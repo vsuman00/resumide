@@ -841,6 +841,8 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 
 - [x] AA010–AA015 engineering closed under ADR-0011 and owner acceptance in ADR-0012; task evidence, residual acceptance obligations AA1-R1–R5, activation requirements and cleanup are reconciled in the [closeout report](../docs/evaluation/AA1_ENGINEERING_CLOSEOUT.md). This checkbox does not pass the accuracy gate below.
 
+**CI repair follow-up (2026-10-17):** Owner-requested parser repairs now carry an explicit extractor version and historical replay. Frozen regression coverage and coordinate-space tests are expanded. Later challenging-scan exact-line failures remain enforced; AA1-R1 and Gate AA1 stay open. See the [dated repair report](../docs/evaluation/OCR_CI_REPAIR_20261017.md) for measured results and remaining work. No representative validation, calibration or activation is implied.
+
 #### Gate AA1: Evidence-safe extraction
 
 - [ ] `CONSTRAINTS.md` extraction floors pass on every approved segment; unsafe evidence reaches review/unsupported state, not numeric scoring.

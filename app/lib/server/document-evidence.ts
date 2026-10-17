@@ -5,6 +5,8 @@ import {
 } from "./native-evidence-schema";
 import { OcrEvidenceSchema, type OcrEvidence } from "./ocr/selective";
 import { CRITICAL_FIELDS, extractEvidenceFields } from "./evidence-fields";
+import { extractEvidenceFields as extractLegacyFields } from "./evidence-fields-v1";
+export const FIELD_EXTRACTOR_VERSION = "evidence-fields/1.0.1" as const;
 
 const field = z.enum(CRITICAL_FIELDS);
 const identifier = z.string().min(1).max(100);
@@ -78,6 +80,7 @@ const blockers = z.enum([
 ]);
 const Shape = ContextSchema.extend({
   schemaVersion: z.literal("evidence/2.0.0"),
+  fieldExtractorVersion: z.literal(FIELD_EXTRACTOR_VERSION).optional(),
   nativeSource: NativeEvidenceSchema,
   ocrSource: OcrEvidenceSchema.nullable(),
   ocrFailure: failure.nullable(),
@@ -105,6 +108,7 @@ function project(
   native: NativeEvidence,
   ocr: OcrEvidence | null,
   ocrFailure: z.infer<typeof failure> | null,
+  fieldExtractorVersion: typeof FIELD_EXTRACTOR_VERSION | undefined,
 ) {
   const nativeSpans = native.spans.map((source) => ({
     ...source,
@@ -146,7 +150,9 @@ function project(
       });
     }) ?? [];
   const spans = [...nativeSpans, ...ocrSpans];
-  const assertions = extractEvidenceFields(spans);
+  const assertions = fieldExtractorVersion
+    ? extractEvidenceFields(spans)
+    : extractLegacyFields(spans);
   const fields = CRITICAL_FIELDS.map((field) => {
     const values = new Set(
       assertions
@@ -187,6 +193,7 @@ function project(
   return {
     ...context,
     schemaVersion: "evidence/2.0.0" as const,
+    ...(fieldExtractorVersion ? { fieldExtractorVersion } : {}),
     nativeSource: native,
     ocrSource: ocr,
     ocrFailure,
@@ -223,7 +230,13 @@ export const DocumentEvidenceSchema = Shape.superRefine((value, validation) => {
       JSON.stringify(ocr.request.nativePageTexts) ===
         JSON.stringify(value.nativeSource.pages.map((page) => page.text)));
   const expected = Shape.safeParse(
-    project(context, value.nativeSource, ocr, value.ocrFailure),
+    project(
+      context,
+      value.nativeSource,
+      ocr,
+      value.ocrFailure,
+      value.fieldExtractorVersion,
+    ),
   );
   if (
     !bound ||
@@ -251,6 +264,7 @@ export function reconcileDocumentEvidence(
       NativeEvidenceSchema.parse(nativeSource),
       ocrSource === null ? null : OcrEvidenceSchema.parse(ocrSource),
       ocrFailure === null ? null : failure.parse(ocrFailure),
+      FIELD_EXTRACTOR_VERSION,
     ),
   );
 }

@@ -228,6 +228,47 @@ function distance(reference: string[], actual: string[]) {
   return prior[actual.length];
 }
 const normalized = (text: string) => text.replace(/\s+/gu, " ").trim();
+// OCR and authored text have independent coordinate spaces. Compare locations
+// after whitespace normalization, but require exact slices in each own source.
+// Line-local positions keep repeated occurrences distinct without making an
+// unrelated earlier line's transcription part of a later field's accuracy.
+function sameFieldLocation(
+  expected: z.infer<typeof field>,
+  observed: z.infer<typeof field>,
+  referencePages: z.infer<typeof page>[],
+  observedPages: z.infer<typeof page>[],
+) {
+  if (expected.span.page !== observed.span.page) return false;
+  if (!grounded(expected, referencePages) || !grounded(observed, observedPages))
+    return false;
+  // Preserve exact-coordinate matches even when unrelated OCR text differs.
+  // Transcription errors elsewhere are measured by CER and line agreement.
+  if (
+    expected.span.start === observed.span.start &&
+    expected.span.end === observed.span.end
+  )
+    return true;
+  const location = (
+    pages: z.infer<typeof page>[],
+    item: z.infer<typeof field>,
+    end: number,
+  ) => {
+    const parts = Array.from(pages.find((p) => p.page === item.span.page)!.text)
+      .slice(0, end)
+      .join("")
+      .split("\n");
+    const localPrefix = parts.pop()!;
+    return JSON.stringify([
+      parts.filter((part) => normalized(part)).length,
+      normalized(localPrefix),
+    ]);
+  };
+  return (["start", "end"] as const).every(
+    (edge) =>
+      location(referencePages, expected, expected.span[edge]) ===
+      location(observedPages, observed, observed.span[edge]),
+  );
+}
 const lines = (text: string) =>
   text.split(/\n/u).map(normalized).filter(Boolean);
 export function evaluateExtractionDocument(
@@ -305,13 +346,9 @@ export function evaluateExtractionDocument(
       (expected) =>
         expected.type === item.type &&
         expected.value === item.value &&
-        JSON.stringify(expected.span) === JSON.stringify(item.span),
+        sameFieldLocation(expected, item, truth.pages, actual.pages),
     );
-    if (
-      match >= 0 &&
-      grounded(item, truth.pages) &&
-      grounded(item, actual.pages)
-    ) {
+    if (match >= 0) {
       counts.truePositive++;
       remaining.splice(match, 1);
     } else counts.falsePositive++;
@@ -557,6 +594,7 @@ export function runExtractionBenchmark(input: {
   const releasePassed = engineeringPassed && releaseBlockers.length === 0;
   return {
     schemaVersion: "extraction-report/1.0.0",
+    fieldEvaluatorVersion: "whitespace-grounded-fields/1.0.0",
     mode: input.mode,
     partition: input.partition,
     manifestLock: input.manifestLock,

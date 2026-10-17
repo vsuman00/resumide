@@ -1,0 +1,433 @@
+{
+  "id": "10000000-0000-4000-8000-000000000001",
+  "ownerId": "10000000-0000-4000-8000-000000000002",
+  "analysisId": "10000000-0000-4000-8000-000000000003",
+  "sourceId": "10000000-0000-4000-8000-000000000004",
+  "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "createdAt": "2026-10-11T00:00:00.000Z",
+  "retentionPolicyId": "synthetic-local-30d/1.0.0",
+  "schemaVersion": "evidence/2.0.0",
+  "nativeSource": {
+    "schemaVersion": "native-evidence-v1",
+    "extractorVersion": "unpdf-v1",
+    "offsetUnit": "unicode_code_point",
+    "pages": [
+      {
+        "id": "page-1",
+        "pageNumber": 1,
+        "text": "Maya Desai\nmaya@example.test\n+1 202 555 0116\nProfessional Experience\nHarbor Analytics\nStaff Software Engineer\nSep 2019 - Nov 2023\nBuilt reliable services for internal teams.\nEducation\nB.Eng. in Software Engineering\nCertifications\nMicrosoft Azure Fundamentals",
+        "method": "native_text",
+        "confidence": "uncalibrated"
+      }
+    ],
+    "spans": [
+      {
+        "id": "page-1-line-1",
+        "pageId": "page-1",
+        "start": 0,
+        "end": 10,
+        "text": "Maya Desai"
+      },
+      {
+        "id": "page-1-line-2",
+        "pageId": "page-1",
+        "start": 11,
+        "end": 28,
+        "text": "maya@example.test"
+      },
+      {
+        "id": "page-1-line-3",
+        "pageId": "page-1",
+        "start": 29,
+        "end": 44,
+        "text": "+1 202 555 0116"
+      },
+      {
+        "id": "page-1-line-4",
+        "pageId": "page-1",
+        "start": 45,
+        "end": 68,
+        "text": "Professional Experience"
+      },
+      {
+        "id": "page-1-line-5",
+        "pageId": "page-1",
+        "start": 69,
+        "end": 85,
+        "text": "Harbor Analytics"
+      },
+      {
+        "id": "page-1-line-6",
+        "pageId": "page-1",
+        "start": 86,
+        "end": 109,
+        "text": "Staff Software Engineer"
+      },
+      {
+        "id": "page-1-line-7",
+        "pageId": "page-1",
+        "start": 110,
+        "end": 129,
+        "text": "Sep 2019 - Nov 2023"
+      },
+      {
+        "id": "page-1-line-8",
+        "pageId": "page-1",
+        "start": 130,
+        "end": 173,
+        "text": "Built reliable services for internal teams."
+      },
+      {
+        "id": "page-1-line-9",
+        "pageId": "page-1",
+        "start": 174,
+        "end": 183,
+        "text": "Education"
+      },
+      {
+        "id": "page-1-line-10",
+        "pageId": "page-1",
+        "start": 184,
+        "end": 214,
+        "text": "B.Eng. in Software Engineering"
+      },
+      {
+        "id": "page-1-line-11",
+        "pageId": "page-1",
+        "start": 215,
+        "end": 229,
+        "text": "Certifications"
+      },
+      {
+        "id": "page-1-line-12",
+        "pageId": "page-1",
+        "start": 230,
+        "end": 258,
+        "text": "Microsoft Azure Fundamentals"
+      }
+    ],
+    "assertions": [
+      {
+        "field": "name",
+        "value": "Maya Desai",
+        "state": "review_required",
+        "confidence": "uncalibrated",
+        "evidence": {
+          "spanId": "page-1-line-1",
+          "start": 0,
+          "end": 10
+        }
+      },
+      {
+        "field": "email",
+        "value": "maya@example.test",
+        "state": "review_required",
+        "confidence": "uncalibrated",
+        "evidence": {
+          "spanId": "page-1-line-2",
+          "start": 0,
+          "end": 17
+        }
+      },
+      {
+        "field": "phone",
+        "value": "+1 202 555 0116",
+        "state": "review_required",
+        "confidence": "uncalibrated",
+        "evidence": {
+          "spanId": "page-1-line-3",
+          "start": 0,
+          "end": 15
+        }
+      }
+    ]
+  },
+  "ocrSource": null,
+  "ocrFailure": null,
+  "status": "review_required",
+  "scoringEligible": false,
+  "confidence": {
+    "kind": "uncalibrated",
+    "reason": "calibration_not_approved"
+  },
+  "spans": [
+    {
+      "id": "native-page-1-line-1",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "Maya Desai",
+      "start": 0,
+      "end": 10,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "native-page-1-line-2",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "maya@example.test",
+      "start": 11,
+      "end": 28,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "native-page-1-line-3",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "+1 202 555 0116",
+      "start": 29,
+      "end": 44,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "native-page-1-line-4",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "Professional Experience",
+      "start": 45,
+      "end": 68,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "native-page-1-line-5",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "Harbor Analytics",
+      "start": 69,
+      "end": 85,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "native-page-1-line-6",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "Staff Software Engineer",
+      "start": 86,
+      "end": 109,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "native-page-1-line-7",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "Sep 2019 - Nov 2023",
+      "start": 110,
+      "end": 129,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "native-page-1-line-8",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "Built reliable services for internal teams.",
+      "start": 130,
+      "end": 173,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "native-page-1-line-9",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "Education",
+      "start": 174,
+      "end": 183,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "native-page-1-line-10",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "B.Eng. in Software Engineering",
+      "start": 184,
+      "end": 214,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "native-page-1-line-11",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "Certifications",
+      "start": 215,
+      "end": 229,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "native-page-1-line-12",
+      "pageId": "page-1",
+      "method": "native_text",
+      "text": "Microsoft Azure Fundamentals",
+      "start": 230,
+      "end": 258,
+      "box": null,
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    }
+  ],
+  "assertions": [
+    {
+      "id": "assertion-1",
+      "field": "name",
+      "value": "Maya Desai",
+      "evidence": [
+        {
+          "spanId": "native-page-1-line-1",
+          "start": 0,
+          "end": 10
+        }
+      ],
+      "state": "review_required",
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "assertion-2",
+      "field": "email",
+      "value": "maya@example.test",
+      "evidence": [
+        {
+          "spanId": "native-page-1-line-2",
+          "start": 0,
+          "end": 17
+        }
+      ],
+      "state": "review_required",
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "assertion-3",
+      "field": "phone",
+      "value": "+1 202 555 0116",
+      "evidence": [
+        {
+          "spanId": "native-page-1-line-3",
+          "start": 0,
+          "end": 15
+        }
+      ],
+      "state": "review_required",
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "assertion-4",
+      "field": "role",
+      "value": "Staff Software Engineer",
+      "evidence": [
+        {
+          "spanId": "native-page-1-line-6",
+          "start": 0,
+          "end": 23
+        }
+      ],
+      "state": "review_required",
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    },
+    {
+      "id": "assertion-5",
+      "field": "dates",
+      "value": "Sep 2019 - Nov 2023",
+      "evidence": [
+        {
+          "spanId": "native-page-1-line-7",
+          "start": 0,
+          "end": 19
+        }
+      ],
+      "state": "review_required",
+      "confidence": {
+        "kind": "uncalibrated",
+        "value": null
+      }
+    }
+  ],
+  "fields": [
+    {
+      "field": "name",
+      "state": "review_required"
+    },
+    {
+      "field": "email",
+      "state": "review_required"
+    },
+    {
+      "field": "phone",
+      "state": "review_required"
+    },
+    {
+      "field": "employer",
+      "state": "not_evaluated"
+    },
+    {
+      "field": "role",
+      "state": "review_required"
+    },
+    {
+      "field": "dates",
+      "state": "review_required"
+    },
+    {
+      "field": "education",
+      "state": "not_evaluated"
+    },
+    {
+      "field": "certification",
+      "state": "not_evaluated"
+    }
+  ],
+  "blockers": ["uncalibrated_confidence", "missing_critical_fields"]
+}

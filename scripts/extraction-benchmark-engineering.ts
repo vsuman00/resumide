@@ -17,14 +17,35 @@ import {
   extractionManifestLock,
   observeExtractionBenchmarkSource,
   runExtractionBenchmark,
+  evaluateExtractionDocument,
   type ExtractionBenchmarkAdapter,
   type ExtractionManifest,
+  type ExtractionObservation,
   type ExtractionTruth,
 } from "../app/lib/server/extraction-benchmark";
 import {
   createOcrPrintFixture,
   PRINT_FAMILIES,
+  type Family,
 } from "../tests/fixtures/ocr-print-pilot";
+import {
+  EXTRACTION_REPAIR_DEVELOPMENT_FAMILIES,
+  EXTRACTION_REPAIR_HEADER_DEVELOPMENT,
+} from "../tests/fixtures/extraction-repair-development";
+import { EXTRACTION_REPAIR_HELDOUT_FAMILIES } from "../tests/fixtures/extraction-repair-heldout";
+import { EXTRACTION_REPAIR_CONFIRMATION_FAMILIES } from "../tests/fixtures/extraction-repair-confirmation";
+import { EXTRACTION_REPAIR_VALIDATION_FAMILIES } from "../tests/fixtures/extraction-repair-validation";
+import { EXTRACTION_REPAIR_VERIFICATION_FAMILIES } from "../tests/fixtures/extraction-repair-verification";
+import { EXTRACTION_REPAIR_ASSESSMENT_FAMILIES } from "../tests/fixtures/extraction-repair-assessment";
+import { EXTRACTION_REPAIR_ACCEPTANCE_FAMILIES } from "../tests/fixtures/extraction-repair-acceptance";
+export type ExtractionCorpusSet =
+  | "original"
+  | "repair-20261017"
+  | "confirmation-20261017"
+  | "validation-20261017"
+  | "verification-20261017"
+  | "assessment-20261017"
+  | "acceptance-20261017";
 import { syntheticPdf } from "../tests/fixtures/native-pdf";
 
 export const ENGINEERING_OCR_IMAGE =
@@ -53,6 +74,16 @@ const codePaths = [
   "tests/fixtures/ocr-print-pilot.ts",
   "package-lock.json",
   "vitest.config.ts",
+  "tests/fixtures/extraction-repair-development.ts",
+  "tests/fixtures/extraction-repair-heldout.ts",
+  "docs/evaluation/aa1-repair-20261017-heldout-freeze.json",
+  "tests/fixtures/extraction-repair-confirmation.ts",
+  "docs/evaluation/aa1-repair-20261017-confirmation-freeze.json",
+  "app/lib/server/evidence-fields-v1.ts",
+  "tests/fixtures/extraction-repair-validation.ts",
+  "tests/fixtures/extraction-repair-verification.ts",
+  "tests/fixtures/extraction-repair-assessment.ts",
+  "tests/fixtures/extraction-repair-acceptance.ts",
 ];
 async function codeReceipt() {
   return Object.fromEntries(
@@ -68,12 +99,67 @@ async function codeReceipt() {
 export async function createEngineeringExtractionCorpus(
   imageId = ENGINEERING_OCR_IMAGE,
   partition: "development" | "locked" = "development",
+  corpusSet: ExtractionCorpusSet = "original",
 ) {
   if (!/^sha256:[a-f0-9]{64}$/u.test(imageId))
     throw new Error("benchmark_immutable_image_required");
   const sources = new Map<string, Uint8Array>();
   const documents: ExtractionTruth[] = [];
-  for (const [index, family] of PRINT_FAMILIES.entries()) {
+  let families: readonly Family[] = PRINT_FAMILIES;
+  if (corpusSet !== "original") {
+    const confirmation = corpusSet === "confirmation-20261017";
+    const validation = corpusSet === "validation-20261017";
+    const verification = corpusSet === "verification-20261017";
+    const assessment = corpusSet === "assessment-20261017";
+    const acceptance = corpusSet === "acceptance-20261017";
+    const frozenSet = acceptance
+      ? "acceptance"
+      : assessment
+        ? "assessment"
+        : verification
+          ? "verification"
+          : validation
+            ? "validation"
+            : confirmation
+              ? "confirmation"
+              : "heldout";
+    const frozen = JSON.parse(
+      await readFile(
+        new URL(
+          `../docs/evaluation/aa1-repair-20261017-${frozenSet}-freeze.json`,
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    );
+    const source = await readFile(
+      new URL(
+        `../tests/fixtures/extraction-repair-${frozenSet}.ts`,
+        import.meta.url,
+      ),
+    );
+    if (
+      sha256(source) !== frozen.sourceSha256 ||
+      frozen.status !== "frozen-before-parser-evaluation"
+    )
+      throw new Error("benchmark_heldout_source_changed");
+    families = [
+      ...EXTRACTION_REPAIR_DEVELOPMENT_FAMILIES,
+      ...EXTRACTION_REPAIR_HEADER_DEVELOPMENT,
+      ...(acceptance
+        ? EXTRACTION_REPAIR_ACCEPTANCE_FAMILIES
+        : assessment
+          ? EXTRACTION_REPAIR_ASSESSMENT_FAMILIES
+          : verification
+            ? EXTRACTION_REPAIR_VERIFICATION_FAMILIES
+            : validation
+              ? EXTRACTION_REPAIR_VALIDATION_FAMILIES
+              : confirmation
+                ? EXTRACTION_REPAIR_CONFIRMATION_FAMILIES
+                : EXTRACTION_REPAIR_HELDOUT_FAMILIES),
+    ].map((family) => ({ ...family, left: 48, top: 62, gap: 27 }));
+  }
+  for (const [index, family] of families.entries()) {
     if (family.partition !== partition) continue;
     const text = family.lines.join("\n");
     const bytes = syntheticPdf(
@@ -113,7 +199,7 @@ export async function createEngineeringExtractionCorpus(
         }),
       });
     for (const segment of ["clean", "challenging", "mixed"] as const) {
-      const fixture = await createOcrPrintFixture(index, segment);
+      const fixture = await createOcrPrintFixture(index, segment, family);
       sources.set(fixture.manifest.id, fixture.bytes);
       documents.push({
         ...base,
@@ -147,7 +233,7 @@ export async function createEngineeringExtractionCorpus(
     evaluationConfig,
     versions,
     sourceCode: await codeReceipt(),
-    sourceFamilies: PRINT_FAMILIES.map((family) => ({
+    sourceFamilies: families.map((family) => ({
       id: family.id,
       partition: family.partition,
       authoredSourceHash: sha256(JSON.stringify(family)),
@@ -155,10 +241,14 @@ export async function createEngineeringExtractionCorpus(
     runtimePlatform: `${process.platform}/${process.arch}`,
     scope: "synthetic_engineering_only",
     partition,
+    corpusSet,
   });
   const manifest: ExtractionManifest = {
     schemaVersion: "extraction-benchmark/1.0.0",
-    datasetVersion: `aa015-native-print-${partition}-v1`,
+    datasetVersion:
+      corpusSet === "original"
+        ? `aa015-native-print-${partition}-v1`
+        : `aa1-${corpusSet}-${partition}-v1`,
     producerVersion: "document-evidence/2.0.0",
     providerVersion: `${versions.engine}/${versions.renderer}`,
     configurationHash: sha256(JSON.stringify(receipt)),
@@ -338,11 +428,13 @@ export async function runEngineeringExtractionHarness(options: {
   expectedLock?: string;
   imageId?: string;
   partition?: "development" | "locked";
+  corpusSet?: ExtractionCorpusSet;
   emit?: (value: unknown) => void;
 }) {
   const corpus = await createEngineeringExtractionCorpus(
     options.imageId ?? ENGINEERING_OCR_IMAGE,
     options.partition ?? "development",
+    options.corpusSet ?? "original",
   );
   if (options.expectedLock && corpus.manifestLock !== options.expectedLock)
     throw new Error("benchmark_frozen_receipt_mismatch");
@@ -408,7 +500,7 @@ export async function runEngineeringExtractionHarness(options: {
     },
     imageId: corpus.receipt.imageId,
   });
-  const observations = [];
+  const observations: ExtractionObservation[] = [];
   for (const truth of corpus.manifest.documents)
     observations.push(
       await observeExtractionBenchmarkSource(
@@ -432,8 +524,30 @@ export async function runEngineeringExtractionHarness(options: {
     mode: options.mode,
     partition: corpus.receipt.partition,
   });
+  const perField = CRITICAL_FIELDS.map((field) => {
+    const total = { truePositive: 0, falsePositive: 0, falseNegative: 0 };
+    for (const [index, truth] of corpus.manifest.documents.entries()) {
+      const counts = evaluateExtractionDocument(
+        {
+          ...truth,
+          fields: truth.fields.filter((item) => item.type === field),
+        },
+        {
+          ...observations[index],
+          fields: observations[index].fields.filter(
+            (item) => item.type === field,
+          ),
+        },
+      ).counts;
+      total.truePositive += counts.truePositive;
+      total.falsePositive += counts.falsePositive;
+      total.falseNegative += counts.falseNegative;
+    }
+    return { field, ...total };
+  });
   return {
     ...report,
+    perField,
     authoritativeScoresEmitted: observations.filter(
       (observation) => observation.authoritativeScore !== null,
     ).length,
@@ -452,7 +566,7 @@ export async function runEngineeringExtractionHarness(options: {
       memoryAndCpu: "not_aggregated_in_this_harness",
     },
     limitations: [
-      `${corpus.receipt.partition === "locked" ? "two_authored_locked" : "three_authored_development"}_families_not_representative`,
+      `${corpus.receipt.sourceFamilies.filter((family) => family.partition === corpus.receipt.partition).length}_authored_${corpus.receipt.partition}_families_not_representative`,
       "no_calibration_or_representative_recognition",
       "independent_human_validation_deferred",
       "single_column_only",

@@ -55,6 +55,15 @@ Review-required/unsupported states, score withholding and the default-off flag
 remain the enforced boundaries while this register is open. R1 is a measured
 quality failure independent of reviewer availability.
 
+## 2026-10-17 CI repair follow-up
+
+The owner requested repair of the failed OCR job. Versioned parser and benchmark
+coordinate fixes are implemented; original frozen labels, failed receipts and
+98%/97% field floors remain. Additional evaluations exposed a strict challenging-
+scan exact-line failure, so AA1-R1 remains OPEN. The [dated repair report](OCR_CI_REPAIR_20261017.md)
+records current local/remote checks, consumed sets and the unevaluated fresh set.
+This follow-up does not close representative, calibration or activation gates.
+
 ## Implemented behavior
 
 - Selective local OCR retains immutable native pages, normalized OCR word geometry,

@@ -83,6 +83,80 @@ function fixture() {
 }
 
 describe("extraction-v2 benchmark", () => {
+  it("keeps exact grounded coordinates after an unrelated OCR substitution", () => {
+    const { manifest, observations } = fixture();
+    const truth = manifest.documents[0];
+    truth.pages[0].text = "Header\nFictional Name";
+    truth.fields[0].span = { page: 1, start: 7, end: 21 };
+    const actual = observations[0];
+    actual.pages[0].text = "Heoder\nFictional Name";
+    actual.fields[0].span = { page: 1, start: 7, end: 21 };
+    const result = evaluateExtractionDocument(truth, actual);
+    expect(result.counts).toMatchObject({
+      truePositive: 1,
+      falsePositive: 0,
+      falseNegative: 0,
+    });
+    expect(result.counts.nativeErrors).toBeGreaterThan(0);
+  });
+  it("matches grounded fields across whitespace-only source offset changes", () => {
+    const { manifest, observations } = fixture();
+    const truth = manifest.documents[0];
+    truth.pages[0].text = "Header\n\nFictional Name\nEngineer";
+    truth.fields[0].span = { page: 1, start: 8, end: 22 };
+    const actual = observations[0];
+    actual.pages[0].text = "Header\nFictional Name\nEngineer";
+    actual.fields[0].span = { page: 1, start: 7, end: 21 };
+    expect(evaluateExtractionDocument(truth, actual).counts).toMatchObject({
+      truePositive: 1,
+      falsePositive: 0,
+      falseNegative: 0,
+    });
+    actual.fields[0].span.start++;
+    expect(evaluateExtractionDocument(truth, actual).counts.truePositive).toBe(
+      0,
+    );
+  });
+
+  it("rejects a grounded duplicate at a different source occurrence", () => {
+    const { manifest, observations } = fixture();
+    const truth = manifest.documents[0];
+    truth.pages[0].text = "Fictional Name\n\nFictional Name";
+    const actual = observations[0];
+    actual.pages[0].text = "Fictional Name\nFictional Name";
+    actual.fields[0].span = { page: 1, start: 15, end: 29 };
+    expect(evaluateExtractionDocument(truth, actual).counts).toMatchObject({
+      truePositive: 0,
+      falsePositive: 1,
+      falseNegative: 1,
+    });
+  });
+
+  it("preserves Unicode offsets while isolating earlier-line transcription errors", () => {
+    const { manifest, observations } = fixture();
+    const truth = manifest.documents[0];
+    truth.pages[0].text = "📄\n\nFictional Name";
+    truth.fields[0].span = { page: 1, start: 3, end: 17 };
+    const actual = observations[0];
+    actual.pages[0].text = "📄\nFictional Name";
+    actual.fields[0].span = { page: 1, start: 2, end: 16 };
+    expect(evaluateExtractionDocument(truth, actual).counts.truePositive).toBe(
+      1,
+    );
+    actual.pages[0].text = "X\nFictional Name";
+    expect(evaluateExtractionDocument(truth, actual).counts.truePositive).toBe(
+      1,
+    );
+    expect(
+      evaluateExtractionDocument(truth, actual).counts.nativeErrors,
+    ).toBeGreaterThan(0);
+    actual.pages[0].text = "📄\nFictional Name";
+    actual.pages[0].page = 2;
+    actual.fields[0].span.page = 2;
+    expect(evaluateExtractionDocument(truth, actual).counts.truePositive).toBe(
+      0,
+    );
+  });
   it("returns nonzero from the release CLI while engineering output remains reviewable", () => {
     const { manifest, observations } = fixture();
     const directory = mkdtempSync(join(tmpdir(), "extraction-benchmark-"));

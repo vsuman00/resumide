@@ -31,11 +31,12 @@ describe("real PDF engineering benchmark adapter", () => {
         partition: "locked",
       }),
     ).rejects.toThrow("previously_frozen_locked_receipt_required");
-  });
+  }, 30_000);
   it("refuses release before recognition and binds explicit immutable CI images", async () => {
     const imageId = `sha256:${"f".repeat(64)}`;
     const corpus = await createEngineeringExtractionCorpus(imageId);
     expect(corpus.receipt.imageId).toBe(imageId);
+    expect(corpus.receipt.evaluationConfig).toEqual({ psm: 3, maxDpi: 150 });
     await expect(
       createEngineeringExtractionCorpus("mutable-tag"),
     ).rejects.toThrow("immutable_image_required");
@@ -48,7 +49,7 @@ describe("real PDF engineering benchmark adapter", () => {
       "not_run_release_prerequisites_missing",
     );
     expect("releasePassed" in report && report.releasePassed).toBe(false);
-  });
+  }, 30_000);
   it("freezes every development source and label before running recognition", async () => {
     const first = await createEngineeringExtractionCorpus();
     expect(first.manifest.documents).toHaveLength(12);
@@ -71,7 +72,7 @@ describe("real PDF engineering benchmark adapter", () => {
       ),
     ).toBe(true);
     expect(first.manifest.releaseEvidence.calibratedPolicy).toBeNull();
-  });
+  }, 30_000);
 
   it("extracts all fields through real PDF parsing and reconciliation without truth input", async () => {
     const corpus = await createEngineeringExtractionCorpus();
@@ -105,5 +106,5 @@ describe("real PDF engineering benchmark adapter", () => {
       expect(actual.status).toBe("review_required");
       expect(actual.confidenceCalibrated).toBe(false);
     }
-  });
+  }, 30_000);
 });

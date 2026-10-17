@@ -1,0 +1,66 @@
+{
+  "timestampUTC": "2026-10-17T13:40:10.777Z",
+  "image": "sha256:62d40d764375b39c4a829a27ee8d76670723402e1f2988b40e31617c7213ffad",
+  "checks": [
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:ocr:local",
+        "--",
+        "<immutable-image>"
+      ],
+      "exitCode": 0,
+      "logSha256": "e5281ed2d228bd4f3e2a7f57fcbad78867a065c9b9385f8d0c38cc34354bca2b"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:ocr:pilot",
+        "--",
+        "<immutable-image>"
+      ],
+      "exitCode": 0,
+      "logSha256": "bb3b2d68f5522f46f3285cc2213a0975669ab55bdcbbb04032ebb68b5bf70c6e"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:ocr:pilot",
+        "--",
+        "<immutable-image>",
+        "--print-pilot",
+        "--partition=development",
+        "--psm=3",
+        "--dpi=150",
+        "--require-quality"
+      ],
+      "exitCode": 0,
+      "logSha256": "1bbd365aaf7e1e3e96d4485028efef2f982a65a194903d236666eb46b8614415"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:ocr:adverse",
+        "--",
+        "<immutable-image>"
+      ],
+      "exitCode": 0,
+      "logSha256": "a2dceb3bdb7091a5ae1e7d7319fa56aa963a9cbef0351b51f22b2f30a55ab84b"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:ocr:fields",
+        "--",
+        "<immutable-image>"
+      ],
+      "exitCode": 0,
+      "logSha256": "9024f4b448a2c4f69e249cb8b4c96d88624eea2872e74d9d319f3a9fd4398fa5"
+    }
+  ]
+}

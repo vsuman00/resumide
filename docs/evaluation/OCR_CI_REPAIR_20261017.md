@@ -1,0 +1,37 @@
+# OCR CI repair, 2026-10-17
+
+Status: PARTIAL; local application checks pass, strict challenging-scan exact-line gate still fails. Remote CI verification is pending at publication. Base revision: `fab804841183169a8d9a2a6a3fd1b702f979565d`. Results describe the scoped dirty candidate, not unrelated concurrent documentation and deployment work.
+
+The owner requested repair of the [failed CI run](https://github.com/vsuman00/resumide/actions/runs/39025484937), followed by commit, push and verification. Its local-OCR job failed the original locked field gate: TP36 / FP3 / FN12, precision 92.31%, recall 75%. The other four jobs passed. [AA1-R1](AA1_ENGINEERING_CLOSEOUT.md) requires development repairs and a separately frozen untouched evaluation without changing the floors or old receipts.
+
+## Changes
+
+New evidence proposals explicitly record `evidence-fields/1.0.1`. Historical envelopes without that property replay with `evidence-fields-v1.ts`, byte-identical to the committed parser (SHA256 `ae802d3b4e0757ede32aabec5a4b28616ac4314b160b9dc69bf064b90f86ca55`). Shared legacy contact/date/section implementations remain unchanged. Migration `20261017120000_evidence_field_parser_version.sql` admits the explicit new version while preserving ownership, provenance, concurrency, resource and score-withholding guards. Apply this additive migration before running updated evidence writers in a deployed environment. No hosted migration was run.
+
+Development cases cover date/phone confusion, explicit and wrapped labels, company/title/date ordering and separators, profile role proposals, qualification variants, date/degree collisions, credential issuers and section termination. Compact employment headers and year-prefixed qualifications keep exact source slices. Every new proposal remains review-required and uncalibrated; no employer relationship or verified fact is inferred from a profile title.
+
+A separate benchmark defect surfaced in the assessment corpus. Its authored text contains blank lines; OCR reconstructs single newlines. The old evaluator demanded identical offsets in both coordinate spaces, rejecting otherwise correct fields after a blank line even with zero whitespace-normalized CER. The versioned evaluator `whitespace-grounded-fields/1.0.0` requires exact type/value/page, exact raw grounding in each span's own page, and equal nonempty-line ordinal and whitespace-normalized line-local prefix at both boundaries (or identical raw coordinates). Repeated occurrences remain distinct; wrong pages, invented values and invalid spans fail. An unrelated earlier line's OCR error is measured by transcription and exact-line agreement rather than invalidating a later grounded field. Thresholds stay at 98% precision / 97% recall per segment, with the existing confidence-interval gates.
+
+## Evaluation history and safeguards
+
+All frozen fixture bytes, label values, original failed receipts and subsequent failed iterations remain. [Iteration history](aa1-repair-20261017-iteration-history.json) indexes failures. The repair, confirmation, validation, verification and assessment sets each failed on their first evaluation and became consumed regression data. Input-only diagnosis supplied rewritten generic development examples; it cannot turn a consumed set back into untouched evidence. The assessment annotation audit separately checked structural consistency and found all 96 rendered labels grounded, with no ambiguous occurrences. It identified the coordinate-space defect independently from parser gaps.
+
+The validation source received a formatting-only change before its first evaluation. Original author bytes and freeze are retained; the revised freeze records identical exported values and their semantic hash. No label values changed.
+
+The separately authored acceptance set has four new families / 32 critical facts, frozen before its first evaluation. It failed the challenging-scan field and exact-line gates and is now consumed regression data. Input-only clean/challenging comparison found identical critical values and offsets; two noncritical OCR substitutions exposed another overly broad prefix comparison. The corrected matcher uses line-local anchors; exact-line agreement remains strict and its failures remain enforced.
+
+Configuration comparisons stopped on development failure: the existing 300-DPI runtime configuration and the single-column 300-DPI variant missed original development fields. Single-column mode at 150 DPI passed development and prior regressions but did not resolve the acceptance scan errors. The final benchmark restores the original PSM 3 / 150-DPI configuration; the production adapter is unchanged. No threshold or exact-line assertion was relaxed.
+
+A further runtime-check set is frozen but UNEVALUATED because the preceding consumed regression still fails. Its source and freeze are retained for a future candidate, without reading its labels or claiming acceptance. Each new author did not inspect the parser, previous families, labels, reports or outcomes. The coordinator does not read their source values. All previous regression gates must pass before the runtime-check set's first evaluation. CI retains every consumed set and collects failures across the additional corpora. No assertions, gates or floors were removed.
+
+## Verification
+
+- `npm run verify:ci`: passes locally: 113 Vitest files / 834 tests and 56 browser checks, plus formatting, lint, types, app/worker builds, security checks and existing synthetic benchmarks. Zero production dependency vulnerabilities. Local Node runtime is 26.5.0; remote CI pins Node 22 and remains to be verified.
+- Versioned SQL checks pass against the isolated local audit database: historical/current envelopes, idempotent retry and ten rejected forgeries; fixtures roll back. Actual document-worker checks pass on four synthetic fixtures, preserving native evidence, retry cleanup and zero scoring/provider rows.
+- Final OCR: 912/912 critical fields, no extra fields, across development and consumed regression executions. All original and five earlier consumed locked sets pass every segment floor. The acceptance set passes all field, CER and coverage gates but fails challenging-scan exact-line agreement: 97.1014%, 95% source-family interval 93.9394–100%, required lower bound at least 98%. CER is 0.0972%; clean/mixed exact-line agreement is 100%. Zero authoritative scores are emitted. Current receipts are written as `aa1-repair-20261017-publication-current-*.json`, binding source hashes, immutable OCR image, configuration and pre-recognition manifest lock.
+- Runtime controls: all five pass. The commands cover selective OCR, diagnostic pilot, unchanged normal-font transcription gate, encrypted/oversized controls and grounded fields. [Runtime receipt](aa1-repair-20261017-runtime-controls.json).
+- Remote CI: pending at publication; its terminal result must be observed after push. The known exact-line failure remains enforced and may keep the OCR job red.
+
+## Limits
+
+These are AI-assisted synthetic single-column engineering checks with no independent human validation. They do not establish representative field accuracy, confidence calibration, proprietary ATS behavior or hiring outcomes. AA1 release acceptance, downstream formal gates and production activation remain open. No score weights, default-off flags or hosted providers were changed; authoritative scores remain withheld for unsafe or uncalibrated evidence. No private resume, JD or credentials belong in this commit.

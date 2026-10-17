@@ -40,13 +40,13 @@ type Fields = Record<
   | "certification",
   string
 >;
-type Family = {
+export type Family = {
   id: string;
   partition: Partition;
   left: number;
   top: number;
   gap: number;
-  lines: string[];
+  lines: readonly string[];
   fields: Fields;
 };
 // Six distinct authored resumes/section sequences. Rendered scan variants of a
@@ -279,8 +279,9 @@ function stream(header: string, bytes: Uint8Array) {
 export async function createOcrPrintFixture(
   familyIndex: number,
   segment: Segment,
+  providedFamily?: Family,
 ) {
-  const family = PRINT_FAMILIES[familyIndex];
+  const family = providedFamily ?? PRINT_FAMILIES[familyIndex];
   if (!family) throw new Error("Unknown authored family");
   const dpi = segment === "challenging" ? 150 : 300;
   const scale = dpi / 72,

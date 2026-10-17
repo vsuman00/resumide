@@ -15,6 +15,12 @@ try {
         arg.startsWith("--") &&
         arg !== "--engineering" &&
         arg !== "--manifest-only" &&
+        arg !== "--corpus=repair-20261017" &&
+        arg !== "--corpus=confirmation-20261017" &&
+        arg !== "--corpus=validation-20261017" &&
+        arg !== "--corpus=verification-20261017" &&
+        arg !== "--corpus=assessment-20261017" &&
+        arg !== "--corpus=acceptance-20261017" &&
         !/^--image=sha256:[a-f0-9]{64}$/u.test(arg) &&
         !/^--partition=(development|locked)$/u.test(arg) &&
         !/^--lock-receipt=[a-f0-9]{64}$/u.test(arg),
@@ -30,6 +36,19 @@ try {
         await import("./extraction-benchmark-engineering")
       ).runEngineeringExtractionHarness({
         mode,
+        corpusSet: args.includes("--corpus=acceptance-20261017")
+          ? "acceptance-20261017"
+          : args.includes("--corpus=assessment-20261017")
+            ? "assessment-20261017"
+            : args.includes("--corpus=verification-20261017")
+              ? "verification-20261017"
+              : args.includes("--corpus=validation-20261017")
+                ? "validation-20261017"
+                : args.includes("--corpus=confirmation-20261017")
+                  ? "confirmation-20261017"
+                  : args.includes("--corpus=repair-20261017")
+                    ? "repair-20261017"
+                    : "original",
         manifestOnly: args.includes("--manifest-only"),
         expectedLock: args
           .find((arg) => arg.startsWith("--lock-receipt="))
