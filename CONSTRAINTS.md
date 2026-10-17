@@ -1,7 +1,7 @@
 # Resumide constraints
 
 Status: **CURRENT ENGINEERING FLOOR PLUS PROPOSED ACCURACY-V2 GATES**
-Last reviewed: 2026-09-11 by Codex; human quality approval pending for proposed gates
+Last reviewed: 2026-10-11; E-003 sequencing approved by the workspace owner; release accuracy/calibration gates remain open
 
 This file records the quality bar. It must not be weakened to make an implementation pass. A proposed gate is not enforced evidence until its named checker exists and runs against the required corpus.
 
@@ -75,9 +75,17 @@ These are proposed product targets and must be baselined before enforcement:
 
 ## 6. Exceptions
 
-| ID    | Constraint                            | Scope                                 | Reason                                                                          | Owner           | Expires                                |
-| ----- | ------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------- | --------------- | -------------------------------------- |
-| E-001 | Accuracy-v2 benchmark commands do not exist yet | Scoring/authoring initiative | AA010 is authorized; planned accuracy benchmarks still require implementation and representative evidence | Workspace owner | At the relevant Accuracy-v2 release gate |
-| E-002 | Independent human annotation prerequisite | Local AA1 synthetic engineering tests only | Owner approved AI-assisted annotation; record AI provenance, known source truth and unverified human validation. No metric threshold or representative-release requirement is waived. See ADR-0010. | Workspace owner, 2026-10-04 | Before representative release evaluation or any human-validated/domain-validity claim |
+| ID    | Constraint                                      | Scope                                      | Reason                                                                                                                                                                                              | Owner                       | Expires                                                                               |
+| ----- | ----------------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------- |
+| E-001 | Accuracy-v2 benchmark commands do not exist yet | Scoring/authoring initiative               | AA010 is authorized; planned accuracy benchmarks still require implementation and representative evidence                                                                                           | Workspace owner             | At the relevant Accuracy-v2 release gate                                              |
+| E-002 | Independent human annotation prerequisite       | Local AA1 synthetic engineering tests only | Owner approved AI-assisted annotation; record AI provenance, known source truth and unverified human validation. No metric threshold or representative-release requirement is waived. See ADR-0010. | Workspace owner, 2026-10-04 | Before representative release evaluation or any human-validated/domain-validity claim |
+
+| E-003 | AA2 engineering depends on Gate AA1 passing | Isolated AA020–AA024 engineering only | Owner approved progression after the disclosed AA1 closeout. Keep failed locked metrics, score withholding, uncertain facts and release requirements unchanged. See [ADR-0012](docs/decisions/0012-aa2-engineering-sequencing-approval.md). | Workspace owner, 2026-10-11 | At Gate AA2 acceptance or before release/production activation, whichever comes first |
 
 No implementation task may add another exception silently.
+
+**E-004 (owner accepted 2026-10-12):** Permit isolated AA040–AA046 local synthetic engineering while formal AA1–AA3 acceptance remains failed/open. Preserve the failed/blocked receipts, uncalibrated states, withheld authoritative values, original thresholds and all representative/domain/calibration/release requirements. No provider activation, hosted migration/deployment, real-data access or publication is authorized. Expires at formal Gate AA4 acceptance or before scoring-policy/production activation. See [ADR-0013](docs/decisions/0013-aa4-local-engineering-sequencing-proposal.md).
+
+**E-005 (owner accepted 2026-10-12):** The instruction to proceed to AA5 after disclosure of open Gate AA4 permits AA050–AA057 local synthetic engineering and necessary additive local authoring storage. Formal upstream acceptance, numeric scoring/calibration, actual model adoption, representative/human review and release requirements remain unchanged. Hosted SQL/deployment, provider activation, real data, spend and Git publication are outside this authorization. Expires at formal Gate AA5 acceptance or before numeric/production activation. See [ADR-0014](docs/decisions/0014-aa5-local-engineering-sequencing.md).
+
+**E-006 (owner accepted 2026-10-14):** The explicit instruction to implement AA6 permits local synthetic AA060–AA065 rendering and verification while formal upstream gates remain open. Artifact floors and formal accessibility/security/release requirements are unchanged. Deployment, hosted SQL, real data, providers, spend and publication remain deferred. Expires at formal Gate AA6 acceptance or before production activation. See [ADR-0015](docs/decisions/0015-aa6-local-engineering-sequencing.md).

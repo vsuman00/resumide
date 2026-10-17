@@ -1,0 +1,23 @@
+# AA4 local engineering plan
+
+Status: **LOCAL AA040–AA046 ENGINEERING COMPLETE AND VERIFIED; FORMAL GATE AA4 OPEN.**
+
+The owner requested AA4 after AA3 wrap-up. [ADR-0013](../docs/decisions/0013-aa4-local-engineering-sequencing-proposal.md) authorizes a bounded local engineering sequence while preserving the failed/open AA1–AA3 formal gates. This plan supplies no numeric policy approval.
+
+| Task  | Concrete next deliverable                                                                               | Required local evidence                                                                                                                               |
+| ----- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AA040 | Versioned draft policy registry, strict score/rule interfaces and legacy adapter                        | Exact-version golden records; unknown version, duplicate dimension, fake calibration/weight and history mutation rejection                            |
+| AA041 | Source-bound readiness evaluator and blocker read model                                                 | Coverage/completeness/disagreement/critical-field cases with null authoritative values; confirmations cannot calibrate evidence                       |
+| AA042 | Deterministic parseability, structure, contact, date, section and format traces                         | Boundary/applicability/unknown/duplicate/international cases; cited reasons; test-only AA0 normalization examples                                     |
+| AA043 | Typed requirement states and bounded alignment traces                                                   | Required/preferred distinction, unknown/inferred importance, years, credential contradictions, source-linked dedup groups, no keyword-stuffing credit |
+| AA044 | Legacy label/read compatibility and removal of model numeric authority                                  | Provider/prose changes cannot affect deterministic results; preserved historical version/date/value; no cross-version improvement claim               |
+| AA045 | Owner-only private explanations with input versions, blockers, strengths and top five repair priorities | Source/ownership/deletion/stale-version checks, keyboard/reflow/axe checks; readiness aggregate disabled                                              |
+| AA046 | Reproducible local validity/robustness harness and fail-closed release mode                             | Determinism, counterfactual names, duplication/stuffing, injection and segment reports; unknown expert/fairness/comprehension evidence withheld       |
+
+Each slice is tested before the next. Preserve the existing dirty checkout and original evidence/history. Use local synthetic fixtures and existing migrations only unless later authorized. No authoritative numeric scoring activates under this plan: policy weights, coverage floors, bands, confidence calibration and released domains require separate evidence-backed approval.
+
+AA3 engineering has no remaining local test or cleanup work: 603 tests, 48 browser checks, 39 AA3 database assertions, populated restore and 68 AA2 regression assertions passed; fixture users, derived test rows and scratch databases were removed. Its formal domain/data acceptance obligations remain in [AA3 status](../docs/evaluation/AA3_ENGINEERING_STATUS.md).
+
+**Preparatory verification:** seven AA040 interface tests pass; the full suite passes 87 files / 610 tests. TypeScript generation/check, scoped ESLint and production build pass. The draft module is isolated from current scoring and application routes. This verifies the proposed contract subset, not completion of AA040 or an approved calibration policy. Logs: `/tmp/resumide-aa4-preparation-types.log`, `/tmp/resumide-aa4-preparation-tests.log` and `/tmp/resumide-aa4-preparation-build.log`.
+
+**Implementation status (2026-10-12):** All seven engineering deliverables are implemented and verified: 653 tests, 49 browser checks, 30 diagnostics DB assertions, 13 historical-pipeline DB assertions, 68 AA2 and 39 AA3 regression assertions, populated restore and cleanup. The diagnostics route is additive and default-off, canonical/JD/evidence sources retain their existing immutable storage and privacy controls, model prose has no numeric authority, and release mode still fails closed. Final receipts and limitations are recorded in [AA4 closeout](../docs/evaluation/AA4_ENGINEERING_CLOSEOUT.md). The preparation counts above are historical, not the final suite counts.

@@ -8,6 +8,13 @@ import EvidenceScene3D from "../../app/components/EvidenceScene3D";
 afterEach(cleanup);
 
 describe("EvidenceScene3D", () => {
+  it("contains no fabricated measurements on a saved result", () => {
+    const { container } = render(
+      <EvidenceScene3D variant="result" label="Evidence layers" />,
+    );
+    expect(container.textContent).toBe("SourceEvidence");
+    expect(container.querySelector(".scene-score-orb")).toBeNull();
+  });
   it("renders route-specific, accessible 3D content", () => {
     render(
       <EvidenceScene3D variant="privacy" label="Private resume data vault" />,

@@ -7,13 +7,208 @@ import {
   processPrivacyRequest,
   runPrivacyWorkerCycle,
   type PrivacyRequestRepository,
+  SupabasePrivacyRequestRepository,
 } from "../../app/lib/server/privacy-worker";
 import {
   runRetentionSweep,
   type RetentionRepository,
 } from "../../app/lib/server/retention";
 
+const database = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn() }));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseAdminClient: () => database,
+}));
+function mockCanonicalExport(response: unknown) {
+  database.rpc.mockImplementation(() => {
+    const r = response as {
+      data: Record<string, unknown> | null;
+      error: unknown;
+    };
+    return Promise.resolve({
+      ...r,
+      data: r.data
+        ? {
+            ...r.data,
+            jobRequirementVersions: [],
+            jobRequirements: [],
+            authoringEvents: [],
+          }
+        : r.data,
+    });
+  });
+}
+
 describe("privacy operations", () => {
+  it("exports immutable evidence and corrections only through the request owner's filters", async () => {
+    const owner = "owner-1";
+    const evidence = {
+      id: "attempt-1",
+      owner_id: owner,
+      envelope: { status: "review_required", original: "fictional source" },
+    };
+    const correction = {
+      id: "correction-1",
+      owner_id: owner,
+      value: "fictional corrected value",
+      revision: 1,
+    };
+    const filters: Array<{ table: string; column: string; value: string }> = [];
+    mockCanonicalExport({
+      data: {
+        canonicalResumeVersions: [],
+        resumeFacts: [],
+        canonicalResumeHeads: [],
+        changeEvents: [],
+      },
+      error: null,
+    });
+    database.from.mockImplementation((table: string) => ({
+      select: () => ({
+        eq: (column: string, value: string) => {
+          filters.push({ table, column, value });
+          const records =
+            table === "document_evidence_attempts"
+              ? [
+                  evidence,
+                  { ...evidence, id: "other-attempt", owner_id: "other-owner" },
+                ]
+              : table === "evidence_corrections"
+                ? [
+                    correction,
+                    {
+                      ...correction,
+                      id: "other-correction",
+                      owner_id: "other-owner",
+                    },
+                  ]
+                : [];
+          return Promise.resolve({
+            data: records.filter((row) => row.owner_id === value),
+            error: null,
+          });
+        },
+      }),
+    }));
+    const repository = new SupabasePrivacyRequestRepository();
+    const manifest = await repository.buildExportManifest({
+      id: "request-1",
+      kind: "export",
+      userId: owner,
+      organizationId: "organization-1",
+      attempt: 1,
+      workerId: "worker-1",
+    });
+    expect(filters).toContainEqual({
+      table: "document_evidence_attempts",
+      column: "owner_id",
+      value: owner,
+    });
+    expect(filters).toContainEqual({
+      table: "evidence_corrections",
+      column: "owner_id",
+      value: owner,
+    });
+    expect(manifest.records.documentEvidenceAttempts).toEqual([evidence]);
+    expect(manifest.records.evidenceCorrections).toEqual([correction]);
+    expect(database.rpc).toHaveBeenCalledWith(
+      "export_resume_workspace_records",
+      { p_user_id: owner },
+    );
+    expect(manifest.records.authoringEvents).toEqual([]);
+    expect(JSON.stringify(manifest)).not.toContain("other-owner");
+  });
+
+  it.each([
+    "document_evidence_attempts",
+    "evidence_corrections",
+    "canonical export RPC",
+  ])("fails export closed when %s cannot be read", async (unavailable) => {
+    mockCanonicalExport({
+      data:
+        unavailable === "canonical export RPC"
+          ? null
+          : {
+              canonicalResumeVersions: [],
+              resumeFacts: [],
+              canonicalResumeHeads: [],
+              changeEvents: [],
+            },
+      error:
+        unavailable === "canonical export RPC"
+          ? { message: "private failure detail" }
+          : null,
+    });
+    database.from.mockImplementation((table: string) => ({
+      select: () => ({
+        eq: () =>
+          Promise.resolve({
+            data: [],
+            error:
+              table === unavailable
+                ? { message: "private failure detail" }
+                : null,
+          }),
+      }),
+    }));
+    await expect(
+      new SupabasePrivacyRequestRepository().buildExportManifest({
+        id: "request-1",
+        kind: "export",
+        userId: "owner-1",
+        organizationId: "organization-1",
+        attempt: 1,
+        workerId: "worker-1",
+      }),
+    ).rejects.toThrow("Privacy export data is unavailable.");
+  });
+
+  it("fails export closed when the canonical snapshot is incomplete", async () => {
+    database.from.mockImplementation(() => ({
+      select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
+    }));
+    mockCanonicalExport({ data: { resumeFacts: [] }, error: null });
+    await expect(
+      new SupabasePrivacyRequestRepository().buildExportManifest({
+        id: "request-1",
+        kind: "export",
+        userId: "owner-1",
+        organizationId: "organization-1",
+        attempt: 1,
+        workerId: "worker-1",
+      }),
+    ).rejects.toThrow("Privacy export data is unavailable.");
+  });
+  it("fails export closed when JD requirements cannot be exported", async () => {
+    database.from.mockImplementation(() => ({
+      select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
+    }));
+    database.rpc.mockImplementation((name: string) =>
+      Promise.resolve(
+        name === "export_resume_workspace_records"
+          ? { data: null, error: { message: "private JD failure" } }
+          : {
+              data: {
+                canonicalResumeVersions: [],
+                resumeFacts: [],
+                canonicalResumeHeads: [],
+                changeEvents: [],
+              },
+              error: null,
+            },
+      ),
+    );
+    await expect(
+      new SupabasePrivacyRequestRepository().buildExportManifest({
+        id: "request-1",
+        kind: "export",
+        userId: "owner-1",
+        organizationId: "org-1",
+        attempt: 1,
+        workerId: "worker-1",
+      }),
+    ).rejects.toThrow("Privacy export data is unavailable.");
+  });
+
   it("builds a versioned export manifest without raw resume text", () => {
     const manifest = buildExportManifest({
       generatedAt: "2026-09-11T00:00:00.000Z",

@@ -66,10 +66,11 @@ function formatDate(value: string | null) {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
     ? "Not available"
-    : new Intl.DateTimeFormat(undefined, {
+    : new Intl.DateTimeFormat("en-GB", {
+        timeZone: "UTC",
         dateStyle: "medium",
         timeStyle: "short",
-      }).format(date);
+      }).format(date) + " UTC";
 }
 
 export default function Account() {

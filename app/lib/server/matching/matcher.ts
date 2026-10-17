@@ -1,4 +1,5 @@
 import { SKILL_TAXONOMY, type SkillTaxonomyEntry } from "./taxonomy";
+import { SOFTWARE_SKILLS } from "../job-requirements";
 
 const MAX_TERMS = 20;
 const MAX_STORED_SPANS = 3;
@@ -94,6 +95,14 @@ const GENERIC_STOPWORDS = new Set([
   "years",
   "you",
   "your",
+  "the",
+  "this",
+  "that",
+  "job",
+  "practical",
+  "exposure",
+  "focuses",
+  "based",
 ]);
 
 export interface EvidenceSpan {
@@ -133,6 +142,7 @@ interface CandidateTerm {
   aliases: readonly string[];
   jobSpans: EvidenceSpan[];
   firstIndex: number;
+  recognized: boolean;
 }
 
 export function matchJobDescription(args: {
@@ -141,17 +151,43 @@ export function matchJobDescription(args: {
   maxTerms?: number;
 }): JobDescriptionMatchResult {
   const maxTerms = Math.max(0, Math.min(args.maxTerms ?? MAX_TERMS, MAX_TERMS));
-  const taxonomyCandidates = extractTaxonomyCandidates(args.jobDescription);
+  const scopedJob = requirementText(args.jobDescription);
+  const taxonomyCandidates = extractTaxonomyCandidates(scopedJob);
+  // Exact engineering vocabulary is discoverable without pretending that an
+  // external taxonomy mapping or proficiency assessment has been approved.
+  for (const skill of SOFTWARE_SKILLS) {
+    if (
+      taxonomyCandidates.some((candidate) =>
+        candidate.aliases.some(
+          (alias) => alias.toLowerCase() === skill.toLowerCase(),
+        ),
+      )
+    )
+      continue;
+    const spans = collectAliasSpans(scopedJob, [skill]);
+    if (spans.length)
+      taxonomyCandidates.push({
+        term: skill,
+        taxonomyId: null,
+        kind: "keyword",
+        aliases: [skill],
+        jobSpans: spans,
+        firstIndex: spans[0].start,
+        recognized: true,
+      });
+  }
   const occupied = taxonomyCandidates.flatMap(
     (candidate) => candidate.jobSpans,
   );
-  const genericCandidates = extractGenericCandidates(
-    args.jobDescription,
-    occupied,
-  );
+  const genericCandidates = extractGenericCandidates(scopedJob, occupied);
   const candidates = [...taxonomyCandidates, ...genericCandidates]
     .sort(compareCandidates)
-    .slice(0, maxTerms);
+    .slice(0, maxTerms)
+    .sort(
+      (left, right) =>
+        left.firstIndex - right.firstIndex ||
+        lexicalCompare(left.term, right.term),
+    );
 
   const evidence = candidates.map((candidate): MatchEvidence => {
     const resumeSpans = collectAliasSpans(args.resumeText, candidate.aliases);
@@ -159,7 +195,7 @@ export function matchJobDescription(args: {
       term: candidate.term,
       taxonomyId: candidate.taxonomyId,
       kind: candidate.kind,
-      uncertain: candidate.kind === "keyword",
+      uncertain: !candidate.recognized,
       job: sourceEvidence(candidate.jobSpans),
       resume: sourceEvidence(resumeSpans),
     };
@@ -194,6 +230,7 @@ function extractTaxonomyCandidates(text: string): CandidateTerm[] {
       aliases,
       jobSpans,
       firstIndex: jobSpans[0].start,
+      recognized: true,
     });
   }
   return candidates;
@@ -217,6 +254,7 @@ function extractGenericCandidates(
     if (term.length < 3 || /^\d+$/.test(term) || GENERIC_STOPWORDS.has(term)) {
       continue;
     }
+    if (negatedAt(text, start, end)) continue;
     const spans = byTerm.get(term) ?? [];
     spans.push({ start, end, text: raw, alias: term });
     byTerm.set(term, spans);
@@ -229,6 +267,7 @@ function extractGenericCandidates(
     aliases: [term],
     jobSpans,
     firstIndex: jobSpans[0].start,
+    recognized: false,
   }));
 }
 
@@ -253,6 +292,7 @@ function collectAliasSpans(
       const matchedText = match[0];
       const start = match.index;
       const end = start + matchedText.length;
+      if (negatedAt(text, start, end)) continue;
       if (
         ignored.some((range) =>
           rangesOverlap(start, end, range.start, range.end),
@@ -324,10 +364,52 @@ function sourceEvidence(spans: readonly EvidenceSpan[]): SourceEvidence {
 }
 
 function compareCandidates(left: CandidateTerm, right: CandidateTerm): number {
+  if (left.recognized !== right.recognized) return left.recognized ? -1 : 1;
   if (left.firstIndex !== right.firstIndex)
     return left.firstIndex - right.firstIndex;
   if (left.kind !== right.kind) return left.kind === "taxonomy" ? -1 : 1;
   return lexicalCompare(left.term, right.term);
+}
+
+function negatedAt(text: string, start: number, end: number): boolean {
+  const boundaries = [
+    ...text.matchAll(
+      /[;\n]|\.(?=\s|$)|\bbut\b|(?:,\s*|\band\s+)(?=(?:no|not)\b)/giu,
+    ),
+  ];
+  const left = boundaries.filter((match) => match.index! < start).at(-1);
+  const right = boundaries.find((match) => match.index! >= end);
+  const clause = text.slice(
+    left ? left.index! + left[0].length : 0,
+    right?.index ?? text.length,
+  );
+  return /\b(?:no|without|never|not(?!\s+only\b))\b/iu.test(clause);
+}
+
+// Mask irrelevant sections rather than rebuilding text, preserving UTF-16
+// offsets used by the existing lexical-evidence contract.
+function requirementText(text: string): string {
+  const heading =
+    /^(?:(?:key |job )?responsibilities|duties|(?:job )?requirements|(?:required |basic |minimum |preferred )?qualifications|(?:required |essential )?skills(?: and experience)?|must have|preferred|nice to have):?$/iu;
+  const lines = text.split("\n");
+  const hasHeading = lines.some((line) => heading.test(line.trim()));
+  let active = !hasHeading;
+  return lines
+    .map((line) => {
+      const trimmed = line.trim();
+      if (heading.test(trimmed)) {
+        active = true;
+        return " ".repeat(line.length);
+      }
+      if (
+        /^(?:benefits|about (?!the job\b|this role\b).+|company overview|equal opportunity):?$/iu.test(
+          trimmed,
+        )
+      )
+        active = false;
+      return active ? line : " ".repeat(line.length);
+    })
+    .join("\n");
 }
 
 function lexicalCompare(left: string, right: string): number {

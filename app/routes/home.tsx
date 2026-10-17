@@ -134,7 +134,8 @@ function statusLabel(status: string) {
 function formattedDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Recently";
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
     month: "short",
     day: "numeric",
     year: "numeric",

@@ -120,10 +120,10 @@ const RULES: Rule[] = [
     label: "Experience section has parseable dates",
     weight: 10,
     run: (ctx) => {
-      const experience = ctx.parseView.sections.find(
+      const experience = ctx.parseView.sections.filter(
         (section) => section.type === "experience",
       );
-      const dates = experience?.dateStrings ?? [];
+      const dates = experience.flatMap((section) => section.dateStrings ?? []);
       return {
         passed: dates.length > 0,
         detail:
@@ -139,10 +139,13 @@ const RULES: Rule[] = [
     label: "Experience section uses bullets",
     weight: 8,
     run: (ctx) => {
-      const experience = ctx.parseView.sections.find(
+      const experience = ctx.parseView.sections.filter(
         (section) => section.type === "experience",
       );
-      const bullets = experience?.bulletCount ?? 0;
+      const bullets = experience.reduce(
+        (total, section) => total + (section.bulletCount ?? 0),
+        0,
+      );
       return {
         passed: bullets >= 2,
         detail: `${bullets} bullet${bullets === 1 ? "" : "s"} detected.`,
@@ -176,7 +179,10 @@ const RULES: Rule[] = [
     weight: 26,
     run: (ctx) => {
       if (ctx.jdKeywords.length === 0) {
-        return { passed: null, detail: "No JD provided - not evaluated." };
+        return {
+          passed: null,
+          detail: "No recognized JD skill terms available - not evaluated.",
+        };
       }
       const ratio = ctx.matched.length / ctx.jdKeywords.length;
       return {
@@ -200,9 +206,15 @@ export function atsRules(args: {
   const context: ScoreContext = {
     wordCount: args.text.trim().split(/\s+/).filter(Boolean).length,
     parseView: args.parseView,
-    jdKeywords: matching.terms,
-    matched: matching.matched,
-    missing: matching.missing,
+    jdKeywords: matching.evidence
+      .filter((item) => !item.uncertain)
+      .map((item) => item.term),
+    matched: matching.matched.filter(
+      (term) => !matching.uncertain.includes(term),
+    ),
+    missing: matching.evidence
+      .filter((item) => !item.uncertain && item.resume.occurrenceCount === 0)
+      .map((item) => item.term),
   };
   const ruleTrace = RULES.map((rule) => toRuleTrace(rule, context));
   const evaluated = ruleTrace.filter(

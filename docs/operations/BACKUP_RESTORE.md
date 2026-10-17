@@ -29,3 +29,16 @@ Status: **PROCEDURE IMPLEMENTED, LIVE DRILL REQUIRED FOR A4**
 checksum and ownership preservation. It is useful in CI but does not claim a
 managed PostgreSQL or object-storage restore. A4 remains open until a dated
 isolated hosted drill supplies the evidence above.
+
+## Canonical importer compatibility repair
+
+Apply `20261017010000_canonical_producer_compatibility.sql` before running the
+repaired importer. It accepts both `canonical-engine/1.0.0` and
+`canonical-engine/1.0.1` without rewriting saved versions or their citations.
+Restore checks must retain historical versions and verify that a new import
+records producer 1.0.1. Keep this forward migration during application rollback;
+do not restore the older validator over documents produced by 1.0.1.
+Template and renderer 1.0.2 identify the repaired export presentation and
+source-link checks. Artifacts remain transient and must be checked again after
+restore. This compatibility change does not authorize a hosted migration or
+close the formal accuracy and artifact-release gates.

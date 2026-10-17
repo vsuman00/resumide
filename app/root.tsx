@@ -17,7 +17,10 @@ import { createThemeBootstrapScript } from "~/lib/theme";
 import PublicShell from "~/components/PublicShell";
 import EvidenceScene3D from "~/components/EvidenceScene3D";
 import TelemetryReporter from "~/components/TelemetryReporter";
+import { responseSecurity } from "~/lib/server/response-security";
 import "./app.css";
+
+export const middleware: Route.MiddlewareFunction[] = [responseSecurity];
 
 export async function loader({ request }: Route.LoaderArgs) {
   const responseHeaders = new Headers();

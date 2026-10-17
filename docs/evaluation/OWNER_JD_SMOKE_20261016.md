@@ -1,0 +1,13 @@
+# Owner-provided resume and Python AI Engineer JD smoke test
+
+Status: FUNCTIONAL COVERAGE FAIL; EVIDENCE AND SCORE-WITHHOLDING GUARDS PASS.
+
+The owner supplied the workspace resume and pasted this JD for a local test. The production extraction, canonical import, JD parser, score diagnostics and authoring finding queue ran in memory. No database writes, external provider calls or candidate confirmations were made. The source PDF is unchanged. The temporary JD copy and derived resume data were deleted. The [aggregate receipt](aa3-20261016-owner-jd-smoke.json) retains counts, JD skill labels, code hashes and diagnostic categories only.
+
+The parser emitted 13 items: 11 skill occurrences, one location and one spurious education item. It discovered only three distinct skill labels: Python, AWS and Git. A manual checklist of 18 directly stated technology concepts found 15 absent from typed skill extraction, including FastAPI, Flask, Pydantic, LLMs, RAG, embeddings, vector databases, AI agents, NoSQL, Redis, async/await, GCP, OOP, REST APIs and microservices. This checklist is a local diagnostic, not independently annotated benchmark gold or a measured release accuracy score.
+
+The stated 1-4 year range was not extracted. The compressed metadata line uses `Exp Range`, which the experience detector does not recognize. `Key Responsibilities` and `Qualifications` also do not enter the supported heading paths, and every emitted item's importance remains unknown. The case-insensitive `BE` education alias matches the ordinary word `be` in an agent-development qualification, creating a false education item. No requirement came from the company marketing paragraphs; one later item came from the closing role-title metadata.
+
+All requirement citations match exact source spans. All alignment fact and requirement references resolve to the supplied documents. Semantic extraction is repeatable. The five grouped alignment entries remain not evaluated, and all numeric scores and aggregate readiness remain withheld. Seven authoring findings are available, with the existing top-five display bound. The 55 imported resume facts remain unconfirmed. No resume fit percentage, skill proficiency, experience eligibility or candidate-confirmed match is established by this test.
+
+The local test ran successfully as a checker, while functional acceptance is false. No implementation changed for this JD test, so the broader unit and browser suites were not rerun. The next parser work should address AI/backend vocabulary, common heading and metadata variants, and the degree-abbreviation false positive, then repeat this authorized local case and the existing synthetic regressions. The earlier resume-import mapping and hyperlink gaps remain separate open defects.

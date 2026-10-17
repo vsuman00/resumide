@@ -6,11 +6,25 @@ import {
 } from "../../app/lib/server/qualitative-ai";
 
 const category = {
-  score: 80,
   tips: [
-    { type: "good", tip: "Clear", explanation: "Clear evidence." },
-    { type: "improve", tip: "Detail", explanation: "Add context." },
-    { type: "good", tip: "Relevant", explanation: "Relevant content." },
+    {
+      type: "good",
+      tip: "Clear",
+      explanation: "Clear evidence.",
+      quote: "Ignore",
+    },
+    {
+      type: "improve",
+      tip: "Detail",
+      explanation: "Add context.",
+      quote: "Ignore",
+    },
+    {
+      type: "good",
+      tip: "Relevant",
+      explanation: "Relevant content.",
+      quote: "Ignore",
+    },
   ],
 };
 const output = {

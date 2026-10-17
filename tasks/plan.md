@@ -1,7 +1,11 @@
 # Implementation Plan: Resumide Reliable Product to Enterprise Platform
 
-Status: **PARTIAL; AA0 APPROVED 2026-10-04; AA010/AA011 CONFORMITY REVIEW NEXT; AA1 IMPLEMENTATION PROVISIONAL; GATES A0/A4 OPEN**
+Status: **PARTIAL; AA0 APPROVED 2026-10-04; AA1 ENGINEERING CLOSED / OWNER ACCEPTED; LOCKED FIELD GATE FAILED; INDEPENDENT VALIDATION DEFERRED; AA2 ENGINEERING CLOSED / VERIFIED LOCALLY; FORMAL GATE OPEN; GATES A0/A4 OPEN**
 Architecture: [`../ARCHITECTURE.md`](../ARCHITECTURE.md)
+AA3 status: **LOCAL IMPLEMENTATION DELIVERED; DOMAIN/DATA ACCEPTANCE OPEN**
+AA4 status: **LOCAL ENGINEERING COMPLETE AND VERIFIED; FORMAL GATE OPEN**
+AA5 status: **LOCAL ENGINEERING COMPLETE, VERIFIED AND OWNER-ACCEPTED 2026-10-14; FORMAL GATE OPEN**
+AA6 status: **LOCAL ENGINEERING COMPLETE AND VERIFIED; FORMAL GATE OPEN**
 Executable checklist: [`todo.md`](todo.md)
 Accuracy-v2 subplan: [`accuracy-authoring-plan.md`](accuracy-authoring-plan.md)
 Decision records: [`../docs/decisions/`](../docs/decisions/)
@@ -431,3 +435,51 @@ A task is complete only when:
 8. Update task status only after acceptance and verification. Never mark an entire phase complete from a single happy-path test.
 9. Stop on contradictory specs, provider choices, data-retention decisions, or cross-task file conflicts.
 10. Require human approval at every architecture and release gate.
+
+### AA2 engineering authorization (2026-10-11)
+
+The owner accepts the AA1 engineering closeout and authorizes AA020–AA024
+engineering under [ADR-0012](../docs/decisions/0012-aa2-engineering-sequencing-approval.md)
+and exception E-003. The AA1 locked field gate remains failed, confidence remains
+uncalibrated and unsafe evidence remains unscored. AA020 starts with the strict
+canonical draft contract; persistence and integrity checks remain separate work.
+
+**2026-10-12 AA2 implementation:** AA020–AA024 now include tenant-bound
+immutable persistence, source-preserving import, optimistic concurrency,
+confirmation and unsupported-fact guards, private history/compare UI, privacy
+export/deletion and populated local restore. Completed local verification is
+tracked in the [AA2 closeout](../docs/evaluation/AA2_ENGINEERING_CLOSEOUT.md).
+Formal Gate AA2 acceptance remains separate from engineering completion under
+E-003; the failed AA1 field gate and calibration obligations are unchanged.
+
+### AA1 final engineering closeout (2026-10-11)
+
+The owner directed AA1 wrap-up before further AA2 implementation. AA010–AA015
+engineering is closed and owner-accepted; the [final report](../docs/evaluation/AA1_ENGINEERING_CLOSEOUT.md)
+contains the completed task matrix and acceptance obligations AA1-R1–R5.
+Gate AA1 is NOT PASSED: locked field accuracy fails and representative validation
+and calibration remain deferred. Existing AA020 draft work and its authorization
+are preserved; no additional AA2 implementation was performed in this closeout.
+
+### AA3 local implementation (2026-10-12)
+
+The owner requested progression to AA3 after AA2 localhost verification. The
+JD review route, exact source/importance contract, immutable transactional
+persistence, bounded model-proposal fallback, offline pinned taxonomy boundary,
+candidate first-domain pack, disabled-without-approval market contract and
+synthetic benchmark are implemented. [AA3 status](../docs/evaluation/AA3_ENGINEERING_STATUS.md)
+records the measured local tier. Domain pack review, real taxonomy adoption and
+mapping quality, representative validity and calibration remain formal gate
+requirements. Hosted deployment and launch remain the final project step.
+
+### AA4 local engineering (2026-10-12)
+
+Owner-accepted E-004 authorizes AA040–AA046 synthetic localhost engineering while upstream formal gates remain open. The versioned diagnostics engine/read model, source-bound readiness, technical traces, typed alignment, cited prose without numeric model authority, legacy presenter and validity/error/bootstrap harness are implemented. The default-off `SCORING_V2_ENABLED` route has no numeric scoring activation, no new storage migration and no readiness aggregate. See [AA4 closeout](../docs/evaluation/AA4_ENGINEERING_CLOSEOUT.md) for actual verification and the remaining formal calibration/domain/expert/fairness/comprehension obligations.
+
+### AA5 local authoring (2026-10-12)
+
+Owner-approved ADR-0014/E-005 permits AA050–AA057 local engineering. The default-off analysis editor, finding navigation, strict suggestion/clarification contracts, grounded patterns, transactional authoring ledger, candidate undo/restore and synthetic adapter benchmark are implemented. Numeric deltas remain withheld and actual model/candidate/domain evaluation remains open. See [AA5 closeout](../docs/evaluation/AA5_ENGINEERING_CLOSEOUT.md) and [authoring design](../docs/design/CANDIDATE_AUTHORING_WORKSPACE.md).
+
+### AA6 local verified core rendering (2026-10-14)
+
+Owner-approved [ADR-0015](../docs/decisions/0015-aa6-local-engineering-sequencing.md) permits local AA060–AA065 engineering. Private, default-off semantic preview and shared PDF/DOCX templates parse generated bytes back before download. The known-synthetic matrix passes; representative corpus, approved viewer and assistive-technology acceptance remain open. See [AA6 closeout](../docs/evaluation/AA6_ENGINEERING_CLOSEOUT.md).

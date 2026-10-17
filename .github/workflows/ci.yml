@@ -21,12 +21,18 @@ jobs:
       - run: npm run format:check
       - run: npm run format:check:native-layout
       - run: npm run check:ocr:pilot-source
+      - run: npm run check:aa2:source
+      - run: npm run check:aa3:source
+      - run: npm run check:aa4:source
+      - run: npm run check:aa5:source
       - run: npm run lint
       - run: npm run test
       - run: npm run test:load
       - run: npm run test:restore
       - run: npm run benchmark:phase5
       - run: npm run benchmark:native-layout
+      - run: npm run benchmark:scoring-validity
+      - run: npm run benchmark:writer-grounding
       - run: npm run typecheck
       - run: npm run build
       - run: npm audit --omit=dev --audit-level=high
@@ -58,6 +64,25 @@ jobs:
             echo "OPENAI_API_KEY=ci-openai-key"
           } >> "$GITHUB_ENV"
       - run: npx supabase db reset --local
+      - name: Verify canonical transactions, privacy and concurrency locally
+        run: npm run test:aa2:local
+      - name: Verify job requirement transactions and privacy locally
+        run: npm run test:aa3:local
+      - name: Verify score diagnostics, ownership and history locally
+        run: npm run test:aa4:local && npm run test:aa4:legacy
+      - run: npm run benchmark:job-intelligence
+      - name: Verify candidate-controlled authoring locally
+        run: npm run test:aa5:local
+      - name: Verify owned, parsed-back PDF and DOCX exports locally
+        run: npm run test:aa6:local
+      - name: Verify populated canonical database restore locally
+        run: npm run test:aa2:restore
+        env:
+          AA2_TEST_DB_CONTAINER: supabase_db_resume_ats
+      - name: Verify opt-in document worker on synthetic local sources
+        run: npm run test:aa1:worker
+        env:
+          EVIDENCE_REVIEW_ENABLED: "true"
       - run: npm run test:e2e
       - name: Upload browser failure artifacts
         if: failure()
@@ -80,6 +105,7 @@ jobs:
       - run: npm ci
       - run: npx supabase start
       - run: npm run test:db
+      - run: npm run test:aa014:concurrency
 
   local-ocr:
     runs-on: ubuntu-latest
@@ -111,6 +137,31 @@ jobs:
         run: |
           ocr_image_id="$(docker image inspect resumide-ocr:${{ github.sha }} --format '{{.Id}}')"
           npm run test:ocr:pilot -- "$ocr_image_id" --print-pilot --partition=development --psm=3 --dpi=150 --require-quality
+
+      - name: Verify encrypted and oversized-raster controls
+        shell: bash
+        run: |
+          ocr_image_id="$(docker image inspect resumide-ocr:${{ github.sha }} --format '{{.Id}}')"
+          npm run test:ocr:adverse -- "$ocr_image_id"
+          npm run test:ocr:fields -- "$ocr_image_id"
+      - name: Enforce development and locked synthetic extraction floors
+        shell: bash
+        run: |
+          ocr_image_id="$(docker image inspect resumide-ocr:${{ github.sha }} --format '{{.Id}}')"
+          npm run benchmark:extraction-v2:engineering -- "--image=$ocr_image_id"
+          node node_modules/vite-node/vite-node.mjs --config vitest.config.ts scripts/benchmark-extraction-v2.ts --engineering --partition=locked --manifest-only "--image=$ocr_image_id" > locked-manifest.jsonl
+          extraction_lock="$(node -e 'const fs=require("fs"); process.stdout.write(JSON.parse(fs.readFileSync("locked-manifest.jsonl","utf8").split("\n")[0]).manifestLock)')"
+          node node_modules/vite-node/vite-node.mjs --config vitest.config.ts scripts/benchmark-extraction-v2.ts --engineering --partition=locked "--lock-receipt=$extraction_lock" "--image=$ocr_image_id" > locked-extraction-report.jsonl
+      - name: Upload extraction acceptance receipts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: extraction-acceptance-receipts
+          path: |
+            locked-manifest.jsonl
+            locked-extraction-report.jsonl
+          if-no-files-found: ignore
+          retention-days: 14
 
   container:
     runs-on: ubuntu-latest

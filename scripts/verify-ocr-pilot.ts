@@ -312,7 +312,7 @@ for (const fixture of fixtures) {
         ? "failed_attempt_resources_not_measured"
         : "no_successful_child_rusage_observation",
     resourceUsageScope:
-      "child_cpu_sum_and_max_single_child_rss_not_whole_container_peak",
+      "child_cpu_sum_and_max_single_child_rss_with_optional_container_cgroup_peak_through_recognition",
     // Expected workload, not measured engine attempts or billable usage.
     expectedRuntimeAttempts:
       fixture.providerPageInjection ||
@@ -347,6 +347,11 @@ const observedUsage = results.flatMap((row) =>
           >["resourceUsage"]
         >,
       ]
+    : [],
+);
+const observedContainerPeaks = observedUsage.flatMap((usage) =>
+  usage.containerMemoryPeak?.valueBytes != null
+    ? [usage.containerMemoryPeak.valueBytes]
     : [],
 );
 const report = {
@@ -401,7 +406,21 @@ const report = {
       : null,
     scope: "successful_observations_only_failed_attempts_unknown",
   },
-  peakMemory: { value: null, reason: "whole_container_peak_not_measured" },
+  peakMemory: {
+    value: observedContainerPeaks.length
+      ? Math.max(...observedContainerPeaks)
+      : null,
+    unit: "bytes",
+    source: "cgroup_v2_memory_peak",
+    scope: "maximum_observed_successful_container_peak_through_recognition",
+    observedDocuments: observedContainerPeaks.length,
+    unmeasuredDocuments: results.length - observedContainerPeaks.length,
+    reason: observedContainerPeaks.length
+      ? null
+      : "no_container_peak_observation",
+    limitations:
+      "failed_attempts_and_post_recognition_serialization_unmeasured",
+  },
   structuredFieldPrecisionRecall: {
     value: null,
     reason: "field_extractor_not_evaluated",

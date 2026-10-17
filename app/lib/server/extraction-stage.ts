@@ -21,6 +21,8 @@ import { buildNativeEvidence } from "./native-evidence";
 import { createSupabaseAdminClient } from "./supabase";
 import { NativeLayoutSchema } from "../native-layout-schema";
 
+import { extractDocumentForReview } from "./document-extraction";
+
 const EXTRACTOR_VERSION = "unpdf-v1";
 
 type ResumeExtractor = typeof extractResumeText;
@@ -262,20 +264,23 @@ export async function processExtractionStage(
   const requestId = `worker-${randomUUID()}`;
   const { data, error } = await admin
     .from("analyses")
-    .select("status, resume_versions(storage_key, organization_id)")
+    .select(
+      "status, owner_id, resume_versions(id, checksum, storage_key, organization_id)",
+    )
     .eq("id", analysisId)
     .single();
   if (error || !data) throw new Error("Analysis input is unavailable.");
 
-  if (data.status === "quarantined") {
+  let status = data.status;
+  if (status === "quarantined") {
     await transition(analysisId, "quarantined", "queued", processId, requestId);
+    status = "queued";
   }
-  if (data.status === "queued") {
+  if (status === "queued") {
     await transition(analysisId, "queued", "extracting", processId, requestId);
+    status = "extracting";
   }
-  if (
-    !(["quarantined", "queued", "extracting"] as const).includes(data.status)
-  ) {
+  if (status !== "extracting") {
     return;
   }
 
@@ -287,6 +292,36 @@ export async function processExtractionStage(
   try {
     const bytes = await createResumeStorage().download(version.storage_key);
     const config = getAnalysisConfig();
+    if (config.EVIDENCE_REVIEW_ENABLED) {
+      const envelope = await extractDocumentForReview({
+        bytes,
+        context: {
+          id: randomUUID(),
+          ownerId: data.owner_id,
+          analysisId,
+          sourceId: version.id,
+          inputSha256: version.checksum,
+          createdAt: new Date().toISOString(),
+          retentionPolicyId: "resume-retention-v1",
+        },
+        maxBytes: config.MAX_UPLOAD_BYTES,
+        maxPages: config.MAX_PDF_PAGES,
+        maxCharacters: config.MAX_EXTRACTED_CHARACTERS,
+        timeoutMs: config.EXTRACTION_TIMEOUT_MS,
+      });
+      const { data: persisted, error: persistError } = await admin.rpc(
+        "persist_document_evidence",
+        {
+          p_analysis_id: analysisId,
+          p_envelope: envelope,
+          p_process_id: processId,
+          p_request_id: requestId,
+        },
+      );
+      if (persistError || persisted !== true)
+        throw new Error("Document evidence persistence failed.");
+      return;
+    }
     const extracted = await extractPdfForAnalysis({
       bytes,
       maxBytes: config.MAX_UPLOAD_BYTES,

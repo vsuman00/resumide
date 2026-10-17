@@ -4,10 +4,70 @@ import {
   runWorkerLoop,
 } from "../../app/lib/server/worker-runner";
 import { metrics } from "../../app/lib/server/observability";
+import { spawn } from "node:child_process";
+import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { join, resolve } from "node:path";
 
 beforeEach(() => metrics.reset());
 
 describe("worker runner", () => {
+  it("keeps a standalone idle worker alive until shutdown", async () => {
+    const directory = await mkdtemp(join(resolve("tests"), ".idle-worker-"));
+    const script = join(directory, "idle.ts");
+    await writeFile(
+      script,
+      `import { runWorkerLoop } from ${JSON.stringify(resolve("app/lib/server/worker-runner.ts"))};
+      const shutdown = new AbortController();
+      process.once("SIGTERM", () => shutdown.abort());
+      await runWorkerLoop({ claim: async () => { console.log("idle"); return null; } }, async () => {}, { signal: shutdown.signal, idleDelayMs: 10000 });`,
+    );
+    const child = spawn(
+      process.execPath,
+      [
+        "node_modules/vite-node/vite-node.mjs",
+        "--config",
+        "vitest.config.ts",
+        script,
+      ],
+      { stdio: ["ignore", "pipe", "pipe"] },
+    );
+    let stderr = "";
+    child.stderr.on("data", (data) => {
+      stderr += String(data);
+    });
+    try {
+      await new Promise<void>((done, reject) => {
+        const timer = setTimeout(
+          () => reject(new Error("Idle worker did not start")),
+          5000,
+        );
+        child.stdout.on("data", (data) => {
+          if (String(data).includes("idle")) {
+            clearTimeout(timer);
+            done();
+          }
+        });
+        child.once("error", (error) => {
+          clearTimeout(timer);
+          reject(error);
+        });
+        child.once("exit", () => {
+          clearTimeout(timer);
+          reject(new Error(`Worker exited before idling: ${stderr}`));
+        });
+      });
+      await new Promise((done) => setTimeout(done, 200));
+      expect(child.exitCode).toBeNull();
+      await new Promise<void>((done) => {
+        child.once("exit", () => done());
+        child.kill("SIGTERM");
+      });
+    } finally {
+      if (child.exitCode === null) child.kill("SIGKILL");
+      await rm(directory, { recursive: true, force: true });
+    }
+  }, 10000);
+
   it("does no work when no job is available", async () => {
     const queue = {
       claim: vi.fn().mockResolvedValue(null),

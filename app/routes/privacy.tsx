@@ -6,6 +6,8 @@ import {
   useActionData,
   useLoaderData,
   useNavigation,
+  data,
+  type HeadersFunction,
 } from "react-router";
 import type { Route } from "./+types/privacy";
 import WorkspaceShell from "~/components/WorkspaceShell";
@@ -20,6 +22,21 @@ import {
 import { assertSameOrigin } from "~/lib/server/security";
 import { getServerConfig } from "~/lib/server/config";
 
+export const headers: HeadersFunction = ({
+  loaderHeaders,
+  actionHeaders,
+  errorHeaders,
+}) => {
+  const headers = new Headers({
+    "Cache-Control": "private, no-store",
+    Vary: "Cookie",
+  });
+  for (const source of [loaderHeaders, actionHeaders, errorHeaders])
+    for (const cookie of source?.getSetCookie() ?? [])
+      headers.append("Set-Cookie", cookie);
+  return headers;
+};
+
 async function requireRouteUser(request: Request, headers: Headers) {
   const user = await getAuthenticatedUser(
     createSupabaseServerClient(request, headers),
@@ -29,11 +46,14 @@ async function requireRouteUser(request: Request, headers: Headers) {
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const headers = new Headers();
+  const headers = new Headers({
+    "Cache-Control": "private, no-store",
+    Vary: "Cookie",
+  });
   const user = await requireRouteUser(request, headers);
-  const { data } = await createSupabaseAdminClient()
+  const { data: requests } = await createSupabaseAdminClient()
     .from("data_requests")
-    .select("id, kind, status, created_at, result_manifest")
+    .select("id, kind, status, created_at")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(20);
@@ -42,41 +62,60 @@ export async function loader({ request }: Route.LoaderArgs) {
     .select("purpose, policy_version, captured_at")
     .eq("user_id", user.id)
     .order("captured_at", { ascending: false });
-  return { requests: data ?? [], consents: consents ?? [] };
+  return data(
+    { requests: requests ?? [], consents: consents ?? [] },
+    { headers },
+  );
 }
 
 export async function action({ request }: Route.ActionArgs) {
   assertSameOrigin(request, getServerConfig().APP_ORIGIN);
-  const headers = new Headers();
+  const headers = new Headers({
+    "Cache-Control": "private, no-store",
+    Vary: "Cookie",
+  });
   const user = await requireRouteUser(request, headers);
   const formData = await request.formData();
   const kind = formData.get("kind");
   if (kind === "cancel") {
     const requestId = formData.get("requestId");
     if (typeof requestId !== "string" || !requestId) {
-      return { error: "Choose a valid privacy request." };
+      return data(
+        { error: "Choose a valid privacy request.", success: null },
+        { headers },
+      );
     }
     const cancelled = await cancelDataRequest({
       userId: user.id,
       requestId,
       auditRequestId: createRequestId(),
     });
-    return {
-      success:
-        cancelled.status === "cancelled"
-          ? "Privacy request cancelled."
-          : "This privacy request can no longer be cancelled.",
-    };
+    return data(
+      {
+        error: null,
+        success:
+          cancelled.status === "cancelled"
+            ? "Privacy request cancelled."
+            : "This privacy request can no longer be cancelled.",
+      },
+      { headers },
+    );
   }
   if (kind !== "export" && kind !== "deletion") {
-    return { error: "Choose a valid privacy request." };
+    return data(
+      { error: "Choose a valid privacy request.", success: null },
+      { headers },
+    );
   }
   const created = await createDataRequest({
     userId: user.id,
     kind,
     requestId: createRequestId(),
   });
-  return { success: `${kind} request ${created.status}.` };
+  return data(
+    { error: null, success: `${kind} request ${created.status}.` },
+    { headers },
+  );
 }
 
 export function meta() {
@@ -101,7 +140,8 @@ function statusLabel(status: string) {
 function formattedDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "Recently";
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -273,7 +313,10 @@ export default function Privacy() {
                       </Form>
                     ) : null}
                     {item.kind === "export" && item.status === "completed" ? (
-                      <Link to={`/api/privacy/requests/${item.id}/export`}>
+                      <Link
+                        reloadDocument
+                        to={`/api/privacy/requests/${item.id}/export`}
+                      >
                         Download export
                       </Link>
                     ) : null}

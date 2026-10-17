@@ -8,6 +8,8 @@ function check(flags: string[]) {
     process.execPath,
     [
       "node_modules/vite-node/vite-node.mjs",
+      "--config",
+      "vitest.config.ts",
       "scripts/verify-ocr-pilot.ts",
       `sha256:${"a".repeat(64)}`,
       ...flags,

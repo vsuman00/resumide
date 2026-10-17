@@ -1,0 +1,15 @@
+# AA2 canonical resume workspace
+
+Status: **IMPLEMENTED and VERIFIED on localhost.** Formal Gate AA2 acceptance remains open under ADR-0012/E-003 until its upstream release dependencies are resolved.
+
+The owner reviews structured content at `/analysis/:id/canonical` after an immutable `evidence/2.0.0` attempt exists. `CANONICAL_AUTHORING_ENABLED` defaults to `false`. The route is private, authenticated, same-origin for mutations, `no-store`, and owner-scoped to the analysis, active source upload, resume, organization and membership. An active deletion request removes access immediately. The evidence page links to the workspace only when the flag is enabled.
+
+The import preserves the original evidence attempt, source hash, retention policy, cited codepoint spans, page order, and the chosen native/OCR method on each page. It creates contact, section, entry, bullet and skill objects independent of a document template. All imported facts are **unconfirmed**. A citation shows where a candidate value came from; it is not a source-supported truth grant while AA1 accuracy and calibration remain open. Ambiguous candidates remain separate unconfirmed facts. The current workspace has no verified-state promotion and never emits a numeric score.
+
+An edit changes one fact in a new immutable child version, drops the old citation and confirmation, and updates a singly linked preview bullet. Confirmation records the owner, exact value and time in a new child. Restore copies an ancestor into a new child of the current head. Original and intermediate versions remain readable. The read model offers paged history (20 versions per page), one-version inspection and deterministic fact comparison. Historical versions cannot be edited directly.
+
+`canonical_resume_versions`, `resume_facts`, `canonical_resume_heads` and `change_events` are tenant-bound. Client writes and direct service writes are revoked. The service-only `save_canonical_version` transaction locks the resume, checks expected head and idempotency key, validates the strict document shape, source ownership and exact citation text, restricts each edit to one existing fact, then writes version, facts, event, head and metadata-only audit together. A losing concurrent edit receives a conflict. Replaying the same key and payload returns the original result; changing payload with that key conflicts.
+
+Privacy export uses service-only `export_canonical_records` to read all four tables in one database snapshot, with a 32 MiB fail-closed manifest bound. This avoids the default Data API row cap silently dropping older facts. Source/resume/account deletion and retention remove dependent canonical data. A pending privacy deletion revokes owner reads before cleanup. All test fixtures use synthetic local accounts and documents; no provider calls are required.
+
+This workspace covers AA020–AA024. Suggestion acceptance/rejection, full section layout editing, job-aware scoring, and rendering are later AA5/AA6 work. See the [AA2 engineering closeout](../evaluation/AA2_ENGINEERING_CLOSEOUT.md) for verification and the remaining release gate.

@@ -76,11 +76,7 @@ const EvidenceScene3D = ({
           ))}
         </div>
       )}
-      {variant === "hero" || variant === "result" ? (
-        <span className="scene-score-orb">
-          {variant === "hero" ? "92" : "78"}
-        </span>
-      ) : null}
+      {variant === "hero" ? <span className="scene-score-orb">92</span> : null}
       {variant === "workspace" ? <span className="scene-archive-slot" /> : null}
       {variant === "analysis" ? <span className="scene-scanner-ring" /> : null}
       {variant === "auth" ? (
@@ -106,7 +102,7 @@ const EvidenceScene3D = ({
             workspace: "Saved",
             upload: "Private PDF",
             analysis: "Parsing",
-            result: "12 strengths",
+            result: "Source",
             auth: "Private",
             privacy: "Export",
             error: "Recovery",
@@ -120,7 +116,7 @@ const EvidenceScene3D = ({
             workspace: "Ready",
             upload: "Parse ready",
             analysis: "Evidence",
-            result: "6 repairs",
+            result: "Evidence",
             auth: "Encrypted",
             privacy: "Control",
             error: "Safe",

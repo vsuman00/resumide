@@ -92,6 +92,13 @@ const WorkspaceShell = ({
           <BrandLockup compact />
         </Link>
         <ThemeControl />
+        {rootData?.user ? (
+          <Form method="post" action="/auth/logout">
+            <button type="submit" className="workspace-sign-out">
+              Sign out
+            </button>
+          </Form>
+        ) : null}
       </header>
 
       <div className="workspace-stage">
@@ -114,7 +121,9 @@ const WorkspaceShell = ({
         {primaryNavigation.map((item) => (
           <NavigationLink key={item.to} {...item} />
         ))}
-        <NavigationLink to="/account" label="Account" />
+        {utilityNavigation.map((item) => (
+          <NavigationLink key={item.to} {...item} />
+        ))}
       </nav>
     </div>
   );

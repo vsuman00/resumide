@@ -1,5 +1,6 @@
 import {
   data as routeData,
+  redirect,
   Link,
   useLoaderData,
   useParams,
@@ -18,12 +19,14 @@ import ResumeWriter from "~/components/ResumeWriter";
 import ResultTabs from "~/components/ResultTabs";
 import EvidenceScene3D from "~/components/EvidenceScene3D";
 import WorkspaceShell from "~/components/WorkspaceShell";
+import { presentLegacyScore } from "~/lib/server/score-v2-contract";
+import { BASELINE_SEMANTICS } from "~/lib/server/qualitative-prose";
 import { scoreBand } from "~/lib/score-band";
 import { AnalysisResultSchema } from "~/lib/server/schema";
 import { getAuthenticatedUser } from "~/lib/server/auth";
 import { recordAuditEvent } from "~/lib/server/privacy";
 import { createRequestId } from "~/lib/server/request-context";
-import { createResumeStorage } from "~/lib/server/storage";
+import { visibleFeedbackGroups } from "~/lib/result-feedback";
 import {
   createSupabaseAdminClient,
   createSupabaseServerClient,
@@ -34,17 +37,21 @@ export const meta = () => [
   { name: "description", content: "Detailed overview of your resume" },
 ];
 
-function buildEvidenceReport(result: AnalysisResult): string {
+function buildEvidenceReport(result: AnalysisResult, unscored = false): string {
   const lines = [
     "Resumide evidence report",
-    `Overall compatibility: ${result.feedback.overallScore}/100`,
+    `Legacy analysis score: ${result.feedback.overallScore}/100 (not comparable with v2)`,
     "",
     "Score breakdown:",
     `- ATS compatibility: ${result.feedback.ATS.score}/100`,
-    `- Tone and style: ${result.feedback.toneAndStyle.score}/100`,
-    `- Content: ${result.feedback.content.score}/100`,
-    `- Structure: ${result.feedback.structure.score}/100`,
-    `- Skills: ${result.feedback.skills.score}/100`,
+    ...(unscored
+      ? ["Qualitative categories: cited prose only, no ratings."]
+      : [
+          `- Legacy tone and style: ${result.feedback.toneAndStyle.score}/100`,
+          `- Legacy content: ${result.feedback.content.score}/100`,
+          `- Legacy structure: ${result.feedback.structure.score}/100`,
+          `- Legacy skills: ${result.feedback.skills.score}/100`,
+        ]),
     "",
     "Deterministic checks:",
     ...result.ruleTrace.map(
@@ -68,7 +75,10 @@ function buildEvidenceReport(result: AnalysisResult): string {
 }
 
 export async function loader({ params, request, url }: Route.LoaderArgs) {
-  const headers = new Headers();
+  const headers = new Headers({
+    "Cache-Control": "private, no-store",
+    "X-Robots-Tag": "noindex, nofollow",
+  });
   const user = await getAuthenticatedUser(
     createSupabaseServerClient(request, headers),
   );
@@ -80,10 +90,11 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
     });
   }
 
-  const { data, error } = await createSupabaseAdminClient()
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin
     .from("analyses")
     .select(
-      "id, status, analysis_results(feedback, parse_view, rule_trace, keyword_coverage), writer_drafts(draft), resume_versions(storage_key, organization_id)",
+      "id, status, analysis_results(feedback, parse_view, rule_trace, keyword_coverage, created_at), analysis_deterministic_results(ruleset_version), writer_drafts(draft), resume_versions(storage_key, organization_id)",
     )
     .eq("id", params.id)
     .eq("owner_id", user.id)
@@ -95,6 +106,17 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
       statusText: "Resume analysis not found",
     });
   }
+
+  const evidence = await admin
+    .from("document_evidence_attempts")
+    .select("id")
+    .eq("analysis_id", params.id!)
+    .eq("owner_id", user.id)
+    .limit(1);
+  if (evidence.error)
+    throw new Response("Evidence unavailable", { status: 503 });
+  if (evidence.data?.length)
+    return redirect(`/analysis/${params.id}/evidence`, { headers });
 
   if (data.status !== "completed" && data.status !== "partial") {
     throw new Response(`Analysis is ${data.status}.`, {
@@ -118,13 +140,7 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
     keywordEvidence: keywords.evidence ?? [],
     writer: data.writer_drafts?.[0]?.draft,
   });
-  const version = Array.isArray(data.resume_versions)
-    ? data.resume_versions[0]
-    : data.resume_versions;
-  const signedResumeUrl = await createResumeStorage().createSignedUrl({
-    organizationId: version!.organization_id,
-    storageKey: version!.storage_key,
-  });
+  const signedResumeUrl = `/analysis/${params.id}/source`;
   await recordAuditEvent({
     userId: user.id,
     action: "analysis.read",
@@ -134,12 +150,44 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
   });
 
   const nativeLayout = await readOwnedNativeLayout(data.id, user.id);
-  return routeData({ result, signedResumeUrl, nativeLayout }, { headers });
+  const unscoredProse = stored?.feedback?.scoreSemantics === BASELINE_SEMANTICS;
+  const deterministicVersion = Array.isArray(
+    data.analysis_deterministic_results,
+  )
+    ? data.analysis_deterministic_results[0]
+    : data.analysis_deterministic_results;
+  const legacy = stored?.created_at
+    ? presentLegacyScore({
+        value: result.feedback.overallScore,
+        createdAt: stored.created_at,
+        scoringVersion: unscoredProse
+          ? (deterministicVersion?.ruleset_version ?? null)
+          : null,
+        kind: unscoredProse ? "deterministic_baseline" : "legacy_blended",
+      })
+    : null;
+  return routeData(
+    {
+      result,
+      signedResumeUrl,
+      nativeLayout,
+      unscoredProse,
+      legacy,
+      qualitativeUnavailable: data.status === "partial",
+    },
+    { headers },
+  );
 }
 
 const Resume = () => {
-  const { result, signedResumeUrl, nativeLayout } =
-    useLoaderData<typeof loader>();
+  const {
+    result,
+    signedResumeUrl,
+    nativeLayout,
+    unscoredProse,
+    legacy,
+    qualitativeUnavailable,
+  } = useLoaderData<typeof loader>();
   const { id } = useParams();
   const entry = useAnalysisStore((s) => (id ? s.entries[id] : undefined));
   const [imageUrl, setImageUrl] = useState("");
@@ -147,7 +195,7 @@ const Resume = () => {
   const [previewError, setPreviewError] = useState("");
   const [resumeUrl, setResumeUrl] = useState(signedResumeUrl);
   const [reportUrl, setReportUrl] = useState("");
-  const [feedback, setFeedback] = useState<Feedback>(result.feedback);
+  const feedback = result.feedback;
   const score = feedback?.overallScore ?? 0;
   const scoreLabels = {
     needs_work: "Needs attention",
@@ -158,27 +206,17 @@ const Resume = () => {
 
   useEffect(() => {
     const url = URL.createObjectURL(
-      new Blob([buildEvidenceReport(result)], { type: "text/plain" }),
+      new Blob([buildEvidenceReport(result, unscoredProse)], {
+        type: "text/plain",
+      }),
     );
     setReportUrl(url);
     return () => URL.revokeObjectURL(url);
-  }, [result]);
-  const feedbackGroups: Array<{
-    source: string;
-    tips: Array<{
-      type: "good" | "improve";
-      tip: string;
-      explanation?: string;
-    }>;
-  }> = feedback
-    ? [
-        { source: "ATS compatibility", tips: feedback.ATS.tips },
-        { source: "Tone and style", tips: feedback.toneAndStyle.tips },
-        { source: "Content", tips: feedback.content.tips },
-        { source: "Structure", tips: feedback.structure.tips },
-        { source: "Skills", tips: feedback.skills.tips },
-      ]
-    : [];
+  }, [result, unscoredProse]);
+  const feedbackGroups = visibleFeedbackGroups(
+    feedback,
+    qualitativeUnavailable,
+  );
   const repairQueue = feedbackGroups
     .flatMap((group) =>
       group.tips
@@ -214,7 +252,6 @@ const Resume = () => {
       let sourcePdf: Blob;
 
       if (entry) {
-        setFeedback(entry.result.feedback);
         const pdfUrl = URL.createObjectURL(entry.pdf);
         revokePdf = pdfUrl;
         setResumeUrl(pdfUrl);
@@ -284,6 +321,15 @@ const Resume = () => {
         </Link>
       }
     >
+      <p>
+        {unscoredProse
+          ? "Deterministic baseline; model ratings are excluded."
+          : "Historical blended result; qualitative ratings below belong to the legacy scoring method."}{" "}
+        This result is not comparable with v2 scores.
+        {legacy
+          ? ` Saved ${legacy.createdAt}; version: ${legacy.scoringVersion ?? "unrecorded"}.`
+          : " Original date and scoring version are unavailable."}
+      </p>
       <section className="result-score-header" aria-label="Analysis summary">
         <div className="result-score-primary">
           <div className="result-score-lockup">
@@ -292,7 +338,7 @@ const Resume = () => {
             </span>
             <div>
               <p>{scoreLabel}</p>
-              <span>Overall compatibility score</span>
+              <span>Legacy analysis score</span>
             </div>
           </div>
           <p className="result-score-note">
@@ -309,14 +355,10 @@ const Resume = () => {
         </a>
         <div className="result-score-meter">
           <div>
-            <span>Readiness</span>
+            <span>Legacy baseline</span>
             <span>{score}/100</span>
           </div>
-          <progress
-            value={score}
-            max="100"
-            aria-label="Overall compatibility score"
-          >
+          <progress value={score} max="100" aria-label="Legacy analysis score">
             {score}%
           </progress>
         </div>
@@ -397,9 +439,7 @@ const Resume = () => {
                       <div className="result-section-heading">
                         <div>
                           <p className="workspace-eyebrow">Repair queue</p>
-                          <h2 id="repair-queue-heading">
-                            Highest-impact fixes
-                          </h2>
+                          <h2 id="repair-queue-heading">Suggested repairs</h2>
                         </div>
                         <span>{repairQueue.length} priority actions</span>
                       </div>
@@ -445,7 +485,7 @@ const Resume = () => {
                         <EvidenceScene3D
                           variant="result"
                           compact
-                          label="Three dimensional evidence layers and score"
+                          label="Source, parse and evidence layers"
                         />
                         <ol>
                           <li>
@@ -467,8 +507,52 @@ const Resume = () => {
                         </ol>
                       </div>
                     </section>
-                    <Summary feedback={feedback} />
-                    <Details feedback={feedback} />
+                    {qualitativeUnavailable ? (
+                      <section role="status">
+                        <h2>Writing feedback unavailable</h2>
+                        <p>
+                          The saved deterministic checks remain available.
+                          Writing feedback was not completed and is excluded
+                          from the repair counts.
+                        </p>
+                      </section>
+                    ) : unscoredProse ? (
+                      <section>
+                        <h2>Cited writing suggestions</h2>
+                        <p>Qualitative ratings are unavailable.</p>
+                        {(
+                          [
+                            "toneAndStyle",
+                            "content",
+                            "structure",
+                            "skills",
+                          ] as const
+                        ).map((key) => (
+                          <article key={key}>
+                            <h3>
+                              {key === "toneAndStyle" ? "Tone and style" : key}
+                            </h3>
+                            <ul>
+                              {feedback[key].tips
+                                .filter((tip) => tip.quote)
+                                .map((tip, index) => (
+                                  <li key={index}>
+                                    {tip.tip} {tip.explanation}
+                                    {tip.quote ? (
+                                      <blockquote>{tip.quote}</blockquote>
+                                    ) : null}
+                                  </li>
+                                ))}
+                            </ul>
+                          </article>
+                        ))}
+                      </section>
+                    ) : (
+                      <>
+                        <Summary feedback={feedback} />
+                        <Details feedback={feedback} />
+                      </>
+                    )}
                   </div>
                 ),
                 evidence: (

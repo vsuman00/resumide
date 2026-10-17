@@ -125,7 +125,7 @@ const Upload = () => {
       setIsProcessing(false);
       setStatusText(
         error instanceof DOMException && error.name === "AbortError"
-          ? "Analysis cancelled. Your file was not saved."
+          ? "Upload stopped in this browser. The server may have received your file. Check Analyses for its status."
           : error instanceof TypeError || navigator.onLine === false
             ? "You appear to be offline. Check your connection and try again."
             : error instanceof Error
@@ -346,7 +346,7 @@ const Upload = () => {
                   className="back-button"
                   onClick={() => requestController.current?.abort()}
                 >
-                  Cancel
+                  Stop upload
                 </button>
               ) : null}
               {!isProcessing && statusText ? (

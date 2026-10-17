@@ -97,7 +97,9 @@ test("upload page supports keyboard/file states and safe API errors", async ({
   await expect(page.getByRole("alert")).toContainText(/sign in|analysis/i);
 });
 
-test("an in-flight analysis can be cancelled", async ({ page }) => {
+test("stopping an in-flight upload does not claim its server data was deleted", async ({
+  page,
+}) => {
   let releaseRequest: (() => void) | undefined;
   await page.route("**/api/analyze", async (route) => {
     await new Promise<void>((resolve) => {
@@ -110,9 +112,11 @@ test("an in-flight analysis can be cancelled", async ({ page }) => {
   await page.getByLabel("Upload PDF resume").setInputFiles("scripts/dummy.pdf");
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: /analyze resume/i }).click();
-  await page.getByRole("button", { name: /^cancel$/i }).click();
+  await page.getByRole("button", { name: "Stop upload", exact: true }).click();
 
-  await expect(page.getByRole("alert")).toContainText(/cancelled/i);
+  await expect(page.getByRole("alert")).toContainText(
+    /may have received your file/i,
+  );
   releaseRequest?.();
 });
 

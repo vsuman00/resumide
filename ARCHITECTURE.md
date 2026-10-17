@@ -1,7 +1,11 @@
 # Resumide Target Architecture
 
-Status: **CANDIDATE B2C FOUNDATION APPROVED; AA0 DESIGN APPROVED 2026-10-04; AA1 IMPLEMENTATION PROVISIONAL; GATE A4 OPEN**
-Last updated: 2026-10-03
+Status: **CANDIDATE B2C FOUNDATION APPROVED; AA0 DESIGN APPROVED 2026-10-04; AA1 ENGINEERING CLOSED / OWNER ACCEPTED; AA1 ACCURACY OPEN; AA2 ENGINEERING CLOSED / VERIFIED LOCALLY; FORMAL GATE OPEN; GATE A4 OPEN**
+Last updated: 2026-10-12
+AA3 status: **LOCAL IMPLEMENTATION DELIVERED; DOMAIN/DATA ACCEPTANCE OPEN**
+AA4 status: **LOCAL ENGINEERING COMPLETE AND VERIFIED; FORMAL GATE OPEN**
+AA5 status: **LOCAL ENGINEERING COMPLETE, VERIFIED AND OWNER-ACCEPTED 2026-10-14; FORMAL GATE OPEN**
+AA6 status: **LOCAL ENGINEERING COMPLETE AND VERIFIED; FORMAL GATE OPEN**
 Canonical execution documents: [`tasks/plan.md`](tasks/plan.md) and [`tasks/todo.md`](tasks/todo.md)
 Accuracy-v2 sources: [`docs/ATS_SCORING_AND_AUTHORING_SPEC.md`](docs/ATS_SCORING_AND_AUTHORING_SPEC.md), [`docs/ATS_SCORING_AND_AUTHORING_RESEARCH.md`](docs/ATS_SCORING_AND_AUTHORING_RESEARCH.md), [`tasks/accuracy-authoring-plan.md`](tasks/accuracy-authoring-plan.md), and [`CONSTRAINTS.md`](CONSTRAINTS.md)
 
@@ -56,6 +60,17 @@ The current repository contains a React Router SSR application, an authenticated
 - Security headers, same-origin enforcement, bounded sessions, PII-safe telemetry, health/readiness, and protected metrics.
 - Unit/integration/browser/accessibility/benchmark/load/restore checks wired into CI.
 - Browser and upload rendering at laptop and mobile widths.
+- AA2 structured resume review is implemented behind a default-off flag:
+  evidence-bound import, immutable fact versions, owner confirmation/correction,
+  optimistic concurrency, history/compare/restore, privacy export and deletion.
+  Formal Gate AA2 acceptance remains open under ADR-0012/E-003. See the
+  [AA2 closeout](docs/evaluation/AA2_ENGINEERING_CLOSEOUT.md) for the local
+  verification tier and the [workspace design](docs/design/CANONICAL_RESUME_WORKSPACE.md).
+- AA3 JD review is implemented behind a default-off flag: typed proposals,
+  exact JD/importance citations, immutable versions and owner-only history,
+  bounded model fallback, pinned offline taxonomy proposals and disabled market
+  inputs. Domain pack review, real mapping quality and representative acceptance
+  remain open. See [AA3 status](docs/evaluation/AA3_ENGINEERING_STATUS.md).
 
 ### Known release blockers
 
@@ -559,3 +574,15 @@ Still required to close Gate A0:
 4. Gate AA0 passed 2026-10-04: software engineering / English / India, synthetic local OCR evaluation, corpus governance and PDF/DOCX export scope. Execution prerequisites and later release gates remain open.
 
 Until the remaining A0 decisions and relevant execution/release gates pass, implementation must preserve current provider and claim boundaries. AA0 approval does not approve production or any industry, vendor, or outcome-calibrated claim.
+
+### AA4 local engineering (2026-10-12)
+
+Owner-accepted E-004 authorizes AA040–AA046 synthetic localhost engineering while upstream formal gates remain open. The versioned diagnostics engine/read model, source-bound readiness, technical traces, typed alignment, cited prose without numeric model authority, legacy presenter and validity/error/bootstrap harness are implemented. The default-off `SCORING_V2_ENABLED` route has no numeric scoring activation, no new storage migration and no readiness aggregate. See [AA4 closeout](docs/evaluation/AA4_ENGINEERING_CLOSEOUT.md) for actual verification and the remaining formal calibration/domain/expert/fairness/comprehension obligations.
+
+### AA5 local authoring (2026-10-12)
+
+Owner-approved ADR-0014/E-005 permits AA050–AA057 local engineering. The default-off analysis editor, finding navigation, strict suggestion/clarification contracts, grounded patterns, transactional authoring ledger, candidate undo/restore and synthetic adapter benchmark are implemented. Numeric deltas remain withheld and actual model/candidate/domain evaluation remains open. See [AA5 closeout](docs/evaluation/AA5_ENGINEERING_CLOSEOUT.md) and [authoring design](docs/design/CANDIDATE_AUTHORING_WORKSPACE.md).
+
+### AA6 local verified core rendering (2026-10-14)
+
+Owner-approved [ADR-0015](docs/decisions/0015-aa6-local-engineering-sequencing.md) permits local AA060–AA065 engineering. A private, default-off semantic preview and one shared single-column PDF/DOCX template now render confirmed canonical versions. Independent parse-back blocks missing/changed text, wrong order, links or layout before download. The known-synthetic matrix passes; representative corpus, approved viewer and assistive-technology acceptance remain open. See [AA6 closeout](docs/evaluation/AA6_ENGINEERING_CLOSEOUT.md).

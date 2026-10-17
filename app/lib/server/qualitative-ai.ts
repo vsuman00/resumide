@@ -1,8 +1,11 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
-import { QualitativeAnalysisSchema } from "./schema";
-import { prepareInstructions } from "../../../constants";
-import { groundWriterSuggestions } from "./writer-grounding";
+import {
+  ProseAnalysisSchema,
+  PROSE_INSTRUCTIONS,
+  groundQualitativeProse,
+  legacyCategoryFromProse,
+} from "./qualitative-prose";
 import { DEFAULT_OPENAI_BASE_URL } from "./egress-policy";
 
 export type QualitativeAiFailureCode =
@@ -71,7 +74,7 @@ export class OpenAIQualitativeTransport implements QualitativeAiTransport {
           { role: "user", content: request.user },
         ],
         response_format: zodResponseFormat(
-          QualitativeAnalysisSchema,
+          ProseAnalysisSchema,
           "qualitative_analysis",
         ),
       },
@@ -126,11 +129,12 @@ export async function runQualitativeAi(
     const response = await Promise.race([
       transport.execute({
         model: args.model,
-        system: prepareInstructions({
+        system: PROSE_INSTRUCTIONS,
+        user: JSON.stringify({
+          resumeText: args.resumeText,
           jobTitle: args.jobTitle,
           jobDescription: args.jobDescription,
         }),
-        user: `Resume text:\n\n${args.resumeText}`,
         maxOutputTokens: args.maxOutputTokens,
         idempotencyKey: args.idempotencyKey,
       }),
@@ -143,12 +147,17 @@ export async function runQualitativeAi(
       }),
     ]);
     if (response.refused) throw new QualitativeAiFailure("AI_REFUSED");
-    const parsed = QualitativeAnalysisSchema.safeParse(response.output);
+    const parsed = ProseAnalysisSchema.safeParse(response.output);
     if (!parsed.success) throw new QualitativeAiFailure("AI_OUTPUT_INVALID");
+    const prose = groundQualitativeProse(parsed.data, args.resumeText);
     return {
+      prose,
       output: {
-        ...parsed.data,
-        writer: groundWriterSuggestions(parsed.data.writer, args.resumeText),
+        toneAndStyle: legacyCategoryFromProse(prose.toneAndStyle),
+        content: legacyCategoryFromProse(prose.content),
+        structure: legacyCategoryFromProse(prose.structure),
+        skills: legacyCategoryFromProse(prose.skills),
+        writer: prose.writer,
       },
       usage: response.usage,
     };

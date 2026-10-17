@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import {
-  QualitativeAnalysisSchema,
   type AnalysisResultZod,
   type FeedbackZod,
   type ParseViewZod,
@@ -10,7 +9,13 @@ import { parseSim } from "./parseSim";
 import { atsRules } from "./atsRules";
 import { extractResumeText, ResumeExtractionError } from "./extract";
 import { PublicApiError } from "./errors";
-import { prepareInstructions } from "../../../constants";
+import {
+  ProseAnalysisSchema,
+  PROSE_INSTRUCTIONS,
+  groundQualitativeProse,
+  legacyCategoryFromProse,
+  BASELINE_SEMANTICS,
+} from "./qualitative-prose";
 import { getAnalysisConfig } from "./config";
 
 function getClient(): OpenAI {
@@ -80,11 +85,12 @@ async function runAnalysis(
   }
   const { totalPages, text, pageTexts } = extracted;
 
-  const instructions = prepareInstructions({
+  const instructions = PROSE_INSTRUCTIONS;
+  const userMessage = JSON.stringify({
+    resumeText: text,
     jobTitle: args.jobTitle,
     jobDescription: args.jobDescription,
   });
-  const userMessage = `Resume text (${totalPages} page${totalPages === 1 ? "" : "s"}):\n\n${text}`;
 
   // Parse-simulation + deterministic ATS run first — they're pure, no LLM,
   // no API key, and they don't depend on the LLM's output. Failures here
@@ -107,26 +113,27 @@ async function runAnalysis(
       { role: "user", content: userMessage },
     ],
     response_format: zodResponseFormat(
-      QualitativeAnalysisSchema,
+      ProseAnalysisSchema,
       "qualitative_analysis",
     ),
   });
 
-  const qualitative = completion.choices[0]?.message?.parsed;
+  const raw = completion.choices[0]?.message?.parsed;
+  const qualitative = raw ? groundQualitativeProse(raw, text) : null;
   if (!qualitative) {
     throw new Error("OpenAI returned no parsed qualitative feedback.");
   }
 
   // Assemble the frozen Feedback contract from the deterministic ATS block
-  // + the LLM's 4 qualitative categories. overallScore is a weighted average
-  // so it stays reproducible too.
+  // + cited unscored prose. The overall value is the deterministic baseline.
   const feedback: FeedbackZod = {
-    overallScore: computeOverallScore(rules.score, qualitative),
+    scoreSemantics: BASELINE_SEMANTICS,
+    overallScore: rules.score,
     ATS: { score: rules.score, tips: rules.tips },
-    toneAndStyle: qualitative.toneAndStyle,
-    content: qualitative.content,
-    structure: qualitative.structure,
-    skills: qualitative.skills,
+    toneAndStyle: legacyCategoryFromProse(qualitative.toneAndStyle),
+    content: legacyCategoryFromProse(qualitative.content),
+    structure: legacyCategoryFromProse(qualitative.structure),
+    skills: legacyCategoryFromProse(qualitative.skills),
   };
 
   return {
@@ -140,23 +147,4 @@ async function runAnalysis(
     keywordEvidence: rules.matchingEvidence,
     writer: qualitative.writer,
   };
-}
-
-// Weights: ATS 30% (deterministic + reproducible), the 4 qualitative 17.5% each.
-function computeOverallScore(
-  ats: number,
-  q: {
-    toneAndStyle: { score: number };
-    content: { score: number };
-    structure: { score: number };
-    skills: { score: number };
-  },
-): number {
-  return Math.round(
-    ats * 0.3 +
-      q.toneAndStyle.score * 0.175 +
-      q.content.score * 0.175 +
-      q.structure.score * 0.175 +
-      q.skills.score * 0.175,
-  );
 }

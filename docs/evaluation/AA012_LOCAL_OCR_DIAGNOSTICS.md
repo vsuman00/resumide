@@ -199,3 +199,54 @@ human/representative validation, calibrated confidence, AA013 reconciliation,
 AA014 correction workflow and AA015 release evaluation remain separate open
 requirements. Original block-font scans remain unsupported/review-required.
 No production enablement or authoritative score is authorized by this report.
+
+## Container memory measurement slice (2026-10-11)
+
+Status: **IMPLEMENTED and locally VERIFIED for completed synthetic OCR attempts;
+AA012 acceptance remains PARTIAL.** The runner now reads the kernel's
+[`memory.peak` cgroup-v2 high-water counter](https://docs.kernel.org/admin-guide/cgroup-v2.html)
+after recognition and scratch-file deletion, before result serialization. This
+includes the container cgroup and its descendants through that snapshot. It is
+separate from the largest individual-child RSS and excludes later serialization
+or shutdown allocations, failed/cancelled attempts and Docker/host overhead.
+There is no new memory acceptance threshold or compute-price estimate.
+
+The reader accepts only namespace-root membership `0::/` with the approved
+1,073,741,824-byte `memory.max`. Unsupported scope, unreadable counters or invalid
+values return null with a reason; they never substitute current usage, child RSS,
+host memory or zero. The optional additive receipt preserves compatibility with
+older reviewed images. Contract validation rejects contradictory value/reason,
+unsafe integers, misleading source/snapshot metadata and unknown fields. All OCR
+evidence remains review-required or insufficient and scoring-ineligible.
+
+The local arm64 image was built from the reviewed Dockerfile with unchanged
+engine, renderer, language-data and isolation settings:
+
+- Image: `sha256:2038f4a280f279e155b05861395dda0d7739c5f7f4f4904d1d2092ab72a30727`.
+- Installed-package manifest SHA-256: `1760e33fe98735108c9d5a8fd24e3e232ce5771b59ff84cbcba33009e1fa5673`.
+- Development receipt: `e006f9ab4828ca618ce71d20b049261643dc7177d278ab99d4345d1f4bdff3da`.
+- Source/label manifest: `42455794d6e025af3e55ea0ad3c47e788a2f09e3976c48965f8cefe632540d6b`.
+- Completed: `2026-10-11T05:36:08.439Z`.
+
+`test:ocr:pilot -- <image-id> --print-pilot --partition=development --psm=3
+--dpi=150 --require-quality` exits 0. Nine authored documents across clean,
+challenging and mixed segments retain 0% CER and 100% exact-position line/page
+agreement. Ten completed OCR attempts, including the blank control, return
+container peak receipts; their maximum is **51,126,272 bytes**. Five other
+controls have no peak observation (native-only, corrupt/oversized source and two
+contract injections), and are counted as unmeasured rather than zero. Original
+native pages and exact-owned cleanup pass. No calibration or locked partition
+was recognized; the earlier held-out receipt/results remain unchanged. No raw
+PDF, raster or recovered text is persisted.
+
+`test:ocr:local` separately passes real isolation, scanned/mixed/native routing,
+observed renderer/OCR cancellation and timeout, malformed input and exact-owned
+cleanup. Reader/contract regressions cover supported, unverified, unreadable and
+invalid-counter paths. Full verification evidence is recorded with the AA012
+slice in [the todo](../../tasks/todo.md).
+
+Remaining acceptance work includes structured-field precision/recall, encrypted
+and oversized-raster controls, failed-attempt and final-lifetime memory/cold-start
+measurements and final protocol review. Representative validity, calibrated
+confidence, AA013–AA015, AA1 and production approval remain open. This measurement
+slice does not accept an OCR provider or enable production OCR.

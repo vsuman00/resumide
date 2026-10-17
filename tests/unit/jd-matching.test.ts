@@ -27,6 +27,45 @@ const corpus = JSON.parse(
 ) as { fixtures: LabeledFixture[] };
 
 describe("versioned JD phrase and skill matching", () => {
+  it("selects requirement vocabulary before generic company prose without corrupting citations", () => {
+    const jobDescription =
+      "About Example Company\n" +
+      "Innovative practical exposure focuses teams products the job. ".repeat(
+        10,
+      ) +
+      "\nQualifications\nPython FastAPI Flask Pydantic required\nAbout Example Company\nJava";
+    const result = matchJobDescription({
+      jobDescription,
+      resumeText: "Built FastAPI with Python",
+    });
+    expect(result.terms.slice(0, 4)).toEqual([
+      "Python",
+      "FastAPI",
+      "Flask",
+      "Pydantic",
+    ]);
+    expect(result.terms).not.toContain("the");
+    expect(result.terms).not.toContain("Java");
+    expectEvidenceOffsets(result.evidence, {
+      jobDescription,
+      resumeText: "Built FastAPI with Python",
+    } as LabeledFixture);
+  });
+  it("does not count negated resume or excluded job skills as positive evidence", () => {
+    const result = matchJobDescription({
+      jobDescription: "Python required; no Java experience required",
+      resumeText: "No Python experience. Java developer.",
+    });
+    expect(result.terms).toContain("Python");
+    expect(result.terms).not.toContain("Java");
+    expect(result.matched).not.toContain("Python");
+    expect(
+      matchJobDescription({
+        jobDescription: "Python",
+        resumeText: "Not only Python but Java",
+      }).matched,
+    ).toContain("Python");
+  });
   it("has a stable version and collision-free taxonomy identifiers", () => {
     expect(TAXONOMY_VERSION).toBe("skills-taxonomy-v1");
     expect(new Set(SKILL_TAXONOMY.entries.map((entry) => entry.id)).size).toBe(

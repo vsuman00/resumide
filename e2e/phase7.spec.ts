@@ -10,9 +10,11 @@ test("production responses include the security policy", async ({
   expect(response.headers()["referrer-policy"]).toBe(
     "strict-origin-when-cross-origin",
   );
-  expect(response.headers()["content-security-policy-report-only"]).toContain(
-    "frame-ancestors 'none'",
-  );
+  const cspHeader =
+    process.env.CSP_MODE === "enforce"
+      ? "content-security-policy"
+      : "content-security-policy-report-only";
+  expect(response.headers()[cspHeader]).toContain("frame-ancestors 'none'");
   expect(response.headers()["strict-transport-security"]).toBeUndefined();
 });
 

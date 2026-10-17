@@ -25,3 +25,11 @@ Labels and ordered line/code-point truth precede rasterization and recognition;
 byte hashes are locked before each run and are explicitly platform-bound.
 AI-only engineering annotation; human/representative validation not evaluated.
 PII: none. Same font/renderer across families remains a generalization limitation.
+
+`ocr-adverse.ts`: repository-authored authenticated encrypted PDF and 16MP blank
+embedded raster for bounded safe-failure/downsampling controls. Synthetic, no PII.
+`ocr-field-evaluation.ts`: fixed original print-family critical-field labels used
+only for disclosed synthetic development diagnostics; never passed to the parser.
+`extraction-benchmark-engineering.ts` builds three native PDFs and nine existing
+development print fixtures; frozen hashes and AI annotation disclosure precede
+recognition. No representative, independent-human or held-out acceptance claim.

@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "writer-grounding-engineering/1.0.0",
+  "manifest": {
+    "id": "writer-known-synthetic/1.0.0",
+    "scope": "known synthetic, no representative or human/model evaluation",
+    "sourceSha256": "ea4a18f0cc0b871490cc9da44341a3e9173b0a5df8cfdd6f3ca0f6ea48a4e025",
+    "patterns": [
+      "xyz",
+      "action_impact_context",
+      "action_scope_result"
+    ],
+    "knownAnswers": {
+      "result": "Fewer failed releases",
+      "measurement": "Five fewer failed releases",
+      "scope": "Internal deployment workflow",
+      "method": "Tested release checks"
+    },
+    "adversarialCases": [
+      "invented_metric",
+      "invented_employer",
+      "unsupported_skill",
+      "unsupported_certification",
+      "foreign_fact",
+      "cross_section",
+      "stale_version",
+      "document_replacement",
+      "model_numeric_authority",
+      "missing_confirmation",
+      "missing_measurement"
+    ]
+  },
+  "manifestSha256": "10817ba6c6f7f9fecd765abbdee09bcdb91210292abb75b12b3200ced95b77c8",
+  "engineeringPassed": true,
+  "releasePassed": false,
+  "adapters": [
+    {
+      "adapterId": "injected_exact_a",
+      "realModel": false,
+      "validatedProposalCount": 1,
+      "unsupportedAcceptedFacts": 0,
+      "citationValidity": 1,
+      "latencyMs": 0.6119579999999871,
+      "providerCostUsd": 0
+    },
+    {
+      "adapterId": "injected_exact_b",
+      "realModel": false,
+      "validatedProposalCount": 1,
+      "unsupportedAcceptedFacts": 0,
+      "citationValidity": 1,
+      "latencyMs": 0.25858400000001325,
+      "providerCostUsd": 0
+    },
+    {
+      "adapterId": "injected_hallucination",
+      "realModel": false,
+      "validatedProposalCount": 0,
+      "unsupportedAcceptedFacts": 0,
+      "citationValidity": null,
+      "latencyMs": 0.24995799999999235,
+      "providerCostUsd": 0
+    }
+  ],
+  "adversarialCases": 11,
+  "unsupportedAcceptedFacts": 0,
+  "realProviderCalls": 0,
+  "adoptedModel": null,
+  "actualModelComparison": null,
+  "editUsefulness": null,
+  "representativeDomainQuality": null,
+  "candidateReviewAcceptance": null,
+  "releaseBlockers": [
+    "No representative locked writer corpus or candidate review",
+    "No authorized real model comparison or model policy adoption",
+    "Formal AA4 confidence/scoring and domain gates remain open"
+  ],
+  "sourceHashes": {
+    "app/lib/server/authoring-contract.ts": "93241918891f2743a81ef4c7b4b2e17b3030d0e3b5928ff1f2595212d3e30291",
+    "app/lib/server/authoring-repository.ts": "6f5b79ab370a750ffa97b512b586ca8f741527e05a09f18cd2bd3400c5ecf127",
+    "app/lib/server/authoring-proposals.ts": "9d4cff397cd5e79a5415a78abb449df14b7a3ac2c016dbfb29f7e3009b78ac9a",
+    "app/lib/writing-quality.ts": "907b2aa798b7f4cb4dd7d16d0c2667be5465d36f8ab773f895359999e4aeef00",
+    "supabase/migrations/20261012160703_candidate_authoring_transactions.sql": "bc5a4e132144d68bb267cdad506c3a96db66205d12ed1b480956596986048ee5"
+  },
+  "executedAt": "2026-10-12T17:25:05.222Z"
+}

@@ -101,6 +101,24 @@ const rawPageSchema = z.strictObject({
   text: z.string().max(200_000),
   words: z.array(rawWordSchema).max(10_000),
 });
+const memoryPeakBase = z.strictObject({
+  kind: z.literal("cgroup_v2_memory_peak"),
+  measuredThrough: z.literal("recognition_complete"),
+});
+const memoryPeakSchema = z.union([
+  memoryPeakBase.extend({
+    valueBytes: z.number().int().positive(),
+    reason: z.null(),
+  }),
+  memoryPeakBase.extend({
+    valueBytes: z.null(),
+    reason: z.enum([
+      "cgroup_scope_unverified",
+      "cgroup_peak_invalid",
+      "cgroup_files_unavailable",
+    ]),
+  }),
+]);
 const resourceUsageSchema = z.strictObject({
   kind: z.literal("child_process_rusage"),
   cpuTimeMs: z.number().finite().nonnegative().max(30_000),
@@ -108,6 +126,8 @@ const resourceUsageSchema = z.strictObject({
   maxChildRssBytes: z.number().int().positive().max(1_073_741_824),
   rendererCalls: z.number().int().positive().max(10),
   recognitionCalls: z.number().int().positive().max(10),
+  // Optional for compatibility with earlier reviewed images; never infer it from RSS.
+  containerMemoryPeak: memoryPeakSchema.optional(),
 });
 const rawSchema = z.strictObject({
   durationMs: z.number().finite().nonnegative().max(30_000),

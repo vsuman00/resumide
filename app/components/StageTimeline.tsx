@@ -34,10 +34,13 @@ const activeStageByStatus: Record<string, number> = {
 function formatUpdatedAt(updatedAt: string) {
   const date = new Date(updatedAt);
   if (Number.isNaN(date.getTime())) return "Updated recently";
-  return new Intl.DateTimeFormat(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
+  return (
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "UTC",
+      hour: "numeric",
+      minute: "2-digit",
+    }).format(date) + " UTC"
+  );
 }
 
 export function StageTimeline({
@@ -49,6 +52,8 @@ export function StageTimeline({
 }) {
   const isCompleted = status === "completed";
   const isPartial = status === "partial";
+  const needsReview = status === "needs_ocr";
+  const isStopped = ["failed", "cancelled", "rejected"].includes(status);
   const activeStage = activeStageByStatus[status];
 
   return (
@@ -57,13 +62,15 @@ export function StageTimeline({
         const isCurrent = activeStage === index;
         const isComplete =
           isCompleted || isPartial
-            ? index < stages.length - 1 ||
-              (isCompleted && index === stages.length - 1)
-            : activeStage !== undefined && index < activeStage;
+            ? true
+            : needsReview
+              ? index === 0
+              : activeStage !== undefined && index < activeStage;
         const isPartialStage = isPartial && index === 3;
+        const isReviewStage = needsReview && index === 1;
         const state = isCurrent
           ? "is-current"
-          : isPartialStage
+          : isPartialStage || isReviewStage
             ? "is-partial"
             : isComplete
               ? "is-complete"
@@ -83,16 +90,23 @@ export function StageTimeline({
                   <time dateTime={updatedAt}>{formatUpdatedAt(updatedAt)}</time>
                 ) : null}
                 {isPartialStage ? <span>Unavailable</span> : null}
+                {isReviewStage ? <span>Needs review</span> : null}
               </div>
               <p>{stage.description}</p>
               <span className="sr-only">
                 {isCurrent
                   ? "Current stage"
                   : isPartialStage
-                    ? "Partially available"
-                    : isComplete
-                      ? "Complete"
-                      : "Pending"}
+                    ? "Unavailable"
+                    : isReviewStage
+                      ? "Needs review"
+                      : isComplete
+                        ? "Complete"
+                        : needsReview
+                          ? "Blocked pending evidence review"
+                          : isStopped
+                            ? "Not completed"
+                            : "Pending"}
               </span>
             </div>
           </li>

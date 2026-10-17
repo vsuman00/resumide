@@ -18,6 +18,32 @@ started = time.monotonic()
 process_counts = {"rendererCalls": 0, "recognitionCalls": 0}
 
 
+def container_memory_peak():
+    # Snapshot before result serialization, not a claim about the container's final lifetime peak.
+    observation = {"kind": "cgroup_v2_memory_peak", "measuredThrough": "recognition_complete",
+                   "valueBytes": None, "reason": "cgroup_files_unavailable"}
+    try:
+        with open("/proc/self/cgroup") as source:
+            membership = source.read(128).strip()
+        with open("/sys/fs/cgroup/memory.max") as source:
+            limit = source.read(128).strip()
+        # Only the namespace root with the exact approved per-container allocation.
+        # Never fall back to a parent/host cgroup, current usage or individual-child RSS.
+        if membership != "0::/" or limit != "1073741824":
+            observation["reason"] = "cgroup_scope_unverified"
+            return observation
+        with open("/sys/fs/cgroup/memory.peak") as source:
+            peak = source.read(128).strip()
+        if not peak.isascii() or not peak.isdigit() or not 0 < int(peak) <= 9007199254740991:
+            observation["reason"] = "cgroup_peak_invalid"
+            return observation
+        observation.update(valueBytes=int(peak), reason=None)
+    except OSError:
+        # Unsupported/unreadable counters do not invent a measurement or fail OCR.
+        observation["reason"] = "cgroup_files_unavailable"
+    return observation
+
+
 def execute(argv):
     remaining = 10 - (time.monotonic() - started)
     if remaining <= 0:
@@ -110,7 +136,8 @@ def main():
     os.unlink("/scratch/input.pdf")
     usage = resource.getrusage(resource.RUSAGE_CHILDREN)
     resource_usage = {"kind": "child_process_rusage", "cpuTimeMs": (usage.ru_utime + usage.ru_stime) * 1000,
-                      "maxChildRssBytes": usage.ru_maxrss * 1024, **process_counts}
+                      "maxChildRssBytes": usage.ru_maxrss * 1024, **process_counts,
+                      "containerMemoryPeak": container_memory_peak()}
     encoded = json.dumps({"durationMs": round((time.monotonic() - started) * 1000), "pages": output, "resourceUsage": resource_usage}).encode("utf-8")
     if len(encoded) > 4 * 1024 * 1024:
         raise ValueError("output_limit")

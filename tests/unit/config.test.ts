@@ -24,6 +24,9 @@ describe("server configuration", () => {
     expect(config.QUALITATIVE_MAX_ATTEMPTS).toBe(1);
     expect(config.NATIVE_EVIDENCE_ENABLED).toBe(false);
     expect(config.NATIVE_LAYOUT_ENABLED).toBe(false);
+    expect(config.EVIDENCE_REVIEW_ENABLED).toBe(false);
+    expect(config.CANONICAL_AUTHORING_ENABLED).toBe(false);
+    expect(config.ARTIFACT_RENDERING_ENABLED).toBe(false);
   });
 
   it("rejects provider egress outside the approved OpenAI endpoint", () => {

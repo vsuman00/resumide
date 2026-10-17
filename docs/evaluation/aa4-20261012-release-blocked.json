@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "scoring-validity-engineering/1.0.0",
+  "scope": "known synthetic engineering only",
+  "engineVersion": "score-v2/1.0.0",
+  "policyId": "software-engineering-en-IN/draft-1.0.0",
+  "engineeringPassed": true,
+  "releasePassed": false,
+  "segments": [
+    {
+      "segment": "source_bound_full_dates",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "f9b64edef2574c06d20ee56d645ecc7f67e097a823f5140543800a833372a462",
+      "semanticFingerprint": "ab786b92415a777fd5c2b10015653b239e2256123582d9973a7153f92f78e1d3",
+      "latencyP95Ms": 0.8465419999999995
+    },
+    {
+      "segment": "repeated_jd",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "1e6c8dcb008bfb6eb898fb1e9db34d9572130b6e2e36c1e2d2d67a444bdd593b",
+      "semanticFingerprint": "ab786b92415a777fd5c2b10015653b239e2256123582d9973a7153f92f78e1d3",
+      "latencyP95Ms": 0.5460410000000024
+    },
+    {
+      "segment": "skill_stuffing",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "a2b1bdcd370878c6a3acb6fd50122d0022942c73106a8d9a80c04266407e036f",
+      "semanticFingerprint": "31223d20783540c18ecc5faed38dd039ff949c6437df86ef483a084574d29458",
+      "latencyP95Ms": 0.5601250000000277
+    },
+    {
+      "segment": "incomplete_pages",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "62ea9d9530cd0059bf42987d7a359ea0bf9d796bb597567b4affa8df53622318",
+      "semanticFingerprint": "0f08d7b39652400aa3462ef2c70f5012656b41967ab76b7b7ed16a9b28cce252",
+      "latencyP95Ms": 0.5689160000000015
+    },
+    {
+      "segment": "missing_jd",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 0,
+      "inputFingerprint": "4386bed48a7ca6c91a190e88bf907f4d7b26fafcef284db13aa56449ee1cabb9",
+      "semanticFingerprint": "1fa6a3c0299e9b38a44b1e0141d217a9b563bb7bea7bd495c46e3875fed1aa6f",
+      "latencyP95Ms": 0.4262090000000285
+    },
+    {
+      "segment": "synthetic_name_1",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "d169c12f2195dac682ae6033d62d7bbfde644172a032a197283d2fd7d8c79af8",
+      "semanticFingerprint": "ab786b92415a777fd5c2b10015653b239e2256123582d9973a7153f92f78e1d3",
+      "latencyP95Ms": 0.74350000000004
+    },
+    {
+      "segment": "synthetic_name_2",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "708df8a404257dcce76bb796cc2affd53949024cc81483487e99e23a1bae7dc3",
+      "semanticFingerprint": "ab786b92415a777fd5c2b10015653b239e2256123582d9973a7153f92f78e1d3",
+      "latencyP95Ms": 0.5532499999999914
+    },
+    {
+      "segment": "synthetic_name_3",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "6da6d68d57fa77b06f3fd5a3a8c129ee40e6a289d5742b827e22aaf89a254c04",
+      "semanticFingerprint": "ab786b92415a777fd5c2b10015653b239e2256123582d9973a7153f92f78e1d3",
+      "latencyP95Ms": 0.5599579999999946
+    },
+    {
+      "segment": "synthetic_name_4",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "6974c7efacb3014b00d94453068d27c1a696d80a18a4e9621bed79a99b0bbe51",
+      "semanticFingerprint": "ab786b92415a777fd5c2b10015653b239e2256123582d9973a7153f92f78e1d3",
+      "latencyP95Ms": 0.5428749999999809
+    }
+  ],
+  "invariance": {
+    "syntheticNames": 4,
+    "repeatedRequirements": true,
+    "skillStuffing": true,
+    "duplicateBulletCredit": 0.5,
+    "promptInjectionRejected": true,
+    "overlappedMonths": 36
+  },
+  "measurementMethods": [
+    "tie-aware Spearman",
+    "seeded case bootstrap percentile interval",
+    "MAE",
+    "RMSE",
+    "coverage and error by segment"
+  ],
+  "expertAgreement": null,
+  "representativeFairnessError": null,
+  "comprehensionReview": null,
+  "authoritativeScoreAccuracy": null,
+  "providerCalls": 0,
+  "providerCostUsd": 0,
+  "releaseBlockers": [
+    "AA1 locked critical field accuracy failed",
+    "AA3 domain and representative corpus acceptance open",
+    "No approved scoring weights or coverage policy",
+    "No reviewed expert ratings or bootstrap agreement estimates",
+    "No representative fairness/error or comprehension review"
+  ],
+  "fixtureManifestSha256": "d5a45c9dbb47cff79bdf5961363c024762dec17688a5f064a8bd5f0c5ea75cdd",
+  "sourceSha256": "cd689ddced1af5135e9cbe3509d1aec60a83558e640b45a85332d9f2f6d392ff",
+  "executedAt": "2026-10-12T15:44:16.967Z"
+}

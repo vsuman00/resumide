@@ -1,7 +1,11 @@
 # Implementation Plan: Accuracy-v2 and evidence-grounded resume authoring
 
-Status: **AA0 APPROVED 2026-10-04; AA010/AA011 NATIVE ACCEPTED; AA012 LOCAL OCR NEXT; CALIBRATION/AA1 RELEASE GATES OPEN**
+Status: **AA0 APPROVED 2026-10-04; AA010/AA011 NATIVE ACCEPTED; AA1 ENGINEERING CLOSED / OWNER ACCEPTED; LOCKED FIELD GATE FAILED; INDEPENDENT VALIDATION DEFERRED; AA2 ENGINEERING CLOSED / VERIFIED LOCALLY; FORMAL GATE OPEN**
 Parent plan: [`plan.md`](plan.md)
+AA3 status: **LOCAL IMPLEMENTATION DELIVERED; DOMAIN/DATA ACCEPTANCE OPEN**
+AA4 status: **LOCAL ENGINEERING COMPLETE AND VERIFIED; FORMAL GATE OPEN**
+AA5 status: **LOCAL ENGINEERING COMPLETE, VERIFIED AND OWNER-ACCEPTED 2026-10-14; FORMAL GATE OPEN**
+AA6 status: **LOCAL ENGINEERING COMPLETE AND VERIFIED; FORMAL GATE OPEN**
 Executable tasks: [`todo.md`](todo.md), task IDs `AA000`–`AA092`
 Spec: [`../docs/ATS_SCORING_AND_AUTHORING_SPEC.md`](../docs/ATS_SCORING_AND_AUTHORING_SPEC.md)
 Research: [`../docs/ATS_SCORING_AND_AUTHORING_RESEARCH.md`](../docs/ATS_SCORING_AND_AUTHORING_RESEARCH.md)
@@ -65,6 +69,17 @@ Architecture, scoring, privacy, evaluation, and product owners sign the decision
 
 ## 5. Phase AA1: Document evidence
 
+**2026-10-11 final closeout:** Engineering AA010–AA015 is closed and owner-accepted;
+the final report records the task matrix and acceptance obligations AA1-R1–R5.
+Further AA2 work was paused during the owner-requested AA1 wrap-up.
+Engineering work AA012–AA015 is implemented under
+[ADR-0011](../docs/decisions/0011-aa1-engineering-closeout-and-deferred-validation.md).
+The owner deferred unavailable independent reviewers; engineering does not wait
+for their assignment. Development fields pass 96/96; the actual frozen held-out
+synthetic run fails field precision/recall (92.31% / 75%). Gate AA1 is open, no
+calibration or representative acceptance is claimed, and unsafe evidence remains
+unscored. [Closeout evidence](../docs/evaluation/AA1_ENGINEERING_CLOSEOUT.md).
+
 ### Outcome
 
 One uploaded resume produces a page/word/field evidence graph with native/OCR provenance, geometry, reading order, quality, disagreements, and candidate-verification states. Scoring is withheld when critical evidence is unsafe.
@@ -84,6 +99,15 @@ Approved extraction gates pass on locked native, scanned, mixed, layout, languag
 
 ## 6. Phase AA2: Canonical resume and immutable versions
 
+**2026-10-11 engineering authorization:** The owner approved progression under
+[ADR-0012](../docs/decisions/0012-aa2-engineering-sequencing-approval.md) / E-003.
+AA1's failed field gate remains visible; AA2 cannot promote uncertain evidence.
+AA020–AA024 are implemented with immutable local persistence, source-preserving
+import, strict confirmation and concurrency controls, owner-only history/compare,
+and privacy cleanup. Completed local verification is tracked in the
+[AA2 closeout](../docs/evaluation/AA2_ENGINEERING_CLOSEOUT.md). Formal Gate AA2
+acceptance remains open under E-003 while the failed AA1 dependency is unresolved.
+
 ### Outcome
 
 The candidate has a template-independent structured resume derived from verified evidence. The original remains immutable, edits create child versions, and every factual value has provenance and confirmation state.
@@ -98,9 +122,18 @@ The candidate has a template-independent structured resume derived from verified
 
 ### Gate AA2
 
-Import, correction, concurrent edit, rollback-as-new-version, deletion/export, ownership, and audit tests pass. No generated or user-confirmed fact loses its source/confirmation state.
+Import, correction, concurrent edit, rollback-as-new-version, deletion/export, ownership, and audit tests pass. Historical facts retain their source and confirmation state. A corrected value starts unconfirmed without the former value's citation; the prior version preserves that citation and confirmation.
 
 ## 7. Phase AA3: Job intelligence and domain packs
+
+**2026-10-12 local implementation:** The owner requested AA3. AA030–AA036
+engineering paths and the `/analysis/:id/requirements` review workspace are
+implemented and locally tested. [Status and receipts](../docs/evaluation/AA3_ENGINEERING_STATUS.md)
+separate the two-family synthetic regression from representative acceptance.
+The first domain pack is a review candidate; no taxonomy release or market
+dataset is adopted. Formal Gate AA3 remains open for pack review, source/mapping
+validity, representative annotation/sample evidence and calibration. Live model
+adoption/variance/cost are not claimed from synthetic adapter tests.
 
 ### Outcome
 
@@ -269,3 +302,15 @@ Add the phase-specific benchmark command only after its task implements it. Befo
 ## 16. Human checkpoints
 
 The workspace owner must explicitly approve AA0 before implementation. Later approval must name the evidence reviewed; “tests pass” is insufficient when the gate requires a real corpus, live provider, recruiter panel, ATS environment, security review, or accessibility review.
+
+### AA4 local engineering (2026-10-12)
+
+Owner-accepted E-004 authorizes AA040–AA046 synthetic localhost engineering while upstream formal gates remain open. The versioned diagnostics engine/read model, source-bound readiness, technical traces, typed alignment, cited prose without numeric model authority, legacy presenter and validity/error/bootstrap harness are implemented. The default-off `SCORING_V2_ENABLED` route has no numeric scoring activation, no new storage migration and no readiness aggregate. See [AA4 closeout](../docs/evaluation/AA4_ENGINEERING_CLOSEOUT.md) for actual verification and the remaining formal calibration/domain/expert/fairness/comprehension obligations.
+
+### AA5 local authoring (2026-10-12)
+
+Owner-approved ADR-0014/E-005 permits AA050–AA057 local engineering. The default-off analysis editor, finding navigation, strict suggestion/clarification contracts, grounded patterns, transactional authoring ledger, candidate undo/restore and synthetic adapter benchmark are implemented. Numeric deltas remain withheld and actual model/candidate/domain evaluation remains open. See [AA5 closeout](../docs/evaluation/AA5_ENGINEERING_CLOSEOUT.md) and [authoring design](../docs/design/CANDIDATE_AUTHORING_WORKSPACE.md).
+
+### AA6 local verified core rendering (2026-10-14)
+
+Owner-approved [ADR-0015](../docs/decisions/0015-aa6-local-engineering-sequencing.md) permits local AA060–AA065 engineering. Private, default-off semantic preview and shared PDF/DOCX templates parse generated bytes back before download. The known-synthetic matrix passes; representative corpus, approved viewer and assistive-technology acceptance remain open. See [AA6 closeout](../docs/evaluation/AA6_ENGINEERING_CLOSEOUT.md).

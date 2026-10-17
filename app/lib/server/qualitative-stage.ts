@@ -1,3 +1,4 @@
+import { hasUncalibratedEvidence } from "./evidence-scoring-guard";
 import { createHash, randomUUID } from "node:crypto";
 import { getAnalysisConfig } from "./config";
 import {
@@ -10,25 +11,8 @@ import type { FeedbackZod } from "./schema";
 import { createSupabaseAdminClient } from "./supabase";
 import { recordProviderUsage } from "./observability";
 
-export const PROMPT_VERSION = "qualitative-v1";
-
-function overallScore(
-  ats: number,
-  qualitative: {
-    toneAndStyle: { score: number };
-    content: { score: number };
-    structure: { score: number };
-    skills: { score: number };
-  },
-) {
-  return Math.round(
-    ats * 0.3 +
-      qualitative.toneAndStyle.score * 0.175 +
-      qualitative.content.score * 0.175 +
-      qualitative.structure.score * 0.175 +
-      qualitative.skills.score * 0.175,
-  );
-}
+import { BASELINE_SEMANTICS } from "./qualitative-prose";
+export const PROMPT_VERSION = "qualitative-cited-prose/2.0.0";
 
 export function buildPartialFeedback(args: {
   score: number;
@@ -40,10 +24,11 @@ export function buildPartialFeedback(args: {
       type: "improve" as const,
       tip: "Qualitative feedback is currently unavailable.",
       explanation:
-        "Your deterministic ATS analysis is available. You can retry qualitative feedback later.",
+        "Your saved deterministic checks remain available. Writing feedback was not completed.",
     })),
   };
   return {
+    scoreSemantics: BASELINE_SEMANTICS,
     overallScore: args.score,
     ATS: {
       score: args.score,
@@ -74,6 +59,7 @@ export async function processQualitativeStage(
     .single();
   if (error || !data) throw new Error("Qualitative input is unavailable.");
   if (data.status !== "qualitative_review") return false;
+  if (await hasUncalibratedEvidence(admin, analysisId)) return false;
 
   const extraction = Array.isArray(data.analysis_extractions)
     ? data.analysis_extractions[0]
@@ -163,7 +149,8 @@ export async function processQualitativeStage(
       tip: rule.detail,
     }));
   const feedback = {
-    overallScore: overallScore(deterministic.score, ai.output),
+    scoreSemantics: BASELINE_SEMANTICS,
+    overallScore: deterministic.score,
     ATS: { score: deterministic.score, tips: atsTips },
     toneAndStyle: ai.output.toneAndStyle,
     content: ai.output.content,
@@ -188,7 +175,7 @@ export async function processQualitativeStage(
       p_input_hash: inputHash,
       p_input_tokens: ai.usage.inputTokens,
       p_model_id: config.OPENAI_MODEL,
-      p_output: ai.output,
+      p_output: ai.prose,
       p_output_tokens: ai.usage.outputTokens,
       p_process_id: processId,
       p_prompt_version: PROMPT_VERSION,

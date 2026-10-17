@@ -121,7 +121,7 @@ function waitFor(delayMs: number, signal: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
     if (signal.aborted) return resolve();
     const timer = setTimeout(resolve, delayMs);
-    timer.unref?.();
+    // A standalone worker must stay alive while its durable queue is empty.
     signal.addEventListener(
       "abort",
       () => {

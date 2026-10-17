@@ -13,6 +13,7 @@ const ATSDimensionalTips = z.object({
 });
 
 const QualitativeTips = z.object({
+  quote: z.string().min(1).max(500).optional(),
   type: TipCategory,
   tip: z.string().min(1),
   explanation: z.string().min(1),
@@ -65,6 +66,9 @@ export type ResumeWriterZod = z.infer<typeof ResumeWriterSchema>;
 // deterministically. The shape is identical to the frozen Feedback
 // in types/index.d.ts.
 export const FeedbackSchema = z.object({
+  scoreSemantics: z
+    .literal("deterministic_baseline_no_model_ratings/1.0.0")
+    .optional(),
   overallScore: Score,
   ATS: ATSCategory,
   toneAndStyle: CategoryWithExplanation,

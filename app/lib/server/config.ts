@@ -17,6 +17,30 @@ const ServerConfigSchema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
+  EVIDENCE_REVIEW_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  CANONICAL_AUTHORING_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  ARTIFACT_RENDERING_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  AUTHORING_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  SCORING_V2_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  JOB_INTELLIGENCE_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   NATIVE_LAYOUT_ENABLED: z
     .enum(["true", "false"])
     .default("false")
@@ -128,6 +152,7 @@ export type ServerConfig = z.infer<typeof ServerConfigSchema>;
 const AnalysisConfigSchema = ServerConfigSchema.pick({
   NATIVE_EVIDENCE_ENABLED: true,
   NATIVE_LAYOUT_ENABLED: true,
+  EVIDENCE_REVIEW_ENABLED: true,
   AI_ENABLED: true,
   AI_MONTHLY_TOKEN_LIMIT: true,
   OPENAI_API_KEY: true,

@@ -18,6 +18,17 @@ const DeletionPlanSchema = z.object({
   storageObjects: z.array(z.object({ storageKey: z.string().min(1) })),
 });
 
+const CanonicalExportSchema = z.object({
+  canonicalResumeVersions: z.array(z.unknown()),
+  resumeFacts: z.array(z.unknown()),
+  canonicalResumeHeads: z.array(z.unknown()),
+  changeEvents: z.array(z.unknown()),
+});
+const RequirementExportSchema = z.object({
+  jobRequirementVersions: z.array(z.unknown()),
+  jobRequirements: z.array(z.unknown()),
+});
+
 export type PrivacyRequest = z.infer<typeof ClaimedPrivacyRequestSchema> & {
   workerId: string;
 };
@@ -146,6 +157,9 @@ export class SupabasePrivacyRequestRepository implements PrivacyRequestRepositor
       results,
       drafts,
       extractions,
+      evidenceAttempts,
+      evidenceCorrections,
+      workspace,
       auditEvents,
     ] = await Promise.all([
       admin
@@ -189,6 +203,17 @@ export class SupabasePrivacyRequestRepository implements PrivacyRequestRepositor
         .select("*")
         .eq("owner_id", request.userId),
       admin
+        .from("document_evidence_attempts")
+        .select("*")
+        .eq("owner_id", request.userId),
+      admin
+        .from("evidence_corrections")
+        .select("*")
+        .eq("owner_id", request.userId),
+      admin.rpc("export_resume_workspace_records", {
+        p_user_id: request.userId,
+      }),
+      admin
         .from("audit_events")
         .select(
           "id, action, target_type, target_id, outcome, request_id, created_at",
@@ -207,9 +232,19 @@ export class SupabasePrivacyRequestRepository implements PrivacyRequestRepositor
       results,
       drafts,
       extractions,
+      evidenceAttempts,
+      evidenceCorrections,
+      workspace,
       auditEvents,
     ];
     if (responses.some((response) => response.error))
+      throw new Error("Privacy export data is unavailable.");
+    const workspaceRecords = CanonicalExportSchema.extend(
+      RequirementExportSchema.shape,
+    )
+      .extend({ authoringEvents: z.array(z.unknown()) })
+      .safeParse(workspace.data);
+    if (!workspaceRecords.success)
       throw new Error("Privacy export data is unavailable.");
     const versionRows = versions.data ?? [];
     return buildExportManifest({
@@ -227,6 +262,9 @@ export class SupabasePrivacyRequestRepository implements PrivacyRequestRepositor
         analysisResults: results.data ?? [],
         writerDrafts: drafts.data ?? [],
         analysisExtractions: extractions.data ?? [],
+        documentEvidenceAttempts: evidenceAttempts.data ?? [],
+        evidenceCorrections: evidenceCorrections.data ?? [],
+        ...workspaceRecords.data,
         auditEvents: auditEvents.data ?? [],
       },
       files: versionRows.map((version) => ({

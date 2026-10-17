@@ -1,7 +1,6 @@
 const Heatmap = ({
   jdKeywords,
   matchedKeywords,
-  missingKeywords,
   uncertainKeywords = [],
   keywordEvidence = [],
 }: {
@@ -14,8 +13,14 @@ const Heatmap = ({
   const matched = new Set(matchedKeywords);
   const uncertain = new Set(uncertainKeywords);
   const total = jdKeywords.length;
-  const coverage =
-    total > 0 ? Math.round((matchedKeywords.length / total) * 100) : 0;
+  const foundCount = jdKeywords.filter(
+    (term) => matched.has(term) && !uncertain.has(term),
+  ).length;
+  const uncertainCount = jdKeywords.filter((term) =>
+    uncertain.has(term),
+  ).length;
+  const missingCount = total - foundCount - uncertainCount;
+  const coverage = total > 0 ? Math.round((foundCount / total) * 100) : 0;
 
   return (
     <section
@@ -31,7 +36,9 @@ const Heatmap = ({
       </div>
       <p className="keyword-coverage-intro">
         Review the role-specific language found in your resume. Add a term only
-        when it accurately reflects your experience.
+        when it accurately reflects your experience. This view checks up to 20
+        selected terms; it does not evaluate every job requirement or establish
+        proficiency.
       </p>
 
       {total === 0 ? (
@@ -46,8 +53,9 @@ const Heatmap = ({
         <>
           <div className="keyword-coverage-meter">
             <div className="keyword-coverage-meter-label">
-              <span>{matchedKeywords.length} found</span>
-              <span>{missingKeywords.length} missing</span>
+              <span>{foundCount} found</span>
+              <span>{uncertainCount} uncertain</span>
+              <span>{missingCount} missing</span>
             </div>
             <div
               className="keyword-coverage-track"
@@ -80,7 +88,13 @@ const Heatmap = ({
               return (
                 <li
                   key={keyword}
-                  className={isMatch ? "is-matched" : "is-missing"}
+                  className={
+                    isUncertain
+                      ? "is-uncertain"
+                      : isMatch
+                        ? "is-matched"
+                        : "is-missing"
+                  }
                 >
                   <span
                     className="keyword-coverage-indicator"

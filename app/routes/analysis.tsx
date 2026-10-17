@@ -13,6 +13,46 @@ const terminalStatuses = new Set([
   "needs_ocr",
 ]);
 
+const terminalCopy: Record<
+  string,
+  { title: string; description: string; heading: string }
+> = {
+  completed: {
+    title: "Your analysis is ready",
+    description: "Your saved result is available to review.",
+    heading: "Analysis complete",
+  },
+  partial: {
+    title: "Your partial result is ready",
+    description:
+      "Your deterministic evidence is saved. Qualitative feedback is unavailable.",
+    heading: "Evidence saved",
+  },
+  cancelled: {
+    title: "Analysis cancelled",
+    description:
+      "This analysis has stopped. It will not continue if you leave this page.",
+    heading: "Processing stopped",
+  },
+  failed: {
+    title: "Analysis could not be completed",
+    description:
+      "Processing stopped without a score. You can start another analysis.",
+    heading: "Processing stopped",
+  },
+  rejected: {
+    title: "This file could not be processed",
+    description: "Review the PDF requirements before trying another file.",
+    heading: "File rejected",
+  },
+  needs_ocr: {
+    title: "Extraction needs review",
+    description:
+      "Saved extraction evidence needs review before scoring can continue.",
+    heading: "Evidence needs review",
+  },
+};
+
 type StatusResponse = {
   status: string;
   stage_updated_at: string;
@@ -29,6 +69,7 @@ export default function AnalysisProgress() {
   const [error, setError] = useState("");
   const [retryAttempt, setRetryAttempt] = useState(0);
   const [isCancelling, setIsCancelling] = useState(false);
+  const copy = result ? terminalCopy[result.status] : undefined;
   const canCancel = Boolean(
     result && ["quarantined", "queued"].includes(result.status),
   );
@@ -130,11 +171,12 @@ export default function AnalysisProgress() {
   return (
     <WorkspaceShell
       eyebrow="Secure analysis"
-      title="Analyzing your resume"
+      title={copy?.title ?? "Analyzing your resume"}
       description={
-        result
+        copy?.description ??
+        (result
           ? "Your analysis is stored safely and will keep running if you leave this page."
-          : "Checking the latest durable analysis status."
+          : "Checking the latest durable analysis status.")
       }
       action={
         canCancel ? (
@@ -160,13 +202,15 @@ export default function AnalysisProgress() {
         <EvidenceScene3D
           variant="analysis"
           active={Boolean(result && !terminalStatuses.has(result.status))}
-          label="Resume evidence being scanned and transformed"
+          label={
+            copy?.heading ?? "Resume evidence being scanned and transformed"
+          }
         />
 
         <div className="analysis-progress-content">
           <div className="analysis-progress-intro">
             <p className="workspace-eyebrow">Live status</p>
-            <h2>Evidence is being prepared</h2>
+            <h2>{copy?.heading ?? "Evidence is being prepared"}</h2>
             <p role="status" aria-live="polite">
               {error
                 ? "We could not refresh this analysis."
@@ -275,10 +319,13 @@ export default function AnalysisProgress() {
 
           {result?.status === "needs_ocr" ? (
             <section className="analysis-state-panel is-partial" role="alert">
-              <h2>A text-based PDF is needed</h2>
+              <h2>Extraction needs review</h2>
+              <Link to={`/analysis/${id}/evidence`}>
+                Review extracted evidence
+              </Link>
               <p>
-                This PDF has no reliable text layer. OCR is not enabled for this
-                workspace, so it cannot be scored safely.
+                Scores are unavailable while extraction evidence needs review.
+                Missing text may require a new text-based PDF.
               </p>
               <Link to="/upload" className="back-button w-fit">
                 Upload a text-based PDF

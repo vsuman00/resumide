@@ -3,8 +3,10 @@ import { atsRules } from "./atsRules";
 import { parseSim } from "./parseSim";
 import { createSupabaseAdminClient } from "./supabase";
 
+import { hasUncalibratedEvidence } from "./evidence-scoring-guard";
+
 export const PARSER_VERSION = "parse-sim-v1";
-export const RULESET_VERSION = "ats-rules-v2";
+export const RULESET_VERSION = "ats-rules-v3";
 export const NORMALIZER_VERSION = "normalizer-v1";
 
 export function scoreExtractedResume(args: {
@@ -71,6 +73,8 @@ export async function processScoringStage(
     : data.analysis_extractions;
   const job = Array.isArray(data.jobs) ? data.jobs[0] : data.jobs;
   if (!extraction) throw new Error("Persisted extraction is unavailable.");
+
+  if (await hasUncalibratedEvidence(admin, analysisId)) return false;
 
   const result = scoreExtractedResume({
     text: extraction.extracted_text,

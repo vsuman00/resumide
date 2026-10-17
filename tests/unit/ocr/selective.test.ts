@@ -85,6 +85,56 @@ describe("selective local OCR contract", () => {
     rendererCalls: 1,
     recognitionCalls: 1,
   };
+  const containerMemoryPeak = {
+    kind: "cgroup_v2_memory_peak" as const,
+    measuredThrough: "recognition_complete" as const,
+    valueBytes: 64 * 1024 * 1024,
+    reason: null,
+  };
+  it.each([
+    containerMemoryPeak,
+    {
+      ...containerMemoryPeak,
+      valueBytes: null,
+      reason: "cgroup_scope_unverified",
+    },
+  ])(
+    "preserves measured or explicitly unavailable container peak %j",
+    async (peak) => {
+      const usage = { ...resourceUsage, containerMemoryPeak: peak };
+      const result = await runSelectiveLocalOcr(
+        request(),
+        adapter({ ...raw(), resourceUsage: usage } as LocalOcrRawResult),
+      );
+      expect(result.status).toBe("review_required");
+      expect(result).toHaveProperty("resourceUsage", usage);
+      expect(result).toHaveProperty("scoringEligible", false);
+    },
+  );
+  it.each([
+    { valueBytes: 0 },
+    { valueBytes: -1 },
+    { valueBytes: NaN },
+    { valueBytes: 1.5 },
+    { valueBytes: Number.MAX_SAFE_INTEGER + 1 },
+    { valueBytes: null },
+    { reason: "cgroup_scope_unverified" },
+    { measuredThrough: "container_exit" },
+    { kind: "child_rss" },
+    { arbitrary: true },
+  ])("rejects misleading container memory receipts %j", async (change) => {
+    const result = await runSelectiveLocalOcr(
+      request(),
+      adapter({
+        ...raw(),
+        resourceUsage: {
+          ...resourceUsage,
+          containerMemoryPeak: { ...containerMemoryPeak, ...change },
+        },
+      } as LocalOcrRawResult),
+    );
+    expect(result).toMatchObject({ status: "failed", code: "invalid_output" });
+  });
   it("preserves qualified observed child resource usage without inventing container peak memory", async () => {
     const result = await runSelectiveLocalOcr(
       request(),

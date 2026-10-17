@@ -1,7 +1,8 @@
 # Resumide Enterprise Implementation Tasks
 
-Status: **PARTIAL; CANDIDATE B2C BASELINE IMPLEMENTED; AA0 APPROVED 2026-10-04; AA1 NATIVE CONFORMITY SLICE VERIFIED; OCR/CORPUS PREREQUISITES OPEN; A0/A4 OPEN**
+Status: **PARTIAL; CANDIDATE B2C BASELINE IMPLEMENTED; AA0 APPROVED 2026-10-04; AA1 ENGINEERING CLOSED / OWNER ACCEPTED; LOCKED FIELD GATE FAILED; INDEPENDENT VALIDATION DEFERRED; AA2 ENGINEERING CLOSED / VERIFIED LOCALLY; FORMAL GATE OPEN; A0/A4 OPEN**
 Plan: [`plan.md`](plan.md)
+AA3 status: **LOCAL IMPLEMENTATION DELIVERED; DOMAIN/DATA ACCEPTANCE OPEN**
 Accuracy-v2 subplan: [`accuracy-authoring-plan.md`](accuracy-authoring-plan.md)
 Architecture: [`../ARCHITECTURE.md`](../ARCHITECTURE.md)
 
@@ -13,6 +14,16 @@ Architecture: [`../ARCHITECTURE.md`](../ARCHITECTURE.md)
 - A checkbox proves only the named evidence tier. Live-provider, browser, staging, restore, and production checks remain separate.
 - Update this file in the same change that completes a task.
 - Preserve unrelated dirty work. Do not stage, commit, deploy, or push unless explicitly authorized.
+
+## Localhost-first completion direction — 2026-10-12
+
+The owner deferred cloud worker deployment until the project is functionally
+complete and feature-tested on localhost. Continue the approved implementation
+sequence, test each slice locally, then perform final deployment and launch
+verification. Oracle Always Free is a discussed option, not a provisioned service
+or a completed provider/region change. Keep existing hosted incident evidence
+historical; new AA2 work and migrations remain local. Release accuracy and
+other acceptance obligations remain visible during engineering.
 
 ## Gate A0 decision record - 2026-09-09
 
@@ -640,7 +651,7 @@ telemetry are implemented with redaction and low-cardinality route labels.
 - [ ] Security/privacy review, restore drill, SLO dashboards, staging E2E, rollback rehearsal, and policy approval are attached.
 - [ ] Human approves Gate A4.
 
-## Phase 7A: Accuracy-v2, authoring, and verified artifacts [AA0 APPROVED 2026-10-04; AA1 IMPLEMENTATION PROVISIONAL]
+## Phase 7A: Accuracy-v2, authoring, and verified artifacts [AA0 APPROVED 2026-10-04; AA1 ENGINEERING CLOSED / OWNER ACCEPTED; RELEASE GATE OPEN]
 
 ### Approval record — 2026-10-03
 
@@ -667,7 +678,9 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 
 **Approval recorded (2026-10-04):** the workspace owner explicitly replied “I approve” to the presented request for approval of [`ADR-0009 candidate 1`](../docs/decisions/0009-aa0-truth-contract-and-evaluation-design.md) for AA000–AA005 and Gate AA0, at reviewed revision `e629a2882b3cc14a63771ae400f4f67a7e4f3f62`. The owner signs as product/scoring/privacy/evaluation approver. Software engineering / English / India, two scores/no aggregate, logical contracts, synthetic corpus governance and local-only OCR evaluation design are accepted without exceptions or threshold relaxations. The six design tasks close in dependency order below. No app code, migration, engine installation or corpus collection is part of this acceptance record.
 
-**Active next task:** AA012 selective local OCR after verifying its host/isolation/resource/cost prerequisites. AA010/AA011 native conformity is accepted in the record below; AA1 stays incomplete. ADR-0010 permits disclosed AI-assisted synthetic engineering labels, not representative human validation. Real-data reuse, managed OCR, production flags and Gate A4 remain unauthorized/open.
+**Active routing (2026-10-11, AA1-first closeout):** AA1 engineering is CLOSED and owner-accepted; its full accuracy gate remains NOT PASSED. The owner directed AA1 wrap-up before further AA2 work. The [final closeout and residual register](../docs/evaluation/AA1_ENGINEERING_CLOSEOUT.md) reconcile AA010–AA015, approval, verification, known failures, deployment requirements and cleanup. Existing AA020 draft work is preserved; no additional AA2 implementation is part of this closeout. ADR-0012/E-003 retain authorization for the subsequent AA2 engineering task. Independent reviewers remain deferred and must not be requested as an engineering prerequisite. Uncertain evidence cannot become verified facts or numeric scores through this sequencing approval.
+
+**Runtime incident resolved (2026-10-11):** owner authorized migration/recovery with “do it test yourself.” Exact AA1 migration applied to hosted Resumide as `20261011151855`; hosted SQL guard verifier passes with fixtures rolled back. Fixed stale extraction status across quarantine → queued → extracting. The queued analysis reached `partial` with deterministic/saved results, queue empty and zero AI runs; continuous worker is running with AI disabled. Native/mixed synthetic worker tests now begin in quarantine. Final `verify:ci` passes 78 files / 536 tests and all 46 browser tests, with zero production dependency vulnerabilities. See the [quarantine recovery record](../docs/operations/RUNBOOKS.md#quarantined-development-upload-incident--2026-10-11). AA2 engineering authorization remains valid; failed AA1 accuracy and release gates are unchanged.
 
 **AA1 progress (2026-10-04, after AA0 approval):** native source-contract review and hardening are verified locally. `buildNativeEvidence` now parses its output through a strict `native-evidence-v1` runtime validator: ordered page/span identities, complete line coverage, Unicode ranges, distinct contact assertion fields, exact source grounding, explicit unknown states and uncalibrated confidence. Unknown versions/fields, malformed or contradictory references, fabricated facts/confirmation and nonfinite offsets fail closed. This retains the existing format; it is not `evidence/2.0.0` adoption, calibrated validity or AA1 completion. Ownership/hash/time bindings remain in the enclosing private extraction/resume rows; a future v2 adapter must preserve those bindings rather than relabel v1 JSON.
 
@@ -726,7 +739,7 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 - [x] Human owners approve AA000-AA005 and change ADR-0006/0007 status only through the recorded ADR-0009 decision, 2026-10-04.
 - [x] Initial weights remain hypotheses until calibration; documentation creation alone does not pass this gate. Explicit workspace-owner approval is recorded above.
 
-### Phase AA1: Document evidence [AA010/AA011 NATIVE ACCEPTED; AA012–AA015 OPEN]
+### Phase AA1: Document evidence [ENGINEERING CLOSED / OWNER ACCEPTED; LOCKED QUALITY FAILED; RELEASE VALIDATION DEFERRED]
 
 #### AA010: Persist one native-PDF evidence graph
 
@@ -766,6 +779,10 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 
 #### AA012: Implement selective OCR adapter slice
 
+**Container-memory measurement slice (2026-10-11): IMPLEMENTED; local OCR VERIFIED.** The runner adds an optional, validated cgroup-v2 `memory.peak` receipt through recognition completion, distinct from individual-child RSS. Only namespace-root membership with the exact approved 1-GiB allocation is accepted; unreadable/unverified/invalid counters remain null with a reason, and older images remain compatible. The new image's development pilot passes unchanged PSM 3 / 150-DPI transcription screening: nine authored documents have 0% CER and complete exact-position lines/page coverage; ten completed attempts (including blank) yield a maximum observed container peak of 51,126,272 bytes, with five unmeasured controls explicitly counted. Real isolation/cancellation/timeout/cleanup checks pass. [Measured receipt, reproduction and limitations](../docs/evaluation/AA012_LOCAL_OCR_DIAGNOSTICS.md#container-memory-measurement-slice-2026-10-11). Failed attempts, result serialization, cold start, structured fields and remaining adverse classes remain acceptance work; AA012 and AA013–AA015/AA1 stay unchecked. No locked/calibration partition, thresholds, production integration, migrations or scoring policy changed.
+
+**Verification prerequisite patch (2026-10-11):** the first full local verification passed 64 files / 425 tests and all 45 browser tests, then failed the final audit on [GHSA-jqcg-44mw-7w3h](https://github.com/advisories/GHSA-jqcg-44mw-7w3h). A separate lockfile-only patch updates Express's transitive `proxy-addr` from 2.0.7 to 2.0.8; the direct dependency manifest is unchanged. Final local `npm run verify:ci` after this patch passes 64 files / 425 tests, all 45 browser tests, formatting/lint/types/build, registry signatures/attestations, secret/alert/container checks, load/restore, Phase 5 regression and zero production dependency vulnerabilities. Live local `test:ocr:local` and the development print pilot pass separately. Changes remain uncommitted; no GitHub CI, deployment or phase acceptance is claimed.
+
 **Frozen held-out verification (2026-10-04):** source/configuration/image receipt `d753f080ab6a23291bf00c6557c81e533b3a89f4da8cf20327a99f0cc1bc4a7a` was recorded and pushed at `f78a53e` before recognition. All six normal-font held-out documents pass `--require-quality` at unchanged PSM 3 / 150 DPI: 0% OCR CER, 100% exact-position lines/page coverage and 48/48 critical source values preserved (substring preservation, not structured-field precision/recall). Two held-out authored families per segment yield descriptive [0, 0] CER intervals, not representative confidence. The separate three-document calibration-family recognition also has zero errors, but its one-family intervals remain null and its statistical gate is explicitly not passed; no confidence model was calibrated. Every OCR result remains review-required/scoring-ineligible, native pages and exact-owned cleanup are verified, and no raw text/assets are persisted. [Measured report and remaining acceptance requirements](../docs/evaluation/AA012_LOCAL_OCR_DIAGNOSTICS.md#frozen-held-out-results) preserve original block-font failures. Local verification passes 63 files / 402 tests and all 45 browser tests; the pushed `f78a53e` normal-font OCR CI gate passes on Linux in addition to local arm64 verification. AA012 stays unchecked for structured-field evaluation, missing adverse classes/measurements and final protocol acceptance. AA013–AA015/AA1 remain open; no production enablement or scoring-policy change.
 
 **Accuracy repair progress (2026-10-04):** the [normal-font investigation and pre-recognition lock](../docs/evaluation/AA012_LOCAL_OCR_DIAGNOSTICS.md#normal-font-accuracy-investigation-2026-10-04) preserve the original failing block corpus and all targets. Six authored synthetic content/layout families are kept in disjoint development/calibration/held-out partitions; they share one pinned font/renderer and are not representative human validation. A development-only 2×2 PSM/DPI comparison found both 300-DPI configurations fail CER confidence bounds and exact-position ordering, while PSM 3 / 150 and PSM 6 / 150 have 0% CER, 100% exact-position agreement and complete critical-value substring recovery across all three normal-font segments. PSM 3 / 150 is selected for a frozen held-out engineering check; this is not a global production downsampling policy. Parent rerun of `--require-quality` exits 0 for development; its receipt is `2edfa33d38e696478da89d62b7637a6688fdc79f50a3a1a4fc2af5dda4c123b1`. Held-out source/configuration/image receipt is recorded before recognition. Missing/mismatched receipts and unsafe CLI flags fail before Docker; extra/reversed/missing lines/pages now penalize exact-position agreement. Actual successful child CPU/RSS/process starts are qualified, failed resources/whole-container peak and host price remain unknown. Runtime smoke safety passes; 63 files / 402 tests, formatting/lint/types/build and 45 browser tests pass. CI adds a normal-font development transcription gate without claiming full AA012 acceptance. Original block diagnostics still fail at selected settings (19.30% / 70.18% / 8.33% CER). AA012/AA1 remain unchecked until remaining protocol/acceptance requirements are satisfied; no production integration, scoring, real-data or provider scope changes.
@@ -794,103 +811,121 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 
 **Dependencies:** AA004, AA010; **Likely files:** document adapter interface, selected adapter, fixtures, tests; **Scope:** M
 
-- [ ] Detect scanned/mixed pages and invoke OCR only where policy requires it; normalize text, geometry, confidence, and provider metadata.
+- [x] Engineering: selective synthetic local OCR, bounded failure/resource controls and normalized provenance are implemented and tested. Production OCR and representative provider acceptance remain deferred.
 - **Verify:** one scanned and one mixed fixture pass adapter-contract, timeout, retry, cost-accounting, and safe-failure tests.
 
 #### AA013: Reconcile native and OCR evidence
 
 **Dependencies:** AA011, AA012; **Likely files:** reconciliation service, confidence policy, tests, UI state; **Scope:** M
 
-- [ ] Preserve disagreements, calibrate confidence, and mark critical conflicts `review_required` rather than selecting silently.
+- [x] Preserve immutable native/OCR sources and disagreements; all proposals remain `review_required` with explicit uncalibrated confidence and score withholding.
+- [ ] Production confidence calibration remains DEFERRED; raw engine confidence and owner confirmation are not calibration.
 - **Verify:** disagreement and low-confidence fixtures never reach a misleading authoritative score.
 
 #### AA014: Add candidate evidence correction
 
 **Dependencies:** AA013; **Likely files:** correction API/service, evidence UI, audit event, tests; **Scope:** M
 
-- [ ] Candidate can confirm or correct uncertain critical fields while original evidence remains immutable and auditable.
+- [x] Owner can confirm or correct uncertain critical fields through the authenticated review route; source attempts stay immutable and separate events are auditable, concurrency-safe, exported and deleted with their source.
 - **Verify:** authorization, concurrent correction, validation, audit, deletion/export, keyboard, and screen-reader tests pass.
 
 #### AA015: Build extraction-v2 benchmark
 
 **Dependencies:** AA010-AA014; **Likely files:** benchmark harness, locked manifest, report template, CI gate; **Scope:** M
 
-- [ ] Report native/OCR character accuracy, field precision/recall, page coverage, reading order, failure, latency, and cost per segment and provider.
+- [x] Engineering harness reports source-grounded fields, transcription, coverage/order, failure, latency, cost limitations and source-family intervals per segment for the approved local provider; frozen manifests bind code/configuration/source/provider.
+- [ ] Locked synthetic field acceptance fails (92.31% precision / 75% recall); representative release validity, calibration and provider comparison remain DEFERRED.
 - **Verify:** locked evaluation is reproducible, confidence intervals are present, and any required-segment failure blocks AA1.
+
+#### Engineering closeout AA1 (2026-10-11)
+
+- [x] AA010–AA015 engineering closed under ADR-0011 and owner acceptance in ADR-0012; task evidence, residual acceptance obligations AA1-R1–R5, activation requirements and cleanup are reconciled in the [closeout report](../docs/evaluation/AA1_ENGINEERING_CLOSEOUT.md). This checkbox does not pass the accuracy gate below.
 
 #### Gate AA1: Evidence-safe extraction
 
 - [ ] `CONSTRAINTS.md` extraction floors pass on every approved segment; unsafe evidence reaches review/unsupported state, not numeric scoring.
 
-### Phase AA2: Canonical resume and immutable versions
+**2026-10-11 engineering closeout:** new reconciliation, worker opt-in, immutable persistence, owner correction UI, private export/cascade cleanup and frozen extraction benchmark are implemented. Live SQL authorization/provenance/read/write guards and two-session correction CAS pass. Real native/mixed worker checks and browser keyboard/correction/owner-isolation/a11y checks pass. Development benchmark recovers 96/96 critical fields; locked synthetic benchmark records TP36/FP3/FN12 across six documents and fails all three field segments. The CI local-OCR job now enforces this nonzero gate and uploads receipts; no pushed GitHub run is claimed. Thresholds and labels were not changed. Gate AA1 is **NOT PASSED**, separately from engineering completion and the user's reviewer deferral. Final `verify:ci` passes 75 test files / 512 tests, 46 browser tests, types/build and zero production dependency vulnerabilities. Final regression receipts are in the [closeout report](../docs/evaluation/AA1_ENGINEERING_CLOSEOUT.md).
+
+### Phase AA2: Canonical resume and immutable versions [ENGINEERING CLOSED / VERIFIED LOCALLY; FORMAL GATE OPEN]
+
+**Owner approval (2026-10-11):** “Everything is clear in this phase AA1, then ready to go for the AA2 phase. Approve all.” [ADR-0012](../docs/decisions/0012-aa2-engineering-sequencing-approval.md) records acceptance of the disclosed AA1 engineering closeout and the E-003 sequencing exception. This is owner approval, not evidence of other reviewers' approval or passed field-accuracy/calibration gates.
 
 #### AA020: Add canonical resume persistence
 
 **Dependencies:** AA1, ADR-0007 approval; **Likely files:** migration, repository, recovery notes, tests; **Scope:** M
 
-- [ ] Add tenant-scoped canonical resume, immutable version, fact provenance, and deletion/export semantics.
+- [x] Add tenant-scoped canonical resume, immutable version, fact provenance, and deletion/export semantics.
+- [x] Initial AA020 contract slice: strict `canonical-resume/1.0.0` draft validator with bounded content, stable IDs, internal fact references, evidence-version binding, exact owner confirmation and explicit unconfirmed facts. Verified state is unavailable; persistence/authentication/source grounding and multi-version lineage are subsequent services, not assertions supplied by this parser.
+- [x] AA020a historical storage foundation (2026-10-12): additive immutable `canonical_resume_versions` and `resume_facts` tables, exact upload/root/tenant binding, owner-only active reads, revoked direct writes and source/resume/account deletion cascades. The later AA020–AA024 transaction migration and repository now supply the writer, grounding, export and retention integration.
+- **AA020a verification:** all migrations apply to a fresh isolated local PostgreSQL 17 database; `scripts/verify-canonical-storage.sql` passes ownership, invalid state/locale/size, forged support/confirmation, immutability, grants, owner/viewer isolation, soft deletion and source/root/account cascade checks with fixtures rolled back. Public/private SQL lint has no warnings. A full empty-local-database custom dump restores with ownership/grants retained using `supabase_admin`, and the same verifier passes against the restored schema. This is local schema recovery, not hosted restore or persisted user-data parity evidence. Local `verify:ci` passes 78 files / 536 tests, all 46 browser tests and zero production dependency vulnerabilities (log `/tmp/resumide-local-first-verify-ci.log`). No hosted migration, cloud provisioning, commit or push occurred.
+- **Historical AA020a verification:** 16 canonical contract tests and the earlier local regression checks passed. The full AA2 transaction, privacy and populated restore checks are tracked in the [AA2 closeout](../docs/evaluation/AA2_ENGINEERING_CLOSEOUT.md). The AA1 locked benchmark remains failed.
 - **Verify:** migration forward/recovery, RLS/authorization, transaction, orphan, retention, and restore tests pass.
 
 #### AA021: Map verified evidence into canonical content
 
 **Dependencies:** AA020; **Likely files:** importer, canonical schema, fixtures, tests; **Scope:** M
 
-- [ ] Map contacts, sections, entries, roles, dates, bullets, skills, and source evidence without template coupling.
+- [x] Map contacts, sections, entries, roles, dates, bullets, skills, and source evidence without template coupling.
 - **Verify:** native/OCR/import fixtures retain content, order, confidence, and provenance; unresolved values remain explicit.
 
 #### AA022: Add version lineage and concurrency
 
 **Dependencies:** AA021; **Likely files:** version service, change-event schema, API, tests; **Scope:** M
 
-- [ ] Edits create child versions with optimistic concurrency and append-only change events; rollback creates a new version.
+- [x] Edits create child versions with optimistic concurrency and append-only change events; rollback creates a new version.
 - **Verify:** concurrent edit, retry/idempotency, lineage, compare, rollback, and audit tests pass.
 
 #### AA023: Enforce fact verification
 
 **Dependencies:** AA022; **Likely files:** fact ledger, validation policy, API, tests; **Scope:** M
 
-- [ ] Every factual value is sourced, candidate-confirmed, or explicitly unsupported; unsupported generated facts cannot be accepted.
+- [x] Every factual value retains its source or explicit unconfirmed state; candidate confirmation binds the exact owner and value. Unsupported generated facts cannot be accepted.
 - **Verify:** adversarial insert/strengthen/date/metric tests record zero unsupported accepted facts.
 
 #### AA024: Add structured resume read and compare models
 
 **Dependencies:** AA022, AA023; **Likely files:** query service, routes, response contract, tests; **Scope:** M
 
-- [ ] Authorized clients can load a structured version and compare two lineage-related versions with provenance states.
+- [x] Authorized clients can load a structured version and compare two lineage-related versions with provenance states.
 - **Verify:** 403/404 isolation, pagination/size, deletion, stale version, and deterministic diff tests pass.
 
 #### Gate AA2: Canonical content integrity
 
-- [ ] Import, correction, concurrency, lineage, deletion/export, authorization, audit, and unsupported-fact tests pass.
+- [x] Import, correction, concurrency, lineage, deletion/export, authorization, audit, and unsupported-fact tests pass on isolated localhost. **Formal Gate AA2 acceptance remains open** under ADR-0012/E-003 until the AA1 dependency or a separately reviewed replacement decision is satisfied; the checkbox records automated engineering integrity only. See the [AA2 closeout](../docs/evaluation/AA2_ENGINEERING_CLOSEOUT.md).
 
-### Phase AA3: Job intelligence and domain packs
+### Phase AA3: Job intelligence and domain packs [LOCAL IMPLEMENTATION DELIVERED; DOMAIN/DATA ACCEPTANCE OPEN]
+
+**2026-10-16 owner-input finding:** The Python AI Engineer JD smoke test fails functional coverage despite passing citation/repeatability/score-withholding guards. AI/backend skill vocabulary, `Exp Range`, common heading variants and the `BE` education false positive need correction. See [owner JD test](../docs/evaluation/OWNER_JD_SMOKE_20261016.md).
+
+**Owner direction (2026-10-12):** “Now go for the Phase AA3.” The approved AA0 first segment remains software engineering / English / India. Local engineering now includes the JD review route, strict source/hash/importance contracts, atomic immutable persistence, bounded model proposals, pinned offline taxonomy mappings, candidate domain pack, optional market-data gate and synthetic benchmark. No real corpus, reviewer signature, adopted taxonomy release, hosted migration or release validity is inferred. See the [AA3 engineering status](../docs/evaluation/AA3_ENGINEERING_STATUS.md) and [review candidate pack](../docs/design/SOFTWARE_ENGINEERING_DOMAIN_PACK.md).
 
 #### AA030: Persist evidence-linked job requirements
 
 **Dependencies:** AA0; **Likely files:** requirement schema/migration, repository, tests; **Scope:** M
 
-- [ ] Persist typed requirements, importance state, exact JD spans, provenance, confidence, and version metadata.
+- [x] Persist typed requirements, importance state, exact JD spans, provenance, confidence, and version metadata; local Auth/Data API/SQL verification passes owner isolation, concurrent head CAS, idempotent retry, malformed/foreign source rejection, export and privacy deletion.
 - **Verify:** schema/repository tests cover duplicate spans, authorization, empty/contradictory requirements, export, and deletion.
 
 #### AA031: Parse explicit deterministic requirements
 
 **Dependencies:** AA030; **Likely files:** deterministic parser, normalizer, fixtures, tests; **Scope:** M
 
-- [ ] Parse explicit years, education, certification, location, work authorization, required/preferred cues, and negation without model inference.
+- [x] Parse explicit years/ranges, education, certification, location, work authorization, required/preferred cues and negation without model inference. Exact heading/inline importance citations are stored; conflicting importance is unknown, numeric thresholds must match the JD, and unrelated job titles remain unsupported.
 - **Verify:** adversarial and international fixtures report per-type precision/recall and preserve exact evidence.
 
 #### AA032: Add bounded model-proposed structure
 
 **Dependencies:** AA031; **Likely files:** model adapter, structured schema, validator, tests; **Scope:** M
 
-- [ ] Model may propose typed requirements only when each item maps to JD evidence; inferred importance is distinct from explicit importance.
+- [x] Optional injected model adapter may propose importance only for exact deterministic requirements; inferred importance is distinct from explicit importance. No live adapter is enabled. Malformed/uncited/duplicate/injected output, explicit-cue changes, variable inferred proposals, timeout and outage are exercised with synthetic adapters and fail closed to review.
 - **Verify:** malformed output, unsupported inference, prompt injection, run variance, timeout, and outage tests fail closed or fall back safely.
 
 #### AA033: Add versioned O*NET/ESCO boundary
 
 **Dependencies:** AA030; **Likely files:** taxonomy adapter, import job, attribution/version record, tests; **Scope:** M
 
-- [ ] Map occupations and skills to licensed, versioned O*NET/ESCO concepts while preserving original wording and mapping confidence.
+- [x] Implement the normalized offline O*NET/ESCO mapping boundary: reviewed provider/version/hash/license pin, attribution/modifications, exact and alias proposals, ambiguity/unmapped states, immutable release registry and activation/rollback. Synthetic test IDs are explicitly fictional; no licensed release has been adopted and real mapping quality remains unmeasured.
 - **Verify:** license/attribution, version pin, alias, ambiguity, update/rollback, and unmapped-concept tests pass.
 
 #### AA034: Build first domain pack
@@ -898,20 +933,21 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 **Dependencies:** AA005, AA031-AA033; **Likely files:** domain pack, aliases/rules, fixture manifest, docs; **Scope:** M
 
 - [ ] Encode only reviewed domain concepts, credentials, terminology, and evaluation fixtures for the approved first domain.
+- [x] Prepare the first software engineering/en-IN engineering vocabulary and review document. Candidate title boundaries and pending-review/scoring-disabled state are implemented and tested. The original reviewed-pack acceptance item remains open; no reviewer signature is fabricated.
 - **Verify:** reviewer signs the pack; unsupported domains are labeled and cannot inherit the first domain's claim.
 
 #### AA035: Specify optional market-frequency data
 
 **Dependencies:** AA003; **Likely files:** dataset contract, provenance/licensing record, privacy review; **Scope:** S
 
-- [ ] Define dated, permissioned market-corpus inputs and bias/coverage reporting without collecting or scraping data in this task.
+- [x] Define dated, permissioned market-corpus inputs, bias/coverage reporting and exact server-owned approval hash. Missing/altered/future/expired datasets disable claims. No collection or scraping occurs.
 - **Verify:** absence or expiry of an approved dataset disables frequency-based claims and scoring inputs.
 
 #### AA036: Build job-intelligence benchmark
 
 **Dependencies:** AA030-AA034; **Likely files:** benchmark harness, locked annotations, report, CI gate; **Scope:** M
 
-- [ ] Measure requirement-type F1, importance F1, citation validity, mapping quality, abstention, variance, latency, and cost per segment.
+- [x] Implement per-type/importance F1, exact citation precision/recall, abstention, repeatability and measured local latency/provider-call accounting per synthetic segment. Optional supplied taxonomy mapping gold is evaluated; absent release/gold returns unknown. Live model variance and representative intervals remain unknown. Durable source/manifest receipts and a nonzero blocked release mode are recorded.
 - **Verify:** reproducible report meets `CONSTRAINTS.md` floors on the locked first-domain set before AA3 passes.
 
 #### Gate AA3: Evidence-linked job intelligence
@@ -920,53 +956,56 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 
 ### Phase AA4: Deterministic scoring v2
 
+**Entry status:** AA040–AA046 local engineering is complete and verified under owner-accepted ADR-0013/E-004: 653 tests, 49 browser checks, 43 AA4 DB assertions, upstream regressions and populated restore. Formal AA1–AA4 gates remain failed/open. All authoritative v2 values remain null. See [AA4 closeout](../docs/evaluation/AA4_ENGINEERING_CLOSEOUT.md) and [local plan](aa4-local-engineering-plan.md).
+
 #### AA040: Introduce versioned score policies
 
 **Dependencies:** AA1-AA3, ADR-0006 approval; **Likely files:** score contracts, policy registry, legacy adapter, tests; **Scope:** M
 
-- [ ] Version dimensions, weights, bands, evidence states, normalization, and legacy read behavior independently of model prompts.
+- [x] **Local engineering under E-004:** Version dimensions, weights, bands, evidence states, normalization, and legacy read behavior independently of model prompts.
+- [x] Preparatory AA0 interface slice: strict draft policy with null weights/coverage/calibration and empty bands; explicit null-only withheld score contract; isolated legacy adapter preserving original version/date/value. Preparatory snapshot only; now superseded by the delivered diagnostics route. No numeric policy is activated.
 - **Verify:** golden tests reproduce each version and historical results never silently change meaning.
 
 #### AA041: Implement Evidence Confidence gating
 
 **Dependencies:** AA040; **Likely files:** confidence policy, analysis orchestration, result model/UI, tests; **Scope:** M
 
-- [ ] Compute evidence readiness from extraction coverage/confidence/disagreement and withhold dependent scores when unsafe.
+- [x] **Local engineering under E-004:** Compute fail-closed evidence readiness from observed coverage, uncalibrated confidence and disagreement and withhold dependent scores when unsafe.
 - **Verify:** low-confidence and missing-critical-field cases show exact repair/review reasons and no authoritative numeric result.
 
 #### AA042: Implement ATS Compatibility dimensions
 
 **Dependencies:** AA041; **Likely files:** compatibility rules, evidence trace, score service, tests; **Scope:** M
 
-- [ ] Compute continuous, deterministic parseability/structure/contact/date/section/format dimensions with passed/failed/not-evaluated states.
+- [x] **Local engineering under E-004:** Compute continuous deterministic technical observations for parseability/structure/contact/date/section/format; unqualified format evidence stays not evaluated and dimension values null with passed/failed/not-evaluated states.
 - **Verify:** boundary, skipped-rule, layout, duplicate-content, and international-format tests produce complete evidence traces.
 
 #### AA043: Implement typed Job Alignment
 
 **Dependencies:** AA036, AA041; **Likely files:** alignment engine, requirement states, evidence trace, tests; **Scope:** M
 
-- [ ] Score explicit requirements as met/partially met/not met/unknown/not applicable, with caps and no double counting.
+- [x] **Local engineering under E-004:** Evaluate typed requirement observations as satisfied/partial/confirmation-needed/unknown/inapplicable, with bounded source traces and no double counting; authoritative alignment remains withheld.
 - **Verify:** repeated keywords, aliases, missing evidence, inferred importance, years, education, certification, and contradiction fixtures pass.
 
 #### AA044: Remove LLM numeric authority
 
 **Dependencies:** AA042, AA043; **Likely files:** qualitative stage, score assembly, historical-result presenter, tests; **Scope:** M
 
-- [ ] Model output is limited to cited qualitative suggestions; historical blended scores are labeled legacy and are not compared as v2 scores.
+- [x] **Local engineering under E-004:** Model output is limited to cited qualitative suggestions; historical blended scores are labeled legacy and are not compared as v2 scores.
 - **Verify:** changing provider/model prose cannot change authoritative numeric output for identical structured evidence.
 
 #### AA045: Add score explanations and readiness experiment
 
 **Dependencies:** AA044; **Likely files:** result read model, score UI, feature flag, tests; **Scope:** M
 
-- [ ] Expose the versioned resume state, blockers, top five high-impact improvements, reliable strengths, missing evidence, dimension contributions, evidence links, unknowns, limitations, and optional Application Readiness only behind an experiment flag.
-- **Verify:** comprehension/accessibility review confirms users do not see scores as employer acceptance probability.
+- [x] **Local engineering under E-004:** Expose the versioned resume state, blockers, top five evidence repair priorities, recovered observations, missing evidence, dimension contributions, evidence links, unknowns, limitations, and optional Application Readiness only behind an experiment flag.
+- **Verify:** automated accessibility and explanatory-copy checks pass; human comprehension review remains required for formal Gate AA4.
 
 #### AA046: Build scoring validity and robustness suite
 
 **Dependencies:** AA040-AA045; **Likely files:** scoring benchmark, metamorphic fixtures, report, CI gate; **Scope:** M
 
-- [ ] Evaluate determinism, expert agreement, counterfactual invariance, stuffing/duplication resistance, prompt injection, segment error, latency, and cost.
+- [x] **Local engineering under E-004:** Evaluate synthetic determinism, counterfactual invariance, stuffing/duplication resistance, prompt injection, latency and provider cost; implement agreement/bootstrap and per-segment error measurement. Actual expert/fairness/comprehension evidence remains unavailable.
 - **Verify:** identical inputs are stable, protected-name changes do not alter score, and all required segment/claim gates are reported separately.
 
 #### Gate AA4: Explainable deterministic scoring
@@ -975,60 +1014,62 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 
 ### Phase AA5: Same-page authoring and grounded writing
 
+**Entry status:** AA050–AA057 local engineering is complete, verified and owner-accepted on 2026-10-14 (“I approved”) under owner-approved ADR-0014/E-005: 675 tests, 51 browser checks, 40 authoring DB assertions, upstream regressions, schema lint, populated restore and cleanup. Formal Gate AA5 remains open. See [AA5 closeout](../docs/evaluation/AA5_ENGINEERING_CLOSEOUT.md).
+
 #### AA050: Add structured result-page editing
 
 **Dependencies:** AA2, AA4; **Likely files:** resume editor route/components, mutation API, tests; **Scope:** M
 
-- [ ] Edit the structured resume on the analysis result page by section/line while preserving source evidence and version identity.
+- [x] **Local engineering under E-005:** Edit the structured resume on the analysis result page by section/line while preserving source evidence and version identity.
 - **Verify:** keyboard, screen-reader, validation, save failure, stale version, mobile, and no-JavaScript-safe recovery behaviors pass.
 
 #### AA051: Navigate findings to editable lines
 
 **Dependencies:** AA050; **Likely files:** finding queue, editor navigation, impact model, tests; **Scope:** M
 
-- [ ] Rank findings by evidence-backed impact and effort, display at most the top five in the high-impact section, and focus the exact affected line/section without hiding uncertainty or discarding the remaining findings.
+- [x] **Local engineering under E-005:** Rank findings by critical source and requirement review needs with honest review-effort labels (calibrated impact points are unavailable), display at most the top five in the high-impact section, and focus the exact affected line/section without hiding uncertainty or discarding the remaining findings.
 - **Verify:** every released rule/requirement maps to an editable target or an explicit non-editable explanation.
 
 #### AA052: Add typed suggestion patches
 
 **Dependencies:** AA023, AA051; **Likely files:** suggestion schema, provider adapter, validator, tests; **Scope:** M
 
-- [ ] Suggestions identify source fact IDs, affected rule/requirement IDs, proposed operations, rationale, confidence, and clarification needs.
+- [x] **Local engineering under E-005:** Suggestions identify source fact IDs, affected rule/requirement IDs, proposed operations, rationale, confidence, and clarification needs.
 - **Verify:** unsupported IDs, free-form document replacement, cross-section mutation, malformed output, and stale-version application are rejected.
 
 #### AA053: Add clarification questions
 
 **Dependencies:** AA052; **Likely files:** clarification contract, editor UI, mutation service, tests; **Scope:** M
 
-- [ ] Ask for missing result, measurement, scope, method, or ownership instead of inventing stronger claims.
+- [x] **Local engineering under E-005:** Ask for missing result, measurement, scope, method, or ownership instead of inventing stronger claims.
 - **Verify:** candidate answers become candidate-confirmed facts with provenance; unanswered questions cannot silently populate content.
 
 #### AA054: Add XYZ and alternative bullet patterns
 
 **Dependencies:** AA052, AA053; **Likely files:** bullet strategy, prompt/schema, UI, tests; **Scope:** M
 
-- [ ] Offer Google-style “accomplished X, measured by Y, by doing Z” when evidence supports it, plus action-impact-context and action-scope-result alternatives.
+- [x] **Local engineering under E-005:** Offer Google-style “accomplished X, measured by Y, by doing Z” when evidence supports it, plus action-impact-context and action-scope-result alternatives.
 - **Verify:** no template requires fabricated metrics; grammar, factual strength, duplication, seniority, and domain terminology are checked.
 
 #### AA055: Add candidate-controlled change workflow
 
 **Dependencies:** AA022, AA052; **Likely files:** change service, editor controls, audit/read model, tests; **Scope:** M
 
-- [ ] Accept, edit, reject, undo, compare, and restore-as-new-version are explicit actions recorded in the immutable ledger.
+- [x] **Local engineering under E-005:** Accept, edit, reject, undo, compare, and restore-as-new-version are explicit actions recorded in the immutable ledger.
 - **Verify:** concurrency, repeated action/idempotency, provider outage, audit, undo, ownership, and deletion/export tests pass.
 
 #### AA056: Show projected and actual score delta
 
 **Dependencies:** AA043, AA055; **Likely files:** preview scorer, result UI, score history, tests; **Scope:** M
 
-- [ ] Label pre-acceptance change as projected and recompute actual deterministic scores only after the new version exists.
+- [x] **Local engineering under E-005:** Label pre-acceptance diagnostics as projected and recompute actual diagnostics from persisted versions; scores and numeric deltas stay null while policy/calibration are unavailable.
 - **Verify:** stale evidence, multiple edits, rollback, unknown requirements, and score-policy-version changes cannot display a false delta.
 
 #### AA057: Benchmark writer grounding and model options
 
 **Dependencies:** AA052-AA056; **Likely files:** writer benchmark, adversarial set, report, model policy; **Scope:** M
 
-- [ ] Compare eligible models on unsupported-fact rate, citation validity, edit usefulness, domain quality, latency, and cost using one locked contract.
+- [x] **Local engineering under E-005:** Implement locked grounding/adversarial/model-adapter comparison on unsupported generated facts, reference validity, latency and provider cost. Actual eligible model comparison, edit usefulness/domain quality and candidate review remain unavailable.
 - **Verify:** zero unsupported accepted facts; a cheaper/faster model is selected only if it passes the same quality gates.
 
 #### Gate AA5: Truthful candidate-controlled authoring
@@ -1037,46 +1078,50 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 
 ### Phase AA6: Verified PDF and DOCX rendering
 
+**Entry status:** AA060–AA065 local engineering complete and verified under owner-approved ADR-0015/E-006: 694 tests, 53 browser checks, 23 DB assertions, 20/20 synthetic parity cases, image build and cleanup. Final regression and closeout evidence are tracked in [AA6 closeout](../docs/evaluation/AA6_ENGINEERING_CLOSEOUT.md). Formal Gate AA6 remains open.
+
+**2026-10-16 local follow-up:** Template/renderer 1.0.1 fixes mathematical glyph coverage. The owner-provided PDF exposes unresolved import fields, four missing clickable targets and three-page export expansion. Current verification: 696 tests and 20/20 synthetic parity cases; original normal export still requires review. See the closeout follow-up and aggregate owner smoke receipt.
+
 #### AA060: Define renderer and artifact states
 
 **Dependencies:** AA2, ADR-0007 approval; **Likely files:** renderer interface, template manifest, artifact contract, tests; **Scope:** M
 
-- [ ] Define deterministic input, escaping, renderer/template versions, queued/rendered/verification-failed/verified states, and evidence report.
+- [x] **Local engineering under E-006:** Define deterministic input, escaping, renderer/template versions, queued/rendered/verification-failed/verified states, and evidence report.
 - **Verify:** contract tests prevent template-specific data from becoming canonical content and block unverified recommended downloads.
 
 #### AA061: Implement semantic preview and one PDF template
 
 **Dependencies:** AA060; **Likely files:** preview, PDF renderer, template, tests; **Scope:** M
 
-- [ ] Render the approved first-domain profile with semantic sections, selectable text, valid links, and no critical clipping.
+- [x] **Local engineering under E-006:** Render the approved first-domain profile with semantic sections, selectable text, valid links, and no critical clipping.
 - **Verify:** visual, text, link, page-size, font/encoding, overflow, keyboard, and screen-reader preview checks pass.
 
 #### AA062: Implement one DOCX template
 
 **Dependencies:** AA060; **Likely files:** DOCX renderer, template, tests, fixture; **Scope:** M
 
-- [ ] Render the same canonical content and section order without divergent authoring logic.
+- [x] **Local engineering under E-006:** Render the same canonical content and section order without divergent authoring logic.
 - **Verify:** DOCX opens in approved viewers and passes text/order/link/style and round-trip fixtures.
 
 #### AA063: Implement parse-back verification
 
 **Dependencies:** AA061, AA062; **Likely files:** artifact verifier, extraction adapter, report model, tests; **Scope:** M
 
-- [ ] Re-extract each artifact and compare critical fields, normalized text, order, links, and expected section anchors to canonical content.
+- [x] **Local engineering under E-006:** Re-extract each artifact and compare critical fields, normalized text, order, links, and expected section anchors to canonical content.
 - **Verify:** deliberate clipping, missing glyph, reordered column, broken link, and omitted-field fixtures lose the verified label.
 
 #### AA064: Enforce artifact layout policies
 
 **Dependencies:** AA063; **Likely files:** layout policy, renderer checks, diagnostics UI, tests; **Scope:** M
 
-- [ ] Enforce A4/US Letter selection, page-count guidance, overflow, links, embedded fonts/encoding, and deterministic safe failure.
+- [x] **Local engineering under E-006:** Enforce A4/US Letter selection, page-count guidance, overflow, links, embedded fonts/encoding, and deterministic safe failure.
 - **Verify:** boundary content and locale fixtures provide actionable diagnostics rather than silently shrinking or dropping content.
 
 #### AA065: Build render-parity and accessibility corpus
 
 **Dependencies:** AA061-AA064; **Likely files:** artifact benchmark, fixture manifest, accessibility report, CI gate; **Scope:** M
 
-- [ ] Evaluate every released template/format/locale combination for critical parity, normalized text, reading order, accessibility, failure, and latency.
+- [x] **Local engineering under E-006:** Evaluate every released template/format/locale combination for critical parity, normalized text, reading order, accessibility, failure, and latency.
 - **Verify:** `CONSTRAINTS.md` artifact floors pass per combination; failures block the recommended download path.
 
 #### Gate AA6: Verified core artifacts
@@ -1399,3 +1444,7 @@ Required non-command evidence:
 - [ ] Accessibility manual spot check.
 - [ ] Privacy export/deletion evidence.
 - [ ] Human approval at the active gate.
+
+### Owner-requested browser audit repairs (2026-10-17)
+
+Local bug repairs follow the [browser audit repair report](../docs/evaluation/BROWSER_BUG_REPAIRS_20261017.md). Matching, provenance validation, section import, authoring state, availability counts, downloads, mobile navigation and terminal progress have dedicated regressions. Forward migrations were applied only to the isolated audit database. This work does not close formal accuracy/release gates; source-link import is partial and exports fail closed when targets would disappear. The development crash remains mitigated pending reproduction. No Git publication or hosted deployment is included.

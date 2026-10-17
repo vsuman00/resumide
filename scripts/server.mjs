@@ -45,7 +45,7 @@ app.use((request, response, next) => {
   });
   next();
 });
-app.use((_request, response, next) => {
+function setStaticSecurityHeaders(response) {
   const headers = createSecurityHeaders({
     appOrigin: config.APP_ORIGIN,
     environment: config.NODE_ENV,
@@ -53,17 +53,26 @@ app.use((_request, response, next) => {
     cspReportUri: config.CSP_REPORT_URI || undefined,
   });
   for (const [name, value] of headers) response.setHeader(name, value);
-  next();
-});
+}
 app.use(
   "/assets",
   express.static(path.join(rootDirectory, "build/client/assets"), {
     immutable: true,
     maxAge: "1y",
+    setHeaders: setStaticSecurityHeaders,
   }),
 );
-app.use(express.static(path.join(rootDirectory, "build/client")));
-app.use(express.static(path.join(rootDirectory, "public"), { maxAge: "1h" }));
+app.use(
+  express.static(path.join(rootDirectory, "build/client"), {
+    setHeaders: setStaticSecurityHeaders,
+  }),
+);
+app.use(
+  express.static(path.join(rootDirectory, "public"), {
+    maxAge: "1h",
+    setHeaders: setStaticSecurityHeaders,
+  }),
+);
 app.all(
   "/{*splat}",
   createRequestHandler({ build, mode: process.env.NODE_ENV }),
