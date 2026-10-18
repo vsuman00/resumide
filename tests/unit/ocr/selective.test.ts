@@ -6,6 +6,7 @@ import {
   type SelectiveOcrRequest,
   type LocalOcrRawResult,
 } from "../../../app/lib/server/ocr/selective";
+import { TEXT_FUSION_VERSIONS } from "../../../app/lib/server/ocr/profiles";
 
 function request(): SelectiveOcrRequest {
   return {
@@ -91,6 +92,46 @@ describe("selective local OCR contract", () => {
     valueBytes: 64 * 1024 * 1024,
     reason: null,
   };
+  it("requires the exact versioned two-decode contract for text fusion", async () => {
+    const two = { ...resourceUsage, recognitionCalls: 2 };
+    const invoke = (
+      usage: typeof two | undefined,
+      versions: {
+        engine: string;
+        renderer: string;
+        languageData: string;
+      } = TEXT_FUSION_VERSIONS,
+    ) =>
+      runSelectiveLocalOcr(request(), {
+        ...adapter({ ...raw(), ...(usage ? { resourceUsage: usage } : {}) }),
+        versions,
+      });
+    expect(await invoke(two)).toMatchObject({
+      status: "review_required",
+      scoringEligible: false,
+    });
+    expect(await invoke(undefined)).toMatchObject({
+      status: "failed",
+      code: "invalid_output",
+    });
+    expect(await invoke({ ...two, recognitionCalls: 1 })).toMatchObject({
+      status: "failed",
+      code: "invalid_output",
+    });
+    expect(await invoke({ ...two, recognitionCalls: 3 })).toMatchObject({
+      status: "failed",
+      code: "invalid_output",
+    });
+    expect(
+      await invoke(two, { ...TEXT_FUSION_VERSIONS, languageData: "forged" }),
+    ).toMatchObject({ status: "failed", code: "invalid_output" });
+    expect(
+      await invoke(two, {
+        ...TEXT_FUSION_VERSIONS,
+        engine: "arbitrary/text-fusion-v1",
+      }),
+    ).toMatchObject({ status: "failed", code: "invalid_output" });
+  });
   it.each([
     containerMemoryPeak,
     {

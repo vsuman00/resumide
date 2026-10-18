@@ -45,15 +45,15 @@ no independent reviewer has been assigned or assumed.
 
 | ID     | Obligation and current state                                                      | Required exit evidence                                                                                                                                                                                       |
 | ------ | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| AA1-R1 | Locked field accuracy FAILED: 92.31% precision / 75% recall                       | General improvements verified on development data, then a separately frozen untouched evaluation meeting every unchanged segment floor; retain this failed receipt and do not tune against its locked labels |
+| AA1-R1 | Synthetic repair exit evidence VERIFIED 2026-10-18; formal acceptance pending     | General improvements verified on development data, then a separately frozen untouched evaluation meeting every unchanged segment floor; retain this failed receipt and do not tune against its locked labels |
 | AA1-R2 | Representative and independent validation DEFERRED                                | Authorized representative corpus, sample-size justification, independent annotation/adjudication and required layout/language/adverse segment reports                                                        |
 | AA1-R3 | Confidence calibration DEFERRED                                                   | Approved calibrated policy with separate calibration/evaluation evidence; confirmations and raw engine scores cannot substitute                                                                              |
 | AA1-R4 | Provider comparison, compute-rate cost and complete runtime measurements DEFERRED | Approved comparable-provider protocol, pricing inputs and qualified successful/failed/cold-start resource measurements                                                                                       |
 | AA1-R5 | Release and production activation NOT AUTHORIZED                                  | Resolve the preceding acceptance obligations, record Gate AA1 and Gate A4 decisions, install the migration through an authorized deployment and separately approve activation                                |
 
 Review-required/unsupported states, score withholding and the default-off flag
-remain the enforced boundaries while this register is open. R1 is a measured
-quality failure independent of reviewer availability.
+remain the enforced boundaries while this register is open. The original R1
+quality failure is retained alongside the subsequent synthetic repair evidence.
 
 ## 2026-10-17 CI repair follow-up
 
@@ -63,6 +63,17 @@ coordinate fixes are implemented; original frozen labels, failed receipts and
 scan exact-line failure, so AA1-R1 remains OPEN. The [dated repair report](OCR_CI_REPAIR_20261017.md)
 records current local/remote checks, consumed sets and the unevaluated fresh set.
 This follow-up does not close representative, calibration or activation gates.
+
+## 2026-10-18 synthetic repair evidence
+
+The explicit engineering text-fusion-v4 profile passes both development runs and
+all consumed regressions, followed by the frozen runtime-check set on its first
+evaluation. All 1,008 critical-field checks match without extras; every segment
+meets unchanged CER, exact-line, coverage and field interval floors. The
+[follow-up report](OCR_CI_REPAIR_20261018.md) records source/image freezes, retained
+failures, runtime/SQL controls and limits. AA1-R1 now has measured synthetic exit
+evidence; formal owner acceptance and AA1-R2–R5 remain separate. This does not
+close Gate AA1, establish representative accuracy or activate production OCR.
 
 ## Implemented behavior
 

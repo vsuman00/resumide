@@ -1,0 +1,161 @@
+{
+  "status": "engineering_smoke_passed",
+  "imageId": "sha256:990ac9d9ff190beeeaa0bb6323a2cbee8b1da0a78926f194ec217f6afa09877d",
+  "profile": "tesseract-5.3.0-2/text-fusion-v4",
+  "datasetType": "synthetic_engineering_only",
+  "partition": "development",
+  "humanValidation": "not_evaluated",
+  "calibration": "not_evaluated",
+  "representativeValidity": "not_evaluated",
+  "fullAA1Gate": "open",
+  "accuracyGate": "not_passed",
+  "cleanup": "no_new_owned_containers_remaining",
+  "results": [
+    {
+      "kind": "scanned",
+      "sourceSha256": "246a98b9d9130382d45cc0d1a9d80c004e2ad77f81acf0623b3ae954e3acf331",
+      "status": "review_required",
+      "selectedPages": [
+        1
+      ],
+      "wallMs": 694.1726249999999,
+      "engineDurationMs": 424,
+      "versions": {
+        "engine": "tesseract-5.3.0-2/text-fusion-v4",
+        "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+        "languageData": "model-bundle-sha256:74a6c07f4943981367364af90d830c36c6de018cb0c7762caba61e51189c44cc"
+      },
+      "pages": [
+        {
+          "pageNumber": 1,
+          "wordCount": 10,
+          "errors": 14,
+          "referenceCharacters": 76
+        }
+      ],
+      "cost": {
+        "apiFeeMicros": 0,
+        "compute": {
+          "status": "unknown",
+          "valueMicros": null,
+          "reason": "host_rate_unavailable"
+        },
+        "boundedAllocation": {
+          "id": "owner-approved-synthetic-local-2026-10-04",
+          "maxWallTimeMs": 10000,
+          "maxPages": 10,
+          "externalApiFeeMicros": 0
+        },
+        "attempts": 1
+      },
+      "resourceUsage": {
+        "kind": "child_process_rusage",
+        "cpuTimeMs": 470.43999999999994,
+        "maxChildRssBytes": 63774720,
+        "rendererCalls": 1,
+        "recognitionCalls": 2,
+        "containerMemoryPeak": {
+          "kind": "cgroup_v2_memory_peak",
+          "measuredThrough": "recognition_complete",
+          "valueBytes": 57790464,
+          "reason": null
+        }
+      }
+    },
+    {
+      "kind": "mixed",
+      "sourceSha256": "cb8baaeb4a5c888f9b2a0e445a1aceb4c7622577cf3360984a5e53af91fb4436",
+      "status": "review_required",
+      "selectedPages": [
+        1,
+        3
+      ],
+      "wallMs": 1225.5869590000002,
+      "engineDurationMs": 934,
+      "versions": {
+        "engine": "tesseract-5.3.0-2/text-fusion-v4",
+        "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+        "languageData": "model-bundle-sha256:74a6c07f4943981367364af90d830c36c6de018cb0c7762caba61e51189c44cc"
+      },
+      "pages": [
+        {
+          "pageNumber": 1,
+          "wordCount": 10,
+          "errors": 14,
+          "referenceCharacters": 76
+        },
+        {
+          "pageNumber": 3,
+          "wordCount": 16,
+          "errors": 2,
+          "referenceCharacters": 128
+        }
+      ],
+      "cost": {
+        "apiFeeMicros": 0,
+        "compute": {
+          "status": "unknown",
+          "valueMicros": null,
+          "reason": "host_rate_unavailable"
+        },
+        "boundedAllocation": {
+          "id": "owner-approved-synthetic-local-2026-10-04",
+          "maxWallTimeMs": 10000,
+          "maxPages": 10,
+          "externalApiFeeMicros": 0
+        },
+        "attempts": 1
+      },
+      "resourceUsage": {
+        "kind": "child_process_rusage",
+        "cpuTimeMs": 1082.7939999999999,
+        "maxChildRssBytes": 66351104,
+        "rendererCalls": 2,
+        "recognitionCalls": 4,
+        "containerMemoryPeak": {
+          "kind": "cgroup_v2_memory_peak",
+          "measuredThrough": "recognition_complete",
+          "valueBytes": 58626048,
+          "reason": null
+        }
+      }
+    },
+    {
+      "kind": "native",
+      "sourceSha256": "33dfe85cba8a264e301809df670430203aeed29c13daaa70fb2b61eaa9c4d723",
+      "status": "not_needed",
+      "selectedPages": [],
+      "wallMs": 57.07366600000023
+    }
+  ],
+  "safeFailures": [
+    {
+      "mode": "cancelled",
+      "code": "cancelled",
+      "engineObserved": true,
+      "cleanup": "verified",
+      "wallMs": 417.1721669999997
+    },
+    {
+      "mode": "cancelled_second_pass",
+      "code": "cancelled",
+      "engineObserved": true,
+      "cleanup": "verified",
+      "wallMs": 599.063584
+    },
+    {
+      "mode": "timeout",
+      "code": "timeout",
+      "engineObserved": true,
+      "cleanup": "verified",
+      "wallMs": 680.160417
+    },
+    {
+      "mode": "invalid_pdf",
+      "code": "engine_failure",
+      "engineObserved": false,
+      "cleanup": "verified",
+      "wallMs": 296.7437500000001
+    }
+  ]
+}

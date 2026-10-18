@@ -13,6 +13,7 @@ import {
   type SelectiveOcrRequest,
 } from "../app/lib/server/ocr/selective";
 import { CRITICAL_FIELDS } from "../app/lib/server/evidence-fields";
+import { TEXT_FUSION_MANIFEST } from "../app/lib/server/ocr/profiles";
 import {
   extractionManifestLock,
   observeExtractionBenchmarkSource,
@@ -38,6 +39,7 @@ import { EXTRACTION_REPAIR_VALIDATION_FAMILIES } from "../tests/fixtures/extract
 import { EXTRACTION_REPAIR_VERIFICATION_FAMILIES } from "../tests/fixtures/extraction-repair-verification";
 import { EXTRACTION_REPAIR_ASSESSMENT_FAMILIES } from "../tests/fixtures/extraction-repair-assessment";
 import { EXTRACTION_REPAIR_ACCEPTANCE_FAMILIES } from "../tests/fixtures/extraction-repair-acceptance";
+import { EXTRACTION_REPAIR_RUNTIME_CHECK_FAMILIES } from "../tests/fixtures/extraction-repair-runtime-check";
 export type ExtractionCorpusSet =
   | "original"
   | "repair-20261017"
@@ -45,14 +47,16 @@ export type ExtractionCorpusSet =
   | "validation-20261017"
   | "verification-20261017"
   | "assessment-20261017"
-  | "acceptance-20261017";
+  | "acceptance-20261017"
+  | "runtime-check-20261017";
 import { syntheticPdf } from "../tests/fixtures/native-pdf";
 
 export const ENGINEERING_OCR_IMAGE =
-  "sha256:2038f4a280f279e155b05861395dda0d7739c5f7f4f4904d1d2092ab72a30727";
+  "sha256:990ac9d9ff190beeeaa0bb6323a2cbee8b1da0a78926f194ec217f6afa09877d";
 const evaluationConfig = Object.freeze({
   psm: 3 as const,
   maxDpi: 150 as const,
+  model: "text-fusion" as const,
 });
 const sha256 = (bytes: Uint8Array | string) =>
   createHash("sha256").update(bytes).digest("hex");
@@ -68,7 +72,9 @@ const codePaths = [
   "app/lib/server/ocr/pdf-detection.ts",
   "app/lib/server/ocr/selective.ts",
   "app/lib/server/ocr/local-container.ts",
+  "app/lib/server/ocr/profiles.ts",
   "scripts/ocr-runtime/runner.py",
+  "scripts/ocr-runtime/Dockerfile",
   "scripts/extraction-benchmark-engineering.ts",
   "tests/fixtures/native-pdf.ts",
   "tests/fixtures/ocr-print-pilot.ts",
@@ -84,6 +90,7 @@ const codePaths = [
   "tests/fixtures/extraction-repair-verification.ts",
   "tests/fixtures/extraction-repair-assessment.ts",
   "tests/fixtures/extraction-repair-acceptance.ts",
+  "tests/fixtures/extraction-repair-runtime-check.ts",
 ];
 async function codeReceipt() {
   return Object.fromEntries(
@@ -112,17 +119,20 @@ export async function createEngineeringExtractionCorpus(
     const verification = corpusSet === "verification-20261017";
     const assessment = corpusSet === "assessment-20261017";
     const acceptance = corpusSet === "acceptance-20261017";
-    const frozenSet = acceptance
-      ? "acceptance"
-      : assessment
-        ? "assessment"
-        : verification
-          ? "verification"
-          : validation
-            ? "validation"
-            : confirmation
-              ? "confirmation"
-              : "heldout";
+    const runtimeCheck = corpusSet === "runtime-check-20261017";
+    const frozenSet = runtimeCheck
+      ? "runtime-check"
+      : acceptance
+        ? "acceptance"
+        : assessment
+          ? "assessment"
+          : verification
+            ? "verification"
+            : validation
+              ? "validation"
+              : confirmation
+                ? "confirmation"
+                : "heldout";
     const frozen = JSON.parse(
       await readFile(
         new URL(
@@ -146,17 +156,19 @@ export async function createEngineeringExtractionCorpus(
     families = [
       ...EXTRACTION_REPAIR_DEVELOPMENT_FAMILIES,
       ...EXTRACTION_REPAIR_HEADER_DEVELOPMENT,
-      ...(acceptance
-        ? EXTRACTION_REPAIR_ACCEPTANCE_FAMILIES
-        : assessment
-          ? EXTRACTION_REPAIR_ASSESSMENT_FAMILIES
-          : verification
-            ? EXTRACTION_REPAIR_VERIFICATION_FAMILIES
-            : validation
-              ? EXTRACTION_REPAIR_VALIDATION_FAMILIES
-              : confirmation
-                ? EXTRACTION_REPAIR_CONFIRMATION_FAMILIES
-                : EXTRACTION_REPAIR_HELDOUT_FAMILIES),
+      ...(runtimeCheck
+        ? EXTRACTION_REPAIR_RUNTIME_CHECK_FAMILIES
+        : acceptance
+          ? EXTRACTION_REPAIR_ACCEPTANCE_FAMILIES
+          : assessment
+            ? EXTRACTION_REPAIR_ASSESSMENT_FAMILIES
+            : verification
+              ? EXTRACTION_REPAIR_VERIFICATION_FAMILIES
+              : validation
+                ? EXTRACTION_REPAIR_VALIDATION_FAMILIES
+                : confirmation
+                  ? EXTRACTION_REPAIR_CONFIRMATION_FAMILIES
+                  : EXTRACTION_REPAIR_HELDOUT_FAMILIES),
     ].map((family) => ({ ...family, left: 48, top: 62, gap: 27 }));
   }
   for (const [index, family] of families.entries()) {
@@ -232,6 +244,7 @@ export async function createEngineeringExtractionCorpus(
     imageId,
     evaluationConfig,
     versions,
+    modelManifest: TEXT_FUSION_MANIFEST,
     sourceCode: await codeReceipt(),
     sourceFamilies: families.map((family) => ({
       id: family.id,

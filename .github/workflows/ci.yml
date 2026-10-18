@@ -107,6 +107,8 @@ jobs:
       - run: npm run test:db
       - name: Verify historical and versioned field evidence contracts
         run: npx supabase db query --local --file scripts/verify-evidence-field-version.sql
+      - name: Verify versioned OCR resource contracts
+        run: npx supabase db query --local --file scripts/verify-ocr-fusion-version.sql
       - run: npm run test:aa014:concurrency
 
   local-ocr:
@@ -130,6 +132,7 @@ jobs:
         run: |
           ocr_image_id="$(docker image inspect resumide-ocr:${{ github.sha }} --format '{{.Id}}')"
           npm run test:ocr:local -- "$ocr_image_id"
+          npm run test:ocr:local -- "$ocr_image_id" --text-fusion
       - name: Record development OCR diagnostics (not release acceptance)
         shell: bash
         run: |
@@ -151,10 +154,15 @@ jobs:
         shell: bash
         run: |
           ocr_image_id="$(docker image inspect resumide-ocr:${{ github.sha }} --format '{{.Id}}')"
-          npm run benchmark:extraction-v2:engineering -- "--image=$ocr_image_id"
-          node node_modules/vite-node/vite-node.mjs --config vitest.config.ts scripts/benchmark-extraction-v2.ts --engineering --partition=locked --manifest-only "--image=$ocr_image_id" > locked-manifest.jsonl
-          extraction_lock="$(node -e 'const fs=require("fs"); process.stdout.write(JSON.parse(fs.readFileSync("locked-manifest.jsonl","utf8").split("\n")[0]).manifestLock)')"
-          node node_modules/vite-node/vite-node.mjs --config vitest.config.ts scripts/benchmark-extraction-v2.ts --engineering --partition=locked "--lock-receipt=$extraction_lock" "--image=$ocr_image_id" > locked-extraction-report.jsonl
+          extraction_status=0
+          npm run benchmark:extraction-v2:engineering -- "--image=$ocr_image_id" || extraction_status=1
+          if node node_modules/vite-node/vite-node.mjs --config vitest.config.ts scripts/benchmark-extraction-v2.ts --engineering --partition=locked --manifest-only "--image=$ocr_image_id" > locked-manifest.jsonl; then
+            extraction_lock="$(node -e 'const fs=require("fs"); process.stdout.write(JSON.parse(fs.readFileSync("locked-manifest.jsonl","utf8").split("\n")[0]).manifestLock)')"
+            node node_modules/vite-node/vite-node.mjs --config vitest.config.ts scripts/benchmark-extraction-v2.ts --engineering --partition=locked "--lock-receipt=$extraction_lock" "--image=$ocr_image_id" > locked-extraction-report.jsonl || extraction_status=1
+          else
+            extraction_status=1
+          fi
+          exit "$extraction_status"
       - name: Enforce additional frozen extraction regression floors
         if: ${{ !cancelled() && steps.build_ocr.outcome == 'success' }}
         shell: bash
@@ -162,7 +170,7 @@ jobs:
           ocr_image_id="$(docker image inspect resumide-ocr:${{ github.sha }} --format '{{.Id}}')"
           extraction_status=0
           node node_modules/vite-node/vite-node.mjs --config vitest.config.ts scripts/benchmark-extraction-v2.ts --engineering --corpus=repair-20261017 "--image=$ocr_image_id" > shared-development-extraction-report.jsonl || extraction_status=1
-          for corpus in repair-20261017 confirmation-20261017 validation-20261017 verification-20261017 assessment-20261017 acceptance-20261017; do
+          for corpus in repair-20261017 confirmation-20261017 validation-20261017 verification-20261017 assessment-20261017 acceptance-20261017 runtime-check-20261017; do
             if ! node node_modules/vite-node/vite-node.mjs --config vitest.config.ts scripts/benchmark-extraction-v2.ts --engineering "--corpus=$corpus" --partition=locked --manifest-only "--image=$ocr_image_id" > "${corpus}-manifest.jsonl"; then
               extraction_status=1
               continue
@@ -185,6 +193,7 @@ jobs:
             verification-20261017-*.jsonl
             assessment-20261017-*.jsonl
             acceptance-20261017-*.jsonl
+            runtime-check-20261017-*.jsonl
             shared-development-extraction-report.jsonl
           if-no-files-found: ignore
           retention-days: 14

@@ -7,6 +7,7 @@ import {
   type DockerCommand,
 } from "../../../app/lib/server/ocr/local-container";
 import type { SelectiveOcrRequest } from "../../../app/lib/server/ocr/selective";
+import { TEXT_FUSION_VERSIONS } from "../../../app/lib/server/ocr/profiles";
 
 const bytes = new TextEncoder().encode("%PDF-synthetic");
 const imageId = `sha256:${"a".repeat(64)}`;
@@ -56,6 +57,97 @@ function mockDocker() {
 
 describe("isolated local OCR container", () => {
   afterEach(() => vi.useRealTimers());
+  it("identifies the fixed two-model text profile", async () => {
+    const { command, calls } = mockDocker();
+    const adapter = createLocalContainerOcrAdapter({
+      bytes,
+      imageId,
+      command,
+      evaluationConfig: { psm: 3, maxDpi: 150, model: "text-fusion" },
+    });
+    await adapter.recognize(request, new AbortController().signal);
+    expect(calls[0].slice(-5)).toEqual([
+      imageId,
+      "1",
+      "3",
+      "150",
+      "text-fusion",
+    ]);
+    expect(adapter.versions).toEqual(TEXT_FUSION_VERSIONS);
+  });
+
+  it.each([undefined, 2] as const)(
+    "pins best model with threshold %s and fixed internal paths",
+    async (thresholdingMethod) => {
+      const { command, calls } = mockDocker();
+      const adapter = createLocalContainerOcrAdapter({
+        bytes,
+        imageId,
+        command,
+        evaluationConfig: {
+          psm: 3,
+          maxDpi: 150,
+          model: "best",
+          ...(thresholdingMethod === undefined ? {} : { thresholdingMethod }),
+        },
+      });
+      await adapter.recognize(request, new AbortController().signal);
+      const expected = [
+        imageId,
+        "1",
+        "3",
+        "150",
+        ...(thresholdingMethod === undefined ? [] : ["2"]),
+        "best",
+      ];
+      expect(calls[0].slice(-expected.length)).toEqual(expected);
+      expect(adapter.versions.languageData).toBe(
+        "sha256:8280aed0782fe27257a68ea10fe7ef324ca0f8d85bd2fd145d1c2b560bcb66ba",
+      );
+      expect(adapter.versions.engine).toBe(
+        LOCAL_OCR_VERSIONS.engine +
+          "/lstm-best" +
+          (thresholdingMethod === undefined ? "" : "/sauvola"),
+      );
+      const dockerfile = readFileSync("scripts/ocr-runtime/Dockerfile", "utf8");
+      expect(dockerfile).toContain(
+        "--checksum=" + adapter.versions.languageData,
+      );
+      expect(dockerfile).toContain(
+        "e2aad9b983032bb1beff9133104a67cdbb87ca4d/eng.traineddata",
+      );
+    },
+  );
+
+  it.each([
+    [1, "leptonica-otsu"],
+    [2, "sauvola"],
+  ] as const)(
+    "identifies and passes threshold method %i",
+    async (thresholdingMethod, suffix) => {
+      const { command, calls } = mockDocker();
+      const adapter = createLocalContainerOcrAdapter({
+        bytes,
+        imageId,
+        command,
+        evaluationConfig: { psm: 3, maxDpi: 150, thresholdingMethod },
+      });
+      await adapter.recognize(request, new AbortController().signal);
+      expect(calls[0].slice(-5)).toEqual([
+        imageId,
+        "1",
+        "3",
+        "150",
+        String(thresholdingMethod),
+      ]);
+      expect(adapter.versions.engine).toBe(
+        LOCAL_OCR_VERSIONS.engine + "/" + suffix,
+      );
+      expect(adapter.versions.renderer).toBe(
+        LOCAL_OCR_VERSIONS.renderer + "/dpi-150",
+      );
+    },
+  );
 
   it("preserves original default argv and metadata for explicit 3/300 evaluation config", async () => {
     const { command, calls } = mockDocker();
@@ -109,6 +201,15 @@ describe("isolated local OCR container", () => {
     { psm: "3;echo", maxDpi: 300 },
     { psm: 3, maxDpi: NaN },
     { psm: 3, maxDpi: 300, flags: "--any" },
+    { psm: 3, maxDpi: 150, thresholdingMethod: 0 },
+    { psm: 3, maxDpi: 150, thresholdingMethod: 3 },
+    { psm: 3, maxDpi: 150, thresholdingMethod: "2;echo" },
+    { psm: 3, maxDpi: 150, model: "/host/data" },
+    { psm: 3, maxDpi: 150, model: "best --any" },
+    { psm: 3, maxDpi: 150, model: "fast" },
+    { psm: 6, maxDpi: 150, model: "text-fusion" },
+    { psm: 3, maxDpi: 300, model: "text-fusion" },
+    { psm: 3, maxDpi: 150, model: "text-fusion", thresholdingMethod: 2 },
   ])(
     "rejects non-allowlisted evaluation configuration %# before invocation",
     (evaluationConfig) => {

@@ -70,14 +70,93 @@ def execute(argv):
                 process.wait(timeout=1)
 
 
+def word_iou(first, second):
+    width = max(0, min(first["left"] + first["width"], second["left"] + second["width"]) - max(first["left"], second["left"]))
+    height = max(0, min(first["top"] + first["height"], second["top"] + second["height"]) - max(first["top"], second["top"]))
+    intersection = width * height
+    return intersection / (first["width"] * first["height"] + second["width"] * second["height"] - intersection)
+
+
+def fuse_text_words(first, second):
+    # Experimental text-fusion/4: engine certainty is not calibrated accuracy.
+    result = list(first)
+    groups = {}
+    for index, word in enumerate(first):
+        groups.setdefault(tuple(word["line"]), [[], []])[0].append(index)
+    for index, word in enumerate(second):
+        groups.setdefault(tuple(word["line"]), [[], []])[1].append(index)
+    for primary, alternate in groups.values():
+        # Dense/ambiguous lines retain the baseline and bound alignment work.
+        if len(primary) > 128 or len(alternate) > 128:
+            continue
+        forward = {index: [] for index in primary}
+        reverse = {index: [] for index in alternate}
+        for left in primary:
+            for right in alternate:
+                if word_iou(first[left], second[right]) >= 0.8:
+                    forward[left].append(right)
+                    reverse[right].append(left)
+        for left in primary:
+            if len(forward[left]) != 1:
+                continue
+            right = forward[left][0]
+            if len(reverse[right]) != 1:
+                continue
+            original, candidate = first[left]["text"], second[right]["text"]
+            # Limit the alternate decoder to punctuation/glyph ambiguity. Plain
+            # alphabetic words retain their baseline rather than being rewritten.
+            if original.isalpha():
+                continue
+            if original == candidate or not all(any(char.isalpha() for char in text) for text in [original, candidate]):
+                continue
+            # An English word model can recast abbreviations as mixed-case words.
+            if original.isupper() and any(char.islower() for char in candidate):
+                continue
+            if any(char.isdigit() or char == "@" or char.isspace() for char in original + candidate) or "://" in original or "://" in candidate:
+                continue
+            result[left] = second[right]
+    return result
+
+
+def parse_words(tsv, width, height):
+    words = []
+    for row in csv.DictReader(io.StringIO(tsv), delimiter="\t"):
+        if row["level"] != "5" or not row["text"].strip():
+            continue
+        left, top, box_width, box_height = [int(row[key]) for key in ["left", "top", "width", "height"]]
+        confidence = float(row["conf"])
+        if not math.isfinite(confidence) or not 0 <= confidence <= 100 or min(left, top) < 0 or min(box_width, box_height) <= 0 or left + box_width > width or top + box_height > height:
+            raise ValueError("geometry")
+        words.append({"text": row["text"], "line": (row["block_num"], row["par_num"], row["line_num"]),
+                      "left": left, "top": top, "width": box_width, "height": box_height, "confidence": confidence})
+    return words
+
+
 def main():
-    if len(sys.argv) not in [2, 4] or not re.fullmatch(r"[1-9][0-9]*(,[1-9][0-9]*){0,9}", sys.argv[1]):
+    if len(sys.argv) not in [2, 4, 5, 6] or not re.fullmatch(r"[1-9][0-9]*(,[1-9][0-9]*){0,9}", sys.argv[1]):
         raise ValueError("pages")
     psm, max_dpi = "3", 300
-    if len(sys.argv) == 4:
+    if len(sys.argv) >= 4:
         if sys.argv[2] not in ["3", "6"] or sys.argv[3] not in ["150", "300"]:
             raise ValueError("config")
         psm, max_dpi = sys.argv[2], int(sys.argv[3])
+    threshold_args = []
+    model_args = []
+    tsv_config = "tsv"
+    extras = sys.argv[4:]
+    fusion = extras == ["text-fusion"]
+    if fusion:
+        if psm != "3" or max_dpi != 150:
+            raise ValueError("config")
+        extras = []
+    if extras and extras[-1] == "best":
+        model_args = ["--oem", "1", "--tessdata-dir", "/opt/tessdata-best"]
+        tsv_config = "/usr/share/tesseract-ocr/5/tessdata/configs/tsv"
+        extras = extras[:-1]
+    if extras:
+        if extras not in [["1"], ["2"]]:
+            raise ValueError("config")
+        threshold_args = ["-c", "thresholding_method=1" if extras[0] == "1" else "thresholding_method=2"]
     selected = [int(number) for number in sys.argv[1].split(",")]
     if len(set(selected)) != len(selected) or max(selected) > 20:
         raise ValueError("pages")
@@ -111,24 +190,22 @@ def main():
         total_pixels += pixels
         if not width or not height or pixels > 10_000_000 or total_pixels > 100_000_000:
             raise ValueError("pixels")
-        tsv = execute(["tesseract", "/scratch/page.png", "stdout", "-l", "eng", "--psm", psm, "tsv"]).decode("utf-8")
+        tsv = execute(["tesseract", "/scratch/page.png", "stdout", "-l", "eng", "--psm", psm, *model_args, *threshold_args, tsv_config]).decode("utf-8")
+        decoded = parse_words(tsv, width, height)
+        if fusion:
+            alternate_tsv = execute(["tesseract", "/scratch/page.png", "stdout", "-l", "eng", "--psm", "3", "--oem", "1", "--tessdata-dir", "/opt/tessdata-best", "/usr/share/tesseract-ocr/5/tessdata/configs/tsv"]).decode("utf-8")
+            decoded = fuse_text_words(decoded, parse_words(alternate_tsv, width, height))
         words = []
         text = ""
         previous_line = None
-        for row in csv.DictReader(io.StringIO(tsv), delimiter="\t"):
-            if row["level"] != "5" or not row["text"].strip():
-                continue
-            line = (row["block_num"], row["par_num"], row["line_num"])
+        for row in decoded:
+            line = row["line"]
             if text:
                 text += " " if line == previous_line else "\n"
             start = len(text)
             text += row["text"]
-            left, top, box_width, box_height = [int(row[key]) for key in ["left", "top", "width", "height"]]
-            confidence = float(row["conf"])
-            if not math.isfinite(confidence) or not 0 <= confidence <= 100 or min(left, top) < 0 or min(box_width, box_height) <= 0 or left + box_width > width or top + box_height > height:
-                raise ValueError("geometry")
-            words.append({"text": row["text"], "start": start, "end": len(text), "confidence": confidence,
-                          "box": {"x": left / width, "y": top / height, "width": box_width / width, "height": box_height / height}})
+            words.append({"text": row["text"], "start": start, "end": len(text), "confidence": row["confidence"],
+                          "box": {"x": row["left"] / width, "y": row["top"] / height, "width": row["width"] / width, "height": row["height"] / height}})
             previous_line = line
         output.append({"pageNumber": page_number, "pageId": "page-" + str(page_number), "imageSha256": hashlib.sha256(image).hexdigest(),
                        "widthPixels": width, "heightPixels": height, "rotation": rotation, "text": text, "words": words})

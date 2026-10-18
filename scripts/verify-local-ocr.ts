@@ -3,6 +3,7 @@ import { execFile } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { promisify } from "node:util";
 import { createLocalContainerOcrAdapter } from "../app/lib/server/ocr/local-container";
+import { TEXT_FUSION_VERSIONS } from "../app/lib/server/ocr/profiles";
 import {
   detectPdfTextProfile,
   extractPdfTextLayers,
@@ -16,6 +17,15 @@ import { createOcrSyntheticFixture } from "../tests/fixtures/ocr-synthetic";
 
 const docker = promisify(execFile);
 const imageId = process.argv[2];
+assert.ok(
+  process.argv.length === 3 ||
+    (process.argv.length === 4 && process.argv[3] === "--text-fusion"),
+  "Only an explicit image ID and optional --text-fusion are supported.",
+);
+const textFusion = process.argv[3] === "--text-fusion";
+const evaluationConfig = textFusion
+  ? { psm: 3 as const, maxDpi: 150 as const, model: "text-fusion" as const }
+  : undefined;
 assert.match(
   imageId ?? "",
   /^sha256:[a-f0-9]{64}$/,
@@ -46,7 +56,7 @@ async function waitForCleanup(baseline: string[]) {
 async function observeIsolation(
   baseline: string[],
   finished: () => boolean,
-  onRunning?: () => void,
+  onRunning?: (phase: "render" | "fast" | "best") => void,
 ) {
   let observed = false;
   while (!finished()) {
@@ -88,13 +98,19 @@ async function observeIsolation(
         try {
           const processes = await docker(
             "docker",
-            ["top", id, "-eo", "pid,comm"],
+            ["top", id, "-eo", "pid,args"],
             {
               timeout: 3000,
               maxBuffer: 4096,
             },
           );
-          if (/\b(pdftoppm|tesseract)\b/u.test(processes.stdout)) onRunning();
+          if (/\btesseract\b/u.test(processes.stdout))
+            onRunning(
+              processes.stdout.includes("--tessdata-dir /opt/tessdata-best")
+                ? "best"
+                : "fast",
+            );
+          else if (/\bpdftoppm\b/u.test(processes.stdout)) onRunning("render");
         } catch {
           // The bounded engine or exact-ID cleanup can finish before inspection.
           continue;
@@ -174,7 +190,11 @@ for (const kind of ["scanned", "mixed", "native"] as const) {
   const controller = new AbortController();
   const pending = runSelectiveLocalOcr(
     request,
-    createLocalContainerOcrAdapter({ bytes: fixture.bytes, imageId }),
+    createLocalContainerOcrAdapter({
+      bytes: fixture.bytes,
+      imageId,
+      evaluationConfig,
+    }),
     controller.signal,
   ).finally(() => {
     finished = true;
@@ -215,6 +235,14 @@ for (const kind of ["scanned", "mixed", "native"] as const) {
     "Actual Docker resource/isolation configuration must be observed.",
   );
   assert.equal(outcome.scoringEligible, false);
+  if (textFusion) {
+    assert.deepEqual(outcome.provider.versions, TEXT_FUSION_VERSIONS);
+    assert.equal(outcome.resourceUsage?.rendererCalls, outcome.pages.length);
+    assert.equal(
+      outcome.resourceUsage?.recognitionCalls,
+      outcome.pages.length * 2,
+    );
+  }
   assert.deepEqual(
     outcome.pages.map((page) => page.pageNumber),
     profile.pagesNeedingOcr,
@@ -241,11 +269,18 @@ for (const kind of ["scanned", "mixed", "native"] as const) {
       ),
     })),
     cost: outcome.cost,
+    resourceUsage: outcome.resourceUsage,
   });
 }
 assert.ok(mixedProbe);
 const safeFailures = [];
-for (const mode of ["cancelled", "timeout", "invalid_pdf"] as const) {
+const modes = [
+  "cancelled",
+  ...(textFusion ? ["cancelled_second_pass" as const] : []),
+  "timeout",
+  "invalid_pdf",
+] as const;
+for (const mode of modes) {
   const request: SelectiveOcrRequest = structuredClone(mixedProbe.request);
   request.attemptId = randomUUID();
   request.createdAt = new Date().toISOString();
@@ -271,7 +306,7 @@ for (const mode of ["cancelled", "timeout", "invalid_pdf"] as const) {
   const started = performance.now();
   const pending: Promise<SelectiveOcrOutcome> = runSelectiveLocalOcr(
     request,
-    createLocalContainerOcrAdapter({ bytes, imageId }),
+    createLocalContainerOcrAdapter({ bytes, imageId, evaluationConfig }),
     controller.signal,
   ).finally(() => {
     finished = true;
@@ -280,9 +315,16 @@ for (const mode of ["cancelled", "timeout", "invalid_pdf"] as const) {
     await observeIsolation(
       baseline,
       () => finished,
-      () => {
-        engineObserved = true;
-        if (mode === "cancelled") controller.abort();
+      (phase) => {
+        if (mode === "cancelled_second_pass") {
+          if (phase === "best") {
+            engineObserved = true;
+            controller.abort();
+          }
+        } else if (!textFusion || phase === "fast") {
+          engineObserved = true;
+          if (mode === "cancelled") controller.abort();
+        }
       },
     );
   } catch (error) {
@@ -296,8 +338,15 @@ for (const mode of ["cancelled", "timeout", "invalid_pdf"] as const) {
   assert.equal(outcome.status, "failed", `Expected safe failure for ${mode}`);
   if (outcome.status !== "failed")
     throw new Error("Expected safe OCR failure.");
-  assert.equal(outcome.code, mode === "invalid_pdf" ? "engine_failure" : mode);
-  if (mode === "cancelled")
+  assert.equal(
+    outcome.code,
+    mode === "invalid_pdf"
+      ? "engine_failure"
+      : mode === "cancelled_second_pass"
+        ? "cancelled"
+        : mode,
+  );
+  if (mode === "cancelled" || mode === "cancelled_second_pass")
     assert.equal(
       engineObserved,
       true,
@@ -316,6 +365,7 @@ process.stdout.write(
     {
       status: "engineering_smoke_passed",
       imageId,
+      profile: textFusion ? TEXT_FUSION_VERSIONS.engine : "legacy-fast",
       datasetType: "synthetic_engineering_only",
       partition: "development",
       humanValidation: "not_evaluated",

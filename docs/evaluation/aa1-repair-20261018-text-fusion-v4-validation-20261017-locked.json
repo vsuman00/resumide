@@ -1,0 +1,506 @@
+{
+  "preExecutionReceipt": {
+    "status": "manifest_frozen_before_recognition",
+    "manifestLock": "41ca0fbb26eff0937906da7ae1e312ee3ed298d2609d2d7c8bedf185b8a72be8",
+    "configurationHash": "803ad05d6276e05204173c782ac3d1c18d11f466bc7112fb26ead9b48d22f165",
+    "receipt": {
+      "imageId": "sha256:990ac9d9ff190beeeaa0bb6323a2cbee8b1da0a78926f194ec217f6afa09877d",
+      "evaluationConfig": {
+        "psm": 3,
+        "maxDpi": 150,
+        "model": "text-fusion"
+      },
+      "versions": {
+        "engine": "tesseract-5.3.0-2/text-fusion-v4",
+        "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+        "languageData": "model-bundle-sha256:74a6c07f4943981367364af90d830c36c6de018cb0c7762caba61e51189c44cc"
+      },
+      "modelManifest": {
+        "schemaVersion": "ocr-text-fusion/4.0.0",
+        "models": [
+          {
+            "id": "fast",
+            "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
+            "oem": 3
+          },
+          {
+            "id": "best",
+            "sha256": "8280aed0782fe27257a68ea10fe7ef324ca0f8d85bd2fd145d1c2b560bcb66ba",
+            "oem": 1
+          }
+        ],
+        "psm": 3,
+        "maxDpi": 150,
+        "thresholdingMethod": 0,
+        "selector": {
+          "version": "aligned-text/4.0.0",
+          "preserveAlphabeticBaseline": true,
+          "preserveUppercaseWhenAlternateIntroducesLowercase": true,
+          "reciprocal": true,
+          "minimumIou": 0.8,
+          "maximumWordsPerLine": 128,
+          "preserveTokensContaining": [
+            "digits",
+            "@",
+            "://",
+            "whitespace"
+          ],
+          "policy": "prefer-best-for-unique-aligned-punctuation-text-otherwise-fast",
+          "confidenceCalibration": "none"
+        }
+      },
+      "sourceCode": {
+        "app/lib/server/extraction-benchmark.ts": "d8f392fd233a0f268ea7e3aaf2595a394b3d2da353a191edefc012a15020b5ba",
+        "app/lib/server/evidence-fields.ts": "a21e2280a556bf97087179dfc6e9b8468e978591d1d24c8b807000fbfc1d8ff7",
+        "app/lib/server/parsing/contact.ts": "e5b1959000b229a3f22e52e5cda6abc30bbfd2e8b6f18b55d1d907db3ebb5579",
+        "app/lib/server/parsing/dates.ts": "eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72",
+        "app/lib/server/parsing/sections.ts": "e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1",
+        "app/lib/server/native-evidence.ts": "dcd756d6970e1a6a0885377c731c9ae73e97684e591eecbf4fc7c9e134fae037",
+        "app/lib/server/native-evidence-schema.ts": "fa26cede5a7a7f4f4910bd6099b44b1bada463eafbdfeb6fd48e164ecea21e39",
+        "app/lib/server/document-evidence.ts": "f4d16c019146924f2390fa764131e3c6b9f69c65531d90315f0a64645a244e67",
+        "app/lib/server/ocr/pdf-detection.ts": "fecea75867dfa0724bb95d26df552b635c18b51856ec786dd71b4577b8bf1a17",
+        "app/lib/server/ocr/selective.ts": "2d647df8cd51d36fd1fbd489cc7464d8ef3b8f098fc674743b871ea8a7f04325",
+        "app/lib/server/ocr/local-container.ts": "45234904a4dad16ccc5b998c679ce6ae1850f72650edcc2920824bec27fc1f65",
+        "app/lib/server/ocr/profiles.ts": "44eb3115fcff823c2f271917d317b2bbcc824b3efbd0f113fa4045167e39cfa8",
+        "scripts/ocr-runtime/runner.py": "d683e041106fdf1d765c1264dd7fbb7a0a17b971c301e0b6b47e238e1d7bbe63",
+        "scripts/ocr-runtime/Dockerfile": "9d1e7b1066a1b6678c99533fd7e06eb8ff967ab068730bf6024d78269a979991",
+        "scripts/extraction-benchmark-engineering.ts": "59ee7de5ff68e36b060b33f63598d1b09ed0a155ead37a3ba5806bc2e3f657e5",
+        "tests/fixtures/native-pdf.ts": "50d1976a1edc2b96c3a34a208d5e7c424447dfcbef61abecf8840726baca2df8",
+        "tests/fixtures/ocr-print-pilot.ts": "b9081984b4865676ca25fe5301cc00e96c57d747075192453b24f8605559ab74",
+        "package-lock.json": "b2b49d6d85bcdd5019bf2d41115e7c7cfdbda1f35444f01f60edf3f1e9a80461",
+        "vitest.config.ts": "7fd600f9b32091e99009efd1361a597f63044252fb82016f919255e23c744649",
+        "tests/fixtures/extraction-repair-development.ts": "c4e81ba36711cff36b06424b215e6191abd713725d14d8c4ddaae553871e04b4",
+        "tests/fixtures/extraction-repair-heldout.ts": "4a588a6c455d7101aa066e84f4574c5e7f8fda72819576f720eee43b4fb2ed66",
+        "docs/evaluation/aa1-repair-20261017-heldout-freeze.json": "6c13d2d3757acf48f70bc8e34a812d32004d5fc1a0a0dab87488693c4bbdd788",
+        "tests/fixtures/extraction-repair-confirmation.ts": "8eccb279f50ff412df5fa3afe49fea46295bf3e8c9cc39e770b056b4f1ae5975",
+        "docs/evaluation/aa1-repair-20261017-confirmation-freeze.json": "1c02a13fcd4c2e3d03715b06cfc00bca5fb885aebfe37a4f54a719e88fcfa893",
+        "app/lib/server/evidence-fields-v1.ts": "ae802d3b4e0757ede32aabec5a4b28616ac4314b160b9dc69bf064b90f86ca55",
+        "tests/fixtures/extraction-repair-validation.ts": "9e4359887ceb615bed85b522dc0782a1e198ecba0eae8b5c9840880808dfc4c0",
+        "tests/fixtures/extraction-repair-verification.ts": "e57cd2345e8e2a13f5e75a62e94734741fee33c6d8b3733aad1cce1801bff1d2",
+        "tests/fixtures/extraction-repair-assessment.ts": "0e91958141554a494b9106269163b9f9948f9afb7c5f615356ca453cf8572135",
+        "tests/fixtures/extraction-repair-acceptance.ts": "17e844b353ccc76c9b0413206fccce4adfa2e337f808caee831a7962dbfb1dfe",
+        "tests/fixtures/extraction-repair-runtime-check.ts": "3e4de155736743cfcbe362cd8b85d6dcd87ce4495b549bfb3f2a42fc5f134e3e"
+      },
+      "sourceFamilies": [
+        {
+          "id": "repair-dev-separated-header",
+          "partition": "development",
+          "authoredSourceHash": "9994502c29586024aa6c42fa7dd327f63f18bbe6916231a4531651048e24a207"
+        },
+        {
+          "id": "repair-dev-title-first",
+          "partition": "development",
+          "authoredSourceHash": "f4f60f1866cacaedbd6366d014186d26e8b7b4e599e8ba9325225e8d016d1a32"
+        },
+        {
+          "id": "repair-dev-inline-employment",
+          "partition": "development",
+          "authoredSourceHash": "7112c27b21dc29f8d6065044116c16b3e8a6045e436e0ff5fd80b9fb8a7a02a1"
+        },
+        {
+          "id": "repair-dev-header-0",
+          "partition": "development",
+          "authoredSourceHash": "efe48dd836b5c23f075f6f00642b9f122be2bf655f104bf711226eaaaf398d1d"
+        },
+        {
+          "id": "repair-dev-header-1",
+          "partition": "development",
+          "authoredSourceHash": "b1b3d4e7d31daef9cd4f475b6436c4da48ad742b6590829a0d7ef178d9e6aa3f"
+        },
+        {
+          "id": "repair-dev-header-2",
+          "partition": "development",
+          "authoredSourceHash": "64cff11b1e2e6db239db5cb4c45dcd4ba3934725985be572d0d369f02b349044"
+        },
+        {
+          "id": "repair-confirmation-01",
+          "partition": "locked",
+          "authoredSourceHash": "8144e6537af155db650da1b9b894485bd00684f94d6c584a78d2cea731a8d832"
+        },
+        {
+          "id": "repair-confirmation-02",
+          "partition": "locked",
+          "authoredSourceHash": "c6c71b9c54df75ea18383409180afb77e9898a048d90fda1a99a25e0dfc989e9"
+        },
+        {
+          "id": "repair-confirmation-03",
+          "partition": "locked",
+          "authoredSourceHash": "ba44126a2cef86ab03137b816026c663fd59176d702023c42a5683413364c9c5"
+        },
+        {
+          "id": "repair-confirmation-04",
+          "partition": "locked",
+          "authoredSourceHash": "af6847e3996dba612de850df8dfdbb79cd159bae8a62784fa91f6ed6f12a3325"
+        }
+      ],
+      "runtimePlatform": "darwin/arm64",
+      "scope": "synthetic_engineering_only",
+      "partition": "locked",
+      "corpusSet": "validation-20261017"
+    },
+    "sources": [
+      {
+        "id": "print-repair-confirmation-01-clean-v1",
+        "family": "repair-confirmation-01",
+        "segment": "clean",
+        "partition": "locked",
+        "sourceHash": "eb9686c6fe6dc4af8288ec93e2796d7bbb8ea3b9f1b5e351801643b341f1709b",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "0bb8eaf90518c9ff589ce9c8abe6b119b5b5484434c3c1f201740909e829ae94"
+      },
+      {
+        "id": "print-repair-confirmation-01-challenging-v1",
+        "family": "repair-confirmation-01",
+        "segment": "challenging",
+        "partition": "locked",
+        "sourceHash": "a1491e9598020731643c04562418e305ec6f264ded4b3757a7a8435a252b5550",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "0bb8eaf90518c9ff589ce9c8abe6b119b5b5484434c3c1f201740909e829ae94"
+      },
+      {
+        "id": "print-repair-confirmation-01-mixed-v1",
+        "family": "repair-confirmation-01",
+        "segment": "mixed",
+        "partition": "locked",
+        "sourceHash": "9e815b297056a7f092a010c8dd1e39c076b13540fc45b42c9d0da6c14f801f51",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "2ea7819c38e42c03c84c52368b1e7fe97ddfbb64321d531770e98166ff8237c6"
+      },
+      {
+        "id": "print-repair-confirmation-02-clean-v1",
+        "family": "repair-confirmation-02",
+        "segment": "clean",
+        "partition": "locked",
+        "sourceHash": "9440f5f3415e76cf2f31678f9d854d0e77aa40bfdf3aa3faa7897d2607218e98",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "e3304058408daf16b442c45ed0627ac253a715449a4c38b47375fd7730ae5e25"
+      },
+      {
+        "id": "print-repair-confirmation-02-challenging-v1",
+        "family": "repair-confirmation-02",
+        "segment": "challenging",
+        "partition": "locked",
+        "sourceHash": "fe4f65c863b1ebd62eee7893f63bdce9feafb8e1b1d86a2149963f03b72d20c8",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "e3304058408daf16b442c45ed0627ac253a715449a4c38b47375fd7730ae5e25"
+      },
+      {
+        "id": "print-repair-confirmation-02-mixed-v1",
+        "family": "repair-confirmation-02",
+        "segment": "mixed",
+        "partition": "locked",
+        "sourceHash": "ab864f51b20f3d79b8c8eb989daac174485133d55e8b2b742aaeba7f38bb5284",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "4ac1d0c0263711a179187e86c9f2a32ab642296dfbd6e82c99fdb2757b255b0a"
+      },
+      {
+        "id": "print-repair-confirmation-03-clean-v1",
+        "family": "repair-confirmation-03",
+        "segment": "clean",
+        "partition": "locked",
+        "sourceHash": "8607e0b556c1a8690a0255c01ca384dadcbe02fabe5648077af71fcc3893652e",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "0d1f927f3ff1730a4dd98b1765bb577610cbfabbb31699a59e9aa519270e5ff9"
+      },
+      {
+        "id": "print-repair-confirmation-03-challenging-v1",
+        "family": "repair-confirmation-03",
+        "segment": "challenging",
+        "partition": "locked",
+        "sourceHash": "0ed3dc096ae345775d6d9fd19b562e39d437e703f30287775219eaeb57e95557",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "0d1f927f3ff1730a4dd98b1765bb577610cbfabbb31699a59e9aa519270e5ff9"
+      },
+      {
+        "id": "print-repair-confirmation-03-mixed-v1",
+        "family": "repair-confirmation-03",
+        "segment": "mixed",
+        "partition": "locked",
+        "sourceHash": "7cece7d1d44127ab2ad43902ec8d889acbdd96458765d58299d0711b3a1f05e1",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "5c9a0c42c9a5623c99b5ec547019bf7aae102d6f28f5ca9ea739e262afbe3587"
+      },
+      {
+        "id": "print-repair-confirmation-04-clean-v1",
+        "family": "repair-confirmation-04",
+        "segment": "clean",
+        "partition": "locked",
+        "sourceHash": "445e9d283fef260ec7280a961c32f97cc49d1e65044e699c935f2c242d52d3e4",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "71de848a5645a3c09524d5718b04490296066b3390281ada9a78caa0879a9ab9"
+      },
+      {
+        "id": "print-repair-confirmation-04-challenging-v1",
+        "family": "repair-confirmation-04",
+        "segment": "challenging",
+        "partition": "locked",
+        "sourceHash": "e01801aae541f74f5dc8c3f0e10cfc347f4c1b50a994c22a71f9a92986bb34c2",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "71de848a5645a3c09524d5718b04490296066b3390281ada9a78caa0879a9ab9"
+      },
+      {
+        "id": "print-repair-confirmation-04-mixed-v1",
+        "family": "repair-confirmation-04",
+        "segment": "mixed",
+        "partition": "locked",
+        "sourceHash": "1b2ec08dc487e779f14522ae266318bb53592b31775b139fbbe7cbb89fc16597",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "423671db19e0101dcbe7a596585f9ff4de448c30d081e6b79d23a7e4bd866605"
+      }
+    ]
+  },
+  "report": {
+    "schemaVersion": "extraction-report/1.0.0",
+    "fieldEvaluatorVersion": "whitespace-grounded-fields/1.0.0",
+    "mode": "engineering",
+    "partition": "locked",
+    "manifestLock": "41ca0fbb26eff0937906da7ae1e312ee3ed298d2609d2d7c8bedf185b8a72be8",
+    "datasetVersion": "aa1-validation-20261017-locked-v1",
+    "producerVersion": "document-evidence/2.0.0",
+    "providerVersion": "tesseract-5.3.0-2/text-fusion-v4/poppler-22.12.0-2+deb12u3/dpi-150",
+    "configurationHash": "803ad05d6276e05204173c782ac3d1c18d11f466bc7112fb26ead9b48d22f165",
+    "normalizationPolicy": "unicode-codepoint-whitespace-v1",
+    "segments": [
+      {
+        "id": "clean",
+        "scan": "clean",
+        "layout": "single-column",
+        "documents": 4,
+        "sourceFamilies": 4,
+        "metrics": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": 0,
+          "fieldPrecision": 1,
+          "fieldRecall": 1,
+          "pageCoverage": 1,
+          "orderedLineAgreement": 1
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": [
+            0,
+            0
+          ],
+          "fieldPrecision": [
+            1,
+            1
+          ],
+          "fieldRecall": [
+            1,
+            1
+          ],
+          "pageCoverage": [
+            1,
+            1
+          ],
+          "orderedLineAgreement": [
+            1,
+            1
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 964.2407079999975,
+          "p95": 1000.315082999994
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": []
+      },
+      {
+        "id": "challenging",
+        "scan": "challenging",
+        "layout": "single-column",
+        "documents": 4,
+        "sourceFamilies": 4,
+        "metrics": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": 0,
+          "fieldPrecision": 1,
+          "fieldRecall": 1,
+          "pageCoverage": 1,
+          "orderedLineAgreement": 1
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": [
+            0,
+            0
+          ],
+          "fieldPrecision": [
+            1,
+            1
+          ],
+          "fieldRecall": [
+            1,
+            1
+          ],
+          "pageCoverage": [
+            1,
+            1
+          ],
+          "orderedLineAgreement": [
+            1,
+            1
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 938.4507500000036,
+          "p95": 962.0310000000027
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": []
+      },
+      {
+        "id": "mixed",
+        "scan": "clean",
+        "layout": "single-column",
+        "documents": 4,
+        "sourceFamilies": 4,
+        "metrics": {
+          "nativeCharacterAccuracy": 1,
+          "ocrCharacterErrorRate": 0,
+          "fieldPrecision": 1,
+          "fieldRecall": 1,
+          "pageCoverage": 1,
+          "orderedLineAgreement": 1
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": [
+            1,
+            1
+          ],
+          "ocrCharacterErrorRate": [
+            0,
+            0
+          ],
+          "fieldPrecision": [
+            1,
+            1
+          ],
+          "fieldRecall": [
+            1,
+            1
+          ],
+          "pageCoverage": [
+            1,
+            1
+          ],
+          "orderedLineAgreement": [
+            1,
+            1
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 1277.5990420000016,
+          "p95": 1302.5394579999993
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": []
+      }
+    ],
+    "failures": [],
+    "releaseBlockers": [
+      "synthetic_corpus_not_representative",
+      "missing_calibratedPolicy",
+      "missing_representativeCorpusReceipt",
+      "missing_approvedThresholdsReceipt",
+      "missing_sampleSizeJustificationReceipt",
+      "independent_human_validation_missing",
+      "calibration_partition_missing"
+    ],
+    "engineeringPassed": true,
+    "releasePassed": false,
+    "exitCode": 0,
+    "perField": [
+      {
+        "field": "name",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "email",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "phone",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "employer",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "role",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "dates",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "education",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "certification",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      }
+    ],
+    "authoritativeScoresEmitted": 0,
+    "criticalFields": {
+      "predicted": 96,
+      "expected": 96
+    },
+    "resourceMeasurements": {
+      "computeCost": "host_rate_unavailable",
+      "memoryAndCpu": "not_aggregated_in_this_harness"
+    },
+    "limitations": [
+      "4_authored_locked_families_not_representative",
+      "no_calibration_or_representative_recognition",
+      "independent_human_validation_deferred",
+      "single_column_only"
+    ]
+  }
+}

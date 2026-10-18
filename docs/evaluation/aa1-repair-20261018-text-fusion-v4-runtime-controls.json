@@ -1,0 +1,78 @@
+{
+  "timestampUTC": "2026-10-18T07:30:44.892Z",
+  "image": "sha256:990ac9d9ff190beeeaa0bb6323a2cbee8b1da0a78926f194ec217f6afa09877d",
+  "checks": [
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:ocr:local",
+        "--",
+        "<immutable-image>"
+      ],
+      "exitCode": 0,
+      "logSha256": "3849dcc8196167f00422cf3ad0f25b28f152d373ef9ce2007cdf883004f43515"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:ocr:local",
+        "--",
+        "<immutable-image>",
+        "--text-fusion"
+      ],
+      "exitCode": 0,
+      "logSha256": "83b0b7ef983ca681f874dd7da6e86f6ffbba6a5f3e0281485c6adde1a2ae905e"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:ocr:pilot",
+        "--",
+        "<immutable-image>"
+      ],
+      "exitCode": 0,
+      "logSha256": "efaa8c972456ca6256d6fb26afb4962ee39d127324ad7f2a323906de8707c319"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:ocr:pilot",
+        "--",
+        "<immutable-image>",
+        "--print-pilot",
+        "--partition=development",
+        "--psm=3",
+        "--dpi=150",
+        "--require-quality"
+      ],
+      "exitCode": 0,
+      "logSha256": "91af13b0f65a60e47d300dbd6c303adc17fc914b560f1b31e99a689b69b198fa"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:ocr:adverse",
+        "--",
+        "<immutable-image>"
+      ],
+      "exitCode": 0,
+      "logSha256": "dc665650691066625829913f4680c2f6c136f9e565d21538d891820ac1f2aebd"
+    },
+    {
+      "command": [
+        "npm",
+        "run",
+        "test:ocr:fields",
+        "--",
+        "<immutable-image>"
+      ],
+      "exitCode": 0,
+      "logSha256": "cc9c64f33fadbf42873385b3897cc2e207518df539af9de700430ecebe3bf6ba"
+    }
+  ]
+}

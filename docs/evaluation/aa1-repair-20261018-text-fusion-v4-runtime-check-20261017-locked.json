@@ -1,0 +1,506 @@
+{
+  "preExecutionReceipt": {
+    "status": "manifest_frozen_before_recognition",
+    "manifestLock": "b75bd18345251af0532d1145881c30af881c39c8e3b48657e92a24317607ecf4",
+    "configurationHash": "2c7d607350010a3462727476fd6006bf8e98f8937d2848464bdb9a9fa3f12d7c",
+    "receipt": {
+      "imageId": "sha256:990ac9d9ff190beeeaa0bb6323a2cbee8b1da0a78926f194ec217f6afa09877d",
+      "evaluationConfig": {
+        "psm": 3,
+        "maxDpi": 150,
+        "model": "text-fusion"
+      },
+      "versions": {
+        "engine": "tesseract-5.3.0-2/text-fusion-v4",
+        "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+        "languageData": "model-bundle-sha256:74a6c07f4943981367364af90d830c36c6de018cb0c7762caba61e51189c44cc"
+      },
+      "modelManifest": {
+        "schemaVersion": "ocr-text-fusion/4.0.0",
+        "models": [
+          {
+            "id": "fast",
+            "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
+            "oem": 3
+          },
+          {
+            "id": "best",
+            "sha256": "8280aed0782fe27257a68ea10fe7ef324ca0f8d85bd2fd145d1c2b560bcb66ba",
+            "oem": 1
+          }
+        ],
+        "psm": 3,
+        "maxDpi": 150,
+        "thresholdingMethod": 0,
+        "selector": {
+          "version": "aligned-text/4.0.0",
+          "preserveAlphabeticBaseline": true,
+          "preserveUppercaseWhenAlternateIntroducesLowercase": true,
+          "reciprocal": true,
+          "minimumIou": 0.8,
+          "maximumWordsPerLine": 128,
+          "preserveTokensContaining": [
+            "digits",
+            "@",
+            "://",
+            "whitespace"
+          ],
+          "policy": "prefer-best-for-unique-aligned-punctuation-text-otherwise-fast",
+          "confidenceCalibration": "none"
+        }
+      },
+      "sourceCode": {
+        "app/lib/server/extraction-benchmark.ts": "d8f392fd233a0f268ea7e3aaf2595a394b3d2da353a191edefc012a15020b5ba",
+        "app/lib/server/evidence-fields.ts": "a21e2280a556bf97087179dfc6e9b8468e978591d1d24c8b807000fbfc1d8ff7",
+        "app/lib/server/parsing/contact.ts": "e5b1959000b229a3f22e52e5cda6abc30bbfd2e8b6f18b55d1d907db3ebb5579",
+        "app/lib/server/parsing/dates.ts": "eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72",
+        "app/lib/server/parsing/sections.ts": "e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1",
+        "app/lib/server/native-evidence.ts": "dcd756d6970e1a6a0885377c731c9ae73e97684e591eecbf4fc7c9e134fae037",
+        "app/lib/server/native-evidence-schema.ts": "fa26cede5a7a7f4f4910bd6099b44b1bada463eafbdfeb6fd48e164ecea21e39",
+        "app/lib/server/document-evidence.ts": "f4d16c019146924f2390fa764131e3c6b9f69c65531d90315f0a64645a244e67",
+        "app/lib/server/ocr/pdf-detection.ts": "fecea75867dfa0724bb95d26df552b635c18b51856ec786dd71b4577b8bf1a17",
+        "app/lib/server/ocr/selective.ts": "2d647df8cd51d36fd1fbd489cc7464d8ef3b8f098fc674743b871ea8a7f04325",
+        "app/lib/server/ocr/local-container.ts": "45234904a4dad16ccc5b998c679ce6ae1850f72650edcc2920824bec27fc1f65",
+        "app/lib/server/ocr/profiles.ts": "44eb3115fcff823c2f271917d317b2bbcc824b3efbd0f113fa4045167e39cfa8",
+        "scripts/ocr-runtime/runner.py": "d683e041106fdf1d765c1264dd7fbb7a0a17b971c301e0b6b47e238e1d7bbe63",
+        "scripts/ocr-runtime/Dockerfile": "9d1e7b1066a1b6678c99533fd7e06eb8ff967ab068730bf6024d78269a979991",
+        "scripts/extraction-benchmark-engineering.ts": "59ee7de5ff68e36b060b33f63598d1b09ed0a155ead37a3ba5806bc2e3f657e5",
+        "tests/fixtures/native-pdf.ts": "50d1976a1edc2b96c3a34a208d5e7c424447dfcbef61abecf8840726baca2df8",
+        "tests/fixtures/ocr-print-pilot.ts": "b9081984b4865676ca25fe5301cc00e96c57d747075192453b24f8605559ab74",
+        "package-lock.json": "b2b49d6d85bcdd5019bf2d41115e7c7cfdbda1f35444f01f60edf3f1e9a80461",
+        "vitest.config.ts": "7fd600f9b32091e99009efd1361a597f63044252fb82016f919255e23c744649",
+        "tests/fixtures/extraction-repair-development.ts": "c4e81ba36711cff36b06424b215e6191abd713725d14d8c4ddaae553871e04b4",
+        "tests/fixtures/extraction-repair-heldout.ts": "4a588a6c455d7101aa066e84f4574c5e7f8fda72819576f720eee43b4fb2ed66",
+        "docs/evaluation/aa1-repair-20261017-heldout-freeze.json": "6c13d2d3757acf48f70bc8e34a812d32004d5fc1a0a0dab87488693c4bbdd788",
+        "tests/fixtures/extraction-repair-confirmation.ts": "8eccb279f50ff412df5fa3afe49fea46295bf3e8c9cc39e770b056b4f1ae5975",
+        "docs/evaluation/aa1-repair-20261017-confirmation-freeze.json": "1c02a13fcd4c2e3d03715b06cfc00bca5fb885aebfe37a4f54a719e88fcfa893",
+        "app/lib/server/evidence-fields-v1.ts": "ae802d3b4e0757ede32aabec5a4b28616ac4314b160b9dc69bf064b90f86ca55",
+        "tests/fixtures/extraction-repair-validation.ts": "9e4359887ceb615bed85b522dc0782a1e198ecba0eae8b5c9840880808dfc4c0",
+        "tests/fixtures/extraction-repair-verification.ts": "e57cd2345e8e2a13f5e75a62e94734741fee33c6d8b3733aad1cce1801bff1d2",
+        "tests/fixtures/extraction-repair-assessment.ts": "0e91958141554a494b9106269163b9f9948f9afb7c5f615356ca453cf8572135",
+        "tests/fixtures/extraction-repair-acceptance.ts": "17e844b353ccc76c9b0413206fccce4adfa2e337f808caee831a7962dbfb1dfe",
+        "tests/fixtures/extraction-repair-runtime-check.ts": "3e4de155736743cfcbe362cd8b85d6dcd87ce4495b549bfb3f2a42fc5f134e3e"
+      },
+      "sourceFamilies": [
+        {
+          "id": "repair-dev-separated-header",
+          "partition": "development",
+          "authoredSourceHash": "9994502c29586024aa6c42fa7dd327f63f18bbe6916231a4531651048e24a207"
+        },
+        {
+          "id": "repair-dev-title-first",
+          "partition": "development",
+          "authoredSourceHash": "f4f60f1866cacaedbd6366d014186d26e8b7b4e599e8ba9325225e8d016d1a32"
+        },
+        {
+          "id": "repair-dev-inline-employment",
+          "partition": "development",
+          "authoredSourceHash": "7112c27b21dc29f8d6065044116c16b3e8a6045e436e0ff5fd80b9fb8a7a02a1"
+        },
+        {
+          "id": "repair-dev-header-0",
+          "partition": "development",
+          "authoredSourceHash": "efe48dd836b5c23f075f6f00642b9f122be2bf655f104bf711226eaaaf398d1d"
+        },
+        {
+          "id": "repair-dev-header-1",
+          "partition": "development",
+          "authoredSourceHash": "b1b3d4e7d31daef9cd4f475b6436c4da48ad742b6590829a0d7ef178d9e6aa3f"
+        },
+        {
+          "id": "repair-dev-header-2",
+          "partition": "development",
+          "authoredSourceHash": "64cff11b1e2e6db239db5cb4c45dcd4ba3934725985be572d0d369f02b349044"
+        },
+        {
+          "id": "runtime-check-cedar",
+          "partition": "locked",
+          "authoredSourceHash": "5bb4ccc0e3733db5abdc45a4a16f3bb51860c5f63038ad495101fe408f705bbf"
+        },
+        {
+          "id": "runtime-check-harbor",
+          "partition": "locked",
+          "authoredSourceHash": "15c468e9ff190ac7c9158e3759092565c1243e23551cbfe03c90886113e58a5b"
+        },
+        {
+          "id": "runtime-check-maple",
+          "partition": "locked",
+          "authoredSourceHash": "5020e38e9fd016b8b1e0d9238558cd01fc69fe22b30654fd7ae31650da1e58d3"
+        },
+        {
+          "id": "runtime-check-brook",
+          "partition": "locked",
+          "authoredSourceHash": "0619f0c9199e056cd19d53fdd0079e3c2e52982aaa8cf1e66f78b23eaf168cd6"
+        }
+      ],
+      "runtimePlatform": "darwin/arm64",
+      "scope": "synthetic_engineering_only",
+      "partition": "locked",
+      "corpusSet": "runtime-check-20261017"
+    },
+    "sources": [
+      {
+        "id": "print-runtime-check-cedar-clean-v1",
+        "family": "runtime-check-cedar",
+        "segment": "clean",
+        "partition": "locked",
+        "sourceHash": "21877f12383a0ae176c91ca418d2fdfa24ed31c77814f5f24dce828e1b084280",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "706277245cefd98cbad62aeceab359e9caa0beabef1168bad116549eeeb56a86"
+      },
+      {
+        "id": "print-runtime-check-cedar-challenging-v1",
+        "family": "runtime-check-cedar",
+        "segment": "challenging",
+        "partition": "locked",
+        "sourceHash": "42d0fb61fe2c1617c107f6750ae12378e9fd2dcf15ab738a6e025b61a52b938e",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "706277245cefd98cbad62aeceab359e9caa0beabef1168bad116549eeeb56a86"
+      },
+      {
+        "id": "print-runtime-check-cedar-mixed-v1",
+        "family": "runtime-check-cedar",
+        "segment": "mixed",
+        "partition": "locked",
+        "sourceHash": "833704af1e06f2c0cad85c784d6d98a72932e63720115988b2233329e6222809",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "d9330329081ca55e948da44b0bdffe50324209e28b795826151da9ba21e8c638"
+      },
+      {
+        "id": "print-runtime-check-harbor-clean-v1",
+        "family": "runtime-check-harbor",
+        "segment": "clean",
+        "partition": "locked",
+        "sourceHash": "9dc7aab66188d26fcaefbea9c7d3db1e2966bc7662ab8ebf2f07f303409465f7",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "efc9f6c7132030ffcc6f40cf1f6d807ccd58aee47902cf7e20cd54361b5067af"
+      },
+      {
+        "id": "print-runtime-check-harbor-challenging-v1",
+        "family": "runtime-check-harbor",
+        "segment": "challenging",
+        "partition": "locked",
+        "sourceHash": "b029182dfc4a074173ba7fa24b72864d1a46bc82e13dc91a58a5ee812d46dc52",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "efc9f6c7132030ffcc6f40cf1f6d807ccd58aee47902cf7e20cd54361b5067af"
+      },
+      {
+        "id": "print-runtime-check-harbor-mixed-v1",
+        "family": "runtime-check-harbor",
+        "segment": "mixed",
+        "partition": "locked",
+        "sourceHash": "5173324216ef249038ad9af49246a62d757b94e39c37a6ad87b0d5d4aac3f28a",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "026af6311b5b06d751f42c7a5008931877ce58c4b0cc33262382c2ce140450fa"
+      },
+      {
+        "id": "print-runtime-check-maple-clean-v1",
+        "family": "runtime-check-maple",
+        "segment": "clean",
+        "partition": "locked",
+        "sourceHash": "7b6027638357f109d4934c80b4eabda776bce6aa20fd53dcc273af80f759cc5f",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "105a06da48f4a116c417d93df7baf7bd6a0d9dc795675518d94cbf8deb513def"
+      },
+      {
+        "id": "print-runtime-check-maple-challenging-v1",
+        "family": "runtime-check-maple",
+        "segment": "challenging",
+        "partition": "locked",
+        "sourceHash": "2a34810574887f671f6ddcffa92107ca30d59e433548ad83d0453409ed4445ee",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "105a06da48f4a116c417d93df7baf7bd6a0d9dc795675518d94cbf8deb513def"
+      },
+      {
+        "id": "print-runtime-check-maple-mixed-v1",
+        "family": "runtime-check-maple",
+        "segment": "mixed",
+        "partition": "locked",
+        "sourceHash": "1b6075b9467aacd5fbf1c373cbfd238055c2e223bf7fcc48dae2b738461592d9",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "91a67faa3c4548aa674cae314e114eb9ae2d36990e4736f2b16f448bee2e3f52"
+      },
+      {
+        "id": "print-runtime-check-brook-clean-v1",
+        "family": "runtime-check-brook",
+        "segment": "clean",
+        "partition": "locked",
+        "sourceHash": "51e10596aca1b97b8018f9c5a3bd2bc8da07cc98a5fc6c3d9eae537771d7aad1",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "dfebd8aaa1609febdd2b84e4c154c4a31a30bbd95c943ca57e0b1ab9a163a830"
+      },
+      {
+        "id": "print-runtime-check-brook-challenging-v1",
+        "family": "runtime-check-brook",
+        "segment": "challenging",
+        "partition": "locked",
+        "sourceHash": "d5f1e951a1701026b9a3da4a0cbe3db6de3a8511a2530b782b4da9fc51d7531d",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "dfebd8aaa1609febdd2b84e4c154c4a31a30bbd95c943ca57e0b1ab9a163a830"
+      },
+      {
+        "id": "print-runtime-check-brook-mixed-v1",
+        "family": "runtime-check-brook",
+        "segment": "mixed",
+        "partition": "locked",
+        "sourceHash": "248356e436c8cce32ecc0f6130a60d7ce138ab2e78c90f3a8ff93601d60df1c3",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "24a99af91c0ebd1f05b5dd511ba621f9937ac22fc97d65bc569a654dbb587b6f"
+      }
+    ]
+  },
+  "report": {
+    "schemaVersion": "extraction-report/1.0.0",
+    "fieldEvaluatorVersion": "whitespace-grounded-fields/1.0.0",
+    "mode": "engineering",
+    "partition": "locked",
+    "manifestLock": "b75bd18345251af0532d1145881c30af881c39c8e3b48657e92a24317607ecf4",
+    "datasetVersion": "aa1-runtime-check-20261017-locked-v1",
+    "producerVersion": "document-evidence/2.0.0",
+    "providerVersion": "tesseract-5.3.0-2/text-fusion-v4/poppler-22.12.0-2+deb12u3/dpi-150",
+    "configurationHash": "2c7d607350010a3462727476fd6006bf8e98f8937d2848464bdb9a9fa3f12d7c",
+    "normalizationPolicy": "unicode-codepoint-whitespace-v1",
+    "segments": [
+      {
+        "id": "clean",
+        "scan": "clean",
+        "layout": "single-column",
+        "documents": 4,
+        "sourceFamilies": 4,
+        "metrics": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": 0,
+          "fieldPrecision": 1,
+          "fieldRecall": 1,
+          "pageCoverage": 1,
+          "orderedLineAgreement": 1
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": [
+            0,
+            0
+          ],
+          "fieldPrecision": [
+            1,
+            1
+          ],
+          "fieldRecall": [
+            1,
+            1
+          ],
+          "pageCoverage": [
+            1,
+            1
+          ],
+          "orderedLineAgreement": [
+            1,
+            1
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 970.7236669999838,
+          "p95": 1005.0524580000201
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": []
+      },
+      {
+        "id": "challenging",
+        "scan": "challenging",
+        "layout": "single-column",
+        "documents": 4,
+        "sourceFamilies": 4,
+        "metrics": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": 0,
+          "fieldPrecision": 1,
+          "fieldRecall": 1,
+          "pageCoverage": 1,
+          "orderedLineAgreement": 1
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": [
+            0,
+            0
+          ],
+          "fieldPrecision": [
+            1,
+            1
+          ],
+          "fieldRecall": [
+            1,
+            1
+          ],
+          "pageCoverage": [
+            1,
+            1
+          ],
+          "orderedLineAgreement": [
+            1,
+            1
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 958.33383399999,
+          "p95": 991.0957500000077
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": []
+      },
+      {
+        "id": "mixed",
+        "scan": "clean",
+        "layout": "single-column",
+        "documents": 4,
+        "sourceFamilies": 4,
+        "metrics": {
+          "nativeCharacterAccuracy": 1,
+          "ocrCharacterErrorRate": 0,
+          "fieldPrecision": 1,
+          "fieldRecall": 1,
+          "pageCoverage": 1,
+          "orderedLineAgreement": 1
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": [
+            1,
+            1
+          ],
+          "ocrCharacterErrorRate": [
+            0,
+            0
+          ],
+          "fieldPrecision": [
+            1,
+            1
+          ],
+          "fieldRecall": [
+            1,
+            1
+          ],
+          "pageCoverage": [
+            1,
+            1
+          ],
+          "orderedLineAgreement": [
+            1,
+            1
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 1280.5844999999972,
+          "p95": 1320.6446249999863
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": []
+      }
+    ],
+    "failures": [],
+    "releaseBlockers": [
+      "synthetic_corpus_not_representative",
+      "missing_calibratedPolicy",
+      "missing_representativeCorpusReceipt",
+      "missing_approvedThresholdsReceipt",
+      "missing_sampleSizeJustificationReceipt",
+      "independent_human_validation_missing",
+      "calibration_partition_missing"
+    ],
+    "engineeringPassed": true,
+    "releasePassed": false,
+    "exitCode": 0,
+    "perField": [
+      {
+        "field": "name",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "email",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "phone",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "employer",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "role",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "dates",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "education",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "certification",
+        "truePositive": 12,
+        "falsePositive": 0,
+        "falseNegative": 0
+      }
+    ],
+    "authoritativeScoresEmitted": 0,
+    "criticalFields": {
+      "predicted": 96,
+      "expected": 96
+    },
+    "resourceMeasurements": {
+      "computeCost": "host_rate_unavailable",
+      "memoryAndCpu": "not_aggregated_in_this_harness"
+    },
+    "limitations": [
+      "4_authored_locked_families_not_representative",
+      "no_calibration_or_representative_recognition",
+      "independent_human_validation_deferred",
+      "single_column_only"
+    ]
+  }
+}

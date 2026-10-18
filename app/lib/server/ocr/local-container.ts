@@ -6,6 +6,7 @@ import {
   type LocalOcrAdapter,
   type LocalOcrRawResult,
 } from "./selective";
+import { BEST_LANGUAGE_DATA, TEXT_FUSION_VERSIONS } from "./profiles";
 
 const OWNER_LABEL = "resumide.ocr.attempt";
 const MAX_OUTPUT_BYTES = 4 * 1024 * 1024;
@@ -27,7 +28,12 @@ export type DockerCommand = (
   },
 ) => Promise<string>;
 
-export type LocalOcrEvaluationConfig = { psm: 3 | 6; maxDpi: 150 | 300 };
+export type LocalOcrEvaluationConfig = {
+  psm: 3 | 6;
+  maxDpi: 150 | 300;
+  thresholdingMethod?: 1 | 2;
+  model?: "best" | "text-fusion";
+};
 
 // No shell, caller-controlled executable or environment forwarding into the container.
 const runDocker: DockerCommand = (args, options) =>
@@ -87,27 +93,59 @@ export function createLocalContainerOcrAdapter(options: {
   if (!/^sha256:[a-f0-9]{64}$/.test(options.imageId))
     throw new LocalOcrExecutionError("engine_failure");
   const config = options.evaluationConfig ?? { psm: 3, maxDpi: 300 };
+  const hasThreshold = Object.prototype.hasOwnProperty.call(
+    config ?? {},
+    "thresholdingMethod",
+  );
+  const hasModel = Object.prototype.hasOwnProperty.call(config ?? {}, "model");
+  const fusion = config?.model === "text-fusion";
   if (
     !config ||
-    Object.keys(config).length !== 2 ||
+    Object.keys(config).length !==
+      2 + Number(hasThreshold) + Number(hasModel) ||
     !(config.psm === 3 || config.psm === 6) ||
-    !(config.maxDpi === 150 || config.maxDpi === 300)
+    !(config.maxDpi === 150 || config.maxDpi === 300) ||
+    (hasThreshold &&
+      config.thresholdingMethod !== 1 &&
+      config.thresholdingMethod !== 2) ||
+    (hasModel && config.model !== "best" && !fusion) ||
+    (fusion && (config.psm !== 3 || config.maxDpi !== 150 || hasThreshold))
   )
     throw new LocalOcrExecutionError("engine_failure");
   const psm = config.psm;
   const maxDpi = config.maxDpi;
   const evaluationArgs =
-    psm === 3 && maxDpi === 300 ? [] : [String(psm), String(maxDpi)];
+    hasThreshold || hasModel || psm !== 3 || maxDpi !== 300
+      ? [
+          String(psm),
+          String(maxDpi),
+          ...(hasThreshold ? [String(config.thresholdingMethod)] : []),
+          ...(hasModel ? [config.model!] : []),
+        ]
+      : [];
   const bytes = options.bytes.slice();
   const sha256 = createHash("sha256").update(bytes).digest("hex");
   const command = options.command ?? runDocker;
   return {
-    versions: Object.freeze({
-      ...LOCAL_OCR_VERSIONS,
-      engine: LOCAL_OCR_VERSIONS.engine + (psm === 3 ? "" : "/psm-6"),
-      renderer:
-        LOCAL_OCR_VERSIONS.renderer + (maxDpi === 300 ? "" : "/dpi-150"),
-    }),
+    versions: fusion
+      ? TEXT_FUSION_VERSIONS
+      : Object.freeze({
+          ...LOCAL_OCR_VERSIONS,
+          languageData: hasModel
+            ? BEST_LANGUAGE_DATA
+            : LOCAL_OCR_VERSIONS.languageData,
+          engine:
+            LOCAL_OCR_VERSIONS.engine +
+            (psm === 3 ? "" : "/psm-6") +
+            (hasModel ? "/lstm-best" : "") +
+            (hasThreshold
+              ? config.thresholdingMethod === 1
+                ? "/leptonica-otsu"
+                : "/sauvola"
+              : ""),
+          renderer:
+            LOCAL_OCR_VERSIONS.renderer + (maxDpi === 300 ? "" : "/dpi-150"),
+        }),
     async recognize(request, signal) {
       if (!SelectiveOcrRequestSchema.safeParse(request).success)
         throw new LocalOcrExecutionError("engine_failure");

@@ -834,7 +834,7 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 **Dependencies:** AA010-AA014; **Likely files:** benchmark harness, locked manifest, report template, CI gate; **Scope:** M
 
 - [x] Engineering harness reports source-grounded fields, transcription, coverage/order, failure, latency, cost limitations and source-family intervals per segment for the approved local provider; frozen manifests bind code/configuration/source/provider.
-- [ ] Locked synthetic field acceptance fails (92.31% precision / 75% recall); representative release validity, calibration and provider comparison remain DEFERRED.
+- [ ] Formal field acceptance remains open. The original locked failure (92.31% precision / 75% recall) is retained; the 2026-10-18 synthetic repair meets its measured exit evidence. Representative release validity, calibration and provider comparison remain DEFERRED.
 - **Verify:** locked evaluation is reproducible, confidence intervals are present, and any required-segment failure blocks AA1.
 
 #### Engineering closeout AA1 (2026-10-11)
@@ -842,6 +842,8 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 - [x] AA010–AA015 engineering closed under ADR-0011 and owner acceptance in ADR-0012; task evidence, residual acceptance obligations AA1-R1–R5, activation requirements and cleanup are reconciled in the [closeout report](../docs/evaluation/AA1_ENGINEERING_CLOSEOUT.md). This checkbox does not pass the accuracy gate below.
 
 **CI repair follow-up (2026-10-17):** Owner-requested parser repairs now carry an explicit extractor version and historical replay. Frozen regression coverage and coordinate-space tests are expanded. Later challenging-scan exact-line failures remain enforced; AA1-R1 and Gate AA1 stay open. See the [dated repair report](../docs/evaluation/OCR_CI_REPAIR_20261017.md) for measured results and remaining work. No representative validation, calibration or activation is implied.
+
+**Synthetic repair verification (2026-10-18):** The explicit engineering text-fusion-v4 profile passes both development runs, every consumed regression and the separately frozen runtime-check set on its first evaluation: 1,008/1,008 critical-field checks, no extras, zero OCR CER and 100% exact-line agreement across measured segments. Original failures, frozen sources and all interval floors remain. Full local CI passes 866 unit tests and 56 browser checks; versioned SQL/resource and real-container two-pass cancellation checks pass. AA1-R1 has measured synthetic exit evidence; formal acceptance, AA1-R2–R5 and Gate AA1 remain open. See the [follow-up report](../docs/evaluation/OCR_CI_REPAIR_20261018.md). No hosted migration or production activation occurred.
 
 #### Gate AA1: Evidence-safe extraction
 

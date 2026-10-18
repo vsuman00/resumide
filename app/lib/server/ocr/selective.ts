@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { TEXT_FUSION_VERSIONS } from "./profiles";
 import { detectPdfTextProfile } from "./pdf-detection";
 
 const sha256 = z.string().regex(/^[a-f0-9]{64}$/);
@@ -125,7 +126,7 @@ const resourceUsageSchema = z.strictObject({
   // Linux RUSAGE_CHILDREN reports the largest individual child, not container peak.
   maxChildRssBytes: z.number().int().positive().max(1_073_741_824),
   rendererCalls: z.number().int().positive().max(10),
-  recognitionCalls: z.number().int().positive().max(10),
+  recognitionCalls: z.number().int().positive().max(20),
   // Optional for compatibility with earlier reviewed images; never infer it from RSS.
   containerMemoryPeak: memoryPeakSchema.optional(),
 });
@@ -230,9 +231,14 @@ export const OcrEvidenceSchema = z
       value.request.allocation.maxWallTimeMs,
     );
     const valid =
-      (!value.resourceUsage ||
-        (value.resourceUsage.rendererCalls === value.pages.length &&
-          value.resourceUsage.recognitionCalls === value.pages.length)) &&
+      (value.provider.versions.engine === TEXT_FUSION_VERSIONS.engine
+        ? JSON.stringify(value.provider.versions) ===
+            JSON.stringify(TEXT_FUSION_VERSIONS) &&
+          value.resourceUsage?.rendererCalls === value.pages.length &&
+          value.resourceUsage.recognitionCalls === value.pages.length * 2
+        : !value.resourceUsage ||
+          (value.resourceUsage.rendererCalls === value.pages.length &&
+            value.resourceUsage.recognitionCalls === value.pages.length)) &&
       value.pages.length === value.request.selectedPages.length &&
       value.pages.every(
         (page, index) =>

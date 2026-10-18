@@ -1,0 +1,430 @@
+{
+  "preExecutionReceipt": {
+    "status": "manifest_frozen_before_recognition",
+    "manifestLock": "7ac72eccd05bbc3561e181873d7db2db2c8fbc12fcc7c8ed07193b9859a43362",
+    "configurationHash": "6aafcd60302d11f4fa277a2b3f514f2fa6a7a30129419ef7e6136b2aea5ba0a1",
+    "receipt": {
+      "imageId": "sha256:f57db02037ad3803db432167139eed84cfa1764e9d94041d4d6c8ec8a48e1566",
+      "evaluationConfig": {
+        "psm": 3,
+        "maxDpi": 150,
+        "model": "text-fusion"
+      },
+      "versions": {
+        "engine": "tesseract-5.3.0-2/text-fusion-v1",
+        "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+        "languageData": "model-bundle-sha256:d95f93a930273d8328d4887059a010aec836c5e8ab31e8b0740fedb191b17b0d"
+      },
+      "modelManifest": {
+        "schemaVersion": "ocr-text-fusion/1.0.0",
+        "models": [
+          {
+            "id": "fast",
+            "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
+            "oem": 3
+          },
+          {
+            "id": "best",
+            "sha256": "8280aed0782fe27257a68ea10fe7ef324ca0f8d85bd2fd145d1c2b560bcb66ba",
+            "oem": 1
+          }
+        ],
+        "psm": 3,
+        "maxDpi": 150,
+        "thresholdingMethod": 0,
+        "selector": {
+          "version": "aligned-text/1.0.0",
+          "reciprocal": true,
+          "minimumIou": 0.8,
+          "maximumWordsPerLine": 128,
+          "preserveTokensContaining": [
+            "digits",
+            "@",
+            "://",
+            "whitespace"
+          ],
+          "policy": "prefer-best-for-unique-aligned-text-otherwise-fast",
+          "confidenceCalibration": "none"
+        }
+      },
+      "sourceCode": {
+        "app/lib/server/extraction-benchmark.ts": "d8f392fd233a0f268ea7e3aaf2595a394b3d2da353a191edefc012a15020b5ba",
+        "app/lib/server/evidence-fields.ts": "a21e2280a556bf97087179dfc6e9b8468e978591d1d24c8b807000fbfc1d8ff7",
+        "app/lib/server/parsing/contact.ts": "e5b1959000b229a3f22e52e5cda6abc30bbfd2e8b6f18b55d1d907db3ebb5579",
+        "app/lib/server/parsing/dates.ts": "eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72",
+        "app/lib/server/parsing/sections.ts": "e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1",
+        "app/lib/server/native-evidence.ts": "dcd756d6970e1a6a0885377c731c9ae73e97684e591eecbf4fc7c9e134fae037",
+        "app/lib/server/native-evidence-schema.ts": "fa26cede5a7a7f4f4910bd6099b44b1bada463eafbdfeb6fd48e164ecea21e39",
+        "app/lib/server/document-evidence.ts": "f4d16c019146924f2390fa764131e3c6b9f69c65531d90315f0a64645a244e67",
+        "app/lib/server/ocr/pdf-detection.ts": "fecea75867dfa0724bb95d26df552b635c18b51856ec786dd71b4577b8bf1a17",
+        "app/lib/server/ocr/selective.ts": "2d647df8cd51d36fd1fbd489cc7464d8ef3b8f098fc674743b871ea8a7f04325",
+        "app/lib/server/ocr/local-container.ts": "45234904a4dad16ccc5b998c679ce6ae1850f72650edcc2920824bec27fc1f65",
+        "app/lib/server/ocr/profiles.ts": "2ba05357ef2d373d1e5ddfb946d0b4963bc42e50d0485b5863a604fcf1832d24",
+        "scripts/ocr-runtime/runner.py": "8c9a08ce9cd9a3a0a124e48d363f0147f8fefbe122641c384d0997566e10ac40",
+        "scripts/ocr-runtime/Dockerfile": "9d1e7b1066a1b6678c99533fd7e06eb8ff967ab068730bf6024d78269a979991",
+        "scripts/extraction-benchmark-engineering.ts": "59ee7de5ff68e36b060b33f63598d1b09ed0a155ead37a3ba5806bc2e3f657e5",
+        "tests/fixtures/native-pdf.ts": "50d1976a1edc2b96c3a34a208d5e7c424447dfcbef61abecf8840726baca2df8",
+        "tests/fixtures/ocr-print-pilot.ts": "b9081984b4865676ca25fe5301cc00e96c57d747075192453b24f8605559ab74",
+        "package-lock.json": "b2b49d6d85bcdd5019bf2d41115e7c7cfdbda1f35444f01f60edf3f1e9a80461",
+        "vitest.config.ts": "7fd600f9b32091e99009efd1361a597f63044252fb82016f919255e23c744649",
+        "tests/fixtures/extraction-repair-development.ts": "c4e81ba36711cff36b06424b215e6191abd713725d14d8c4ddaae553871e04b4",
+        "tests/fixtures/extraction-repair-heldout.ts": "4a588a6c455d7101aa066e84f4574c5e7f8fda72819576f720eee43b4fb2ed66",
+        "docs/evaluation/aa1-repair-20261017-heldout-freeze.json": "6c13d2d3757acf48f70bc8e34a812d32004d5fc1a0a0dab87488693c4bbdd788",
+        "tests/fixtures/extraction-repair-confirmation.ts": "8eccb279f50ff412df5fa3afe49fea46295bf3e8c9cc39e770b056b4f1ae5975",
+        "docs/evaluation/aa1-repair-20261017-confirmation-freeze.json": "1c02a13fcd4c2e3d03715b06cfc00bca5fb885aebfe37a4f54a719e88fcfa893",
+        "app/lib/server/evidence-fields-v1.ts": "ae802d3b4e0757ede32aabec5a4b28616ac4314b160b9dc69bf064b90f86ca55",
+        "tests/fixtures/extraction-repair-validation.ts": "9e4359887ceb615bed85b522dc0782a1e198ecba0eae8b5c9840880808dfc4c0",
+        "tests/fixtures/extraction-repair-verification.ts": "e57cd2345e8e2a13f5e75a62e94734741fee33c6d8b3733aad1cce1801bff1d2",
+        "tests/fixtures/extraction-repair-assessment.ts": "0e91958141554a494b9106269163b9f9948f9afb7c5f615356ca453cf8572135",
+        "tests/fixtures/extraction-repair-acceptance.ts": "17e844b353ccc76c9b0413206fccce4adfa2e337f808caee831a7962dbfb1dfe",
+        "tests/fixtures/extraction-repair-runtime-check.ts": "3e4de155736743cfcbe362cd8b85d6dcd87ce4495b549bfb3f2a42fc5f134e3e"
+      },
+      "sourceFamilies": [
+        {
+          "id": "alpha-backend",
+          "partition": "development",
+          "authoredSourceHash": "d0f847d3669d10391151914dd29206a7c976fd8553f2014eb3dc8a012705e16a"
+        },
+        {
+          "id": "beta-accessibility",
+          "partition": "development",
+          "authoredSourceHash": "245687701c6f0b9f68dbdb332f366b7ecbfd8cc4a5b8c729542edac03b5f72f3"
+        },
+        {
+          "id": "gamma-platform",
+          "partition": "development",
+          "authoredSourceHash": "8a36f915a2d3de5e295f84ef73d78f1ec0307fef0d530e132b0f4d6a5bb86937"
+        },
+        {
+          "id": "delta-mobile",
+          "partition": "calibration",
+          "authoredSourceHash": "6bcfe5c0cd3ba0500fb3e897bcf1228205f6c2332e42178c60ff634d3ea5da41"
+        },
+        {
+          "id": "epsilon-quality",
+          "partition": "locked",
+          "authoredSourceHash": "843b0723cf069b392cf4fce0bf4b10932891b0b83f05d74e107239f1baf6f9e3"
+        },
+        {
+          "id": "zeta-data",
+          "partition": "locked",
+          "authoredSourceHash": "83a4183c4ba53c8089711b3c3767606e41ebe6e2ada725862428607caa5c3beb"
+        }
+      ],
+      "runtimePlatform": "darwin/arm64",
+      "scope": "synthetic_engineering_only",
+      "partition": "locked",
+      "corpusSet": "original"
+    },
+    "sources": [
+      {
+        "id": "print-epsilon-quality-clean-v1",
+        "family": "epsilon-quality",
+        "segment": "clean",
+        "partition": "locked",
+        "sourceHash": "7fc4995f6520012f0c307360f243814f07174461d03f9bb4798be1444ed9dec7",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "646ee8a6928815089f2d6d94d575a29f4c36aa6172386d92242534e9bf64c418"
+      },
+      {
+        "id": "print-epsilon-quality-challenging-v1",
+        "family": "epsilon-quality",
+        "segment": "challenging",
+        "partition": "locked",
+        "sourceHash": "dee90dcf844e5ee930a9ebe14f86a03623c63421ab3083a2ee5fdbec0d3f15b1",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "646ee8a6928815089f2d6d94d575a29f4c36aa6172386d92242534e9bf64c418"
+      },
+      {
+        "id": "print-epsilon-quality-mixed-v1",
+        "family": "epsilon-quality",
+        "segment": "mixed",
+        "partition": "locked",
+        "sourceHash": "f3616323ba9af25f3c7906a71179387709af24a7a52f457aab5d1ff7cae3cf55",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "acb2072bb4d9cf44935d2dfbd361fd372fbd96cfc8238b2502dc7356c97c325c"
+      },
+      {
+        "id": "print-zeta-data-clean-v1",
+        "family": "zeta-data",
+        "segment": "clean",
+        "partition": "locked",
+        "sourceHash": "edced652ba3e86d8d89ac73157ed07356fd42ebead704df2576278040a1bef08",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "28b8fb2ffad36272242e5043641fc36b3530a93dab68be86b912f5db48fd1f4e"
+      },
+      {
+        "id": "print-zeta-data-challenging-v1",
+        "family": "zeta-data",
+        "segment": "challenging",
+        "partition": "locked",
+        "sourceHash": "e5e7b9a46a0cee552a90532a145b7b5777022941f904d57c591f3609c761e0ec",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "28b8fb2ffad36272242e5043641fc36b3530a93dab68be86b912f5db48fd1f4e"
+      },
+      {
+        "id": "print-zeta-data-mixed-v1",
+        "family": "zeta-data",
+        "segment": "mixed",
+        "partition": "locked",
+        "sourceHash": "ad10c17e908a24b985608aa0e69b0acedd5e66332cb2bed9fb619ca7edae7d71",
+        "generatorVersion": "normal-font-pdf-v1",
+        "labelsHash": "5076885ade2daa15b63bfa3a319924a90094e3c86daf8dd0e870c2d80bdc64af"
+      }
+    ]
+  },
+  "report": {
+    "schemaVersion": "extraction-report/1.0.0",
+    "fieldEvaluatorVersion": "whitespace-grounded-fields/1.0.0",
+    "mode": "engineering",
+    "partition": "locked",
+    "manifestLock": "7ac72eccd05bbc3561e181873d7db2db2c8fbc12fcc7c8ed07193b9859a43362",
+    "datasetVersion": "aa015-native-print-locked-v1",
+    "producerVersion": "document-evidence/2.0.0",
+    "providerVersion": "tesseract-5.3.0-2/text-fusion-v1/poppler-22.12.0-2+deb12u3/dpi-150",
+    "configurationHash": "6aafcd60302d11f4fa277a2b3f514f2fa6a7a30129419ef7e6136b2aea5ba0a1",
+    "normalizationPolicy": "unicode-codepoint-whitespace-v1",
+    "segments": [
+      {
+        "id": "clean",
+        "scan": "clean",
+        "layout": "single-column",
+        "documents": 2,
+        "sourceFamilies": 2,
+        "metrics": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": 0,
+          "fieldPrecision": 1,
+          "fieldRecall": 1,
+          "pageCoverage": 1,
+          "orderedLineAgreement": 1
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": [
+            0,
+            0
+          ],
+          "fieldPrecision": [
+            1,
+            1
+          ],
+          "fieldRecall": [
+            1,
+            1
+          ],
+          "pageCoverage": [
+            1,
+            1
+          ],
+          "orderedLineAgreement": [
+            1,
+            1
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 881.6196249999994,
+          "p95": 889.8074579999993
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": []
+      },
+      {
+        "id": "challenging",
+        "scan": "challenging",
+        "layout": "single-column",
+        "documents": 2,
+        "sourceFamilies": 2,
+        "metrics": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": 0,
+          "fieldPrecision": 1,
+          "fieldRecall": 1,
+          "pageCoverage": 1,
+          "orderedLineAgreement": 1
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": [
+            0,
+            0
+          ],
+          "fieldPrecision": [
+            1,
+            1
+          ],
+          "fieldRecall": [
+            1,
+            1
+          ],
+          "pageCoverage": [
+            1,
+            1
+          ],
+          "orderedLineAgreement": [
+            1,
+            1
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 856.603916,
+          "p95": 878.6872500000027
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": []
+      },
+      {
+        "id": "mixed",
+        "scan": "clean",
+        "layout": "single-column",
+        "documents": 2,
+        "sourceFamilies": 2,
+        "metrics": {
+          "nativeCharacterAccuracy": 1,
+          "ocrCharacterErrorRate": 0,
+          "fieldPrecision": 1,
+          "fieldRecall": 1,
+          "pageCoverage": 1,
+          "orderedLineAgreement": 1
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": [
+            1,
+            1
+          ],
+          "ocrCharacterErrorRate": [
+            0,
+            0
+          ],
+          "fieldPrecision": [
+            1,
+            1
+          ],
+          "fieldRecall": [
+            1,
+            1
+          ],
+          "pageCoverage": [
+            1,
+            1
+          ],
+          "orderedLineAgreement": [
+            1,
+            1
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 1182.2222089999996,
+          "p95": 1195.6257499999992
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": []
+      }
+    ],
+    "failures": [],
+    "releaseBlockers": [
+      "synthetic_corpus_not_representative",
+      "missing_calibratedPolicy",
+      "missing_representativeCorpusReceipt",
+      "missing_approvedThresholdsReceipt",
+      "missing_sampleSizeJustificationReceipt",
+      "independent_human_validation_missing",
+      "calibration_partition_missing"
+    ],
+    "engineeringPassed": true,
+    "releasePassed": false,
+    "exitCode": 0,
+    "perField": [
+      {
+        "field": "name",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "email",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "phone",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "employer",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "role",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "dates",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "education",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      {
+        "field": "certification",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0
+      }
+    ],
+    "authoritativeScoresEmitted": 0,
+    "criticalFields": {
+      "predicted": 48,
+      "expected": 48
+    },
+    "resourceMeasurements": {
+      "computeCost": "host_rate_unavailable",
+      "memoryAndCpu": "not_aggregated_in_this_harness"
+    },
+    "limitations": [
+      "2_authored_locked_families_not_representative",
+      "no_calibration_or_representative_recognition",
+      "independent_human_validation_deferred",
+      "single_column_only"
+    ]
+  }
+}

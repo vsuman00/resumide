@@ -1,6 +1,6 @@
 # OCR CI repair, 2026-10-17
 
-Status: PARTIAL; local application checks pass, strict challenging-scan exact-line gate still fails. Remote CI verification is pending at publication. Base revision: `fab804841183169a8d9a2a6a3fd1b702f979565d`. Results describe the scoped dirty candidate, not unrelated concurrent documentation and deployment work.
+Historical status: PARTIAL at publication. Commit `3ffc206` later passed four GitHub jobs and failed local-ocr on the recorded exact-line gate. The [2026-10-18 follow-up](OCR_CI_REPAIR_20261018.md) records the subsequent synthetic repair and verification. Base revision: `fab804841183169a8d9a2a6a3fd1b702f979565d`. The results below preserve that earlier candidate and its failures.
 
 The owner requested repair of the [failed CI run](https://github.com/vsuman00/resumide/actions/runs/39025484937), followed by commit, push and verification. Its local-OCR job failed the original locked field gate: TP36 / FP3 / FN12, precision 92.31%, recall 75%. The other four jobs passed. [AA1-R1](AA1_ENGINEERING_CLOSEOUT.md) requires development repairs and a separately frozen untouched evaluation without changing the floors or old receipts.
 

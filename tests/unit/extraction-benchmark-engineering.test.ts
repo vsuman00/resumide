@@ -36,7 +36,11 @@ describe("real PDF engineering benchmark adapter", () => {
     const imageId = `sha256:${"f".repeat(64)}`;
     const corpus = await createEngineeringExtractionCorpus(imageId);
     expect(corpus.receipt.imageId).toBe(imageId);
-    expect(corpus.receipt.evaluationConfig).toEqual({ psm: 3, maxDpi: 150 });
+    expect(corpus.receipt.evaluationConfig).toEqual({
+      psm: 3,
+      maxDpi: 150,
+      model: "text-fusion",
+    });
     await expect(
       createEngineeringExtractionCorpus("mutable-tag"),
     ).rejects.toThrow("immutable_image_required");
