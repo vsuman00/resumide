@@ -1,0 +1,320 @@
+--- a/scripts/latex-runtime/Dockerfile
++++ b/scripts/latex-runtime/Dockerfile
+@@ -1,6 +1,49 @@
+ FROM debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS snapshot
+ ENV DEBIAN_FRONTEND=noninteractive
+ RUN rm -f /etc/apt/sources.list.d/debian.sources && printf '%s\n' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20261106T000000Z trixie main' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security main' > /etc/apt/sources.list
++
++
++# Frozen native Poppler V6 stages; only the snapshot alias avoids a name collision.
++FROM debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS poppler-snapshot
++ENV DEBIAN_FRONTEND=noninteractive
++RUN test "$(dpkg --print-architecture)" = arm64 && rm -f /etc/apt/sources.list.d/debian.sources && printf '%s\n' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20261106T000000Z trixie main' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security main' > /etc/apt/sources.list
++COPY native-expat/apt-transport.py /recipe/apt-transport.py
++RUN printf '%s\n' '8b831a59cd8f2f89925b755973c1ef764daa2722207bfd24742114c67d31ded8  /recipe/apt-transport.py' | sha256sum -c -
++FROM poppler-snapshot AS build-dependencies
++COPY native-poppler/build-pins.json native-poppler/apt_transport_poppler.py native-poppler/dependency-plan.lock.json /recipe/
++RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt_transport_poppler.py && apt-get -o Acquire::Retries=3 install -y --no-install-recommends build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && rm -rf /var/lib/apt/lists/*
++FROM build-dependencies AS build
++COPY native-expat/prepare.py /recipe/expat_source.py
++RUN printf '%s\n' '1f0e50caf5b1cb91b891a2d484feae3187746f0d5e45484f62255356747fa59a  /recipe/expat_source.py' | sha256sum -c -
++ADD --chmod=0444 --checksum=sha256:6002f81f463a2d976d84b34170367cc16da2d60bd0ba9ab9d868d6e1c1a935d9 https://deb.debian.org/debian/dists/trixie/main/source/by-hash/SHA256/6002f81f463a2d976d84b34170367cc16da2d60bd0ba9ab9d868d6e1c1a935d9 /inputs/trixie-main-Sources.xz
++ADD --chmod=0444 --checksum=sha256:b895e1e28568a486523f93dd5a8707ecb16767c5f134a6e23510b0597114c628 https://deb.debian.org/debian/pool/main/p/poppler/poppler_25.03.0-5+deb13u4.dsc /inputs/poppler_25.03.0-5+deb13u4.dsc
++ADD --chmod=0444 --checksum=sha256:97da4ff88517a6bbd729529f195f85c8d7a0c3bb4a3d57cb0c685cbb052fe837 https://deb.debian.org/debian/pool/main/p/poppler/poppler_25.03.0.orig.tar.xz /inputs/poppler_25.03.0.orig.tar.xz
++ADD --chmod=0444 --checksum=sha256:2605b5d7e6ce17a307d067048386deedfc41fdac6f75f81ad76050f517fc0de4 https://deb.debian.org/debian/pool/main/p/poppler/poppler_25.03.0-5+deb13u4.debian.tar.xz /inputs/poppler_25.03.0-5+deb13u4.debian.tar.xz
++COPY --chmod=0444 native-poppler/inputs/poppler-testdata.tar.xz /inputs/poppler-testdata.tar.xz
++COPY native-poppler/pins.json native-poppler/build-pins.json native-poppler/prepare_build.py native-poppler/native_geometry.py native-poppler/verify_consumer.py native-poppler/abi-smoke.cc native-poppler/disable-openjpeg-packaging.diff native-poppler/changelog-proposal.diff native-poppler/series-proposal.diff /recipe/
++COPY native-poppler/build-v5.py /recipe/build.py
++COPY native-poppler/verify_native_v6.py /recipe/verify_native.py
++COPY native-poppler/ctest_v5.py native-poppler/ctest_v5_baseline.json /recipe/
++COPY native-poppler/patches/resumide-native-geometry-v1.patch /recipe/patches/
++COPY native-poppler/provenance/trixie-main.InRelease native-poppler/provenance/testdata-files.json /recipe/provenance/
++RUN python3 -c 'import pathlib,stat; root=pathlib.Path("/inputs"); assert root.is_dir() and not root.is_symlink(); print("AA7_POPPLER_INPUT_MODE_BEFORE",oct(stat.S_IMODE(root.stat().st_mode)),flush=True); root.chmod(0o755); assert all(p.is_file() and not p.is_symlink() and stat.S_IMODE(p.stat().st_mode)==0o444 for p in root.iterdir())' && test -z "$(getent passwd 65532)" && test -z "$(getent group 65532)" && printf '%s\n' 'nativebuild:x:65532:65532:Native source builder:/work:/bin/sh' >> /etc/passwd && printf '%s\n' 'nativebuild:x:65532:' >> /etc/group && mkdir /work /export && chown 65532:65532 /work /export
++ENV HOME=/work LANG=C.UTF-8
++RUN --network=none setpriv --no-new-privs --bounding-set=-all --reuid=65532 --regid=65532 --clear-groups -- /usr/bin/python3 -B /recipe/build.py
++FROM poppler-snapshot AS installation
++RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py poppler-utils=25.03.0-5+deb13u4 util-linux && apt-get -o Acquire::Retries=3 install -y --no-install-recommends poppler-utils=25.03.0-5+deb13u4 util-linux
++COPY native-poppler/build-pins.json native-poppler/verify_install.py native-poppler/native_geometry.py /recipe/
++COPY --from=build /export/libpoppler147_*.deb /export/poppler-utils_*.deb /packages/
++COPY --from=build /export/source-and-test-receipt.json /proof/
++COPY --from=build /work/source/test/unittestcases/truetype.pdf /probe/truetype.pdf
++RUN mkdir /scratch && chown 65532:65532 /scratch && chmod 0700 /scratch
++RUN --network=none python3 -B /recipe/verify_install.py install && setpriv --no-new-privs --bounding-set=-all --reuid=65532 --regid=65532 --clear-groups -- /usr/bin/python3 -B /recipe/verify_install.py probe
++FROM scratch AS artifacts
++COPY --from=build /export/ /
++COPY --from=installation /scratch/install-verification.json /install-verification.json
++COPY --from=installation /recipe/build-dependency-transport.json /installation-dependency-transport.json
++
++FROM scratch AS native-poppler-runtime-verifier
++COPY native-poppler/install-runtime.py native-poppler/build-pins.json native-poppler/ctest_v5.py native-poppler/ctest_v5_baseline.json /recipe/
+ 
+ FROM snapshot AS native-expat-build
+ COPY native-expat/apt-transport.py /recipe/
+@@ -57,6 +100,8 @@
+     apt-get check; \
+     rm -f /tmp/latex-purge-plan /tmp/latex-purge-expected /tmp/latex-purge-actual; \
+     rm -f /tmp/pinned-font-uri
++# Reuse accepted source-build AND fresh-install proof; no host-produced package input.
++RUN --network=none --mount=type=bind,from=artifacts,source=/,target=/build-input/poppler,readonly --mount=type=bind,from=native-poppler-runtime-verifier,source=/recipe,target=/build-input/poppler-recipe,readonly python3 -I -B /build-input/poppler-recipe/install-runtime.py
+ COPY --from=native-expat-build /export/source-and-test-receipt.json /export/build-outcome.json /opt/latex/native-expat/
+ COPY --from=native-expat-build /recipe/pins.json /opt/latex/native-expat/pins.json
+ RUN --network=none --mount=type=bind,from=native-expat-build,source=/export,target=/build-input/expat,readonly python3 - <<'PYVERIFY'
+
+--- a/scripts/latex-runtime/.dockerignore
++++ b/scripts/latex-runtime/.dockerignore
+@@ -20,3 +20,36 @@
+ native-expat/provenance/**
+ !native-expat/provenance/trixie-security.InRelease
+ !native-expat/provenance/sid.InRelease
++
++# Exact Poppler V6 context plus the build-time runtime verifier.
++!native-poppler/
++native-poppler/**
++!native-poppler/inputs/
++native-poppler/inputs/**
++!native-poppler/patches/
++native-poppler/patches/**
++!native-poppler/provenance/
++native-poppler/provenance/**
++!native-poppler/Dockerfile.plan-lock-v6
++!native-poppler/Dockerfile.plan-lock-v6.dockerignore
++!native-poppler/abi-smoke.cc
++!native-poppler/apt_transport_poppler.py
++!native-poppler/build-pins.json
++!native-poppler/build-v5.py
++!native-poppler/changelog-proposal.diff
++!native-poppler/ctest_v5.py
++!native-poppler/ctest_v5_baseline.json
++!native-poppler/dependency-plan.lock.json
++!native-poppler/disable-openjpeg-packaging.diff
++!native-poppler/inputs/poppler-testdata.tar.xz
++!native-poppler/install-runtime.py
++!native-poppler/native_geometry.py
++!native-poppler/patches/resumide-native-geometry-v1.patch
++!native-poppler/pins.json
++!native-poppler/prepare_build.py
++!native-poppler/provenance/testdata-files.json
++!native-poppler/provenance/trixie-main.InRelease
++!native-poppler/series-proposal.diff
++!native-poppler/verify_consumer.py
++!native-poppler/verify_install.py
++!native-poppler/verify_native_v6.py
+
+--- /dev/null
++++ b/scripts/latex-runtime/native-poppler/install-runtime.py
+@@ -0,0 +1,215 @@
++"""Build-time exact native Poppler installation; not an application entrypoint."""
++import hashlib
++import json
++import os
++from pathlib import Path, PurePosixPath
++import re
++import subprocess
++import sys
++import xml.etree.ElementTree as ET
++
++ARTIFACTS = Path('/build-input/poppler')
++RECIPE = Path('/build-input/poppler-recipe')
++METADATA = Path('/opt/latex/native-poppler')
++ENV = {'PATH': '/usr/sbin:/usr/bin:/sbin:/bin', 'LANG': 'C.UTF-8', 'HOME': '/root',
++       'DEBIAN_FRONTEND': 'noninteractive'}
++RECIPE_HASHES = {
++    'build-pins.json': '2bb3f7c717b2aaad314d2680700529a6da985d35542ac93ea934d65fbad9e923',
++    'ctest_v5.py': '8c76f1cfa6c820a021d2219b6d5d0b66be466f49013955625de7dc39e8797f67',
++    'ctest_v5_baseline.json': '625407fe6970d4952aeac54e2ffad947f356428b91fe2e4775456205bcaf5e34',
++}
++
++
++def require(value, message):
++    if not value:
++        raise ValueError(message)
++
++
++def digest(path, maximum):
++    require(not path.is_symlink() and path.is_file() and path.stat().st_size <= maximum,
++            'nonregular or oversized installation input')
++    result = hashlib.sha256()
++    total = 0
++    with path.open('rb') as stream:
++        while data := stream.read(65536):
++            total += len(data)
++            require(total <= maximum, 'installation input grew beyond bound')
++            result.update(data)
++    return result.hexdigest()
++
++
++def read_json(path):
++    digest(path, 1048576)
++    return json.loads(path.read_bytes())
++
++
++def command(arguments, timeout=30):
++    result = subprocess.run(arguments, env=ENV, capture_output=True, text=True,
++                            check=True, timeout=timeout)
++    require(len(result.stdout.encode()) + len(result.stderr.encode()) <= 1048576,
++            'installation command output exceeded bound')
++    return result.stdout
++
++
++def inventory():
++    rows = command(['dpkg-query', '-W', '-f=${Package}\t${Version}\t${Architecture}\t${Essential}\t${Protected}\t${db:Status-Status}\n'])
++    packages = {}
++    for row in rows.splitlines():
++        fields = row.split('\t')
++        require(len(fields) == 6 and fields[0] not in packages, 'ambiguous package inventory')
++        packages[fields[0]] = fields[1:]
++    return packages
++
++
++def main():
++    require(os.getuid() == 0 and command(['dpkg', '--print-architecture']).strip() == 'arm64',
++            'installation requires the reviewed arm64 build stage')
++    for name, expected in RECIPE_HASHES.items():
++        require(digest(RECIPE / name, 1048576) == expected, 'reviewed V5 helper/pin hash changed')
++    # Fixed read-only recipe mount; this imports only the already-reviewed predicate.
++    sys.path.insert(0, str(RECIPE))
++    from ctest_v5 import assess
++
++    pins = read_json(RECIPE / 'build-pins.json')
++    baseline = read_json(RECIPE / 'ctest_v5_baseline.json')
++    names = ('source-and-test-receipt.json', 'build-outcome.json',
++             'install-verification.json', 'candidate-signature-binding.json')
++    records = {name: read_json(ARTIFACTS / name) for name in names}
++    source = records['source-and-test-receipt.json']
++    outcome = records['build-outcome.json']
++    installed = records['install-verification.json']
++    binding = records['candidate-signature-binding.json']
++    require(source['sourceVersion'] == pins['sourceVersion']
++            and source['packageVersion'] == pins['packageVersion']
++            and source['testDataManifestSha256'] == pins['testdataManifestSha256']
++            and source['archiveValidSigners'] and source['noUnstableBinaries'] is True,
++            'source authentication/provenance receipt differs')
++    require(outcome['failure'] is None and outcome['runtimeAdopted'] is False,
++            'failed or previously promoted build receipt')
++    phases = outcome['phases']
++    tests = [phase for phase in phases if phase['name'] == 'fatal-upstream-tests']
++    require(len(tests) == 1 and all(phase['exitCode'] == 0 for phase in phases
++                                  if phase['name'] != 'fatal-upstream-tests'),
++            'non-test native phase failed or test phase missing')
++    junit = ARTIFACTS / 'upstream-junit.xml'
++    junit_hash = digest(junit, 16777216)
++    upstream = assess(list(ET.fromstring(junit.read_bytes()).iter('testcase')),
++                      pins, binding, baseline, tests[0]['exitCode'])
++    upstream['junitSha256'] = junit_hash
++    require(upstream == source['upstream'] == outcome['upstream']
++            and outcome['candidateSignatureBinding'] == binding,
++            'honest upstream/binding receipts disagree')
++    expected_status = ('private-engineering-with-reviewed-exception'
++                       if upstream['engineeringException'] else 'native-package-checks-pass')
++    require(outcome['status'] == expected_status, 'native outcome status obscures actual failure')
++    native = source['nativeVerification']
++    require(outcome['nativeDiagnostic'] == {'status': 'all-original-native-checks-pass', 'result': native}
++            and native['missingExports'] == [] and native['oldHeaderClientLinkedAndPassed'] is True
++            and native['wholePdfRejectionClaim'] is False
++            and native['soname'] == 'libpoppler.so.147'
++            and native['baselineExports'] > 0
++            and native['candidateExports'] >= native['baselineExports']
++            and native['disabledJpxDiagnostic'] == 'Unknown filter; EOF permits unrelated text extraction',
++            'native compatibility/codec verification failed')
++    require([row['fixture'] for row in native['samePdfParity']] == pins['nativeParityPdfs']
++            and all(row['exactCoordinateTextOrder'] is True
++                    and row['standardBboxTsvByteParity'] is True
++                    and row['fontInventoryParity'] is True for row in native['samePdfParity']),
++            'incomplete native geometry/font parity')
++    cohort = pins['packageCohort']
++    require(sorted(cohort) == ['libpoppler147', 'poppler-utils']
++            and set(source['cohort']) == set(cohort), 'native cohort differs')
++    require(installed['normalNoRemoveApt'] is True and installed['allOtherPackagesUnchanged'] is True
++            and installed['runtimeAdopted'] is False
++            and installed['before'] == {name: pins['baselineVersion'] for name in cohort}
++            and installed['after'] == {name: pins['packageVersion'] for name in cohort},
++            'fresh exact-cohort installation proof differs')
++    fresh = installed['freshNonrootProbe']
++    require(all(fresh[key] is True for key in ('actualInstalledCli', 'textHashMatchesNativeParity', 'noOpenJpegLink')),
++            'fresh installed-consumer proof missing')
++    elf_rows = native['runtimeElfNoOpj']
++    require(2 <= len(elf_rows) <= 128 and len({row['path'] for row in elf_rows}) == len(elf_rows)
++            and fresh['runtimeElfHashes'] == {row['path']: row['sha256'] for row in elf_rows},
++            'fresh installed ELF proof differs')
++    packages = sorted(ARTIFACTS.glob('*.deb'))
++    require(len(packages) == 2 and sum(path.stat().st_size for path in packages) <= 67108864,
++            'runtime package count/aggregate bound')
++    checked = {}
++    for package in packages:
++        field = lambda name: command(['dpkg-deb', '-f', str(package), name]).strip()
++        name = field('Package')
++        require(name in cohort and name not in checked, 'unexpected native package')
++        item = source['cohort'][name]
++        package_hash = digest(package, 67108864)
++        require(package.name == item['file'] and package_hash == item['sha256']
++                and field('Version') == item['version'] == pins['packageVersion']
++                and field('Architecture') == 'arm64' and field('Source') == item['source'],
++                'native package identity mismatch')
++        checked[name] = {'file': package.name, 'sha256': package_hash, 'version': pins['packageVersion']}
++    before = inventory()
++    require(all(before[name][0] == pins['baselineVersion'] and before[name][1] == 'arm64'
++                and before[name][-1] == 'installed'
++                for name in cohort), 'runtime baseline package cohort differs')
++    automatic_before = set(command(['apt-mark', 'showauto']).splitlines())
++    held_before = set(command(['apt-mark', 'showhold']).splitlines())
++    apt = ['apt-get', '--no-remove', '--no-install-recommends', '--assume-yes', 'install', *map(str, packages)]
++    plan = command([apt[0], '--simulate', *apt[1:]])
++    require(sorted(re.findall(r'^Inst ([^ ]+)', plan, re.M)) == sorted(cohort)
++            and not re.search(r'^(Remv|Purg) ', plan, re.M), 'APT proposed non-cohort changes')
++    # The RUN has network=none. Do not use APT's broken local-file --no-download path.
++    subprocess.run(apt, env=ENV, check=True, timeout=60)
++    command(['apt-get', 'check'])
++    after = inventory()
++    expected = {name: [pins['packageVersion'], *values[1:]] if name in cohort else values
++                for name, values in before.items()}
++    require(after == expected, 'runtime package set/version/architecture/protection/status changed')
++    automatic_after = set(command(['apt-mark', 'showauto']).splitlines())
++    cohort_auto = lambda values: {name for name in values if name.split(':', 1)[0] in cohort}
++    require(automatic_before - cohort_auto(automatic_before) == automatic_after - cohort_auto(automatic_after)
++            and set(command(['apt-mark', 'showhold']).splitlines()) == held_before,
++            'non-cohort automatic/held flags changed')
++    installed_hashes = {}
++    elf_bytes = 0
++    for row in elf_rows:
++        relative = PurePosixPath(row['path'])
++        require(not relative.is_absolute() and '..' not in relative.parts and relative.parts[0] == 'usr',
++                'unsafe installed ELF proof path')
++        path = Path('/') / str(relative)
++        elf_bytes += path.stat().st_size
++        require(elf_bytes <= 268435456, 'installed ELF aggregate bound')
++        require(digest(path, 67108864) == row['sha256'], 'installed stripped native ELF hash differs')
++        installed_hashes[str(relative)] = row['sha256']
++    graph = command(['ldd', '/usr/bin/pdftotext'], timeout=10)
++    require('not found' not in graph and 'libopenjp' not in graph, 'installed extractor linkage differs')
++    paths = {str(Path(name).resolve(strict=True)) for name in re.findall(r'(?:=> )?(/[^\s()]+)', graph)}
++    require(any(Path(name).name.startswith('libpoppler.so.147')
++                and str(Path(name).relative_to('/')) in installed_hashes for name in paths),
++            'installed extractor does not bind the verified stripped core')
++    METADATA.mkdir(parents=True, exist_ok=False)
++    metadata_hashes = {}
++    for name in names:
++        data = (ARTIFACTS / name).read_bytes()
++        (METADATA / name).write_bytes(data)
++        metadata_hashes[name] = hashlib.sha256(data).hexdigest()
++    data = (RECIPE / 'build-pins.json').read_bytes()
++    (METADATA / 'pins.json').write_bytes(data)
++    metadata_hashes['pins.json'] = hashlib.sha256(data).hexdigest()
++    result = {'cohort': checked, 'metadataSha256': metadata_hashes,
++              'scope': 'Poppler installation before separately verified native Expat update',
++              'junitSha256': junit_hash, 'upstream': upstream,
++              'normalNoRemoveOfflineApt': True, 'allOtherPackagesAndProtectionFlagsUnchanged': True,
++              'nonCohortAutomaticAndHeldFlagsUnchanged': True,
++              'cohortAutomaticBefore': sorted(cohort_auto(automatic_before)),
++              'cohortAutomaticAfter': sorted(cohort_auto(automatic_after)),
++              'runtimeElfHashes': installed_hashes, 'installedPdftotextGraph': graph,
++              'installedElfProofSource': 'nativeVerification.runtimeElfNoOpj stripped package cohort',
++              'runtimeInstallVerifierSha256': digest(Path(__file__), 1048576),
++              'reviewedV5ManifestSha256': '85eaeb41220256bcaa66c29cb776213e4e71dcf3078a197d00dc9b71ce640396',
++              'runtimeAdopted': False, 'finalWorkerVerification': 'pending'}
++    (METADATA / 'installed-package.json').write_text(json.dumps(result, indent=2) + '\n')
++    print(json.dumps({'nativePopplerInstalled': True, 'upstreamAllPassed': upstream['allNativeTestsPassed'],
++                      'actualCtestExitCode': upstream['actualCtestExitCode'], 'runtimeAdopted': False}))
++
++
++if __name__ == '__main__':
++    main()

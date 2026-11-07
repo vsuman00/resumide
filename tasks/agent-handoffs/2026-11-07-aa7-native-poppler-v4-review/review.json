@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-07",
+  "status": "SOURCE_REVIEW_PASS_NOT_EXECUTED",
+  "backendDirectory": "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-licenses/resume_ats/scripts/latex-runtime/native-poppler",
+  "rootHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "rootDirty": true,
+  "inputs": {
+    "build-review-manifest.v4.json": {
+      "bytes": 10837,
+      "sha256": "5dac8c68c434f311c6141537ca98930d6e5279db0c3f71ca9e2a622b7175d675"
+    },
+    "build-context-manifest.v4.json": {
+      "bytes": 4314,
+      "sha256": "a2d66cd8daab0685338b7f5cb81aa9e995320e4d4c818873ccc5274b6db4f328"
+    },
+    "build-v4.py": {
+      "bytes": 16389,
+      "sha256": "5a64d60e5042c0ba973c9075d86098314fd6fca37ac66eb3d42abff0bd9c61da"
+    },
+    "build-v4.diff": {
+      "bytes": 11318,
+      "sha256": "c5f604c754463d5bc25b04fc55046283b37fc517ebbd232ea83a1cb02747302f"
+    },
+    "verify_native.py": {
+      "bytes": 9380,
+      "sha256": "5f8ab8db1ab82a98ef338ce45f4ecaf0e9296a07676150c206a6cf1401cbdfa8"
+    },
+    "Dockerfile.plan-lock-v4": {
+      "bytes": 5868,
+      "sha256": "08452e699c2a843dd4e77e1e945f94ffe7944436cfb0f85c6a175f4b97eeaa7f"
+    },
+    "Dockerfile.plan-lock-v4.dockerignore": {
+      "bytes": 1069,
+      "sha256": "63bdb71b81f1666f444dbb00c5c4579b85ff5f23570d77a9e6fc56987155a760"
+    },
+    "build-review-manifest.json": {
+      "bytes": 6865,
+      "sha256": "f6f3a3bbe7a55c6a8e1f4e4c534499e1d9e94a18b768b129be2d8be0ec7ab54d"
+    },
+    "build-review-manifest.v2.json": {
+      "bytes": 8563,
+      "sha256": "ef124759f7e4e69ea139a8d314e7a5ad84024cde250979ce31b99f60077a2f57"
+    },
+    "build-review-manifest.v3.json": {
+      "bytes": 9951,
+      "sha256": "57383aba269ed5c9354f7adb61daeaacc46f16259c242809aa1353cb5d9fc134"
+    }
+  },
+  "checks": {
+    "v4FileHashes": 64,
+    "v4FileBytes": 3346157,
+    "exactContextHashesAndLiteralFileAllowlist": 22,
+    "contextFileBytes": 3125165,
+    "allOldManifestFilesUnchanged": {
+      "v1": 41,
+      "v2": 51,
+      "v3": 59
+    },
+    "fatalCtestAndQtBlockByteIdentical": true,
+    "ctestRequiredExecutables": 71,
+    "qtRequiredExecutables": 56,
+    "verifyNativeUnchanged": true,
+    "builderAstParseDataOnly": true,
+    "runtimeExecution": false,
+    "vendorExecution": false,
+    "dockerActions": false,
+    "sourceChanges": false
+  },
+  "findings": [],
+  "limits": [
+    "Source review does not prove runtime candidate configuration, linkage or test success; V4 must execute after coordinator allocation and applicable exception review.",
+    "Failed JUnit diagnostic is capped at16MiB input,128 testcase records and64KiB emitted JSON. Missing/oversized exact case reports UNAVAILABLE and preserves failure; it never changes acceptance.",
+    "Native validation errors are retained while CTest runs; they remain fatal before .deb copy. Any later I/O error can leave private partial files in the failed build layer, but failed RUN cannot produce the artifacts target or installation stage.",
+    "Candidate signature metadata is a diagnostic actual-file hash binding, not a successful test or release attestation.",
+    "No candidate original assertion has been observed by this review; baseline signer failure cannot be substituted."
+  ]
+}

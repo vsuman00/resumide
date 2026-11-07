@@ -1,3 +1,4 @@
+import { selectSiteTheme } from "./site-menu";
 import { expect, test } from "@playwright/test";
 
 test("health and readiness are available", async ({ request }) => {
@@ -26,15 +27,13 @@ test("home renders the candidate history state", async ({ page }) => {
 
 test("theme preference applies and survives a reload", async ({ page }) => {
   await page.goto("/");
-  await page
-    .getByRole("combobox", { name: "Color theme" })
-    .selectOption("dark");
+  await selectSiteTheme(page, "dark");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
 
   await page.reload();
 
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(page.getByRole("combobox", { name: "Color theme" })).toHaveValue(
+  await expect(page.locator('select[aria-label="Color theme"]')).toHaveValue(
     "dark",
   );
 });
@@ -43,13 +42,14 @@ test("mobile shell keeps its primary actions visible", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
 
+  await expect(page.getByLabel("Open site menu")).toBeVisible();
+  await page.getByLabel("Open site menu").click();
   await expect(
     page.getByRole("combobox", { name: "Color theme" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("link", { name: /^analyze resume$/i }),
+    page.getByRole("link", { name: "New analysis", exact: true }),
   ).toBeVisible();
-  await page.locator(".public-mobile-menu summary").click();
   await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
   await expect
     .poll(() =>
@@ -199,8 +199,7 @@ test.describe("completed design shells", () => {
       await page.setViewportSize({ width: 390, height: 844 });
       await page.goto(route);
 
-      const themeControl = page.getByRole("combobox", { name: "Color theme" });
-      await themeControl.selectOption("dark");
+      await selectSiteTheme(page, "dark");
       await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
       await expect
         .poll(() =>

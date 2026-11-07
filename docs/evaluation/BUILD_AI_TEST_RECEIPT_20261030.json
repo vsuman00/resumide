@@ -1,0 +1,74 @@
+{
+  "task": "Build selected-context AI assistance",
+  "status": "mocked engineering verified; live provider access failed/unverified",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "node": "22.23.4",
+  "recordedAt": "2026-10-30T08:02:11.331884+00:00",
+  "checks": {
+    "focused": {
+      "command": "npm run test:build-ai",
+      "files": 4,
+      "tests": 88,
+      "status": "pass"
+    },
+    "sourceChecks": "pass",
+    "canonicalVerify": {
+      "command": "npm run verify",
+      "files": 131,
+      "tests": 1152,
+      "formatLintTypesWebWorker": "pass",
+      "status": "pass"
+    },
+    "browser": {
+      "cases": 6,
+      "seconds": 36.8,
+      "status": "pass",
+      "provider": "Test-only official-endpoint fetch stub; dummy key; no production bypass/custom egress",
+      "database": "Owner-authorized managed Supabase synthetic metadata",
+      "desktopAndMobileAxe": "zero violations in tested popup states",
+      "casesCovered": [
+        "hover/selection disclosure and zero automatic requests",
+        "actual PDF before explicit reviewed patch; apply invalidation and exact undo",
+        "resume confirmation and withheld numeric changes",
+        "unsafe TeX/questions as advice and malformed/refused output safe failure",
+        "editing/cancel/dismiss/stale response and mobile bounds",
+        "actual SDK mock timeout and refusal"
+      ],
+      "testedBundleScope": "Testing worktree production path; final narrow monthly empty-string guard separately covered by focused units and final root verification"
+    }
+  },
+  "liveProbe": {
+    "status": "failed",
+    "category": "authentication_or_access",
+    "httpStatus": 401,
+    "model": "gpt-6-luna",
+    "calls": 1,
+    "maxOutputTokens": 128,
+    "maxRetries": 0,
+    "timeoutMs": 10000,
+    "durationMs": 625
+  },
+  "liveProbeReceipt": "BUILD_AI_LIVE_PROBE_20261030.json",
+  "noLiveRetry": true,
+  "configuredModelUnchanged": true,
+  "cleanup": {
+    "knownSyntheticAccountsAcrossAttempts": 14,
+    "knownSyntheticOrganizations": 14,
+    "exactRecordedUserOrganizationMonthAndCompilerKeys": 42,
+    "actualBucketsDeletedByExactKeys": 19,
+    "remainingAuthProfilesMembershipOrganizationsConsentsAuditAnalysisAiRowsAndExactKeys": 0,
+    "privateEnvironmentAndLedgerRemoved": true,
+    "port3110Stopped": true,
+    "ownedCompilerContainersRemaining": 0,
+    "globalMetadata": "Existing build-ai/latex global counters retained; no baseline/broad deletion",
+    "historicalMetadata": "Earlier AA7 expired-counter limitation remains unchanged"
+  },
+  "limitations": [
+    "HTTP401 means live model generation/capability is not verified",
+    "No real/private resumes or screenshots sent to provider",
+    "No model/key switch or secret provisioning",
+    "Compiler resource/benchmark matrix unchanged and not repeated",
+    "No full upstream managed DB/browser drills, verify:ci, deployment, publication or formal release/accessibility acceptance"
+  ],
+  "screenshot": "build-ai-review-20261030.png"
+}

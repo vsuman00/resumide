@@ -1,0 +1,899 @@
+import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { LATEX_LIMITS, LATEX_POLICY_VERSION } from "../app/lib/latex-converter";
+import { compileLatex } from "../app/lib/server/latex-sandbox";
+import { prepareLatexDocument } from "../app/lib/server/latex-source";
+import {
+  inspectLatexPdf,
+  LATEX_EXPECTED_ORDER,
+  SYNTHETIC_LATEX,
+} from "../tests/fixtures/latex";
+import {
+  docker,
+  rawLatexAttempt,
+  assertNoOwnedContainers,
+  latexSourceHashes,
+} from "./latex-test-fixtures";
+export async function verifyLatexSandbox(imageId: string) {
+  assert.match(imageId, /^sha256:[a-f0-9]{64}$/);
+  await assertNoOwnedContainers();
+  const image = await docker(
+    ["image", "inspect", imageId, "--format", "{{.Id}}"],
+    undefined,
+    4096,
+    5000,
+  );
+  assert.equal(image.stdout.trim(), imageId);
+  const checks: Array<Record<string, unknown>> = [];
+  const confinement = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/opt/latex/confine",
+    args: ["--probe"],
+  });
+  assert.ok(confinement.value.abi >= 6);
+  assert.deepEqual(
+    Object.fromEntries(
+      Object.entries(confinement.value).filter(([key]) => key !== "abi"),
+    ),
+    {
+      deniedReads: 2,
+      approvedRead: 1,
+      scratchWrite: 1,
+      outsideWriteDenied: 1,
+      shellExecDenied: 1,
+    },
+  );
+  checks.push({
+    name: "actual-landlock-rights-and-exec",
+    ...confinement.value,
+  });
+  const inventory = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: [
+      "-c",
+      String.raw`import pathlib,json,hashlib,re,subprocess,xml.etree.ElementTree as ET
+paths=['landlock.c','supervisor.py','inspect_pdf.py','native_geometry.py','build-closure.py','build-fontconfig.py','texmf.cnf','requirements.lock']
+manifest=pathlib.Path('/opt/latex/closure.json').read_bytes()
+closure=json.loads(manifest)
+def inventoried(paths):
+ result={}
+ assert paths
+ for name in paths:
+  path=pathlib.Path(name).resolve()
+  assert path.is_file() and path.stat().st_size>0
+  digest=hashlib.sha256(path.read_bytes()).hexdigest()
+  assert closure['files'][str(path)]==digest
+  result[str(path)]=digest
+ return result
+fontconfig=closure['fontconfig']
+assert fontconfig['policy']=='latex-fontconfig/1.0.0'
+assert fontconfig['config']=='/opt/latex/fontconfig/fonts.conf'
+assert fontconfig['searchPath']=='/opt/latex/fontconfig'
+assert fontconfig['fontReadPermissionsAdded'] is False
+assert inventoried(fontconfig['files'])==fontconfig['files']
+read_paths=set(pathlib.Path('/opt/latex/read-paths').read_text().splitlines())
+assert set(fontconfig['files'])<=read_paths
+assert fontconfig['sourceOrder'] and fontconfig['removedUserEntries']
+assert {x['output'] for x in fontconfig['sourceOrder']}==set(fontconfig['files'])
+for source in fontconfig['sourceOrder']:
+ assert hashlib.sha256(pathlib.Path(source['resolvedPath']).read_bytes()).hexdigest()==source['sha256']
+ assert source['path'] not in read_paths and source['resolvedPath'] not in read_paths
+assert not any(p.startswith(('/etc/fonts/','/usr/share/fontconfig/conf.avail/')) for p in closure['files'])
+for name in fontconfig['files']:
+ path=pathlib.Path(name)
+ assert str(path.resolve())==name and not path.stat().st_mode&0o222
+ payload=re.sub(rb'<!--.*?-->',b'',path.read_bytes(),flags=re.S)
+ assert b'<!DOCTYPE' not in payload.upper() and b'<!ENTITY' not in payload.upper()
+ for node in ET.fromstring(payload).iter():
+  if node.tag not in ('include','dir','cachedir'):continue
+  value=(node.text or '').strip()
+  assert node.attrib.get('prefix') is None and pathlib.Path(value).is_absolute()
+  assert not any(c in value for c in '$~*?[]')
+  if node.tag=='include':assert value in fontconfig['files']
+  elif node.tag=='cachedir':assert value=='/var/cache/fontconfig'
+  else:assert any(pathlib.Path(value)==root or root in pathlib.Path(value).parents for root in map(pathlib.Path,('/usr/share/fonts','/usr/local/share/fonts','/usr/share/texmf/fonts/opentype')))
+styles=inventoried(closure['requiredStyles'])
+font_groups={}
+for label,group in closure['requiredFonts'].items():
+ entries=inventoried(group)
+ font_groups[label]={'files':len(entries),'inventorySha256':hashlib.sha256(json.dumps(entries,sort_keys=True).encode()).hexdigest()}
+loaders={}
+for engine in ['/usr/bin/xetex','/usr/bin/xdvipdfmx']:
+ inventoried([engine])
+ dependencies=subprocess.check_output(['ldd',engine],text=True)
+ assert 'not found' not in dependencies
+ actual=[]
+ for path in re.findall(r'/[^\s()]+',dependencies):
+  if 'ld-linux' in path:actual.append(str(pathlib.Path(path).resolve()))
+ entries=inventoried(actual)
+ for path in entries:
+  with open(path,'rb') as stream:assert stream.read(4)==b'\x7fELF'
+  assert path in closure['elfInterpreters']
+ loaders[engine]=entries
+assert set(closure['elfInterpreters'])=={path for group in loaders.values() for path in group}
+print(json.dumps({'runtimeHashes':{p:hashlib.sha256(pathlib.Path('/opt/latex',p).read_bytes()).hexdigest() for p in paths},'manifestSha256':hashlib.sha256(manifest).hexdigest(),'closureFiles':len(closure['files']),'snapshot':closure['snapshot'],'packagesSha256':hashlib.sha256(pathlib.Path('/opt/latex/packages.lock').read_bytes()).hexdigest(),'requiredStyles':{pathlib.Path(path).name:{'path':path,'sha256':digest} for path,digest in styles.items()},'requiredFonts':font_groups,'requiredRuntime':inventoried(closure['requiredRuntime']),'requiredTransitiveFiles':inventoried(closure['requiredTransitiveFiles']),'engineLoaders':loaders,'fontconfig':fontconfig}))`,
+    ],
+  });
+  assert.deepEqual(Object.keys(inventory.value.requiredStyles).sort(), [
+    "amsmath.sty",
+    "amssymb.sty",
+    "enumitem.sty",
+    "geometry.sty",
+    "hyperref.sty",
+    "latexsym.sty",
+    "titlesec.sty",
+    "xcolor.sty",
+  ]);
+  assert.deepEqual(Object.keys(inventory.value.requiredFonts).sort(), [
+    "computerModernMetrics",
+    "computerModernType1",
+    "latinModernEncodings",
+    "latinModernMetrics",
+    "latinModernOpenType",
+    "latinModernType1",
+  ]);
+  for (const group of Object.values(inventory.value.requiredFonts) as Array<{
+    files: number;
+    inventorySha256: string;
+  }>) {
+    assert.ok(group.files > 0);
+    assert.match(group.inventorySha256, /^[a-f0-9]{64}$/);
+  }
+  assert.deepEqual(
+    Object.keys(inventory.value.requiredTransitiveFiles).sort(),
+    [
+      "/etc/paperspecs",
+      "/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty",
+    ],
+  );
+  assert.deepEqual(Object.keys(inventory.value.requiredRuntime).sort(), [
+    "/etc/ld.so.cache",
+    "/opt/latex/fontconfig/fonts.conf",
+    "/opt/latex/texmf.cnf",
+    "/var/lib/texmf/web2c/xetex/xelatex.fmt",
+  ]);
+  assert.deepEqual(Object.keys(inventory.value.engineLoaders).sort(), [
+    "/usr/bin/xdvipdfmx",
+    "/usr/bin/xetex",
+  ]);
+  const hashes = await latexSourceHashes();
+  for (const [file, hash] of Object.entries(inventory.value.runtimeHashes))
+    assert.equal(
+      hash,
+      hashes[`scripts/latex-runtime/${file}`],
+      "Image runtime differs from receipt source",
+    );
+  checks.push({
+    name: "image-runtime-and-closure-binding",
+    ...inventory.value,
+  });
+
+  const native = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: [
+      "-I",
+      "-B",
+      "-c",
+      String.raw`import pathlib,json,hashlib,sysconfig,ctypes,pyexpat,xml.etree.ElementTree as ET
+from email.parser import Parser
+base=pathlib.Path('/opt/latex/native-expat')
+digest=lambda p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+pins=json.loads((base/'pins.json').read_text())
+receipt=json.loads((base/'source-and-test-receipt.json').read_text())
+outcome=json.loads((base/'build-outcome.json').read_text())
+installed=json.loads((base/'installed-package.json').read_text())
+assert pins['schemaVersion']=='resumide-native-expat/1'
+assert pins['packageVersion']==receipt['packageVersion']==installed['version']=='2.10.0-1~deb13u1+resumide1'
+assert pins['upstreamVersion']==receipt['sourceVersion']=='2.10.0'
+assert installed['package']=='libexpat1'
+assert receipt['sourceInputs']==pins['sources']+pins['inputs']
+assert receipt['noUnstableBinaries'] is True and pins['noUnstableBinaryPackages'] is True
+assert receipt['fixedCohort']==pins['fixedCohort'] and receipt['unresolved']==pins['unresolved']
+assert 'CVE-2025-66382' in receipt['unresolved']
+assert receipt['debianPackagingDifferences']==['debian/changelog']
+assert receipt['testOnlyAdapter']['artifactSourceChanged'] is False
+assert all(x['path'].startswith('tests/') for x in receipt['testOnlyAdapter']['changedFiles'])
+assert outcome['status']=='pass' and outcome['failure'] is None and outcome['phases']
+assert all(x['exitCode']==0 for x in outcome['phases'])
+required={'native-package-build','upstream-check-narrow','upstream-check-native-wide16','candidate-abi-narrow','candidate-abi-wide16','python-xml-consumer','fontconfig-candidate-linkage','fontconfig-consumer','adapter-self-test'}
+assert required<={x['phase'] for x in outcome['phases']}
+for mode in ('build','buildw'):
+ assert receipt['upstreamCheckCounts'][mode]['checks']==5328 and receipt['upstreamCheckCounts'][mode]['failures']==0
+ assert outcome['upstreamChecks'][mode]==receipt['upstreamCheckCounts'][mode]
+assert set(installed['metadataSha256'])=={'pins.json','source-and-test-receipt.json','build-outcome.json'}
+assert all(digest(base/name)==value for name,value in installed['metadataSha256'].items())
+package_names=[name for name in receipt['builtPackages'] if name.startswith('libexpat1_')]
+assert len(package_names)==1 and installed['packageSha256']==receipt['builtPackages'][package_names[0]]
+libraries={}
+for entry in receipt['abiChecks']:
+ assert entry['baselineExports']==entry['candidateExports']==83 and entry['missingExports']==[]
+ path=(pathlib.Path('/usr/lib')/sysconfig.get_config_var('MULTIARCH')/entry['library']).resolve()
+ assert digest(path)==entry['sha256']
+ libraries[entry['library']]={'path':str(path),'sha256':entry['sha256']}
+assert set(libraries)=={'libexpat.so.1','libexpatw.so.1'}
+assert pyexpat.EXPAT_VERSION=='expat_2.10.0'
+lib=ctypes.CDLL('libexpat.so.1');lib.XML_ExpatVersion.restype=ctypes.c_char_p;lib.XML_ExpatVersion.argtypes=[]
+assert lib.XML_ExpatVersion()==b'expat_2.10.0'
+assert ET.fromstring('<fontconfig><dir>neutral &amp; safe</dir></fontconfig>')[0].text=='neutral & safe'
+maps=[line for line in pathlib.Path('/proc/self/maps').read_text().splitlines() if '/libexpat.so.' in line]
+assert maps and not any('(deleted)' in line for line in maps)
+assert {str(pathlib.Path(line.split()[-1]).resolve()) for line in maps}=={libraries['libexpat.so.1']['path']}
+fresh=installed['freshPythonConsumer']
+assert fresh['pyexpatVersion']==fresh['ctypesVersion']=='expat_2.10.0' and fresh['elementTreeNeutralParse'] is True
+assert fresh['mappedLibrarySha256']==libraries['libexpat.so.1']['sha256']
+records=[Parser().parsestr(x) for x in pathlib.Path('/var/lib/dpkg/status').read_text().split('\n\n') if x]
+packages={x['Package']:x['Version'] for x in records if x['Status']=='install ok installed'}
+assert packages['libexpat1']==pins['packageVersion']
+removed=['dirmngr','gnupg','gnupg-l10n','gpg-agent','gpgsm','mount']
+assert all(name not in packages for name in removed)
+retained=['login','gpg','gpgconf','libgpgme11t64','libgpgmepp6t64','libpoppler147','poppler-utils']
+assert all(name in packages for name in retained)
+print(json.dumps({'pinsSha256':digest(base/'pins.json'),'metadataHashes':{name:digest(base/name) for name in ['source-and-test-receipt.json','build-outcome.json','installed-package.json']},'version':pins['packageVersion'],'nativeVersion':pyexpat.EXPAT_VERSION,'libraries':libraries,'upstreamChecks':receipt['upstreamCheckCounts'],'testAdapterSha256':receipt['testOnlyAdapter']['patchSha256'],'freshBuildConsumerVerified':True,'currentMappedLibraryVerified':True,'removed':removed,'retained':{name:packages[name] for name in retained},'unresolved':receipt['unresolved']}))`,
+    ],
+  });
+  assert.equal(
+    native.value.pinsSha256,
+    hashes["scripts/latex-runtime/native-expat/pins.json"],
+  );
+  assert.equal(
+    native.value.testAdapterSha256,
+    hashes["scripts/latex-runtime/native-expat/native-utf16-tests.patch"],
+  );
+  checks.push({
+    name: "native-expat-and-reviewed-package-purge",
+    ...native.value,
+  });
+
+  const nativeFrameProbeSource = await readFile(
+    "scripts/latex-runtime/verify-native-frame.py",
+    "utf8",
+  );
+  const nativeFrameSuiteSource = await readFile(
+    "scripts/latex-runtime/native-poppler/verify_consumer.py",
+    "utf8",
+  );
+  const frozenFrameSuiteSha256 =
+    "8d36bb9de1fcf0cf900e0d8c08c05a255b05e165bab7c40aeef28ffc6386bd1d";
+  assert.equal(
+    createHash("sha256").update(nativeFrameProbeSource).digest("hex"),
+    hashes["scripts/latex-runtime/verify-native-frame.py"],
+  );
+  assert.equal(
+    createHash("sha256").update(nativeFrameSuiteSource).digest("hex"),
+    frozenFrameSuiteSha256,
+  );
+  assert.equal(
+    hashes["scripts/latex-runtime/native-poppler/verify_consumer.py"],
+    frozenFrameSuiteSha256,
+  );
+  const nativeFrame = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: ["-I", "-B", "-c", nativeFrameProbeSource],
+    input: JSON.stringify({
+      suiteSource: nativeFrameSuiteSource,
+      runtimeInstallVerifierSha256:
+        hashes["scripts/latex-runtime/native-poppler/install-runtime.py"],
+    }),
+  });
+  assert.equal(nativeFrame.value.passed, true);
+  assert.equal(nativeFrame.value.protocol, "RESUMIDE_BBOX/1");
+  assert.equal(
+    nativeFrame.value.currentPackageVersion,
+    "25.03.0-5+deb13u4+resumide1",
+  );
+  assert.deepEqual(nativeFrame.value.installedCohort, [
+    "libpoppler147",
+    "poppler-utils",
+  ]);
+  assert.equal(nativeFrame.value.installedElfCount, 14);
+  assert.equal(nativeFrame.value.nativeAbiExports, 2716);
+  assert.equal(nativeFrame.value.samePdfNativeFixtures, 7);
+  assert.equal(nativeFrame.value.pdftotextNoOpenJpegBinding, true);
+  assert.equal(nativeFrame.value.supervisorFrameWiring, true);
+  assert.equal(
+    nativeFrame.value.consumerSha256,
+    hashes["scripts/latex-runtime/native_geometry.py"],
+  );
+  assert.equal(nativeFrame.value.consumerSuite.cases, 107);
+  assert.equal(nativeFrame.value.consumerSuite.testMethods, 6);
+  assert.equal(nativeFrame.value.consumerSuite.passed, true);
+  assert.equal(nativeFrame.value.consumerSuite.consumerStable, true);
+  assert.equal(nativeFrame.value.upstream.executed, 71);
+  assert.equal(nativeFrame.value.upstream.qtCompleteClasses, 56);
+  if (nativeFrame.value.upstream.allNativeTestsPassed) {
+    assert.equal(nativeFrame.value.upstream.passed, 71);
+    assert.equal(nativeFrame.value.upstream.failed, 0);
+    assert.equal(nativeFrame.value.upstream.actualCtestExitCode, 0);
+    assert.equal(nativeFrame.value.upstream.engineeringException, null);
+  } else {
+    assert.equal(nativeFrame.value.upstream.passed, 70);
+    assert.equal(nativeFrame.value.upstream.failed, 1);
+    assert.equal(nativeFrame.value.upstream.actualCtestExitCode, 8);
+    assert.equal(nativeFrame.value.upstream.engineeringException.id, "E010");
+    assert.deepEqual(
+      nativeFrame.value.upstream.engineeringException
+        .unexecutedLaterAssertionLines,
+      [312, 313, 314, 315],
+    );
+  }
+  assert.equal(nativeFrame.value.pdfInputsGenerated, false);
+  assert.equal(nativeFrame.value.pdfNativeDecodingRequested, false);
+  assert.equal(nativeFrame.value.sourceBuildsRequested, false);
+  assert.equal(nativeFrame.value.temporaryFilesRemoved, true);
+  checks.push({
+    name: "native-frame-provenance-and-frozen-consumer",
+    ...nativeFrame.value,
+    durationMs: nativeFrame.durationMs,
+  });
+
+  const freeTypeProbe = await readFile(
+    "scripts/latex-runtime/verify-native-freetype.py",
+    "utf8",
+  );
+  assert.equal(
+    createHash("sha256").update(freeTypeProbe).digest("hex"),
+    hashes["scripts/latex-runtime/verify-native-freetype.py"],
+  );
+  const freeTypeBudgetReference = await readFile(
+    "scripts/latex-runtime/native-freetype/provenance/budget-adapter-source-binding.json",
+    "utf8",
+  );
+  assert.equal(
+    createHash("sha256").update(freeTypeBudgetReference).digest("hex"),
+    hashes[
+      "scripts/latex-runtime/native-freetype/provenance/budget-adapter-source-binding.json"
+    ],
+  );
+  const freeType = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: ["-I", "-B", "-c", freeTypeProbe],
+    input: JSON.stringify({
+      pinsSha256: hashes["scripts/latex-runtime/native-freetype/pins-v3.json"],
+      installerSha256:
+        hashes["scripts/latex-runtime/native-freetype/install-runtime-v3.py"],
+      patchSha256:
+        hashes[
+          "scripts/latex-runtime/native-freetype/patches/CVE-2026-95512.patch"
+        ],
+      budgetReference: JSON.parse(freeTypeBudgetReference),
+    }),
+  });
+  assert.equal(freeType.value.passed, true);
+  assert.equal(
+    freeType.value.packageVersion,
+    "2.13.3+dfsg-1+deb13u1+resumide1",
+  );
+  assert.deepEqual(freeType.value.runtimeCohort, ["libfreetype6"]);
+  assert.equal(freeType.value.knownFontCases, 2);
+  assert.equal(freeType.value.literalBudgetComparativeControls, 5);
+  assert.equal(freeType.value.oldHeaderDynamicProof, true);
+  assert.equal(freeType.value.originalFreshSdkDynamicAndStaticProof, true);
+  assert.equal(
+    freeType.value.upstreamMeson.status,
+    "NOT_RUN_EXTERNAL_FONT_UNAVAILABLE",
+  );
+  assert.equal(freeType.value.fullUpstreamSuitePassedClaim, false);
+  assert.equal(freeType.value.newFontOrPdfInputProvided, false);
+  assert.equal(freeType.value.xetexMapping.actualExecutable, "/usr/bin/xetex");
+  assert.equal(
+    freeType.value.xetexMapping.mappedLibrarySha256,
+    freeType.value.runtimeLibrarySha256,
+  );
+  assert.equal(freeType.value.xetexMapping.inputBytesSent, 0);
+  assert.equal(freeType.value.xetexMapping.fontOrPdfInputProvided, false);
+  assert.equal(freeType.value.xetexMapping.ownedProcessStopped, true);
+  assert.equal(freeType.value.xetexMapping.ownedProcessGroupAbsent, true);
+  checks.push({
+    name: "native-freetype-source-abi-font-and-mapped-library",
+    ...freeType.value,
+    durationMs: freeType.durationMs,
+  });
+
+  const fontconfigCanary = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: [
+      "-I",
+      "-B",
+      "-c",
+      String.raw`import pathlib,json,hashlib,subprocess,sys
+closure=json.loads(pathlib.Path('/opt/latex/closure.json').read_text());sealed=closure['fontconfig']
+SNAPSHOT="\nimport ctypes as C,json,os\nP=C.c_void_p; lib=C.CDLL('libfontconfig.so.1')\ndef bind(name,restype,args):\n fn=getattr(lib,name);fn.restype=restype;fn.argtypes=args;return fn\nbind('FcInitLoadConfigAndFonts',P,[]);bind('FcConfigGetConfigFiles',P,[P]);bind('FcConfigGetFontDirs',P,[P]);bind('FcConfigGetCacheDirs',P,[P]);bind('FcStrListNext',C.c_char_p,[P]);bind('FcStrListDone',None,[P]);bind('FcNameParse',P,[C.c_char_p]);bind('FcConfigSubstitute',C.c_int,[P,P,C.c_int]);bind('FcDefaultSubstitute',None,[P]);bind('FcFontMatch',P,[P,P,C.POINTER(C.c_int)]);bind('FcPatternGetString',C.c_int,[P,C.c_char_p,C.c_int,C.POINTER(C.c_char_p)]);bind('FcPatternGetInteger',C.c_int,[P,C.c_char_p,C.c_int,C.POINTER(C.c_int)]);bind('FcPatternDestroy',None,[P]);bind('FcConfigDestroy',None,[P])\nc=lib.FcInitLoadConfigAndFonts();assert c,'Native Fontconfig initialization failed'\ndef strings(iterator):\n result=[]\n while True:\n  item=lib.FcStrListNext(iterator)\n  if item is None:break\n  result.append(item.decode())\n lib.FcStrListDone(iterator);return result\ndef field(pattern,key):\n value=C.c_char_p();assert lib.FcPatternGetString(pattern,key.encode(),0,C.byref(value))==0,key\n return value.value.decode()\nresult={'configFiles':strings(lib.FcConfigGetConfigFiles(c)),'fontDirs':strings(lib.FcConfigGetFontDirs(c)),'cacheDirs':strings(lib.FcConfigGetCacheDirs(c)),'matches':[]}\nfor family in ['serif','sans-serif','monospace','Latin Modern Roman','Latin Modern Sans','Latin Modern Mono','Latin Modern Math','DejaVu Serif','DejaVu Sans','DejaVu Sans Mono']:\n for style in ['Regular','Bold','Italic','Bold Italic']:\n  request=family+':style='+style+':size=10';p=lib.FcNameParse(request.encode());assert p\n  assert lib.FcConfigSubstitute(c,p,0);lib.FcDefaultSubstitute(p);r=C.c_int();m=lib.FcFontMatch(c,p,C.byref(r));assert m\n  index=C.c_int();assert lib.FcPatternGetInteger(m,b'index',0,C.byref(index))==0\n  result['matches'].append({'request':request,'family':field(m,'family'),'style':field(m,'style'),'file':field(m,'file'),'index':index.value})\n  lib.FcPatternDestroy(m);lib.FcPatternDestroy(p)\nlib.FcConfigDestroy(c);print(json.dumps(result,sort_keys=True))\n"
+def snapshot(use_sealed):
+ env={'HOME':'/scratch','LANG':'C.UTF-8'}
+ if use_sealed:env.update({'FONTCONFIG_FILE':sealed['config'],'FONTCONFIG_PATH':sealed['searchPath']})
+ r=subprocess.run([sys.executable,'-I','-B','-c',SNAPSHOT],env=env,capture_output=True,text=True,timeout=5)
+ assert r.returncode==0,'Native Fontconfig snapshot failed'
+ return json.loads(r.stdout)
+baseline=snapshot(False);clone=snapshot(True)
+assert len(clone['matches'])==40 and baseline['matches']==clone['matches']
+assert set(clone['configFiles'])==set(sealed['files'])
+assert all(not p.startswith('/scratch') for p in clone['fontDirs']+clone['cacheDirs'])
+canary=pathlib.Path('/scratch/.fonts.conf')
+assert not canary.exists()
+canary.write_text('<fontconfig><match target="pattern"><test name="family" compare="eq"><string>Latin Modern Roman</string></test><edit name="family" mode="assign" binding="strong"><string>Latin Modern Sans</string></edit></match></fontconfig>')
+try:
+ control=snapshot(False);after=snapshot(True)
+ assert str(canary) in control['configFiles'] and str(canary) not in after['configFiles']
+ assert baseline['matches']!=control['matches']
+ assert clone==after
+finally:canary.unlink()
+assert all(hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==value for name,value in sealed['files'].items())
+print(json.dumps({'nativeMatches':40,'allNativeMatchesPreserved':True,'positiveUserCanaryChangedControl':True,'sealedCanaryUnchanged':True,'configFiles':clone['configFiles'],'fontDirs':clone['fontDirs'],'cacheDirs':clone['cacheDirs'],'matchesSha256':hashlib.sha256(json.dumps(clone['matches'],sort_keys=True).encode()).hexdigest(),'scope':'Trusted native-library canary inside hardened worker; production Landlock engine probes remain separate'}))`,
+    ],
+  });
+  checks.push({
+    name: "sealed-fontconfig-user-canary",
+    ...fontconfigCanary.value,
+  });
+  const fontconfigHomeProbe = await readFile(
+    "scripts/latex-runtime/verify-fontconfig-home.py",
+    "utf8",
+  );
+  const fontconfigHomeProbeSha256 = createHash("sha256")
+    .update(fontconfigHomeProbe)
+    .digest("hex");
+  assert.equal(
+    fontconfigHomeProbeSha256,
+    hashes["scripts/latex-runtime/verify-fontconfig-home.py"],
+  );
+  const fontconfigHome = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: ["-I", "-B", "-c", fontconfigHomeProbe],
+  });
+  assert.equal(fontconfigHome.value.passed, true);
+  assert.equal(fontconfigHome.value.actualHome, "/opt/latex/home");
+  assert.equal(fontconfigHome.value.productionSourceHomeFixed, true);
+  assert.deepEqual(fontconfigHome.value.immutableHomeMetadata, {
+    uid: 0,
+    gid: 0,
+    mode: "0o555",
+    empty: true,
+  });
+  assert.equal(fontconfigHome.value.writableFailureControlConsumedCanary, true);
+  assert.equal(fontconfigHome.value.actualHomeFailureConsumedCanary, false);
+  assert.equal(fontconfigHome.value.actualHomeFailureNoCandidateXml, true);
+  assert.equal(fontconfigHome.value.proposedHomeFailureNoCandidateXml, true);
+  assert.equal(fontconfigHome.value.ordinarySealedMatches, 40);
+  assert.equal(fontconfigHome.value.ordinary40MatchesPreserved, true);
+  assert.equal(fontconfigHome.value.ordinarySealedFilesPreserved, true);
+  assert.equal(fontconfigHome.value.ordinarySealedDirectoriesPreserved, true);
+  assert.equal(fontconfigHome.value.sealedXmlHashesStable, true);
+  assert.equal(fontconfigHome.value.canaryRemoved, true);
+  checks.push({
+    name: "fontconfig-failure-branch-immutable-home",
+    probeSha256: fontconfigHomeProbeSha256,
+    ...fontconfigHome.value,
+  });
+  const parser = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: [
+      "-c",
+      String.raw`import sys,json,shutil,importlib.util
+sys.path.insert(0,'/opt/latex')
+import pypdf
+print(json.dumps({'parser':'pypdf','version':pypdf.__version__,'legacyParserPresent':importlib.util.find_spec('PyPDF2') is not None,'buildTools':{name:shutil.which(name) for name in ['gcc','cc','make']}}))`,
+    ],
+  });
+  assert.equal(parser.value.parser, "pypdf");
+  assert.equal(parser.value.version, "6.21.4");
+  assert.equal(parser.value.legacyParserPresent, false);
+  assert.deepEqual(parser.value.buildTools, {
+    gcc: null,
+    cc: null,
+    make: null,
+  });
+  checks.push({
+    name: "maintained-parser-and-no-runtime-build-tools",
+    ...parser.value,
+  });
+  const resources = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: ["-c", DOCKER_RESOURCE_PROBE],
+  });
+  assert.notEqual(resources.value.networkErrno, 0);
+  assert.equal(resources.value.openFilesLimited, true);
+  assert.equal(resources.value.processesLimited, true);
+  assert.equal(resources.value.fileLimitBytes, 8388608);
+  assert.equal(resources.value.tmpfsLimited, true);
+  assert.equal(resources.value.memoryChildReturn, -9);
+  assert.equal(resources.value.cpuChildReturn, -9);
+  assert.ok(
+    resources.value.cpuUserSeconds >= 9 && resources.value.cpuUserSeconds < 12,
+  );
+  checks.push({
+    name: "actual-docker-network-and-resource-limits",
+    ...resources.value,
+  });
+  const pdfPolicy = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: ["-c", PDF_POLICY_PROBE],
+  });
+  assert.equal(pdfPolicy.value.cases, 20);
+  assert.deepEqual(pdfPolicy.value.failures, []);
+  checks.push({
+    name: "actual-pdf-parser-active-content-and-bounds",
+    ...pdfPolicy.value,
+  });
+  const jbig2Probe = await readFile(
+    "scripts/latex-runtime/verify-jbig2.py",
+    "utf8",
+  );
+  const jbig2 = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: ["-I", "-B", "-c", jbig2Probe],
+  });
+  assert.equal(jbig2.value.expectBlocked, true);
+  assert.deepEqual(
+    jbig2.value.cases.map((item: Record<string, unknown>) => item.case),
+    ["explicit-configuration", "legacy-configuration"],
+  );
+  for (const item of jbig2.value.cases) {
+    assert.equal(item.rejected, true);
+    assert.equal(item.subprocessAttempts, 0);
+    assert.equal(item.temporaryDirectories, 0);
+    assert.equal(item.incomingConfigurationRestored, true);
+  }
+  assert.equal(jbig2.value.neutralPages, 1);
+  assert.equal(jbig2.value.neutralConfigurationRestored, true);
+  assert.equal(jbig2.value.outerConfigurationRestored, true);
+  assert.equal(jbig2.value.externalBinaryExecuted, false);
+  checks.push({
+    name: "pdf-optional-decoder-disabled-and-context-restored",
+    probeSha256: createHash("sha256").update(jbig2Probe).digest("hex"),
+    ...jbig2.value,
+  });
+  const imageAdmissionProbe = await readFile(
+    "scripts/latex-runtime/verify-image-admission.py",
+    "utf8",
+  );
+  const imageAdmission = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: ["-I", "-B", "-c", imageAdmissionProbe],
+  });
+  assert.equal(imageAdmission.value.cases, 49);
+  assert.equal(imageAdmission.value.passed, true);
+  assert.equal(imageAdmission.value.imageDecoderAttempts, 0);
+  assert.equal(imageAdmission.value.inlineScannerAttempts, 0);
+  assert.equal(imageAdmission.value.imageExtractionAttempts, 0);
+  assert.equal(imageAdmission.value.configurationRestored, true);
+  assert.equal(imageAdmission.value.getDataHookRestored, true);
+  assert.equal(imageAdmission.value.nativeImageOrFontDecoderExecuted, false);
+  for (const item of imageAdmission.value.checks) {
+    assert.equal(item.pass, true, item.name);
+    assert.equal(item.requiredBranchObserved, true, item.name);
+  }
+  checks.push({
+    name: "pdf-raster-inline-image-and-font-admission",
+    probeSha256: createHash("sha256").update(imageAdmissionProbe).digest("hex"),
+    ...imageAdmission.value,
+  });
+  const mockImageBoundaryProbe = await readFile(
+    "scripts/latex-runtime/verify-image-boundaries-mock.py",
+    "utf8",
+  );
+  const mockImageBoundary = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: ["-I", "-B", "-c", mockImageBoundaryProbe],
+  });
+  assert.equal(mockImageBoundary.value.cases, 4);
+  assert.equal(mockImageBoundary.value.passed, true);
+  assert.equal(mockImageBoundary.value.attempts.originalEncodedData, 0);
+  assert.equal(mockImageBoundary.value.attempts.imageDecoder, 0);
+  assert.equal(mockImageBoundary.value.pdfBytesGenerated, false);
+  assert.equal(mockImageBoundary.value.realPdfReaderCalled, false);
+  assert.equal(mockImageBoundary.value.nativeDecoderExecuted, false);
+  for (const item of mockImageBoundary.value.checks) {
+    assert.equal(item.pass, true, item.name);
+    assert.equal(item.configurationRestored, true, item.name);
+    assert.equal(item.getDataHookRestored, true, item.name);
+  }
+  checks.push({
+    name: "pdf-image-boundaries-mock-policy-checks",
+    probeSha256: createHash("sha256")
+      .update(mockImageBoundaryProbe)
+      .digest("hex"),
+    ...mockImageBoundary.value,
+  });
+  const success = await rawLatexAttempt(imageId, SYNTHETIC_LATEX);
+  assert.equal(
+    success.value.error,
+    undefined,
+    "Representative macro document must actually compile",
+  );
+  const bytes = Buffer.from(success.value.pdf, "base64"),
+    parsed = await inspectLatexPdf(bytes);
+  assert.equal(parsed.pages, 2);
+  let cursor = -1;
+  for (const phrase of LATEX_EXPECTED_ORDER) {
+    const index = parsed.text.indexOf(phrase, cursor + 1);
+    assert.ok(
+      index > cursor,
+      `Expected synthetic phrase/order missing: ${phrase}`,
+    );
+    cursor = index;
+  }
+  assert.ok(parsed.links.includes("https://example.org/reference"));
+  checks.push({
+    name: "real-macro-math-layout-pdf",
+    pages: parsed.pages,
+    pdfBytes: bytes.length,
+    pdfSha256: createHash("sha256").update(bytes).digest("hex"),
+    sourceSha256: createHash("sha256").update(SYNTHETIC_LATEX).digest("hex"),
+    taggedPages: parsed.taggedPages,
+    durationMs: success.durationMs,
+  });
+  const wrap = (body: string) =>
+    "\\documentclass{article}\n\\begin{document}\n" +
+    body +
+    "\n\\end{document}\n";
+  const control = await rawLatexAttempt(
+    imageId,
+    wrap("Neutral wrapper control."),
+  );
+  assert.equal(
+    control.value.error,
+    undefined,
+    "Negative-case wrapper must compile a neutral control",
+  );
+  checks.push({ name: "negative-wrapper-control", pass: true });
+  const adverse = [
+    ["direct-file-read", wrap(String.raw`\input{/etc/passwd}`)],
+    [
+      "constructed-file-read",
+      wrap(String.raw`\csname input\endcsname{/etc/passwd}`),
+    ],
+    [
+      "outside-write",
+      wrap(
+        String.raw`\newwrite\out\immediate\openout\out=/opt/latex/owned-marker\immediate\write\out{denied}`,
+      ),
+    ],
+    [
+      "unsupported-package",
+      String.raw`\documentclass{article}\usepackage{shellesc}\begin{document}Denied package\end{document}`,
+    ],
+    [
+      "unsafe-pdf-link",
+      String.raw`\documentclass{article}\usepackage{hyperref}\begin{document}\href{javascript:alert(1)}{Denied action}\end{document}`,
+    ],
+    [
+      "unbounded-pages",
+      wrap(
+        String.raw`\newcount\n\n=0\loop Text\newpage\advance\n by1\ifnum\n<11\repeat`,
+      ),
+    ],
+    [
+      "overfull-layout",
+      wrap(String.raw`\hbox to 1pt{An intentionally long synthetic box.}`),
+    ],
+    ["recursive-macro", wrap(String.raw`\def\forever{\forever}\forever`)],
+    ["cpu-loop", wrap(String.raw`\loop\iftrue\repeat`)],
+  ];
+  for (const [name, source] of adverse) {
+    const result = await rawLatexAttempt(imageId, source);
+    assert.ok(
+      typeof result.value.error === "string",
+      `${name} produced downloadable output`,
+    );
+    if (name === "overfull-layout")
+      assert.equal(result.value.error, "layout_overflow");
+    assert.ok(
+      !JSON.stringify(result.value).includes("/etc/passwd"),
+      "Runner exposed a raw log/path",
+    );
+    checks.push({
+      name,
+      code: result.value.error,
+      durationMs: result.durationMs,
+    });
+  }
+  const prepared = prepareLatexDocument({
+    source: SYNTHETIC_LATEX,
+    profile: "document",
+  });
+  const controller = new AbortController(),
+    pending = compileLatex(prepared, { imageId, signal: controller.signal });
+  controller.abort();
+  await assert.rejects(
+    pending,
+    (error: unknown) =>
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "cancelled",
+  );
+  await assertNoOwnedContainers();
+  checks.push({ name: "production-cancel-cleanup", pass: true });
+  const loop = prepareLatexDocument({
+    source: wrap(String.raw`\loop\iftrue\repeat`),
+    profile: "document",
+  });
+  const activeController = new AbortController();
+  const activeJob = compileLatex(loop, {
+    imageId,
+    signal: activeController.signal,
+  });
+  // Attach rejection handling immediately while waiting for the actual owned running container.
+  const activeOutcome = activeJob.then(
+    () => "unexpected-success",
+    (error: unknown) => error,
+  );
+  await runningConverter();
+  activeController.abort();
+  assert.equal(((await activeOutcome) as { code?: string }).code, "cancelled");
+  await assertNoOwnedContainers();
+  checks.push({ name: "active-production-cancellation-cleanup", pass: true });
+  const timed = compileLatex(loop, { imageId });
+  const timedOutcome = timed.then(
+    () => "unexpected-success",
+    (error: unknown) => error,
+  );
+  const owned = await runningConverter();
+  const paused = await docker(["pause", owned], undefined, 4096, 5000);
+  assert.equal(paused.code, 0);
+  assert.equal(((await timedOutcome) as { code?: string }).code, "timeout");
+  await assertNoOwnedContainers();
+  checks.push({ name: "real-paused-worker-wall-timeout-cleanup", pass: true });
+  const concurrent = [new AbortController(), new AbortController()];
+  const jobs = concurrent.map((controller) =>
+    compileLatex(loop, { imageId, signal: controller.signal }).then(
+      () => "unexpected-success",
+      (error: unknown) => error,
+    ),
+  );
+  await runningConverters(2);
+  await assert.rejects(
+    compileLatex(loop, { imageId }),
+    (error: unknown) =>
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "busy",
+  );
+  concurrent.forEach((controller) => controller.abort());
+  for (const result of await Promise.all(jobs))
+    assert.equal((result as { code?: string }).code, "cancelled");
+  await assertNoOwnedContainers();
+  checks.push({ name: "actual-two-active-admission-and-cleanup", pass: true });
+  return {
+    policyVersion: LATEX_POLICY_VERSION,
+    imageId,
+    sourceHashes: await latexSourceHashes(),
+    configuration: success.configuration,
+    limits: LATEX_LIMITS,
+    checks,
+    checksExecuted: checks.length,
+    accessibility:
+      "Structural inspection only; assistive-technology and PDF/UA acceptance unrun",
+    evidence:
+      "Local synthetic engineering; no production or security-owner acceptance",
+  };
+}
+async function runningConverter() {
+  return (await runningConverters(1))[0];
+}
+async function runningConverters(count: number) {
+  const until = performance.now() + 5000;
+  while (performance.now() < until) {
+    const result = await docker(
+      ["ps", "-q", "--filter", "label=resumide.latex.service=converter"],
+      undefined,
+      4096,
+      3000,
+    );
+    const ids = result.stdout.trim().split(/\s+/u).filter(Boolean);
+    if (ids.length === count) return ids;
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  }
+  throw Error("Expected owned converter did not enter running state");
+}
+const DOCKER_RESOURCE_PROBE = String.raw`import socket,os,errno,json,subprocess,resource,pathlib
+result={}
+s=socket.socket();s.settimeout(1);result['networkErrno']=s.connect_ex(('198.51.100.1',443));s.close()
+opened=[]
+try:
+ for i in range(100):opened.append(open('/dev/null','rb'))
+except OSError as e:result['openFilesLimited']=e.errno==errno.EMFILE
+finally:
+ for f in opened:f.close()
+children=[]
+try:
+ for i in range(80):
+  pid=os.fork()
+  if pid==0:os._exit(0)
+  children.append(pid)
+except OSError as e:result['processesLimited']=e.errno==errno.EAGAIN
+finally:
+ for pid in children:os.waitpid(pid,0)
+try:
+ with open('/scratch/file-cap','wb') as f:
+  for i in range(140):f.write(bytes(65536))
+except OSError as e:
+ result['fileLimitBytes']=pathlib.Path('/scratch/file-cap').stat().st_size if e.errno==errno.EFBIG else -1
+memory=subprocess.run(['/usr/bin/python3','-c',"open('/proc/self/oom_score_adj','w').write('1000'); a=bytearray(800*1024*1024)"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=8)
+result['memoryChildReturn']=memory.returncode
+before=resource.getrusage(resource.RUSAGE_CHILDREN).ru_utime
+cpu=subprocess.run(['/usr/bin/python3','-c','while True: pass'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=15)
+result['cpuChildReturn']=cpu.returncode;result['cpuUserSeconds']=round(resource.getrusage(resource.RUSAGE_CHILDREN).ru_utime-before,2)
+try:
+ for number in range(20):
+  with open('/scratch/fill-'+str(number),'wb') as f:
+   for i in range(128):f.write(bytes(65536))
+except OSError as e:result['tmpfsLimited']=e.errno==errno.ENOSPC
+print(json.dumps(result))`;
+const PDF_POLICY_PROBE = String.raw`import sys,io,json
+sys.path.insert(0,'/opt/latex')
+from inspect_pdf import inspect_pdf
+from pypdf import PdfWriter
+from pypdf.generic import NameObject as N,DictionaryObject as D,ArrayObject as A,TextStringObject as T,NumberObject as I,NullObject
+failures=[];cases=0
+def check(name,mutate,expected):
+ global cases
+ cases+=1;w=PdfWriter();p=w.add_blank_page(width=612,height=792);w._root_object.pop('/AcroForm',None)
+ mutate(w,p)
+ b=io.BytesIO();w.write(b)
+ try:inspect_pdf(b.getvalue());actual=True
+ except Exception:actual=False
+ if actual!=expected:failures.append(name)
+def root(w,key,value):w._root_object[N(key)]=value
+def ref(w):return w._pages.get_object()['/Kids'][0]
+check('plain',lambda w,p:None,True)
+check('internal-open-destination',lambda w,p:root(w,'/OpenAction',A([ref(w),N('/Fit')])),True)
+check('javascript-open',lambda w,p:root(w,'/OpenAction',D({N('/S'):N('/JavaScript'),N('/JS'):T('synthetic')})),False)
+check('launch-open',lambda w,p:root(w,'/OpenAction',D({N('/S'):N('/Launch'),N('/F'):T('/etc/passwd')})),False)
+check('invalid-open-array',lambda w,p:root(w,'/OpenAction',A([I(0),N('/Fit')])),False)
+check('chained-uri-launch',lambda w,p:root(w,'/A',D({N('/S'):N('/URI'),N('/URI'):T('https://example.org/'),N('/Next'):D({N('/S'):N('/Launch'),N('/F'):T('denied')})})),False)
+check('unsafe-uri',lambda w,p:root(w,'/A',D({N('/S'):N('/URI'),N('/URI'):T('javascript:synthetic')})),False)
+check('encoded-control-uri',lambda w,p:root(w,'/A',D({N('/S'):N('/URI'),N('/URI'):T('https://example.org/%0a')})),False)
+check('embedded-files',lambda w,p:root(w,'/EmbeddedFiles',D()),False)
+check('filespec',lambda w,p:root(w,'/Synthetic',D({N('/Type'):N('/Filespec'),N('/F'):T('denied')})),False)
+check('unreachable-script',lambda w,p:w._add_object(D({N('/JS'):T('synthetic')})),False)
+def deep_graph(w,p):
+ value=I(1)
+ for depth in range(82):value=A([value])
+ root(w,'/Synthetic',value)
+check('excessive-object-depth',deep_graph,False)
+check('unembedded-font',lambda w,p:p.update({N('/Resources'):D({N('/Font'):D({N('/F1'):D({N('/Type'):N('/Font'),N('/Subtype'):N('/Type1'),N('/BaseFont'):N('/Helvetica')})})})}),False)
+check('rotation',lambda w,p:p.update({N('/Rotate'):I(90)}),False)
+check('crop-mismatch',lambda w,p:p.update({N('/CropBox'):A([I(0),I(0),I(100),I(100)])}),False)
+check('user-unit',lambda w,p:p.update({N('/UserUnit'):I(2)}),False)
+check('eleven-pages',lambda w,p:[w.add_blank_page(width=612,height=792) for i in range(10)],False)
+check('encrypted',lambda w,p:w.encrypt('synthetic-test-only'),False)
+for name,data in [('malformed',b'%PDF-1.7\nbroken'),('oversized',b'%PDF-'+bytes(5242880))]:
+ cases+=1
+ try:inspect_pdf(data);failures.append(name)
+ except Exception:pass
+print(json.dumps({'cases':cases,'failures':failures}))`;
+async function targetedLayout(imageId: string) {
+  const wrap = (body: string) =>
+    "\\documentclass{article}\n\\begin{document}\n" +
+    body +
+    "\n\\end{document}\n";
+  const checks = [];
+  for (const [name, body, expected] of [
+    ["neutral-wrapper", "Neutral wrapper control.", undefined],
+    ["latin-unicode", "Café naïve résumé.", undefined],
+    ["missing-glyph", "Unsupported symbol 🦄.", "missing_glyph"],
+    [
+      "overfull-layout",
+      String.raw`\hbox to 1pt{An intentionally long synthetic box.}`,
+      "layout_overflow",
+    ],
+  ] as const) {
+    const result = await rawLatexAttempt(imageId, wrap(body));
+    assert.equal(result.value.error, expected, name);
+    checks.push({
+      name,
+      pass: true,
+      ...(expected ? { code: expected } : { pages: result.value.pages }),
+    });
+  }
+  await assertNoOwnedContainers();
+  return { imageId, checks, checksExecuted: checks.length };
+}
+const imageId = process.argv.find((arg) => arg.startsWith("sha256:")) ?? "";
+const result = process.argv.includes("--focused-layout")
+  ? await targetedLayout(imageId)
+  : await verifyLatexSandbox(imageId);
+assert.ok(result.checks.length > 0, "Verification must execute real checks");
+process.stdout.write(JSON.stringify(result, null, 2) + "\n");

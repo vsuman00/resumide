@@ -1,0 +1,58 @@
+{
+  "tier": "MOCK policy-boundary checks; ordinary pypdf dictionaries only",
+  "cases": 4,
+  "passed": false,
+  "checks": [
+    {
+      "name": "parser-success-after-policy-error",
+      "mustReject": true,
+      "rejected": false,
+      "errorClass": null,
+      "pages": 1,
+      "mockParserCaughtPolicyThenReturnedSuccess": true,
+      "configurationRestored": true,
+      "getDataHookRestored": true,
+      "pass": false
+    },
+    {
+      "name": "SMask-None-supported",
+      "mustReject": false,
+      "rejected": false,
+      "errorClass": null,
+      "pages": 1,
+      "mockParserCaughtPolicyThenReturnedSuccess": false,
+      "configurationRestored": true,
+      "getDataHookRestored": true,
+      "pass": true
+    },
+    {
+      "name": "SMask-G-missing-Subtype",
+      "mustReject": true,
+      "rejected": false,
+      "errorClass": null,
+      "pages": 1,
+      "mockParserCaughtPolicyThenReturnedSuccess": false,
+      "configurationRestored": true,
+      "getDataHookRestored": true,
+      "pass": false
+    },
+    {
+      "name": "SMask-G-valid-Form",
+      "mustReject": false,
+      "rejected": false,
+      "errorClass": null,
+      "pages": 1,
+      "mockParserCaughtPolicyThenReturnedSuccess": false,
+      "configurationRestored": true,
+      "getDataHookRestored": true,
+      "pass": true
+    }
+  ],
+  "attempts": {
+    "originalEncodedData": 0,
+    "imageDecoder": 0
+  },
+  "pdfBytesGenerated": false,
+  "realPdfReaderCalled": false,
+  "nativeDecoderExecuted": false
+}

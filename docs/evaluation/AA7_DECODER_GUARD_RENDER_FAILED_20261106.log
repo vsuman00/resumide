@@ -1,0 +1,29 @@
+
+> verify:latex:render
+> vite-node --config vitest.config.ts scripts/verify-latex-render-parity.ts sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203
+
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ 'sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc'
+- 'sha256:19d2a00a2a830173bf1fae07dddfcac7d54be3047e58b276af031d3cbd1018ac'
+
+    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/scripts/verify-latex-render-parity.ts:48:8
+    at ViteNodeRunner.runModule (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:397:4)
+    at ViteNodeRunner.directRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:375:3)
+    at ViteNodeRunner.cachedRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:189:11)
+    at ViteNodeRunner.executeFile (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:162:10)
+    at CAC.run (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/cli.mjs:102:28) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 'sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc',
+  expected: 'sha256:19d2a00a2a830173bf1fae07dddfcac7d54be3047e58b276af031d3cbd1018ac',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.4

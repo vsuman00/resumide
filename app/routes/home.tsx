@@ -1,13 +1,13 @@
 import type { Route } from "./+types/home";
 import {
   data as routeData,
+  redirect,
   isRouteErrorResponse,
   Link,
   useLoaderData,
   useNavigate,
   useNavigation,
   useRevalidator,
-  useRouteLoaderData,
 } from "react-router";
 import PublicShell from "~/components/PublicShell";
 import WorkspaceShell from "~/components/WorkspaceShell";
@@ -20,10 +20,6 @@ import {
 
 const PAGE_SIZE = 12;
 
-interface RootLoaderData {
-  user: { email?: string } | null;
-}
-
 interface HistoryEntry {
   id: string;
   status: string;
@@ -34,12 +30,10 @@ interface HistoryEntry {
 
 export async function loader({ request, url }: Route.LoaderArgs) {
   const headers = new Headers();
-  const user = await getAuthenticatedUser(
-    createSupabaseServerClient(request, headers),
-  );
-  if (!user)
+  if (url.pathname !== "/analyses")
     return routeData(
       {
+        isWorkspace: false,
         entries: [] as HistoryEntry[],
         page: 1,
         sort: "recent" as const,
@@ -47,6 +41,10 @@ export async function loader({ request, url }: Route.LoaderArgs) {
       },
       { headers },
     );
+  const user = await getAuthenticatedUser(
+    createSupabaseServerClient(request, headers),
+  );
+  if (!user) throw redirect("/auth?next=%2Fanalyses", { headers });
 
   const searchParams = url.searchParams;
   const requestedPage = Number(searchParams.get("page"));
@@ -92,6 +90,7 @@ export async function loader({ request, url }: Route.LoaderArgs) {
   const from = (page - 1) * PAGE_SIZE;
   return routeData(
     {
+      isWorkspace: true,
       entries: sorted.slice(from, from + PAGE_SIZE),
       page,
       sort,
@@ -107,7 +106,7 @@ export function meta({}: Route.MetaArgs) {
     {
       name: "description",
       content:
-        "Inspect parsed resume evidence and improve the highest-impact issues first.",
+        "Inspect parsed resume evidence and improve the issues supported by evidence.",
     },
   ];
 }
@@ -160,7 +159,7 @@ function PublicHome() {
             <h1 id="public-home-heading">See what the ATS sees.</h1>
             <p>
               Inspect your parsed resume, understand every score, and fix the
-              highest-impact issues first.
+              issues supported by evidence.
             </p>
             <div className="public-hero-actions">
               <Link to="/upload" className="primary-button w-fit">
@@ -218,8 +217,8 @@ function PublicHome() {
             <p className="workspace-eyebrow">From score to action</p>
             <h2 id="result-story-heading">A result you can actually use.</h2>
             <p>
-              Start with three high-impact repairs, inspect the evidence behind
-              each one, and preserve the strengths that already work.
+              Review suggested changes, inspect the evidence behind each one,
+              and preserve the strengths that already work.
             </p>
             <Link to="/upload" className="back-button w-fit">
               Start an evidence review
@@ -233,55 +232,34 @@ function PublicHome() {
             <header>
               <div>
                 <p className="workspace-eyebrow">Example analysis</p>
-                <h3>ATS readiness</h3>
+                <h3>Evidence review</h3>
               </div>
-              <span>Strong foundation</span>
+              <span>Illustrative workflow</span>
             </header>
-            <div className="public-preview-score">
-              <strong>78</strong>
-              <span>/100</span>
-              <progress
-                value="78"
-                max="100"
-                aria-label="Example ATS readiness score"
-              >
-                78%
-              </progress>
-            </div>
-            <dl className="public-preview-metrics">
-              <div>
-                <dt>Strengths</dt>
-                <dd>12</dd>
-              </div>
-              <div>
-                <dt>Repairs</dt>
-                <dd>6</dd>
-              </div>
-              <div>
-                <dt>Role match</dt>
-                <dd>78%</dd>
-              </div>
-            </dl>
+            <p>
+              Review source evidence before accepting a change. Scores require
+              reliable, calibrated evidence.
+            </p>
             <div className="public-preview-queue">
               <div className="public-preview-queue-heading">
                 <h4>Repair queue</h4>
-                <span>Top priorities</span>
+                <span>Examples to review</span>
               </div>
               <ol>
                 <li>
                   <span>1</span>
-                  <p>Add quantified impact to the most recent role</p>
-                  <small>High</small>
+                  <p>Confirm any claimed impact against your source</p>
+                  <small>Review</small>
                 </li>
                 <li>
                   <span>2</span>
                   <p>Include relevant language from the target role</p>
-                  <small>High</small>
+                  <small>Review</small>
                 </li>
                 <li>
                   <span>3</span>
                   <p>Clarify scope and team size</p>
-                  <small>Medium</small>
+                  <small>Review</small>
                 </li>
               </ol>
             </div>
@@ -479,10 +457,9 @@ function AnalysisWorkspace({
 }
 
 export default function Home() {
-  const { entries, page, sort, hasMore } = useLoaderData<typeof loader>();
-  const rootData = useRouteLoaderData("root") as RootLoaderData | undefined;
-
-  if (!rootData?.user) return <PublicHome />;
+  const { isWorkspace, entries, page, sort, hasMore } =
+    useLoaderData<typeof loader>();
+  if (!isWorkspace) return <PublicHome />;
   return (
     <AnalysisWorkspace
       entries={entries}

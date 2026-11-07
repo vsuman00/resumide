@@ -12,7 +12,7 @@ import { createSupabaseAdminClient } from "./supabase";
 import { recordProviderUsage } from "./observability";
 
 import { BASELINE_SEMANTICS } from "./qualitative-prose";
-export const PROMPT_VERSION = "qualitative-cited-prose/2.0.0";
+export const PROMPT_VERSION = "qualitative-cited-prose/3.0.0";
 
 export function buildPartialFeedback(args: {
   score: number;

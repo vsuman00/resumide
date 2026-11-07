@@ -1,0 +1,19 @@
+# Independent V5 native Poppler source review
+
+2026-11-07. No blocking source defect found in the bounded reporting/acceptance proposal. This is source review only, not E-010 approval, execution authorization, package adoption or release acceptance.
+
+Verified all 74 manifest files and 24 explicit context inputs against frozen review manifest `85eaeb41220256bcaa66c29cb776213e4e71dcf3078a197d00dc9b71ce640396` and context `58715072cef36eff097c94417c75064cd3f10e64b2f6990298dd74403398eeaa`. The context totals 3,143,355 bytes. No source, test, input or build setting was changed in this review.
+
+`ctest_v5.assess` requires the exact 71 registered outcomes, rejects errors/skips/incomplete statuses and requires 56 complete Qt summaries with positive methods and no skip/blacklist. The only proposed nonzero path is CTest 8 with the exact signature class, 11 passing rows and one failing `testPgp(gpg)` signer-name assertion at source 311. The ordered pass rows, failure text/location, test executable/source, fixture archive/manifest and noncore loaded-library graph are baseline-bound; the only allowed graph removal is the recorded OpenJPEG library. Additional failures or changed bindings remain fatal. A genuine all-pass execution must return 0 and remains separately labelled.
+
+The returned receipt preserves 70 passed/one failed, actual CTest exit 8, `allNativeTestsPassed:false`, the failed row and unexecuted assertions 312-315. It makes no claim that PGP verification is disabled or its unresolved cause is fixed. The original tests, keys, clock, compiler features and timeouts remain unchanged; the new CTest output limits repair reporting completeness rather than test behavior. Missing/truncated summaries still deny acceptance.
+
+`build-v5.py` captures only the narrowly expected CTest 8 failure before assessment. It still runs normal packaging and all native checks; a stored native error is re-raised even if the proposed PGP predicate matches. Its successful-with-exception status is explicit, and the raw failed JUnit/log evidence is retained. No source/native assertion is deleted or skipped.
+
+The reference compatibility change applies only to the hash-pinned public `pdf20-utf8-test.pdf`, the known TITLE encoding/error position, unique doc-body fences and strict one-page/19-word body. Standard bbox and TSV bytes must first be identical between baseline and candidate. The private frame must still match every absolute coordinate token, word/order/text, layout result and font inventory. Other reference XML failures remain fatal. This is a trusted build-time geometry reference repair, not a production XML fallback or a claim of identical whole-document rejection behavior.
+
+The unchanged `verify_install.py` remains schema-compatible: it reads the same cohort and nativeVerification keys, enforces normal no-remove installation of exactly two packages with all other packages/flags unchanged, and checks fresh nonroot executable linkage, installed ELF hashes and actual frame/text. The Dockerfile maps the V5 producer/verifier filenames to the modules those scripts import. No cross-stage key mismatch was found.
+
+One integration requirement must stay explicit: install-verification does not repeat the upstream exception payload. Preserve it together with source-and-test-receipt and build-outcome. Installation success must not be presented as 71/71 tests passing, and later consumers must not normalize `failedOrSkipped:1` or `allNativeTestsPassed:false` to a clean pass. The artifacts stage retains the separate upstream receipts; final adoption must consume them honestly.
+
+No candidate/vendor code, test, input generator, Docker, browser, database, provider or scanner ran. Only source reading and SHA-256/size reconciliation were performed. Root still owns the named E-010 decision, bounded build allocation, existing host export/resource guards and eventual final-worker verification.

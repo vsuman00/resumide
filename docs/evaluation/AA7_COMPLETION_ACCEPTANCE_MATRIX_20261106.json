@@ -1,0 +1,177 @@
+{
+  "schemaVersion": "aa7-acceptance-review/1",
+  "recordedAt": "2026-11-06T11:12:19.986495+00:00",
+  "status": "PRIVATE_FUNCTIONAL_COMPLETE_FORMAL_GATE_OPEN",
+  "image": "sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc",
+  "evidenceSha256": {
+    "tasks/todo.md": "68d328090d7de09f7348749802b5fdeb1cd81e44c54f2ea69c1b2b6ed370034c",
+    "CONSTRAINTS.md": "41848a563d7825d77489f6058eddd65051378e755ee943065f04a77fe9f793a6",
+    "docs/decisions/0016-standalone-latex-converter.md": "95edbbfe9c46897f891194ac05fe909e081a13909f6da3625be87372dd112c2f",
+    "docs/design/LATEX_CONVERTER.md": "80ba8028b7eb21a18bbe354a257dc9eeb8b15c409fa7d6efe376bc100a7df364",
+    "docs/evaluation/AA7_FULL_PRIVATE_CI_FINAL_20261106.json": "4799f880634d5445837e32cea7ce68e26aeac3b00ce09d1f45c6196c2d50cc19",
+    "docs/evaluation/AA7_FINAL_NATIVE_VALIDATION_20261106.json": "b5cc9181fa929230f01f4b3030b86123c9595f32581e3dc1699b0bff9138e4ba",
+    "docs/evaluation/AA7_SEALED_NATIVE_SECURITY_20261106_COMPARE.json": "8d288b04038d3189f8ade41274481d554e1e6a011724c7324f6b6abda582232c",
+    "docs/evaluation/AA7_SEALED_NATIVE_SECURITY_20261106_RAW.json": "ebd88e0c10176b00aa792bac78df55fbedc45256ab9a1f30355c0e0a0a45963f",
+    "docs/evaluation/AA7_FULL_SECURITY_ACTIONABILITY_20261106.json": "552fd998b3427a30a722e08af0f2675c163e11f18ad846dbe536992406e7d407",
+    "docs/evaluation/AA7_FINAL_NATIVE_LICENSES_20261106.json": "d4beede47dc0ee28ea0828601f7a8d45627806bf0715a9a721aecc3aac5db067"
+  },
+  "requirements": [
+    {
+      "id": "AA070",
+      "requirement": "Threat model and approved local scope",
+      "status": "LOCAL_IMPLEMENTED_VERIFIED",
+      "evidence": "ADR0016 local owner approval;22 production-path runtime groups; bounded rollback and current inventory.",
+      "remaining": "Formal security-owner approval remains open; current image947 matches require precise fix/applicability dispositions, not a count-based waiver."
+    },
+    {
+      "id": "AA071",
+      "requirement": "Single-file source admission and binding",
+      "status": "LOCAL_IMPLEMENTED_VERIFIED",
+      "evidence": "Source/macro/math/package/Unicode/control/size/binding tests in full private1242; actual allowed/denied package paths in runtime22.",
+      "remaining": "No identified missing bounded local acceptance proof; arbitrary Overleaf/package/locale compatibility is not promised."
+    },
+    {
+      "id": "AA072",
+      "requirement": "Disposable isolated compilation",
+      "status": "LOCAL_IMPLEMENTED_VERIFIED",
+      "evidence": "Exact3829 Docker/LandlockABI8 resource/filesystem/network/exec/cancellation/concurrency/cleanup22 groups;20 PDF policy cases.",
+      "remaining": "Verified current Linuxarm64 worker only. A future deployment host must pass the same required isolation/owned-daemon boundary review; no generic host or cross-architecture claim."
+    },
+    {
+      "id": "AA073",
+      "requirement": "Three editable profiles and two papers",
+      "status": "LOCAL_IMPLEMENTED_VERIFIED",
+      "evidence": "All6 profile/paper cases recover known synthetic text/order/links and pass font/output checks.",
+      "remaining": "Supported synthetic combinations only; no canonical/representative-domain/ATS assertion."
+    },
+    {
+      "id": "AA074",
+      "requirement": "Standalone Build editor/preview/download",
+      "status": "LOCAL_IMPLEMENTED_VERIFIED",
+      "evidence": "Full general65 and dedicatedAI6 browser cases pass; current-page plain-text preview, keyboard/mobile/Axe and current-buffer invalidation.",
+      "remaining": "Export remains untagged; document/assistive-technology acceptance is separate from web-preview checks. No live-provider acceptance inferred."
+    },
+    {
+      "id": "AA075",
+      "requirement": "Artifacts/limits/examples/latency/failure benchmark",
+      "status": "LOCAL_IMPLEMENTED_VERIFIED",
+      "evidence": "Runtime22/PDF20/examples6/rollback and four paired neutral PNGs pass; root visual review; sample p95=745ms from6 examples.",
+      "remaining": "No approved compile-p95 target or performance guarantee. Arbitrary pasted source has no canonical parity baseline; compiled PDFs are not AA6 verified artifacts."
+    },
+    {
+      "id": "GATE_AA7",
+      "requirement": "Safe LaTeX export",
+      "status": "OPEN_NOT_APPROVED",
+      "evidence": "Sandbox/malicious/resource/parity/operational/rollback evidence passes at private engineering tier; current app audits0.",
+      "remaining": "Security disposition and explicit security-owner approval, exported-document accessibility decision and release acceptance remain open. No tester can grant them."
+    },
+    {
+      "id": "APPLICATION_SECURITY",
+      "requirement": "All-severity dependency and CI checks",
+      "status": "VERIFIED_FOR_BOUND_SOURCE",
+      "evidence": "149files/1242unit tests;65+6=71browser;9commands code0/no signal;557stable code inputs; allseverity/prodaudit totals0.",
+      "remaining": "Npm advisory absence is limited to captured audit data and does not clear OS components."
+    },
+    {
+      "id": "LICENSE_INVENTORY",
+      "requirement": "Exact-current package/native provenance",
+      "status": "METADATA_VERIFIED_INTERPRETATION_OPEN",
+      "evidence": "Fresh216package audit binds lock:6exact removals, onlylibexpat1 changed; source/ABI/test/copyright hashes bound;159DEP5,57nonDEP5 retained.",
+      "remaining": "Package declaration inventory is not complete per-file legal interpretation or owner legal acceptance."
+    }
+  ],
+  "scanner": {
+    "packageCveMatches": 947,
+    "severityCounts": {
+      "CRITICAL": 0,
+      "HIGH": 80,
+      "LOW": 670,
+      "MEDIUM": 186,
+      "UNKNOWN": 11
+    },
+    "sourceGroups": 51,
+    "sourceCvePairs": 355,
+    "uniqueIds": 354,
+    "countsAreNotExploitCount": true,
+    "noSuppressions": true,
+    "currentSourceCvePairsEqualCapturedVendorAudit": true,
+    "vendorAuditCountsNotRelabelledCurrentPackageCounts": true,
+    "rawFindingsRetained": true,
+    "allVulnerabilitiesFixed": false
+  },
+  "finitePriorities": [
+    {
+      "priority": 1,
+      "action": "Review eight exact non-applicability candidates first",
+      "scope": [
+        "util-linux CVE-2026-76642/78408/78409/78410",
+        "ncurses CVE-2025-69720",
+        "Perl CVE-2026-9538",
+        "xdg-utils CVE-2022-4055",
+        "GnuPG CVE-2026-24882"
+      ],
+      "acceptance": "Require affected function/component + exact installed/source binding + production entrypoint/read/exec/load/privilege preconditions. Proposed only; no raw findings removed.",
+      "notRequired": "Do not require a source-package backport solely because a shared source/CVE maps to unused binaries."
+    },
+    {
+      "priority": 2,
+      "action": "Keep materially used XML/PDF components explicit",
+      "scope": [
+        "Python CVE-2026-7210",
+        "Expat2.10 source-backed4-CVE cohort",
+        "Expat CVE-2025-66382",
+        "pypdf/Poppler/image/font dependency paths"
+      ],
+      "acceptance": "Python ET.fromstring is an actual supervisor XML consumer; Expat upgrade alone is insufficient for7210. Authenticate/test a coherent Python fix or prove exact applicable patch. Four Expat cohort fixes have source evidence but raw matches remain; unresolved66382 is not fixed by sealed Fontconfig."
+    },
+    {
+      "priority": 3,
+      "action": "Bound the next applicability cohort, then remaining material fix research",
+      "scope": [
+        "X11 malicious-server reply CVEs",
+        "Other Python HTML/TLS/tar paths",
+        "zlib CVE-2026-76844",
+        "Remaining source-group inventory"
+      ],
+      "acceptance": "Use captured advisory paths and actual trusted-consumer graph; absent compiler-closure entry alone is insufficient. No complete-upstream-fix claim for unknown rows; avoid choosing every355pair as an automatic backport."
+    },
+    {
+      "priority": 4,
+      "action": "Record exported-document and security scope decisions",
+      "scope": [
+        "Explicit security-owner approval",
+        "Document accessibility/untagged export limitations",
+        "License interpretation",
+        "Conditional deployment-host readiness"
+      ],
+      "acceptance": "Workspace owner may hold roles privately. No public reviewer/live-model/deployment is required for current private engineering. Do not downgrade a gate or invent tagged-PDF conformity."
+    },
+    {
+      "priority": 5,
+      "action": "Refresh canonical evidence links and repeat only affected verification after a reviewed change",
+      "scope": [
+        "Root plans/context/runbook",
+        "Final artifact scan after actual image change",
+        "Affected compatibility/runtime/browser checks"
+      ],
+      "acceptance": "Current fullCI and3829matrix are complete; no unchanged rerun. Preserve raw scans/failures and bind any replacement artifact before claiming its evidence."
+    }
+  ],
+  "capturedUpstreamOpen": [
+    {
+      "source": "expat",
+      "id": "CVE-2025-66382",
+      "status": "Captured vendor/upstream open; no complete fix established"
+    },
+    {
+      "source": "openjpeg2",
+      "id": "CVE-2023-39327",
+      "status": "Captured vendor/upstream open; cited2.5.3 change only partial mitigation"
+    }
+  ],
+  "limits": [
+    "Read-only existing evidence review; fresh license metadata audit is separately authorized and recorded.",
+    "No new scanner/build/browser/DB/provider or unchanged test rerun for this matrix.",
+    "No finding accepted/resolved and no human approval supplied by this review."
+  ]
+}

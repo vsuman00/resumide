@@ -120,44 +120,75 @@ export async function ownedAnalysis(
     .object({ id, owner_id: id, organization_id: id, resume_version_id: id })
     .safeParse(result.data);
   if (!analysis.success || analysis.data.owner_id !== ownerId) throw missing();
-  const source = await client
+  const sourceQuery = client
     .from("resume_versions")
-    .select("id,resume_id,owner_id,organization_id")
+    .select(
+      "id,resume_id,owner_id,organization_id,active_resume:resumes!resume_versions_resume_id_fkey(id,owner_id,organization_id,status)",
+    )
     .eq("id", analysis.data.resume_version_id)
     .eq("owner_id", ownerId)
+    .eq("organization_id", analysis.data.organization_id)
+    .eq("active_resume.owner_id", ownerId)
+    .eq("active_resume.organization_id", analysis.data.organization_id)
+    .eq("active_resume.status", "active")
     .maybeSingle();
+  // Scope reads overlap source loading; source validation keeps precedence.
+  const pendingScope = Promise.all([
+    client
+      .from("memberships")
+      .select("user_id")
+      .eq("organization_id", analysis.data.organization_id)
+      .eq("user_id", ownerId)
+      .maybeSingle(),
+    client
+      .from("data_requests")
+      .select("id")
+      .eq("user_id", ownerId)
+      .eq("kind", "deletion")
+      .neq("status", "failed")
+      .limit(1),
+  ]).then(
+    (value) => ({ value }),
+    (error: unknown) => ({ error }),
+  );
+  const source = await sourceQuery;
   if (source.error) throw unavailable();
   const parsed = z
-    .object({ id, resume_id: id, owner_id: id, organization_id: id })
+    .object({
+      id,
+      resume_id: id,
+      owner_id: id,
+      organization_id: id,
+      active_resume: z.unknown(),
+    })
     .safeParse(source.data);
   if (
     !parsed.success ||
+    parsed.data.id !== analysis.data.resume_version_id ||
+    parsed.data.owner_id !== ownerId ||
     parsed.data.organization_id !== analysis.data.organization_id
   )
     throw missing();
-  const root = await client
-    .from("resumes")
-    .select("id")
-    .eq("id", parsed.data.resume_id)
-    .eq("owner_id", ownerId)
-    .eq("organization_id", parsed.data.organization_id)
-    .eq("status", "active")
-    .maybeSingle();
-  const membership = await client
-    .from("memberships")
-    .select("user_id")
-    .eq("organization_id", parsed.data.organization_id)
-    .eq("user_id", ownerId)
-    .maybeSingle();
-  const deletion = await client
-    .from("data_requests")
-    .select("id")
-    .eq("user_id", ownerId)
-    .eq("kind", "deletion")
-    .neq("status", "failed")
-    .limit(1);
-  if (root.error || membership.error || deletion.error) throw unavailable();
-  if (!root.data || !membership.data || deletion.data?.length) throw missing();
+  const scope = await pendingScope;
+  if ("error" in scope) throw scope.error;
+  const [membership, deletion] = scope.value;
+  if (membership.error || deletion.error) throw unavailable();
+  if (!membership.data || deletion.data?.length) throw missing();
+  const root = z
+    .object({
+      id,
+      owner_id: id,
+      organization_id: id,
+      status: z.literal("active"),
+    })
+    .safeParse(parsed.data.active_resume);
+  if (
+    !root.success ||
+    root.data.id !== parsed.data.resume_id ||
+    root.data.owner_id !== ownerId ||
+    root.data.organization_id !== analysis.data.organization_id
+  )
+    throw missing();
   return { ...analysis.data, resumeId: parsed.data.resume_id };
 }
 async function version(
@@ -194,6 +225,23 @@ export async function loadCanonical(
   const offset = options.offset ?? 0;
   if (!Number.isInteger(offset) || offset < 0 || offset > 10000)
     throw new CanonicalError(422, "Choose a valid history page.");
+  const historyQuery = client
+    .from("canonical_resume_versions")
+    .select("id,parent_version_id,revision,created_at")
+    .eq("resume_id", analysis.resumeId)
+    .eq("owner_id", ownerId)
+    .order("revision", { ascending: false })
+    .range(offset, offset + 20);
+  // Handle speculative failures immediately; head validation keeps precedence.
+  const pendingVersions = options.versionId
+    ? Promise.all([
+        version(client, analysis.resumeId, ownerId, options.versionId),
+        historyQuery,
+      ]).then(
+        (value) => ({ value }),
+        (error: unknown) => ({ error }),
+      )
+    : null;
   const head = await client
     .from("canonical_resume_heads")
     .select("version_id,revision")
@@ -217,20 +265,22 @@ export async function loadCanonical(
     .object({ version_id: id, revision: z.number().int().positive() })
     .safeParse(head.data);
   if (!headValue.success) throw unavailable();
-  const current = await version(
-    client,
-    analysis.resumeId,
-    ownerId,
-    options.versionId ?? headValue.data.version_id,
-  );
+  const loaded = pendingVersions
+    ? await pendingVersions
+    : {
+        value: await Promise.all([
+          version(
+            client,
+            analysis.resumeId,
+            ownerId,
+            headValue.data.version_id,
+          ),
+          historyQuery,
+        ]),
+      };
+  if ("error" in loaded) throw loaded.error;
+  const [current, list] = loaded.value;
   if (current.sourceId !== analysis.resume_version_id) throw missing();
-  const list = await client
-    .from("canonical_resume_versions")
-    .select("id,parent_version_id,revision,created_at")
-    .eq("resume_id", analysis.resumeId)
-    .eq("owner_id", ownerId)
-    .order("revision", { ascending: false })
-    .range(offset, offset + 20);
   if (list.error) throw unavailable();
   const history = z
     .array(

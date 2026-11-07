@@ -25,6 +25,12 @@ or a completed provider/region change. Keep existing hosted incident evidence
 historical; new AA2 work and migrations remain local. Release accuracy and
 other acceptance obligations remain visible during engineering.
 
+**Oracle worker planning (2026-10-31):** The owner requested a documented
+Always Free Mumbai deployment plan. The [proposed plan](../docs/operations/ORACLE_FREE_WORKER_PLAN.md)
+contains prerequisites, ordered tasks and separate provider, staging and release
+gates. It does not change the approved Fly decision or authorize provisioning,
+hosted testing, real data or deployment; the localhost-first direction remains.
+
 ## Gate A0 decision record - 2026-09-09
 
 - Approved by the workspace owner: candidate B2C-first product; Node.js 22 LTS; Fly.io web/worker process groups in Mumbai; Supabase PostgreSQL 17, Auth, and private Storage in `ap-south-1`; modular monolith with PostgreSQL-backed jobs.
@@ -374,6 +380,8 @@ other acceptance obligations remain visible during engineering.
 
 **Verification (2026-09-10):** Unit fixtures cover the declared provider outcomes. A hosted staging smoke test used only a synthetic resume/job/user, invoked the real OpenAI qualitative stage, and verified one persisted AI run, result, writer draft, and terminal `completed` analysis state before deleting all synthetic database and storage data.
 
+**Model configuration (2026-10-18):** Owner-requested GPT-6 Luna migration updates the default, explicit local environment overrides and standard token-cost estimates. Both prose request paths set no reasoning for this alias while retaining structured output, source grounding, output caps and deterministic score ownership. Local contract checks pass; live access returned HTTP 401 and remains unverified. Production OCR activation stays deferred; the subsequent hosted mock implementation is tracked in AA012. See the [migration report](../docs/evaluation/GPT6_LUNA_MIGRATION_20261018.md).
+
 ### T045: Add partial results and provider-outage behavior
 
 **Dependencies:** T043, T044
@@ -560,6 +568,8 @@ other acceptance obligations remain visible during engineering.
 
 **Verification (2026-09-11):** Structured output remains schema-validated, then passes a conservative server-side grounding gate that removes unsupported summaries/bullets and requires each original bullet to exist in source text. Valid, invented-fact, and empty-source unit fixtures pass; the UI labels suggestions as grounded and review-before-use. Live provider output and manual screen-reader review remain unrun locally.
 
+**Owner-requested functional Rewrite repair (2026-10-31):** Added a consented Generate suggestions action on legacy Review, source-ID drafting for the normal qualitative pipeline and same-passage grounding. The owner's supplied PDF was checksum-matched to the saved MERN analysis; live Chromium/Supabase validation generated and saved usable suggestions, checked Copy/reload, and preserved numeric/parse results. Previous drafts survive failed or rejected requests. Formal writer quality and release acceptance remain open. See [functional repair evidence](../docs/evaluation/REWRITE_GENERATION_REPAIR_20261031.md).
+
 ## Phase 7: Production security and operations
 
 ### T070: Implement security headers and session hardening
@@ -637,12 +647,13 @@ telemetry are implemented with redaction and low-cardinality route labels.
 - [x] The deterministic load scenario exercises accepted uploads, queue growth, worker concurrency, provider throttling hooks, browser performance, cost, and worker recovery.
 - **Verify:** `npm run test:load` emits p50/p95/p99, memory, error, queue-age, throughput, cost, and recovery evidence. Hosted DB-pool, provider-throttle, soak, and capacity approval remain A4 evidence.
 
-### Phase 7 implementation checkpoint: local and hosted evidence — 2026-09-11
+### Phase 7 implementation checkpoint: local and hosted evidence — 2026-09-11 (local revalidation 2026-10-30)
 
 - [x] T070-T076 implementation slices, tests, operational docs, alert policy, migration, worker entry points, egress policy, container hardening check, and CI command wiring are present in this checkout.
-- [x] Local evidence passes: 45 Vitest files / 190 tests, TypeScript, lint, build, deterministic load, deterministic restore, and 44 Playwright tests (including accessibility and Phase 7 coverage).
-- [x] Database evidence passes: local Supabase reset through the full migration set, Phase 4 and Phase 7 SQL verification, and database lint. Hosted Phase 4 persistence, tenant/RLS, private-storage, and Phase 7 SQL verification also pass.
-- [x] Dependency/security checks pass: registry signatures and attestations verify, the production dependency audit reports 0 vulnerabilities, and the secret scan passes.
+- [x] Local evidence revalidated 2026-10-30: 122 Vitest files / 958 tests; 5 security files / 25 tests; TypeScript, lint, formatting, web/worker builds; deterministic load and restore; and 56/56 Playwright tests against isolated local Supabase with local-only credentials and no `.env` loading.
+- [x] Canonical verification revalidated 2026-10-30: `npm run verify` passes, and the Phase 5, job-intelligence, scoring-validity, writer-grounding, and render-parity benchmarks pass at engineering tier with release blockers preserved.
+- [x] Database evidence revalidated 2026-10-30: local Supabase reset through the full migration set; Phase 4, Phase 7, native evidence, document evidence, canonical storage, and Paddle admission SQL verification; and database lint with no schema errors. Earlier hosted Phase 4 persistence, tenant/RLS, private-storage, and Phase 7 SQL verification remain recorded; hosted revalidation was not performed.
+- [x] Dependency/security checks revalidated 2026-10-30: registry signatures and attestations verify, the production dependency audit reports 0 vulnerabilities, the secret scan passes, and alert/container checks pass.
 - [ ] Gate A4 external evidence is complete. Hosted restore, notification delivery, monitored staging E2E, rollback rehearsal, policy approval, human security/operations approval, live provider verification, and deployment-owned malware/sandbox/egress controls are still pending and cannot be inferred from local tests.
 
 ### Checkpoint A4: B2C production readiness [IMPLEMENTATION READY; GATE OPEN]
@@ -778,6 +789,18 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 **Final scoped verification:** `npm run verify:ci` passes with 54 test files / 226 tests, all 45 browser tests, the Phase 5 benchmark, build/type/lint/format gates, registry signatures/attestations, secret/alert/container checks, synthetic load/restore and zero production dependency vulnerabilities. The authenticated fixture now covers three real PDF pages: source highlighting/keyboard selection, explicit left-before-right inferred order, table row/cell alternatives, serious/critical accessibility checks, responsive layouts and cross-owner denial. The existing SQL verifier also passes again on hosted Resumide, including all malformed evidence rejections and service-only privileges. Cleanup verification confirms zero synthetic AA010/AA011 users. The normalizer/gate commit `5bf13dd` passes all four GitHub CI jobs in [run 37146976847](https://github.com/vsuman00/ai_resume_checker/actions/runs/37146976847); final UI integration is verified locally and its push will trigger a fresh full CI run.
 
 #### AA012: Implement selective OCR adapter slice
+
+**Hosted PaddleOCR boundary (2026-10-18; PARTIAL integration):** The owner requested an API-based alternative without local inference, then selected mocked API responses for this step. The additive server-only adapter and native-first orchestration are implemented with 60 mocked/synthetic checks; full local `verify:ci` passes 117 files / 929 tests and 56 browser checks; native text remains unchanged, hosted line confidence is uncalibrated, all outputs are scoring-ineligible, and submission intent/acknowledgment receipts are required. Production upload/worker/database/UI wiring remains pending explicit document consent, durable admission/attempt storage and versioned hosted evidence support. No provider request, production activation, model installation or hosted migration occurred. Existing local OCR, frozen labels and accuracy/release gates remain unchanged. See [contract](../docs/design/HOSTED_PADDLEOCR_API.md) and [verification](../docs/evaluation/PADDLEOCR_API_MOCK_IMPLEMENTATION_20261018.md).
+
+**Cross-cutting verification and security repair (2026-10-29; engineering evidence only):** A sanitized local sweep (provider credentials unset; production build against synthetic, non-routable Supabase/OpenAI configuration with AI and PaddleOCR disabled) found and fixed two defects. First, every route generated a second `X-Request-Id`, so response headers, JSON error bodies, and request logs disagreed; the server now owns one validated ID, stamps it onto the inbound request, routes read it through `requestIdFrom`, and route copies cannot duplicate the response header. Second, a foreign-origin `POST /auth/logout` surfaced an unhandled `PublicApiError` as HTTP 500; it now returns the safe `403 FORBIDDEN` JSON envelope. The audit then fixed production `zod` 4.4.3 -> 4.6.7 for GHSA-mrhx-c7xc-m3w5, transitive `body-parser`/`qs` patches through a non-forced `npm audit fix`, and dev Vitest 4.1.11 -> 4.1.12; production and full audits report zero vulnerabilities. Zod 4.6 tightened ISO-datetime generation against the frozen SQL validators, so DB-backed schemas now pin the already-migrated pattern in `iso-datetime.ts`; no historical migration, SQL check, threshold, or frozen label was edited or weakened.
+
+Verification: 120 test files / 936 tests pass; typecheck, lint, Prettier, and web/worker builds pass; the security suite passes 5 files / 25 tests. A black-box production-server matrix covers health/readiness, public pages, auth redirects, method/`Allow`, 401/403/404/405/503 behavior, metrics token handling, security headers, request-ID/log correlation, and absence of secret/PII/`X-Powered-By` leakage. Phase 5, job-intelligence, scoring-validity, writer-grounding, and render-parity checks pass at the engineering tier with release blockers preserved; synthetic load/restore, registry signatures/attestations, secret scan, alerts, container policy, and zero-vulnerability audits pass. Not run: Playwright/E2E (loads real `.env` and creates hosted Supabase fixtures), local Supabase SQL/DB (Docker unavailable), live OpenAI/PaddleOCR (unauthorized or HTTP 401), hosted migrations, and deployment. No commit, push, provider call, candidate data, or hosted mutation occurred. AA0/AA1 accuracy/release gates and AA012 acceptance are unchanged.
+
+**HTTP contract fixes and durable hosted-OCR admission (2026-10-29; engineering evidence only):** The remaining black-box defects are fixed. `GET /auth/logout` now returns `405` with `Allow: POST` instead of a generic `400`, the action rejects non-POST methods before sign-out (previously `PUT`/`DELETE` could execute the action and redirect), and unknown `/api/*` paths return the shared JSON `NOT_FOUND` envelope instead of an HTML page. Regression tests cover the loader/action method policy and unknown API GET/POST responses. The production-server matrix re-verified all logout methods (`405`/`Allow: POST`), foreign-origin POST (`403`), known API methods (`405`/`401`), unknown API paths (`404` JSON), health/readiness, metrics token handling, one request ID, and security headers.
+
+The first provider-independent hosted-OCR slice is implemented locally: forward migration `20261029130000_paddle_ocr_admission.sql` adds service-only `admit_paddle_ocr` / `record_paddle_ocr_attempt` RPCs, owner-readable admission/page/attempt tables, and a private per-owner page/byte budget bucket. `app/lib/server/ocr/paddle-admission.ts` supplies the store; the adapter now binds selected page numbers into admission. Duplicate admissions, owner/source/hash mismatches, page/byte overflow, duplicate or regressive attempt receipts, and job mismatches fail closed; an interrupted submission remains visible and cannot be auto-resubmitted. The slice is default-off and not wired to upload, workers, scoring or UI. Budget limits remain caller-supplied; no provider facts, disclosure text, production quota or consent persistence is added.
+
+Verification: 122 test files / 958 tests pass; typecheck, lint, web/worker builds and Prettier pass; security suite passes 5 files / 25 tests. `scripts/verify-paddle-admission.sql` passes from a clean disposable PostgreSQL 17 cluster, covering binding, duplicate rollback, page/byte budgets, window reset, attempt transitions, RLS owner reads, denied client writes/RPCs, and cascade deletion. Not run: Supabase `test:db`/local stack (Docker unavailable), hosted migration, live PaddleOCR, Playwright/E2E, and production approval. No commit, push, deployment, provider request, candidate data or hosted mutation occurred.
 
 **Container-memory measurement slice (2026-10-11): IMPLEMENTED; local OCR VERIFIED.** The runner adds an optional, validated cgroup-v2 `memory.peak` receipt through recognition completion, distinct from individual-child RSS. Only namespace-root membership with the exact approved 1-GiB allocation is accepted; unreadable/unverified/invalid counters remain null with a reason, and older images remain compatible. The new image's development pilot passes unchanged PSM 3 / 150-DPI transcription screening: nine authored documents have 0% CER and complete exact-position lines/page coverage; ten completed attempts (including blank) yield a maximum observed container peak of 51,126,272 bytes, with five unmeasured controls explicitly counted. Real isolation/cancellation/timeout/cleanup checks pass. [Measured receipt, reproduction and limitations](../docs/evaluation/AA012_LOCAL_OCR_DIAGNOSTICS.md#container-memory-measurement-slice-2026-10-11). Failed attempts, result serialization, cold start, structured fields and remaining adverse classes remain acceptance work; AA012 and AA013–AA015/AA1 stay unchecked. No locked/calibration partition, thresholds, production integration, migrations or scoring policy changed.
 
@@ -998,6 +1021,8 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 - [x] **Local engineering under E-004:** Model output is limited to cited qualitative suggestions; historical blended scores are labeled legacy and are not compared as v2 scores.
 - **Verify:** changing provider/model prose cannot change authoritative numeric output for identical structured evidence.
 
+**Owner-reported score inflation repair (2026-10-31):** Fixed role/accountability heading masking and binary keyword full credit for new `ats-rules-v4` analyses. Preserved historical values, removed uncalibrated Strong labels and exposed proportional trace credit. Owner PDF/JD validation was local only; formal calibration remains open. See [reproduction and verification](../docs/evaluation/SCORE_INFLATION_REPAIR_20261031.md).
+
 #### AA045: Add score explanations and readiness experiment
 
 **Dependencies:** AA044; **Likely files:** result read model, score UI, feature flag, tests; **Scope:** M
@@ -1026,6 +1051,12 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 
 - [x] **Local engineering under E-005:** Edit the structured resume on the analysis result page by section/line while preserving source evidence and version identity.
 - **Verify:** keyboard, screen-reader, validation, save failure, stale version, mobile, and no-JavaScript-safe recovery behaviors pass.
+
+**Owner-requested Review UI follow-up (2026-10-31):** Styled the Cited writing suggestions branch with category/status hierarchy, separate explanations and source excerpts, responsive rows and explicit empty states. No scoring or authoring mutation changed. Component and sequential synthetic browser evidence is in the [UI receipt](../docs/evaluation/CITED_WRITING_UI_20261031.md).
+
+**Owner-requested navigation and Rewrite follow-up (2026-10-31):** Shared floating navbar now connects the public homepage `/`, history `/analyses`, upload and LaTeX Build with identical links. Theme and session controls stay in Menu. The report button has a fixed 44px height. Empty Rewrite copy now describes the saved state without inventing a grounding failure; existing retained suggestions remain supported. See [verification and limitations](../docs/evaluation/NAVIGATION_REWRITE_REPAIR_20261031.md).
+
+**Eight browser-comment repairs (2026-10-31):** Replaced raw score metadata with an accessible disclosure and readable timestamp while preserving score semantics; shortened empty Rewrite guidance and generated two suggestions on the exact owner-commented saved analysis. Removed Build's redundant icon rail/upload shortcut, retained labelled mobile panes, and enabled only the verified local compiler after nineteen sandbox checks. Current-site preview/download and sequential browser evidence are in the [comment repair report](../docs/evaluation/BROWSER_COMMENT_REPAIRS_20261031.md).
 
 #### AA051: Navigate findings to editable lines
 
@@ -1132,53 +1163,95 @@ These tasks supplement, rather than retroactively upgrade, the synthetic A3 evid
 
 - [ ] PDF/DOCX parity, accessibility, security, performance, and safe-failure evidence passes for every released combination.
 
-### Phase AA7: Sandboxed LaTeX rendering
+### Phase AA7: Standalone sandboxed LaTeX-to-PDF converter [GATE CLOSED / OWNER ACCEPTED 2026-11-07]
+
+**Owner-scoped revision, 2026-10-30:** The owner requested a separate code-left/PDF-right converter, with current-buffer recompilation, preview and PDF download for manual upload. The owner approved the revised [design](../docs/design/LATEX_CONVERTER.md) and [ADR-0016](../docs/decisions/0016-standalone-latex-converter.md). E-007 permits local engineering while formal upstream/release gates remain open. No canonical/analyzer integration, LaTeX output, automatic upload, persisted source/PDF or ATS-verified claim. **Local engineering is complete and verified:**126 files/1,052 tests,94 focused cases,6 real browser scenarios with desktop/mobile Axe,19 runtime check groups and6 example/paper cases. Canonical `npm run verify` passes. Formal Gate AA7 remains open; the default flag is off. See the [dated closeout](../docs/evaluation/AA7_ENGINEERING_CLOSEOUT_20261030.md).
 
 #### AA070: Approve LaTeX threat model
 
 **Dependencies:** AA6; **Likely files:** threat model, compiler ADR, package allowlist, runbook; **Scope:** S
 
-- [ ] Approve runtime isolation, package/font allowlist, no-shell-escape/network/host policy, resource limits, cleanup, and incident response.
-- **Verify:** security owner records misuse cases, controls, residual risk, rollback, and provider/runtime exit path.
+- [x] Owner approved the revised local compiler-security design and bounded execution scope through ADR-0016. Current runtime, closure, resource and cleanup evidence passes; formal release security review remains separate.
+- **Verify:** ADR-0016 and the [converter runbook](../docs/operations/LATEX_CONVERTER.md) record misuse cases, tested controls, resource limits, cleanup/quarantine, residual risks, rollback and runtime exit. Formal release/security and assistive-technology acceptance are separate.
 
-#### AA071: Implement canonical-to-LaTeX rendering
+#### AA071: Validate supported single-file LaTeX source
 
-**Dependencies:** AA070; **Likely files:** LaTeX renderer, templates, escape library, tests; **Scope:** M
+**Dependencies:** AA070; **Likely files:** source contract, admission policy, examples, tests; **Scope:** M
 
-- [ ] Generate source from canonical content with complete escaping and no raw user-controlled commands.
-- **Verify:** special characters, Unicode, URLs, bidi text, injection payloads, long content, and deterministic-source tests pass.
+- [x] **Local engineering under E-007:** Accept bounded single-file source with the reviewed macro/math/layout capabilities, preserve source bytes and geometry, bind hash/policy, and revalidate before isolated execution. Lexical screening is not the runtime security boundary.
+- **Verify:** supported macros/math/packages, special characters, Unicode, URLs, bidi/encoded controls, unsupported input, size and deterministic binding tests pass.
 
 #### AA072: Isolate LaTeX compilation
 
 **Dependencies:** AA071; **Likely files:** compiler worker, sandbox policy, cleanup, tests; **Scope:** M
 
-- [ ] Compile without network, shell escape, writable host mounts, or reusable state; cap CPU, memory, files, output, and wall time.
-- **Verify:** malicious input, package escape, file-read/write, fork/resource exhaustion, timeout, cleanup, and cancellation tests pass.
+- [x] **Local engineering under E-007:** Compile without network, shell escape, writable host mounts, or reusable state; cap CPU, memory, files, output, and wall time.
+- **Verify:** Actual Docker+Landlock ABI8 resource/filesystem/exec/network and output-policy probes pass, including denied files/packages, memory/CPU/process/file/scratch exhaustion, timeout, active cancellation, two-active/third-busy and cleanup. No host fallback. Docker is compiler-worker-only; database/auth/rate metadata use managed Supabase directly.
 
-#### AA073: Add profile-specific LaTeX templates
+#### AA073: Add editable example profiles
 
 **Dependencies:** AA071; **Likely files:** template manifests, templates, preview metadata, fixtures; **Scope:** M
 
-- [ ] Add reviewed templates by supported profile rather than assuming one student/technology layout fits all users.
-- **Verify:** each template declares domain/locale/page support and passes the same canonical content and accessibility policy.
+- [x] **Local engineering under E-007:** Add neutral early-career, experienced and general-document starter examples with supported paper/font/package metadata; preserve user-edited source.
+- **Verify:** every example/paper combination recovers its known synthetic text/order/links, passes output checks and declares accessibility limits without ATS claims.
 
-#### AA074: Add LaTeX diagnostics and source download
+#### AA074: Add standalone editor, PDF preview, diagnostics and download
 
 **Dependencies:** AA072, AA073; **Likely files:** diagnostics sanitizer, preview/source routes, UI, tests; **Scope:** M
 
-- [ ] Provide safe diagnostics, preview, source download, retry, and fallback to verified core templates without exposing host paths or secrets.
-- **Verify:** compilation errors, timeout, unsupported glyph/package, stale version, authorization, and log-redaction paths pass.
+- [x] **Local engineering under E-007:** Provide the screenshot-based two-pane editor, in-place current-buffer recompilation, safe diagnostics, retry/cancel, PDF preview/page/zoom/download and separate manual-upload navigation. No source export or analyzer calls.
+- **Verify:** compilation errors, timeout, unsupported glyph/package, stale response/download, authorization/origin/admission, cancellation, mobile/keyboard and log-redaction paths pass.
+
+**Owner-reported availability/UI follow-up (2026-10-31):** Local compilation was off because `.env` lacked the converter settings. Verified the existing pinned runtime, activated only the local workspace, removed redundant navigation and validated real preview/download. Default-off repository settings and formal Gate AA7 remain unchanged; see the [comment repair report](../docs/evaluation/BROWSER_COMMENT_REPAIRS_20261031.md).
+
+**Owner-reported contrast follow-up (2026-10-31):** Selected code now paints visible foreground text; native theme/example/paper options have paired theme colors. Five sequential browser modes cover light/dark/system/mobile/forced colors with rendered-glyph and contrast checks; the native dark popup was visually verified. [Evidence](../docs/evaluation/EDITOR_CONTRAST_REPAIR_20261031.md).
+
+**Owner-supplied document overflow follow-up (2026-10-31):** Reproduced a 0.78194-point overfull paragraph in the exact supplied source. One explicit emergency line-breaking command in a new private copy preserves all original bytes, wording, fonts and margins. Sequential headed-browser preview/download passed with direct Supabase auth; four runtime controls confirm overflow rejection remains active. No application policy change; the existing in-app buffer still needs the corrected source. [Evidence](../docs/evaluation/LATEX_DOCUMENT_OVERFLOW_REPAIR_20261031.md).
+
+**Owner-reported toolbar follow-up (2026-10-31):** Example options now has a 44-pixel square SVG chevron and an explicit expanded-panel relationship. Download PDF keeps matching outlined-button dimensions across disabled and ready states. Six sequential light/dark desktop/mobile browser cases, keyboard interaction and real synthetic PDF download pass. LaTeX's 106 unit tests, source checks, lint, typecheck and web build pass. [Evidence](../docs/evaluation/BUILD_TOOLBAR_REPAIR_20261031.md).
 
 #### AA075: Benchmark compiled artifacts
 
 **Dependencies:** AA072-AA074; **Likely files:** LaTeX benchmark, parse-back fixtures, security report, CI gate; **Scope:** M
 
-- [ ] Run parity, accessibility, template, malicious-input, resource, latency, and failure evaluation for each released combination.
-- **Verify:** security review and AA6-equivalent artifact floors pass before the production flag can be enabled.
+- [x] **Local engineering under E-007:** Run known synthetic output text/order/link/layout, accessibility-limit, example, malicious-input, resource, latency and failure evaluation for every declared combination; arbitrary pasted source has no canonical fact/parity baseline.
+- **Verify:** runtime security and declared synthetic recovery floors pass; compiled PDFs are not AA6 verified artifacts. Accessibility/security/release approval remains necessary before production enablement.
+
+#### Owner-requested Build AI follow-up (2026-10-30)
+
+**Scope:** separate Build workspace only; see the [design](../docs/design/LATEX_CONVERTER.md#inline-ai-assistance-follow-up) and [coordinator packet](agent-handoffs/2026-10-30-build-ai-coordinator.md). Owner approved reuse of the configured key and bounded synthetic testing. No canonical fact/score integration or release approval.
+
+- [x] Integrate contextual fix/rewrite/resume popover with per-request selected-context consent, plain-text review, guarded Apply/Undo and PDF invalidation.
+- [x] Implement authenticated origin-checked default-off API, strict source/patch binding, provider/context/time/output limits and managed Supabase consent/rate/monthly quota metadata without migrations.
+- [x] Verify focused safeguards, controlled-provider browser flows, accessibility and the combined application candidate. The final local candidate passes 88 focused tests, six controlled-provider browser scenarios including desktop/mobile Axe, and `npm run verify` (131 files / 1,152 tests plus format, lint, types, web and worker builds). Exact recorded synthetic accounts and rate keys were cleaned; detailed receipts are in the [handoff](agent-handoffs/2026-10-30-build-ai-coordinator.md).
+- [x] Verify live provider availability: two earlier bounded probes returned HTTP 401; a third owner-requested synthetic structured-response probe succeeded using the configured model. No automatic retry or model/key fallback. Live end-to-end browser acceptance remains separate.
+- **Sequential browser audit (2026-10-30):** Public, LaTeX and controlled-provider Build AI checks passed; home-page claim and medium-width navigation findings and untested authenticated flows are recorded in the [audit report](../docs/evaluation/BROWSER_AUDIT_20261030.md). This is partial engineering evidence and does not close Gate AA7 or release gates.
+
+**Browser audit repair follow-up:** The owner approved eight existing hosted migrations after review. UI claims/header and consent wording were repaired; direct-Supabase authenticated testing now uses guarded synthetic fixtures and exact cleanup. The final combined browser run passed 12/13; intermittent authoring acceptance over five seconds and PDF tagging remain open. See [repair evidence](../docs/evaluation/AUDIT_REPAIRS_20261030.md) and [migration mapping](../docs/evaluation/MANAGED_BROWSER_PREREQUISITES_20261030.md).
+
+**Private internal continuation (2026-11-06):** Senior frontend/backend review reproduced four defects: transient compiler startup failures remained cached, formatted units bypassed resume protection, deferred PDF bytes could start loading after dismissal, and Escape keyup reopened the AI popup. Minimal shared-function fixes and permanent regressions are integrated. The same regression set failed 10 cases before and passed all 59 afterward; current-root focused checks pass 108 converter, 95 AI and three component cases. Combined verification and detailed evidence are recorded in the [private coordinator handoff](agent-handoffs/2026-11-06-aa7-coordinator.md). No public testing, provider call, database change or production activation.
+
+**Fresh runtime/browser follow-up (2026-11-06):** The changed compiler adapter passed all 19 runtime groups against the pinned image. Six selected current-browser cases passed after a popup heading semantic repair; no Axe exclusions. Direct Supabase fixtures and exact recorded rate keys were cleaned and verified absent. Docker was used only for worker jobs. [Browser receipt](../docs/evaluation/AA7_BROWSER_REVALIDATION_20261106.json); [runtime receipt](../docs/evaluation/LATEX_RUNTIME_RECHECK_20261106.json). Private license/CVE and complete rollback evidence remain in progress; formal acceptance is unchanged.
+
+**Private security follow-up (2026-11-06):** Exact-image license metadata inventory and actual quarantine/restart drill are recorded. An enforced-offline Trivy scan preserved all raw findings, including four critical and 269 high package matches; applicability/vendor triage is in progress. Passing functional tests do not clear those findings. See [CVE evidence](../docs/evaluation/AA7_IMAGE_CVE_20261106.md), [license inventory](../docs/evaluation/AA7_IMAGE_LICENSES_20261106.md), and [rollback receipt](../docs/evaluation/AA7_ROLLBACK_RECEIPT_20261106.json). No public testing, upload, provider use or production enablement.
+
+**Hardened private candidate (2026-11-06):** Candidate19d2 replaces PyPDF2 with exact hash-pinned pypdf6.21.4 and keeps compiler/header/pip tools out of the final runtime. Same base/snapshot/TeX source capabilities; one signed-index-authenticated identical XeTeX artifact uses an explicit transport/cache remedy. All20runtimegroups/20PDFcases,6profile-paper cases, rollback, combined1,203tests/145files and full13browser cases pass. Direct-Supabase cleanup is verified; no Docker database or live provider. Paired offline scan under identical databases retains3critical/70high matches, down from4/269; all findings remain. The configured image is unchanged and formal security/accessibility/release gates remain open. [Private candidate closeout](../docs/evaluation/AA7_PRIVATE_CANDIDATE_CLOSEOUT_20261106.md).
+
+**Private engineering closure (2026-11-06):** Coordinator and senior developer/tester audits confirm AA070-AA075 private requirements have current source-bound evidence. Current runbook commands now target the maintained-parser19d2 candidate; historical activation explicitly identifies600c. All requested internal functional checks are complete. Residual package-risk acceptance, license interpretation, document/assistive-technology acceptance and production release remain separate open decisions, not requirements for public testing now. Optional APT removal was stopped without bypassing its native safety warning. [Final private closeout](../docs/evaluation/AA7_PRIVATE_CANDIDATE_CLOSEOUT_20261106.md).
+
+**Full vulnerability-remediation request (2026-11-06):** Incomplete; do not close the phase. The scoped application dependency repair has zero all-dependency audit findings and the integrated application passes 1,205 tests. Current paperfix worker `8f7…` passes 20 runtime groups, 20 PDF-policy cases, six example/paper cases, rollback, paired glyph/render review and all 13 dedicated browser cases. Direct Supabase fixtures and owned resources were cleaned up. The full unsuppressed scan removes three critical matches but retains 978 total matches, including 89 high (previously 70). Known upstream-open issues and broader native-backport/applicability work remain. No release or configuration promotion occurred. See the [current security closeout and remaining obligations](../docs/evaluation/AA7_FULL_SECURITY_CLOSEOUT_20261106.md).
+
+**Native repair and full-verification continuation (2026-11-06):** Unpromoted worker `38292747…` builds archive-authenticated native Expat2.10 with both upstream modes, each with 5,328 checks, old-header compatibility and exact loaded-library verification. Exactly six optional packages are purged with native safety guards. A sealed Fontconfig clone preserves 40 measured font/style selections and excludes user-home configuration. The full unsuppressed scan now has 947 matches, including 0 critical and 80 high: 31 removed and none added. Source-backed Expat fixes remain visible in the raw output, and CVE-2025-66382 remains open. The first literal private CI failed at 65/71 browser cases after 1,220 unit tests; its receipt remains unchanged. Reviewed landmark, query scheduling/LEFT-FK and private AI-context repairs now pass the complete integrated verification: 1,242 tests across 149 files, all 65 general browser cases and all six dedicated Build AI cases. All nine commands exit zero; both npm audits have zero findings. Original assertions and timeouts remain. The expanded 22-group runtime matrix, 20 PDF cases, six examples, rollback and paired render now pass on that exact image; coordinator visual review found both candidate pages identical to baseline PNGs. The [final private receipt](../docs/evaluation/AA7_FULL_PRIVATE_CI_FINAL_20261106.json) binds 557 stable source inputs and independent exact cleanup of 31 synthetic owners, four storage keys and 13 owned rate rows. Supabase is used directly; no Docker database, deployment or promotion. [Completion packet](agent-handoffs/2026-11-06-aa7-completion-coordinator.md), [scan](../docs/evaluation/AA7_SEALED_NATIVE_SECURITY_20261106.md).
+
+**Decoder guard and current verification (2026-11-06):** Current unpromoted worker `fc8c0ace…` explicitly disables optional external pypdf decoding and legacy overrides for each inspection, restoring configuration afterward. Permanent before/after regression passes without changing the original validation body. The exact image passes 23 runtime groups, all 20 PDF cases, six profile/paper cases, rollback and paired render. Full private verification passes 149 files/1,242 unit tests and all 71 browser cases; all nine commands exit zero and both npm audits report zero. The [current final receipt](../docs/evaluation/AA7_DECODER_GUARD_PRIVATE_CI_FINAL_20261106.json) binds 558 stable source inputs and exact synthetic cleanup. The [fresh unsuppressed scan](../docs/evaluation/AA7_DECODER_GUARD_SECURITY_20261106.md) still has 947 matches, including 80 high and zero critical, with no package/CVE delta from3829. Native decoder/XML remediation remains in progress; no security clearance, deployment or configuration promotion.
+
+**Immutable native HOME follow-up (2026-11-06):** An actual benign forced-config-failure probe reproduces Fontconfig loading XML from writable scratch HOME. The reviewed fix gives both native child environments and the image an empty root-owned read-only HOME. Interim worker `fb277061…` builds and passes the same focused RED-to-GREEN probe, all 40 ordinary font selections, source checks/typecheck/108 LaTeX tests and all six profile/paper cases. 559 code inputs/21 runtime hashes remain stable and exact cleanup passes. Full matrix/CI/scan remains reserved for the final native-frame candidate; no raw CVE is suppressed or release accepted. [Repair evidence](../docs/evaluation/AA7_IMMUTABLE_HOME_REMEDIATION_20261106.md).
 
 #### Gate AA7: Safe LaTeX export
 
-- [ ] Sandbox, malicious-input, resource, parity, accessibility, operational, and rollback evidence passes with explicit security-owner approval.
+**November 7 engineering closeout:** AA070–AA075 implementation and private verification are complete on exact worker `4b83ffec…`. The actual FreeType repair and mandatory mapped-library probe pass; all 28 runtime groups, original 20 PDF cases, 49 admission cases, four explicitly mocked boundaries, 107 frame checks, six profiles, rollback and render pass. The single final integrated run passes all nine commands, 1,242 unit tests/149 files and all 71 browser cases; both npm audits report zero. Exact synthetic Supabase, rate-key, file/process/container and scan-directory cleanup is complete. The [current closeout](../docs/evaluation/AA7_FREETYPE_FINAL_CLOSEOUT_20261107.md) binds 588 code inputs and 61 runtime hashes. The final unsuppressed image scan retains 947 advisories, including 80 high and zero critical; these remain formal release work, with no all-vulnerabilities-fixed claim. Historical native 70/71/E-010 and unavailable font-reproduction evidence remain explicit. The owner requested an end to repeated validation: green engineering tasks stay closed unless changed code or a concrete failure warrants reopening. No deployment or configuration promotion occurred.
+
+- [x] Sandbox, malicious-input, resource, parity, accessibility, operational and rollback evidence accepted by the workspace owner on 2026-11-07, with the disclosed residual risks and tested accessibility limits. [Owner decision](../docs/decisions/0017-aa7-owner-acceptance-and-aa8-start.md). Production activation and whole-project launch remain deferred.
 
 ### Phase AA8: Representative validity and staged claims
 

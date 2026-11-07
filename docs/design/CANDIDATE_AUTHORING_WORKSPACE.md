@@ -19,3 +19,9 @@ The ledger is owner-readable with active-source/membership/deletion RLS, immutab
 Projected diagnostics are labelled before acceptance; actual diagnostics read persisted canonical versions. Numeric scores and deltas are null while AA4 policy/calibration remain unapproved. No arbitrary improvement claim or employer acceptance probability is shown.
 
 The proposal interface has no default provider. Explicit injected transports receive only the selected candidate-confirmed contribution/version context, untrusted-data instructions, an abort signal, timeout and bounded strict output validation. Provider failure/timeout produces no patch or mutation. Local UI patterns continue to function without a provider. The locked known-synthetic harness compares exact and hallucinating injected adapters, not actual models. No cheaper/faster real model is selected, and edit usefulness, representative domain quality and human candidate-review acceptance remain unavailable pending authorized evaluation.
+
+## Legacy Review generation follow-up
+
+The `/resume/:id#rewrite` copy-suggestion view has a separate owner-requested Generate suggestions action. It uses the saved extraction and JD, explicit provider consent, server-bound source IDs, same-passage grounding, the existing monthly usage ledger and database rate limits. Active-source, membership and deletion access are checked before drafting and before publication. Draft timestamps reject stale writes. Provider failures or empty grounded output preserve the previous draft. The normal qualitative worker also resolves model source IDs before grounding. See the [repair evidence](../evaluation/REWRITE_GENERATION_REPAIR_20261031.md).
+
+This action saves copyable proposals; it does not accept a canonical fact, change an immutable resume version or recompute scores. The canonical authoring provider policy and formal AA5 gates above remain separate.

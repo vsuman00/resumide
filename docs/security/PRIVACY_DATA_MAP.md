@@ -211,20 +211,20 @@ The canonical resume renders to approved, profile-appropriate PDF and DOCX templ
 
 Critical-field and normalized-text parity pass for every released template/format/locale combination. Failure removes the verified label and blocks the artifact from the recommended download action.
 
-## 11. Phase AA7: Sandboxed LaTeX rendering
+## 11. Phase AA7: Standalone sandboxed LaTeX conversion
 
 ### Outcome
 
-Candidates can generate, preview, download, and optionally inspect LaTeX source without exposing the worker or user data to arbitrary TeX execution.
+Under owner-approved [ADR-0016](../decisions/0016-standalone-latex-converter.md), candidates edit supported single-file LaTeX on `/build`, preview a compiled PDF and download it for separate manual upload. The converter does not consume canonical records, call analysis, export LaTeX or persist source/PDF. Supabase directly provides authentication and content-free admission metadata; Docker is used only for the compiler worker. Optional AI assistance has its own selected-context consent and metadata boundary, documented in the [converter design](../design/LATEX_CONVERTER.md#inline-ai-assistance-follow-up).
 
 ### Vertical slices
 
 - `AA070`: Approve LaTeX compiler/runtime threat model and package allowlist.
-- `AA071`: Implement canonical-to-LaTeX renderer with complete escaping tests.
+- `AA071`: Implement bounded source-preserving admission and exact source/hash/policy binding.
 - `AA072`: Implement isolated compilation with no shell escape/network/host access and hard resource limits.
-- `AA073`: Add profile templates rather than one fixed student/technology layout.
-- `AA074`: Add LaTeX diagnostics, preview, source download, and safe failure UX.
-- `AA075`: Add compiled-PDF parse-back and accessibility/template benchmark.
+- `AA073`: Add neutral editable examples with declared package/font/page support.
+- `AA074`: Add two-pane editing, safe diagnostics, PDF preview/download, cancellation and stale-response protection.
+- `AA075`: Verify compiled-PDF safety and known synthetic text/order/link/layout recovery, with explicit accessibility limits.
 
 ### Gate AA7
 

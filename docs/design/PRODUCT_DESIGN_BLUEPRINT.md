@@ -106,26 +106,12 @@ Analyses -> New analysis -> Progress -> Result -> New version
 
 ### Navigation model
 
-Desktop signed-in workspace:
+All page shells use the same floating navbar, including the public homepage, authenticated workspace and LaTeX Build editor. The logo always opens the public homepage `/`, even when signed in. The history workspace is `/analyses`; `/upload` starts a new analysis and `/build` opens the LaTeX editor.
 
-- 232px rail.
-- Wordmark and workspace label at top.
-- Analyses and New analysis as the first actions.
-- Privacy and Account at the bottom.
-- Current route uses a left evidence bar, not a filled pill.
-
-Tablet:
-
-- 72px icon rail.
-- Accessible tooltips and visible selected state.
-- Page title and action remain in the content header.
-
-Mobile:
-
-- 56px top bar with brand, theme, and account.
-- Bottom navigation for Analyses, New analysis, and Account.
-- New analysis is visually emphasized but remains part of the same navigation pattern.
-- No essential action is hidden behind hover.
+- Desktop links: Home, Analyses, New analysis, Build, in that order with identical destinations on every page.
+- At 900px and below, those links move into Menu. Privacy, Account, the theme selector and Sign in/Sign out stay inside Menu at all widths.
+- Use a rounded floating surface with backdrop blur, a solid fallback, visible focus and current-route state. Dropdown controls keep their normal height; they do not stretch across the navbar.
+- The workspace sidebar and mobile bottom navigation are superseded by this owner-requested model. Build uses its editor toolbar and mobile Code/PDF preview tabs, without a second sidebar.
 
 ### Page frame
 
@@ -220,12 +206,12 @@ Workspace shell
 
 ## 5. Responsive grid
 
-| Viewport  | Grid       | Gutters | Shell behavior                          |
-| --------- | ---------- | ------- | --------------------------------------- |
-| 320-767   | 4 columns  | 16px    | Top bar and bottom navigation           |
-| 768-1023  | 8 columns  | 20px    | Compact rail or top navigation by route |
-| 1024-1439 | 12 columns | 24px    | Full workspace rail and split panes     |
-| 1440+     | 12 columns | 24px    | Content capped at 1440px                |
+| Viewport  | Grid       | Gutters | Shell behavior                           |
+| --------- | ---------- | ------- | ---------------------------------------- |
+| 320-767   | 4 columns  | 16px    | Floating navbar with menu                |
+| 768-1023  | 8 columns  | 20px    | Shared navbar; links in menu up to 900px |
+| 1024-1439 | 12 columns | 24px    | Floating navbar and split panes          |
+| 1440+     | 12 columns | 24px    | Content capped at 1440px                 |
 
 Primary breakpoints are verified at 390, 768, 1024, 1366, and 1440 pixels, plus a 320px no-horizontal-scroll check.
 
@@ -298,7 +284,7 @@ Public top bar
 - Trust statement becomes a short strip above the form.
 - The artifact is removed before any form content is pushed below the fold.
 
-## 8. Page 3: Resume workspace `/`
+## 8. Page 3: Resume workspace `/analyses`
 
 ### Purpose
 
@@ -307,7 +293,7 @@ Help a returning user continue useful work in less than five seconds.
 ### Desktop structure
 
 ```text
-Workspace rail
+Shared floating navbar
 Page header: Resume workspace                         [Analyze resume]
 Latest analysis: target, status, score, three facts   [View result]
 History toolbar: label, optional search/filter
@@ -388,7 +374,7 @@ Sticky footer: file state + next step       [Analyze resume]
 
 - Left: `Ready to analyze resume.pdf` or the single next requirement.
 - Right: Analyze resume.
-- On mobile, it becomes a bottom action region above mobile navigation.
+- On mobile, it becomes a bottom action region above the viewport edge.
 
 ### Processing transition
 
@@ -478,6 +464,14 @@ Order:
 
 The score is not a giant isolated gauge. It is one part of the result header and always includes a written explanation.
 
+### Saved score explanation
+
+Keep the uncalibrated label and the warning that a checklist result does not measure job fit. Put the method, rules version and a human-readable IST save time inside How this saved score was calculated. Explain why methods differ in plain language and link the user to a new analysis for current checks. Preserve the saved numbers and provenance; presentation does not recalibrate a historical result.
+
+### Cited writing suggestions
+
+For unscored, source-backed feedback, use explicit category headings and flat suggestion rows. Each row separates its status, short title, explanation and labelled resume excerpt. Preserve source quotations and omit uncited advice. Stack the status above the content on mobile, wrap long text, and explain empty categories. Qualitative ratings remain unavailable. See the [implemented UI receipt](../evaluation/CITED_WRITING_UI_20261031.md).
+
 ### ATS Evidence
 
 Each evidence row includes:
@@ -509,6 +503,10 @@ Group rows by Searchability, Structure, Content, and Job relevance. Accordions m
 
 ### Rewrite
 
+- An empty saved analysis points to Generate suggestions on the same page; results are saved per analysis/JD. Explain a rejected request in its status rather than assuming that every empty historical draft failed evidence checks.
+- Generate suggestions from the saved resume and JD with explicit provider consent. Show pending status, disable repeat submission while busy and refresh saved proposals after success.
+- Bind each original passage on the server using source IDs. Keep skills, names and measurements within that passage; JD wording cannot supply candidate facts.
+- Preserve the previous draft on provider failure, an empty grounded result or a stale save. Explain cooldown and retry states. This action changes writing proposals only.
 - Original text on the left or top.
 - Suggested text on the right or below.
 - Reasoning and evidence grounding below both.
@@ -633,6 +631,8 @@ Dark mode:
 - Coral and teal use their lighter theme values for contrast.
 
 No component branches on hard-coded light or dark utility colors after migration.
+
+Selected editor text must remain visible against its highlight in both themes and forced colors. Native option menus use an explicit opaque background and foreground from the theme, including the theme chooser and example controls. See the [contrast repair evidence](../evaluation/EDITOR_CONTRAST_REPAIR_20261031.md).
 
 ## 16. Accessibility contract
 

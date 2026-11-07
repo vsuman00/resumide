@@ -1,3 +1,7 @@
+import {
+  requireBrowserTestTarget,
+  recordBrowserFixture,
+} from "./browser-test-target";
 import { randomUUID, createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { getServerConfig } from "../app/lib/server/config";
@@ -14,12 +18,7 @@ export async function createCanonicalFixture(
   sourceBytes?: Uint8Array,
 ) {
   const config = getServerConfig();
-  if (
-    !["127.0.0.1", "localhost", "[::1]"].includes(
-      new URL(config.SUPABASE_URL).hostname,
-    )
-  )
-    throw new Error("AA2 fixtures require an isolated local database");
+  requireBrowserTestTarget(config.SUPABASE_URL);
   const admin = createSupabaseAdminClient();
   const email = `aa2-local-${randomUUID()}@example.test`;
   const password = randomUUID() + randomUUID();
@@ -50,6 +49,7 @@ export async function createCanonicalFixture(
       throw new Error("Synthetic source cleanup failed");
   };
   try {
+    await recordBrowserFixture(config.SUPABASE_URL, { ownerId });
     if ((await user.auth.signInWithPassword({ email, password })).error)
       throw new Error("Synthetic owner sign-in failed");
     const org = await admin
@@ -71,6 +71,10 @@ export async function createCanonicalFixture(
         organizationId,
         resumeId,
         versionId: sourceId,
+      });
+      await recordBrowserFixture(config.SUPABASE_URL, {
+        ownerId,
+        storageKey: sourceStorageKey,
       });
       const uploaded = await admin.storage
         .from(config.SUPABASE_RESUME_BUCKET)

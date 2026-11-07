@@ -1,0 +1,42 @@
+--- a/inspect_pdf.candidate.py
++++ b/inspect_pdf.candidate.py
+@@ -72,14 +72,22 @@
+ 
+ def inspect_pdf(data):
+  original=EncodedStreamObject.get_data
++ policy_rejected=False
+  def image_free_data(stream):
+-  _reject_image_data(stream)
++  nonlocal policy_rejected
++  try:_reject_image_data(stream)
++  except Exception:
++   policy_rejected=True
++   raise
+   return original(stream)
+  # Reader construction can decode XRef/ObjStm before the dictionary walk.
+  EncodedStreamObject.get_data=image_free_data
+  try:
+   with apply_configuration(jbig2dec_binary=None,disable_legacy_handling=True):
+-   return _inspect_pdf(data)
++   result=_inspect_pdf(data)
++   # The pinned reader can swallow an earlier stream-policy exception.
++   if policy_rejected:raise UnsafePDF()
++   return result
+  finally:EncodedStreamObject.get_data=original
+ 
+ def _inspect_pdf(data):
+@@ -111,6 +119,14 @@
+     for item in resources.values():
+      item=_resolved(item)
+      if not isinstance(item,StreamObject) or _name(item,'/Subtype')!='/Form':raise UnsafePDF()
++   if '/SMask' in obj:
++    mask=_resolved(obj.get('/SMask'))
++    if isinstance(mask,NameObject):
++     if mask!='/None':raise UnsafePDF()
++    else:
++     if not isinstance(mask,DictionaryObject):raise UnsafePDF()
++     group=_resolved(mask.get('/G'))
++     if not isinstance(group,StreamObject) or _name(group,'/Subtype')!='/Form':raise UnsafePDF()
+    if '/Font' in obj:
+     resources=_resolved(obj.get('/Font'))
+     if not isinstance(resources,DictionaryObject):raise UnsafePDF()

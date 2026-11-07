@@ -7,6 +7,7 @@ export interface RuleTrace {
   outcome: "passed" | "failed" | "not_evaluated";
   confidence: "high" | "none";
   weight: number;
+  credit?: number;
   detail: string;
   evidence?: string[];
 }
@@ -42,6 +43,7 @@ interface ScoreContext {
   jdKeywords: string[];
   matched: string[];
   missing: string[];
+  proportionalKeywords: boolean;
 }
 
 const RULES: Rule[] = [
@@ -186,7 +188,7 @@ const RULES: Rule[] = [
       }
       const ratio = ctx.matched.length / ctx.jdKeywords.length;
       return {
-        passed: ratio >= 0.5,
+        passed: ctx.proportionalKeywords ? ratio === 1 : ratio >= 0.5,
         detail: `${ctx.matched.length}/${ctx.jdKeywords.length} JD phrases and skills present (${Math.round(ratio * 100)}%).`,
         evidence: ctx.missing.slice(0, 5),
       };
@@ -198,12 +200,14 @@ export function atsRules(args: {
   text: string;
   jobDescription: string;
   parseView: ParseViewData;
+  rulesetVersion?: "ats-rules-v3" | "ats-rules-v4";
 }): ATSRulesResult {
   const matching = matchJobDescription({
     jobDescription: args.jobDescription,
     resumeText: args.text,
   });
   const context: ScoreContext = {
+    proportionalKeywords: args.rulesetVersion !== "ats-rules-v3",
     wordCount: args.text.trim().split(/\s+/).filter(Boolean).length,
     parseView: args.parseView,
     jdKeywords: matching.evidence
@@ -221,9 +225,12 @@ export function atsRules(args: {
     (rule) => rule.outcome !== "not_evaluated",
   );
   const totalWeight = evaluated.reduce((total, rule) => total + rule.weight, 0);
-  const earnedWeight = ruleTrace
-    .filter((rule) => rule.outcome === "passed")
-    .reduce((total, rule) => total + rule.weight, 0);
+  const earnedWeight = evaluated.reduce(
+    (total, rule) =>
+      total +
+      rule.weight * (rule.credit ?? (rule.outcome === "passed" ? 1 : 0)),
+    0,
+  );
   const score =
     totalWeight === 0 ? 0 : Math.round((earnedWeight / totalWeight) * 100);
 
@@ -254,6 +261,16 @@ function toRuleTrace(rule: Rule, context: ScoreContext): RuleTrace {
           : "failed",
     confidence: result.passed === null ? "none" : "high",
     weight: rule.weight,
+    ...(context.proportionalKeywords && result.passed !== null
+      ? {
+          credit:
+            rule.ruleId === "keywords.coverage"
+              ? context.matched.length / context.jdKeywords.length
+              : result.passed
+                ? 1
+                : 0,
+        }
+      : {}),
     detail: result.detail,
     evidence: result.evidence,
   };

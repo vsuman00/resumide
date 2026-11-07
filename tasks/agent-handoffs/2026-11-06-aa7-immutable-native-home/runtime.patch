@@ -1,0 +1,22 @@
+--- a/scripts/latex-runtime/supervisor.py
++++ b/scripts/latex-runtime/supervisor.py
+@@ -14,7 +14,7 @@
+  # Keep diagnostics transient in the trusted supervisor, never in Docker logs.
+  with open('/dev/null','rb') as null:
+   proc=subprocess.Popen(args,stdin=null,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,close_fds=True,
+-   env={'HOME':'/scratch','LANG':'C.UTF-8','FONTCONFIG_FILE':'/opt/latex/fontconfig/fonts.conf','FONTCONFIG_PATH':'/opt/latex/fontconfig'})
++   env={'HOME':'/opt/latex/home','LANG':'C.UTF-8','FONTCONFIG_FILE':'/opt/latex/fontconfig/fonts.conf','FONTCONFIG_PATH':'/opt/latex/fontconfig'})
+   output=bytearray(); deadline=time.monotonic()+14
+   with selectors.DefaultSelector() as selector:
+    selector.register(proc.stdout,selectors.EVENT_READ)
+--- a/scripts/latex-runtime/landlock.c
++++ b/scripts/latex-runtime/landlock.c
+@@ -61,7 +61,7 @@
+   printf("{\"abi\":%d,\"deniedReads\":%d,\"approvedRead\":%d,\"scratchWrite\":%d,\"outsideWriteDenied\":%d,\"shellExecDenied\":%d}\n",abi,denied,approved,scratchok,outside,execdenied);
+   return denied==2 && approved && scratchok && outside && execdenied?0:79;
+  }
+- char *env[]={"HOME=/scratch","LANG=C.UTF-8",
++ char *env[]={"HOME=/opt/latex/home","LANG=C.UTF-8",
+  "FONTCONFIG_FILE=/opt/latex/fontconfig/fonts.conf","FONTCONFIG_PATH=/opt/latex/fontconfig",
+  "TEXMFCNF=/opt/latex","TEXMFOUTPUT=/scratch","SOURCE_DATE_EPOCH=1735689600","FORCE_SOURCE_DATE=1",NULL};
+  execve(argv[1],argv+1,env);die();

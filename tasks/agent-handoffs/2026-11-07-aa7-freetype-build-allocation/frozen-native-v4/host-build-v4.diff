@@ -1,0 +1,50 @@
+--- host-build-v3.py
++++ host-build-v4.py
+@@ -22,7 +22,7 @@
+ ATTEMPT.chmod(0o700)
+ for name in ['home', 'tmp', 'exports', 'transport']: (ATTEMPT / name).mkdir(mode=0o700)
+ ENV = {'HOME': str(ATTEMPT / 'home'), 'LANG': 'C.UTF-8', 'PATH': '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin', 'TMPDIR': str(ATTEMPT / 'tmp')}
+-ADMISSION = 7500000000
++ADMISSION = 7000000000
+ FLOOR = 5176082432
+ DEADLINE = 2400
+ process = None
+@@ -49,16 +49,16 @@
+ 
+ 
+ def snapshot():
+-    if digest(RECIPE / 'review-manifest.v3.json') != EXPECTED_REVIEW or digest(RECIPE / 'context-manifest.v3.json') != EXPECTED_CONTEXT:
++    if digest(RECIPE / 'review-manifest.v4.json') != EXPECTED_REVIEW or digest(RECIPE / 'context-manifest.v4.json') != EXPECTED_CONTEXT:
+         raise ValueError('approved manifest identity changed')
+-    review = json.loads((RECIPE / 'review-manifest.v3.json').read_text())
+-    context = json.loads((RECIPE / 'context-manifest.v3.json').read_text())
++    review = json.loads((RECIPE / 'review-manifest.v4.json').read_text())
++    context = json.loads((RECIPE / 'context-manifest.v4.json').read_text())
+     for root, rows in [(RECIPE, review['files']), (RECIPE.parent, context['files'])]:
+         for item in rows:
+             path = root / item['path']
+             if path.is_symlink() or not path.is_file() or path.stat().st_size != item['bytes'] or digest(path) != item['sha256']:
+                 raise ValueError('frozen input changed: ' + item['path'])
+-    return {'review': digest(RECIPE / 'review-manifest.v3.json'), 'context': digest(RECIPE / 'context-manifest.v3.json')}
++    return {'review': digest(RECIPE / 'review-manifest.v4.json'), 'context': digest(RECIPE / 'context-manifest.v4.json')}
+ 
+ 
+ def command(argv, timeout=15):
+@@ -71,7 +71,7 @@
+ try:
+     receipt['sourcesBefore'] = snapshot()
+     receipt['freeBefore'] = free()
+-    if free() < ADMISSION: raise RuntimeError('FT admission below7500000000B')
++    if free() < ADMISSION: raise RuntimeError('FT admission below7000000000B')
+     limits()
+     socket = Path('/var/run/docker.sock').resolve(strict=True)
+     if socket != Path('/Users/vaibhavsuman/.docker/run/docker.sock') or not stat.S_ISSOCK(socket.stat().st_mode):
+@@ -83,7 +83,7 @@
+     receipt['unixEndpoint'] = str(socket)
+     tag = 'resumide-freetype:aa7-native-' + ATTEMPT.name.rsplit('-', 1)[-1]
+     argv = [tool, 'build', '--platform', 'linux/arm64', '--pull=false', '--target', 'artifacts', '--progress=plain', '--tag', tag,
+-            '--iidfile', str(ATTEMPT / 'image.iid'), '--file', str(RECIPE / 'Dockerfile.v3'), str(RECIPE.parent)]
++            '--iidfile', str(ATTEMPT / 'image.iid'), '--file', str(RECIPE / 'Dockerfile.v4'), str(RECIPE.parent)]
+     receipt.update(status='RUNNING', argv=argv, environmentNames=sorted(ENV))
+     (ATTEMPT / 'receipt.json').write_text(json.dumps(receipt, indent=2) + '\n')
+     print(json.dumps({'attempt': str(ATTEMPT), 'argv': argv}), flush=True)

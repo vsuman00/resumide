@@ -1,3 +1,7 @@
+import {
+  requireBrowserTestTarget,
+  recordBrowserFixture,
+} from "../scripts/browser-test-target";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
@@ -13,6 +17,7 @@ test("owner confirms and corrects evidence by keyboard with CAS, privacy and no-
   test.setTimeout(90_000);
   if (!process.env.SUPABASE_URL) process.loadEnvFile(".env");
   const url = process.env.SUPABASE_URL!;
+  requireBrowserTestTarget(url);
   const admin = createClient(url, process.env.SUPABASE_SECRET_KEY!, {
     auth: { persistSession: false },
   });
@@ -36,6 +41,7 @@ test("owner confirms and corrects evidence by keyboard with CAS, privacy and no-
     check(created.error, "Synthetic user creation failed");
     const id = created.data.user!.id;
     users.push(id);
+    await recordBrowserFixture(url, { ownerId: id });
     const cookies: { name: string; value: string }[] = [];
     const auth = createServerClient(
       url,

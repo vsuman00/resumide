@@ -234,7 +234,7 @@ export function ErrorBoundary() {
           </p>
         </>
       ) : (
-        <Link to="/">Return to analyses</Link>
+        <Link to="/analyses">Return to analyses</Link>
       )}
     </WorkspaceShell>
   );

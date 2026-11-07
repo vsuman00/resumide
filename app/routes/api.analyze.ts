@@ -11,7 +11,7 @@ import {
   PublicApiError,
   toErrorResponse,
 } from "~/lib/server/errors";
-import { createRequestId } from "~/lib/server/request-context";
+import { requestIdFrom } from "~/lib/server/request-context";
 
 import {
   recordAuditEvent,
@@ -31,12 +31,12 @@ import {
 //   jobTitle: string
 //   jobDescription: string
 // Returns: { feedback: Feedback }
-export function loader() {
-  return methodNotAllowedResponse(createRequestId(), ["POST"]);
+export function loader({ request }: { request: Request }) {
+  return methodNotAllowedResponse(requestIdFrom(request), ["POST"]);
 }
 
 export async function action({ request }: { request: Request }) {
-  const requestId = createRequestId();
+  const requestId = requestIdFrom(request);
   if (request.method !== "POST") {
     return methodNotAllowedResponse(requestId, ["POST"]);
   }

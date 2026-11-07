@@ -1,0 +1,47 @@
+{
+  "status": "ONE_BOUNDED_BUILD_ALLOCATED",
+  "owner": "primary coordinator",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "objective": "Minimal installed-version FreeType CVE-2026-95512 source backport; no worker adoption",
+  "reviewManifestSha256": "0c64430dea3f33060c36cb085faf00fd5f230c995947d5d25234da159707fac0",
+  "reviewFiles": 58,
+  "contextManifestSha256": "f89f853388a962ae0e589b272832895e87487c5abea11c945877a8a57ac925d8",
+  "contextFiles": 12,
+  "contextBytes": 99439,
+  "launcherSha256": "b4b7e3bf7a32584703fc7b2978470e027ce96bc926cae50945444fcc4edb32c3",
+  "rootRehashedAllInputs": true,
+  "frontendIndependentReview": "PASS source-only V3",
+  "testerReview": "PASS final V3 source review; six host-MOCK controls pass",
+  "bounds": {
+    "admissionBytes": 7500000000,
+    "activeFloorBytes": 5176082432,
+    "hostDeadlineSeconds": 2400,
+    "nativeDeadlineSeconds": 1800,
+    "pollSeconds": 0.5,
+    "logCapBytes": 33554432,
+    "exportCapBytes": 268435456,
+    "packageAggregateCapBytes": 67108864
+  },
+  "missingEvidence": [
+    "Optional upstream external-font test unavailable, NOT_RUN",
+    "Actual CVE font reproduction NOT_RUN; source patch identity and comparative budget controls are separate"
+  ],
+  "unchanged": [
+    "Original source except nine upstream lines",
+    "Original packaging rules/features/five prior patches",
+    "Native original client assertions",
+    "Current root 6f623 worker/source and managed Supabase"
+  ],
+  "notAuthorized": [
+    "Retry without review",
+    "Runtime adoption",
+    "Image/environment promotion",
+    "Database container/reset/migration",
+    "Private data/provider/deployment/publication/global cleanup"
+  ],
+  "evidenceTier": "Private synthetic engineering; no formal security/legal/accessibility/release acceptance",
+  "preparedAtUnix": 1794037894.374122,
+  "allocatedAtUnix": 1794037902.808033,
+  "executor": "primary coordinator",
+  "attemptsAuthorized": 1
+}

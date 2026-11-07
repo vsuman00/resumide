@@ -3,7 +3,12 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
+const privateMode = process.env.RESUMIDE_PRIVATE_VERIFY;
+if (privateMode !== undefined && privateMode !== "aa7-owned-synthetic")
+  throw new Error("Invalid private verification mode");
+
 export default defineConfig({
+  envDir: privateMode === "aa7-owned-synthetic" ? false : undefined,
   plugins: [tailwindcss(), reactRouter(), tsconfigPaths()],
   // Keep React Router's framework components and React DOM on the same React
   // instance. Without this, Vite's dependency optimizer can load a second

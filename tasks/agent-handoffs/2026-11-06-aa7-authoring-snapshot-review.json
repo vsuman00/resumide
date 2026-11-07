@@ -1,0 +1,29 @@
+{
+  "canonicalLoadDependencyWaves": {
+    "defaultUnspecifiedVersion": 5,
+    "knownVersionAfterSchedulingFix": 4
+  },
+  "canonicalQueriesPerCompleteLoad": 8,
+  "importantConstraints": [
+    "Validate all ScoreReadOptions before moving canonical reads to route; preserve422 before invalid-version canonical404 or I/O",
+    "Keep score final canonical/requirements/analysis deletion/job/head barriers unchanged",
+    "Only same request-owned snapshot already consumed by successful scoring; not user/global/cross-request data",
+    "score.inputSha256 is composite, not canonical.document.inputSha256",
+    "Preserve authoring additional post-score fresh owner/source/head semantics or explicitly retain ownedAnalysis+head check",
+    "Preserve historicalread-only behavior, invalidfocus/historyerrorprecedence, default no-snapshot callers and serializedDTO shape"
+  ],
+  "latencyMeasurement": "Not provided to this reviewer; query counts are source analysis, not measured milliseconds",
+  "noSourceServicesDatabaseOrProviderChanges": true,
+  "potentialAuthoringReadRemoval": {
+    "fullSnapshotReuse": 8,
+    "immutableDocumentHistoryWithFreshOwnedAnalysisAndHead": 2
+  },
+  "sourceSHA256": {
+    "app/lib/server/authoring-repository.ts": "465c694a79f441b5fcffe19cfb38e7de95c29633f70cdedca6bab639b1f3a05c",
+    "app/lib/server/canonical-repository.ts": "7f6e3052b0e3caa2ab13308f58cef37eebf4f40cd737d1f91ef80aa7bc1ef8a5",
+    "app/lib/server/score-v2-repository.ts": "4755b9d4f354268ed89a163e0ccecf9554608652200a2ce3c4151f8de1c5a42f",
+    "app/routes/analysis.score.tsx": "1324089a88f1eb5e8bd4016b90a0549eb989613898218ddb727ffba6793cb90f"
+  },
+  "status": "READ_ONLY_PROPOSAL_AWAITING_TIMING_NOT_IMPLEMENTED",
+  "successfulPopulatedScoreGETCanonicalLoads": 3
+}

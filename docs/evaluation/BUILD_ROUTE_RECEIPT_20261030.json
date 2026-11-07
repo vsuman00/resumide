@@ -1,0 +1,92 @@
+{
+  "task": "Build route rename and compatibility",
+  "status": "verified bounded local engineering",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "testedScope": "Uncommitted integrated Build rename candidate; unrelated dirty work preserved",
+  "recordedAt": "2026-10-30T07:01:00.970365+00:00",
+  "node": "22.23.4",
+  "checks": {
+    "initialFocusedRouteService": {
+      "files": 2,
+      "tests": 42,
+      "status": "pass"
+    },
+    "test:latex": {
+      "files": 5,
+      "tests": 106,
+      "status": "pass"
+    },
+    "check:latex:source": "pass",
+    "lint": "pass",
+    "typecheck": "pass",
+    "build": "pass",
+    "build:worker": "pass",
+    "browser": {
+      "cases": 6,
+      "seconds": 20.4,
+      "status": "pass",
+      "uses": "Local production app and explicitly approved managed Supabase synthetic accounts",
+      "desktopAxeViolations": 0,
+      "mobileAxeViolations": 0
+    },
+    "coreUnit": {
+      "command": "npm test",
+      "files": 127,
+      "tests": 1064,
+      "status": "pass"
+    }
+  },
+  "routeAssertions": [
+    "Build heading/title and /build current page",
+    "/build/compile current exact-buffer source endpoint",
+    "Legacy GET /latex returns308 to fixed /build without query reflection",
+    "Legacy POST /latex/compile returns307 or308 to fixed /build/compile preserving method",
+    "Authenticated legacy POST produces actual PDF containing its distinct submitted source",
+    "Private/no-store, authentication, Origin, admission, cancellation, stale-state and source-binding assertions retained"
+  ],
+  "compilerImage": "sha256:600c3815bdf12a4e3df6d332c0aea11685fd122f0fc3240b7be3c802fd23bf4f",
+  "compilerSecuritySuite": "Not rerun: engine/adapter unchanged; prior AA7 evidence remains historical",
+  "cleanup": {
+    "createdSyntheticUsers": 5,
+    "removedExactUserRateBuckets": 2,
+    "remainingAuthUsers": 0,
+    "remainingProfiles": 0,
+    "remainingMemberships": 0,
+    "remainingOwnedOrganizations": 0,
+    "remainingExactLedgerRateKeys": 0,
+    "scope": "Exact recorded synthetic IDs/hash keys only, verified by SDK and scoped SQL",
+    "privateEnvironmentAndLedgerRemoved": true,
+    "port3110Stopped": true,
+    "ownedCompilerContainersRemaining": 0,
+    "sharedGlobalRateMetadata": "Retained without modifying existing state; logical window expires normally",
+    "historicalEarlierRateMetadata": "Earlier AA7 cleanup limitation remains unchanged; no broad deletion performed"
+  },
+  "ai": "No AI design, implementation, tests, model call, live-key verification or provider provisioning; pending credential decision",
+  "exclusions": [
+    "Docker database",
+    "remote migration/reset",
+    "private documents",
+    "deployments",
+    "commits/publication",
+    "full compiler resource/benchmark suite rerun",
+    "full upstream browser/database suite"
+  ],
+  "files": {
+    "app/routes/latex.tsx": "078c0c4aec665d53cc0c98fe3f8a7d2628d9a665fad862d499355fbfdbcb512c",
+    "app/routes/latex.legacy.ts": "ea6b0ffc763cbde3248039e07b29dd9c6ae517f33984dc15f63cbdfd264297f9",
+    "app/routes/latex.compile-legacy.ts": "76ccd7e8c50bb5c215085feb73db860259da211132b839a37c068179eeb7c0f5",
+    "app/routes.ts": "b1d81baa6a0519d54ff2b9e69ca39816cb27ab1d489735b1136b9eddeaed9c16",
+    "app/components/WorkspaceShell.tsx": "4846603f91655134d617891063132d493c4c5fbb7de81caf5bfd27aa99fab840",
+    "app/lib/server/latex-converter-service.ts": "8dff99d1b0c2718ba9f4d813e9df3d9ecfb199f3de4a8eb8968a3fea9ab552e5",
+    "tests/unit/latex-routes.test.ts": "67405975e580feb66303a1c3a122c838fe8e927f3b60f9897b6f6905e36cde59",
+    "tests/unit/latex-service.test.ts": "c20112b435a1b41a879ebd555da4b5ae3d014f7a7a507518023d1da26a4aa173",
+    "e2e/latex-converter.spec.ts": "03a9da1402a1c08864fd5481551e84f143160ff802af3c94b7f37ec00c951d06",
+    "playwright.latex.config.ts": "646d51320ef821a3cb7c4db21274e0619228308eddd0986e02eb1332e8a68d20",
+    "package.json": "1a63e32075b555e5b7ea761293fc93f09c02f0096d2c700df306fb8871e382cc"
+  },
+  "screenshot": {
+    "path": "build-route-success-20261030.png",
+    "sha256": "29f1102930babc94c00a9e3c73b7bb790afb03b6868a8682e1e1c5e5b36dc181",
+    "content": "Synthetic source and actual PDF output only; no credentials/sessions"
+  }
+}

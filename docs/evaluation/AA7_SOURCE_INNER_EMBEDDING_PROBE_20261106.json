@@ -1,0 +1,117 @@
+{
+  "kind": "owned-synthetic-postgrest-inner-prototype",
+  "startedAt": "2026-11-06T10:34:59.050Z",
+  "finishedAt": "2026-11-06T10:36:18.108Z",
+  "node": "22.23.4",
+  "query": {
+    "startedAt": "2026-11-06T10:36:14.444Z",
+    "selector": "id,resume_id,owner_id,organization_id,active_resume:resumes!resume_versions_resume_id_fkey!inner(id,owner_id,organization_id,status)",
+    "cases": [
+      {
+        "label": "valid-object-and-id-binding",
+        "status": 200,
+        "elapsedMs": 114.54,
+        "error": false,
+        "topLevelNull": false,
+        "objectShape": true,
+        "idBound": true,
+        "pass": true
+      },
+      {
+        "label": "wrong-source-owner",
+        "status": 200,
+        "elapsedMs": 93.489,
+        "error": false,
+        "topLevelNull": true,
+        "objectShape": false,
+        "idBound": false,
+        "pass": true
+      },
+      {
+        "label": "wrong-source-organization",
+        "status": 200,
+        "elapsedMs": 97.437,
+        "error": false,
+        "topLevelNull": true,
+        "objectShape": false,
+        "idBound": false,
+        "pass": true
+      },
+      {
+        "label": "wrong-parent-owner",
+        "status": 200,
+        "elapsedMs": 113.947,
+        "error": false,
+        "topLevelNull": true,
+        "objectShape": false,
+        "idBound": false,
+        "pass": true
+      },
+      {
+        "label": "wrong-parent-organization",
+        "status": 200,
+        "elapsedMs": 110.574,
+        "error": false,
+        "topLevelNull": true,
+        "objectShape": false,
+        "idBound": false,
+        "pass": true
+      },
+      {
+        "label": "exact-owned-parent-marked-deleted",
+        "status": 200,
+        "elapsedMs": 88.672,
+        "error": false,
+        "topLevelNull": true,
+        "objectShape": false,
+        "idBound": false,
+        "pass": true
+      }
+    ],
+    "restored": true,
+    "fixtureCleanup": true,
+    "finishedAt": "2026-11-06T10:36:18.052Z"
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "code": 1,
+      "signal": null,
+      "groupCleanupConfirmed": true,
+      "fixtureCreated": false,
+      "failure": "Vite-node cannot resolve shared node_modules SSR module"
+    },
+    {
+      "attempt": 2,
+      "code": 1,
+      "signal": null,
+      "groupCleanupConfirmed": true,
+      "fixtureCreated": false,
+      "failure": "Vite-node cannot resolve shared node_modules SSR module"
+    },
+    {
+      "attempt": 3,
+      "code": 0,
+      "signal": null,
+      "groupCleanupConfirmed": true,
+      "fixtureCreated": true,
+      "failure": null
+    }
+  ],
+  "fixtureSourceSha256": "6737e83c26cb89cf99c7e0da23e406323c97ba8f0b315ccc7ee71b5fecfd093d",
+  "probeSourceSha256": "e87de30c7927b3753b9b20e455c279928dc7c2cec264f718d943ae7e0275d628",
+  "cleanup": {
+    "ownersCreated": 1,
+    "restoredActiveBeforeCleanup": true,
+    "fixtureCleanup": true,
+    "independentSqlRelations": 13,
+    "allOwnedRowsRemaining": 0,
+    "storageUploads": 0,
+    "rateKeyOperations": 0,
+    "privateFilesRemoved": true
+  },
+  "limitations": [
+    "Prototype INNER semantics only; not LEFT semantics or implementation/product acceptance.",
+    "No model, server, browser, Docker, migration or production source edits."
+  ]
+}

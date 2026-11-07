@@ -33,7 +33,19 @@ app.disable("x-powered-by");
 app.use((request, response, next) => {
   const requestId = getOrCreateRequestId(request.get("X-Request-Id"));
   const startedAt = performance.now();
+  request.headers["x-request-id"] = requestId;
   response.setHeader("X-Request-Id", requestId);
+  // The server owns this header; route-level copies must not duplicate it.
+  const setHeader = response.setHeader.bind(response);
+  const appendHeader = response.appendHeader.bind(response);
+  response.setHeader = (name, value) => {
+    if (String(name).toLowerCase() === "x-request-id") return response;
+    return setHeader(name, value);
+  };
+  response.appendHeader = (name, value) => {
+    if (String(name).toLowerCase() === "x-request-id") return response;
+    return appendHeader(name, value);
+  };
   response.on("finish", () => {
     recordHttpRequest({
       method: request.method,

@@ -43,20 +43,32 @@ export async function loadAuthoring(
   model: Awaited<ReturnType<typeof loadScoreDiagnostics>>,
   focus?: string,
 ) {
+  const pendingEvents = Promise.resolve()
+    .then(() =>
+      client
+        .from("authoring_events")
+        .select(
+          "id,action,base_version_id,result_version_id,created_at,command",
+        )
+        .eq("analysis_id", analysisId)
+        .eq("owner_id", ownerId)
+        .order("created_at", { ascending: false })
+        .order("id")
+        .limit(20),
+    )
+    .then(
+      (value) => ({ value }),
+      (error: unknown) => ({ error }),
+    );
   const c = await loadCanonical(client, analysisId, ownerId, {
     versionId: model.canonical.versionId,
   });
   if (!c.current || c.headId !== model.canonical.headId)
     throw new CanonicalError(409, "The resume changed. Reload before editing.");
   const doc = c.current.document;
-  const events = await client
-    .from("authoring_events")
-    .select("id,action,base_version_id,result_version_id,created_at,command")
-    .eq("analysis_id", analysisId)
-    .eq("owner_id", ownerId)
-    .order("created_at", { ascending: false })
-    .order("id")
-    .limit(20);
+  const eventsResult = await pendingEvents;
+  if ("error" in eventsResult) throw eventsResult.error;
+  const events = eventsResult.value;
   const parsed = z.array(event).safeParse(events.data);
   if (events.error || !parsed.success)
     throw new CanonicalError(503, "Authoring history is unavailable.");
@@ -204,9 +216,15 @@ export async function applyAuthoring(
     confirmationBody = null;
   try {
     if (cmd.action === "accept" || cmd.action === "reject") {
-      const score = await loadScoreDiagnostics(client, analysisId, ownerId, {
-        canonical: cmd.expectedVersionId,
-      });
+      const score = await loadScoreDiagnostics(
+        client,
+        analysisId,
+        ownerId,
+        {
+          canonical: cmd.expectedVersionId,
+        },
+        canonical,
+      );
       if (cmd.action === "accept")
         validateSuggestion(cmd.patch, doc, score.diagnostics);
       else if (

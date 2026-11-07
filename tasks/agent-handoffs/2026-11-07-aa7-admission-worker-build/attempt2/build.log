@@ -1,0 +1,159 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 12.76kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
+#2 DONE 1.6s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 546B done
+#3 DONE 0.0s
+
+#4 [builder 4/6] ADD --checksum=sha256:f78823e2d6f77708ed8adf72b5af721a46adabbc282243368063d77f2fd7ca4b https://deb.debian.org/debian/pool/main/libf/libfontenc/libfontenc1_1.1.8-1+b2_arm64.deb /build/pinned-fonts/libfontenc1.deb
+#4 DONE 0.0s
+
+#5 [builder 6/6] ADD --checksum=sha256:a87ada29e88cc85d0b51fa20c7c02101538caec81fcf3ef43aaeee54557795dd https://deb.debian.org/debian/pool/main/l/lmodern/lmodern_2.005-1_all.deb /build/pinned-fonts/lmodern.deb
+#5 DONE 0.0s
+
+#6 [builder 5/6] ADD --checksum=sha256:56143f317d241b6dee0275aa1066df936a776810d3bb83fe58563965d9bbe3d3 https://deb.debian.org/debian/pool/main/x/xfonts-encodings/xfonts-encodings_1.0.4-2.2_all.deb /build/pinned-fonts/xfonts-encodings.deb
+#6 DONE 0.0s
+
+#7 [native-expat-build  4/14] ADD --checksum=sha256:be3658b5ddf20ff644276d0059bd410c6bc8ee262146df6c8eaeed79d9f59d40 https://deb.debian.org/debian/dists/sid/main/source/by-hash/SHA256/be3658b5ddf20ff644276d0059bd410c6bc8ee262146df6c8eaeed79d9f59d40 /inputs/sid-Sources.xz
+#7 DONE 0.0s
+
+#8 [native-expat-build  7/14] ADD --checksum=sha256:0c1575a3dc3d039f9e6751821efcdfd5246e04c6af4939defa01226d94541fba https://deb.debian.org/debian-security/pool/updates/main/e/expat/expat_2.9.0-1~deb13u1.debian.tar.xz /inputs/expat_2.9.0-1~deb13u1.debian.tar.xz
+#8 DONE 0.0s
+
+#9 [native-expat-build  3/14] ADD --checksum=sha256:62af0f5a1b39263679a788880b48449332ac684c543506a1f35254b8e042b5a4 https://deb.debian.org/debian-security/dists/trixie-security/main/source/by-hash/SHA256/62af0f5a1b39263679a788880b48449332ac684c543506a1f35254b8e042b5a4 /inputs/trixie-security-Sources.xz
+#9 DONE 0.0s
+
+#10 [native-expat-build  5/14] ADD --checksum=sha256:09fe168e2186a2672e077d9fda02287b51fa08f73914fcc425b3307b503df8ff https://deb.debian.org/debian-security/pool/updates/main/e/expat/expat_2.9.0-1~deb13u1.dsc /inputs/expat_2.9.0-1~deb13u1.dsc
+#10 DONE 0.0s
+
+#11 [native-expat-build 11/14] ADD --checksum=sha256:9be65c3ff79ca0508590970422de0a55f117bb7134a0274dd1ed3261f85631dc https://deb.debian.org/debian/pool/main/e/expat/expat_2.10.0-1.debian.tar.xz /inputs/expat_2.10.0-1.debian.tar.xz
+#11 DONE 0.0s
+
+#12 [native-expat-build  8/14] ADD --checksum=sha256:c624ba2998fc65df1163a49641ff3f9ab73138b11641d92c86bee0fb01b1bc7f https://github.com/libexpat/libexpat/releases/download/R_2_10_0/expat-2.10.0.tar.xz /inputs/expat-2.10.0.tar.xz
+#12 DONE 0.0s
+
+#13 [native-expat-build  6/14] ADD --checksum=sha256:6e8ce7b52ebbaa423c59becc7cf1e6875c42e49228c062ac8123c10e700cec27 https://deb.debian.org/debian-security/pool/updates/main/e/expat/expat_2.9.0.orig.tar.gz /inputs/expat_2.9.0.orig.tar.gz
+#13 DONE 0.0s
+
+#14 [native-expat-build  9/14] ADD --checksum=sha256:8c4623c101959b8709a3f0a10c06a40d413dc7a6f5ffad3bc9d0cd010d850956 https://deb.debian.org/debian/pool/main/e/expat/expat_2.10.0-1.dsc /inputs/expat_2.10.0-1.dsc
+#14 DONE 0.0s
+
+#15 [native-expat-build 10/14] ADD --checksum=sha256:b3644a12f62d7762b62c444f69d169ba0234f13138d0240244bca64cbe35286f https://deb.debian.org/debian/pool/main/e/expat/expat_2.10.0.orig.tar.gz /inputs/expat_2.10.0.orig.tar.gz
+#15 DONE 0.0s
+
+#16 [snapshot 1/2] FROM docker.io/library/debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
+#16 resolve docker.io/library/debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 done
+#16 DONE 0.0s
+
+#17 [internal] load build context
+#17 transferring context: 310.41kB done
+#17 DONE 0.0s
+
+#18 [builder 1/6] RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends ca-certificates gcc libc6-dev python3 python3-pip && rm -rf /var/lib/apt/lists/*
+#18 CACHED
+
+#19 [builder 4/6] ADD --checksum=sha256:f78823e2d6f77708ed8adf72b5af721a46adabbc282243368063d77f2fd7ca4b https://deb.debian.org/debian/pool/main/libf/libfontenc/libfontenc1_1.1.8-1+b2_arm64.deb /build/pinned-fonts/libfontenc1.deb
+#19 CACHED
+
+#20 [builder 3/6] RUN gcc -O2 -Wall -Wextra -Werror /build/landlock.c -o /build/confine && python3 -m pip --isolated install --index-url https://pypi.org/simple --only-binary=:all: --require-hashes --no-deps --no-compile --no-cache-dir --target /build/vendor -r /build/requirements.lock
+#20 CACHED
+
+#21 [builder 5/6] ADD --checksum=sha256:56143f317d241b6dee0275aa1066df936a776810d3bb83fe58563965d9bbe3d3 https://deb.debian.org/debian/pool/main/x/xfonts-encodings/xfonts-encodings_1.0.4-2.2_all.deb /build/pinned-fonts/xfonts-encodings.deb
+#21 CACHED
+
+#22 [builder 2/6] COPY landlock.c requirements.lock /build/
+#22 CACHED
+
+#23 [snapshot 2/2] RUN rm -f /etc/apt/sources.list.d/debian.sources && printf '%s\n' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20261106T000000Z trixie main' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security main' > /etc/apt/sources.list
+#23 CACHED
+
+#24 [builder 6/6] ADD --checksum=sha256:a87ada29e88cc85d0b51fa20c7c02101538caec81fcf3ef43aaeee54557795dd https://deb.debian.org/debian/pool/main/l/lmodern/lmodern_2.005-1_all.deb /build/pinned-fonts/lmodern.deb
+#24 CACHED
+
+#25 [native-expat-build  3/14] ADD --checksum=sha256:62af0f5a1b39263679a788880b48449332ac684c543506a1f35254b8e042b5a4 https://deb.debian.org/debian-security/dists/trixie-security/main/source/by-hash/SHA256/62af0f5a1b39263679a788880b48449332ac684c543506a1f35254b8e042b5a4 /inputs/trixie-security-Sources.xz
+#25 CACHED
+
+#26 [runtime  2/10] COPY --from=native-expat-build /export/source-and-test-receipt.json /export/build-outcome.json /opt/latex/native-expat/
+#26 CACHED
+
+#27 [native-expat-build  2/14] RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py build-essential debhelper docbook-to-man docbook2x pkgconf python3 gpgv libexpat1-dev=2.9.0-1~deb13u1 fontconfig && apt-get -o Acquire::Retries=3 install -y --no-install-recommends build-essential debhelper docbook-to-man docbook2x pkgconf python3 gpgv libexpat1-dev=2.9.0-1~deb13u1 fontconfig && rm -rf /var/lib/apt/lists/*
+#27 CACHED
+
+#28 [native-expat-build  4/14] ADD --checksum=sha256:be3658b5ddf20ff644276d0059bd410c6bc8ee262146df6c8eaeed79d9f59d40 https://deb.debian.org/debian/dists/sid/main/source/by-hash/SHA256/be3658b5ddf20ff644276d0059bd410c6bc8ee262146df6c8eaeed79d9f59d40 /inputs/sid-Sources.xz
+#28 CACHED
+
+#29 [native-expat-build 12/14] COPY native-expat/pins.json native-expat/prepare.py native-expat/build.py native-expat/abi-smoke.c native-expat/native-utf16-tests.patch native-expat/utf16-adapter-check.c /recipe/
+#29 CACHED
+
+#30 [native-expat-build  7/14] ADD --checksum=sha256:0c1575a3dc3d039f9e6751821efcdfd5246e04c6af4939defa01226d94541fba https://deb.debian.org/debian-security/pool/updates/main/e/expat/expat_2.9.0-1~deb13u1.debian.tar.xz /inputs/expat_2.9.0-1~deb13u1.debian.tar.xz
+#30 CACHED
+
+#31 [native-expat-build  9/14] ADD --checksum=sha256:8c4623c101959b8709a3f0a10c06a40d413dc7a6f5ffad3bc9d0cd010d850956 https://deb.debian.org/debian/pool/main/e/expat/expat_2.10.0-1.dsc /inputs/expat_2.10.0-1.dsc
+#31 CACHED
+
+#32 [native-expat-build  1/14] COPY native-expat/apt-transport.py /recipe/
+#32 CACHED
+
+#33 [native-expat-build 11/14] ADD --checksum=sha256:9be65c3ff79ca0508590970422de0a55f117bb7134a0274dd1ed3261f85631dc https://deb.debian.org/debian/pool/main/e/expat/expat_2.10.0-1.debian.tar.xz /inputs/expat_2.10.0-1.debian.tar.xz
+#33 CACHED
+
+#34 [native-expat-build 10/14] ADD --checksum=sha256:b3644a12f62d7762b62c444f69d169ba0234f13138d0240244bca64cbe35286f https://deb.debian.org/debian/pool/main/e/expat/expat_2.10.0.orig.tar.gz /inputs/expat_2.10.0.orig.tar.gz
+#34 CACHED
+
+#35 [runtime  3/10] COPY --from=native-expat-build /recipe/pins.json /opt/latex/native-expat/pins.json
+#35 CACHED
+
+#36 [native-expat-build  5/14] ADD --checksum=sha256:09fe168e2186a2672e077d9fda02287b51fa08f73914fcc425b3307b503df8ff https://deb.debian.org/debian-security/pool/updates/main/e/expat/expat_2.9.0-1~deb13u1.dsc /inputs/expat_2.9.0-1~deb13u1.dsc
+#36 CACHED
+
+#37 [runtime  4/10] RUN --network=none --mount=type=bind,from=native-expat-build,source=/export,target=/build-input/expat,readonly python3 - <<'PYVERIFY'
+#37 CACHED
+
+#38 [native-expat-build 13/14] COPY native-expat/provenance/trixie-security.InRelease native-expat/provenance/sid.InRelease /recipe/provenance/
+#38 CACHED
+
+#39 [native-expat-build  6/14] ADD --checksum=sha256:6e8ce7b52ebbaa423c59becc7cf1e6875c42e49228c062ac8123c10e700cec27 https://deb.debian.org/debian-security/pool/updates/main/e/expat/expat_2.9.0.orig.tar.gz /inputs/expat_2.9.0.orig.tar.gz
+#39 CACHED
+
+#40 [native-expat-build 14/14] RUN --network=none python3 /recipe/build.py
+#40 CACHED
+
+#41 [native-expat-build  8/14] ADD --checksum=sha256:c624ba2998fc65df1163a49641ff3f9ab73138b11641d92c86bee0fb01b1bc7f https://github.com/libexpat/libexpat/releases/download/R_2_10_0/expat-2.10.0.tar.xz /inputs/expat-2.10.0.tar.xz
+#41 CACHED
+
+#42 [runtime  1/10] RUN --mount=type=bind,from=builder,source=/build/pinned-fonts,target=/build-input/fonts,readonly set -eu;     apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update;     apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y;     for artifact in 'libfontenc1=1:1.1.8-1+b2' 'xfonts-encodings=1:1.0.4-2.2' 'lmodern=2.005-1'; do       name=${artifact%%=*};       if [ "$name" = libfontenc1 ] && [ "$(dpkg --print-architecture)" != arm64 ]; then printf '%s\n' "APT native download retained for $name on this architecture"; continue; fi;       apt-get --print-uris download "$artifact" > /tmp/pinned-font-uri;       read -r uri archive size checksum < /tmp/pinned-font-uri;       case "$archive" in */*) exit 1 ;; "$name"_*.deb) ;; *) exit 1 ;; esac;       printf '%s\n' "APT archive $artifact -> $archive ($size $checksum)";       install -D -m 0644 "/build-input/fonts/$name.deb" "/var/cache/apt/archives/$archive";     done;     apt-get -o Acquire::Retries=3 install -y --no-install-recommends ca-certificates texlive-xetex texlive-latex-extra texlive-fonts-recommended lmodern=2.005-1 python3 poppler-utils;     purge_packages='dirmngr gnupg gnupg-l10n gpg-agent gpgsm mount';     for package in $purge_packages; do       [ "$(dpkg-query -W -f='${db:Status-Status} ${Essential} ${Protected}' "$package")" = 'installed no no' ] || exit 1;     done;     apt-get -o APT::Get::AutomaticRemove=false --simulate --assume-yes --no-install-recommends purge -- $purge_packages > /tmp/latex-purge-plan 2>&1;     if grep -Eiq 'essential packages will be removed|protected packages will be removed|should not be done' /tmp/latex-purge-plan; then cat /tmp/latex-purge-plan; exit 1; fi;     printf '%s\n' $purge_packages | LC_ALL=C sort > /tmp/latex-purge-expected;     awk '/^(Remv|Purg) / {print $2}' /tmp/latex-purge-plan | LC_ALL=C sort -u > /tmp/latex-purge-actual;     cmp /tmp/latex-purge-expected /tmp/latex-purge-actual;     apt-get -o APT::Get::AutomaticRemove=false --assume-yes --no-install-recommends purge -- $purge_packages;     for package in gpg gpgconf libgpgme11t64 libgpgmepp6t64 libpoppler147 poppler-utils; do       [ "$(dpkg-query -W -f='${db:Status-Status}' "$package")" = installed ] || exit 1;     done;     apt-get check;     rm -f /tmp/latex-purge-plan /tmp/latex-purge-expected /tmp/latex-purge-actual;     rm -f /tmp/pinned-font-uri
+#42 CACHED
+
+#43 [runtime  5/10] RUN rm -rf /var/lib/apt/lists/*
+#43 CACHED
+
+#44 [runtime  6/10] COPY landlock.c supervisor.py inspect_pdf.py build-closure.py build-fontconfig.py texmf.cnf requirements.lock /opt/latex/
+#44 DONE 0.0s
+
+#45 [runtime  7/10] COPY --from=builder /build/confine /opt/latex/confine
+#45 DONE 0.0s
+
+#46 [runtime  8/10] COPY --from=builder /build/vendor/ /opt/latex/
+#46 DONE 0.0s
+
+#47 [runtime  9/10] RUN test ! -e /opt/latex/home && install -d -o 0 -g 0 -m 0555 /opt/latex/home && python3 /opt/latex/build-closure.py && dpkg-query -W -f='${Package}=${Version}\n' > /opt/latex/packages.lock && chmod -R a-w /opt/latex && mkdir /scratch && chown 65532:65532 /scratch
+#47 DONE 0.5s
+
+#48 [runtime 10/10] WORKDIR /scratch
+#48 DONE 0.0s
+
+#49 exporting to image
+#49 exporting layers 0.1s done
+#49 exporting manifest sha256:d160a25785008a93bceac2ed170be72f3b436692b5a8d41b901683a725b0d92e done
+#49 exporting config sha256:fe188696f7645d3d16dd5a4eaed63b855009f839b5b4566589ebbe20394ffe32 done
+#49 exporting attestation manifest sha256:a1ae9cc8de76a897da00129b602f0e6a4cc7489abc4b19dad13f5da0c3a2eaf7 done
+#49 exporting manifest list sha256:8d8c07ad2ab8e646de1ed32120bd99a94c6b5a5c2ad4070106c4bedce691169c done
+#49 naming to docker.io/library/resumide-latex:aa7-admission-20261107-yceckp3q done
+#49 unpacking to docker.io/library/resumide-latex:aa7-admission-20261107-yceckp3q 0.0s done
+#49 DONE 0.1s

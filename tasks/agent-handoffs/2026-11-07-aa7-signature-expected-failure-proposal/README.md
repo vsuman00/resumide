@@ -1,0 +1,15 @@
+# Narrow signature expected-failure proposal
+
+Source/report review only, November 7, 2026. A named private engineering expected-failure exception is supportable in principle for exactly one known baseline failure. No exception, code change, build, rerun or candidate acceptance is supplied here.
+
+The candidate now has the actual same observed failure as the published baseline: testPgp(gpg), original source 311, empty signer name, class 11 passes/one failure/zero skips/zero blacklisting. The signature test executable is byte-identical to the baseline diagnostic executable (b19ed1b3), and the test source matches (33cb4f22). All 74 non-core loaded-library hashes match; the actual candidate core is correctly different. The previous source review already binds the unchanged signature/Form/crypto code and fixture inputs. The loaded-library comparison does not itself capture external GPG engine process state or explain the missing signer UID. Do not infer a key, clock or compile-flag cause.
+
+A possible exception must retain the raw result as 70/71, not turn it into 71/71. It must match only this exact row, source line, empty-name assertion and unchanged class outcome inventory; every other incident remains fatal. Assertions 312-315 in that failed row were never reached, so its hash/certificate/signature-valid checks must stay explicitly unverified. Do not skip the executable or modify the upstream class.
+
+Any acceptance parser would need complete original outcome metadata before applying that single-row rule. All other CTest entries, the other 55 Qt executable summaries and the nonfailed rows of this class remain mandatory. Twelve currently missing Qt summaries remain a separate blocking evidence gap, even if truncation caused it. A passing CTest status or aggregate count cannot substitute for their real outcomes.
+
+The native checks also remain failed on a separate malformed public metadata-XML ParseError. This exception would not waive that error, ABI/export checks, no-OpenJPEG proof, exact standard/frame/text/order/geometry/font parity, coherent normal package installation, or final runtime/render/browser/security verification. No failed package becomes adoptable merely because a known signature row is accounted for.
+
+The production-path rationale must bind the actual inspected-PDF boundary and fixed extraction API: AcroForm/Widget/signature-bearing structures are rejected before extraction, and extraction does not request FormFieldSignature signature validation. Absence of Qt SDKs and PGP default-off are not adequate arguments; core GPG APIs and dependencies remain installed. This is a narrow workflow exclusion, not generic GPG or PDF safety and not a CVE fix.
+
+Root would need to record a named engineering-only exception with evidence, exact immutable inputs and expiry before adoption/input changes. Existing formal security/accessibility/release gates stay open. No test/key/clock/backend/source/fixture change or reporting suppression is proposed. The JSON preserves the exact candidate/baseline hashes and all independent blockers.

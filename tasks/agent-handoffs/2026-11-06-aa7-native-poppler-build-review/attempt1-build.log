@@ -1,0 +1,346 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 7.36kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
+#2 ...
+
+#3 [auth] library/debian:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
+#2 DONE 1.9s
+
+#4 [snapshot 1/4] FROM docker.io/library/debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
+#4 resolve docker.io/library/debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 done
+#4 CACHED
+
+#5 [internal] load build context
+#5 transferring context: 2.82MB 0.0s done
+#5 DONE 0.0s
+
+#6 [snapshot 2/4] RUN test "$(dpkg --print-architecture)" = arm64 && rm -f /etc/apt/sources.list.d/debian.sources && printf '%s\n' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20261106T000000Z trixie main' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security main' > /etc/apt/sources.list
+#6 DONE 0.1s
+
+#7 [build  3/12] ADD --chmod=0444 --checksum=sha256:6002f81f463a2d976d84b34170367cc16da2d60bd0ba9ab9d868d6e1c1a935d9 https://deb.debian.org/debian/dists/trixie/main/source/by-hash/SHA256/6002f81f463a2d976d84b34170367cc16da2d60bd0ba9ab9d868d6e1c1a935d9 /inputs/trixie-main-Sources.xz
+#7 ...
+
+#8 [snapshot 3/4] COPY native-expat/apt-transport.py /recipe/apt-transport.py
+#8 DONE 0.0s
+
+#9 [build  4/12] ADD --chmod=0444 --checksum=sha256:b895e1e28568a486523f93dd5a8707ecb16767c5f134a6e23510b0597114c628 https://deb.debian.org/debian/pool/main/p/poppler/poppler_25.03.0-5+deb13u4.dsc /inputs/poppler_25.03.0-5+deb13u4.dsc
+#9 DONE 0.1s
+
+#10 [build  6/12] ADD --chmod=0444 --checksum=sha256:2605b5d7e6ce17a307d067048386deedfc41fdac6f75f81ad76050f517fc0de4 https://deb.debian.org/debian/pool/main/p/poppler/poppler_25.03.0-5+deb13u4.debian.tar.xz /inputs/poppler_25.03.0-5+deb13u4.debian.tar.xz
+#10 DONE 0.1s
+
+#11 [snapshot 4/4] RUN printf '%s\n' '8b831a59cd8f2f89925b755973c1ef764daa2722207bfd24742114c67d31ded8  /recipe/apt-transport.py' | sha256sum -c -
+#11 0.075 /recipe/apt-transport.py: OK
+#11 DONE 0.1s
+
+#12 [build  5/12] ADD --chmod=0444 --checksum=sha256:97da4ff88517a6bbd729529f195f85c8d7a0c3bb4a3d57cb0c685cbb052fe837 https://deb.debian.org/debian/pool/main/p/poppler/poppler_25.03.0.orig.tar.xz /inputs/poppler_25.03.0.orig.tar.xz
+#12 DONE 0.2s
+
+#13 [installation 1/7] RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py poppler-utils=25.03.0-5+deb13u4 util-linux && apt-get -o Acquire::Retries=3 install -y --no-install-recommends poppler-utils=25.03.0-5+deb13u4 util-linux
+#13 ...
+
+#7 [build  3/12] ADD --chmod=0444 --checksum=sha256:6002f81f463a2d976d84b34170367cc16da2d60bd0ba9ab9d868d6e1c1a935d9 https://deb.debian.org/debian/dists/trixie/main/source/by-hash/SHA256/6002f81f463a2d976d84b34170367cc16da2d60bd0ba9ab9d868d6e1c1a935d9 /inputs/trixie-main-Sources.xz
+#7 DONE 0.4s
+
+#13 [installation 1/7] RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py poppler-utils=25.03.0-5+deb13u4 util-linux && apt-get -o Acquire::Retries=3 install -y --no-install-recommends poppler-utils=25.03.0-5+deb13u4 util-linux
+#13 0.251 Get:1 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie InRelease [140 kB]
+#13 0.291 Get:2 http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security InRelease [43.4 kB]
+#13 0.330 Get:3 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 Packages [9614 kB]
+#13 0.718 Get:4 http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security/main arm64 Packages [299 kB]
+#13 1.240 Fetched 10.1 MB in 1s (9054 kB/s)
+#13 1.240 Reading package lists...
+#13 1.516 Reading package lists...
+#13 1.801 Building dependency tree...
+#13 1.891 Reading state information...
+#13 1.923 Calculating upgrade...
+#13 2.031 0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+#13 2.036 Reading package lists...
+#13 2.364 Building dependency tree...
+#13 2.450 Reading state information...
+#13 2.564 The following additional packages will be installed:
+#13 2.564   libexpat1 libffi8 libncursesw6 libpython3-stdlib libpython3.13-minimal
+#13 2.564   libpython3.13-stdlib libreadline8t64 media-types netbase openssl
+#13 2.564   python3-minimal python3.13 python3.13-minimal readline-common
+#13 2.565 Suggested packages:
+#13 2.565   python3-doc python3-tk python3-venv python3.13-venv python3.13-doc binutils
+#13 2.565   binfmt-support readline-doc
+#13 2.565 Recommended packages:
+#13 2.565   libgpm2
+#13 2.639 The following NEW packages will be installed:
+#13 2.639   ca-certificates libexpat1 libffi8 libncursesw6 libpython3-stdlib
+#13 2.639   libpython3.13-minimal libpython3.13-stdlib libreadline8t64 media-types
+#13 2.639   netbase openssl python3 python3-minimal python3.13 python3.13-minimal
+#13 2.639   readline-common
+#13 2.744 0 upgraded, 16 newly installed, 0 to remove and 0 not upgraded.
+#13 2.744 Need to get 7745 kB of archives.
+#13 2.744 After this operation, 29.2 MB of additional disk space will be used.
+#13 2.744 Get:1 http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security/main arm64 libexpat1 arm64 2.9.0-1~deb13u1 [114 kB]
+#13 2.771 Get:2 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libpython3.13-minimal arm64 3.13.5-2+deb13u5 [856 kB]
+#13 2.872 Get:3 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 python3.13-minimal arm64 3.13.5-2+deb13u5 [2008 kB]
+#13 3.015 Get:4 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 python3-minimal arm64 3.13.5-1 [27.2 kB]
+#13 3.017 Get:5 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 media-types all 13.0.0 [29.3 kB]
+#13 3.017 Get:6 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 netbase all 6.5 [12.4 kB]
+#13 3.020 Get:7 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libffi8 arm64 3.4.8-2 [21.3 kB]
+#13 3.020 Get:8 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libncursesw6 arm64 6.5+20250216-2 [124 kB]
+#13 3.030 Get:9 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 readline-common all 8.2-6 [69.4 kB]
+#13 3.031 Get:10 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libreadline8t64 arm64 8.2-6 [159 kB]
+#13 3.044 Get:11 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libpython3.13-stdlib arm64 3.13.5-2+deb13u5 [1895 kB]
+#13 3.125 Get:12 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 python3.13 arm64 3.13.5-2+deb13u5 [757 kB]
+#13 3.184 Get:13 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libpython3-stdlib arm64 3.13.5-1 [10.2 kB]
+#13 3.184 Get:14 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 python3 arm64 3.13.5-1 [28.2 kB]
+#13 3.184 Get:15 http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security/main arm64 openssl arm64 3.5.7-1~deb13u3 [1473 kB]
+#13 3.303 Get:16 http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security/main arm64 ca-certificates all 20250419+deb13u1 [161 kB]
+#13 3.610 Preconfiguring packages ...
+#13 3.632 Fetched 7745 kB in 1s (11.7 MB/s)
+#13 3.638 Selecting previously unselected package libexpat1:arm64.
+#13 3.638 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 4948 files and directories currently installed.)
+#13 3.640 Preparing to unpack .../libexpat1_2.9.0-1~deb13u1_arm64.deb ...
+#13 3.641 Unpacking libexpat1:arm64 (2.9.0-1~deb13u1) ...
+#13 3.655 Selecting previously unselected package libpython3.13-minimal:arm64.
+#13 3.656 Preparing to unpack .../libpython3.13-minimal_3.13.5-2+deb13u5_arm64.deb ...
+#13 3.656 Unpacking libpython3.13-minimal:arm64 (3.13.5-2+deb13u5) ...
+#13 3.698 Selecting previously unselected package python3.13-minimal.
+#13 3.698 Preparing to unpack .../python3.13-minimal_3.13.5-2+deb13u5_arm64.deb ...
+#13 3.700 Unpacking python3.13-minimal (3.13.5-2+deb13u5) ...
+#13 3.783 Setting up libpython3.13-minimal:arm64 (3.13.5-2+deb13u5) ...
+#13 3.788 Setting up libexpat1:arm64 (2.9.0-1~deb13u1) ...
+#13 3.790 Setting up python3.13-minimal (3.13.5-2+deb13u5) ...
+#13 4.142 Selecting previously unselected package python3-minimal.
+#13 4.142 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5282 files and directories currently installed.)
+#13 4.144 Preparing to unpack .../0-python3-minimal_3.13.5-1_arm64.deb ...
+#13 4.144 Unpacking python3-minimal (3.13.5-1) ...
+#13 4.153 Selecting previously unselected package media-types.
+#13 4.153 Preparing to unpack .../1-media-types_13.0.0_all.deb ...
+#13 4.154 Unpacking media-types (13.0.0) ...
+#13 4.163 Selecting previously unselected package netbase.
+#13 4.163 Preparing to unpack .../2-netbase_6.5_all.deb ...
+#13 4.164 Unpacking netbase (6.5) ...
+#13 4.172 Selecting previously unselected package libffi8:arm64.
+#13 4.173 Preparing to unpack .../3-libffi8_3.4.8-2_arm64.deb ...
+#13 4.173 Unpacking libffi8:arm64 (3.4.8-2) ...
+#13 4.182 Selecting previously unselected package libncursesw6:arm64.
+#13 4.182 Preparing to unpack .../4-libncursesw6_6.5+20250216-2_arm64.deb ...
+#13 4.183 Unpacking libncursesw6:arm64 (6.5+20250216-2) ...
+#13 4.196 Selecting previously unselected package readline-common.
+#13 4.196 Preparing to unpack .../5-readline-common_8.2-6_all.deb ...
+#13 4.197 Unpacking readline-common (8.2-6) ...
+#13 4.208 Selecting previously unselected package libreadline8t64:arm64.
+#13 4.209 Preparing to unpack .../6-libreadline8t64_8.2-6_arm64.deb ...
+#13 4.210 Adding 'diversion of /lib/aarch64-linux-gnu/libhistory.so.8 to /lib/aarch64-linux-gnu/libhistory.so.8.usr-is-merged by libreadline8t64'
+#13 4.213 Adding 'diversion of /lib/aarch64-linux-gnu/libhistory.so.8.2 to /lib/aarch64-linux-gnu/libhistory.so.8.2.usr-is-merged by libreadline8t64'
+#13 4.214 Adding 'diversion of /lib/aarch64-linux-gnu/libreadline.so.8 to /lib/aarch64-linux-gnu/libreadline.so.8.usr-is-merged by libreadline8t64'
+#13 4.216 Adding 'diversion of /lib/aarch64-linux-gnu/libreadline.so.8.2 to /lib/aarch64-linux-gnu/libreadline.so.8.2.usr-is-merged by libreadline8t64'
+#13 4.216 Unpacking libreadline8t64:arm64 (8.2-6) ...
+#13 4.230 Selecting previously unselected package libpython3.13-stdlib:arm64.
+#13 4.231 Preparing to unpack .../7-libpython3.13-stdlib_3.13.5-2+deb13u5_arm64.deb ...
+#13 4.231 Unpacking libpython3.13-stdlib:arm64 (3.13.5-2+deb13u5) ...
+#13 4.317 Selecting previously unselected package python3.13.
+#13 4.317 Preparing to unpack .../8-python3.13_3.13.5-2+deb13u5_arm64.deb ...
+#13 4.318 Unpacking python3.13 (3.13.5-2+deb13u5) ...
+#13 4.331 Selecting previously unselected package libpython3-stdlib:arm64.
+#13 4.332 Preparing to unpack .../9-libpython3-stdlib_3.13.5-1_arm64.deb ...
+#13 4.332 Unpacking libpython3-stdlib:arm64 (3.13.5-1) ...
+#13 4.342 Setting up python3-minimal (3.13.5-1) ...
+#13 4.400 Selecting previously unselected package python3.
+#13 4.400 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5790 files and directories currently installed.)
+#13 4.402 Preparing to unpack .../python3_3.13.5-1_arm64.deb ...
+#13 4.404 Unpacking python3 (3.13.5-1) ...
+#13 4.413 Selecting previously unselected package openssl.
+#13 4.413 Preparing to unpack .../openssl_3.5.7-1~deb13u3_arm64.deb ...
+#13 4.414 Unpacking openssl (3.5.7-1~deb13u3) ...
+#13 4.471 Selecting previously unselected package ca-certificates.
+#13 4.471 Preparing to unpack .../ca-certificates_20250419+deb13u1_all.deb ...
+#13 4.472 Unpacking ca-certificates (20250419+deb13u1) ...
+#13 4.488 Setting up media-types (13.0.0) ...
+#13 4.491 Setting up libncursesw6:arm64 (6.5+20250216-2) ...
+#13 4.493 Setting up libffi8:arm64 (3.4.8-2) ...
+#13 4.495 Setting up netbase (6.5) ...
+#13 4.501 Setting up openssl (3.5.7-1~deb13u3) ...
+#13 4.504 Setting up readline-common (8.2-6) ...
+#13 4.507 Setting up ca-certificates (20250419+deb13u1) ...
+#13 4.664 Updating certificates in /etc/ssl/certs...
+#13 4.850 148 added, 0 removed; done.
+#13 4.858 Setting up libreadline8t64:arm64 (8.2-6) ...
+#13 4.860 Setting up libpython3.13-stdlib:arm64 (3.13.5-2+deb13u5) ...
+#13 4.863 Setting up libpython3-stdlib:arm64 (3.13.5-1) ...
+#13 4.865 Setting up python3.13 (3.13.5-2+deb13u5) ...
+#13 5.251 Setting up python3 (3.13.5-1) ...
+#13 5.290 Processing triggers for libc-bin (2.41-12+deb13u4) ...
+#13 5.295 Processing triggers for ca-certificates (20250419+deb13u1) ...
+#13 5.296 Updating certificates in /etc/ssl/certs...
+#13 5.442 0 added, 0 removed; done.
+#13 5.442 Running hooks in /etc/ca-certificates/update.d...
+#13 5.442 done.
+#13 ...
+
+#14 [build-dependencies 1/1] RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && apt-get -o Acquire::Retries=3 install -y --no-install-recommends build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && rm -rf /var/lib/apt/lists/*
+#14 0.251 Get:1 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie InRelease [140 kB]
+#14 0.291 Get:2 http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security InRelease [43.4 kB]
+#14 0.330 Get:3 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 Packages [9614 kB]
+#14 0.626 Get:4 http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security/main arm64 Packages [299 kB]
+#14 1.160 Fetched 10.1 MB in 1s (9764 kB/s)
+#14 1.160 Reading package lists...
+#14 1.435 Reading package lists...
+#14 1.699 Building dependency tree...
+#14 1.772 Reading state information...
+#14 1.800 Calculating upgrade...
+#14 1.923 0 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+#14 1.928 Reading package lists...
+#14 2.264 Building dependency tree...
+#14 2.340 Reading state information...
+#14 2.449 The following additional packages will be installed:
+#14 2.449   libexpat1 libffi8 libncursesw6 libpython3-stdlib libpython3.13-minimal
+#14 2.450   libpython3.13-stdlib libreadline8t64 media-types netbase openssl
+#14 2.450   python3-minimal python3.13 python3.13-minimal readline-common
+#14 2.450 Suggested packages:
+#14 2.450   python3-doc python3-tk python3-venv python3.13-venv python3.13-doc binutils
+#14 2.450   binfmt-support readline-doc
+#14 2.450 Recommended packages:
+#14 2.450   libgpm2
+#14 2.524 The following NEW packages will be installed:
+#14 2.524   ca-certificates libexpat1 libffi8 libncursesw6 libpython3-stdlib
+#14 2.524   libpython3.13-minimal libpython3.13-stdlib libreadline8t64 media-types
+#14 2.524   netbase openssl python3 python3-minimal python3.13 python3.13-minimal
+#14 2.524   readline-common
+#14 2.609 0 upgraded, 16 newly installed, 0 to remove and 0 not upgraded.
+#14 2.609 Need to get 7745 kB of archives.
+#14 2.609 After this operation, 29.2 MB of additional disk space will be used.
+#14 2.609 Get:1 http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security/main arm64 libexpat1 arm64 2.9.0-1~deb13u1 [114 kB]
+#14 2.623 Get:2 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libpython3.13-minimal arm64 3.13.5-2+deb13u5 [856 kB]
+#14 2.654 Get:3 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 python3.13-minimal arm64 3.13.5-2+deb13u5 [2008 kB]
+#14 2.687 Get:4 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 python3-minimal arm64 3.13.5-1 [27.2 kB]
+#14 2.687 Get:5 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 media-types all 13.0.0 [29.3 kB]
+#14 2.687 Get:6 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 netbase all 6.5 [12.4 kB]
+#14 2.687 Get:7 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libffi8 arm64 3.4.8-2 [21.3 kB]
+#14 2.688 Get:8 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libncursesw6 arm64 6.5+20250216-2 [124 kB]
+#14 2.689 Get:9 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 readline-common all 8.2-6 [69.4 kB]
+#14 2.689 Get:10 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libreadline8t64 arm64 8.2-6 [159 kB]
+#14 2.693 Get:11 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libpython3.13-stdlib arm64 3.13.5-2+deb13u5 [1895 kB]
+#14 2.725 Get:12 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 python3.13 arm64 3.13.5-2+deb13u5 [757 kB]
+#14 2.733 Get:13 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 libpython3-stdlib arm64 3.13.5-1 [10.2 kB]
+#14 2.733 Get:14 http://snapshot.debian.org/archive/debian/20261106T000000Z trixie/main arm64 python3 arm64 3.13.5-1 [28.2 kB]
+#14 2.734 Get:15 http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security/main arm64 openssl arm64 3.5.7-1~deb13u3 [1473 kB]
+#14 2.754 Get:16 http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security/main arm64 ca-certificates all 20250419+deb13u1 [161 kB]
+#14 3.088 Preconfiguring packages ...
+#14 3.112 Fetched 7745 kB in 0s (34.6 MB/s)
+#14 3.119 Selecting previously unselected package libexpat1:arm64.
+#14 3.119 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 4948 files and directories currently installed.)
+#14 3.127 Preparing to unpack .../libexpat1_2.9.0-1~deb13u1_arm64.deb ...
+#14 3.129 Unpacking libexpat1:arm64 (2.9.0-1~deb13u1) ...
+#14 3.141 Selecting previously unselected package libpython3.13-minimal:arm64.
+#14 3.141 Preparing to unpack .../libpython3.13-minimal_3.13.5-2+deb13u5_arm64.deb ...
+#14 3.142 Unpacking libpython3.13-minimal:arm64 (3.13.5-2+deb13u5) ...
+#14 3.186 Selecting previously unselected package python3.13-minimal.
+#14 3.186 Preparing to unpack .../python3.13-minimal_3.13.5-2+deb13u5_arm64.deb ...
+#14 3.189 Unpacking python3.13-minimal (3.13.5-2+deb13u5) ...
+#14 3.272 Setting up libpython3.13-minimal:arm64 (3.13.5-2+deb13u5) ...
+#14 3.276 Setting up libexpat1:arm64 (2.9.0-1~deb13u1) ...
+#14 3.277 Setting up python3.13-minimal (3.13.5-2+deb13u5) ...
+#14 3.618 Selecting previously unselected package python3-minimal.
+#14 3.618 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5282 files and directories currently installed.)
+#14 3.620 Preparing to unpack .../0-python3-minimal_3.13.5-1_arm64.deb ...
+#14 3.621 Unpacking python3-minimal (3.13.5-1) ...
+#14 3.628 Selecting previously unselected package media-types.
+#14 3.629 Preparing to unpack .../1-media-types_13.0.0_all.deb ...
+#14 3.630 Unpacking media-types (13.0.0) ...
+#14 3.639 Selecting previously unselected package netbase.
+#14 3.639 Preparing to unpack .../2-netbase_6.5_all.deb ...
+#14 3.640 Unpacking netbase (6.5) ...
+#14 3.648 Selecting previously unselected package libffi8:arm64.
+#14 3.648 Preparing to unpack .../3-libffi8_3.4.8-2_arm64.deb ...
+#14 3.649 Unpacking libffi8:arm64 (3.4.8-2) ...
+#14 3.659 Selecting previously unselected package libncursesw6:arm64.
+#14 3.659 Preparing to unpack .../4-libncursesw6_6.5+20250216-2_arm64.deb ...
+#14 3.660 Unpacking libncursesw6:arm64 (6.5+20250216-2) ...
+#14 3.672 Selecting previously unselected package readline-common.
+#14 3.673 Preparing to unpack .../5-readline-common_8.2-6_all.deb ...
+#14 3.674 Unpacking readline-common (8.2-6) ...
+#14 3.685 Selecting previously unselected package libreadline8t64:arm64.
+#14 3.685 Preparing to unpack .../6-libreadline8t64_8.2-6_arm64.deb ...
+#14 3.688 Adding 'diversion of /lib/aarch64-linux-gnu/libhistory.so.8 to /lib/aarch64-linux-gnu/libhistory.so.8.usr-is-merged by libreadline8t64'
+#14 3.690 Adding 'diversion of /lib/aarch64-linux-gnu/libhistory.so.8.2 to /lib/aarch64-linux-gnu/libhistory.so.8.2.usr-is-merged by libreadline8t64'
+#14 3.691 Adding 'diversion of /lib/aarch64-linux-gnu/libreadline.so.8 to /lib/aarch64-linux-gnu/libreadline.so.8.usr-is-merged by libreadline8t64'
+#14 3.693 Adding 'diversion of /lib/aarch64-linux-gnu/libreadline.so.8.2 to /lib/aarch64-linux-gnu/libreadline.so.8.2.usr-is-merged by libreadline8t64'
+#14 3.694 Unpacking libreadline8t64:arm64 (8.2-6) ...
+#14 3.707 Selecting previously unselected package libpython3.13-stdlib:arm64.
+#14 3.707 Preparing to unpack .../7-libpython3.13-stdlib_3.13.5-2+deb13u5_arm64.deb ...
+#14 3.708 Unpacking libpython3.13-stdlib:arm64 (3.13.5-2+deb13u5) ...
+#14 3.793 Selecting previously unselected package python3.13.
+#14 3.793 Preparing to unpack .../8-python3.13_3.13.5-2+deb13u5_arm64.deb ...
+#14 3.794 Unpacking python3.13 (3.13.5-2+deb13u5) ...
+#14 3.811 Selecting previously unselected package libpython3-stdlib:arm64.
+#14 3.812 Preparing to unpack .../9-libpython3-stdlib_3.13.5-1_arm64.deb ...
+#14 3.812 Unpacking libpython3-stdlib:arm64 (3.13.5-1) ...
+#14 3.819 Setting up python3-minimal (3.13.5-1) ...
+#14 3.879 Selecting previously unselected package python3.
+#14 3.879 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5790 files and directories currently installed.)
+#14 3.881 Preparing to unpack .../python3_3.13.5-1_arm64.deb ...
+#14 3.883 Unpacking python3 (3.13.5-1) ...
+#14 3.891 Selecting previously unselected package openssl.
+#14 3.892 Preparing to unpack .../openssl_3.5.7-1~deb13u3_arm64.deb ...
+#14 3.892 Unpacking openssl (3.5.7-1~deb13u3) ...
+#14 3.949 Selecting previously unselected package ca-certificates.
+#14 3.949 Preparing to unpack .../ca-certificates_20250419+deb13u1_all.deb ...
+#14 3.950 Unpacking ca-certificates (20250419+deb13u1) ...
+#14 3.966 Setting up media-types (13.0.0) ...
+#14 3.969 Setting up libncursesw6:arm64 (6.5+20250216-2) ...
+#14 3.971 Setting up libffi8:arm64 (3.4.8-2) ...
+#14 3.973 Setting up netbase (6.5) ...
+#14 3.978 Setting up openssl (3.5.7-1~deb13u3) ...
+#14 3.980 Setting up readline-common (8.2-6) ...
+#14 3.983 Setting up ca-certificates (20250419+deb13u1) ...
+#14 4.136 Updating certificates in /etc/ssl/certs...
+#14 4.328 148 added, 0 removed; done.
+#14 4.337 Setting up libreadline8t64:arm64 (8.2-6) ...
+#14 4.340 Setting up libpython3.13-stdlib:arm64 (3.13.5-2+deb13u5) ...
+#14 4.344 Setting up libpython3-stdlib:arm64 (3.13.5-1) ...
+#14 4.346 Setting up python3.13 (3.13.5-2+deb13u5) ...
+#14 4.735 Setting up python3 (3.13.5-1) ...
+#14 4.773 Processing triggers for libc-bin (2.41-12+deb13u4) ...
+#14 4.788 Processing triggers for ca-certificates (20250419+deb13u1) ...
+#14 4.790 Updating certificates in /etc/ssl/certs...
+#14 4.934 0 added, 0 removed; done.
+#14 4.934 Running hooks in /etc/ca-certificates/update.d...
+#14 4.934 done.
+#14 6.851 Traceback (most recent call last):
+#14 6.852   File "/recipe/apt-transport.py", line 153, in <module>
+#14 6.852     self_test() if sys.argv[1:] == ["--self-test"] else main(sys.argv[1:])
+#14 6.852                                                         ~~~~^^^^^^^^^^^^^^
+#14 6.852   File "/recipe/apt-transport.py", line 110, in main
+#14 6.852     raise ValueError("empty, duplicate or excessive native APT plan")
+#14 6.852 ValueError: empty, duplicate or excessive native APT plan
+#14 ERROR: process "/bin/sh -c apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && apt-get -o Acquire::Retries=3 install -y --no-install-recommends build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && rm -rf /var/lib/apt/lists/*" did not complete successfully: exit code: 1
+
+#13 [installation 1/7] RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py poppler-utils=25.03.0-5+deb13u4 util-linux && apt-get -o Acquire::Retries=3 install -y --no-install-recommends poppler-utils=25.03.0-5+deb13u4 util-linux
+#13 CANCELED
+------
+ > [build-dependencies 1/1] RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && apt-get -o Acquire::Retries=3 install -y --no-install-recommends build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && rm -rf /var/lib/apt/lists/*:
+4.934 0 added, 0 removed; done.
+4.934 Running hooks in /etc/ca-certificates/update.d...
+4.934 done.
+6.851 Traceback (most recent call last):
+6.852   File "/recipe/apt-transport.py", line 153, in <module>
+6.852     self_test() if sys.argv[1:] == ["--self-test"] else main(sys.argv[1:])
+6.852                                                         ~~~~^^^^^^^^^^^^^^
+6.852   File "/recipe/apt-transport.py", line 110, in main
+6.852     raise ValueError("empty, duplicate or excessive native APT plan")
+6.852 ValueError: empty, duplicate or excessive native APT plan
+------
+Dockerfile:7
+--------------------
+   5 |     RUN printf '%s\n' '8b831a59cd8f2f89925b755973c1ef764daa2722207bfd24742114c67d31ded8  /recipe/apt-transport.py' | sha256sum -c -
+   6 |     FROM snapshot AS build-dependencies
+   7 | >>> RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && apt-get -o Acquire::Retries=3 install -y --no-install-recommends build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && rm -rf /var/lib/apt/lists/*
+   8 |     FROM build-dependencies AS build
+   9 |     COPY native-expat/prepare.py /recipe/expat_source.py
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && apt-get -o Acquire::Retries=3 install -y --no-install-recommends build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && rm -rf /var/lib/apt/lists/*" did not complete successfully: exit code: 1
+
+View build details: docker-desktop://dashboard/build/desktop-linux/desktop-linux/rsitcdv9yvakste8sy77vyy9i

@@ -1,9 +1,9 @@
 import { getServerConfig } from "~/lib/server/config";
-import { createRequestId } from "~/lib/server/request-context";
+import { requestIdFrom } from "~/lib/server/request-context";
 import { metrics } from "~/lib/server/observability";
 
 export function loader({ request }: { request: Request }) {
-  const requestId = createRequestId();
+  const requestId = requestIdFrom(request);
   const token = getServerConfig().METRICS_TOKEN;
   if (!token || request.headers.get("X-Metrics-Token") !== token) {
     return new Response(null, {

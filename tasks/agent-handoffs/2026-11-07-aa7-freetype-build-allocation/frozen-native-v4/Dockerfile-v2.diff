@@ -1,0 +1,23 @@
+--- Dockerfile
++++ Dockerfile.v2
+@@ -13,7 +13,9 @@
+ ADD --chmod=0444 --checksum=sha256:65c66aec6244d247540430b21d3e80b677f1361906347a5be7fad371d46655da https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig-ft2docs.tar.xz.asc /inputs/freetype_2.13.3+dfsg.orig-ft2docs.tar.xz.asc
+ ADD --chmod=0444 --checksum=sha256:686ec73cbf6783b245dd068a09ce807b729ac0f8a46dd70f7867923c32fdf4de https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig.tar.xz /inputs/freetype_2.13.3+dfsg.orig.tar.xz
+ ADD --chmod=0444 --checksum=sha256:e7a07cad1b9c803457ec310bc87132429f52171c89f9126c09eb62e203c8c84b https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg-1+deb13u1.debian.tar.xz /inputs/freetype_2.13.3+dfsg-1+deb13u1.debian.tar.xz
+-COPY native-freetype/pins.json native-freetype/prepare.py native-freetype/build.py native-freetype/budget_adapter.py native-freetype/abi-fonts.c /recipe/
++COPY native-freetype/prepare.py native-freetype/budget_adapter.py native-freetype/abi-fonts.c /recipe/
++COPY native-freetype/pins-v2.json /recipe/pins.json
++COPY native-freetype/build-v2.py /recipe/build.py
+ COPY native-freetype/patches/CVE-2026-95512.patch /recipe/patches/
+ COPY native-freetype/provenance/trixie-security.InRelease /recipe/provenance/
+ RUN chmod 0755 /inputs && test -z "$(getent passwd 65532)" && test -z "$(getent group 65532)" && printf '%s\n' 'nativebuild:x:65532:65532:Native source builder:/work:/bin/sh' >> /etc/passwd && printf '%s\n' 'nativebuild:x:65532:' >> /etc/group && mkdir /work /export && chown 65532:65532 /work /export
+@@ -21,7 +23,8 @@
+ RUN --network=none setpriv --no-new-privs --bounding-set=-all --reuid=65532 --regid=65532 --clear-groups -- /usr/bin/python3 -B /recipe/build.py
+ FROM snapshot AS installation
+ COPY native-expat/prepare.py /recipe/expat_source.py
+-COPY native-freetype/pins.json native-freetype/verify_install.py /recipe/
++COPY native-freetype/verify_install.py /recipe/
++COPY native-freetype/pins-v2.json /recipe/pins.json
+ COPY --from=build /export/libfreetype6_*.deb /export/libfreetype-dev_*.deb /packages/
+ COPY --from=build /export/source-and-test-receipt.json /proof/
+ COPY --from=build /export/old-header-fonts /export/original-debian-autopkgtest.sh /probe/

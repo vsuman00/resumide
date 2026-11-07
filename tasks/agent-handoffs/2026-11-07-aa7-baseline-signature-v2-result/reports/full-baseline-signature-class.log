@@ -1,0 +1,287 @@
+********* Start testing of TestSignatureBasics *********
+Config: Using QtTest library 6.8.2, Qt 6.8.2 (arm64-little_endian-lp64 shared (dynamic) release build; by GCC 14.2.0), debian 13
+INFO   : TestSignatureBasics::initTestCase() entering
+PASS   : TestSignatureBasics::initTestCase()
+INFO   : TestSignatureBasics::testSignatureCount() entering
+INFO   : TestSignatureBasics::testSignatureCount(nss) QCOMPARE(CryptoSign::Factory::getActive(), backend)
+   Loc: [./qt6/tests/check_signature_basics.cpp(142)]
+INFO   : TestSignatureBasics::testSignatureCount(nss) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(147)]
+INFO   : TestSignatureBasics::testSignatureCount(nss) QVERIFY(doc->isOk())
+   Loc: [./qt6/tests/check_signature_basics.cpp(148)]
+INFO   : TestSignatureBasics::testSignatureCount(nss) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(182)]
+INFO   : TestSignatureBasics::testSignatureCount(nss) QCOMPARE(signatureFields.size(), 4)
+   Loc: [./qt6/tests/check_signature_basics.cpp(184)]
+INFO   : TestSignatureBasics::testSignatureCount(nss) QVERIFY(!signatureFields[0]->getSignature().empty())
+   Loc: [./qt6/tests/check_signature_basics.cpp(186)]
+INFO   : TestSignatureBasics::testSignatureCount(nss) QVERIFY(!signatureFields[1]->getSignature().empty())
+   Loc: [./qt6/tests/check_signature_basics.cpp(187)]
+INFO   : TestSignatureBasics::testSignatureCount(nss) QVERIFY(signatureFields[2]->getSignature().empty())
+   Loc: [./qt6/tests/check_signature_basics.cpp(188)]
+INFO   : TestSignatureBasics::testSignatureCount(nss) QVERIFY(signatureFields[3]->getSignature().empty())
+   Loc: [./qt6/tests/check_signature_basics.cpp(189)]
+PASS   : TestSignatureBasics::testSignatureCount(nss)
+INFO   : TestSignatureBasics::testSignatureCount(gpg) QCOMPARE(CryptoSign::Factory::getActive(), backend)
+   Loc: [./qt6/tests/check_signature_basics.cpp(142)]
+INFO   : TestSignatureBasics::testSignatureCount(gpg) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(147)]
+INFO   : TestSignatureBasics::testSignatureCount(gpg) QVERIFY(doc->isOk())
+   Loc: [./qt6/tests/check_signature_basics.cpp(148)]
+INFO   : TestSignatureBasics::testSignatureCount(gpg) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(182)]
+INFO   : TestSignatureBasics::testSignatureCount(gpg) QCOMPARE(signatureFields.size(), 4)
+   Loc: [./qt6/tests/check_signature_basics.cpp(184)]
+INFO   : TestSignatureBasics::testSignatureCount(gpg) QVERIFY(!signatureFields[0]->getSignature().empty())
+   Loc: [./qt6/tests/check_signature_basics.cpp(186)]
+INFO   : TestSignatureBasics::testSignatureCount(gpg) QVERIFY(!signatureFields[1]->getSignature().empty())
+   Loc: [./qt6/tests/check_signature_basics.cpp(187)]
+INFO   : TestSignatureBasics::testSignatureCount(gpg) QVERIFY(signatureFields[2]->getSignature().empty())
+   Loc: [./qt6/tests/check_signature_basics.cpp(188)]
+INFO   : TestSignatureBasics::testSignatureCount(gpg) QVERIFY(signatureFields[3]->getSignature().empty())
+   Loc: [./qt6/tests/check_signature_basics.cpp(189)]
+PASS   : TestSignatureBasics::testSignatureCount(gpg)
+INFO   : TestSignatureBasics::testSignatureSizes() entering
+INFO   : TestSignatureBasics::testSignatureSizes(nss) QCOMPARE(CryptoSign::Factory::getActive(), backend)
+   Loc: [./qt6/tests/check_signature_basics.cpp(142)]
+INFO   : TestSignatureBasics::testSignatureSizes(nss) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(147)]
+INFO   : TestSignatureBasics::testSignatureSizes(nss) QVERIFY(doc->isOk())
+   Loc: [./qt6/tests/check_signature_basics.cpp(148)]
+INFO   : TestSignatureBasics::testSignatureSizes(nss) QCOMPARE(signatureFields[0]->getSignature().size(), 10230)
+   Loc: [./qt6/tests/check_signature_basics.cpp(200)]
+INFO   : TestSignatureBasics::testSignatureSizes(nss) QCOMPARE(signatureFields[1]->getSignature().size(), 10196)
+   Loc: [./qt6/tests/check_signature_basics.cpp(201)]
+PASS   : TestSignatureBasics::testSignatureSizes(nss)
+INFO   : TestSignatureBasics::testSignatureSizes(gpg) QCOMPARE(CryptoSign::Factory::getActive(), backend)
+   Loc: [./qt6/tests/check_signature_basics.cpp(142)]
+INFO   : TestSignatureBasics::testSignatureSizes(gpg) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(147)]
+INFO   : TestSignatureBasics::testSignatureSizes(gpg) QVERIFY(doc->isOk())
+   Loc: [./qt6/tests/check_signature_basics.cpp(148)]
+INFO   : TestSignatureBasics::testSignatureSizes(gpg) QCOMPARE(signatureFields[0]->getSignature().size(), 10230)
+   Loc: [./qt6/tests/check_signature_basics.cpp(200)]
+INFO   : TestSignatureBasics::testSignatureSizes(gpg) QCOMPARE(signatureFields[1]->getSignature().size(), 10196)
+   Loc: [./qt6/tests/check_signature_basics.cpp(201)]
+PASS   : TestSignatureBasics::testSignatureSizes(gpg)
+INFO   : TestSignatureBasics::testSignerInfo() entering
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(CryptoSign::Factory::getActive(), backend)
+   Loc: [./qt6/tests/check_signature_basics.cpp(142)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(147)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QVERIFY(doc->isOk())
+   Loc: [./qt6/tests/check_signature_basics.cpp(148)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(signatureFields[0]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature0_B_" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(207)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(signatureFields[0]->getSignatureType(), CryptoSign::SignatureType::ETSI_CAdES_detached)
+   Loc: [./qt6/tests/check_signature_basics.cpp(208)]
+NSS_Init failed: security library: bad database.
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(siginfo0->getSignerName(), std::string { "Koch, Werner" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(212)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(siginfo0->getHashAlgorithm(), HashAlgorithm::Sha256)
+   Loc: [./qt6/tests/check_signature_basics.cpp(213)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(siginfo0->getCertificateInfo()->getPublicKeyInfo().publicKeyStrength, 2048 / 8)
+   Loc: [./qt6/tests/check_signature_basics.cpp(214)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(siginfo0->getSigningTime(), time_t(1677570911))
+   Loc: [./qt6/tests/check_signature_basics.cpp(219)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(signatureFields[1]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature1_B_" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(221)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(signatureFields[1]->getSignatureType(), CryptoSign::SignatureType::ETSI_CAdES_detached)
+   Loc: [./qt6/tests/check_signature_basics.cpp(222)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(siginfo1->getSignerName(), std::string { "Koch, Werner" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(226)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(siginfo1->getHashAlgorithm(), HashAlgorithm::Sha256)
+   Loc: [./qt6/tests/check_signature_basics.cpp(227)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(siginfo1->getCertificateInfo()->getPublicKeyInfo().publicKeyStrength, 0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(233)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(siginfo1->getSigningTime(), time_t(1677840601))
+   Loc: [./qt6/tests/check_signature_basics.cpp(239)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(signatureFields[2]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature2_B_" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(241)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(signatureFields[2]->getSignatureType(), CryptoSign::SignatureType::unsigned_signature_field)
+   Loc: [./qt6/tests/check_signature_basics.cpp(242)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(signatureFields[3]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature3_B_" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(243)]
+INFO   : TestSignatureBasics::testSignerInfo(nss) QCOMPARE(signatureFields[3]->getSignatureType(), CryptoSign::SignatureType::unsigned_signature_field)
+   Loc: [./qt6/tests/check_signature_basics.cpp(244)]
+PASS   : TestSignatureBasics::testSignerInfo(nss)
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(CryptoSign::Factory::getActive(), backend)
+   Loc: [./qt6/tests/check_signature_basics.cpp(142)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(147)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QVERIFY(doc->isOk())
+   Loc: [./qt6/tests/check_signature_basics.cpp(148)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(signatureFields[0]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature0_B_" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(207)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(signatureFields[0]->getSignatureType(), CryptoSign::SignatureType::ETSI_CAdES_detached)
+   Loc: [./qt6/tests/check_signature_basics.cpp(208)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(siginfo0->getSignerName(), std::string { "Koch, Werner" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(212)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(siginfo0->getHashAlgorithm(), HashAlgorithm::Sha256)
+   Loc: [./qt6/tests/check_signature_basics.cpp(213)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(siginfo0->getCertificateInfo()->getPublicKeyInfo().publicKeyStrength, 2048 / 8)
+   Loc: [./qt6/tests/check_signature_basics.cpp(214)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(siginfo0->getSigningTime(), time_t(1677570911))
+   Loc: [./qt6/tests/check_signature_basics.cpp(219)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(signatureFields[1]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature1_B_" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(221)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(signatureFields[1]->getSignatureType(), CryptoSign::SignatureType::ETSI_CAdES_detached)
+   Loc: [./qt6/tests/check_signature_basics.cpp(222)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(siginfo1->getSignerName(), std::string { "Koch, Werner" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(226)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(siginfo1->getHashAlgorithm(), HashAlgorithm::Sha256)
+   Loc: [./qt6/tests/check_signature_basics.cpp(227)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(siginfo1->getCertificateInfo()->getPublicKeyInfo().publicKeyStrength, 2048 / 8)
+   Loc: [./qt6/tests/check_signature_basics.cpp(230)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(siginfo1->getSigningTime(), time_t(1677840601))
+   Loc: [./qt6/tests/check_signature_basics.cpp(239)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(signatureFields[2]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature2_B_" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(241)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(signatureFields[2]->getSignatureType(), CryptoSign::SignatureType::unsigned_signature_field)
+   Loc: [./qt6/tests/check_signature_basics.cpp(242)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(signatureFields[3]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature3_B_" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(243)]
+INFO   : TestSignatureBasics::testSignerInfo(gpg) QCOMPARE(signatureFields[3]->getSignatureType(), CryptoSign::SignatureType::unsigned_signature_field)
+   Loc: [./qt6/tests/check_signature_basics.cpp(244)]
+PASS   : TestSignatureBasics::testSignerInfo(gpg)
+INFO   : TestSignatureBasics::testSignedRanges() entering
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(CryptoSign::Factory::getActive(), backend)
+   Loc: [./qt6/tests/check_signature_basics.cpp(142)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(147)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QVERIFY(doc->isOk())
+   Loc: [./qt6/tests/check_signature_basics.cpp(148)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QVERIFY(sig0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(253)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(ranges0.size(), 4)
+   Loc: [./qt6/tests/check_signature_basics.cpp(255)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(ranges0[0], 0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(256)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(ranges0[1], 24890)
+   Loc: [./qt6/tests/check_signature_basics.cpp(257)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(ranges0[2], 45352)
+   Loc: [./qt6/tests/check_signature_basics.cpp(258)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(ranges0[3], 58529)
+   Loc: [./qt6/tests/check_signature_basics.cpp(259)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QVERIFY(ranges0[3] != size0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(260)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QVERIFY(sig1)
+   Loc: [./qt6/tests/check_signature_basics.cpp(264)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(ranges1.size(), 4)
+   Loc: [./qt6/tests/check_signature_basics.cpp(266)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(ranges1[0], 0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(267)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(ranges1[1], 59257)
+   Loc: [./qt6/tests/check_signature_basics.cpp(268)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(ranges1[2], 79651)
+   Loc: [./qt6/tests/check_signature_basics.cpp(269)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(ranges1[3], 92773)
+   Loc: [./qt6/tests/check_signature_basics.cpp(270)]
+INFO   : TestSignatureBasics::testSignedRanges(nss) QCOMPARE(ranges1[3], size1)
+   Loc: [./qt6/tests/check_signature_basics.cpp(271)]
+PASS   : TestSignatureBasics::testSignedRanges(nss)
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(CryptoSign::Factory::getActive(), backend)
+   Loc: [./qt6/tests/check_signature_basics.cpp(142)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(147)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QVERIFY(doc->isOk())
+   Loc: [./qt6/tests/check_signature_basics.cpp(148)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QVERIFY(sig0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(253)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(ranges0.size(), 4)
+   Loc: [./qt6/tests/check_signature_basics.cpp(255)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(ranges0[0], 0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(256)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(ranges0[1], 24890)
+   Loc: [./qt6/tests/check_signature_basics.cpp(257)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(ranges0[2], 45352)
+   Loc: [./qt6/tests/check_signature_basics.cpp(258)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(ranges0[3], 58529)
+   Loc: [./qt6/tests/check_signature_basics.cpp(259)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QVERIFY(ranges0[3] != size0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(260)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QVERIFY(sig1)
+   Loc: [./qt6/tests/check_signature_basics.cpp(264)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(ranges1.size(), 4)
+   Loc: [./qt6/tests/check_signature_basics.cpp(266)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(ranges1[0], 0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(267)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(ranges1[1], 59257)
+   Loc: [./qt6/tests/check_signature_basics.cpp(268)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(ranges1[2], 79651)
+   Loc: [./qt6/tests/check_signature_basics.cpp(269)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(ranges1[3], 92773)
+   Loc: [./qt6/tests/check_signature_basics.cpp(270)]
+INFO   : TestSignatureBasics::testSignedRanges(gpg) QCOMPARE(ranges1[3], size1)
+   Loc: [./qt6/tests/check_signature_basics.cpp(271)]
+PASS   : TestSignatureBasics::testSignedRanges(gpg)
+INFO   : TestSignatureBasics::testPgp() entering
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(CryptoSign::Factory::getActive(), backend)
+   Loc: [./qt6/tests/check_signature_basics.cpp(142)]
+INFO   : TestSignatureBasics::testPgp(nss) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(147)]
+INFO   : TestSignatureBasics::testPgp(nss) QVERIFY(doc->isOk())
+   Loc: [./qt6/tests/check_signature_basics.cpp(148)]
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(signatureFields.size(), 1)
+   Loc: [./qt6/tests/check_signature_basics.cpp(295)]
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(signatureFields[0]->getSignatureType(), CryptoSign::SignatureType::g10c_pgp_signature_detached)
+   Loc: [./qt6/tests/check_signature_basics.cpp(296)]
+INFO   : TestSignatureBasics::testPgp(nss) QVERIFY(!signatureFields[0]->getSignature().empty())
+   Loc: [./qt6/tests/check_signature_basics.cpp(297)]
+INFO   : TestSignatureBasics::testPgp(nss) QVERIFY(sig0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(300)]
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(ranges0.size(), 4)
+   Loc: [./qt6/tests/check_signature_basics.cpp(302)]
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(ranges0[0], 0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(303)]
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(ranges0[1], 82991)
+   Loc: [./qt6/tests/check_signature_basics.cpp(304)]
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(ranges0[2], 102993)
+   Loc: [./qt6/tests/check_signature_basics.cpp(305)]
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(ranges0[3], 103534)
+   Loc: [./qt6/tests/check_signature_basics.cpp(306)]
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(siginfo0->getSignerName(), std::string {})
+   Loc: [./qt6/tests/check_signature_basics.cpp(317)]
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(siginfo0->getHashAlgorithm(), HashAlgorithm::Unknown)
+   Loc: [./qt6/tests/check_signature_basics.cpp(318)]
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(siginfo0->getCertificateInfo(), nullptr)
+   Loc: [./qt6/tests/check_signature_basics.cpp(319)]
+INFO   : TestSignatureBasics::testPgp(nss) QCOMPARE(siginfo0->getSignatureValStatus(), SignatureValidationStatus::SIGNATURE_NOT_VERIFIED)
+   Loc: [./qt6/tests/check_signature_basics.cpp(320)]
+PASS   : TestSignatureBasics::testPgp(nss)
+INFO   : TestSignatureBasics::testPgp(gpg) QCOMPARE(CryptoSign::Factory::getActive(), backend)
+   Loc: [./qt6/tests/check_signature_basics.cpp(142)]
+INFO   : TestSignatureBasics::testPgp(gpg) QVERIFY(doc)
+   Loc: [./qt6/tests/check_signature_basics.cpp(147)]
+INFO   : TestSignatureBasics::testPgp(gpg) QVERIFY(doc->isOk())
+   Loc: [./qt6/tests/check_signature_basics.cpp(148)]
+INFO   : TestSignatureBasics::testPgp(gpg) QCOMPARE(result.numImported(), 1)
+   Loc: [./qt6/tests/check_signature_basics.cpp(290)]
+INFO   : TestSignatureBasics::testPgp(gpg) QCOMPARE(signatureFields.size(), 1)
+   Loc: [./qt6/tests/check_signature_basics.cpp(295)]
+INFO   : TestSignatureBasics::testPgp(gpg) QCOMPARE(signatureFields[0]->getSignatureType(), CryptoSign::SignatureType::g10c_pgp_signature_detached)
+   Loc: [./qt6/tests/check_signature_basics.cpp(296)]
+INFO   : TestSignatureBasics::testPgp(gpg) QVERIFY(!signatureFields[0]->getSignature().empty())
+   Loc: [./qt6/tests/check_signature_basics.cpp(297)]
+INFO   : TestSignatureBasics::testPgp(gpg) QVERIFY(sig0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(300)]
+INFO   : TestSignatureBasics::testPgp(gpg) QCOMPARE(ranges0.size(), 4)
+   Loc: [./qt6/tests/check_signature_basics.cpp(302)]
+INFO   : TestSignatureBasics::testPgp(gpg) QCOMPARE(ranges0[0], 0)
+   Loc: [./qt6/tests/check_signature_basics.cpp(303)]
+INFO   : TestSignatureBasics::testPgp(gpg) QCOMPARE(ranges0[1], 82991)
+   Loc: [./qt6/tests/check_signature_basics.cpp(304)]
+INFO   : TestSignatureBasics::testPgp(gpg) QCOMPARE(ranges0[2], 102993)
+   Loc: [./qt6/tests/check_signature_basics.cpp(305)]
+INFO   : TestSignatureBasics::testPgp(gpg) QCOMPARE(ranges0[3], 103534)
+   Loc: [./qt6/tests/check_signature_basics.cpp(306)]
+INFO   : TestSignatureBasics::testPgp(gpg) QCOMPARE(siginfo0->getSignerName(), std::string { "Sune Vuorela" })
+   Loc: [./qt6/tests/check_signature_basics.cpp(311)]
+FAIL!  : TestSignatureBasics::testPgp(gpg) Compared values are not the same
+   Actual   (siginfo0->getSignerName())     : ""
+   Expected (std::string { "Sune Vuorela" }): "Sune Vuorela"
+   Loc: [./qt6/tests/check_signature_basics.cpp(311)]
+INFO   : TestSignatureBasics::cleanupTestCase() entering
+PASS   : TestSignatureBasics::cleanupTestCase()
+Totals: 11 passed, 1 failed, 0 skipped, 0 blacklisted, 87ms
+********* Finished testing of TestSignatureBasics *********

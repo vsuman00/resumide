@@ -3,6 +3,18 @@ import { SOFTWARE_SKILLS } from "../job-requirements";
 
 const MAX_TERMS = 20;
 const MAX_STORED_SPANS = 3;
+// Exact software vocabulary for lexical coverage, not proficiency or taxonomy claims.
+const MATCHING_SKILLS = [
+  ...SOFTWARE_SKILLS,
+  "Express",
+  "Jest",
+  "Mocha",
+  "Cypress",
+  "Playwright",
+  "ChatGPT",
+  "GitHub Copilot",
+  "Claude",
+] as const;
 const PHRASE_SEPARATOR = String.raw`(?:[\s\u00a0\-_–—]+)`;
 
 const GENERIC_STOPWORDS = new Set([
@@ -155,7 +167,7 @@ export function matchJobDescription(args: {
   const taxonomyCandidates = extractTaxonomyCandidates(scopedJob);
   // Exact engineering vocabulary is discoverable without pretending that an
   // external taxonomy mapping or proficiency assessment has been approved.
-  for (const skill of SOFTWARE_SKILLS) {
+  for (const skill of MATCHING_SKILLS) {
     if (
       taxonomyCandidates.some((candidate) =>
         candidate.aliases.some(
@@ -390,7 +402,7 @@ function negatedAt(text: string, start: number, end: number): boolean {
 // offsets used by the existing lexical-evidence contract.
 function requirementText(text: string): string {
   const heading =
-    /^(?:(?:key |job )?responsibilities|duties|(?:job )?requirements|(?:required |basic |minimum |preferred )?qualifications|(?:required |essential )?skills(?: and experience)?|must have|preferred|nice to have):?$/iu;
+    /^(?:(?:key |job )?responsibilities|(?:key )?accountabilities|job purpose and impact|duties|(?:job )?requirements|(?:required |basic |minimum |preferred )?qualifications|(?:required |essential )?skills(?: and experience)?|must have|preferred|nice to have):?$/iu;
   const lines = text.split("\n");
   const hasHeading = lines.some((line) => heading.test(line.trim()));
   let active = !hasHeading;

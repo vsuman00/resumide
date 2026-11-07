@@ -305,7 +305,7 @@ controls require external evidence.
 
 ### Outcome
 
-Candidates receive evidence-backed guidance that clearly distinguishes whether the document was read reliably, whether it is structurally compatible with common ATS ingestion, and how well it matches a specific job. They can edit the resume on the result page, accept only fact-supported suggestions, and export a PDF or DOCX whose content is parsed back and verified. LaTeX follows as a sandboxed renderer, not as the source of truth.
+Candidates receive evidence-backed guidance that clearly distinguishes whether the document was read reliably, whether it is structurally compatible with common ATS ingestion, and how well it matches a specific job. They can edit the resume on the result page, accept only fact-supported suggestions, and export a PDF or DOCX whose content is parsed back and verified. The owner scoped AA7 on 2026-10-30 to an independent LaTeX-to-PDF editor/converter under ADR-0016/E-007; it does not consume canonical records or integrate with analysis.
 
 This phase is specified in [`accuracy-authoring-plan.md`](accuracy-authoring-plan.md) and [`../docs/ATS_SCORING_AND_AUTHORING_SPEC.md`](../docs/ATS_SCORING_AND_AUTHORING_SPEC.md). Its numeric floors are in [`../CONSTRAINTS.md`](../CONSTRAINTS.md). ADR-0006/0007 AA0 design is accepted through [`ADR-0009`](../docs/decisions/0009-aa0-truth-contract-and-evaluation-design.md), explicitly approved 2026-10-04. First review provisional AA010/AA011 for contract conformity; each later implementation retains its own prerequisites and acceptance gates.
 
@@ -318,7 +318,7 @@ This phase is specified in [`accuracy-authoring-plan.md`](accuracy-authoring-pla
 5. **AA4 Scoring v2:** deterministic, versioned ATS Compatibility and Job Alignment with counterfactual, stuffing, duplication, and prompt-injection resistance.
 6. **AA5 Authoring:** result-page editor, line-level diagnostics, fact-safe rewrite contracts, multiple bullet patterns including XYZ, impact review, undo, compare, and re-score.
 7. **AA6 Verified artifacts:** PDF/DOCX render adapters, overflow/link checks, parse-back parity, accessible output, and artifact evidence.
-8. **AA7 LaTeX:** reviewed templates and a networkless resource-bounded compiler after AA6 passes.
+8. **AA7 standalone converter:** source-preserving editor/PDF preview/download, reviewed examples and isolated compiler under owner-approved E-007 sequencing. Local engineering is complete and verified; formal release/security/accessibility gates remain open. See [closeout](../docs/evaluation/AA7_ENGINEERING_CLOSEOUT_20261030.md).
 9. **AA8 Domain validity:** locked representative per-segment corpus, independent review, expert agreement, fairness/error analysis, and claim review.
 10. **AA9 Recruiter/vendor pilot:** optional controlled observation for recruiter calibration or a specifically named ATS claim; no automatic hiring action.
 

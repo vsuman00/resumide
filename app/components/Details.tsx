@@ -1,4 +1,3 @@
-import { scoreBand } from "~/lib/score-band";
 import {
   Accordion,
   AccordionContent,
@@ -7,8 +6,9 @@ import {
 } from "./Accordion";
 
 const ScoreBadge = ({ score }: { score: number }) => {
-  const band = scoreBand(score);
-  return <span className={`detail-score-badge is-${band}`}>{score}/100</span>;
+  return (
+    <span className="detail-score-badge is-uncalibrated">{score}/100</span>
+  );
 };
 
 const CategoryHeader = ({

@@ -1,0 +1,36 @@
+name: Isolated LaTeX compiler
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-runtime:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run check:latex:source
+      - run: npm run test:latex
+      - name: Build immutable offline compiler
+        run: |
+          docker build --tag resumide-latex:ci scripts/latex-runtime
+          echo "LATEX_TEST_IMAGE=$(docker image inspect resumide-latex:ci --format '{{.Id}}')" >> "$GITHUB_ENV"
+      - name: Prove real confinement and safe failures
+        run: npm run --silent verify:latex -- "$LATEX_TEST_IMAGE" > latex-runtime-receipt.json
+      - name: Benchmark synthetic examples
+        run: npm run --silent benchmark:latex -- "$LATEX_TEST_IMAGE" > latex-benchmark-receipt.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: synthetic-latex-receipts
+          path: latex-*-receipt.json
+          retention-days: 14
+          if-no-files-found: ignore

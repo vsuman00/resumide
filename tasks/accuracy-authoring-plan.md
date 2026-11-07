@@ -213,22 +213,38 @@ The canonical resume renders to approved, profile-appropriate PDF and DOCX templ
 
 Critical-field and normalized-text parity pass for every released template/format/locale combination. Failure removes the verified label and blocks the artifact from the recommended download action.
 
-## 11. Phase AA7: Sandboxed LaTeX rendering
+## 11. Phase AA7: Standalone sandboxed LaTeX-to-PDF conversion
 
 ### Outcome
 
-Candidates can generate, preview, download, and optionally inspect LaTeX source without exposing the worker or user data to arbitrary TeX execution.
+Candidates can edit supported single-file LaTeX on a separate page, compile and preview a PDF, then download it for manual upload. The owner approved this scoped replacement of the canonical-to-LaTeX path on 2026-10-30 through ADR-0016/E-007. No analyzer/canonical integration, source export, persisted source/PDF, arbitrary-project compatibility or ATS-verified claim.
+
+**Local status, 2026-10-30:** Implementation and synthetic verification are complete under ADR-0016/E-007. Canonical verification:1,052 tests/126 files;94 focused cases;6 browser scenarios;19 real runtime groups;6 example/paper combinations. Default-off and formal AA7 release/accessibility/security gates remain open. [Closeout](../docs/evaluation/AA7_ENGINEERING_CLOSEOUT_20261030.md).
 
 ### Vertical slices
 
 - `AA070`: Approve LaTeX compiler/runtime threat model and package allowlist.
-- `AA071`: Implement canonical-to-LaTeX renderer with complete escaping tests.
+- `AA071`: Implement bounded, source-preserving admission and immutable source/hash/policy binding.
 - `AA072`: Implement isolated compilation with no shell escape/network/host access and hard resource limits.
-- `AA073`: Add profile templates rather than one fixed student/technology layout.
-- `AA074`: Add LaTeX diagnostics, preview, source download, and safe failure UX.
-- `AA075`: Add compiled-PDF parse-back and accessibility/template benchmark.
+- `AA073`: Add neutral editable starter profiles with measured package/font/page support.
+- `AA074`: Add the two-pane editor, safe diagnostics, current-buffer PDF preview/download, cancellation and stale-response protection.
+- `AA075`: Add compiled-PDF safety checks and known-output synthetic recovery/accessibility-limit benchmarks.
+
+### Owner-requested Build follow-up
+
+The public workspace is now `/build`, with fixed legacy redirects. The owner also approved bounded contextual AI fixes, rewrites and resume wording proposals using the configured key. The assistant is independent of canonical authoring: transient source-bound patches, per-request consent, review/Apply/Undo and explicit unverified-fact confirmation. No scoring or verified provenance is added. Default-off flags and all formal gates remain unchanged. See the [design](../docs/design/LATEX_CONVERTER.md#inline-ai-assistance-follow-up) and [coordinator record](agent-handoffs/2026-10-30-build-ai-coordinator.md). Controlled-mock verification passed locally; two live smokes returned HTTP 401 and a subsequent owner-requested synthetic provider probe succeeded; live end-to-end acceptance remains separate.
+
+### Private engineering closure, November 6
+
+AA070-AA075 private implementation and internal validation are complete on exact candidate19d2, with existing scope and default-off production policy preserved. All20runtimegroups/20PDFcases,6profile-paper cases,1,203applicationtests/145files and full13browser cases pass. Direct Supabase fixtures were cleaned; Docker was worker-only. Paired scans and license metadata are recorded with residual findings and unknowns, not accepted as production clearance. See the [private candidate closeout](../docs/evaluation/AA7_PRIVATE_CANDIDATE_CLOSEOUT_20261106.md). Public testing, independent representative review and release activation were not requested and did not occur. GateAA7 below remains open; optional further image composition changes are separately reviewed work.
+
+### Current private engineering closeout, November 7
+
+AA070–AA075 are complete and privately verified on worker `4b83ffec…`: 28 runtime groups, 1,242 unit tests and 71 browser cases pass, with exact cleanup. The confirmed native repair is tested; no current functional defect is reproduced. [Current closeout](../docs/evaluation/AA7_FREETYPE_FINAL_CLOSEOUT_20261107.md) preserves the 947 raw image advisories, historical vendor-test disposition and deferred release requirements. Keep green engineering tasks closed; do not turn release-risk research into another AA7 implementation loop.
 
 ### Gate AA7
+
+**CLOSED / OWNER ACCEPTED, 2026-11-07:** The owner explicitly instructed closure and progression to AA8 after disclosure of final evidence and residual risks. [ADR-0017](../docs/decisions/0017-aa7-owner-acceptance-and-aa8-start.md) records the exact accepted worker, limitations and continuing default-off/deployment boundary. This supplies phase-owner acceptance without rewriting failures or claiming all vulnerabilities fixed.
 
 Security-owner sandbox review, malicious-input tests, resource exhaustion tests, render parity, accessibility evidence, and rollback plan pass before production enablement.
 

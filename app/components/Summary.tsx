@@ -1,14 +1,4 @@
-import { scoreBand } from "~/lib/score-band";
-
-const scoreLabels = {
-  needs_work: "Needs attention",
-  good_start: "Good start",
-  strong: "Strong",
-} as const;
-
 const Category = ({ title, score }: { title: string; score: number }) => {
-  const band = scoreBand(score);
-
   return (
     <div
       className="result-score-category"
@@ -17,11 +7,11 @@ const Category = ({ title, score }: { title: string; score: number }) => {
     >
       <div>
         <strong>{title}</strong>
-        <span className={`result-category-band is-${band}`}>
-          {scoreLabels[band]}
+        <span className="result-category-band is-uncalibrated">
+          Historical rating
         </span>
       </div>
-      <span className={`result-category-value is-${band}`}>{score}/100</span>
+      <span className="result-category-value is-uncalibrated">{score}/100</span>
     </div>
   );
 };
@@ -35,13 +25,13 @@ const Summary = ({ feedback }: { feedback: Feedback }) => {
       <div className="result-section-heading">
         <div>
           <p className="workspace-eyebrow">Score breakdown</p>
-          <h2 id="score-breakdown-heading">Where the score comes from</h2>
+          <h2 id="score-breakdown-heading">Historical ratings</h2>
         </div>
         <span>0 to 100</span>
       </div>
       <p className="result-score-breakdown-intro">
-        Each area is scored independently so you can focus on the changes with
-        the clearest evidence.
+        These saved ratings belong to the legacy method. They are not validated
+        measures of writing quality, skills or job alignment.
       </p>
       <div className="result-score-category-list">
         <Category title="ATS compatibility" score={feedback.ATS.score} />

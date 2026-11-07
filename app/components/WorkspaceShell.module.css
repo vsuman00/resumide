@@ -1,0 +1,19 @@
+.shell {
+  display: block;
+  min-height: 100vh;
+}
+.stage {
+  padding: 32px clamp(16px, 4vw, 64px) 48px;
+}
+.shell :global(.result-tab-list),
+.shell :global(.result-resume-viewer) {
+  top: 104px;
+}
+@media (max-width: 600px) {
+  .stage {
+    padding: 24px 16px 40px;
+  }
+  .shell :global(.result-tab-list) {
+    top: 84px;
+  }
+}

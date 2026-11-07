@@ -1,0 +1,54 @@
+{
+  "status": "PROPOSED_NATIVE_SOURCE_REPAIR_NO_COMPILER_OR_CONTAINER_EXECUTION",
+  "source": "freetype_2.13.3+dfsg-1+deb13u1",
+  "candidateVersion": "2.13.3+dfsg-1+deb13u1+resumide1",
+  "runtimeCohort": [
+    "libfreetype6"
+  ],
+  "testSdkCohort": [
+    "libfreetype6",
+    "libfreetype-dev"
+  ],
+  "sourceFix": "Exactvendorf3ca71c9 CIDoverlapbudget patch only; fiveoriginalDebianpatches preserved",
+  "originalRulesUnchanged": true,
+  "normalDebianBuild": [
+    "dpkg-checkbuilddeps",
+    "dpkg-buildpackage --no-sign -b -j2"
+  ],
+  "preservedBuildFeatures": [
+    "DEB_BUILD_MAINT_OPTIONS=hardening=+all",
+    "DPKG_GENSYMBOLS_CHECK_LEVEL=4",
+    "without-harfbuzz originalconfigureflag",
+    "normaldemos/docs/udebproducts; no buildprofiles/nocheck flags"
+  ],
+  "mandatoryChecks": {
+    "archive": "fresh gpgv same pinnedkeyring+InRelease\u2192Sources\u2192all7inputs; sourceandpackaginghashes; DSCdeveloper signature notindependentlyclaimed",
+    "ABI": "sameSONAME libfreetype.so.6 and exactdefineddynamicexportset; oldinstalled2.13.3headers compiledclient resolves extractedcandidate library",
+    "neutralFonts": "Two existing rootclosurehash-pinnedLatinModern OTF/PFB files,4ASCIIglyphseach; exactbaseline/candidate glyphIDs/advance/bounding/face metrics bytes, no tolerance",
+    "allocationBudget": "Compile5neutralmetadata cases from literalbefore/aftervendorblocks; mocks allocationobservation only, no font/PDF bytes or fullparserclaim; preserve integerdivision67/68 boundary",
+    "freshInstallation": "Normaloffline no-removeAPT upgrades exact2SDK testcohort, everyotherpackage/version/architecture/Essential/Protected/statusunchanged; finalruntimewillinstallonlylib6",
+    "originalDebianAutopkgtest": "Execute authenticated unchanged originalscript as65532/caps0/NNP/networknone; requirebothoriginaldynamicandstaticassertionclients exit0/versionoutput2; donotreplaceassertions",
+    "freshInstalledFonts": "VerifystrippedlibrarySHAthenoldheaderclientidenticalmetricsagainstsame2knownfonts"
+  },
+  "knownMissingEvidence": {
+    "upstreamMeson": "One issue1063 test disabledbydefault, external As.I.Lay.Dying.ttf absent; NOTRUN andnotfetched/substituted/skippedaspass",
+    "actual95512Exploit": "NOTRUN; no authenticfontreproducer inprovidedinputs, no maliciousfont/PDFfixturegenerationauthorized",
+    "fullNativeTestSuitePassClaim": false
+  },
+  "candidateBuildBounds": {
+    "nativeStageUID": 65532,
+    "capabilities": "allzero",
+    "noNewPrivileges": true,
+    "network": "none",
+    "HOME": "/work",
+    "LANG": "C.UTF-8",
+    "nativeDeadlineSeconds": 1800,
+    "phaseLogCapBytes": 33554432,
+    "exportCapBytes": 268435456,
+    "packageAggregateCapBytes": 67108864,
+    "archiveMembers": 10000,
+    "archiveExpandedBytes": 167772160
+  },
+  "pendingHostAllocation": "No Docker/nativecompile executed; coordinator must review frozenrecipe/availablemissingtests before oneboundedallocation; preserveE011existingexpiry/no automaticresourceexceptionreuse",
+  "finalAdoptionRequired": "Actualimage runtime/PDF/originalprofiles/fonts/geometry/rollback/render/browser/license+unsuppressedscan and exact installedcohortboundreceipts; preserveallrawfindings."
+}

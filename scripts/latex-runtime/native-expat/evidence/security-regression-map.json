@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "resumide-native-expat-security-regressions/1",
+  "actualNativeVersion": "2.10.0-1~deb13u1+resumide1",
+  "upstreamRelease": "https://github.com/libexpat/libexpat/releases/tag/R_2_10_0",
+  "proofSha256": "6bbd0c6d1b8c131038ad9e1138a08da825746a51649ad99657b34e2093f9dc36",
+  "rows": [
+    {
+      "cve": "CVE-2026-113351",
+      "primaryPulls": [
+        1431
+      ],
+      "regressions": [
+        "test_amplification_reset_neutrality",
+        "test_alloc_tracker_reset_neutrality"
+      ],
+      "coverage": "Dedicated upstream regressions; registered under default DTD/GE build.",
+      "primaryUrls": [
+        "https://github.com/libexpat/libexpat/pull/1431"
+      ],
+      "executionStatus": "Full narrow and native UTF-16 suites each passed 5328 checks in build 6; no separate per-test execution counter."
+    },
+    {
+      "cve": "CVE-2026-115506",
+      "primaryPulls": [
+        1433,
+        1436,
+        1439,
+        1442
+      ],
+      "regressions": [
+        "test_scan_entity_text",
+        "test_is_cdata_comment_or_pi_start",
+        "test_is_predefined_entity_name",
+        "test_xcs_nstr"
+      ],
+      "coverage": "Upstream precomputed-entity helpers plus existing amplification/parameter-entity suite; no claim each function is a complete exploit reproducer.",
+      "primaryUrls": [
+        "https://github.com/libexpat/libexpat/pull/1433",
+        "https://github.com/libexpat/libexpat/pull/1436",
+        "https://github.com/libexpat/libexpat/pull/1439",
+        "https://github.com/libexpat/libexpat/pull/1442"
+      ],
+      "executionStatus": "Full narrow and native UTF-16 suites each passed 5328 checks in build 6; no separate per-test execution counter."
+    },
+    {
+      "cve": "CVE-2026-117610",
+      "primaryPulls": [
+        1444
+      ],
+      "regressions": [
+        "test_misc_empty_nonfinal_subparser_parse",
+        "test_empty_ext_param_entity_in_value"
+      ],
+      "coverage": "Dedicated new empty-nonfinal subparser case and adjusted existing regression.",
+      "primaryUrls": [
+        "https://github.com/libexpat/libexpat/pull/1444"
+      ],
+      "executionStatus": "Full narrow and native UTF-16 suites each passed 5328 checks in build 6; no separate per-test execution counter."
+    },
+    {
+      "cve": "CVE-2026-118370",
+      "primaryPulls": [
+        1450
+      ],
+      "regressions": [],
+      "coverage": "Upstream PR changes storeAtts guards without adding a dedicated test. Full attribute/allocation suite is indirect regression coverage; keep this limit explicit.",
+      "primaryUrls": [
+        "https://github.com/libexpat/libexpat/pull/1450"
+      ],
+      "executionStatus": "Full narrow and native UTF-16 suites each passed 5328 checks in build 6; no separate per-test execution counter."
+    }
+  ],
+  "unresolved": [
+    "CVE-2025-66382"
+  ]
+}
