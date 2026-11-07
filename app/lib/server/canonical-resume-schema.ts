@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { SqlCompatibleIsoDateTimeSchema } from "./iso-datetime";
 
 const id = z.uuid();
 const text = z
@@ -19,7 +20,7 @@ const citation = z
   .refine((value) => value.end > value.start);
 const confirmation = z.strictObject({
   actorId: id,
-  confirmedAt: z.iso.datetime(),
+  confirmedAt: SqlCompatibleIsoDateTimeSchema,
   value: text,
 });
 const fact = z.strictObject({
@@ -84,7 +85,7 @@ export const CanonicalResumeDraftSchema = z
     ownerId: id,
     organizationId: id,
     locale: z.string().regex(/^[a-z]{2,3}(?:-[A-Z]{2})?$/u),
-    createdAt: z.iso.datetime(),
+    createdAt: SqlCompatibleIsoDateTimeSchema,
     state: z.enum(["draft", "review_required"]),
     sourceEvidenceVersionId: id.nullable(),
     contactFactIds: z.array(id).max(20),
@@ -98,7 +99,7 @@ export const CanonicalResumeDraftSchema = z
           action: z.enum(["create", "import", "edit", "rollback"]),
           targetId: id,
           priorValue: text.nullable(),
-          createdAt: z.iso.datetime(),
+          createdAt: SqlCompatibleIsoDateTimeSchema,
         }),
       )
       .max(1_000),

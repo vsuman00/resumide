@@ -24,6 +24,31 @@ const ACTION_WORDS = new Set([
   "Clearer",
 ]);
 
+// Sentence-initial editorial words describe the change, not candidate facts.
+const EDITORIAL_WORDS = new Set([
+  "Clarifies",
+  "Highlights",
+  "Emphasizes",
+  "Rephrases",
+  "Reorders",
+  "Preserves",
+  "Keeps",
+  "Focuses",
+  "Connects",
+  "Removes",
+  "Avoids",
+  "Retains",
+  "Tightens",
+  "Combines",
+  "Separates",
+  "Converts",
+  "Uses",
+  "Shortens",
+  "Aligns",
+  "This",
+  "The",
+]);
+
 function normalized(value: string): string {
   return value.trim().replace(/\s+/gu, " ").toLocaleLowerCase("en-US");
 }
@@ -49,23 +74,35 @@ function taxonomySkillsAreGrounded(value: string, source: string): boolean {
   });
 }
 
-function groundedFactTokens(value: string, source: string): boolean {
-  const sourceText = normalized(source);
+function groundedFactTokens(
+  value: string,
+  source: string,
+  editorial = false,
+): boolean {
   if (!taxonomySkillsAreGrounded(value, source)) return false;
-  const numericTokens = value.match(/\b\d[\d,.]*(?:%|[a-z]{1,4})?\b/giu) ?? [];
-  if (numericTokens.some((token) => !sourceText.includes(normalized(token)))) {
+  const numbers = (text: string) =>
+    text
+      .match(/(?<![\p{L}\p{N}])\d+(?:[,.]\d+)*(?:%|[a-z]{1,4}\b)?/giu)
+      ?.map(normalized) ?? [];
+  const sourceNumbers = new Set(numbers(source));
+  if (numbers(value).some((token) => !sourceNumbers.has(token))) {
     return false;
   }
 
   const sourceTokens = new Set(
-    source.match(/[\p{L}\p{N}][\p{L}\p{N}+#.-]*/gu)?.map(normalized) ?? [],
+    source
+      .match(/[\p{L}\p{N}][\p{L}\p{N}+#.-]*/gu)
+      ?.map((token) => normalized(token).replace(/\.+$/u, "")) ?? [],
   );
   const properNouns =
     value.match(
       /\b(?:[A-Z][A-Za-z0-9+#.-]{1,}|[A-Z]{2,}[A-Za-z0-9+#.-]*)\b/gu,
     ) ?? [];
   return properNouns.every(
-    (token) => ACTION_WORDS.has(token) || sourceTokens.has(normalized(token)),
+    (token, index) =>
+      ACTION_WORDS.has(token) ||
+      sourceTokens.has(normalized(token).replace(/\.+$/u, "")) ||
+      (editorial && index === 0 && EDITORIAL_WORDS.has(token)),
   );
 }
 
@@ -75,8 +112,9 @@ function suggestionIsGrounded(
 ): boolean {
   const sourceText = normalized(source);
   if (!sourceText.includes(normalized(suggestion.original))) return false;
-  return [suggestion.rewrite, suggestion.reasoning].every((value) =>
-    groundedFactTokens(value, source),
+  return (
+    groundedFactTokens(suggestion.rewrite, suggestion.original) &&
+    groundedFactTokens(suggestion.reasoning, suggestion.original, true)
   );
 }
 

@@ -1,0 +1,1237 @@
+
+> verify:ci
+> npm audit signatures && npm run scan:secrets && npm run check:alerts && npm run check:container && npm run verify && npm run test:load && npm run test:restore && npm run benchmark:phase5 && npm run benchmark:job-intelligence && npm run benchmark:scoring-validity && npm run benchmark:writer-grounding && npm run benchmark:render-parity && npm run test:e2e && npm audit --omit=dev --audit-level=high
+
+audited 463 packages in 4s
+
+463 packages have verified registry signatures
+
+141 packages have verified attestations
+(use --json --include-attestations to view attestation details)
+
+
+> scan:secrets
+> if git grep -nE '(sk-[A-Za-z0-9]{20,}|sb_secret_[A-Za-z0-9_-]{20,})' -- ':!package-lock.json' ':!*.md'; then echo 'Potential secret found'; exit 1; else echo 'Secret scan passed'; fi
+
+Secret scan passed
+
+> check:alerts
+> node scripts/validate-alerts.mjs
+
+{"status":"ok","alerts":["ResumideAvailabilityErrorBudgetBurn","ResumideApiLatencyP95","ResumideJobTerminalFailure","ResumideQueueAge","ResumideProviderCostAnomaly","ResumideReadinessFailure"]}
+
+> check:container
+> node scripts/check-container.mjs
+
+{"status":"ok","file":"Dockerfile","baseImages":4,"runtimeUser":"node"}
+{"status":"ok","file":"Dockerfile.worker","baseImages":3,"runtimeUser":"node"}
+
+> verify
+> npm run format:check && npm run format:check:native-layout && npm run check:ocr:pilot-source && npm run check:aa1:source && npm run check:aa2:source && npm run check:aa3:source && npm run check:aa4:source && npm run check:aa5:source && npm run check:aa6:source && npm run lint && npm run test && npm run typecheck && npm run build && npm run build:worker
+
+
+> format:check
+> prettier --check eslint.config.js vitest.config.ts playwright.config.ts e2e tests app/routes/healthz.ts app/routes/readyz.ts app/routes/upload.tsx app/routes/resume.tsx app/routes/api.analyze.ts app/routes/api.telemetry.ts app/routes/api.privacy-export.ts app/routes/metrics.ts app/routes.ts app/root.tsx app/lib/server app/components/FileUploader.tsx app/components/TelemetryReporter.tsx scripts/validate-config.ts scripts/selfcheck-config.ts scripts/selfcheck-errors.ts scripts/selfcheck-upload.mjs scripts/server.mjs scripts/load-test.ts scripts/verify-restore.ts scripts/run-privacy-worker.ts scripts/run-retention.ts scripts/validate-alerts.mjs scripts/check-container.mjs docs/operations/ALERTS.json scripts/verify-local-ocr.ts vite.worker.config.ts scripts/check-container.mjs
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> format:check:native-layout
+> prettier --check app/lib/native-layout-schema.ts app/lib/native-layout-structure.ts app/components/NativeLayoutEvidence.tsx app/components/NativeStructureEvidence.tsx app/components/ParseView.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:ocr:pilot-source
+> prettier --check scripts/verify-ocr-pilot.ts && eslint scripts/verify-ocr-pilot.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa1:source
+> prettier --check scripts/verify-ocr-adverse.ts scripts/verify-ocr-fields.ts scripts/benchmark-extraction-v2.ts scripts/extraction-benchmark-engineering.ts scripts/verify-document-worker.ts app/routes/analysis.evidence.tsx && eslint scripts/verify-ocr-adverse.ts scripts/verify-ocr-fields.ts scripts/benchmark-extraction-v2.ts scripts/extraction-benchmark-engineering.ts scripts/verify-document-worker.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa2:source
+> prettier --check scripts/canonical-test-fixture.ts scripts/verify-canonical-resume.ts scripts/verify-canonical-restore.ts app/routes/analysis.canonical.tsx && eslint scripts/canonical-test-fixture.ts scripts/verify-canonical-resume.ts scripts/verify-canonical-restore.ts app/routes/analysis.canonical.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa3:source
+> prettier --check scripts/job-requirement-test-fixture.ts scripts/verify-job-requirements.ts scripts/benchmark-job-intelligence.ts app/routes/analysis.requirements.tsx && eslint scripts/job-requirement-test-fixture.ts scripts/verify-job-requirements.ts scripts/benchmark-job-intelligence.ts app/routes/analysis.requirements.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa4:source
+> prettier --check scripts/benchmark-scoring-validity.ts scripts/scoring-validity-engineering.ts scripts/score-v2-test-fixture.ts scripts/verify-score-v2.ts scripts/verify-score-v2-legacy.ts app/routes/analysis.score.tsx && eslint scripts/benchmark-scoring-validity.ts scripts/scoring-validity-engineering.ts scripts/score-v2-test-fixture.ts scripts/verify-score-v2.ts scripts/verify-score-v2-legacy.ts app/routes/analysis.score.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa5:source
+> prettier --check app/lib/authoring-ui.ts app/lib/writing-quality.ts app/routes/analysis.author.tsx app/components/AuthoringWorkspace.tsx scripts/verify-authoring.ts scripts/benchmark-writer-grounding.ts scripts/writer-grounding-engineering.ts && eslint app/lib/authoring-ui.ts app/lib/writing-quality.ts app/routes/analysis.author.tsx app/components/AuthoringWorkspace.tsx scripts/verify-authoring.ts scripts/benchmark-writer-grounding.ts scripts/writer-grounding-engineering.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa6:source
+> prettier --check app/lib/server/artifact-contract.ts app/lib/server/artifact-renderer.ts app/lib/server/artifact-worker.mjs app/lib/server/artifact-repository.ts app/lib/server/artifact-route-helpers.ts app/routes/analysis.export.tsx app/routes/analysis.artifact.ts scripts/verify-artifact-export.ts scripts/benchmark-render-parity.ts && eslint app/lib/server/artifact-contract.ts app/lib/server/artifact-renderer.ts app/lib/server/artifact-repository.ts app/lib/server/artifact-route-helpers.ts app/routes/analysis.export.tsx app/routes/analysis.artifact.ts scripts/verify-artifact-export.ts scripts/benchmark-render-parity.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> lint
+> eslint app/routes app/lib/server app/lib/native-layout-schema.ts app/lib/native-layout-structure.ts tests e2e app/components scripts/verify-local-ocr.ts vite.worker.config.ts scripts/check-container.mjs
+
+
+> test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m<workspace>[39m
+
+ [32m✓[39m tests/unit/document-worker-cli.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1159[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe configuration before client imports or network activity {"SUPABASE_URL":"http://user:password@127.0.0.1:54321","EVIDENCE_REVIEW_ENABLED":"true"} [33m 361[2mms[22m[39m
+[90mstderr[2m | tests/components/WorkspaceRepairs.test.tsx[2m > [22m[2mrebinds writing selection and clears clarification text and confirmation when focus changes
+[22m[39mNo `HydrateFallback` element provided to render during initial hydration
+
+ [32m✓[39m tests/unit/extraction-benchmark.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 1458[2mms[22m[39m
+     [33m[2m✓[22m[39m returns nonzero from the release CLI while engineering output remains reviewable [33m 1427[2mms[22m[39m
+ [32m✓[39m tests/unit/scoring-validity.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1699[2mms[22m[39m
+   [33m[2m✓[22m[39m AA046 checks deterministic traces and invariance while failing closed on unreviewed release metrics [33m 542[2mms[22m[39m
+   [33m[2m✓[22m[39m release CLI produces a blocked receipt and a nonzero exit [33m 1156[2mms[22m[39m
+ [32m✓[39m tests/components/WorkspaceRepairs.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1399[2mms[22m[39m
+   [33m[2m✓[22m[39m rebinds writing selection and clears clarification text and confirmation when focus changes [33m 1356[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/text-fusion.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 1344[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/runtime-memory.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 1033[2mms[22m[39m
+ [32m✓[39m tests/unit/writer-grounding-engineering.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 876[2mms[22m[39m
+   [33m[2m✓[22m[39m release mode emits a blocked receipt and exits nonzero [33m 781[2mms[22m[39m
+ [32m✓[39m tests/unit/worker-runner.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 590[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps a standalone idle worker alive until shutdown [33m 542[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-corruption.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 3328[2mms[22m[39m
+   [33m[2m✓[22m[39m real pdf bytes with changed critical content or missing structure lose verified state [33m 1686[2mms[22m[39m
+   [33m[2m✓[22m[39m real docx bytes with changed critical content or missing structure lose verified state [33m 1640[2mms[22m[39m
+ [32m✓[39m tests/unit/typescript-eslint-glob.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 536[2mms[22m[39m
+   [33m[2m✓[22m[39m allows only the declared hidden-file glob through real project services [33m 523[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-synthetic.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 499[2mms[22m[39m
+ [32m✓[39m tests/unit/private-verification.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1352[2mms[22m[39m
+   [33m[2m✓[22m[39m seals real Vite env loading and rejects unsafe private browser configuration [33m 783[2mms[22m[39m
+   [33m[2m✓[22m[39m inventories Git-aware source changes and aborts the actual owned process group [33m 567[2mms[22m[39m
+ [32m✓[39m tests/components/ResultTabs.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 153[2mms[22m[39m
+ [32m✓[39m tests/components/FileUploader.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 199[2mms[22m[39m
+[90mstderr[2m | tests/components/PrivacyRepairs.test.tsx[2m > [22m[2muses stable UTC dates and lets the browser handle the export attachment link
+[22m[39mNo `HydrateFallback` element provided to render during initial hydration
+
+ [32m✓[39m tests/components/PrivacyRepairs.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 196[2mms[22m[39m
+ [32m✓[39m tests/unit/score-v2-engine.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 265[2mms[22m[39m
+ [32m✓[39m tests/components/LatexPdfPreview.test.tsx [2m([22m[2m15 tests[22m[2m)[22m[33m 520[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-pilot.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 211[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-source-links.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 132[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-repository.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 109[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-print-pilot.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 4832[2mms[22m[39m
+     [33m[2m✓[22m[39m renders deterministic image-only clean source with eight preauthored fields [33m 455[2mms[22m[39m
+     [33m[2m✓[22m[39m actually applies declared 150 DPI challenge transformations [33m 339[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps every source family in one partition and counts controls honestly [33m 3783[2mms[22m[39m
+ [32m✓[39m tests/components/Phase6Accessibility.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 191[2mms[22m[39m
+ [32m✓[39m tests/components/CitedWritingSuggestions.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 148[2mms[22m[39m
+ [32m✓[39m tests/components/ResumeWriter.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 157[2mms[22m[39m
+ [32m✓[39m tests/unit/authoring-proposals.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 109[2mms[22m[39m
+ [32m✓[39m tests/unit/authoring-contract.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 139[2mms[22m[39m
+ [32m✓[39m tests/components/BuildAiAssistant.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 106[2mms[22m[39m
+ [32m✓[39m tests/components/Heatmap.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 89[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-adverse.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 129[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-contract.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 118[2mms[22m[39m
+ [32m✓[39m tests/unit/job-requirements.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 104[2mms[22m[39m
+ [32m✓[39m tests/unit/job-intelligence-benchmark.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 78[2mms[22m[39m
+ [32m✓[39m tests/components/ThemeControl.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 188[2mms[22m[39m
+ [32m✓[39m tests/unit/build-assist-service.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 92[2mms[22m[39m
+[90mstderr[2m | tests/integration/paddle-api.test.ts[2m > [22m[2mnative PDF to hosted OCR contract integration (no live provider)[2m > [22m[2mrejects malformed before API disclosure
+[22m[39mWarning: Indexing all PDF objects
+
+ [32m✓[39m tests/integration/paddle-api.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 73[2mms[22m[39m
+ [32m✓[39m tests/components/EvidenceScene3D.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 107[2mms[22m[39m
+ [32m✓[39m tests/unit/extraction-repair-development.test.ts [2m([22m[2m91 tests[22m[2m)[22m[32m 48[2mms[22m[39m
+ [32m✓[39m tests/integration/native-reading-order.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 78[2mms[22m[39m
+ [32m✓[39m tests/integration/native-evidence.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+ [32m✓[39m tests/unit/score-inflation.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 73[2mms[22m[39m
+ [32m✓[39m tests/unit/canonical-content.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 83[2mms[22m[39m
+ [32m✓[39m tests/unit/scoring-stage.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 70[2mms[22m[39m
+ [32m✓[39m tests/unit/jd-matching.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 65[2mms[22m[39m
+ [32m✓[39m tests/unit/score-semantics.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+ [32m✓[39m tests/unit/writer-worker-transport.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 57[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/paddle.test.ts [2m([22m[2m52 tests[22m[2m)[22m[32m 59[2mms[22m[39m
+ [32m✓[39m tests/unit/analysis.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 70[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-review.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-evaluation.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 52[2mms[22m[39m
+ [32m✓[39m tests/unit/rewrite-service.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+ [32m✓[39m tests/unit/rewrite-ai.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m tests/unit/document-extraction.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/unit/job-requirement-proposals.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/adapter.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/selective.test.ts [2m([22m[2m58 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m tests/unit/authoring-route.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m tests/unit/canonical-route.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m tests/unit/native-evidence-v2.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m tests/unit/job-requirement-route.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-field-version.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-fields.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m tests/components/SavedScoreContext.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/local-container.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/unit/document-evidence.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-review-route.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m tests/unit/writer-regeneration.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m tests/unit/privacy-operations.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m tests/unit/writer-grounding.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m tests/unit/score-v2-route.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/latex-routes.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m tests/unit/metrics-route.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m tests/unit/openai-model-transport.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/unit/build-assist.test.ts [2m([22m[2m44 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/integration/api-analyze.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m tests/unit/authoring-forms.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/unit/analyze-request.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/response-security.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/latex-sandbox.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m tests/unit/auth-logout.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-route.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m tests/components/UncalibratedScores.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m tests/integration/error-matrix.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m tests/unit/native-evidence-schema.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/build-assist-provider.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m tests/unit/request-context.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/errors.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/unit/latex-source.test.ts [2m([22m[2m47 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m tests/unit/security.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/paddle-admission.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/unit/extraction-stage.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/unit/home-routing.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/api-not-found.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/canonical-resume-schema.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m tests/unit/canonical-sql-contract.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/unit/job-domain.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/parse-sim-benchmark.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/unit/qualitative-stage-outage.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/dates.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/extraction-router.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/qualitative-ai.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/score-v2-contract.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m tests/unit/native-layout-structure.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/extraction-transitions.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/contact.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/unit/qualitative-prose.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/latex-config.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/unit/score-v2-validity-metrics.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-renderer.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 9138[2mms[22m[39m
+   [33m[2m✓[22m[39m renders and independently parses pdf for A4 and Letter [33m 970[2mms[22m[39m
+   [33m[2m✓[22m[39m renders and independently parses docx for A4 and Letter [33m 1113[2mms[22m[39m
+   [33m[2m✓[22m[39m blocks unsupported glyphs, overflow, stale input and cancelled work [33m 487[2mms[22m[39m
+   [33m[2m✓[22m[39m reproduces identical pdf bytes for identical version and options [33m 880[2mms[22m[39m
+   [33m[2m✓[22m[39m reproduces identical docx bytes for identical version and options [33m 1747[2mms[22m[39m
+   [33m[2m✓[22m[39m bounds simultaneous jobs and cancels active workers [33m 750[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves mixed text and mathematical symbols in pdf without substitution [33m 737[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves mixed text and mathematical symbols in docx without substitution [33m 2452[2mms[22m[39m
+ [32m✓[39m tests/unit/latex-service.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/unit/config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/native-evidence-worker.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/observability.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/unit/parse-pages.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/layout-read-model.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/unit/native-layout-schema.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/native-layout.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/layout.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-scoring-guard.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/unit/upload-validation.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/extraction-benchmark-engineering.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 9037[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps existing locked families separate and requires their pre-execution receipt [33m 2510[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses release before recognition and binds explicit immutable CI images [33m 3399[2mms[22m[39m
+     [33m[2m✓[22m[39m freezes every development source and label before running recognition [33m 1572[2mms[22m[39m
+     [33m[2m✓[22m[39m extracts all fields through real PDF parsing and reconciliation without truth input [33m 1553[2mms[22m[39m
+ [32m✓[39m tests/unit/storage.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/build-assist-config.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/native-layout-limits.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/source-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/qualitative-stage.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/score-snapshot-binding.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/analysis-state.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/unit/privacy.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/auth.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/worker-readiness.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/phase5-thresholds.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/sections.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/iso-datetime.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-field-sql-version.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/database.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/unit/browser-test-target.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/unit/operations-readiness.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/bullets.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-field-evaluation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/writing-quality.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/unit/result-cache.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/unit/react-router-config.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/authorization.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/theme.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/job-policy.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/result-feedback.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-pilot-cli.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 10729[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe flags before execution: ["--psm=7"] [33m 541[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe flags before execution: ["--dpi=150","--dpi=300"] [33m 655[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe flags before execution: ["--print-pilot"] [33m 591[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe flags before execution: ["--print-pilot","--partition=locked"] [33m 584[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe flags before execution: ["--lock-receipt=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"] [33m 561[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects a mismatched frozen receipt without reaching Docker [33m 4368[2mms[22m[39m
+     [33m[2m✓[22m[39m can freeze held-out sources without Docker or recognition [33m 3426[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m147 passed[39m[22m[90m (147)[39m
+[2m      Tests [22m [1m[32m1220 passed[39m[22m[90m (1220)[39m
+[2m   Start at [22m 15:12:06
+[2m   Duration [22m 10.88s[2m (transform 3.42s, setup 0ms, import 14.24s, tests 55.13s, environment 6.71s)[22m
+
+
+> typecheck
+> react-router typegen && tsc
+
+
+> build
+> react-router build
+
+Using Vite Environment API (experimental)
+vite v6.4.5 building for production...
+transforming...
+node_modules/zod/v4/core/regexes.js (74:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/util.js (400:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 266 modules transformed.
+Generated an empty chunk: "auth.callback".
+Generated an empty chunk: "auth.logout".
+Generated an empty chunk: "latex.compile".
+Generated an empty chunk: "build.suggest".
+Generated an empty chunk: "latex.legacy".
+Generated an empty chunk: "latex.compile-legacy".
+Generated an empty chunk: "resume.rewrite".
+Generated an empty chunk: "analysis.source".
+Generated an empty chunk: "analysis.artifact".
+Generated an empty chunk: "api.analyze".
+Generated an empty chunk: "api.analysis-status".
+Generated an empty chunk: "api.analysis-cancel".
+Generated an empty chunk: "api.telemetry".
+Generated an empty chunk: "api.privacy-export".
+Generated an empty chunk: "api.not-found".
+Generated an empty chunk: "metrics".
+Generated an empty chunk: "healthz".
+Generated an empty chunk: "readyz".
+Generated an empty chunk: "chrome-devtools".
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                        13.83 kB │ gzip:   1.53 kB
+build/client/assets/WorkspaceShell-Cp2OACIv.css          0.29 kB │ gzip:   0.19 kB
+build/client/assets/SiteNavigation-CekEXlv7.css          2.70 kB │ gzip:   0.94 kB
+build/client/assets/resume-Bnjh1IjJ.css                  3.28 kB │ gzip:   1.05 kB
+build/client/assets/latex-CACerNXU.css                  12.38 kB │ gzip:   3.08 kB
+build/client/assets/root-Cn_K63-Q.css                  141.77 kB │ gzip:  24.10 kB
+build/client/assets/auth.callback-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/auth.logout-l0sNRNKZ.js              0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.compile-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/build.suggest-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.legacy-l0sNRNKZ.js             0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.compile-legacy-l0sNRNKZ.js     0.00 kB │ gzip:   0.02 kB
+build/client/assets/resume.rewrite-l0sNRNKZ.js           0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.source-l0sNRNKZ.js          0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.artifact-l0sNRNKZ.js        0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analyze-l0sNRNKZ.js              0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analysis-status-l0sNRNKZ.js      0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analysis-cancel-l0sNRNKZ.js      0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.telemetry-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.privacy-export-l0sNRNKZ.js       0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.not-found-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/metrics-l0sNRNKZ.js                  0.00 kB │ gzip:   0.02 kB
+build/client/assets/healthz-l0sNRNKZ.js                  0.00 kB │ gzip:   0.02 kB
+build/client/assets/readyz-l0sNRNKZ.js                   0.00 kB │ gzip:   0.02 kB
+build/client/assets/chrome-devtools-l0sNRNKZ.js          0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.score-B-9bWACx.js           0.25 kB │ gzip:   0.20 kB
+build/client/assets/analyses-E4OQpzzq.js                 0.34 kB │ gzip:   0.26 kB
+build/client/assets/PublicShell-26rMaOTU.js              0.67 kB │ gzip:   0.36 kB
+build/client/assets/WorkspaceShell-pSyJ3OhW.js           0.78 kB │ gzip:   0.36 kB
+build/client/assets/store-DL7ZpJ9l.js                    0.79 kB │ gzip:   0.48 kB
+build/client/assets/preload-helper-ckwbz45p.js           1.14 kB │ gzip:   0.66 kB
+build/client/assets/account-BFJNC2HF.js                  2.11 kB │ gzip:   0.93 kB
+build/client/assets/EvidenceScene3D-C1MTRLDB.js          2.41 kB │ gzip:   0.93 kB
+build/client/assets/root-BAE9DoY1.js                     3.32 kB │ gzip:   1.63 kB
+build/client/assets/analysis.requirements-CEoiS8vn.js    3.33 kB │ gzip:   1.46 kB
+build/client/assets/auth-DjeZoUqy.js                     3.41 kB │ gzip:   1.35 kB
+build/client/assets/analysis.export-BMOT0ZCE.js          3.64 kB │ gzip:   1.55 kB
+build/client/assets/index-CMdmomBl.js                    3.92 kB │ gzip:   1.54 kB
+build/client/assets/SiteNavigation-DcJlVsJa.js           4.28 kB │ gzip:   1.80 kB
+build/client/assets/analysis.evidence-HQfSKdRA.js        5.66 kB │ gzip:   2.00 kB
+build/client/assets/analysis.canonical-CpHXS56o.js       6.07 kB │ gzip:   1.91 kB
+build/client/assets/privacy-BLwsmKXv.js                  6.60 kB │ gzip:   2.14 kB
+build/client/assets/analysis-C_GSkZpY.js                 8.53 kB │ gzip:   2.89 kB
+build/client/assets/home-CKe7lqPZ.js                     9.22 kB │ gzip:   2.82 kB
+build/client/assets/analysis.author-CE2VCjHP.js         17.95 kB │ gzip:   5.53 kB
+build/client/assets/latex-DZcuJpbe.js                   34.22 kB │ gzip:  11.52 kB
+build/client/assets/upload-Cuvr36i3.js                  70.39 kB │ gzip:  20.47 kB
+build/client/assets/resume-BxVNUAE4.js                 133.55 kB │ gzip:  39.37 kB
+build/client/assets/chunk-BV7QT456-BdP_oTIi.js         133.72 kB │ gzip:  44.97 kB
+build/client/assets/entry.client-BbqgV4JK.js           179.94 kB │ gzip:  57.23 kB
+build/client/assets/pdf-DCt7qnim.js                    390.14 kB │ gzip: 115.82 kB
+✓ built in 1.57s
+vite v6.4.5 building SSR bundle for production...
+transforming...
+✓ 144 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                 0.23 kB
+build/server/assets/server-build-DdDdAvUV.css  160.41 kB
+build/server/index.js                          665.29 kB
+
+✓ 1 asset cleaned from React Router server build.
+build/server/assets/server-build-DdDdAvUV.css
+
+✓ built in 377ms
+
+> build:worker
+> vite build --config vite.worker.config.ts
+
+vite v6.4.5 building for production...
+transforming...
+✓ 46 modules transformed.
+rendering chunks...
+computing gzip size...
+build/worker/analysis.mjs  115.67 kB │ gzip: 34.27 kB
+✓ built in 140ms
+
+> test:load
+> node --experimental-strip-types node_modules/vite-node/vite-node.mjs scripts/load-test.ts
+
+{
+  "status": "pass",
+  "scenario": {
+    "analyses": 100,
+    "concurrency": 5,
+    "providerThrottleEvery": 0
+  },
+  "acceptance": {
+    "p50Ms": 210,
+    "p95Ms": 280,
+    "p99Ms": 280,
+    "throughputPerMinute": 3297
+  },
+  "queue": {
+    "peakDepth": 95,
+    "maxAgeMs": 1820
+  },
+  "worker": {
+    "maxConcurrency": 5,
+    "memoryMb": 180
+  },
+  "browser": {
+    "p95Ms": 420
+  },
+  "provider": {
+    "throttled": 0
+  },
+  "errors": {
+    "total": 0,
+    "rate": 0
+  },
+  "cost": {
+    "estimatedUsd": 0
+  },
+  "recovery": {
+    "workerKillReclaimed": true,
+    "duplicateCharges": 0
+  }
+}
+
+> test:restore
+> node --experimental-strip-types node_modules/vite-node/vite-node.mjs scripts/verify-restore.ts
+
+{"mode":"synthetic-fixture","ok":true,"reason":"integrity_verified"}
+
+> benchmark:phase5
+> node node_modules/vite-node/vite-node.mjs scripts/benchmark-phase5.ts
+
+{
+  "corpus": {
+    "parsingFixtures": 7,
+    "matchingFixtures": 10
+  },
+  "parser": {
+    "aggregate": {
+      "truePositive": 24,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "precision": 1,
+      "recall": 1,
+      "f1": 1
+    },
+    "sections": {
+      "truePositive": 20,
+      "falsePositive": 0,
+      "falseNegative": 2,
+      "precision": 1,
+      "recall": 0.9090909090909091,
+      "f1": 0.9523809523809523
+    }
+  },
+  "matching": {
+    "truePositive": 13,
+    "falsePositive": 0,
+    "falseNegative": 0,
+    "precision": 1,
+    "recall": 1,
+    "f1": 1
+  },
+  "deterministicVariance": {
+    "differingRuns": 0,
+    "totalPairs": 10
+  },
+  "latencyMs": {
+    "p50": 0.36762499999997544,
+    "p95": 0.9823330000000396,
+    "max": 0.9823330000000396
+  },
+  "costMicros": 0,
+  "failureRate": 0,
+  "thresholdCheck": {
+    "enforced": true,
+    "status": "approved",
+    "failures": []
+  }
+}
+
+> benchmark:job-intelligence
+> vite-node --config vitest.config.ts scripts/benchmark-job-intelligence.ts
+
+{"schemaVersion":"job-intelligence-benchmark/1.0.0","manifestSha256":"f186b2a58aabf99026d602de65a4744a83933936fa7bc02767ea539b36108b16","producerVersion":"jd-parser/1.0.2","scope":"known-synthetic-engineering-only","documents":[{"id":"jd-standard-a","family":"synthetic-a","segment":"standard","byType":{"experience":{"tp":1,"fp":0,"fn":0},"skill":{"tp":2,"fp":0,"fn":0},"education":{"tp":1,"fp":0,"fn":0},"certification":{"tp":1,"fp":0,"fn":0},"location":{"tp":1,"fp":0,"fn":0},"authorization":{"tp":1,"fp":0,"fn":0},"responsibility":{"tp":1,"fp":0,"fn":0}},"importanceByClass":{"required":{"tp":5,"fp":0,"fn":0},"preferred":{"tp":2,"fp":0,"fn":0},"contextual":{"tp":1,"fp":0,"fn":0},"unknown":{"tp":0,"fp":0,"fn":0}},"citationValid":true,"citationCount":8,"citationRecall":1,"abstainedLines":2,"variance":false,"latencyMs":24.221958},{"id":"jd-adverse-b","family":"synthetic-b","segment":"adverse","byType":{"education":{"tp":1,"fp":0,"fn":0},"authorization":{"tp":1,"fp":0,"fn":0},"skill":{"tp":2,"fp":0,"fn":0},"experience":{"tp":1,"fp":0,"fn":0},"certification":{"tp":1,"fp":0,"fn":0},"location":{"tp":1,"fp":0,"fn":0},"responsibility":{"tp":1,"fp":0,"fn":0}},"importanceByClass":{"required":{"tp":1,"fp":0,"fn":0},"preferred":{"tp":2,"fp":0,"fn":0},"contextual":{"tp":3,"fp":0,"fn":0},"unknown":{"tp":2,"fp":0,"fn":0}},"citationValid":true,"citationCount":8,"citationRecall":1,"abstainedLines":3,"variance":false,"latencyMs":13.057083000000006}],"segments":[{"segment":"standard","documents":1,"typed":{"experience":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"skill":{"tp":2,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"education":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"certification":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"location":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"authorization":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"responsibility":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1}},"importance":{"required":{"tp":5,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"preferred":{"tp":2,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"contextual":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"unknown":{"tp":0,"fp":0,"fn":0,"precision":0,"recall":0,"f1":0}},"typedMacroF1":1,"importanceMacroF1":1,"citationPrecision":1,"citationRecall":1,"variance":false},{"segment":"adverse","documents":1,"typed":{"education":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"authorization":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"skill":{"tp":2,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"experience":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"certification":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"location":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"responsibility":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1}},"importance":{"required":{"tp":1,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"preferred":{"tp":2,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"contextual":{"tp":3,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1},"unknown":{"tp":2,"fp":0,"fn":0,"precision":1,"recall":1,"f1":1}},"typedMacroF1":1,"importanceMacroF1":1,"citationPrecision":1,"citationRecall":1,"variance":false}],"floors":{"typedMacroF1":0.95,"importanceMacroF1":0.93,"citationPrecision":1},"engineeringPassed":true,"mappingQuality":null,"modelVariance":null,"mappingReason":"no_adopted_licensed_taxonomy","providerCalls":0,"providerCostUsd":0,"marketDatasetAvailable":false,"releasePassed":false,"releaseBlockers":["representative_corpus_unavailable","independent_annotation_unavailable","domain_pack_review_pending","taxonomy_mapping_validation_unavailable","confidence_uncalibrated"],"intervals":null,"intervalReason":"two_synthetic_source_families_are_insufficient_for_representative_intervals","excludedTypes":["other"],"parserSha256":"21d541ee26daca3f9159a7ac1fe140a3f1617b8bab7dc3f275d113e3c01cb20a","annotationProvenance":"manually specified fictional source truth; no independent annotation","executedAt":"2026-11-06T09:42:26.640Z"}
+
+> benchmark:scoring-validity
+> vite-node --config vitest.config.ts scripts/benchmark-scoring-validity.ts
+
+{"schemaVersion":"scoring-validity-engineering/1.0.0","scope":"known synthetic engineering only","engineVersion":"score-v2/1.0.1","policyId":"software-engineering-en-IN/draft-1.0.0","engineeringPassed":true,"releasePassed":false,"segments":[{"segment":"source_bound_full_dates","repetitions":20,"deterministic":true,"numericValuesWithheld":true,"technicalRuleCount":6,"groupedRequirementCount":7,"inputFingerprint":"68c50382bf6884d0609fc198a3d32aff510f3993f2d3454a748909b943713572","semanticFingerprint":"b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e","latencyP95Ms":1.5218340000000126},{"segment":"repeated_jd","repetitions":20,"deterministic":true,"numericValuesWithheld":true,"technicalRuleCount":6,"groupedRequirementCount":7,"inputFingerprint":"7b10bd43f04dd2995f89e768a35e1ef867d4ab0feb50012cda07ab1088ed8fc3","semanticFingerprint":"b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e","latencyP95Ms":1.16375000000005},{"segment":"skill_stuffing","repetitions":20,"deterministic":true,"numericValuesWithheld":true,"technicalRuleCount":6,"groupedRequirementCount":7,"inputFingerprint":"db257625248360dab0f6d52c32e1ab2d71047d91e7096fbd8893d0ca96f97298","semanticFingerprint":"b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e","latencyP95Ms":0.8568329999999946},{"segment":"incomplete_pages","repetitions":20,"deterministic":true,"numericValuesWithheld":true,"technicalRuleCount":6,"groupedRequirementCount":7,"inputFingerprint":"10b0c5b321249b0453181a7a24a60ae775014f70ae9705689e09620db02c1fb4","semanticFingerprint":"56fea55774211bd32599068b5f7368971d777ed68f35eb839226e769230e4d54","latencyP95Ms":0.8084579999999733},{"segment":"missing_jd","repetitions":20,"deterministic":true,"numericValuesWithheld":true,"technicalRuleCount":6,"groupedRequirementCount":0,"inputFingerprint":"953b92632c401c077237092f929666c0b72482b9842f81c6b9229f7dbc8d6e1e","semanticFingerprint":"5f41f3220639da14ed6007fd423d8a5fd34674bfe5ca1a4e49e7e1330b1f5bfe","latencyP95Ms":0.4858329999999569},{"segment":"synthetic_name_1","repetitions":20,"deterministic":true,"numericValuesWithheld":true,"technicalRuleCount":6,"groupedRequirementCount":7,"inputFingerprint":"7508695c997d7314a27279328a4697e01795c5f1c6d6190129d4e5d545ce86e0","semanticFingerprint":"b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e","latencyP95Ms":0.6596670000000131},{"segment":"synthetic_name_2","repetitions":20,"deterministic":true,"numericValuesWithheld":true,"technicalRuleCount":6,"groupedRequirementCount":7,"inputFingerprint":"3f39f0a9198803f615dbfc7b188d2bcced0badbd154961ded311746ec82d191b","semanticFingerprint":"b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e","latencyP95Ms":0.6880419999999958},{"segment":"synthetic_name_3","repetitions":20,"deterministic":true,"numericValuesWithheld":true,"technicalRuleCount":6,"groupedRequirementCount":7,"inputFingerprint":"56dec88bb404e647d901b0cfde3b433e81e457da9ce01ffed421817e8c22dfdb","semanticFingerprint":"b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e","latencyP95Ms":0.691250000000025},{"segment":"synthetic_name_4","repetitions":20,"deterministic":true,"numericValuesWithheld":true,"technicalRuleCount":6,"groupedRequirementCount":7,"inputFingerprint":"413c3736e10ec8a2c33157613388da450ed102b03da3c59acea0f5324b8e3f8d","semanticFingerprint":"b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e","latencyP95Ms":0.7136669999999867}],"invariance":{"syntheticNames":4,"repeatedRequirements":true,"skillStuffing":true,"duplicateBulletCredit":0.5,"promptInjectionRejected":true,"overlappedMonths":36},"measurementMethods":["tie-aware Spearman","seeded case bootstrap percentile interval","MAE","RMSE","coverage and error by segment"],"expertAgreement":null,"representativeFairnessError":null,"comprehensionReview":null,"authoritativeScoreAccuracy":null,"providerCalls":0,"providerCostUsd":0,"releaseBlockers":["AA1 locked critical field accuracy failed","AA3 domain and representative corpus acceptance open","No approved scoring weights or coverage policy","No reviewed expert ratings or bootstrap agreement estimates","No representative fairness/error or comprehension review"],"fixtureManifestSha256":"d5a45c9dbb47cff79bdf5961363c024762dec17688a5f064a8bd5f0c5ea75cdd","sourceSha256":"d265843789a362f82753ad9f7b3284467b899bc003c25ca72e42c2dd9c7f8f4b","executedAt":"2026-11-06T09:42:27.186Z"}
+
+> benchmark:writer-grounding
+> vite-node --config vitest.config.ts scripts/benchmark-writer-grounding.ts
+
+{"schemaVersion":"writer-grounding-engineering/1.0.0","manifest":{"id":"writer-known-synthetic/1.0.0","scope":"known synthetic, no representative or human/model evaluation","sourceSha256":"ea4a18f0cc0b871490cc9da44341a3e9173b0a5df8cfdd6f3ca0f6ea48a4e025","patterns":["xyz","action_impact_context","action_scope_result"],"knownAnswers":{"result":"Fewer failed releases","measurement":"Five fewer failed releases","scope":"Internal deployment workflow","method":"Tested release checks"},"adversarialCases":["invented_metric","invented_employer","unsupported_skill","unsupported_certification","foreign_fact","cross_section","stale_version","document_replacement","model_numeric_authority","missing_confirmation","missing_measurement"]},"manifestSha256":"10817ba6c6f7f9fecd765abbdee09bcdb91210292abb75b12b3200ced95b77c8","engineeringPassed":true,"releasePassed":false,"adapters":[{"adapterId":"injected_exact_a","realModel":false,"validatedProposalCount":1,"unsupportedAcceptedFacts":0,"citationValidity":1,"latencyMs":0.590582999999981,"providerCostUsd":0},{"adapterId":"injected_exact_b","realModel":false,"validatedProposalCount":1,"unsupportedAcceptedFacts":0,"citationValidity":1,"latencyMs":0.23054100000001654,"providerCostUsd":0},{"adapterId":"injected_hallucination","realModel":false,"validatedProposalCount":0,"unsupportedAcceptedFacts":0,"citationValidity":null,"latencyMs":0.21295800000001464,"providerCostUsd":0}],"adversarialCases":11,"unsupportedAcceptedFacts":0,"realProviderCalls":0,"adoptedModel":null,"actualModelComparison":null,"editUsefulness":null,"representativeDomainQuality":null,"candidateReviewAcceptance":null,"releaseBlockers":["No representative locked writer corpus or candidate review","No authorized real model comparison or model policy adoption","Formal AA4 confidence/scoring and domain gates remain open"],"sourceHashes":{"app/lib/server/authoring-contract.ts":"93241918891f2743a81ef4c7b4b2e17b3030d0e3b5928ff1f2595212d3e30291","app/lib/server/authoring-repository.ts":"27e96de1fc04ccef532f1acea3d54e57022bcddc0c907a2fec3d3cde1ce82402","app/lib/server/authoring-proposals.ts":"9d4cff397cd5e79a5415a78abb449df14b7a3ac2c016dbfb29f7e3009b78ac9a","app/lib/writing-quality.ts":"907b2aa798b7f4cb4dd7d16d0c2667be5465d36f8ab773f895359999e4aeef00","supabase/migrations/20261012160703_candidate_authoring_transactions.sql":"bc5a4e132144d68bb267cdad506c3a96db66205d12ed1b480956596986048ee5"},"executedAt":"2026-11-06T09:42:27.559Z"}
+
+> benchmark:render-parity
+> vite-node --config vitest.config.ts scripts/benchmark-render-parity.ts
+
+{
+  "schemaVersion": "render-parity-engineering/1.0.0",
+  "kind": "known-synthetic-local",
+  "template": {
+    "id": "software-engineering-single-column",
+    "version": "1.0.2"
+  },
+  "sourceHashes": {
+    "app/lib/server/artifact-contract.ts": "3c4e5f4b291a5124d762ba3cf6e4a9ce2979204f9b50d454d2f5d229e41bfb4a",
+    "app/lib/server/artifact-renderer.ts": "636fb5d1eb4b1a75b1c6aaed5b753a7ea4c7e375e5617573e9eea5fb8b75b70d",
+    "app/lib/server/artifact-worker.mjs": "10ac82e6a5c3f53821a3d1250d0ee33ada83072c18b348febb2d9b0c272f025f",
+    "assets/fonts/NotoSans-Regular.ttf": "b85c38ecea8a7cfb39c24e395a4007474fa5a4fc864f6ee33309eb4948d232d5",
+    "assets/fonts/NotoSansMath-Regular.ttf": "80b61fd613d3519197e64fff6f7e71fdc7f3e6526440ea4115b554ef7fd59af7"
+  },
+  "caseCount": 20,
+  "passed": 20,
+  "cases": [
+    {
+      "id": "en-IN/pdf/A4",
+      "passed": true,
+      "pages": 1,
+      "durationMs": 255,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": []
+    },
+    {
+      "id": "en-IN/pdf/LETTER",
+      "passed": true,
+      "pages": 1,
+      "durationMs": 195,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": []
+    },
+    {
+      "id": "en-IN/docx/A4",
+      "passed": true,
+      "pages": null,
+      "durationMs": 279,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": [
+        "DOCX pagination depends on your viewer; inspect page flow before sharing."
+      ]
+    },
+    {
+      "id": "en-IN/docx/LETTER",
+      "passed": true,
+      "pages": null,
+      "durationMs": 275,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": [
+        "DOCX pagination depends on your viewer; inspect page flow before sharing."
+      ]
+    },
+    {
+      "id": "en-US/pdf/A4",
+      "passed": true,
+      "pages": 1,
+      "durationMs": 194,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": []
+    },
+    {
+      "id": "en-US/pdf/LETTER",
+      "passed": true,
+      "pages": 1,
+      "durationMs": 195,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": []
+    },
+    {
+      "id": "en-US/docx/A4",
+      "passed": true,
+      "pages": null,
+      "durationMs": 272,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": [
+        "DOCX pagination depends on your viewer; inspect page flow before sharing."
+      ]
+    },
+    {
+      "id": "en-US/docx/LETTER",
+      "passed": true,
+      "pages": null,
+      "durationMs": 274,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": [
+        "DOCX pagination depends on your viewer; inspect page flow before sharing."
+      ]
+    },
+    {
+      "id": "en-GB/pdf/A4",
+      "passed": true,
+      "pages": 1,
+      "durationMs": 195,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": []
+    },
+    {
+      "id": "en-GB/pdf/LETTER",
+      "passed": true,
+      "pages": 1,
+      "durationMs": 194,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": []
+    },
+    {
+      "id": "en-GB/docx/A4",
+      "passed": true,
+      "pages": null,
+      "durationMs": 272,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": [
+        "DOCX pagination depends on your viewer; inspect page flow before sharing."
+      ]
+    },
+    {
+      "id": "en-GB/docx/LETTER",
+      "passed": true,
+      "pages": null,
+      "durationMs": 278,
+      "criticalParity": 1,
+      "textCoverage": 1,
+      "diagnostics": [
+        "DOCX pagination depends on your viewer; inspect page flow before sharing."
+      ]
+    },
+    {
+      "id": "missing-critical",
+      "passed": true
+    },
+    {
+      "id": "reordered-column",
+      "passed": true
+    },
+    {
+      "id": "broken-link",
+      "passed": true
+    },
+    {
+      "id": "misbound-link",
+      "passed": true
+    },
+    {
+      "id": "omitted-section",
+      "passed": true
+    },
+    {
+      "id": "clipping",
+      "passed": true
+    },
+    {
+      "id": "missing-structure",
+      "passed": true
+    },
+    {
+      "id": "extra-text",
+      "passed": true
+    }
+  ],
+  "measured": {
+    "criticalParity": 1,
+    "textCoverage": 1,
+    "approvedViewer": null,
+    "assistiveTechnology": null,
+    "representativeCorpus": null,
+    "expertAccessibilityReview": null
+  },
+  "engineeringPass": true,
+  "releasePass": false,
+  "releaseBlockers": [
+    "approved viewer matrix",
+    "assistive technology evaluation",
+    "representative domain and locale corpus",
+    "security/accessibility owner acceptance",
+    "upstream formal gates"
+  ]
+}
+
+> test:e2e
+> npm run build && playwright test
+
+
+> build
+> react-router build
+
+Using Vite Environment API (experimental)
+vite v6.4.5 building for production...
+transforming...
+node_modules/zod/v4/core/regexes.js (74:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/util.js (400:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 266 modules transformed.
+Generated an empty chunk: "auth.callback".
+Generated an empty chunk: "auth.logout".
+Generated an empty chunk: "latex.compile".
+Generated an empty chunk: "build.suggest".
+Generated an empty chunk: "latex.legacy".
+Generated an empty chunk: "latex.compile-legacy".
+Generated an empty chunk: "resume.rewrite".
+Generated an empty chunk: "analysis.source".
+Generated an empty chunk: "analysis.artifact".
+Generated an empty chunk: "api.analyze".
+Generated an empty chunk: "api.analysis-status".
+Generated an empty chunk: "api.analysis-cancel".
+Generated an empty chunk: "api.telemetry".
+Generated an empty chunk: "api.privacy-export".
+Generated an empty chunk: "api.not-found".
+Generated an empty chunk: "metrics".
+Generated an empty chunk: "healthz".
+Generated an empty chunk: "readyz".
+Generated an empty chunk: "chrome-devtools".
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                        13.83 kB │ gzip:   1.53 kB
+build/client/assets/WorkspaceShell-Cp2OACIv.css          0.29 kB │ gzip:   0.19 kB
+build/client/assets/SiteNavigation-CekEXlv7.css          2.70 kB │ gzip:   0.94 kB
+build/client/assets/resume-Bnjh1IjJ.css                  3.28 kB │ gzip:   1.05 kB
+build/client/assets/latex-CACerNXU.css                  12.38 kB │ gzip:   3.08 kB
+build/client/assets/root-Cn_K63-Q.css                  141.77 kB │ gzip:  24.10 kB
+build/client/assets/auth.callback-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/auth.logout-l0sNRNKZ.js              0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.compile-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/build.suggest-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.legacy-l0sNRNKZ.js             0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.compile-legacy-l0sNRNKZ.js     0.00 kB │ gzip:   0.02 kB
+build/client/assets/resume.rewrite-l0sNRNKZ.js           0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.source-l0sNRNKZ.js          0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.artifact-l0sNRNKZ.js        0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analyze-l0sNRNKZ.js              0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analysis-status-l0sNRNKZ.js      0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analysis-cancel-l0sNRNKZ.js      0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.telemetry-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.privacy-export-l0sNRNKZ.js       0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.not-found-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/metrics-l0sNRNKZ.js                  0.00 kB │ gzip:   0.02 kB
+build/client/assets/healthz-l0sNRNKZ.js                  0.00 kB │ gzip:   0.02 kB
+build/client/assets/readyz-l0sNRNKZ.js                   0.00 kB │ gzip:   0.02 kB
+build/client/assets/chrome-devtools-l0sNRNKZ.js          0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.score-B-9bWACx.js           0.25 kB │ gzip:   0.20 kB
+build/client/assets/analyses-E4OQpzzq.js                 0.34 kB │ gzip:   0.26 kB
+build/client/assets/PublicShell-26rMaOTU.js              0.67 kB │ gzip:   0.36 kB
+build/client/assets/WorkspaceShell-pSyJ3OhW.js           0.78 kB │ gzip:   0.36 kB
+build/client/assets/store-DL7ZpJ9l.js                    0.79 kB │ gzip:   0.48 kB
+build/client/assets/preload-helper-ckwbz45p.js           1.14 kB │ gzip:   0.66 kB
+build/client/assets/account-BFJNC2HF.js                  2.11 kB │ gzip:   0.93 kB
+build/client/assets/EvidenceScene3D-C1MTRLDB.js          2.41 kB │ gzip:   0.93 kB
+build/client/assets/root-BAE9DoY1.js                     3.32 kB │ gzip:   1.63 kB
+build/client/assets/analysis.requirements-CEoiS8vn.js    3.33 kB │ gzip:   1.46 kB
+build/client/assets/auth-DjeZoUqy.js                     3.41 kB │ gzip:   1.35 kB
+build/client/assets/analysis.export-BMOT0ZCE.js          3.64 kB │ gzip:   1.55 kB
+build/client/assets/index-CMdmomBl.js                    3.92 kB │ gzip:   1.54 kB
+build/client/assets/SiteNavigation-DcJlVsJa.js           4.28 kB │ gzip:   1.80 kB
+build/client/assets/analysis.evidence-HQfSKdRA.js        5.66 kB │ gzip:   2.00 kB
+build/client/assets/analysis.canonical-CpHXS56o.js       6.07 kB │ gzip:   1.91 kB
+build/client/assets/privacy-BLwsmKXv.js                  6.60 kB │ gzip:   2.14 kB
+build/client/assets/analysis-C_GSkZpY.js                 8.53 kB │ gzip:   2.89 kB
+build/client/assets/home-CKe7lqPZ.js                     9.22 kB │ gzip:   2.82 kB
+build/client/assets/analysis.author-CE2VCjHP.js         17.95 kB │ gzip:   5.53 kB
+build/client/assets/latex-DZcuJpbe.js                   34.22 kB │ gzip:  11.52 kB
+build/client/assets/upload-Cuvr36i3.js                  70.39 kB │ gzip:  20.47 kB
+build/client/assets/resume-BxVNUAE4.js                 133.55 kB │ gzip:  39.37 kB
+build/client/assets/chunk-BV7QT456-BdP_oTIi.js         133.72 kB │ gzip:  44.97 kB
+build/client/assets/entry.client-BbqgV4JK.js           179.94 kB │ gzip:  57.23 kB
+build/client/assets/pdf-DCt7qnim.js                    390.14 kB │ gzip: 115.82 kB
+✓ built in 1.50s
+vite v6.4.5 building SSR bundle for production...
+transforming...
+✓ 144 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                 0.23 kB
+build/server/assets/server-build-DdDdAvUV.css  160.41 kB
+build/server/index.js                          665.29 kB
+
+✓ 1 asset cleaned from React Router server build.
+build/server/assets/server-build-DdDdAvUV.css
+
+✓ built in 369ms
+
+Running 71 tests using 1 worker
+
+  ✓   1 [chromium] › e2e/a11y.spec.ts:14:3 › / has no serious or critical accessibility violations (1.0s)
+  ✓   2 [chromium] › e2e/a11y.spec.ts:14:3 › /auth has no serious or critical accessibility violations (790ms)
+  ✓   3 [chromium] › e2e/a11y.spec.ts:14:3 › /upload has no serious or critical accessibility violations (840ms)
+  ✓   4 [chromium] › e2e/a11y.spec.ts:14:3 › /analysis/test-id has no serious or critical accessibility violations (743ms)
+  ✓   5 [chromium] › e2e/a11y.spec.ts:14:3 › /account has no serious or critical accessibility violations (816ms)
+  ✓   6 [chromium] › e2e/a11y.spec.ts:14:3 › /privacy has no serious or critical accessibility violations (753ms)
+  ✘   7 [chromium] › e2e/artifact-export.spec.ts:84:1 › semantic preview, checked PDF/DOCX and stale-version safety (12.1s)
+  ✓   8 [chromium] › e2e/artifact-export.spec.ts:138:1 › no-JavaScript export form and private access (17.9s)
+  ✓   9 [chromium] › e2e/audit-repairs.spec.ts:3:1 › public examples avoid numeric claims and the medium header stays compact (577ms)
+  ✘  10 [chromium] › e2e/authoring.spec.ts:47:1 › candidate edits, clarifies, accepts and undoes a source-bound patch by keyboard (28.0s)
+  ✓  11 [chromium] › e2e/authoring.spec.ts:147:1 › JavaScript-disabled editing preserves stale drafts and supports explicit recovery and restore (20.0s)
+  ✓  12 [chromium] › e2e/browser-repairs.spec.ts:69:1 › privacy initial load and reload are stable across timezones and export uses a native download (2.3s)
+  ✓  13 [chromium] › e2e/browser-repairs.spec.ts:124:1 › mobile private navigation reaches Privacy and signs out the current session (1.8s)
+  ✓  14 [chromium] › e2e/browser-repairs.spec.ts:168:1 › changing writing focus and going back never retargets another contribution's clarification draft (12.5s)
+  ✓  15 [chromium] › e2e/build-assist.spec.ts:31:1 › hover and keyboard selection disclose context without requests; Escape restores control (3.4s)
+  ✓  16 [chromium] › e2e/build-assist.spec.ts:90:1 › review/apply/undo binds exact source, preserves privacy and invalidates PDF (6.5s)
+  ✓  17 [chromium] › e2e/build-assist.spec.ts:135:1 › resume drafts require candidate confirmation and protected metrics are withheld (3.9s)
+  ✓  18 [chromium] › e2e/build-assist.spec.ts:185:1 › unsafe proposals and missing evidence remain advice; malformed/refused output fails safely (5.2s)
+  ✓  19 [chromium] › e2e/build-assist.spec.ts:221:1 › edits/cancel/dismiss ignore stale results and reset consent on mobile (2.9s)
+  ✓  20 [chromium] › e2e/build-assist.spec.ts:265:1 › mock provider timeout and refusal fail safely without changing source (14.0s)
+  ✘  21 [chromium] › e2e/canonical-resume.spec.ts:8:1 › canonical import, confirmation, edit, compare, restore and owner isolation (12.7s)
+[WebServer] Error: The `request.url` origin does not match `origin` header from a forwarded action request. Aborting the action.
+[WebServer]     at throwIfPotentialCSRFAttack (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:767:13)
+[WebServer]     at handleDocumentRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1426:9)
+[WebServer]     at requestHandler (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1295:24)
+[WebServer]     at requestHandler (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1349:12)
+[WebServer]     at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@react-router/express/dist/index.mjs:28:28
+[WebServer]     at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+  ✓  22 [chromium] › e2e/evidence-review.spec.ts:13:1 › owner confirms and corrects evidence by keyboard with CAS, privacy and no-score guards (8.3s)
+  ✘  23 [chromium] › e2e/job-requirements.spec.ts:5:1 › owner reviews cited JD requirements and immutable history by keyboard (6.1s)
+  ✓  24 [chromium] › e2e/latex-converter.spec.ts:48:1 › converter requires a session for page and compile requests (549ms)
+  ✓  25 [chromium] › e2e/latex-converter.spec.ts:84:1 › exact current macro source compiles in place and downloads a real readable PDF (4.9s)
+  ✓  26 [chromium] › e2e/latex-converter.spec.ts:240:1 › syntax failure and unsafe source reveal safe errors and allow retry (4.6s)
+  ✓  27 [chromium] › e2e/latex-converter.spec.ts:281:1 › browser-origin policy rejects cross-site and absent Origin requests (1.6s)
+  ✓  28 [chromium] › e2e/latex-converter.spec.ts:303:1 › keyboard resizing, source replacement and mobile views preserve the current buffer (2.4s)
+  ✓  29 [chromium] › e2e/latex-converter.spec.ts:386:1 › cancellation and late response cannot restore a stale preview (transport fault injection) (1.6s)
+  ✓  30 [chromium] › e2e/latex-converter.spec.ts:439:1 › selected code and native dropdown options stay readable in both themes (3.5s)
+  ✘  31 [chromium] › e2e/native-layout.spec.ts:16:1 › owner can review persisted layout by keyboard; other users cannot read it (11.7s)
+  ✓  32 [chromium] › e2e/phase6.spec.ts:16:5 › Phase 6 accessible runtime matrix › keeps one heading and no horizontal overflow at 390px (401ms)
+  ✓  33 [chromium] › e2e/phase6.spec.ts:16:5 › Phase 6 accessible runtime matrix › keeps one heading and no horizontal overflow at 768px (376ms)
+  ✓  34 [chromium] › e2e/phase6.spec.ts:16:5 › Phase 6 accessible runtime matrix › keeps one heading and no horizontal overflow at 1024px (377ms)
+  ✓  35 [chromium] › e2e/phase6.spec.ts:16:5 › Phase 6 accessible runtime matrix › keeps one heading and no horizontal overflow at 1366px (396ms)
+  ✓  36 [chromium] › e2e/phase6.spec.ts:16:5 › Phase 6 accessible runtime matrix › keeps one heading and no horizontal overflow at 1440px (384ms)
+[WebServer] Error: No route matches URL "/missing-page"
+[WebServer]     at getInternalRouterError (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-BV7QT456.mjs:5582:5)
+[WebServer]     at Object.query (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-BV7QT456.mjs:3584:19)
+[WebServer]     at handleDocumentRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1435:38)
+[WebServer]     at requestHandler (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1295:24)
+[WebServer]     at requestHandler (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1349:12)
+[WebServer]     at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@react-router/express/dist/index.mjs:28:28
+  ✓  37 [chromium] › e2e/phase6.spec.ts:32:3 › Phase 6 accessible runtime matrix › routes have no client console errors or page exceptions (621ms)
+  ✓  38 [chromium] › e2e/phase6.spec.ts:64:3 › Phase 6 accessible runtime matrix › reduced motion keeps upload controls usable (389ms)
+  ✓  39 [chromium] › e2e/phase6.spec.ts:85:3 › Phase 6 accessible runtime matrix › forced-colors mode retains readable structure and touch targets (379ms)
+  ✓  40 [chromium] › e2e/phase6.spec.ts:110:3 › Phase 6 accessible runtime matrix › important upload actions remain reachable at 200% zoom (369ms)
+  ✓  41 [chromium] › e2e/phase6.spec.ts:128:3 › Phase 6 accessible runtime matrix › offline upload shows a recoverable, announced error (500ms)
+  ✓  42 [chromium] › e2e/phase6.spec.ts:142:3 › Phase 6 accessible runtime matrix › analysis status can recover after a transient failure (501ms)
+  ✓  43 [chromium] › e2e/phase7.spec.ts:3:1 › production responses include the security policy (7ms)
+  ✓  44 [chromium] › e2e/phase7.spec.ts:21:1 › telemetry accepts only the PII-free event contract (3ms)
+  ✓  45 [chromium] › e2e/phase7.spec.ts:40:1 › cross-origin state-changing requests are rejected (2ms)
+  ✘  46 [chromium] › e2e/scoring-v2.spec.ts:5:1 › owner reviews withheld scoring diagnostics, source versions and privacy by keyboard (12.6s)
+  ✓  47 [chromium] › e2e/smoke.spec.ts:4:1 › health and readiness are available (116ms)
+  ✓  48 [chromium] › e2e/smoke.spec.ts:9:1 › home renders the candidate history state (460ms)
+  ✓  49 [chromium] › e2e/smoke.spec.ts:28:1 › theme preference applies and survives a reload (511ms)
+  ✓  50 [chromium] › e2e/smoke.spec.ts:41:1 › mobile shell keeps its primary actions visible (437ms)
+  ✓  51 [chromium] › e2e/smoke.spec.ts:63:1 › sign-in form retains an approved return path (383ms)
+  ✓  52 [chromium] › e2e/smoke.spec.ts:75:1 › invalid sign-in callback recovers safely (419ms)
+  ✓  53 [chromium] › e2e/smoke.spec.ts:81:1 › upload page supports keyboard/file states and safe API errors (558ms)
+  ✓  54 [chromium] › e2e/smoke.spec.ts:100:1 › stopping an in-flight upload does not claim its server data was deleted (493ms)
+  ✓  55 [chromium] › e2e/smoke.spec.ts:123:1 › progress stub exposes an announced state (470ms)
+  ✓  56 [chromium] › e2e/smoke.spec.ts:131:1 › partial analysis exposes its durable result link (398ms)
+  ✓  57 [chromium] › e2e/smoke.spec.ts:151:1 › signed-out result access redirects without revealing existence (425ms)
+[WebServer] Error: No route matches URL "/missing-page"
+[WebServer]     at getInternalRouterError (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-BV7QT456.mjs:5582:5)
+[WebServer]     at Object.query (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-BV7QT456.mjs:3584:19)
+[WebServer]     at handleDocumentRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1435:38)
+[WebServer]     at requestHandler (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1295:24)
+[WebServer]     at requestHandler (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1349:12)
+[WebServer]     at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@react-router/express/dist/index.mjs:28:28
+  ✓  58 [chromium] › e2e/smoke.spec.ts:162:1 › unknown routes use the branded recovery state (368ms)
+  ✓  59 [chromium] › e2e/smoke.spec.ts:176:5 › responsive upload layout › renders at 390px (397ms)
+  ✓  60 [chromium] › e2e/smoke.spec.ts:176:5 › responsive upload layout › renders at 768px (432ms)
+  ✓  61 [chromium] › e2e/smoke.spec.ts:176:5 › responsive upload layout › renders at 1024px (400ms)
+  ✓  62 [chromium] › e2e/smoke.spec.ts:176:5 › responsive upload layout › renders at 1366px (483ms)
+  ✓  63 [chromium] › e2e/smoke.spec.ts:176:5 › responsive upload layout › renders at 1440px (475ms)
+  ✓  64 [chromium] › e2e/smoke.spec.ts:198:5 › completed design shells › / stays responsive in dark mode (545ms)
+  ✓  65 [chromium] › e2e/smoke.spec.ts:198:5 › completed design shells › /auth?next=/upload stays responsive in dark mode (499ms)
+  ✓  66 [chromium] › e2e/smoke.spec.ts:198:5 › completed design shells › /upload stays responsive in dark mode (449ms)
+  ✓  67 [chromium] › e2e/smoke.spec.ts:198:5 › completed design shells › /analysis/test-id stays responsive in dark mode (446ms)
+  ✓  68 [chromium] › e2e/smoke.spec.ts:198:5 › completed design shells › /privacy stays responsive in dark mode (449ms)
+  ✓  69 [chromium] › e2e/smoke.spec.ts:198:5 › completed design shells › /resume/missing stays responsive in dark mode (481ms)
+[WebServer] Error: No route matches URL "/missing-page"
+[WebServer]     at getInternalRouterError (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-BV7QT456.mjs:5582:5)
+[WebServer]     at Object.query (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-BV7QT456.mjs:3584:19)
+[WebServer]     at handleDocumentRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1435:38)
+[WebServer]     at requestHandler (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1295:24)
+[WebServer]     at requestHandler (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs:1349:12)
+[WebServer]     at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@react-router/express/dist/index.mjs:28:28
+  ✓  70 [chromium] › e2e/smoke.spec.ts:198:5 › completed design shells › /missing-page stays responsive in dark mode (393ms)
+  ✓  71 [chromium] › e2e/workspace-navigation.spec.ts:7:1 › one floating navbar connects public home, history, upload and Build with theme in its menu (4.1s)
+
+
+  1) [chromium] › e2e/artifact-export.spec.ts:84:1 › semantic preview, checked PDF/DOCX and stale-version safety 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 39
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure all page content is contained by landmarks",
+    +     "help": "All page content should be contained by landmarks",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/region?application=playwright",
+    +     "id": "region",
+    +     "impact": "moderate",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "isIframe": false,
+    +             },
+    +             "id": "region",
+    +             "impact": "moderate",
+    +             "message": "Some page content is not contained by landmarks",
+    +             "relatedNodes": Array [],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Some page content is not contained by landmarks",
+    +         "html": "<div class=\"workspace-page-header\"><div class=\"workspace-page-heading\"><p class=\"workspace-eyebrow\">Resume export</p><h1>Preview your saved resume</h1><p class=\"workspace-page-description\">Review the content, check an export, then download it.</p></div></div>",
+    +         "impact": "moderate",
+    +         "none": Array [],
+    +         "target": Array [
+    +           ".workspace-page-header",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.keyboard",
+    +       "best-practice",
+    +       "RGAAv4",
+    +       "RGAA-9.2.1",
+    +     ],
+    +   },
+    + ]
+
+       96 |       page.getByRole("article", { name: "Resume preview" }),
+       97 |     ).toContainText("Demo Person");
+    >  98 |     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+          |                                                                   ^
+       99 |     await page.getByRole("button", { name: "Check export" }).click();
+      100 |     await expect(
+      101 |       page.getByRole("heading", { name: "Export parity verified" }),
+        at <workspace>/e2e/artifact-export.spec.ts:98:67
+
+    Error Context: ../../../../../../tmp/resumide-aa7-private-<owned-id>/playwright/artifact-export-semantic-p-ce6d8-CX-and-stale-version-safety-chromium/error-context.md
+
+  2) [chromium] › e2e/authoring.spec.ts:47:1 › candidate edits, clarifies, accepts and undoes a source-bound patch by keyboard 
+
+    Error: expect(locator).toHaveValue(expected) failed
+
+    Locator: locator('#author-fact-<owned-id>')
+    Timeout: 5000ms
+    - Expected  - 1
+    + Received  + 3
+
+    - Built robust tests; scope: Internal tests; result: Fewer release defects.
+    + Built robust tests
+    + Result: Fewer release defects
+    + Scope: Internal tests
+
+    Call log:
+      - Expect "toHaveValue" locator('#author-fact-<owned-id>') with timeout 5000ms
+      - waiting for locator('#author-fact-<owned-id>')
+        14 × locator resolved to <textarea required="" name="value" maxlength="2000" id="author-fact-<owned-id>">Built robust tests↵Result: Fewer release defects↵…</textarea>
+           - unexpected value "Built robust tests
+    Result: Fewer release defects
+    Scope: Internal tests"
+
+
+      101 |     await accept.focus();
+      102 |     await page.keyboard.press("Enter");
+    > 103 |     await expect(page.locator(`#author-fact-${fact.id}`)).toHaveValue(
+          |                                                           ^
+      104 |       "Built robust tests; scope: Internal tests; result: Fewer release defects.",
+      105 |     );
+      106 |     expect(await page.getByText("Unavailable", { exact: true }).count()).toBe(
+        at <workspace>/e2e/authoring.spec.ts:103:59
+
+    Error Context: ../../../../../../tmp/resumide-aa7-private-<owned-id>/playwright/authoring-candidate-edits--e8f37-rce-bound-patch-by-keyboard-chromium/error-context.md
+
+  3) [chromium] › e2e/canonical-resume.spec.ts:8:1 › canonical import, confirmation, edit, compare, restore and owner isolation 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 39
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure all page content is contained by landmarks",
+    +     "help": "All page content should be contained by landmarks",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/region?application=playwright",
+    +     "id": "region",
+    +     "impact": "moderate",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "isIframe": false,
+    +             },
+    +             "id": "region",
+    +             "impact": "moderate",
+    +             "message": "Some page content is not contained by landmarks",
+    +             "relatedNodes": Array [],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Some page content is not contained by landmarks",
+    +         "html": "<div class=\"workspace-page-header\"><div class=\"workspace-page-heading\"><p class=\"workspace-eyebrow\">Structured resume</p><h1>Review your resume facts</h1><p class=\"workspace-page-description\">Review imported content, confirm facts and keep a history of your changes.</p></div></div>",
+    +         "impact": "moderate",
+    +         "none": Array [],
+    +         "target": Array [
+    +           ".workspace-page-header",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.keyboard",
+    +       "best-practice",
+    +       "RGAAv4",
+    +       "RGAA-9.2.1",
+    +     ],
+    +   },
+    + ]
+
+      142 |     ).toBeVisible();
+      143 |     const accessibility = await new AxeBuilder({ page }).analyze();
+    > 144 |     expect(accessibility.violations).toEqual([]);
+          |                                      ^
+      145 |     await page
+      146 |       .getByRole("link", { name: "View version 1", exact: true })
+      147 |       .click();
+        at <workspace>/e2e/canonical-resume.spec.ts:144:38
+
+    Error Context: ../../../../../../tmp/resumide-aa7-private-<owned-id>/playwright/canonical-resume-canonical-450c8-restore-and-owner-isolation-chromium/error-context.md
+
+  4) [chromium] › e2e/job-requirements.spec.ts:5:1 › owner reviews cited JD requirements and immutable history by keyboard 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 39
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure all page content is contained by landmarks",
+    +     "help": "All page content should be contained by landmarks",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/region?application=playwright",
+    +     "id": "region",
+    +     "impact": "moderate",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "isIframe": false,
+    +             },
+    +             "id": "region",
+    +             "impact": "moderate",
+    +             "message": "Some page content is not contained by landmarks",
+    +             "relatedNodes": Array [],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Some page content is not contained by landmarks",
+    +         "html": "<div class=\"workspace-page-header\">",
+    +         "impact": "moderate",
+    +         "none": Array [],
+    +         "target": Array [
+    +           ".workspace-page-header",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.keyboard",
+    +       "best-practice",
+    +       "RGAAv4",
+    +       "RGAA-9.2.1",
+    +     ],
+    +   },
+    + ]
+
+      75 |         .single()
+      76 |     ).data!.id;
+    > 77 |     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+         |                                                                   ^
+      78 |     expect(
+      79 |       (
+      80 |         await fixture.admin
+        at <workspace>/e2e/job-requirements.spec.ts:77:67
+
+    Error Context: ../../../../../../tmp/resumide-aa7-private-<owned-id>/playwright/job-requirements-owner-rev-c0c8e-mutable-history-by-keyboard-chromium/error-context.md
+
+  5) [chromium] › e2e/native-layout.spec.ts:16:1 › owner can review persisted layout by keyboard; other users cannot read it 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected substring: "Writing generation is disabled on this server."
+    Received string:    "No usable source contribution is available for rewriting."
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toContainText" getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('alert')
+        9 × locator resolved to <p role="alert" class="field-error">No usable source contribution is available for re…</p>
+          - unexpected value "No usable source contribution is available for rewriting."
+
+
+      318 |       .getByRole("button", { name: "Generate suggestions", exact: true })
+      319 |       .click();
+    > 320 |     await expect(page.getByRole("alert")).toContainText(
+          |                                           ^
+      321 |       "Writing generation is disabled on this server.",
+      322 |     );
+      323 |     await expect(
+        at <workspace>/e2e/native-layout.spec.ts:320:43
+
+    Error Context: ../../../../../../tmp/resumide-aa7-private-<owned-id>/playwright/native-layout-owner-can-re-5a4e3--other-users-cannot-read-it-chromium/error-context.md
+
+  6) [chromium] › e2e/scoring-v2.spec.ts:5:1 › owner reviews withheld scoring diagnostics, source versions and privacy by keyboard 
+
+    Error: expect(received).toEqual(expected) // deep equality
+
+    - Expected  -  1
+    + Received  + 39
+
+    - Array []
+    + Array [
+    +   Object {
+    +     "description": "Ensure all page content is contained by landmarks",
+    +     "help": "All page content should be contained by landmarks",
+    +     "helpUrl": "https://dequeuniversity.com/rules/axe/4.13/region?application=playwright",
+    +     "id": "region",
+    +     "impact": "moderate",
+    +     "nodes": Array [
+    +       Object {
+    +         "all": Array [],
+    +         "any": Array [
+    +           Object {
+    +             "data": Object {
+    +               "isIframe": false,
+    +             },
+    +             "id": "region",
+    +             "impact": "moderate",
+    +             "message": "Some page content is not contained by landmarks",
+    +             "relatedNodes": Array [],
+    +           },
+    +         ],
+    +         "failureSummary": "Fix any of the following:
+    +   Some page content is not contained by landmarks",
+    +         "html": "<div class=\"workspace-page-header\"><div class=\"workspace-page-heading\"><p class=\"workspace-eyebrow\">Evidence review</p><h1>Review scoring diagnostics</h1><p class=\"workspace-page-description\">Review recovered evidence and missing information before using a score.</p></div></div>",
+    +         "impact": "moderate",
+    +         "none": Array [],
+    +         "target": Array [
+    +           ".workspace-page-header",
+    +         ],
+    +       },
+    +     ],
+    +     "tags": Array [
+    +       "cat.keyboard",
+    +       "best-practice",
+    +       "RGAAv4",
+    +       "RGAA-9.2.1",
+    +     ],
+    +   },
+    + ]
+
+      86 |       new RegExp(`canonical=${f.canonical.versionId}`),
+      87 |     );
+    > 88 |     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+         |                                                                   ^
+      89 |     await page.setViewportSize({ width: 390, height: 844 });
+      90 |     expect(
+      91 |       await page.evaluate(() => document.documentElement.scrollWidth),
+        at <workspace>/e2e/scoring-v2.spec.ts:88:67
+
+    Error Context: ../../../../../../tmp/resumide-aa7-private-<owned-id>/playwright/scoring-v2-owner-reviews-w-36795-ons-and-privacy-by-keyboard-chromium/error-context.md
+
+  6 failed
+    [chromium] › e2e/artifact-export.spec.ts:84:1 › semantic preview, checked PDF/DOCX and stale-version safety 
+    [chromium] › e2e/authoring.spec.ts:47:1 › candidate edits, clarifies, accepts and undoes a source-bound patch by keyboard 
+    [chromium] › e2e/canonical-resume.spec.ts:8:1 › canonical import, confirmation, edit, compare, restore and owner isolation 
+    [chromium] › e2e/job-requirements.spec.ts:5:1 › owner reviews cited JD requirements and immutable history by keyboard 
+    [chromium] › e2e/native-layout.spec.ts:16:1 › owner can review persisted layout by keyboard; other users cannot read it 
+    [chromium] › e2e/scoring-v2.spec.ts:5:1 › owner reviews withheld scoring diagnostics, source versions and privacy by keyboard 
+  65 passed (3.8m)

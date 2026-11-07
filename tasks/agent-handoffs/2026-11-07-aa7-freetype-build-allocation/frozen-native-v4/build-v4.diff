@@ -1,0 +1,31 @@
+--- build-v2.py
++++ build-v4.py
+@@ -57,6 +57,8 @@
+     resource.setrlimit(resource.RLIMIT_FSIZE, (33554432, 33554432))
+     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
+     source, pins, receipt = prepare(pathlib.Path('/inputs'), pathlib.Path('/recipe'), pathlib.Path('/work'))
++    adapter = pathlib.Path('/work/budget-adapter.c')
++    budget = generate(pathlib.Path('/work/baseline-cidload.c'), source / 'src/cid/cidload.c', adapter, pins)
+     env = {'PATH': '/usr/sbin:/usr/bin:/sbin:/bin', 'HOME': '/work', 'LANG': 'C.UTF-8',
+            'SOURCE_DATE_EPOCH': str(pins['sourceDateEpoch']), 'DEB_BUILD_OPTIONS': 'parallel=2'}
+     if run(['dpkg-query', '-W', '-f=${Version}', 'libfreetype-dev'], 'baseline-header-version', env=env).strip() != pins['baselineVersion']:
+@@ -71,6 +73,8 @@
+         baseline_metrics[font] = run([str(client), font], 'baseline-font-' + str(i), env=env)
+     run(['dpkg-checkbuilddeps'], 'normal-original-build-dependencies', cwd=source, env=env)
+     run(['dpkg-buildpackage', '--no-sign', '-b', '-j2'], 'normal-original-debian-build', cwd=source, env=env)
++    receipt['postBuildCidSha256'] = digest(source / 'src/cid/cidload.c')
++    print('AA7_FREETYPE_POST_BUILD_CID ' + receipt['postBuildCidSha256'], flush=True)
+     archive_names = {}
+     for name in ('libfreetype6', 'libfreetype-dev'):
+         files = list(source.parent.glob(name + '_' + pins['packageVersion'] + '_arm64.deb'))
+@@ -104,8 +108,8 @@
+         metrics.append({'font': font, 'fontSha256': pins['neutralFontSha256'][font], 'byteIdenticalMetrics': True,
+                         'baselineLogSha256': digest(export / ('baseline-font-' + str(i) + '.log')),
+                         'candidateLogSha256': digest(export / ('candidate-font-' + str(i) + '.log'))})
+-    adapter = pathlib.Path('/work/budget-adapter.c')
+-    budget = generate(pathlib.Path('/work/baseline-cidload.c'), source / 'src/cid/cidload.c', adapter, pins)
++    if digest(adapter) != budget['programSha256']:
++        raise ValueError('saved literal adapter program hash changed')
+     run(['gcc', '-Wall', '-Wextra', '-Werror', *shlex.split(subprocess.check_output(['pkg-config', '--cflags', 'freetype2'], env=env, text=True)), str(adapter), '-o', '/work/budget-adapter'], 'compile-literal-budget-adapter', env=env)
+     if run(['/work/budget-adapter'], 'literal-budget-neutral-cases', env=env).strip() != 'neutral-vendor-budget-cases=5 original-controls=5 patched-controls=5':
+         raise ValueError('budget test count missing')

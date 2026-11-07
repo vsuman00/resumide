@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEFAULT_OPENAI_MODEL } from "./openai-model.ts";
 import {
   DEFAULT_OPENAI_BASE_URL,
   isAllowedOpenAiBaseUrl,
@@ -8,6 +9,19 @@ const ServerConfigSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
+  BUILD_AI_ASSIST_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  LATEX_CONVERTER_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  LATEX_COMPILER_IMAGE: z
+    .string()
+    .regex(/^sha256:[a-f0-9]{64}$/)
+    .or(z.literal(""))
+    .default(""),
   APP_ORIGIN: z.url().default("http://localhost:5173"),
   SUPABASE_URL: z.url(),
   SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
@@ -68,7 +82,7 @@ const ServerConfigSchema = z.object({
     .string()
     .default(DEFAULT_OPENAI_BASE_URL)
     .refine(isAllowedOpenAiBaseUrl, "approved OpenAI egress is required"),
-  OPENAI_MODEL: z.string().min(1).default("gpt-5.6-luna"),
+  OPENAI_MODEL: z.string().min(1).default(DEFAULT_OPENAI_MODEL),
   OPENAI_TIMEOUT_MS: z.coerce
     .number()
     .int()

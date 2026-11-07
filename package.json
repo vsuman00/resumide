@@ -34,8 +34,9 @@
     "test:phase7:db": "supabase db query --local --file scripts/verify-phase7-db.sql",
     "test:aa010:db": "supabase db query --local --file scripts/verify-native-evidence.sql",
     "test:aa011:db": "supabase db query --local --file scripts/verify-native-evidence.sql",
-    "test:db": "supabase db reset --local && npm run test:phase4:db && npm run test:phase7:db && npm run test:aa010:db && npm run test:aa013:db && npm run test:aa020:db && supabase db lint --local --level warning",
+    "test:db": "supabase db reset --local && npm run test:phase4:db && npm run test:phase7:db && npm run test:aa010:db && npm run test:aa013:db && npm run test:aa020:db && npm run test:paddle:db && supabase db lint --local --level warning",
     "test:aa020:db": "supabase db query --local --file scripts/verify-canonical-storage.sql",
+    "test:paddle:db": "supabase db query --local --file scripts/verify-paddle-admission.sql",
     "test:aa2:local": "vite-node --config vitest.config.ts scripts/verify-canonical-resume.ts",
     "test:aa2:restore": "vite-node --config vitest.config.ts scripts/verify-canonical-restore.ts",
     "test:aa3:local": "vite-node --config vitest.config.ts scripts/verify-job-requirements.ts",
@@ -76,7 +77,20 @@
     "check:aa5:source": "prettier --check app/lib/authoring-ui.ts app/lib/writing-quality.ts app/routes/analysis.author.tsx app/components/AuthoringWorkspace.tsx scripts/verify-authoring.ts scripts/benchmark-writer-grounding.ts scripts/writer-grounding-engineering.ts && eslint app/lib/authoring-ui.ts app/lib/writing-quality.ts app/routes/analysis.author.tsx app/components/AuthoringWorkspace.tsx scripts/verify-authoring.ts scripts/benchmark-writer-grounding.ts scripts/writer-grounding-engineering.ts",
     "test:aa6:local": "vite-node --config vitest.config.ts scripts/verify-artifact-export.ts",
     "benchmark:render-parity": "vite-node --config vitest.config.ts scripts/benchmark-render-parity.ts",
-    "check:aa6:source": "prettier --check app/lib/server/artifact-contract.ts app/lib/server/artifact-renderer.ts app/lib/server/artifact-worker.mjs app/lib/server/artifact-repository.ts app/lib/server/artifact-route-helpers.ts app/routes/analysis.export.tsx app/routes/analysis.artifact.ts scripts/verify-artifact-export.ts scripts/benchmark-render-parity.ts && eslint app/lib/server/artifact-contract.ts app/lib/server/artifact-renderer.ts app/lib/server/artifact-repository.ts app/lib/server/artifact-route-helpers.ts app/routes/analysis.export.tsx app/routes/analysis.artifact.ts scripts/verify-artifact-export.ts scripts/benchmark-render-parity.ts"
+    "check:aa6:source": "prettier --check app/lib/server/artifact-contract.ts app/lib/server/artifact-renderer.ts app/lib/server/artifact-worker.mjs app/lib/server/artifact-repository.ts app/lib/server/artifact-route-helpers.ts app/routes/analysis.export.tsx app/routes/analysis.artifact.ts scripts/verify-artifact-export.ts scripts/benchmark-render-parity.ts && eslint app/lib/server/artifact-contract.ts app/lib/server/artifact-renderer.ts app/lib/server/artifact-repository.ts app/lib/server/artifact-route-helpers.ts app/routes/analysis.export.tsx app/routes/analysis.artifact.ts scripts/verify-artifact-export.ts scripts/benchmark-render-parity.ts",
+    "test:latex": "vitest run tests/unit/latex-source.test.ts tests/unit/latex-service.test.ts tests/unit/latex-sandbox.test.ts tests/unit/latex-config.test.ts tests/unit/latex-routes.test.ts",
+    "verify:latex": "vite-node --config vitest.config.ts scripts/verify-latex-sandbox.ts",
+    "verify:latex:render": "vite-node --config vitest.config.ts scripts/verify-latex-render-parity.ts",
+    "verify:private:aa7": "node scripts/verify-private-aa7.mjs",
+    "check:private:aa7:source": "prettier --check vite.config.ts vite.worker.config.ts vitest.config.ts playwright.config.ts scripts/verify-private-aa7.mjs tests/unit/private-verification.test.ts && eslint vite.config.ts vite.worker.config.ts vitest.config.ts playwright.config.ts scripts/verify-private-aa7.mjs tests/unit/private-verification.test.ts",
+    "benchmark:latex": "vite-node --config vitest.config.ts scripts/benchmark-latex.ts",
+    "check:latex:source": "prettier --check scripts/verify-latex-sandbox.ts scripts/verify-latex-rollback.ts scripts/verify-latex-render-parity.ts scripts/benchmark-latex.ts scripts/latex-test-fixtures.ts tests/unit/latex-source.test.ts tests/unit/latex-routes.test.ts tests/unit/latex-config.test.ts tests/unit/latex-service.test.ts tests/unit/latex-sandbox.test.ts tests/fixtures/latex.ts tests/fixtures/latex-auth.ts e2e/latex-converter.spec.ts playwright.latex.config.ts app/lib/latex-converter.ts app/routes/latex.tsx app/routes/latex.compile.ts app/routes/latex.legacy.ts app/routes/latex.compile-legacy.ts app/components/LatexPdfPreview.tsx app/components/LatexConverter.module.css .github/workflows/latex.yml && eslint playwright.latex.config.ts scripts/verify-latex-sandbox.ts scripts/verify-latex-rollback.ts scripts/verify-latex-render-parity.ts scripts/benchmark-latex.ts scripts/latex-test-fixtures.ts tests/unit/latex-source.test.ts tests/unit/latex-routes.test.ts tests/unit/latex-config.test.ts tests/unit/latex-service.test.ts tests/unit/latex-sandbox.test.ts tests/fixtures/latex.ts tests/fixtures/latex-auth.ts e2e/latex-converter.spec.ts && python3 -c 'import ast,pathlib; [ast.parse(p.read_text(), filename=str(p)) for p in pathlib.Path(\"scripts/latex-runtime\").rglob(\"*.py\")]' && python3 scripts/audit-latex-licenses.py --self-test && python3 scripts/latex-runtime/build-fontconfig.py --self-test && python3 scripts/latex-runtime/native-expat/prepare.py",
+    "test:e2e:latex": "playwright test --config playwright.latex.config.ts",
+    "test:build-ai": "vitest run tests/unit/build-assist.test.ts tests/unit/build-assist-provider.test.ts tests/unit/build-assist-service.test.ts tests/unit/build-assist-config.test.ts",
+    "check:build-ai:source": "prettier --check tests/unit/build-assist.test.ts tests/unit/build-assist-config.test.ts tests/unit/build-assist-provider.test.ts tests/unit/build-assist-service.test.ts tests/fixtures/build-assist.ts e2e/build-assist.spec.ts playwright.build-ai.config.ts scripts/verify-build-ai.ts scripts/build-ai-test-preload.mjs app/lib/build-assist.ts app/lib/server/build-assist.ts app/lib/server/build-assist-service.ts app/components/BuildAiAssistant.tsx app/routes/build.suggest.ts app/components/BuildAiAssistant.module.css && eslint tests/unit/build-assist.test.ts tests/unit/build-assist-config.test.ts tests/unit/build-assist-provider.test.ts tests/unit/build-assist-service.test.ts tests/fixtures/build-assist.ts e2e/build-assist.spec.ts playwright.build-ai.config.ts scripts/verify-build-ai.ts scripts/build-ai-test-preload.mjs app/lib/build-assist.ts app/lib/server/build-assist.ts app/lib/server/build-assist-service.ts app/components/BuildAiAssistant.tsx app/routes/build.suggest.ts",
+    "test:e2e:build-ai": "playwright test --config playwright.build-ai.config.ts",
+    "verify:build-ai:live": "vite-node --config vitest.config.ts scripts/verify-build-ai.ts --live-probe",
+    "verify:latex:rollback": "vite-node --config vitest.config.ts scripts/verify-latex-rollback.ts"
   },
   "dependencies": {
     "@react-router/express": "7.18.3",
@@ -99,7 +113,7 @@
     "react-router": "7.18.3",
     "tailwind-merge": "^3.3.1",
     "unpdf": "^1.6.2",
-    "zod": "^4.4.3",
+    "zod": "^4.6.7",
     "zustand": "^5.0.7"
   },
   "devDependencies": {
@@ -126,6 +140,11 @@
     "typescript-eslint": "^8.70.0",
     "vite": "^6.3.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.5"
+    }
   }
 }

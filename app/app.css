@@ -146,6 +146,17 @@ textarea {
   outline-offset: 3px;
 }
 
+/* Native popup menus need their own opaque pair; transparent option backgrounds
+   can fall back to a light OS surface while inheriting dark-theme text. */
+select {
+  color-scheme: inherit;
+}
+select option,
+select optgroup {
+  color: var(--ink);
+  background-color: var(--surface-raised);
+}
+
 .skip-link {
   position: fixed;
   top: 12px;
@@ -6246,7 +6257,11 @@ form {
 .result-report-link {
   display: inline-flex;
   width: fit-content;
+  height: 44px;
   min-height: 44px;
+  align-self: start;
+  justify-self: start;
+  white-space: nowrap;
   align-items: center;
   padding: 8px 12px;
   border: 1px solid var(--border-strong);
@@ -6581,3 +6596,44 @@ form {
 .upload-drop-scene {
   overflow: visible;
 }
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .public-nav,
+  .public-account-action {
+    display: none;
+  }
+  .public-mobile-menu {
+    display: block;
+  }
+}
+
+.result-score-value.is-uncalibrated,
+.result-category-value.is-uncalibrated {
+  color: var(--ink-strong);
+}
+.ats-score-status.is-uncalibrated,
+.result-category-band.is-uncalibrated,
+.detail-score-badge.is-uncalibrated {
+  color: var(--ink-muted);
+  border-color: var(--border);
+  background: var(--surface);
+}
+.rewrite-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.rewrite-empty-state > p:not(.workspace-eyebrow) {
+  max-width: 64ch;
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.rewrite-generator { padding: 24px; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-raised); }
+.rewrite-generator h2 { font-size: 24px; margin-bottom: 12px; }
+.rewrite-generator p { color: var(--ink-muted); line-height: 1.6; max-width: 70ch; }
+.rewrite-generator form { display: grid; gap: 16px; margin-block: 16px; }
+.rewrite-consent { display: flex; align-items: start; gap: 10px; font-size: 14px; line-height: 1.5; }
+.rewrite-consent input { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 2px; }
+.rewrite-generator [role="status"] { font-size: 14px; color: var(--evidence); }

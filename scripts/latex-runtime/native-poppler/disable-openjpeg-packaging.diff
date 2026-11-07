@@ -1,0 +1,11 @@
+--- a/debian/rules
++++ b/debian/rules
+@@ -24,7 +24,7 @@
+ 	-DENABLE_GTK_DOC=$(if $(filter libpoppler-glib-doc,$(shell dh_listpackages)),ON,OFF) \
+ 	-DENABLE_UNSTABLE_API_ABI_HEADERS=ON	\
+ 	-DENABLE_CMS=lcms2			\
+-	-DENABLE_LIBOPENJPEG=openjpeg2		\
++	-DENABLE_LIBOPENJPEG=none		\
+ 	-DBUILD_GTK_TESTS=OFF
+ 
+ ifeq ($(filter %-qt6-dev,$(built_binaries)),)

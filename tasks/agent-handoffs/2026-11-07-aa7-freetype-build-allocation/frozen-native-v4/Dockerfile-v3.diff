@@ -1,0 +1,20 @@
+--- Dockerfile.v2
++++ Dockerfile.v3
+@@ -14,7 +14,7 @@
+ ADD --chmod=0444 --checksum=sha256:686ec73cbf6783b245dd068a09ce807b729ac0f8a46dd70f7867923c32fdf4de https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig.tar.xz /inputs/freetype_2.13.3+dfsg.orig.tar.xz
+ ADD --chmod=0444 --checksum=sha256:e7a07cad1b9c803457ec310bc87132429f52171c89f9126c09eb62e203c8c84b https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg-1+deb13u1.debian.tar.xz /inputs/freetype_2.13.3+dfsg-1+deb13u1.debian.tar.xz
+ COPY native-freetype/prepare.py native-freetype/budget_adapter.py native-freetype/abi-fonts.c /recipe/
+-COPY native-freetype/pins-v2.json /recipe/pins.json
++COPY native-freetype/pins-v3.json /recipe/pins.json
+ COPY native-freetype/build-v2.py /recipe/build.py
+ COPY native-freetype/patches/CVE-2026-95512.patch /recipe/patches/
+ COPY native-freetype/provenance/trixie-security.InRelease /recipe/provenance/
+@@ -24,7 +24,7 @@
+ FROM snapshot AS installation
+ COPY native-expat/prepare.py /recipe/expat_source.py
+ COPY native-freetype/verify_install.py /recipe/
+-COPY native-freetype/pins-v2.json /recipe/pins.json
++COPY native-freetype/pins-v3.json /recipe/pins.json
+ COPY --from=build /export/libfreetype6_*.deb /export/libfreetype-dev_*.deb /packages/
+ COPY --from=build /export/source-and-test-receipt.json /proof/
+ COPY --from=build /export/old-header-fonts /export/original-debian-autopkgtest.sh /probe/

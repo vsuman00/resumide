@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
+import { SqlCompatibleIsoDateTimeSchema } from "./iso-datetime";
 
 export const RequirementType = z.enum([
   "skill",
@@ -54,7 +55,7 @@ export const JobRequirementsSchema = z
     organizationId: z.uuid(),
     analysisId: z.uuid(),
     jobId: z.uuid(),
-    createdAt: z.iso.datetime(),
+    createdAt: SqlCompatibleIsoDateTimeSchema,
     retentionPolicyId: z.literal("candidate-active-30d/1.0.0"),
     inputSha256: z.string().regex(/^[a-f0-9]{64}$/u),
     locale: z.string().min(2).max(20),

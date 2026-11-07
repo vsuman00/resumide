@@ -1,3 +1,4 @@
+import CitedWritingSuggestions from "~/components/CitedWritingSuggestions";
 import {
   data as routeData,
   redirect,
@@ -9,23 +10,24 @@ import { useEffect, useState } from "react";
 import type { Route } from "./+types/resume";
 import { useAnalysisStore } from "~/lib/store";
 import { convertPdfToImages } from "~/lib/pdf2img";
+import SavedScoreContext from "~/components/SavedScoreContext";
 import Summary from "~/components/Summary";
 import Details from "~/components/Details";
 import ATS from "~/components/ATS";
 import ParseView from "~/components/ParseView";
 import { readOwnedNativeLayout } from "~/lib/server/layout-read-model";
 import Heatmap from "~/components/Heatmap";
+import RewriteGenerator from "~/components/RewriteGenerator";
 import ResumeWriter from "~/components/ResumeWriter";
 import ResultTabs from "~/components/ResultTabs";
 import EvidenceScene3D from "~/components/EvidenceScene3D";
 import WorkspaceShell from "~/components/WorkspaceShell";
 import { presentLegacyScore } from "~/lib/server/score-v2-contract";
 import { BASELINE_SEMANTICS } from "~/lib/server/qualitative-prose";
-import { scoreBand } from "~/lib/score-band";
 import { AnalysisResultSchema } from "~/lib/server/schema";
 import { getAuthenticatedUser } from "~/lib/server/auth";
 import { recordAuditEvent } from "~/lib/server/privacy";
-import { createRequestId } from "~/lib/server/request-context";
+import { requestIdFrom } from "~/lib/server/request-context";
 import { visibleFeedbackGroups } from "~/lib/result-feedback";
 import {
   createSupabaseAdminClient,
@@ -146,7 +148,7 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
     action: "analysis.read",
     targetType: "analysis",
     targetId: data.id,
-    requestId: createRequestId(),
+    requestId: requestIdFrom(request),
   });
 
   const nativeLayout = await readOwnedNativeLayout(data.id, user.id);
@@ -197,12 +199,6 @@ const Resume = () => {
   const [reportUrl, setReportUrl] = useState("");
   const feedback = result.feedback;
   const score = feedback?.overallScore ?? 0;
-  const scoreLabels = {
-    needs_work: "Needs attention",
-    good_start: "Good start",
-    strong: "Strong",
-  } as const;
-  const scoreLabel = scoreLabels[scoreBand(score)];
 
   useEffect(() => {
     const url = URL.createObjectURL(
@@ -321,29 +317,24 @@ const Resume = () => {
         </Link>
       }
     >
-      <p>
-        {unscoredProse
-          ? "Deterministic baseline; model ratings are excluded."
-          : "Historical blended result; qualitative ratings below belong to the legacy scoring method."}{" "}
-        This result is not comparable with v2 scores.
-        {legacy
-          ? ` Saved ${legacy.createdAt}; version: ${legacy.scoringVersion ?? "unrecorded"}.`
-          : " Original date and scoring version are unavailable."}
-      </p>
+      <SavedScoreContext
+        createdAt={legacy?.createdAt}
+        scoringVersion={legacy?.scoringVersion}
+        modelRatingsExcluded={unscoredProse}
+      />
       <section className="result-score-header" aria-label="Analysis summary">
         <div className="result-score-primary">
           <div className="result-score-lockup">
-            <span className={`result-score-value is-${scoreBand(score)}`}>
-              {score}
-            </span>
+            <span className="result-score-value is-uncalibrated">{score}</span>
             <div>
-              <p>{scoreLabel}</p>
+              <p>Uncalibrated</p>
               <span>Legacy analysis score</span>
             </div>
           </div>
           <p className="result-score-note">
-            ATS compatibility guidance based on a parse simulation, not a
-            guarantee from a specific employer system.
+            This historical checklist result does not measure job fit. Missing
+            keywords may still need attention. Start a new analysis to use the
+            latest checks.
           </p>
         </div>
         <a
@@ -517,36 +508,7 @@ const Resume = () => {
                         </p>
                       </section>
                     ) : unscoredProse ? (
-                      <section>
-                        <h2>Cited writing suggestions</h2>
-                        <p>Qualitative ratings are unavailable.</p>
-                        {(
-                          [
-                            "toneAndStyle",
-                            "content",
-                            "structure",
-                            "skills",
-                          ] as const
-                        ).map((key) => (
-                          <article key={key}>
-                            <h3>
-                              {key === "toneAndStyle" ? "Tone and style" : key}
-                            </h3>
-                            <ul>
-                              {feedback[key].tips
-                                .filter((tip) => tip.quote)
-                                .map((tip, index) => (
-                                  <li key={index}>
-                                    {tip.tip} {tip.explanation}
-                                    {tip.quote ? (
-                                      <blockquote>{tip.quote}</blockquote>
-                                    ) : null}
-                                  </li>
-                                ))}
-                            </ul>
-                          </article>
-                        ))}
-                      </section>
+                      <CitedWritingSuggestions feedback={feedback} />
                     ) : (
                       <>
                         <Summary feedback={feedback} />
@@ -605,6 +567,9 @@ const Resume = () => {
                             </div>
                             <span className="rule-trace-weight">
                               Weight {rule.weight}
+                              {rule.credit === undefined
+                                ? ""
+                                : `; earned ${Number((rule.weight * rule.credit).toFixed(2))}`}
                             </span>
                           </article>
                         ))}
@@ -629,7 +594,15 @@ const Resume = () => {
                     keywordEvidence={result.keywordEvidence}
                   />
                 ),
-                rewrite: <ResumeWriter writer={result.writer} />,
+                rewrite: (
+                  <>
+                    <RewriteGenerator analysisId={id!} />
+                    <ResumeWriter
+                      writer={result.writer}
+                      unavailable={qualitativeUnavailable}
+                    />
+                  </>
+                ),
               }}
             />
           </div>

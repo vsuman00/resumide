@@ -1,0 +1,9 @@
+
+> check:latex:source
+> prettier --check scripts/verify-latex-sandbox.ts scripts/verify-latex-rollback.ts scripts/verify-latex-render-parity.ts scripts/benchmark-latex.ts scripts/latex-test-fixtures.ts tests/unit/latex-source.test.ts tests/unit/latex-routes.test.ts tests/unit/latex-config.test.ts tests/unit/latex-service.test.ts tests/unit/latex-sandbox.test.ts tests/fixtures/latex.ts tests/fixtures/latex-auth.ts e2e/latex-converter.spec.ts playwright.latex.config.ts app/lib/latex-converter.ts app/routes/latex.tsx app/routes/latex.compile.ts app/routes/latex.legacy.ts app/routes/latex.compile-legacy.ts app/components/LatexPdfPreview.tsx app/components/LatexConverter.module.css .github/workflows/latex.yml && eslint playwright.latex.config.ts scripts/verify-latex-sandbox.ts scripts/verify-latex-rollback.ts scripts/verify-latex-render-parity.ts scripts/benchmark-latex.ts scripts/latex-test-fixtures.ts tests/unit/latex-source.test.ts tests/unit/latex-routes.test.ts tests/unit/latex-config.test.ts tests/unit/latex-service.test.ts tests/unit/latex-sandbox.test.ts tests/fixtures/latex.ts tests/fixtures/latex-auth.ts e2e/latex-converter.spec.ts && python3 -c 'import ast,pathlib; [ast.parse(p.read_text(), filename=str(p)) for p in pathlib.Path("scripts/latex-runtime").rglob("*.py")]' && python3 scripts/audit-latex-licenses.py --self-test && python3 scripts/latex-runtime/build-fontconfig.py --self-test && python3 scripts/latex-runtime/native-expat/prepare.py
+
+Checking formatting...
+All matched files use Prettier code style!
+license declaration self-check passed
+Sealed Fontconfig fixture self-test passed
+native Expat source helper self-test passed

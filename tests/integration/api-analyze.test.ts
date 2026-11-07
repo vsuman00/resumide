@@ -13,10 +13,17 @@ describe("/api/analyze request contract", async () => {
   const route = await import("../../app/routes/api.analyze");
 
   it("rejects non-POST requests with Allow", async () => {
-    const response = route.loader();
+    const response = route.loader({
+      request: new Request("http://localhost:5173/api/analyze", {
+        headers: { "X-Request-Id": "request-1234" },
+      }),
+    });
     expect(response.status).toBe(405);
     expect(response.headers.get("Allow")).toBe("POST");
-    expect((await response.json()).error.code).toBe("METHOD_NOT_ALLOWED");
+    const body = await response.json();
+    expect(body.error.code).toBe("METHOD_NOT_ALLOWED");
+    expect(body.error.requestId).toBe("request-1234");
+    expect(response.headers.get("X-Request-Id")).toBe("request-1234");
   });
 
   it("rejects unauthenticated requests before parsing multipart data", async () => {

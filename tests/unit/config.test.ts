@@ -21,12 +21,20 @@ describe("server configuration", () => {
     expect(config.OPENAI_TIMEOUT_MS).toBe(20_000);
     expect(config.OPENAI_MAX_OUTPUT_TOKENS).toBe(1_200);
     expect(config.OPENAI_BASE_URL).toBe("https://api.openai.com/v1");
+    expect(config.OPENAI_MODEL).toBe("gpt-6-luna");
     expect(config.QUALITATIVE_MAX_ATTEMPTS).toBe(1);
     expect(config.NATIVE_EVIDENCE_ENABLED).toBe(false);
     expect(config.NATIVE_LAYOUT_ENABLED).toBe(false);
     expect(config.EVIDENCE_REVIEW_ENABLED).toBe(false);
     expect(config.CANONICAL_AUTHORING_ENABLED).toBe(false);
     expect(config.ARTIFACT_RENDERING_ENABLED).toBe(false);
+  });
+
+  it("preserves an explicitly configured model", () => {
+    expect(
+      parseServerConfig({ ...validEnvironment, OPENAI_MODEL: "custom-model" })
+        .OPENAI_MODEL,
+    ).toBe("custom-model");
   });
 
   it("rejects provider egress outside the approved OpenAI endpoint", () => {

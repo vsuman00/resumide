@@ -274,6 +274,8 @@ LaTeX-specific controls:
 - Template suitability by candidate profile rather than one fixed technology/student structure.
 - Tagged/accessibility support evaluated before an accessible-PDF claim.
 
+**Standalone converter scope (owner approved 2026-10-30):** ADR-0016/E-007 permits an independent LaTeX editor→PDF preview/download page. It consumes supported user source rather than canonical resume data and never calls the analyzer or creates `artifact-verification/1.0.0` records. Source/PDF are transient. Known synthetic recovery checks and output safety do not establish canonical truth, ATS compatibility or accessibility certification. This separate category does not change existing canonical renderer/verified-artifact contracts or their release floors.
+
 ## 13. Data additions
 
 Target entities, names subject to migration review:

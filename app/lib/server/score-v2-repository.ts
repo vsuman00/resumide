@@ -19,35 +19,61 @@ export async function loadScoreDiagnostics(
   analysisId: string,
   ownerId: string,
   raw: unknown = {},
+  canonicalSnapshot?: Awaited<ReturnType<typeof loadCanonical>>,
 ) {
   const parsed = ScoreReadOptions.safeParse(raw);
   if (!parsed.success)
     throw new CanonicalError(422, "Choose valid scoring input versions.");
   const options = parsed.data;
-  const canonical = await loadCanonical(client, analysisId, ownerId, {
-    versionId: options.canonical,
-  });
+  const [canonical, analysis] = await Promise.all([
+    canonicalSnapshot ??
+      loadCanonical(client, analysisId, ownerId, {
+        versionId: options.canonical,
+      }),
+    client
+      .from("analyses")
+      .select("job_id")
+      .eq("id", analysisId)
+      .eq("owner_id", ownerId)
+      .maybeSingle(),
+  ]);
   if (!canonical.current)
     throw new CanonicalError(
       422,
       "Import your structured resume before reviewing scoring diagnostics.",
     );
   const doc = canonical.current.document;
-  const analysis = await client
-    .from("analyses")
-    .select("job_id")
-    .eq("id", analysisId)
-    .eq("owner_id", ownerId)
-    .maybeSingle();
+  if (
+    canonical.analysisId !== analysisId ||
+    doc.ownerId !== ownerId ||
+    (options.canonical && doc.versionId !== options.canonical)
+  )
+    throw new CanonicalError(422, "Scoring input binding failed.");
   if (analysis.error)
     throw new CanonicalError(503, "Scoring inputs are unavailable.");
   if (!analysis.data)
     throw new CanonicalError(404, "Scoring inputs not found.");
-  const requirements = analysis.data.job_id
-    ? await loadJobRequirements(client, analysisId, ownerId, {
-        versionId: options.requirements,
-      })
-    : null;
+  const [requirements, evidence, source] = await Promise.all([
+    analysis.data.job_id
+      ? loadJobRequirements(client, analysisId, ownerId, {
+          versionId: options.requirements,
+        })
+      : Promise.resolve(null),
+    client
+      .from("document_evidence_attempts")
+      .select("envelope,resume_version_id,input_sha256")
+      .eq("id", doc.sourceEvidenceVersionId!)
+      .eq("analysis_id", analysisId)
+      .eq("owner_id", ownerId)
+      .maybeSingle(),
+    client
+      .from("resume_versions")
+      .select("page_count")
+      .eq("id", canonical.current.sourceId)
+      .eq("owner_id", ownerId)
+      .eq("organization_id", doc.organizationId)
+      .maybeSingle(),
+  ]);
   if (!requirements && options.requirements)
     throw new CanonicalError(404, "Scoring inputs not found.");
   if (
@@ -60,20 +86,6 @@ export async function loadScoreDiagnostics(
       409,
       "Scoring inputs changed. Reload before continuing.",
     );
-  const evidence = await client
-    .from("document_evidence_attempts")
-    .select("envelope,resume_version_id,input_sha256")
-    .eq("id", doc.sourceEvidenceVersionId!)
-    .eq("analysis_id", analysisId)
-    .eq("owner_id", ownerId)
-    .maybeSingle();
-  const source = await client
-    .from("resume_versions")
-    .select("page_count")
-    .eq("id", canonical.current.sourceId)
-    .eq("owner_id", ownerId)
-    .eq("organization_id", doc.organizationId)
-    .maybeSingle();
   if (evidence.error || source.error)
     throw new CanonicalError(503, "Scoring inputs are unavailable.");
   const envelope = DocumentEvidenceSchema.safeParse(evidence.data?.envelope);
@@ -99,14 +111,14 @@ export async function loadScoreDiagnostics(
     throw new CanonicalError(422, "Scoring inputs failed integrity checks.");
   }
   // Recheck deletion/active ownership and moving heads before releasing private data.
-  const final = await loadCanonical(client, analysisId, ownerId, {
-    versionId: doc.versionId,
-  });
-  const finalRequirements = requirements
-    ? await loadJobRequirements(client, analysisId, ownerId, {
-        versionId: requirements.current?.document.id,
-      })
-    : null;
+  const [final, finalRequirements] = await Promise.all([
+    loadCanonical(client, analysisId, ownerId, { versionId: doc.versionId }),
+    requirements
+      ? loadJobRequirements(client, analysisId, ownerId, {
+          versionId: requirements.current?.document.id,
+        })
+      : Promise.resolve(null),
+  ]);
   const finalAnalysis = await client
     .from("analyses")
     .select("job_id")

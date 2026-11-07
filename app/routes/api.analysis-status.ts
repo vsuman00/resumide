@@ -4,7 +4,7 @@ import {
   PublicApiError,
   toErrorResponse,
 } from "~/lib/server/errors";
-import { createRequestId } from "~/lib/server/request-context";
+import { requestIdFrom } from "~/lib/server/request-context";
 import { createSupabaseServerClient } from "~/lib/server/supabase";
 
 export async function loader({
@@ -14,7 +14,7 @@ export async function loader({
   request: Request;
   params: { id?: string };
 }) {
-  const requestId = createRequestId();
+  const requestId = requestIdFrom(request);
   if (request.method !== "GET")
     return methodNotAllowedResponse(requestId, ["GET"]);
   try {

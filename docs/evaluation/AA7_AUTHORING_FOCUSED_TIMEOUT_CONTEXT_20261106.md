@@ -1,0 +1,637 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: authoring.spec.ts >> candidate edits, clarifies, accepts and undoes a source-bound patch by keyboard
+- Location: e2e/authoring.spec.ts:47:1
+
+# Error details
+
+```
+Test timeout of 30000ms exceeded.
+```
+
+# Page snapshot
+
+```yaml
+- generic [active] [ref=f1e1]:
+  - link "Skip to main content" [ref=f1e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=f1e4]:
+    - banner [ref=f1e5]:
+      - link "Resumide home" [ref=f1e6] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f1e7]:
+          - generic [ref=f1e8]: Resumide
+          - generic [ref=f1e12]: Evidence desk
+      - group [ref=f1e13]:
+        - generic "Open site menu" [ref=f1e14] [cursor=pointer]:
+          - text: Menu
+          - generic [aria-hidden] [ref=f1e15]: ☰
+    - main [ref=f1e16]:
+      - generic [ref=f1e18]:
+        - paragraph [ref=f1e19]: Evidence review
+        - heading "Review scoring diagnostics" [level=1] [ref=f1e20]
+        - paragraph [ref=f1e21]: Review recovered evidence and missing information before using a score.
+      - generic [ref=f1e23]:
+        - region [ref=f1e24]:
+          - heading "Edit your resume on this analysis" [level=2] [ref=f1e25]
+          - status [ref=f1e26]: Saving or loading your current version…
+          - group "Resume authoring actions" [ref=f1e27]:
+            - paragraph [ref=f1e29]: Changes create new versions. Imported or edited facts need your confirmation; confirmation is your own declaration, not verified extraction accuracy.
+            - generic [ref=f1e30]:
+              - heading "Top findings to review" [level=3] [ref=f1e31]
+              - paragraph [ref=f1e32]: At most five evidence priorities; impact points are unavailable.
+              - list [ref=f1e33]:
+                - listitem [ref=f1e34]:
+                  - text: Observes name/email/phone recovery without rating identity or candidate merit.
+                  - generic [ref=f1e35]: "Effort: review required."
+                  - link "Edit the affected fact" [ref=f1e36] [cursor=pointer]:
+                    - /url: "#author-fact-<owned-id>"
+                - listitem [ref=f1e37]:
+                  - text: Skill-specific tenure requires dated evidence associated with that skill; general role dates do not establish it.
+                  - generic [ref=f1e38]: "Effort: review required."
+                  - paragraph [ref=f1e39]:
+                    - text: No verified editable fact supports this requirement. Clarify evidence rather than inventing a qualification.
+                    - link "Review the source" [ref=f1e40] [cursor=pointer]:
+                      - /url: /analysis/<owned-id>/evidence
+                - listitem [ref=f1e41]:
+                  - text: A matching candidate exists but needs exact source-backed confirmation.
+                  - generic [ref=f1e42]: "Effort: review required."
+                  - link "Edit the affected fact" [ref=f1e43] [cursor=pointer]:
+                    - /url: "#author-fact-<owned-id>"
+                - listitem [ref=f1e44]:
+                  - text: No reliable matching evidence was recovered; absence is not yet established.
+                  - generic [ref=f1e45]: "Effort: review required."
+                  - paragraph [ref=f1e46]:
+                    - text: No verified editable fact supports this requirement. Clarify evidence rather than inventing a qualification.
+                    - link "Review the source" [ref=f1e47] [cursor=pointer]:
+                      - /url: /analysis/<owned-id>/evidence
+                - listitem [ref=f1e48]:
+                  - text: No reliable matching evidence was recovered; absence is not yet established.
+                  - generic [ref=f1e49]: "Effort: review required."
+                  - paragraph [ref=f1e50]:
+                    - text: No verified editable fact supports this requirement. Clarify evidence rather than inventing a qualification.
+                    - link "Review the source" [ref=f1e51] [cursor=pointer]:
+                      - /url: /analysis/<owned-id>/evidence
+              - group [ref=f1e52]:
+                - generic "Remaining findings (8)" [ref=f1e53]
+            - navigation "Resume outline" [ref=f1e54]:
+              - paragraph [ref=f1e55]:
+                - link "Imported content" [ref=f1e56] [cursor=pointer]:
+                  - /url: "#author-section-<owned-id>"
+              - paragraph [ref=f1e57]:
+                - link "Experience" [ref=f1e58] [cursor=pointer]:
+                  - /url: "#author-section-<owned-id>"
+              - paragraph [ref=f1e59]:
+                - link "Education" [ref=f1e60] [cursor=pointer]:
+                  - /url: "#author-section-<owned-id>"
+              - paragraph [ref=f1e61]:
+                - link "Skills" [ref=f1e62] [cursor=pointer]:
+                  - /url: "#author-section-<owned-id>"
+              - paragraph [ref=f1e63]:
+                - link "Certifications" [ref=f1e64] [cursor=pointer]:
+                  - /url: "#author-section-<owned-id>"
+            - generic [ref=f1e65]:
+              - heading "Imported content" [level=3] [ref=f1e66]
+              - generic [ref=f1e67]:
+                - generic [ref=f1e68]: "Section title: Imported content"
+                - 'textbox "Section title: Imported content" [disabled] [ref=f1e69]': Imported content
+                - button "Save section title" [disabled] [ref=f1e70]
+              - article [ref=f1e71]:
+                - 'heading "email: demo@example.test" [level=4] [ref=f1e72]'
+                - paragraph [ref=f1e73]: "State: unconfirmed"
+                - link "Inspect this fact’s provenance and version" [ref=f1e74] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+                - generic [ref=f1e75]:
+                  - generic [ref=f1e76]: "Edit email: demo@example.test"
+                  - 'textbox "Edit email: demo@example.test" [disabled] [ref=f1e77]': demo@example.test
+                  - button "Save fact correction" [disabled] [ref=f1e78]
+                - button "Confirm this saved fact" [disabled] [ref=f1e80]
+              - article [ref=f1e81]:
+                - 'heading "name: Demo Person" [level=4] [ref=f1e82]'
+                - paragraph [ref=f1e83]: "State: unconfirmed"
+                - link "Inspect this fact’s provenance and version" [ref=f1e84] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+                - generic [ref=f1e85]:
+                  - generic [ref=f1e86]: "Edit name: Demo Person"
+                  - 'textbox "Edit name: Demo Person" [disabled] [ref=f1e87]': Demo Person
+                  - button "Save fact correction" [disabled] [ref=f1e88]
+                - button "Confirm this saved fact" [disabled] [ref=f1e90]
+            - generic [ref=f1e91]:
+              - heading "Experience" [level=3] [ref=f1e92]
+              - generic [ref=f1e93]:
+                - generic [ref=f1e94]: "Section title: Experience"
+                - 'textbox "Section title: Experience" [disabled] [ref=f1e95]': Experience
+                - button "Save section title" [disabled] [ref=f1e96]
+              - article [ref=f1e97]:
+                - 'heading "employer: Fictional Co" [level=4] [ref=f1e98]'
+                - paragraph [ref=f1e99]: "State: unconfirmed"
+                - link "Inspect this fact’s provenance and version" [ref=f1e100] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+                - generic [ref=f1e101]:
+                  - generic [ref=f1e102]: "Edit employer: Fictional Co"
+                  - 'textbox "Edit employer: Fictional Co" [disabled] [ref=f1e103]': Fictional Co
+                  - button "Save fact correction" [disabled] [ref=f1e104]
+                - button "Confirm this saved fact" [disabled] [ref=f1e106]
+              - article [ref=f1e107]:
+                - 'heading "role: Engineer" [level=4] [ref=f1e108]'
+                - paragraph [ref=f1e109]: "State: unconfirmed"
+                - link "Inspect this fact’s provenance and version" [ref=f1e110] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+                - generic [ref=f1e111]:
+                  - generic [ref=f1e112]: "Edit role: Engineer"
+                  - 'textbox "Edit role: Engineer" [disabled] [ref=f1e113]': Engineer
+                  - button "Save fact correction" [disabled] [ref=f1e114]
+                - button "Confirm this saved fact" [disabled] [ref=f1e116]
+              - article [ref=f1e117]:
+                - 'heading "dates: 2020 - 2022" [level=4] [ref=f1e118]'
+                - paragraph [ref=f1e119]: "State: unconfirmed"
+                - link "Inspect this fact’s provenance and version" [ref=f1e120] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+                - generic [ref=f1e121]:
+                  - generic [ref=f1e122]: "Edit dates: 2020 - 2022"
+                  - 'textbox "Edit dates: 2020 - 2022" [disabled] [ref=f1e123]': 2020 - 2022
+                  - button "Save fact correction" [disabled] [ref=f1e124]
+                - button "Confirm this saved fact" [disabled] [ref=f1e126]
+              - article [ref=f1e127]:
+                - 'heading "contribution: Built robust tests; scope: Internal tests; result: Fewer release defects." [level=4] [ref=f1e128]'
+                - paragraph [ref=f1e129]: "State: candidate confirmed"
+                - link "Inspect this fact’s provenance and version" [ref=f1e130] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+                - generic [ref=f1e131]:
+                  - generic [ref=f1e132]: "Edit contribution: Built robust tests; scope: Internal tests; result: Fewer release defects."
+                  - 'textbox "Edit contribution: Built robust tests; scope: Internal tests; result: Fewer release defects." [disabled] [ref=f1e133]': "Built robust tests; scope: Internal tests; result: Fewer release defects."
+                  - button "Save fact correction" [disabled] [ref=f1e134]
+                - button "Confirm this saved fact" [disabled] [ref=f1e136]
+                - link "Review writing for this contribution" [ref=f1e137] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score?focus=<owned-id>#writing-review
+            - generic [ref=f1e138]:
+              - heading "Education" [level=3] [ref=f1e139]
+              - generic [ref=f1e140]:
+                - generic [ref=f1e141]: "Section title: Education"
+                - 'textbox "Section title: Education" [disabled] [ref=f1e142]': Education
+                - button "Save section title" [disabled] [ref=f1e143]
+              - article [ref=f1e144]:
+                - 'heading "education: Fictional University" [level=4] [ref=f1e145]'
+                - paragraph [ref=f1e146]: "State: unconfirmed"
+                - link "Inspect this fact’s provenance and version" [ref=f1e147] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+                - generic [ref=f1e148]:
+                  - generic [ref=f1e149]: "Edit education: Fictional University"
+                  - 'textbox "Edit education: Fictional University" [disabled] [ref=f1e150]': Fictional University
+                  - button "Save fact correction" [disabled] [ref=f1e151]
+                - button "Confirm this saved fact" [disabled] [ref=f1e153]
+            - generic [ref=f1e154]:
+              - heading "Skills" [level=3] [ref=f1e155]
+              - generic [ref=f1e156]:
+                - generic [ref=f1e157]: "Section title: Skills"
+                - 'textbox "Section title: Skills" [disabled] [ref=f1e158]': Skills
+                - button "Save section title" [disabled] [ref=f1e159]
+              - article [ref=f1e160]:
+                - 'heading "skill: TypeScript" [level=4] [ref=f1e161]'
+                - paragraph [ref=f1e162]: "State: unconfirmed"
+                - link "Inspect this fact’s provenance and version" [ref=f1e163] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+                - generic [ref=f1e164]:
+                  - generic [ref=f1e165]: "Edit skill: TypeScript"
+                  - 'textbox "Edit skill: TypeScript" [disabled] [ref=f1e166]': TypeScript
+                  - button "Save fact correction" [disabled] [ref=f1e167]
+                - button "Confirm this saved fact" [disabled] [ref=f1e169]
+            - generic [ref=f1e170]:
+              - heading "Certifications" [level=3] [ref=f1e171]
+              - generic [ref=f1e172]:
+                - generic [ref=f1e173]: "Section title: Certifications"
+                - 'textbox "Section title: Certifications" [disabled] [ref=f1e174]': Certifications
+                - button "Save section title" [disabled] [ref=f1e175]
+              - article [ref=f1e176]:
+                - 'heading "certification: Fictional Certificate" [level=4] [ref=f1e177]'
+                - paragraph [ref=f1e178]: "State: unconfirmed"
+                - link "Inspect this fact’s provenance and version" [ref=f1e179] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+                - generic [ref=f1e180]:
+                  - generic [ref=f1e181]: "Edit certification: Fictional Certificate"
+                  - 'textbox "Edit certification: Fictional Certificate" [disabled] [ref=f1e182]': Fictional Certificate
+                  - button "Save fact correction" [disabled] [ref=f1e183]
+                - button "Confirm this saved fact" [disabled] [ref=f1e185]
+            - generic [ref=f1e186]:
+              - heading "Grounded writing review" [level=3] [ref=f1e187]
+              - generic [ref=f1e188]:
+                - generic [ref=f1e189]: Contribution to review
+                - combobox "Contribution to review" [disabled] [ref=f1e190]:
+                  - 'option "Built robust tests; scope: Internal tests; result: Fewer release defects." [disabled] [selected]'
+                - button "Review contribution" [disabled] [ref=f1e191]
+              - paragraph [ref=f1e192]: Clarify only what you can confirm. Leave unknown answers unanswered.
+              - generic [ref=f1e193]:
+                - generic [ref=f1e194]: What result can you truthfully attribute to this contribution?
+                - textbox "What result can you truthfully attribute to this contribution?" [disabled] [ref=f1e195]: Fewer release defects
+                - generic [ref=f1e196]:
+                  - checkbox "I confirm this answer is accurate." [checked] [disabled] [ref=f1e197]
+                  - text: I confirm this answer is accurate.
+                - button "Save result clarification" [disabled] [ref=f1e198]
+              - generic [ref=f1e199]:
+                - generic [ref=f1e200]: How was that result measured? Leave it unanswered if no measurement is known.
+                - textbox "How was that result measured? Leave it unanswered if no measurement is known." [disabled] [ref=f1e201]
+                - generic [ref=f1e202]:
+                  - checkbox "I confirm this answer is accurate." [disabled] [ref=f1e203]
+                  - text: I confirm this answer is accurate.
+                - button "Save measurement clarification" [disabled] [ref=f1e204]
+              - generic [ref=f1e205]:
+                - generic [ref=f1e206]: What was the verified scope or context?
+                - textbox "What was the verified scope or context?" [disabled] [ref=f1e207]: Internal tests
+                - generic [ref=f1e208]:
+                  - checkbox "I confirm this answer is accurate." [checked] [disabled] [ref=f1e209]
+                  - text: I confirm this answer is accurate.
+                - button "Save scope clarification" [disabled] [ref=f1e210]
+              - generic [ref=f1e211]:
+                - generic [ref=f1e212]: What did you do to achieve the result?
+                - textbox "What did you do to achieve the result?" [disabled] [ref=f1e213]
+                - generic [ref=f1e214]:
+                  - checkbox "I confirm this answer is accurate." [disabled] [ref=f1e215]
+                  - text: I confirm this answer is accurate.
+                - button "Save method clarification" [disabled] [ref=f1e216]
+              - generic [ref=f1e217]:
+                - generic [ref=f1e218]: What was your own responsibility rather than the team's?
+                - textbox "What was your own responsibility rather than the team's?" [disabled] [ref=f1e219]
+                - generic [ref=f1e220]:
+                  - checkbox "I confirm this answer is accurate." [disabled] [ref=f1e221]
+                  - text: I confirm this answer is accurate.
+                - button "Save ownership clarification" [disabled] [ref=f1e222]
+              - article [ref=f1e223]:
+                - heading "xyz" [level=4] [ref=f1e224]
+                - paragraph [ref=f1e225]: "State: clarification required; confidence: uncalibrated."
+                - paragraph [ref=f1e226]: Reorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.
+                - paragraph [ref=f1e227]: "Factual strength: candidate-declared; domain quality needs review."
+                - list
+                - blockquote [ref=f1e228]: "Built robust tests; scope: Internal tests; result: Fewer release defects."
+                - paragraph [ref=f1e229]: "Clarification needed: result, measurement, method"
+                - paragraph [ref=f1e230]: "Projected before acceptance: unavailable. Actual after a saved version: unavailable. Numeric delta: unavailable."
+                - generic [ref=f1e231]:
+                  - generic [ref=f1e232]:
+                    - checkbox "I reviewed and confirm every proposed claim." [disabled] [ref=f1e233]
+                    - text: I reviewed and confirm every proposed claim.
+                  - button "Accept xyz" [disabled] [ref=f1e234]
+                - button "Reject xyz" [disabled] [ref=f1e236]
+              - article [ref=f1e237]:
+                - heading "action impact context" [level=4] [ref=f1e238]
+                - paragraph [ref=f1e239]: "State: clarification required; confidence: uncalibrated."
+                - paragraph [ref=f1e240]: Reorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.
+                - paragraph [ref=f1e241]: "Factual strength: candidate-declared; domain quality needs review."
+                - list
+                - blockquote [ref=f1e242]: "Built robust tests; scope: Internal tests; result: Fewer release defects."
+                - paragraph [ref=f1e243]: "Clarification needed: result, scope"
+                - paragraph [ref=f1e244]: "Projected before acceptance: unavailable. Actual after a saved version: unavailable. Numeric delta: unavailable."
+                - generic [ref=f1e245]:
+                  - generic [ref=f1e246]:
+                    - checkbox "I reviewed and confirm every proposed claim." [disabled] [ref=f1e247]
+                    - text: I reviewed and confirm every proposed claim.
+                  - button "Accept action impact context" [disabled] [ref=f1e248]
+                - button "Reject action impact context" [disabled] [ref=f1e250]
+              - article [ref=f1e251]:
+                - heading "action scope result" [level=4] [ref=f1e252]
+                - paragraph [ref=f1e253]: "State: clarification required; confidence: uncalibrated."
+                - paragraph [ref=f1e254]: Reorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.
+                - paragraph [ref=f1e255]: "Factual strength: candidate-declared; domain quality needs review."
+                - list
+                - blockquote [ref=f1e256]: "Built robust tests; scope: Internal tests; result: Fewer release defects."
+                - paragraph [ref=f1e257]: "Clarification needed: result, scope"
+                - paragraph [ref=f1e258]: "Projected before acceptance: unavailable. Actual after a saved version: unavailable. Numeric delta: unavailable."
+                - generic [ref=f1e259]:
+                  - generic [ref=f1e260]:
+                    - checkbox "I reviewed and confirm every proposed claim." [disabled] [ref=f1e261]
+                    - text: I reviewed and confirm every proposed claim.
+                  - button "Accept action scope result" [disabled] [ref=f1e262]
+                - button "Reject action scope result" [disabled] [ref=f1e264]
+            - generic [ref=f1e265]:
+              - heading "Candidate change history" [level=3] [ref=f1e266]
+              - paragraph [ref=f1e267]: Most recent twenty decisions. Full history is included in your privacy export.
+              - button "Undo last saved change as a new version" [disabled] [ref=f1e269]
+              - list [ref=f1e270]:
+                - listitem [ref=f1e271]:
+                  - text: accept at
+                  - time [ref=f1e272]: 2026-11-06T10:12:50.570519+00:00
+                  - link "Compare this decision" [ref=f1e273] [cursor=pointer]:
+                    - /url: /analysis/<owned-id>/canonical?version=<owned-id>&compare=<owned-id>
+                - listitem [ref=f1e274]:
+                  - text: clarify at
+                  - time [ref=f1e275]: 2026-11-06T10:12:45.83476+00:00
+                  - link "Compare this decision" [ref=f1e276] [cursor=pointer]:
+                    - /url: /analysis/<owned-id>/canonical?version=<owned-id>&compare=<owned-id>
+                - listitem [ref=f1e277]:
+                  - text: clarify at
+                  - time [ref=f1e278]: 2026-11-06T10:12:42.486021+00:00
+                  - link "Compare this decision" [ref=f1e279] [cursor=pointer]:
+                    - /url: /analysis/<owned-id>/canonical?version=<owned-id>&compare=<owned-id>
+                - listitem [ref=f1e280]:
+                  - text: edit at
+                  - time [ref=f1e281]: 2026-11-06T10:12:36.745188+00:00
+                  - link "Compare this decision" [ref=f1e282] [cursor=pointer]:
+                    - /url: /analysis/<owned-id>/canonical?version=<owned-id>&compare=<owned-id>
+              - article [ref=f1e283]:
+                - link "View resume version 8" [ref=f1e284] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score?canonical=<owned-id>
+              - article [ref=f1e285]:
+                - link "View resume version 7" [ref=f1e286] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score?canonical=<owned-id>
+                - button "Restore version 7 as a new version" [disabled] [ref=f1e288]
+              - article [ref=f1e289]:
+                - link "View resume version 6" [ref=f1e290] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score?canonical=<owned-id>
+                - button "Restore version 6 as a new version" [disabled] [ref=f1e292]
+              - article [ref=f1e293]:
+                - link "View resume version 5" [ref=f1e294] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score?canonical=<owned-id>
+                - button "Restore version 5 as a new version" [disabled] [ref=f1e296]
+              - article [ref=f1e297]:
+                - link "View resume version 4" [ref=f1e298] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score?canonical=<owned-id>
+                - button "Restore version 4 as a new version" [disabled] [ref=f1e300]
+              - article [ref=f1e301]:
+                - link "View resume version 3" [ref=f1e302] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score?canonical=<owned-id>
+                - button "Restore version 3 as a new version" [disabled] [ref=f1e304]
+              - article [ref=f1e305]:
+                - link "View resume version 2" [ref=f1e306] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score?canonical=<owned-id>
+                - button "Restore version 2 as a new version" [disabled] [ref=f1e308]
+              - article [ref=f1e309]:
+                - link "View resume version 1" [ref=f1e310] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score?canonical=<owned-id>
+                - button "Restore version 1 as a new version" [disabled] [ref=f1e312]
+              - paragraph [ref=f1e313]: "Actual diagnostics use saved version <owned-id>. Numeric score/delta: unavailable."
+        - navigation "Evidence workspace" [ref=f1e314]:
+          - link "Review source evidence" [ref=f1e315] [cursor=pointer]:
+            - /url: /analysis/<owned-id>/evidence
+          - text: ·
+          - link "Review structured resume" [ref=f1e316] [cursor=pointer]:
+            - /url: /analysis/<owned-id>/canonical
+          - text: ·
+          - link "Review job requirements" [ref=f1e317] [cursor=pointer]:
+            - /url: /analysis/<owned-id>/requirements
+          - text: ·
+          - link "Preview and export resume" [ref=f1e318] [cursor=pointer]:
+            - /url: /analysis/<owned-id>/export
+        - paragraph [ref=f1e319]: Numeric scores are unavailable while evidence and scoring calibration need review. These diagnostics do not predict employer acceptance.
+        - region "Score dimensions" [ref=f1e320]:
+          - article [ref=f1e321]:
+            - heading "ATS compatibility" [level=2] [ref=f1e322]
+            - paragraph [ref=f1e323]: Unavailable
+            - paragraph [ref=f1e324]: calibration not approved; coverage policy unknown; critical evidence missing; extraction review required; requirements review required
+          - article [ref=f1e325]:
+            - heading "Required job alignment" [level=2] [ref=f1e326]
+            - paragraph [ref=f1e327]: Unavailable
+            - paragraph [ref=f1e328]: calibration not approved; coverage policy unknown; critical evidence missing; extraction review required; requirements review required
+          - article [ref=f1e329]:
+            - heading "Preferred job alignment" [level=2] [ref=f1e330]
+            - paragraph [ref=f1e331]: Unavailable
+            - paragraph [ref=f1e332]: calibration not approved; coverage policy unknown; critical evidence missing; extraction review required; requirements review required
+        - generic [ref=f1e333]:
+          - heading "Evidence readiness" [level=2] [ref=f1e334]
+          - paragraph [ref=f1e335]: review required. Recovered text appears on 100% of the declared or retained pages. This is an observation, not confidence in accuracy.
+          - list [ref=f1e336]:
+            - listitem [ref=f1e337]: calibration not approved
+            - listitem [ref=f1e338]: coverage policy unknown
+            - listitem [ref=f1e339]: critical evidence missing
+            - listitem [ref=f1e340]: extraction review required
+            - listitem [ref=f1e341]: requirements review required
+          - paragraph [ref=f1e342]: uncalibrated confidence
+          - paragraph [ref=f1e343]: missing critical fields
+          - paragraph [ref=f1e344]: "Application Readiness aggregate: unavailable."
+        - generic [ref=f1e345]:
+          - heading "Next repair priorities" [level=2] [ref=f1e346]
+          - paragraph [ref=f1e347]: Ordered by missing evidence and review needs. No estimated score gains.
+          - list [ref=f1e348]:
+            - listitem [ref=f1e349]:
+              - text: Inspect missing or conflicting critical fields and incomplete source pages.
+              - link "Review this evidence" [ref=f1e350] [cursor=pointer]:
+                - /url: /analysis/<owned-id>/evidence
+            - listitem [ref=f1e351]:
+              - text: Verify the exact JD clauses and required/preferred importance cues.
+              - link "Review this evidence" [ref=f1e352] [cursor=pointer]:
+                - /url: /analysis/<owned-id>/requirements
+            - listitem [ref=f1e353]:
+              - text: Unrecognized sections remain inspectable and require review.
+              - link "Review this evidence" [ref=f1e354] [cursor=pointer]:
+                - /url: /analysis/<owned-id>/canonical
+            - listitem [ref=f1e355]:
+              - text: Observes name/email/phone recovery without rating identity or candidate merit.
+              - link "Review this evidence" [ref=f1e356] [cursor=pointer]:
+                - /url: /analysis/<owned-id>/canonical
+            - listitem [ref=f1e357]:
+              - text: Text alone cannot establish font, column, clipping or rendered-format compatibility.
+              - link "Review this evidence" [ref=f1e358] [cursor=pointer]:
+                - /url: /analysis/<owned-id>/evidence
+        - generic [ref=f1e359]:
+          - heading "Recovered observations" [level=2] [ref=f1e360]
+          - list [ref=f1e361]:
+            - listitem [ref=f1e362]: Recovered page coverage
+            - listitem [ref=f1e363]: Calendar order in recovered date ranges
+            - listitem [ref=f1e364]: Repeated bullet content
+        - generic [ref=f1e365]:
+          - heading "Technical evidence checks" [level=2] [ref=f1e366]
+          - article [ref=f1e367]:
+            - heading "Recovered page coverage" [level=3] [ref=f1e368]
+            - paragraph [ref=f1e369]: "pass: Coverage describes retained pages with text, not calibrated extraction accuracy."
+            - paragraph [ref=f1e370]: "Observed rule credit: 1; policy weight: unavailable."
+            - list [ref=f1e371]:
+              - listitem [ref=f1e372]:
+                - link "document span native-page-1-line-1" [ref=f1e373] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-1
+              - listitem [ref=f1e374]:
+                - link "document span native-page-1-line-2" [ref=f1e375] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-2
+              - listitem [ref=f1e376]:
+                - link "document span native-page-1-line-3" [ref=f1e377] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-3
+              - listitem [ref=f1e378]:
+                - link "document span native-page-1-line-4" [ref=f1e379] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-4
+              - listitem [ref=f1e380]:
+                - link "document span native-page-1-line-5" [ref=f1e381] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-5
+              - listitem [ref=f1e382]:
+                - link "document span native-page-1-line-6" [ref=f1e383] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-6
+              - listitem [ref=f1e384]:
+                - link "document span native-page-1-line-7" [ref=f1e385] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-7
+              - listitem [ref=f1e386]:
+                - link "document span native-page-1-line-8" [ref=f1e387] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-8
+              - listitem [ref=f1e388]:
+                - link "document span native-page-1-line-9" [ref=f1e389] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-9
+              - listitem [ref=f1e390]:
+                - link "document span native-page-1-line-10" [ref=f1e391] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-10
+              - listitem [ref=f1e392]:
+                - link "document span native-page-1-line-11" [ref=f1e393] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-11
+              - listitem [ref=f1e394]:
+                - link "document span native-page-1-line-12" [ref=f1e395] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-12
+              - listitem [ref=f1e396]:
+                - link "document span native-page-1-line-13" [ref=f1e397] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/score#span-native-page-1-line-13
+          - article [ref=f1e398]:
+            - heading "Recognized section structure" [level=3] [ref=f1e399]
+            - paragraph [ref=f1e400]: "partial: Unrecognized sections remain inspectable and require review."
+            - paragraph [ref=f1e401]: "Observed rule credit: 0.8; policy weight: unavailable."
+            - list
+          - article [ref=f1e402]:
+            - heading "Recovered contact candidates" [level=3] [ref=f1e403]
+            - paragraph [ref=f1e404]: "partial: Observes name/email/phone recovery without rating identity or candidate merit."
+            - paragraph [ref=f1e405]: "Observed rule credit: 0.6666666666666666; policy weight: unavailable."
+            - list [ref=f1e406]:
+              - listitem [ref=f1e407]:
+                - link "fact <owned-id>" [ref=f1e408] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+              - listitem [ref=f1e409]:
+                - link "fact <owned-id>" [ref=f1e410] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+          - article [ref=f1e411]:
+            - heading "Calendar order in recovered date ranges" [level=3] [ref=f1e412]
+            - paragraph [ref=f1e413]: "pass: Ambiguous formats need review; year-only ranges never establish exact experience duration."
+            - paragraph [ref=f1e414]: "Observed rule credit: 1; policy weight: unavailable."
+            - list [ref=f1e415]:
+              - listitem [ref=f1e416]:
+                - link "fact <owned-id>" [ref=f1e417] [cursor=pointer]:
+                  - /url: /analysis/<owned-id>/canonical?version=<owned-id>#fact-<owned-id>
+          - article [ref=f1e418]:
+            - heading "Repeated bullet content" [level=3] [ref=f1e419]
+            - paragraph [ref=f1e420]: "pass: Repeated content cannot multiply factual or alignment credit."
+            - paragraph [ref=f1e421]: "Observed rule credit: 1; policy weight: unavailable."
+            - list
+          - article [ref=f1e422]:
+            - heading "Qualified layout evidence" [level=3] [ref=f1e423]
+            - paragraph [ref=f1e424]: "not evaluated: Text alone cannot establish font, column, clipping or rendered-format compatibility."
+            - paragraph [ref=f1e425]: "Observed rule credit: unavailable; policy weight: unavailable."
+            - list
+        - generic [ref=f1e426]:
+          - heading "Cited source excerpts" [level=2] [ref=f1e427]
+          - article [ref=f1e428]:
+            - heading "Source span native-page-1-line-1" [level=3] [ref=f1e429]
+            - blockquote [ref=f1e430]: "Name: Demo Person"
+          - article [ref=f1e431]:
+            - heading "Source span native-page-1-line-2" [level=3] [ref=f1e432]
+            - blockquote [ref=f1e433]: "Email: demo@example.test"
+          - article [ref=f1e434]:
+            - heading "Source span native-page-1-line-3" [level=3] [ref=f1e435]
+            - blockquote [ref=f1e436]: Experience
+          - article [ref=f1e437]:
+            - heading "Source span native-page-1-line-4" [level=3] [ref=f1e438]
+            - blockquote [ref=f1e439]: "Employer: Fictional Co"
+          - article [ref=f1e440]:
+            - heading "Source span native-page-1-line-5" [level=3] [ref=f1e441]
+            - blockquote [ref=f1e442]: "Role: Engineer"
+          - article [ref=f1e443]:
+            - heading "Source span native-page-1-line-6" [level=3] [ref=f1e444]
+            - blockquote [ref=f1e445]: "Dates: 2020 - 2022"
+          - article [ref=f1e446]:
+            - heading "Source span native-page-1-line-7" [level=3] [ref=f1e447]
+            - blockquote [ref=f1e448]: Built reliable tests
+          - article [ref=f1e449]:
+            - heading "Source span native-page-1-line-8" [level=3] [ref=f1e450]
+            - blockquote [ref=f1e451]: Education
+          - article [ref=f1e452]:
+            - heading "Source span native-page-1-line-9" [level=3] [ref=f1e453]
+            - blockquote [ref=f1e454]: "Education: Fictional University"
+          - article [ref=f1e455]:
+            - heading "Source span native-page-1-line-10" [level=3] [ref=f1e456]
+            - blockquote [ref=f1e457]: Skills
+          - article [ref=f1e458]:
+            - heading "Source span native-page-1-line-11" [level=3] [ref=f1e459]
+            - blockquote [ref=f1e460]: TypeScript
+          - article [ref=f1e461]:
+            - heading "Source span native-page-1-line-12" [level=3] [ref=f1e462]
+            - blockquote [ref=f1e463]: Certifications
+          - article [ref=f1e464]:
+            - heading "Source span native-page-1-line-13" [level=3] [ref=f1e465]
+            - blockquote [ref=f1e466]: "Certification: Fictional Certificate"
+        - generic [ref=f1e467]:
+          - heading "required requirements" [level=2] [ref=f1e468]
+          - article [ref=f1e469]:
+            - 'heading "experience: Must have 3+ years experience in TypeScript and SQL" [level=3] [ref=f1e470]'
+            - paragraph [ref=f1e471]: "Evaluation: not evaluated. Candidate observation: not evaluated."
+            - paragraph [ref=f1e472]: Skill-specific tenure requires dated evidence associated with that skill; general role dates do not establish it.
+            - paragraph [ref=f1e473]: 1 source clause(s), grouped once.
+            - link "Inspect quoted requirement" [ref=f1e474] [cursor=pointer]:
+              - /url: /analysis/<owned-id>/requirements?version=<owned-id>
+          - article [ref=f1e475]:
+            - 'heading "skill: TypeScript" [level=3] [ref=f1e476]'
+            - paragraph [ref=f1e477]: "Evaluation: not evaluated. Candidate observation: candidate confirmation required."
+            - paragraph [ref=f1e478]: A matching candidate exists but needs exact source-backed confirmation.
+            - paragraph [ref=f1e479]: 1 source clause(s), grouped once.
+            - link "Inspect quoted requirement" [ref=f1e480] [cursor=pointer]:
+              - /url: /analysis/<owned-id>/requirements?version=<owned-id>
+            - paragraph [ref=f1e481]:
+              - link "Inspect fact <owned-id>" [ref=f1e482] [cursor=pointer]:
+                - /url: /analysis/<owned-id>/canonical?version=<owned-id>
+          - article [ref=f1e483]:
+            - 'heading "skill: SQL" [level=3] [ref=f1e484]'
+            - paragraph [ref=f1e485]: "Evaluation: not evaluated. Candidate observation: not evaluated."
+            - paragraph [ref=f1e486]: No reliable matching evidence was recovered; absence is not yet established.
+            - paragraph [ref=f1e487]: 1 source clause(s), grouped once.
+            - link "Inspect quoted requirement" [ref=f1e488] [cursor=pointer]:
+              - /url: /analysis/<owned-id>/requirements?version=<owned-id>
+          - article [ref=f1e489]:
+            - 'heading "education: Bachelor degree required" [level=3] [ref=f1e490]'
+            - paragraph [ref=f1e491]: "Evaluation: not evaluated. Candidate observation: not evaluated."
+            - paragraph [ref=f1e492]: No reliable matching evidence was recovered; absence is not yet established.
+            - paragraph [ref=f1e493]: 1 source clause(s), grouped once.
+            - link "Inspect quoted requirement" [ref=f1e494] [cursor=pointer]:
+              - /url: /analysis/<owned-id>/requirements?version=<owned-id>
+          - article [ref=f1e495]:
+            - 'heading "location: Located in Bengaluru" [level=3] [ref=f1e496]'
+            - paragraph [ref=f1e497]: "Evaluation: not evaluated. Candidate observation: not evaluated."
+            - paragraph [ref=f1e498]: No reliable matching evidence was recovered; absence is not yet established.
+            - paragraph [ref=f1e499]: 1 source clause(s), grouped once.
+            - link "Inspect quoted requirement" [ref=f1e500] [cursor=pointer]:
+              - /url: /analysis/<owned-id>/requirements?version=<owned-id>
+          - article [ref=f1e501]:
+            - 'heading "authorization: Must have work authorization in India" [level=3] [ref=f1e502]'
+            - paragraph [ref=f1e503]: "Evaluation: not evaluated. Candidate observation: not evaluated."
+            - paragraph [ref=f1e504]: No approved factual mapping exists for this requirement type.
+            - paragraph [ref=f1e505]: 1 source clause(s), grouped once.
+            - link "Inspect quoted requirement" [ref=f1e506] [cursor=pointer]:
+              - /url: /analysis/<owned-id>/requirements?version=<owned-id>
+        - generic [ref=f1e507]:
+          - heading "preferred requirements" [level=2] [ref=f1e508]
+          - article [ref=f1e509]:
+            - 'heading "certification: AWS certification preferred" [level=3] [ref=f1e510]'
+            - paragraph [ref=f1e511]: "Evaluation: not evaluated. Candidate observation: not evaluated."
+            - paragraph [ref=f1e512]: No reliable matching evidence was recovered; absence is not yet established.
+            - paragraph [ref=f1e513]: 1 source clause(s), grouped once.
+            - link "Inspect quoted requirement" [ref=f1e514] [cursor=pointer]:
+              - /url: /analysis/<owned-id>/requirements?version=<owned-id>
+          - article [ref=f1e515]:
+            - 'heading "skill: AWS" [level=3] [ref=f1e516]'
+            - paragraph [ref=f1e517]: "Evaluation: not evaluated. Candidate observation: not evaluated."
+            - paragraph [ref=f1e518]: No reliable matching evidence was recovered; absence is not yet established.
+            - paragraph [ref=f1e519]: 1 source clause(s), grouped once.
+            - link "Inspect quoted requirement" [ref=f1e520] [cursor=pointer]:
+              - /url: /analysis/<owned-id>/requirements?version=<owned-id>
+          - article [ref=f1e521]:
+            - 'heading "skill: Python" [level=3] [ref=f1e522]'
+            - paragraph [ref=f1e523]: "Evaluation: not evaluated. Candidate observation: not evaluated."
+            - paragraph [ref=f1e524]: No reliable matching evidence was recovered; absence is not yet established.
+            - paragraph [ref=f1e525]: 1 source clause(s), grouped once.
+            - link "Inspect quoted requirement" [ref=f1e526] [cursor=pointer]:
+              - /url: /analysis/<owned-id>/requirements?version=<owned-id>
+        - generic [ref=f1e527]:
+          - heading "contextual requirements" [level=2] [ref=f1e528]
+          - article [ref=f1e529]:
+            - 'heading "responsibility: Develop reliable services" [level=3] [ref=f1e530]'
+            - paragraph [ref=f1e531]: "Evaluation: not evaluated. Candidate observation: not evaluated."
+            - paragraph [ref=f1e532]: No approved factual mapping exists for this requirement type.
+            - paragraph [ref=f1e533]: 1 source clause(s), grouped once.
+            - link "Inspect quoted requirement" [ref=f1e534] [cursor=pointer]:
+              - /url: /analysis/<owned-id>/requirements?version=<owned-id>
+        - heading "unknown requirements" [level=2] [ref=f1e536]
+        - group [ref=f1e537]:
+          - generic "Input versions and scoring policy" [ref=f1e538]
+```

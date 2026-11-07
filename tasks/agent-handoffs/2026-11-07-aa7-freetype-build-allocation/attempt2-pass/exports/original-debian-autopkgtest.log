@@ -1,0 +1,12 @@
+freetype 2.13.3
+freetype 2.13.3
++ [ -n  ]
++ CROSS_COMPILE=
++ cd /scratch
++ cat
++ pkg-config --cflags --libs freetype2
++ gcc -Wall -o trivial trivial.c -I/usr/include/freetype2 -I/usr/include/libpng16 -lfreetype
++ ./trivial
++ pkg-config --static --cflags --libs freetype2
++ gcc -Wall -static -o static trivial.c -I/usr/include/freetype2 -I/usr/include/libpng16 -lfreetype -lz -lbz2 -lpng16 -lz -lm -lz -lbrotlidec -lbrotlicommon
++ ./static

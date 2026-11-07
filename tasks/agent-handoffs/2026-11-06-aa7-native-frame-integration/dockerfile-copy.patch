@@ -1,0 +1,10 @@
+--- a/scripts/latex-runtime/Dockerfile
++++ b/scripts/latex-runtime/Dockerfile
+@@ -124,6 +124,7 @@
+ PYVERIFY
+ RUN rm -rf /var/lib/apt/lists/*
+ COPY landlock.c supervisor.py inspect_pdf.py build-closure.py build-fontconfig.py texmf.cnf requirements.lock /opt/latex/
++COPY native_geometry.py /opt/latex/native_geometry.py
+ COPY --from=builder /build/confine /opt/latex/confine
+ COPY --from=builder /build/vendor/ /opt/latex/
+ RUN test ! -e /opt/latex/home && install -d -o 0 -g 0 -m 0555 /opt/latex/home && python3 /opt/latex/build-closure.py && dpkg-query -W -f='${Package}=${Version}\n' > /opt/latex/packages.lock && chmod -R a-w /opt/latex && mkdir /scratch && chown 65532:65532 /scratch

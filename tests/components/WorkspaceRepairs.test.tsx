@@ -157,7 +157,7 @@ it("provides Privacy and the current-session sign-out form on mobile surfaces", 
   render(<RouterProvider router={router} />);
   await screen.findByRole("heading", { name: "Workspace" });
   const mobileNavigation = document.querySelector(
-    ".workspace-mobile-tabs",
+    ".workspace-floating-header details",
   ) as HTMLElement;
   expect(
     within(mobileNavigation)
@@ -165,7 +165,7 @@ it("provides Privacy and the current-session sign-out form on mobile surfaces", 
       .getAttribute("href"),
   ).toBe("/privacy");
   const header = document.querySelector(
-    ".workspace-mobile-header",
+    ".workspace-floating-header details",
   ) as HTMLElement;
   expect(
     within(header)

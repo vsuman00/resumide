@@ -1,0 +1,11 @@
+--- Dockerfile.v3
++++ Dockerfile.v4
+@@ -15,7 +15,7 @@
+ ADD --chmod=0444 --checksum=sha256:e7a07cad1b9c803457ec310bc87132429f52171c89f9126c09eb62e203c8c84b https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg-1+deb13u1.debian.tar.xz /inputs/freetype_2.13.3+dfsg-1+deb13u1.debian.tar.xz
+ COPY native-freetype/prepare.py native-freetype/budget_adapter.py native-freetype/abi-fonts.c /recipe/
+ COPY native-freetype/pins-v3.json /recipe/pins.json
+-COPY native-freetype/build-v2.py /recipe/build.py
++COPY native-freetype/build-v4.py /recipe/build.py
+ COPY native-freetype/patches/CVE-2026-95512.patch /recipe/patches/
+ COPY native-freetype/provenance/trixie-security.InRelease /recipe/provenance/
+ RUN chmod 0755 /inputs && test -z "$(getent passwd 65532)" && test -z "$(getent group 65532)" && printf '%s\n' 'nativebuild:x:65532:65532:Native source builder:/work:/bin/sh' >> /etc/passwd && printf '%s\n' 'nativebuild:x:65532:' >> /etc/group && mkdir /work /export && chown 65532:65532 /work /export

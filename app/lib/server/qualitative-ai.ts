@@ -2,11 +2,15 @@ import OpenAI from "openai";
 import { zodResponseFormat } from "openai/helpers/zod";
 import {
   ProseAnalysisSchema,
+  ProseGenerationSchema,
   PROSE_INSTRUCTIONS,
   groundQualitativeProse,
   legacyCategoryFromProse,
 } from "./qualitative-prose";
+import { buildRewriteSources, type RewriteSource } from "./rewrite-sources";
+import { resolveWriterProposals } from "./writer-proposals";
 import { DEFAULT_OPENAI_BASE_URL } from "./egress-policy";
+import { proseModelOptions } from "./openai-model";
 
 export type QualitativeAiFailureCode =
   | "AI_DISABLED"
@@ -31,6 +35,7 @@ export class QualitativeAiFailure extends Error {
 
 export interface QualitativeAiTransport {
   execute(request: {
+    sources?: RewriteSource[];
     model: string;
     system: string;
     user: string;
@@ -59,6 +64,7 @@ export class OpenAIQualitativeTransport implements QualitativeAiTransport {
   }
 
   async execute(request: {
+    sources?: RewriteSource[];
     model: string;
     system: string;
     user: string;
@@ -67,14 +73,14 @@ export class OpenAIQualitativeTransport implements QualitativeAiTransport {
   }) {
     const completion = await this.client.chat.completions.parse(
       {
-        model: request.model,
+        ...proseModelOptions(request.model),
         max_completion_tokens: request.maxOutputTokens,
         messages: [
           { role: "system", content: request.system },
           { role: "user", content: request.user },
         ],
         response_format: zodResponseFormat(
-          ProseAnalysisSchema,
+          ProseGenerationSchema,
           "qualitative_analysis",
         ),
       },
@@ -82,7 +88,15 @@ export class OpenAIQualitativeTransport implements QualitativeAiTransport {
     );
     const message = completion.choices[0]?.message;
     return {
-      output: message?.parsed,
+      output: message?.parsed
+        ? {
+            ...message.parsed,
+            writer: resolveWriterProposals(
+              message.parsed.writer,
+              request.sources ?? [],
+            ),
+          }
+        : null,
       refused: Boolean(message?.refusal),
       usage: {
         inputTokens: completion.usage?.prompt_tokens ?? 0,
@@ -130,8 +144,10 @@ export async function runQualitativeAi(
       transport.execute({
         model: args.model,
         system: PROSE_INSTRUCTIONS,
+        sources: buildRewriteSources(args.resumeText),
         user: JSON.stringify({
           resumeText: args.resumeText,
+          sources: buildRewriteSources(args.resumeText),
           jobTitle: args.jobTitle,
           jobDescription: args.jobDescription,
         }),

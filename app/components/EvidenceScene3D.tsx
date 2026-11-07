@@ -76,7 +76,7 @@ const EvidenceScene3D = ({
           ))}
         </div>
       )}
-      {variant === "hero" ? <span className="scene-score-orb">92</span> : null}
+      {variant === "hero" ? <span className="scene-score-orb">✓</span> : null}
       {variant === "workspace" ? <span className="scene-archive-slot" /> : null}
       {variant === "analysis" ? <span className="scene-scanner-ring" /> : null}
       {variant === "auth" ? (

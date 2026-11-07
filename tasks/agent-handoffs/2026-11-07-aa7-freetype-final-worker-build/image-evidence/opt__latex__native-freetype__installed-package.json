@@ -1,0 +1,54 @@
+{
+  "cohort": {
+    "libfreetype6": {
+      "file": "libfreetype6_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb",
+      "sha256": "53977736031a58794116fc26694eb1beb0d768dca53c2e619bee10c6c9f571c6",
+      "version": "2.13.3+dfsg-1+deb13u1+resumide1"
+    }
+  },
+  "metadataSha256": {
+    "source-and-test-receipt.json": "27194f4c3f3455dd655a7582f50210aa9e940c484c4982576e57c197262e5591",
+    "build-outcome.json": "4a0e095a9d75af584ada49e3e82c81ea7f6f4007d0692ba47d6163252f9736cb",
+    "install-verification.json": "6a6e19dc82a4e0664484a2f7337ef5eee3e8c3356fce037aabf8b0c78bc94318"
+  },
+  "normalNoRemoveOfflineApt": true,
+  "allOtherPackagesAndFlagsUnchanged": true,
+  "noncohortAutomaticAndAllHeldFlagsUnchanged": true,
+  "runtimeLibrarySha256": "eab220e08a609b989d86d98f7b1c97ea24277fd2012f7c73093fbadca1398ead",
+  "installerSha256": "de7bd821fd03a417a6eef6cccf35afc15b377e24333c36defea56cf24f24f5d2",
+  "pinsSha256": "48e6f0ddb0dbf88acbba24714208005632fcf9a6e4d9a64ac99fa631aeb3c271",
+  "literalBudgetAdapter": {
+    "sourceBindings": [
+      {
+        "mode": "original",
+        "sourceSha256": "ca5b9411a9f617db795a432cada72032e2fcf7c89947095f1697c8689963b2ab",
+        "literalBlockSha256": "46576f9295cdd905f73afe527c6ef6a1580631dbba55b2982322f5c4ba10a550",
+        "scope": "literal allocation-budget block; not the complete font parser/allocator/decryptor"
+      },
+      {
+        "mode": "patched",
+        "sourceSha256": "29bb98f73bfc74f971aa0ada1ea4ee796f961ea0c66545398343c89b5075eeb6",
+        "literalBlockSha256": "81949bf4eca8f477a495f50c071e142ea54d8487511f0b40eea00a148a2bf09a",
+        "scope": "literal allocation-budget block; not the complete font parser/allocator/decryptor"
+      }
+    ],
+    "programSha256": "a70655edc9b15ab9e0f09cd9344f7392ed04c7e232ef6cdb3d631283c3859ef4",
+    "expectedNeutralCases": 5,
+    "noFontOrPdfInput": true,
+    "wholeCveReproduction": false,
+    "boundary": "Integer division cum_len/4 is preserved, including67 accepted versus68 rejected for stream16."
+  },
+  "baselineCidSha256": "ca5b9411a9f617db795a432cada72032e2fcf7c89947095f1697c8689963b2ab",
+  "patchedCidSha256": "29bb98f73bfc74f971aa0ada1ea4ee796f961ea0c66545398343c89b5075eeb6",
+  "xetexLinkage": "\tlinux-vdso.so.1 (0x0000ffff8e1bd000)\n\tlibharfbuzz.so.0 => /lib/aarch64-linux-gnu/libharfbuzz.so.0 (0x0000ffff8dc00000)\n\tlibgraphite2.so.3 => /lib/aarch64-linux-gnu/libgraphite2.so.3 (0x0000ffff8dbc0000)\n\tlibicuuc.so.76 => /lib/aarch64-linux-gnu/libicuuc.so.76 (0x0000ffff8d980000)\n\tlibTECkit.so.0 => /lib/aarch64-linux-gnu/libTECkit.so.0 (0x0000ffff8d920000)\n\tlibpng16.so.16 => /lib/aarch64-linux-gnu/libpng16.so.16 (0x0000ffff8d8c0000)\n\tlibz.so.1 => /lib/aarch64-linux-gnu/libz.so.1 (0x0000ffff8d880000)\n\tlibfontconfig.so.1 => /lib/aarch64-linux-gnu/libfontconfig.so.1 (0x0000ffff8d810000)\n\tlibfreetype.so.6 => /lib/aarch64-linux-gnu/libfreetype.so.6 (0x0000ffff8d730000)\n\tlibkpathsea.so.6 => /lib/aarch64-linux-gnu/libkpathsea.so.6 (0x0000ffff8d6f0000)\n\tlibstdc++.so.6 => /lib/aarch64-linux-gnu/libstdc++.so.6 (0x0000ffff8d480000)\n\tlibm.so.6 => /lib/aarch64-linux-gnu/libm.so.6 (0x0000ffff8d3d0000)\n\tlibgcc_s.so.1 => /lib/aarch64-linux-gnu/libgcc_s.so.1 (0x0000ffff8d390000)\n\tlibc.so.6 => /lib/aarch64-linux-gnu/libc.so.6 (0x0000ffff8d1d0000)\n\t/lib/ld-linux-aarch64.so.1 (0x0000ffff8e170000)\n\tlibglib-2.0.so.0 => /lib/aarch64-linux-gnu/libglib-2.0.so.0 (0x0000ffff8d040000)\n\tlibicudata.so.76 => /lib/aarch64-linux-gnu/libicudata.so.76 (0x0000ffff8b1b0000)\n\tlibexpat.so.1 => /lib/aarch64-linux-gnu/libexpat.so.1 (0x0000ffff8b160000)\n\tlibbz2.so.1.0 => /lib/aarch64-linux-gnu/libbz2.so.1.0 (0x0000ffff8b130000)\n\tlibbrotlidec.so.1 => /lib/aarch64-linux-gnu/libbrotlidec.so.1 (0x0000ffff8b100000)\n\tlibatomic.so.1 => /lib/aarch64-linux-gnu/libatomic.so.1 (0x0000ffff8b0d0000)\n\tlibpcre2-8.so.0 => /lib/aarch64-linux-gnu/libpcre2-8.so.0 (0x0000ffff8b010000)\n\tlibbrotlicommon.so.1 => /lib/aarch64-linux-gnu/libbrotlicommon.so.1 (0x0000ffff8afd0000)\n",
+  "actualCveFontReproduction": "not-run; unavailable and no new font fixture authorized",
+  "upstreamMeson": {
+    "status": "NOT_RUN_EXTERNAL_FONT_UNAVAILABLE",
+    "registeredTests": 1,
+    "originalDisabledByDefault": true,
+    "fixture": "As.I.Lay.Dying.ttf",
+    "fixtureFetchedOrSubstituted": false
+  },
+  "runtimeAdopted": false,
+  "finalWorkerVerification": "pending"
+}

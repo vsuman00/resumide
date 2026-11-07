@@ -1,0 +1,235 @@
+--- /dev/null
++++ b/scripts/latex-runtime/verify-fontconfig-home.py
+@@ -0,0 +1,174 @@
++"""Trusted benign failure-branch probe; not a TeX or unknown-CVE reproduction."""
++import ast
++import hashlib
++import json
++import os
++import pathlib
++import re
++import stat
++import subprocess
++import sys
++import time
++
++HOME = '/opt/latex/home'
++CANARY = pathlib.Path('/scratch/.config/fontconfig/fonts.conf')
++MISSING = '/scratch/resumide-aa7-missing-fontconfig.conf'
++FAMILY = 'Resumide AA7 Fallback Control'
++MARKER = 'Resumide AA7 Canary Applied'
++CANARY_XML = ('<fontconfig><match target="pattern"><test name="family" compare="eq">'
++              '<string>' + FAMILY + '</string></test><edit name="family" mode="assign" binding="strong">'
++              '<string>' + MARKER + '</string></edit></match></fontconfig>').encode()
++
++SNAPSHOT = r'''
++import ctypes as C,json,os,sys
++lib=C.CDLL('libfontconfig.so.1');P=C.c_void_p
++def bind(name,result,args):
++ fn=getattr(lib,name);fn.restype=result;fn.argtypes=args;return fn
++bind('FcInitLoadConfig',P,[]);bind('FcInitLoadConfigAndFonts',P,[])
++bind('FcConfigGetConfigFiles',P,[P]);bind('FcConfigGetFontDirs',P,[P]);bind('FcConfigGetCacheDirs',P,[P])
++bind('FcStrListNext',C.c_char_p,[P]);bind('FcStrListDone',None,[P]);bind('FcNameParse',P,[C.c_char_p])
++bind('FcConfigSubstitute',C.c_int,[P,P,C.c_int]);bind('FcDefaultSubstitute',None,[P])
++bind('FcFontMatch',P,[P,P,C.POINTER(C.c_int)])
++bind('FcPatternGetString',C.c_int,[P,C.c_char_p,C.c_int,C.POINTER(C.c_char_p)])
++bind('FcPatternGetInteger',C.c_int,[P,C.c_char_p,C.c_int,C.POINTER(C.c_int)])
++bind('FcPatternDestroy',None,[P]);bind('FcConfigDestroy',None,[P])
++with_fonts=sys.argv[1]=='fonts'
++c=lib.FcInitLoadConfigAndFonts() if with_fonts else lib.FcInitLoadConfig()
++assert c,'Native Fontconfig initialization failed'
++def strings(iterator):
++ assert iterator
++ result=[]
++ while True:
++  item=lib.FcStrListNext(iterator)
++  if item is None:break
++  result.append(item.decode('utf-8',errors='strict'))
++  assert len(result)<=256
++ lib.FcStrListDone(iterator);return result
++def field(pattern,key):
++ value=C.c_char_p();assert lib.FcPatternGetString(pattern,key.encode(),0,C.byref(value))==0
++ return value.value.decode('utf-8',errors='strict')
++result={'configFiles':strings(lib.FcConfigGetConfigFiles(c)),
++        'fontDirs':strings(lib.FcConfigGetFontDirs(c)),
++        'cacheDirs':strings(lib.FcConfigGetCacheDirs(c)),
++        'xdgEnvironmentPresent':any(k.startswith('XDG_') for k in os.environ),'matches':[]}
++p=lib.FcNameParse(b'Resumide AA7 Fallback Control:style=Regular:size=10');assert p
++assert lib.FcConfigSubstitute(c,p,0)
++result['canaryFamily']=field(p,'family');lib.FcPatternDestroy(p)
++if with_fonts:
++ for family in ['serif','sans-serif','monospace','Latin Modern Roman','Latin Modern Sans','Latin Modern Mono','Latin Modern Math','DejaVu Serif','DejaVu Sans','DejaVu Sans Mono']:
++  for style in ['Regular','Bold','Italic','Bold Italic']:
++   request=family+':style='+style+':size=10';p=lib.FcNameParse(request.encode());assert p
++   assert lib.FcConfigSubstitute(c,p,0);lib.FcDefaultSubstitute(p)
++   status=C.c_int();match=lib.FcFontMatch(c,p,C.byref(status));assert match
++   index=C.c_int();assert lib.FcPatternGetInteger(match,b'index',0,C.byref(index))==0
++   result['matches'].append({'request':request,'family':field(match,'family'),'style':field(match,'style'),'file':field(match,'file'),'index':index.value})
++   lib.FcPatternDestroy(match);lib.FcPatternDestroy(p)
++lib.FcConfigDestroy(c);print(json.dumps(result,sort_keys=True))
++'''
++
++
++def production_environments():
++    supervisor = pathlib.Path('/opt/latex/supervisor.py').read_text()
++    function = next(node for node in ast.parse(supervisor).body if isinstance(node, ast.FunctionDef) and node.name == 'run')
++    popen = next(node for node in ast.walk(function) if isinstance(node, ast.Call)
++                 and isinstance(node.func, ast.Attribute) and isinstance(node.func.value, ast.Name)
++                 and node.func.value.id == 'subprocess' and node.func.attr == 'Popen')
++    environment = ast.literal_eval(next(item.value for item in popen.keywords if item.arg == 'env'))
++    launcher = pathlib.Path('/opt/latex/landlock.c').read_text().split('char *env[]={', 1)[1].split('NULL};', 1)[0]
++    c_environment = dict(item.split('=', 1) for item in re.findall(r'"([^"\n]+)"', launcher))
++    return environment, c_environment
++
++
++def main():
++    assert os.getuid() == 65532 and os.getgid() == 65532
++    os.umask(0o077)
++    actual_home = os.environ.get('HOME')
++    assert actual_home in ('/scratch', HOME), 'Unexpected image HOME'
++    assert not any(name.startswith('XDG_') for name in os.environ), 'Unexpected image XDG environment'
++    closure = json.loads(pathlib.Path('/opt/latex/closure.json').read_text())
++    sealed = closure['fontconfig']
++    deadline = time.monotonic() + 18
++
++    def snapshot(home, failure=False, fonts=False):
++        environment = {'HOME': home, 'LANG': 'C.UTF-8',
++                       'FONTCONFIG_FILE': MISSING if failure else sealed['config'],
++                       'FONTCONFIG_PATH': sealed['searchPath']}
++        remaining = deadline - time.monotonic()
++        assert remaining > 0, 'Native snapshot deadline exceeded'
++        result = subprocess.run([sys.executable, '-I', '-B', '-c', SNAPSHOT, 'fonts' if fonts else 'config'],
++                                env=environment, stdin=subprocess.DEVNULL, close_fds=True,
++                                capture_output=True, timeout=min(5, remaining))
++        assert result.returncode == 0, 'Native Fontconfig snapshot failed'
++        assert len(result.stdout) <= 65536 and len(result.stderr) <= 16384, 'Native snapshot output bound exceeded'
++        value = json.loads(result.stdout)
++        assert not value['xdgEnvironmentPresent']
++        value['diagnosticBytes'] = len(result.stderr)
++        return value
++
++    assert not pathlib.Path(MISSING).exists()
++    assert not CANARY.parent.parent.exists(), 'Fresh scratch config path required'
++    ordinary_scratch = snapshot('/scratch', fonts=True)
++    ordinary_actual = snapshot(actual_home, fonts=True)
++    CANARY.parent.mkdir(parents=True, mode=0o700)
++    CANARY.write_bytes(CANARY_XML)
++    try:
++        # Observe actual Docker HOME before checking the proposed immutable path.
++        # Thus the old image records real candidate XML use rather than only a
++        # missing-directory failure for the not-yet-created production HOME.
++        actual_failure = snapshot(actual_home, failure=True)
++        writable_control = snapshot('/scratch', failure=True)
++        immutable = pathlib.Path(HOME)
++        immutable_metadata = None
++        proposed_failure = None
++        if immutable.is_dir() and not immutable.is_symlink():
++            info = immutable.stat()
++            immutable_metadata = {'uid': info.st_uid, 'gid': info.st_gid,
++                                  'mode': oct(stat.S_IMODE(info.st_mode)), 'empty': not any(immutable.iterdir())}
++            proposed_failure = snapshot(HOME, failure=True)
++        ordinary_after = snapshot(actual_home, fonts=True)
++    finally:
++        assert CANARY.read_bytes() == CANARY_XML, 'Canary contents changed'
++        CANARY.unlink()
++        CANARY.parent.rmdir()
++        CANARY.parent.parent.rmdir()
++    assert not CANARY.exists() and not CANARY.parent.parent.exists()
++
++    def consumed(value):
++        return str(CANARY) in value['configFiles'] and value['canaryFamily'] == MARKER
++
++    def no_candidate_xml(value):
++        return value is not None and not any(path == '/scratch' or path.startswith('/scratch/') for path in value['configFiles']) and value['canaryFamily'] != MARKER
++
++    supervisor_env, launcher_env = production_environments()
++    expected_metadata = {'uid': 0, 'gid': 0, 'mode': '0o555', 'empty': True}
++    ordinary_same = (ordinary_scratch['matches'] == ordinary_actual['matches'] == ordinary_after['matches']
++                     and len(ordinary_actual['matches']) == 40)
++    sealed_files = (set(ordinary_actual['configFiles']) == set(sealed['files'])
++                    and ordinary_scratch['configFiles'] == ordinary_actual['configFiles'] == ordinary_after['configFiles'])
++    sealed_directories = (ordinary_scratch['fontDirs'] == ordinary_actual['fontDirs'] == ordinary_after['fontDirs']
++                          and ordinary_scratch['cacheDirs'] == ordinary_actual['cacheDirs'] == ordinary_after['cacheDirs'])
++    sources_fixed = (supervisor_env['HOME'] == launcher_env['HOME'] == HOME
++                     and all(not key.startswith('XDG_') for key in [*supervisor_env, *launcher_env]))
++    hashes_stable = all(hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest() == value for path, value in sealed['files'].items())
++    passed = (actual_home == HOME and sources_fixed and immutable_metadata == expected_metadata
++              and consumed(writable_control) and no_candidate_xml(actual_failure)
++              and no_candidate_xml(proposed_failure) and ordinary_same and sealed_files
++              and sealed_directories and hashes_stable)
++    result = {'scope': 'Benign native config-load failure branch; not OOM, hostile-TeX mkdir or unknown-CVE reproduction',
++              'actualHome': actual_home, 'productionSourceHomeFixed': sources_fixed,
++              'immutableHomeMetadata': immutable_metadata, 'writableFailureControlConsumedCanary': consumed(writable_control),
++              'actualHomeFailureConsumedCanary': consumed(actual_failure),
++              'actualHomeFailureConfigFiles': actual_failure['configFiles'],
++              'proposedHomeFailureConfigFiles': proposed_failure['configFiles'] if proposed_failure else None,
++              'actualHomeFailureNoCandidateXml': no_candidate_xml(actual_failure),
++              'proposedHomeFailureNoCandidateXml': no_candidate_xml(proposed_failure),
++              'ordinarySealedMatches': len(ordinary_actual['matches']), 'ordinary40MatchesPreserved': ordinary_same,
++              'ordinarySealedFilesPreserved': sealed_files, 'ordinarySealedDirectoriesPreserved': sealed_directories,
++              'ordinaryMatchesSha256': hashlib.sha256(json.dumps(ordinary_actual['matches'], sort_keys=True).encode()).hexdigest(),
++              'sealedXmlHashesStable': hashes_stable, 'canaryRemoved': True, 'passed': passed}
++    print(json.dumps(result, sort_keys=True), flush=True)
++    return 0 if passed else 1
++
++
++if __name__ == '__main__':
++    sys.exit(main())
+--- a/scripts/verify-latex-sandbox.ts
++++ b/scripts/verify-latex-sandbox.ts
+@@ -279,6 +279,45 @@
+   checks.push({
+     name: "sealed-fontconfig-user-canary",
+     ...fontconfigCanary.value,
++  });
++  const fontconfigHomeProbe = await readFile(
++    "scripts/latex-runtime/verify-fontconfig-home.py",
++    "utf8",
++  );
++  const fontconfigHomeProbeSha256 = createHash("sha256")
++    .update(fontconfigHomeProbe)
++    .digest("hex");
++  assert.equal(
++    fontconfigHomeProbeSha256,
++    hashes["scripts/latex-runtime/verify-fontconfig-home.py"],
++  );
++  const fontconfigHome = await rawLatexAttempt(imageId, "", {
++    entrypoint: "/usr/bin/python3",
++    args: ["-I", "-B", "-c", fontconfigHomeProbe],
++  });
++  assert.equal(fontconfigHome.value.passed, true);
++  assert.equal(fontconfigHome.value.actualHome, "/opt/latex/home");
++  assert.equal(fontconfigHome.value.productionSourceHomeFixed, true);
++  assert.deepEqual(fontconfigHome.value.immutableHomeMetadata, {
++    uid: 0,
++    gid: 0,
++    mode: "0o555",
++    empty: true,
++  });
++  assert.equal(fontconfigHome.value.writableFailureControlConsumedCanary, true);
++  assert.equal(fontconfigHome.value.actualHomeFailureConsumedCanary, false);
++  assert.equal(fontconfigHome.value.actualHomeFailureNoCandidateXml, true);
++  assert.equal(fontconfigHome.value.proposedHomeFailureNoCandidateXml, true);
++  assert.equal(fontconfigHome.value.ordinarySealedMatches, 40);
++  assert.equal(fontconfigHome.value.ordinary40MatchesPreserved, true);
++  assert.equal(fontconfigHome.value.ordinarySealedFilesPreserved, true);
++  assert.equal(fontconfigHome.value.ordinarySealedDirectoriesPreserved, true);
++  assert.equal(fontconfigHome.value.sealedXmlHashesStable, true);
++  assert.equal(fontconfigHome.value.canaryRemoved, true);
++  checks.push({
++    name: "fontconfig-failure-branch-immutable-home",
++    probeSha256: fontconfigHomeProbeSha256,
++    ...fontconfigHome.value,
+   });
+   const parser = await rawLatexAttempt(imageId, "", {
+     entrypoint: "/usr/bin/python3",
+--- a/scripts/latex-test-fixtures.ts
++++ b/scripts/latex-test-fixtures.ts
+@@ -197,6 +197,7 @@
+     "scripts/latex-runtime/supervisor.py",
+     "scripts/latex-runtime/inspect_pdf.py",
+     "scripts/latex-runtime/verify-jbig2.py",
++    "scripts/latex-runtime/verify-fontconfig-home.py",
+     "scripts/latex-runtime/build-closure.py",
+     "scripts/latex-runtime/build-fontconfig.py",
+     "scripts/latex-runtime/native-expat/pins.json",

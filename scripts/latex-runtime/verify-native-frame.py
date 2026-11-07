@@ -1,0 +1,276 @@
+"""Image metadata plus the unchanged frozen frame-only suite; never creates PDFs."""
+import ast
+import hashlib
+import json
+import os
+from pathlib import Path, PurePosixPath
+import re
+import subprocess
+import sys
+import uuid
+
+BASE = Path('/opt/latex/native-poppler')
+CONSUMER = Path('/opt/latex/native_geometry.py')
+CONSUMER_HASH = '8399d3432cde87c92f55771f272bad82c42b26856f3b4096fc1f76bc88249da1'
+SUITE_HASH = '8d36bb9de1fcf0cf900e0d8c08c05a255b05e165bab7c40aeef28ffc6386bd1d'
+PINS_HASH = '2bb3f7c717b2aaad314d2680700529a6da985d35542ac93ea934d65fbad9e923'
+ENV = {'PATH': '/usr/sbin:/usr/bin:/sbin:/bin', 'HOME': '/opt/latex/home', 'LANG': 'C.UTF-8'}
+
+
+def require(value, label):
+    if not value:
+        raise ValueError(label)
+
+
+def digest(path, maximum):
+    require(path.is_file() and not path.is_symlink() and path.stat().st_size <= maximum,
+            'regular-file-size-bound')
+    value = hashlib.sha256()
+    total = 0
+    with path.open('rb') as stream:
+        while data := stream.read(65536):
+            total += len(data)
+            require(total <= maximum, 'file-grew-over-bound')
+            value.update(data)
+    return value.hexdigest()
+
+
+def record(name):
+    path = BASE / name
+    digest(path, 1048576)
+    return json.loads(path.read_bytes())
+
+
+def command(args):
+    result = subprocess.run(args, stdin=subprocess.DEVNULL, capture_output=True,
+                            env=ENV, timeout=5, check=False)
+    require(result.returncode == 0 and len(result.stdout) + len(result.stderr) <= 65536,
+            'metadata-command-failed-or-oversized')
+    return (result.stdout + result.stderr).decode('utf-8', errors='strict')
+
+
+def upstream_proof(source, outcome, installed):
+    upstream = source['upstream']
+    require(upstream == outcome['upstream'] == installed['upstream'], 'upstream-receipt-disagreement')
+    require(upstream['ctestExecutables'] == 71 and upstream['skippedExecutables'] == 0
+            and upstream['qtClassesWithPositiveMethodEvidence'] == 56
+            and len(upstream['qtOutcomes']) == 56
+            and upstream['debianIgnoredTestExitNotUsedAsAcceptance'] is True,
+            'incomplete-native-outcomes')
+    for counts in upstream['qtOutcomes'].values():
+        require(counts['reportedPassedIncludingInitCleanup'] > 2
+                and counts['skipped'] == counts['blacklisted'] == 0, 'incomplete-qt-outcomes')
+    phases = outcome['phases']
+    tests = [phase for phase in phases if phase['name'] == 'fatal-upstream-tests']
+    require(len(tests) == 1 and tests[0]['exitCode'] == upstream['actualCtestExitCode']
+            and all(phase['exitCode'] == 0 for phase in phases if phase['name'] != 'fatal-upstream-tests'),
+            'native-phase-failure')
+    exception = upstream['engineeringException']
+    if upstream['allNativeTestsPassed'] is True:
+        require(upstream['passedExecutables'] == 71 and upstream['failedExecutables'] == 0
+                and upstream['failedOrSkipped'] == 0 and upstream['actualCtestExitCode'] == 0
+                and exception is None and outcome['status'] == 'native-package-checks-pass'
+                and all(counts['failed'] == 0 for counts in upstream['qtOutcomes'].values()),
+                'all-pass-receipt-not-honest')
+    else:
+        require(upstream['allNativeTestsPassed'] is False and upstream['passedExecutables'] == 70
+                and upstream['failedExecutables'] == upstream['failedOrSkipped'] == 1
+                and upstream['actualCtestExitCode'] == 8
+                and outcome['status'] == 'private-engineering-with-reviewed-exception',
+                'known-failure-receipt-not-honest')
+        require(exception['id'] == 'E010' and exception['class'] == 'check_qt6_signature_basics'
+                and exception['method'] == 'testPgp' and exception['backend'] == 'gpg'
+                and exception['sourceLine'] == 311 and exception['actualSigner'] == ''
+                and exception['expectedSigner'] == 'Sune Vuorela'
+                and exception['originalTestStillFailed'] is True
+                and exception['sourceOrKeyOrClockChanged'] is False
+                and exception['unexecutedLaterAssertionLines'] == [312, 313, 314, 315]
+                and exception['pgpVerificationDisabledClaim'] is False,
+                'changed-known-failure-scope')
+        require(upstream['qtOutcomes']['check_qt6_signature_basics'] == {
+            'reportedPassedIncludingInitCleanup': 11, 'failed': 1, 'skipped': 0, 'blacklisted': 0},
+            'changed-known-class-outcome')
+        require(all(counts['failed'] == 0 for name, counts in upstream['qtOutcomes'].items()
+                    if name != 'check_qt6_signature_basics'), 'other-qt-failure')
+    require(outcome['failure'] is None and outcome['runtimeAdopted'] is False
+            and source['runtimeAdopted'] is False, 'failed-or-promoted-source-receipt')
+    return {'executed': 71, 'passed': upstream['passedExecutables'],
+            'failed': upstream['failedExecutables'], 'actualCtestExitCode': upstream['actualCtestExitCode'],
+            'allNativeTestsPassed': upstream['allNativeTestsPassed'], 'qtCompleteClasses': 56,
+            'engineeringException': exception, 'junitSha256': upstream['junitSha256']}
+
+
+def check_wiring():
+    tree = ast.parse(Path('/opt/latex/supervisor.py').read_text())
+    imports = [node for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)
+               and node.module == 'native_geometry']
+    require(any({'parse_geometry', 'GeometryError'}.issubset({item.name for item in node.names})
+                for node in imports), 'consumer-import-missing')
+    require(not any(isinstance(node, ast.Import) and any(item.name.startswith('xml') for item in node.names)
+                    or isinstance(node, ast.ImportFrom) and (node.module or '').startswith('xml')
+                    for node in ast.walk(tree)), 'supervisor-xml-fallback-present')
+    commands = []
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'run'
+                and node.args and isinstance(node.args[0], ast.List)):
+            values = [item.value for item in node.args[0].elts if isinstance(item, ast.Constant)]
+            if values and values[0] == '/usr/bin/pdftotext':
+                commands.append(values)
+    require(commands == [['/usr/bin/pdftotext', '-resumide-bbox', '/scratch/main.pdf', '/scratch/text.frame']],
+            'producer-argv-not-private-frame')
+    calls = [node for node in ast.walk(tree) if isinstance(node, ast.Call)
+             and isinstance(node.func, ast.Name) and node.func.id == 'parse_geometry']
+    require(len(calls) == 1 and len(calls[0].args) == 2
+            and isinstance(calls[0].args[1], ast.Name) and calls[0].args[1].id == 'pages',
+            'inspected-page-count-not-bound')
+    return True
+
+
+def consumer_suite(program, owned):
+    data = program.encode('utf-8')
+    require(hashlib.sha256(data).hexdigest() == SUITE_HASH, 'frozen-suite-source-changed')
+    token = uuid.uuid4().hex
+    script = Path('/scratch/frame-proof-' + token + '.py')
+    receipt = Path('/scratch/frame-proof-' + token + '.json')
+    log = Path('/scratch/frame-proof-' + token + '.log')
+    for path in (script, receipt, log):
+        fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+        os.close(fd)
+        stat = path.stat()
+        owned.append((path, stat.st_dev, stat.st_ino))
+    script.write_bytes(data)
+    with log.open('wb') as output:
+        result = subprocess.run(['/usr/bin/python3', '-I', '-B', str(script), '--consumer', str(CONSUMER),
+                                 '--sha256', CONSUMER_HASH, '--receipt', str(receipt)],
+                                stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.STDOUT,
+                                env=ENV, timeout=14, check=False)
+    require(result.returncode == 0, 'frozen-consumer-suite-failed')
+    digest(log, 131072)
+    digest(receipt, 131072)
+    proof = json.loads(receipt.read_bytes())
+    require(proof['passed'] is True and proof['consumerStable'] is True
+            and proof['consumerSHA256'] == CONSUMER_HASH and proof['testSHA256'] == SUITE_HASH
+            and proof['testMethods'] == 6 and len(proof['cases']) == 107
+            and all(case['passed'] is True for case in proof['cases']), 'incomplete-frozen-consumer-suite')
+    return {'passed': True, 'cases': 107, 'testMethods': 6, 'consumerStable': True,
+            'suiteSha256': SUITE_HASH, 'consumerSha256': CONSUMER_HASH,
+            'receiptSha256': digest(receipt, 131072), 'logSha256': digest(log, 131072),
+            'originalReceiptTier': proof['tier'],
+            'executionContext': 'actual immutable worker; unchanged frame-only neutral suite'}
+
+
+def run(owned):
+    raw = sys.stdin.buffer.read(32769)
+    require(len(raw) <= 32768, 'probe-input-bound')
+    request = json.loads(raw)
+    require(set(request) == {'suiteSource', 'runtimeInstallVerifierSha256'}
+            and isinstance(request['suiteSource'], str)
+            and re.fullmatch('[a-f0-9]{64}', request['runtimeInstallVerifierSha256']) is not None,
+            'probe-source-binding-input')
+    require(digest(CONSUMER, 65536) == CONSUMER_HASH, 'installed-consumer-source-changed')
+    require(digest(BASE / 'pins.json', 1048576) == PINS_HASH, 'native-pins-changed')
+    pins = record('pins.json')
+    source = record('source-and-test-receipt.json')
+    outcome = record('build-outcome.json')
+    fresh = record('install-verification.json')
+    binding = record('candidate-signature-binding.json')
+    installed = record('installed-package.json')
+    require(installed['runtimeInstallVerifierSha256'] == request['runtimeInstallVerifierSha256'],
+            'runtime-install-verifier-source-mismatch')
+    metadata = installed['metadataSha256']
+    require(set(metadata) == {'pins.json', 'source-and-test-receipt.json', 'build-outcome.json',
+                              'install-verification.json', 'candidate-signature-binding.json'}
+            and all(digest(BASE / name, 1048576) == value for name, value in metadata.items()),
+            'installed-provenance-metadata-changed')
+    require(source['sourceVersion'] == pins['sourceVersion']
+            and source['packageVersion'] == pins['packageVersion']
+            and source['testDataManifestSha256'] == pins['testdataManifestSha256']
+            and source['archiveValidSigners'] and source['noUnstableBinaries'] is True,
+            'source-provenance-mismatch')
+    require(outcome['candidateSignatureBinding'] == binding, 'signature-binding-receipt-mismatch')
+    upstream = upstream_proof(source, outcome, installed)
+    native = source['nativeVerification']
+    require(outcome['nativeDiagnostic'] == {'status': 'all-original-native-checks-pass', 'result': native}
+            and native['missingExports'] == [] and native['oldHeaderClientLinkedAndPassed'] is True
+            and native['soname'] == 'libpoppler.so.147' and native['baselineExports'] == 2716
+            and native['candidateExports'] >= native['baselineExports']
+            and native['disabledJpxDiagnostic'] == 'Unknown filter; EOF permits unrelated text extraction'
+            and native['wholePdfRejectionClaim'] is False, 'native-compatibility-proof-missing')
+    require([row['fixture'] for row in native['samePdfParity']] == pins['nativeParityPdfs']
+            and len(native['samePdfParity']) == 7
+            and all(row['exactCoordinateTextOrder'] is True and row['standardBboxTsvByteParity'] is True
+                    and row['fontInventoryParity'] is True for row in native['samePdfParity']),
+            'native-parity-evidence-incomplete')
+    require(installed['normalNoRemoveOfflineApt'] is True
+            and installed['allOtherPackagesAndProtectionFlagsUnchanged'] is True
+            and installed['nonCohortAutomaticAndHeldFlagsUnchanged'] is True
+            and installed['runtimeAdopted'] is False
+            and fresh['normalNoRemoveApt'] is True and fresh['allOtherPackagesUnchanged'] is True
+            and fresh['runtimeAdopted'] is False
+            and all(fresh['freshNonrootProbe'][key] is True for key in
+                    ('actualInstalledCli', 'textHashMatchesNativeParity', 'noOpenJpegLink')),
+            'normal-exact-cohort-install-proof-missing')
+    cohort = pins['packageCohort']
+    require(sorted(cohort) == ['libpoppler147', 'poppler-utils']
+            and set(source['cohort']) == set(installed['cohort']) == set(cohort), 'native-cohort-changed')
+    require(fresh['before'] == {name: pins['baselineVersion'] for name in cohort}
+            and fresh['after'] == {name: pins['packageVersion'] for name in cohort},
+            'fresh-native-cohort-versions-differ')
+    for name in cohort:
+        row = command(['dpkg-query', '-W', '-f=${Version}\t${Architecture}\t${db:Status-Status}', name]).split('\t')
+        require(row == [pins['packageVersion'], 'arm64', 'installed']
+                and installed['cohort'][name]['sha256'] == source['cohort'][name]['sha256']
+                and installed['cohort'][name]['version'] == source['cohort'][name]['version']
+                == pins['packageVersion'],
+                'current-installed-native-package-differs')
+    rows = native['runtimeElfNoOpj']
+    expected = {row['path']: row['sha256'] for row in rows}
+    require(len(rows) == len(expected) == 14 and expected == installed['runtimeElfHashes']
+            == fresh['freshNonrootProbe']['runtimeElfHashes'], 'installed-elf-proof-disagreement')
+    total = 0
+    for name, value in expected.items():
+        relative = PurePosixPath(name)
+        require(relative.parts and not relative.is_absolute() and '..' not in relative.parts
+                and relative.parts[0] == 'usr', 'invalid-cohort-elf-path')
+        path = Path('/') / name
+        total += path.stat().st_size
+        require(total <= 268435456 and digest(path, 67108864) == value, 'current-installed-elf-hash-differs')
+    graph = command(['ldd', '/usr/bin/pdftotext'])
+    require('libopenjp' not in graph and 'not found' not in graph, 'current-pdftotext-openjpeg-or-missing-dependency')
+    paths = {str(Path(value).resolve(strict=True)) for value in re.findall(r'(?:=> )?(/[^\s()]+)', graph)}
+    require(any(Path(path).name.startswith('libpoppler.so.147')
+                and str(Path(path).relative_to('/')) in expected for path in paths), 'current-pdftotext-core-unbound')
+    version = command(['/usr/bin/pdftotext', '-v'])
+    help_text = command(['/usr/bin/pdftotext', '-h'])
+    require('pdftotext version ' + pins['sourceVersion'].split('-', 1)[0] in version
+            and '-resumide-bbox' in help_text, 'private-native-producer-interface-missing')
+    require(check_wiring(), 'supervisor-frame-wiring-missing')
+    suite = consumer_suite(request['suiteSource'], owned)
+    require(digest(CONSUMER, 65536) == CONSUMER_HASH, 'installed-consumer-mutated')
+    return {'passed': True, 'protocol': 'RESUMIDE_BBOX/1', 'producerOption': '-resumide-bbox',
+            'currentPackageVersion': pins['packageVersion'], 'installedCohort': sorted(cohort),
+            'sourceVersion': pins['sourceVersion'], 'metadataSha256': metadata,
+            'installedElfHashes': expected, 'installedElfCount': len(expected),
+            'pdftotextNoOpenJpegBinding': True, 'supervisorFrameWiring': True,
+            'consumerSha256': CONSUMER_HASH, 'consumerSuite': suite, 'upstream': upstream,
+            'installedMetadataSha256': digest(BASE / 'installed-package.json', 1048576),
+            'runtimeInstallVerifierSha256': installed['runtimeInstallVerifierSha256'],
+            'samePdfNativeFixtures': len(native['samePdfParity']), 'nativeAbiExports': native['baselineExports'],
+            'pdfInputsGenerated': False, 'pdfNativeDecodingRequested': False, 'sourceBuildsRequested': False}
+
+
+if __name__ == '__main__':
+    os.umask(0o077)
+    owned = []
+    result = None
+    try:
+        result = run(owned)
+    finally:
+        for path, device, inode in reversed(owned):
+            state = path.lstat()
+            require(not path.is_symlink() and (state.st_dev, state.st_ino) == (device, inode),
+                    'owned-neutral-suite-file-identity-changed')
+            path.unlink()
+    result['temporaryFilesRemoved'] = all(not path.exists() for path, _device, _inode in owned)
+    require(result['temporaryFilesRemoved'], 'owned-neutral-suite-files-remain')
+    print(json.dumps(result, separators=(',', ':')))

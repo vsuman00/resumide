@@ -1,0 +1,15 @@
+# Native Trixie FreeType backport proposal
+
+Status: source and recipe prepared; no compiler, container or native build has run. The active combined worker and its green evidence are unchanged.
+
+The exact installed source is `2.13.3+dfsg-1+deb13u1`. Reused, previously verified Debian archive signatures bind the retained security Sources index, its exact active FreeType stanza and all seven source inputs. The downloads total 4,767,517 bytes; all size and SHA256 checks pass. Developer DSC and detached upstream signatures are not independently claimed. The build recipe repeats archive-signature verification before source extraction.
+
+The proposed local version is `2.13.3+dfsg-1+deb13u1+resumide1`. It appends only the verified nine-line `CVE-2026-95512.patch` and an honest changelog entry. Original Debian rules, all five existing patches, hardening, symbol checks, features and ordinary demos/docs/udeb products remain. The runtime cohort is only `libfreetype6`; the development package is used solely for fresh dynamic/static client testing.
+
+Normal `dpkg-source`, dependency checks and `dpkg-buildpackage` remain mandatory. Additional gates compare all dynamic exports and SONAME, compile an old-header client, verify two existing hash-bound Latin Modern OTF/PFB fonts and compare exact glyph/face metrics. A fresh, offline normal APT test upgrades only the library and test SDK, preserves other packages and flags, then runs the original authenticated Debian dynamic/static test unchanged. Actual converter profiles and all current font choices remain final worker gates.
+
+The safe targeted adapter compiles literal source statements from the authenticated original and patched CID loader budget blocks. It uses only bounded offset/length metadata and observes mocked allocation acceptance. Five cases cover ordinary counts, repeated overlap and the exact integer-division boundary. It neither creates nor parses a font/PDF, exercises decryption, nor reproduces the whole vulnerability. Its original and patched block hashes and generated C text are retained for independent review. It has not been compiled or executed.
+
+The source has one optional Meson regression, `issue-1063`, disabled by default. It requires absent `As.I.Lay.Dying.ttf` from an external attachment. That test is explicitly NOT RUN; no font is downloaded, substituted or silently counted as passed. No actual CVE-95512 font reproduction is available. The normal build, Debian client tests and bounded additional checks cannot be relabelled as the complete upstream suite.
+
+`Dockerfile.dockerignore` explicitly admits only the native recipe, patch, signed release and two existing shared helpers. Public source inputs remain checksum-pinned remote ADDs. The native stage runs as UID 65532 with zero capabilities, no-new-privileges and no network. Resource, output and source bounds remain fatal. No build is authorized until coordinator and independent review; host storage admission needs a new explicit allocation, not reuse of expired E-011.

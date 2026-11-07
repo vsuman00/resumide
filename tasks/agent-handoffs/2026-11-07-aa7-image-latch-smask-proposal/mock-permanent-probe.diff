@@ -1,0 +1,34 @@
+--- a/scripts/verify-latex-sandbox.ts
++++ b/scripts/verify-latex-sandbox.ts
+@@ -421,6 +421,31 @@
+     name: "pdf-raster-inline-image-and-font-admission",
+     probeSha256: createHash("sha256").update(imageAdmissionProbe).digest("hex"),
+     ...imageAdmission.value,
++  });
++  const mockImageBoundaryProbe = await readFile(
++    "scripts/latex-runtime/verify-image-boundaries-mock.py",
++    "utf8",
++  );
++  const mockImageBoundary = await rawLatexAttempt(imageId, "", {
++    entrypoint: "/usr/bin/python3",
++    args: ["-I", "-B", "-c", mockImageBoundaryProbe],
++  });
++  assert.equal(mockImageBoundary.value.cases, 4);
++  assert.equal(mockImageBoundary.value.passed, true);
++  assert.equal(mockImageBoundary.value.attempts.originalEncodedData, 0);
++  assert.equal(mockImageBoundary.value.attempts.imageDecoder, 0);
++  assert.equal(mockImageBoundary.value.pdfBytesGenerated, false);
++  assert.equal(mockImageBoundary.value.realPdfReaderCalled, false);
++  assert.equal(mockImageBoundary.value.nativeDecoderExecuted, false);
++  for (const item of mockImageBoundary.value.checks) {
++    assert.equal(item.pass, true, item.name);
++    assert.equal(item.configurationRestored, true, item.name);
++    assert.equal(item.getDataHookRestored, true, item.name);
++  }
++  checks.push({
++    name: "pdf-image-boundaries-mock-policy-checks",
++    probeSha256: createHash("sha256").update(mockImageBoundaryProbe).digest("hex"),
++    ...mockImageBoundary.value,
+   });
+   const success = await rawLatexAttempt(imageId, SYNTHETIC_LATEX);
+   assert.equal(

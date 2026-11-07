@@ -1,0 +1,32 @@
+{
+  "status": "PROPOSAL_ONLY_ROOT_UNCHANGED",
+  "baselineSha256": "a94dc26f65100913249bf8416a3e39f4ab008aaeb7197a70ed6f72580bc73a82",
+  "candidateSha256": "d3e69b7749db55527928e62344addbe2d57604e6b3dea3037396ac2d34bfce6c",
+  "patchSha256": "dfb5ff6fa5ba8df98332de8f4e195dda4564fc6db978cf40d770c97b723efa0a",
+  "meaning": "Undefined parent marker remains omitted; any defined marker including invalid or empty value is forwarded without normalization. Existing config validation decides validity.",
+  "argsTimeoutsAssertionsAndApplicationSourceUnchanged": true,
+  "actualRollbackNotExecuted": true,
+  "noDockerProviderDatabaseOrEnvChanges": true,
+  "checks": {
+    "prettierTypescriptParser": {
+      "exit": 0,
+      "passed": true
+    },
+    "gitApplyCheckAgainstCurrentRoot": {
+      "exit": 0,
+      "passed": true
+    },
+    "typescriptTranspileSyntax": {
+      "exit": 0,
+      "passed": true
+    },
+    "targetedSemanticTypescript": {
+      "exit": 0,
+      "passed": true,
+      "method": "Compiler host substitutes candidate for the root script in memory using existing tsconfig and resolved imports; noEmit/incrementalfalse, zero diagnostics, no writes."
+    },
+    "wholeApplicationTypecheck": "not-run; root integration checks remain separate",
+    "actualRollback": "not-run; tester owns eventual image-bound execution",
+    "noNewLowValueMirrorTests": true
+  }
+}

@@ -1,5 +1,3 @@
-import { scoreBand } from "~/lib/score-band";
-
 interface Suggestion {
   type: "good" | "improve";
   tip: string;
@@ -10,15 +8,7 @@ interface ATSProps {
   suggestions: Suggestion[];
 }
 
-const scoreLabels = {
-  needs_work: "Needs attention",
-  good_start: "Good start",
-  strong: "Strong",
-} as const;
-
 const ATS = ({ score, suggestions }: ATSProps) => {
-  const band = scoreBand(score);
-
   return (
     <section
       className="ats-evidence-overview"
@@ -29,13 +19,13 @@ const ATS = ({ score, suggestions }: ATSProps) => {
           <p className="workspace-eyebrow">Compatibility guidance</p>
           <h2 id="ats-evidence-heading">ATS evidence</h2>
           <p>
-            This score reflects the deterministic checks and parse simulation
-            available for this resume.
+            This saved checklist baseline is uncalibrated. It is not a
+            percentage of job requirements met or an employer ATS score.
           </p>
         </div>
-        <div className={`ats-score-status is-${band}`}>
+        <div className="ats-score-status is-uncalibrated">
           <strong>{score}/100</strong>
-          <span>{scoreLabels[band]}</span>
+          <span>Uncalibrated baseline</span>
         </div>
       </div>
 

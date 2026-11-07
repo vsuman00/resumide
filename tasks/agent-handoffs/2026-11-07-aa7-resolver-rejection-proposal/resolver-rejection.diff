@@ -1,0 +1,13 @@
+--- a/scripts/latex-runtime/inspect_pdf.py
++++ b/scripts/latex-runtime/inspect_pdf.py
+@@ -15,7 +15,9 @@
+   if not isinstance(value,IndirectObject):return value
+   key=(id(value.pdf),value.idnum,value.generation)
+   if key in seen:raise UnsafePDF()
+-  seen.add(key);value=value.get_object()
++  seen.add(key)
++  try:value=value.get_object()
++  except Exception as error:raise UnsafePDF() from error
+  raise UnsafePDF()
+ 
+ def _name(obj,key):

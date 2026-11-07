@@ -1,0 +1,59 @@
+{
+  "status": "prepared-not-built",
+  "failureImage": "sha256:4ea4aabf22823a6d76f6de957a8cead659494ae06fd09995dc81e9d2cda977b1",
+  "syntheticSourceSha256": "7bb2f9d426e4bec5030315c809d823618e8ef65c876e927a26d040464f3901d0",
+  "unchangedConfinedFailure": {
+    "error": "compile_failed",
+    "returncode": 1,
+    "classifiedReason": "xdvipdfmx could not recognize native a4 paper format"
+  },
+  "recorder": {
+    "diagnosticOnlyNotConfinementProof": true,
+    "runs": 1,
+    "returncode": 0,
+    "inputPaths": 76,
+    "flsSha256": "a2447852b82d395a5dbac098af2f9d174bb55b7e82bbc06455e56797a586e1fd",
+    "missingNonScratchInputs": []
+  },
+  "backend": {
+    "diagnosticOnlyNotConfinementProof": true,
+    "runs": 1,
+    "confinedXetexReturncode": 0,
+    "xdvSha256": "c8a05c27bd4171f16799f316f4b6e21fd6f702c70e178b77dcb505e0f10102cd",
+    "unconfinedReturncode": 0,
+    "pdfCreated": true,
+    "resolvedInputTokens": {
+      "cmmi10.pfb": "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb",
+      "cmr10.pfb": "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb",
+      "cmr8.pfb": "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb",
+      "cmsy10.pfb": "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb",
+      "msbm10.pfb": "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb"
+    },
+    "observedMissingPaths": [],
+    "observationLimit": "Verbose identified inputs do not prove all library file opens; native paperspecs causality is separately documented."
+  },
+  "proposedFile": {
+    "path": "/etc/paperspecs",
+    "sha256": "d335af4a3d4a834d8b4156a8f7ae435a6463b78e83d34d774622b0aab3ae8962",
+    "size": 1309,
+    "owner": "libpaper2:arm64: /etc/paperspecs"
+  },
+  "nativeDefinitions": [
+    "A4,210,297,mm",
+    "Letter,8.5,11,in",
+    "Letter,216,279,mm"
+  ],
+  "installedPackageVersion": "2.2.5-0.3+b2",
+  "signedPackageStanza": "Package: libpaper2\nSource: libpaper (2.2.5-0.3)\nVersion: 2.2.5-0.3+b2\nInstalled-Size: 118\nMaintainer: Giuseppe Sacco <eppesuig@debian.org>\nArchitecture: arm64\nProvides: libpaperg\nDepends: libc6 (>= 2.17), debconf (>= 0.5) | debconf-2.0\nRecommends: libpaper-utils\nDescription: Paper sizes catalogue\nMulti-Arch: same\nHomepage: https://github.com/rrthomas/libpaper\nDescription-md5: 0e8a8c110543a85fd986cc2f3249012b\nSection: libs\nPriority: optional\nFilename: pool/main/libp/libpaper/libpaper2_2.2.5-0.3+b2_arm64.deb\nSize: 16640\nMD5sum: 538cd5706e1dc373a46c04a649bb27d0\nSHA256: a5fbafa769017b5b2e0b4f967ca1fd33d3dc72228e7a1626df7c7f4d6acc56a7",
+  "authenticatedIndexSha256": "be16b37b2f740f066ea93d35d56f04f94d63693e5a3eb421b052bf86fae75bcd",
+  "beforeSha256": "a3fb1d50afe0bc100ab09fdcf1acc0591cc1699e62bd903c916ed56cfe46502e",
+  "afterSha256": "8bb06bc086b1a61cd51941e7ac505f5610d2330a1712174e73f989a64a45cd5a",
+  "diff": "--- build5/build-closure.py\n+++ build6/build-closure.py\n@@ -43,7 +43,7 @@\n for pattern in ['/var/lib/texmf/web2c/xetex/xelatex.fmt','/var/lib/texmf/fonts/map/dvipdfmx/**/*','/var/lib/texmf/fonts/map/dvips/**/*','/var/lib/texmf/fonts/map/pdftex/**/*','/etc/texmf/dvipdfmx/**/*','/usr/share/texmf/fonts/opentype/public/lm/*','/usr/share/texmf/fonts/type1/public/lm/*','/usr/share/texmf/fonts/tfm/public/lm/*','/usr/share/texmf/fonts/enc/dvips/lm/*']:\n  files.update(str(pathlib.Path(p).resolve()) for p in glob.glob(pattern,recursive=True) if pathlib.Path(p).is_file())\n files.add('/opt/latex/texmf.cnf')\n-required_transitives=require_paths([root/'tex/latex/etoolbox/etoolbox.sty'])\n+required_transitives=require_paths([root/'tex/latex/etoolbox/etoolbox.sty','/etc/paperspecs'])\n files.update(required_transitives)\n loaders=set()\n for binary in ['/usr/bin/xetex','/usr/bin/xdvipdfmx']:\n",
+  "ownedContainersAbsent": true,
+  "productionLoggingChanged": false,
+  "directStylesUnchanged": 8,
+  "requiredRuntimeUnchanged": 3,
+  "directoryRootsChanged": false,
+  "paperGeometryOverridesAdded": false,
+  "privateDiagnosticLogCommitted": false
+}

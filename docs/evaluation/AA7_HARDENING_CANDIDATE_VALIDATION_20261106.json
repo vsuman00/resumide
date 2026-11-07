@@ -1,0 +1,57 @@
+{
+  "recordedAt": "2026-11-06T05:36:01.330988+00:00",
+  "status": "pass",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "candidateImage": "sha256:19d2a00a2a830173bf1fae07dddfcac7d54be3047e58b276af031d3cbd1018ac",
+  "node": "22.23.4",
+  "checks": {
+    "check:latex:source": "pass",
+    "verify:latex": {
+      "exitCode": 0,
+      "runtimeGroups": 20,
+      "pdfPolicyCases": 20,
+      "failures": []
+    },
+    "benchmark:latex": {
+      "exitCode": 0,
+      "cases": 6,
+      "smallSampleP95Ms": 712
+    },
+    "verify:latex:rollback": {
+      "exitCode": 0,
+      "quarantineRetained": true,
+      "freshProcessCompile": true,
+      "ownedContainersRemaining": 0
+    },
+    "verify": {
+      "exitCode": 0,
+      "files": 145,
+      "tests": 1203,
+      "includes": ["format", "lint", "types", "web build", "worker build"]
+    },
+    "fullDedicatedBrowser": {
+      "latex": 7,
+      "aiControlledProvider": 6,
+      "totalPassed": 13,
+      "receipt": "AA7_HARDENING_CANDIDATE_BROWSER_20261106.json"
+    }
+  },
+  "evidenceLimits": [
+    "Controlled synthetic worker verification, no representative validity or document-accessibility certification",
+    "No provider or database calls; no Docker database or public operation",
+    "No CVE-specific exploit regression; package vulnerability scan and license review are separate evidence",
+    "No production activation or formal release approval",
+    "Existing Vite .env NODE_ENV warning remains non-fatal"
+  ],
+  "sourceHashes": {
+    "scripts/latex-runtime/Dockerfile": "59b3f2bbdb2a01829db88037d5690d56a74ab7c814f295252e92dfd1cef62974",
+    "scripts/latex-runtime/requirements.lock": "6c3793776e6b3c3d9a955e11b1eb2de1f192aa0990305fef4bb065f70b402261",
+    "scripts/latex-runtime/inspect_pdf.py": "abebf24292b7c591758c818994ddee65db475f7fa1fba6ab81cd9d2ca906e152",
+    "scripts/audit-latex-licenses.py": "f430e65886653274f2c6d4a26019d1da074a31bd023256ce3cd823c4f825e0fe",
+    "scripts/verify-latex-sandbox.ts": "b896e544a73da8dbed7e84da0f1a706475089f5bc27c1028e142eb1c6f3db7bf",
+    "scripts/latex-test-fixtures.ts": "937739ce8ef43afc7c5b76c8cbe3b5763f9b182a4db831ff8ce8efdee1ef4c85",
+    "scripts/benchmark-latex.ts": "1835490a56d05e61bac5d47a4438cfa73e169f6625e35bb80e271a17caa9ec41",
+    "scripts/verify-latex-rollback.ts": "a94dc26f65100913249bf8416a3e39f4ab008aaeb7197a70ed6f72580bc73a82",
+    "app/lib/server/latex-sandbox.ts": "e7b0b41aee2d83553c29437264524cf71f4fbb9a6bf8b1f760e4041d5eea2477"
+  }
+}

@@ -1,0 +1,15 @@
+# AA7 authoring read scheduling repair
+
+Owner: aa7_review; coordinator: root. Isolated worktree aa7-20261106-licenses, HEAD a0b2392. Refreshed the three assigned repositories from current ROOT before writing. ROOT was never edited. Native util recipe remains frozen at manifest331db0e3; no build was started.
+
+The full private run96392 snapshot showed a disabled workspace with the original clarification value after acceptance. Source hashes match that run. This supports a pending accept/redirect path, not a proven composition error. Static call graph counted about40 DB requests in acceptance plus47 during redirected scoring/authoring, with about45 dependency waves and authentication additional. No live timing, DB call, server or external job was used for diagnosis or this repair.
+
+Only query scheduling changed. Known canonical version/history reads now overlap the head after owned scope validation. Requirement history/head overlap, with its selected immutable version also overlapping when explicitly known. Authoring events overlap canonical loading, remain owner/analysis filtered and cannot be returned until canonical/head validation passes. All existing query filters, row/integrity checks, error text, final scoring rechecks, mutation logic, immutable versions, ownership/deletion barriers and SQL CAS/idempotency stay intact. Parallel failures are captured immediately as outcomes and rethrown in original head/ownership validation order; early failure cannot orphan another read rejection.
+
+RED: the new held-head tests failed all three scheduling expectations on the copied baseline; six existing guard cases passed. GREEN: final focused file13cases plus seven existing unit files,80tests total, passed. Guards cover foreign/deleted canonical and JD scope, immutable requirement row binding, stale/head error precedence, concurrent read rejections, historical read-only behavior and valid idempotent replay after head advance. Targeted TypeScript, ESLint and whitespace checks pass. No existing timeout/assertion was changed.
+
+Evidence/patch/receipt: `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-scheduling-mwf7guo7/`. Deliver only the assigned repositories and new tests/unit/repository-read-scheduling.test.ts. Local copies of current score-v2-repository.ts and score-snapshot-binding.test.ts are dependency/test baselines, identical to ROOT and excluded from integration. node_modules reuses the existing ROOT installation by symlink; no install/lockfile change.
+
+Exact delivered hashes: canonical7f6e3052b0e3caa2ab13308f58cef37eebf4f40cd737d1f91ef80aa7bc1ef8a5; requirements1af779d2428eb7619153f5d4486c6018063536619f6a73c86c44277b654c98ad; authoring465c694a79f441b5fcffe19cfb38e7de95c29633f70cdedca6bab639b1f3a05c; test321b1717f4b16f0b87bc393d6bd48d85da88016ab5e5f7072479ceaa8d7bad3a.
+
+Root must review/integrate the four-file diff, then rerun the managed private browser/fullCI path. Unit scheduling proof does not establish network latency or a passing browser result. No cache, migration, public API, runtime flag, database state, provider call or deployment changed.

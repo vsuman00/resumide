@@ -1,0 +1,33 @@
+test_image_directory_and_working_directory_contract (__main__.Environments.test_image_directory_and_working_directory_contract) ... ok
+test_native_launcher_environment (__main__.Environments.test_native_launcher_environment) ... FAIL
+test_supervisor_actual_child_environment (__main__.Environments.test_supervisor_actual_child_environment) ... FAIL
+test_supervisor_preserves_non_home_behavior (__main__.Environments.test_supervisor_preserves_non_home_behavior) ... ok
+
+======================================================================
+FAIL: test_native_launcher_environment (__main__.Environments.test_native_launcher_environment)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-accessible-preview/resume_ats/tasks/agent-handoffs/2026-11-06-aa7-immutable-native-home/neutral-test.py", line 77, in test_native_launcher_environment
+    self.assertEqual(after['HOME'], '/opt/latex/home')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '/scratch' != '/opt/latex/home'
+- /scratch
++ /opt/latex/home
+
+
+======================================================================
+FAIL: test_supervisor_actual_child_environment (__main__.Environments.test_supervisor_actual_child_environment)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-accessible-preview/resume_ats/tasks/agent-handoffs/2026-11-06-aa7-immutable-native-home/neutral-test.py", line 70, in test_supervisor_actual_child_environment
+    self.assertEqual(observed['env']['HOME'], '/opt/latex/home')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: '/scratch' != '/opt/latex/home'
+- /scratch
++ /opt/latex/home
+
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.003s
+
+FAILED (failures=2)

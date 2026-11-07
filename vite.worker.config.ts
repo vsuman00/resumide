@@ -1,7 +1,12 @@
 import { isAbsolute } from "node:path";
 import { defineConfig } from "vite";
 
+const privateMode = process.env.RESUMIDE_PRIVATE_VERIFY;
+if (privateMode !== undefined && privateMode !== "aa7-owned-synthetic")
+  throw new Error("Invalid private verification mode");
+
 export default defineConfig({
+  envDir: privateMode === "aa7-owned-synthetic" ? false : undefined,
   build: {
     target: "node22",
     outDir: "build/worker",

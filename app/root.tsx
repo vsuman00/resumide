@@ -38,7 +38,10 @@ export async function loader({ request }: Route.LoaderArgs) {
   );
 
   return Response.json(
-    { user: user ? { email: user.email } : null },
+    {
+      user: user ? { email: user.email } : null,
+      latexConverterEnabled: config.LATEX_CONVERTER_ENABLED,
+    },
     { headers: responseHeaders },
   );
 }

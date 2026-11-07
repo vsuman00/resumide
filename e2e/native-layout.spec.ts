@@ -1,3 +1,8 @@
+import { selectSiteTheme } from "./site-menu";
+import {
+  requireBrowserTestTarget,
+  recordBrowserFixture,
+} from "../scripts/browser-test-target";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
@@ -5,6 +10,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { extractPdfForAnalysis } from "../app/lib/server/extraction-stage";
 import { buildNativeEvidence } from "../app/lib/server/native-evidence";
+import { BASELINE_SEMANTICS } from "../app/lib/server/qualitative-prose";
 import { syntheticPdf, CONTACT_PDF_STREAM } from "../tests/fixtures/native-pdf";
 
 test("owner can review persisted layout by keyboard; other users cannot read it", async ({
@@ -15,6 +21,7 @@ test("owner can review persisted layout by keyboard; other users cannot read it"
   if (!process.env.SUPABASE_URL) process.loadEnvFile(".env");
   const url = process.env.SUPABASE_URL!;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY!;
+  requireBrowserTestTarget(url);
   const admin = createClient(url, process.env.SUPABASE_SECRET_KEY!, {
     auth: { persistSession: false },
   });
@@ -39,6 +46,7 @@ test("owner can review persisted layout by keyboard; other users cannot read it"
     check(created.error, "Synthetic user creation failed");
     const id = created.data.user!.id;
     users.push(id);
+    await recordBrowserFixture(url, { ownerId: id });
     const cookies: { name: string; value: string }[] = [];
     const auth = createServerClient(url, key, {
       cookies: {
@@ -83,6 +91,7 @@ test("owner can review persisted layout by keyboard; other users cannot read it"
       "BT /F1 12 Tf 50 750 Td (Skill) Tj 300 0 Td (Level) Tj -300 -20 Td (TypeScript) Tj 300 0 Td (Advanced) Tj -300 -20 Td (SQL) Tj 300 0 Td (Intermediate) Tj ET",
     ]);
     storageKey = `organizations/${organizationId}/resumes/${resumeId}/${versionId}.pdf`;
+    await recordBrowserFixture(url, { ownerId: owner, storageKey });
     check(
       (
         await admin.storage
@@ -238,6 +247,83 @@ test("owner can review persisted layout by keyboard; other users cannot read it"
       "Synthetic result completion failed",
     );
     await page.goto(`/resume/${analysisId}#parse`);
+    await expect(page.locator(".result-score-header")).toContainText(
+      "Uncalibrated",
+    );
+    await expect(page.locator(".result-score-header")).not.toContainText(
+      "Strong",
+    );
+    await page.locator(".result-score-header").screenshot({
+      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/navigation-report-button-20261031.png`,
+    });
+    const scoreContext = page.locator("details").filter({
+      has: page.getByText("How this saved score was calculated", {
+        exact: true,
+      }),
+    });
+    await expect(scoreContext).not.toHaveAttribute("open", "");
+    await scoreContext.locator("summary").click();
+    await expect(scoreContext).toContainText(
+      "not a percentage of job requirements met",
+    );
+    await expect(scoreContext.locator("time")).toContainText("IST");
+    await scoreContext.screenshot({
+      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/score-explanation-20261031.png`,
+    });
+    await scoreContext.locator("summary").click();
+    const reportButton = await page
+      .getByRole("link", { name: "Download evidence report" })
+      .boundingBox();
+    expect(reportButton!.height).toBe(44);
+    expect(reportButton!.width).toBeLessThan(260);
+    await page.getByRole("tab", { name: "Rewrite", exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: "No rewrite was saved" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/evidence did not support a safe wording/),
+    ).toHaveCount(0);
+    await page.getByRole("link", { name: "Review available feedback" }).click();
+    await expect(
+      page.getByRole("tab", { name: "Overview", exact: true }),
+    ).toHaveAttribute("aria-selected", "true");
+    check(
+      (
+        await admin
+          .from("writer_drafts")
+          .update({
+            draft: {
+              summary: "Synthetic retained wording for review.",
+              bullets: [],
+            },
+          })
+          .eq("analysis_id", analysisId)
+          .eq("owner_id", owner)
+      ).error,
+      "Synthetic retained writer update failed",
+    );
+    await page.goto(`/resume/${analysisId}#rewrite`);
+    await page.reload();
+    await expect(
+      page.getByRole("heading", { name: "Rewrite with evidence" }),
+    ).toBeVisible();
+    await expect(
+      page.getByText("Synthetic retained wording for review."),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Copy", exact: true }),
+    ).toBeVisible();
+    await page.getByLabel(/I agree to send the saved resume/).check();
+    await page
+      .getByRole("button", { name: "Generate suggestions", exact: true })
+      .click();
+    await expect(page.getByRole("alert")).toContainText(
+      "Writing generation is disabled on this server.",
+    );
+    await expect(
+      page.getByText("Synthetic retained wording for review."),
+    ).toBeVisible();
+    await page.getByRole("tab", { name: "Parse view", exact: true }).click();
     await expect(
       page.getByRole("region", { name: "Page 1 layout evidence" }),
     ).toBeVisible();
@@ -345,9 +431,94 @@ test("owner can review persisted layout by keyboard; other users cannot read it"
       ),
     ).toEqual([]);
     await page.screenshot({
-      path: "test-results/native-layout-review.png",
+      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results"}/native-layout-review.png`,
       fullPage: true,
     });
+    const citedCategory = {
+      score: 0,
+      tips: [
+        {
+          type: "good",
+          tip: "Keep the clear outcome",
+          explanation:
+            "The excerpt gives the reader a concrete contribution to review.",
+          quote: "Built reliable synthetic test services.",
+        },
+        {
+          type: "improve",
+          tip: "Clarify the scope before adding detail",
+          explanation:
+            "Describe the scope only when the source or your confirmation supports it.",
+          quote: "Maintained regression coverage.",
+        },
+        {
+          type: "improve",
+          tip: "Uncited advice",
+          explanation: "This remains omitted from the cited review.",
+        },
+      ],
+    };
+    check(
+      (
+        await admin
+          .from("analysis_results")
+          .update({
+            feedback: {
+              scoreSemantics: BASELINE_SEMANTICS,
+              overallScore: 70,
+              ATS: category,
+              toneAndStyle: citedCategory,
+              content: citedCategory,
+              structure: citedCategory,
+              skills: citedCategory,
+            },
+          })
+          .eq("analysis_id", analysisId)
+      ).error,
+      "Synthetic cited feedback setup failed",
+    );
+    await page.goto(`/resume/${analysisId}`);
+    const writing = page.getByRole("region", {
+      name: "Cited writing suggestions",
+    });
+    await expect(writing).toBeVisible();
+    await expect(writing.getByRole("heading", { level: 3 })).toHaveText([
+      "Tone and style",
+      "Content",
+      "Structure",
+      "Skills",
+    ]);
+    await expect(writing.locator("blockquote")).toHaveCount(8);
+    for (const [width, theme] of [
+      [1366, "light"],
+      [390, "dark"],
+    ] as const) {
+      await page.setViewportSize({ width, height: 1000 });
+      await selectSiteTheme(page, theme);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      const issues = await new AxeBuilder({ page })
+        .include('[data-testid="cited-writing-suggestions"]')
+        .analyze();
+      expect(issues.violations).toEqual([]);
+      const toneGroup = writing.getByRole("region", { name: "Tone and style" });
+      await toneGroup.evaluate((element) =>
+        element.scrollIntoView({ block: "center" }),
+      );
+      await toneGroup.screenshot({
+        path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/cited-writing-${width}-20261031.png`,
+      });
+    }
+    await page.goto("/analyses");
+    await expect(
+      page.getByRole("heading", { name: "Analysis history" }),
+    ).toBeVisible();
+    await expect(
+      page.locator(`a[href="/resume/${analysisId}"]`).first(),
+    ).toBeVisible();
     await login();
     const response = await page.goto(`/resume/${analysisId}`);
     expect(response?.status()).toBe(404);

@@ -1,0 +1,437 @@
+--- a/app/lib/server/canonical-repository.ts
++++ b/app/lib/server/canonical-repository.ts
+@@ -120,34 +120,24 @@
+     .object({ id, owner_id: id, organization_id: id, resume_version_id: id })
+     .safeParse(result.data);
+   if (!analysis.success || analysis.data.owner_id !== ownerId) throw missing();
+-  const source = await client
++  const sourceQuery = client
+     .from("resume_versions")
+-    .select("id,resume_id,owner_id,organization_id")
++    .select(
++      "id,resume_id,owner_id,organization_id,active_resume:resumes!resume_versions_resume_id_fkey(id,owner_id,organization_id,status)",
++    )
+     .eq("id", analysis.data.resume_version_id)
+     .eq("owner_id", ownerId)
++    .eq("organization_id", analysis.data.organization_id)
++    .eq("active_resume.owner_id", ownerId)
++    .eq("active_resume.organization_id", analysis.data.organization_id)
++    .eq("active_resume.status", "active")
+     .maybeSingle();
+-  if (source.error) throw unavailable();
+-  const parsed = z
+-    .object({ id, resume_id: id, owner_id: id, organization_id: id })
+-    .safeParse(source.data);
+-  if (
+-    !parsed.success ||
+-    parsed.data.organization_id !== analysis.data.organization_id
+-  )
+-    throw missing();
+-  const [root, membership, deletion] = await Promise.all([
+-    client
+-      .from("resumes")
+-      .select("id")
+-      .eq("id", parsed.data.resume_id)
+-      .eq("owner_id", ownerId)
+-      .eq("organization_id", parsed.data.organization_id)
+-      .eq("status", "active")
+-      .maybeSingle(),
++  // Scope reads overlap source loading; source validation keeps precedence.
++  const pendingScope = Promise.all([
+     client
+       .from("memberships")
+       .select("user_id")
+-      .eq("organization_id", parsed.data.organization_id)
++      .eq("organization_id", analysis.data.organization_id)
+       .eq("user_id", ownerId)
+       .maybeSingle(),
+     client
+@@ -157,9 +147,48 @@
+       .eq("kind", "deletion")
+       .neq("status", "failed")
+       .limit(1),
+-  ]);
+-  if (root.error || membership.error || deletion.error) throw unavailable();
+-  if (!root.data || !membership.data || deletion.data?.length) throw missing();
++  ]).then(
++    (value) => ({ value }),
++    (error: unknown) => ({ error }),
++  );
++  const source = await sourceQuery;
++  if (source.error) throw unavailable();
++  const parsed = z
++    .object({
++      id,
++      resume_id: id,
++      owner_id: id,
++      organization_id: id,
++      active_resume: z.unknown(),
++    })
++    .safeParse(source.data);
++  if (
++    !parsed.success ||
++    parsed.data.id !== analysis.data.resume_version_id ||
++    parsed.data.owner_id !== ownerId ||
++    parsed.data.organization_id !== analysis.data.organization_id
++  )
++    throw missing();
++  const scope = await pendingScope;
++  if ("error" in scope) throw scope.error;
++  const [membership, deletion] = scope.value;
++  if (membership.error || deletion.error) throw unavailable();
++  if (!membership.data || deletion.data?.length) throw missing();
++  const root = z
++    .object({
++      id,
++      owner_id: id,
++      organization_id: id,
++      status: z.literal("active"),
++    })
++    .safeParse(parsed.data.active_resume);
++  if (
++    !root.success ||
++    root.data.id !== parsed.data.resume_id ||
++    root.data.owner_id !== ownerId ||
++    root.data.organization_id !== analysis.data.organization_id
++  )
++    throw missing();
+   return { ...analysis.data, resumeId: parsed.data.resume_id };
+ }
+ async function version(
+--- a/app/lib/server/job-requirement-repository.ts
++++ b/app/lib/server/job-requirement-repository.ts
+@@ -49,10 +49,15 @@
+       .maybeSingle(),
+     client
+       .from("resume_versions")
+-      .select("resume_id")
++      .select(
++        "id,resume_id,owner_id,organization_id,active_resume:resumes!resume_versions_resume_id_fkey(id,owner_id,organization_id,status)",
++      )
+       .eq("id", a.resume_version_id)
+       .eq("owner_id", ownerId)
+       .eq("organization_id", a.organization_id)
++      .eq("active_resume.owner_id", ownerId)
++      .eq("active_resume.organization_id", a.organization_id)
++      .eq("active_resume.status", "active")
+       .maybeSingle(),
+     client
+       .from("memberships")
+@@ -72,16 +77,37 @@
+     throw unavailable();
+   if (!job.data || !source.data || !membership.data || deletion.data?.length)
+     throw missing();
+-  const root = await client
+-    .from("resumes")
+-    .select("id")
+-    .eq("id", source.data.resume_id)
+-    .eq("owner_id", ownerId)
+-    .eq("organization_id", a.organization_id)
+-    .eq("status", "active")
+-    .maybeSingle();
+-  if (root.error) throw unavailable();
+-  if (!root.data) throw missing();
++  const sourceScope = z
++    .object({
++      id,
++      resume_id: id,
++      owner_id: id,
++      organization_id: id,
++      active_resume: z.unknown(),
++    })
++    .safeParse(source.data);
++  if (
++    !sourceScope.success ||
++    sourceScope.data.id !== a.resume_version_id ||
++    sourceScope.data.owner_id !== ownerId ||
++    sourceScope.data.organization_id !== a.organization_id
++  )
++    throw missing();
++  const root = z
++    .object({
++      id,
++      owner_id: id,
++      organization_id: id,
++      status: z.literal("active"),
++    })
++    .safeParse(sourceScope.data.active_resume);
++  if (
++    !root.success ||
++    root.data.id !== sourceScope.data.resume_id ||
++    root.data.owner_id !== ownerId ||
++    root.data.organization_id !== a.organization_id
++  )
++    throw missing();
+   const text = z.string().max(20000).safeParse(job.data.description);
+   if (!text.success)
+     throw new CanonicalError(422, "The JD exceeds the supported limit.");
+--- a/tests/unit/repository-read-scheduling.test.ts
++++ b/tests/unit/repository-read-scheduling.test.ts
+@@ -39,6 +39,25 @@
+     revision: 1,
+     created_at: doc.createdAt,
+   };
++  const analysisRow = {
++    id: req.analysisId,
++    job_id: req.jobId,
++    owner_id: doc.ownerId,
++    organization_id: doc.organizationId,
++    resume_version_id: f.evidence.sourceId,
++  };
++  const sourceRow = {
++    id: f.evidence.sourceId,
++    resume_id: doc.resumeId,
++    owner_id: doc.ownerId,
++    organization_id: doc.organizationId,
++    active_resume: {
++      id: doc.resumeId,
++      owner_id: doc.ownerId,
++      organization_id: doc.organizationId,
++      status: "active",
++    },
++  };
+   const head = ok({ version_id: doc.versionId, revision: 1 });
+   const jobHead = ok({ id: req.id, revision: 1 });
+   const client = {
+@@ -73,21 +92,8 @@
+           const replacement = override?.(read);
+           if (replacement) return Promise.resolve(replacement).then(yes, no);
+           let result: Result;
+-          if (table === "analyses")
+-            result = ok({
+-              id: req.analysisId,
+-              job_id: req.jobId,
+-              owner_id: doc.ownerId,
+-              organization_id: doc.organizationId,
+-              resume_version_id: f.evidence.sourceId,
+-            });
+-          else if (table === "resume_versions")
+-            result = ok({
+-              id: f.evidence.sourceId,
+-              resume_id: doc.resumeId,
+-              owner_id: doc.ownerId,
+-              organization_id: doc.organizationId,
+-            });
++          if (table === "analyses") result = ok(analysisRow);
++          else if (table === "resume_versions") result = ok(sourceRow);
+           else if (table === "resumes") result = ok({ id: doc.resumeId });
+           else if (table === "memberships")
+             result = ok({ user_id: doc.ownerId });
+@@ -154,6 +160,8 @@
+     client: client as unknown as Parameters<typeof loadCanonical>[0],
+     rawClient: client,
+     reads,
++    analysisRow,
++    sourceRow,
+     head,
+     jobHead,
+     model,
+@@ -463,3 +471,208 @@
+     );
+   },
+ );
++
++it.each(["canonical", "requirements"] as const)(
++  "authorizes %s in two query waves without a separate parent request",
++  async (kind) => {
++    const analysis = held<Result>(),
++      source = held<Result>();
++    const f = fixture((read) =>
++      read.table === "analyses"
++        ? analysis.promise
++        : read.table === "resume_versions"
++          ? source.promise
++          : undefined,
++    );
++    const pending =
++      kind === "canonical"
++        ? loadCanonical(
++            f.client,
++            f.requirements.analysisId,
++            f.canonical.ownerId,
++          )
++        : loadJobRequirements(
++            f.client,
++            f.requirements.analysisId,
++            f.canonical.ownerId,
++          );
++    try {
++      await setImmediate();
++      expect(f.reads.map((read) => read.table)).toEqual(["analyses"]);
++      analysis.resolve(ok(f.analysisRow));
++      await setImmediate();
++      expect(f.reads.map((read) => read.table)).toEqual(
++        expect.arrayContaining([
++          "resume_versions",
++          "memberships",
++          "data_requests",
++          ...(kind === "requirements" ? ["jobs"] : []),
++        ]),
++      );
++      expect(
++        f.reads.some(
++          (read) =>
++            read.table === "canonical_resume_versions" ||
++            read.table === "job_requirement_versions",
++        ),
++      ).toBe(false);
++    } finally {
++      analysis.resolve(ok(f.analysisRow));
++      source.resolve(ok(f.sourceRow));
++      await pending;
++    }
++    const sourceRead = f.reads.find(
++      (read) => read.table === "resume_versions",
++    )!;
++    expect(sourceRead.columns).toContain(
++      "active_resume:resumes!resume_versions_resume_id_fkey(",
++    );
++    expect(sourceRead.columns).not.toContain("!inner");
++    expect(sourceRead.filters).toEqual({
++      id: f.evidence.sourceId,
++      owner_id: f.canonical.ownerId,
++      organization_id: f.canonical.organizationId,
++      "active_resume.owner_id": f.canonical.ownerId,
++      "active_resume.organization_id": f.canonical.organizationId,
++      "active_resume.status": "active",
++    });
++    expect(f.reads.some((read) => read.table === "resumes")).toBe(false);
++  },
++);
++
++it.each(["canonical", "requirements"] as const)(
++  "closes invalid source or nullable parent scope for %s",
++  async (kind) => {
++    for (const mismatch of [
++      "null source",
++      "source id",
++      "source owner",
++      "source organization",
++      "null parent",
++      "parent id",
++      "parent owner",
++      "parent organization",
++      "inactive parent",
++      "array parent",
++    ]) {
++      const f = fixture((read) => {
++        if (read.table !== "resume_versions") return;
++        if (mismatch === "null source") return ok(null);
++        const row: Record<string, unknown> = { ...f.sourceRow };
++        if (mismatch === "source id") row.id = randomUUID();
++        if (mismatch === "source owner") row.owner_id = randomUUID();
++        if (mismatch === "source organization")
++          row.organization_id = randomUUID();
++        if (mismatch === "null parent") row.active_resume = null;
++        if (mismatch === "array parent")
++          row.active_resume = [f.sourceRow.active_resume];
++        if (mismatch.startsWith("parent ") || mismatch === "inactive parent")
++          row.active_resume = {
++            ...f.sourceRow.active_resume,
++            ...(mismatch === "parent id" ? { id: randomUUID() } : {}),
++            ...(mismatch === "parent owner" ? { owner_id: randomUUID() } : {}),
++            ...(mismatch === "parent organization"
++              ? { organization_id: randomUUID() }
++              : {}),
++            ...(mismatch === "inactive parent" ? { status: "deleted" } : {}),
++          };
++        return ok(row);
++      });
++      const pending =
++        kind === "canonical"
++          ? loadCanonical(
++              f.client,
++              f.requirements.analysisId,
++              f.canonical.ownerId,
++            )
++          : loadJobRequirements(
++              f.client,
++              f.requirements.analysisId,
++              f.canonical.ownerId,
++            );
++      await expect(pending, mismatch).rejects.toMatchObject({ status: 404 });
++      expect(
++        f.reads.some(
++          (read) =>
++            read.table === "canonical_resume_versions" ||
++            read.table === "job_requirement_versions",
++        ),
++        mismatch,
++      ).toBe(false);
++    }
++  },
++);
++
++it.each(["memberships", "data_requests"] as const)(
++  "handles a rejected speculative %s read without replacing a foreign-source failure",
++  async (table) => {
++    const scope = held<Result>(),
++      source = held<Result>();
++    const f = fixture((read) =>
++      read.table === table
++        ? scope.promise
++        : read.table === "resume_versions"
++          ? source.promise
++          : undefined,
++    );
++    const pending = loadCanonical(
++      f.client,
++      f.requirements.analysisId,
++      f.canonical.ownerId,
++    );
++    const assertion = expect(pending).rejects.toMatchObject({ status: 404 });
++    await setImmediate();
++    if (f.reads.some((read) => read.table === table))
++      scope.reject(Error("scope request rejected"));
++    else scope.resolve(ok(null));
++    source.resolve(ok({ ...f.sourceRow, organization_id: randomUUID() }));
++    await assertion;
++    await setImmediate();
++  },
++);
++
++it.each(["canonical", "requirements"] as const)(
++  "keeps membership/deletion guards and scope-error precedence over a missing parent for %s",
++  async (kind) => {
++    for (const state of [
++      "missing membership",
++      "deletion",
++      "scope error",
++      "scope rejection",
++    ]) {
++      const rejected = Error("scope request rejected");
++      const f = fixture((read) => {
++        if (state === "scope error" || state === "scope rejection") {
++          if (read.table === "resume_versions")
++            return ok({ ...f.sourceRow, active_resume: null });
++          if (read.table === "memberships")
++            return state === "scope error"
++              ? { data: null, error: Error("scope database unavailable") }
++              : Promise.reject(rejected);
++        }
++        if (state === "missing membership" && read.table === "memberships")
++          return ok(null);
++        if (state === "deletion" && read.table === "data_requests")
++          return ok([{ id: randomUUID() }]);
++      });
++      const pending =
++        kind === "canonical"
++          ? loadCanonical(
++              f.client,
++              f.requirements.analysisId,
++              f.canonical.ownerId,
++            )
++          : loadJobRequirements(
++              f.client,
++              f.requirements.analysisId,
++              f.canonical.ownerId,
++            );
++      if (state === "scope rejection")
++        await expect(pending).rejects.toBe(rejected);
++      else
++        await expect(pending).rejects.toMatchObject({
++          status: state === "scope error" ? 503 : 404,
++        });
++    }
++  },
++);

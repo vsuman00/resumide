@@ -49,10 +49,15 @@ async function ownedJob(client: Client, analysisId: string, ownerId: string) {
       .maybeSingle(),
     client
       .from("resume_versions")
-      .select("resume_id")
+      .select(
+        "id,resume_id,owner_id,organization_id,active_resume:resumes!resume_versions_resume_id_fkey(id,owner_id,organization_id,status)",
+      )
       .eq("id", a.resume_version_id)
       .eq("owner_id", ownerId)
       .eq("organization_id", a.organization_id)
+      .eq("active_resume.owner_id", ownerId)
+      .eq("active_resume.organization_id", a.organization_id)
+      .eq("active_resume.status", "active")
       .maybeSingle(),
     client
       .from("memberships")
@@ -72,16 +77,37 @@ async function ownedJob(client: Client, analysisId: string, ownerId: string) {
     throw unavailable();
   if (!job.data || !source.data || !membership.data || deletion.data?.length)
     throw missing();
-  const root = await client
-    .from("resumes")
-    .select("id")
-    .eq("id", source.data.resume_id)
-    .eq("owner_id", ownerId)
-    .eq("organization_id", a.organization_id)
-    .eq("status", "active")
-    .maybeSingle();
-  if (root.error) throw unavailable();
-  if (!root.data) throw missing();
+  const sourceScope = z
+    .object({
+      id,
+      resume_id: id,
+      owner_id: id,
+      organization_id: id,
+      active_resume: z.unknown(),
+    })
+    .safeParse(source.data);
+  if (
+    !sourceScope.success ||
+    sourceScope.data.id !== a.resume_version_id ||
+    sourceScope.data.owner_id !== ownerId ||
+    sourceScope.data.organization_id !== a.organization_id
+  )
+    throw missing();
+  const root = z
+    .object({
+      id,
+      owner_id: id,
+      organization_id: id,
+      status: z.literal("active"),
+    })
+    .safeParse(sourceScope.data.active_resume);
+  if (
+    !root.success ||
+    root.data.id !== sourceScope.data.resume_id ||
+    root.data.owner_id !== ownerId ||
+    root.data.organization_id !== a.organization_id
+  )
+    throw missing();
   const text = z.string().max(20000).safeParse(job.data.description);
   if (!text.success)
     throw new CanonicalError(422, "The JD exceeds the supported limit.");
@@ -103,6 +129,33 @@ export async function loadJobRequirements(
     throw new CanonicalError(422, "Choose a valid history page.");
   if (options.versionId && !id.safeParse(options.versionId).success)
     throw missing();
+  const pendingHead = Promise.resolve(
+    client
+      .from("job_requirement_versions")
+      .select("id,revision")
+      .eq("analysis_id", analysisId)
+      .eq("owner_id", ownerId)
+      .order("revision", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ).then(
+    (value) => ({ value }),
+    (error: unknown) => ({ error }),
+  );
+  const readVersion = (versionId: string) =>
+    client
+      .from("job_requirement_versions")
+      .select("*")
+      .eq("id", versionId)
+      .eq("analysis_id", analysisId)
+      .eq("owner_id", ownerId)
+      .maybeSingle();
+  const pendingVersion = options.versionId
+    ? Promise.resolve(readVersion(options.versionId)).then(
+        (value) => ({ value }),
+        (error: unknown) => ({ error }),
+      )
+    : null;
   const versions = await client
     .from("job_requirement_versions")
     .select("id,revision,parent_version_id,created_at")
@@ -110,14 +163,9 @@ export async function loadJobRequirements(
     .eq("owner_id", ownerId)
     .order("revision", { ascending: false })
     .range(offset, offset + 20);
-  const head = await client
-    .from("job_requirement_versions")
-    .select("id,revision")
-    .eq("analysis_id", analysisId)
-    .eq("owner_id", ownerId)
-    .order("revision", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const headResult = await pendingHead;
+  if ("error" in headResult) throw headResult.error;
+  const head = headResult.value;
   if (versions.error || head.error) throw unavailable();
   const chosen = options.versionId ?? head.data?.id;
   if (!chosen)
@@ -130,13 +178,11 @@ export async function loadJobRequirements(
       nextOffset: null,
       scoringEligible: false as const,
     };
-  const row = await client
-    .from("job_requirement_versions")
-    .select("*")
-    .eq("id", chosen)
-    .eq("analysis_id", analysisId)
-    .eq("owner_id", ownerId)
-    .maybeSingle();
+  const selected = pendingVersion
+    ? await pendingVersion
+    : { value: await readVersion(chosen) };
+  if ("error" in selected) throw selected.error;
+  const row = selected.value;
   if (row.error) throw unavailable();
   if (!row.data) throw missing();
   const doc = JobRequirementsSchema.safeParse(row.data.content);

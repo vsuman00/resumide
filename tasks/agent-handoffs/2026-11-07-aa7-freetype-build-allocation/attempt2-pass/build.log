@@ -1,0 +1,188 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile.v4
+#1 transferring dockerfile: 6.03kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
+#2 DONE 1.4s
+
+#3 [build  2/16] ADD --chmod=0444 --checksum=sha256:62af0f5a1b39263679a788880b48449332ac684c543506a1f35254b8e042b5a4 https://deb.debian.org/debian-security/dists/trixie-security/main/source/by-hash/SHA256/62af0f5a1b39263679a788880b48449332ac684c543506a1f35254b8e042b5a4 /inputs/trixie-security-Sources.xz
+#3 DONE 0.0s
+
+#4 [build  3/16] ADD --chmod=0444 --checksum=sha256:8aa6e936f4b8ce5b1ac530d3c1bc7c5c36e6432ef81385c29ce649a3ed79e8cd https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg-1+deb13u1.dsc /inputs/freetype_2.13.3+dfsg-1+deb13u1.dsc
+#4 DONE 0.0s
+
+#5 [build  4/16] ADD --chmod=0444 --checksum=sha256:8775e5ffded1a885ba2ccb3ea0e82c73306a03b764080c3e4c79da15b5c9a28a https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig-ft2demos.tar.xz /inputs/freetype_2.13.3+dfsg.orig-ft2demos.tar.xz
+#5 DONE 0.0s
+
+#6 [build  7/16] ADD --chmod=0444 --checksum=sha256:65c66aec6244d247540430b21d3e80b677f1361906347a5be7fad371d46655da https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig-ft2docs.tar.xz.asc /inputs/freetype_2.13.3+dfsg.orig-ft2docs.tar.xz.asc
+#6 DONE 0.0s
+
+#7 [build  8/16] ADD --chmod=0444 --checksum=sha256:686ec73cbf6783b245dd068a09ce807b729ac0f8a46dd70f7867923c32fdf4de https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig.tar.xz /inputs/freetype_2.13.3+dfsg.orig.tar.xz
+#7 DONE 0.0s
+
+#8 [build  6/16] ADD --chmod=0444 --checksum=sha256:b7b66149bea769e226fd3d6d1eee6160e5b6beb4249b088071434fbe85fd1070 https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig-ft2docs.tar.xz /inputs/freetype_2.13.3+dfsg.orig-ft2docs.tar.xz
+#8 DONE 0.0s
+
+#9 [build  9/16] ADD --chmod=0444 --checksum=sha256:e7a07cad1b9c803457ec310bc87132429f52171c89f9126c09eb62e203c8c84b https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg-1+deb13u1.debian.tar.xz /inputs/freetype_2.13.3+dfsg-1+deb13u1.debian.tar.xz
+#9 DONE 0.0s
+
+#10 [build  5/16] ADD --chmod=0444 --checksum=sha256:931bfa17e59c0ec7db391160f43977e0907f36ea3c39d7e6063731cd4612dd51 https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig-ft2demos.tar.xz.asc /inputs/freetype_2.13.3+dfsg.orig-ft2demos.tar.xz.asc
+#10 DONE 0.0s
+
+#11 [snapshot 1/4] FROM docker.io/library/debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
+#11 resolve docker.io/library/debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 done
+#11 DONE 0.0s
+
+#12 [internal] load build context
+#12 transferring context: 94.59kB done
+#12 DONE 0.0s
+
+#13 [installation 2/8] COPY native-freetype/verify_install.py /recipe/
+#13 CACHED
+
+#14 [snapshot 3/4] COPY native-expat/apt-transport.py /recipe/
+#14 CACHED
+
+#15 [snapshot 4/4] RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py build-essential debhelper autoconf bzip2 gettext libbrotli-dev libbz2-dev libpng-dev libtool libx11-dev pkgconf x11proto-core-dev zlib1g-dev dpkg-dev gpgv python3 libfreetype-dev=2.13.3+dfsg-1+deb13u1 lmodern=2.005-1 && apt-get -o Acquire::Retries=3 install -y --no-install-recommends build-essential debhelper autoconf bzip2 gettext libbrotli-dev libbz2-dev libpng-dev libtool libx11-dev pkgconf x11proto-core-dev zlib1g-dev dpkg-dev gpgv python3 libfreetype-dev=2.13.3+dfsg-1+deb13u1 lmodern=2.005-1 && rm -rf /var/lib/apt/lists/*
+#15 CACHED
+
+#16 [installation 1/8] COPY native-expat/prepare.py /recipe/expat_source.py
+#16 CACHED
+
+#17 [snapshot 2/4] RUN test "$(dpkg --print-architecture)" = arm64 && rm -f /etc/apt/sources.list.d/debian.sources && printf '%s\n' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20261106T000000Z trixie main' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security main' > /etc/apt/sources.list
+#17 CACHED
+
+#18 [installation 3/8] COPY native-freetype/pins-v3.json /recipe/pins.json
+#18 CACHED
+
+#19 [build  4/16] ADD --chmod=0444 --checksum=sha256:8775e5ffded1a885ba2ccb3ea0e82c73306a03b764080c3e4c79da15b5c9a28a https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig-ft2demos.tar.xz /inputs/freetype_2.13.3+dfsg.orig-ft2demos.tar.xz
+#19 CACHED
+
+#20 [build  7/16] ADD --chmod=0444 --checksum=sha256:65c66aec6244d247540430b21d3e80b677f1361906347a5be7fad371d46655da https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig-ft2docs.tar.xz.asc /inputs/freetype_2.13.3+dfsg.orig-ft2docs.tar.xz.asc
+#20 CACHED
+
+#21 [build  3/16] ADD --chmod=0444 --checksum=sha256:8aa6e936f4b8ce5b1ac530d3c1bc7c5c36e6432ef81385c29ce649a3ed79e8cd https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg-1+deb13u1.dsc /inputs/freetype_2.13.3+dfsg-1+deb13u1.dsc
+#21 CACHED
+
+#22 [build  6/16] ADD --chmod=0444 --checksum=sha256:b7b66149bea769e226fd3d6d1eee6160e5b6beb4249b088071434fbe85fd1070 https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig-ft2docs.tar.xz /inputs/freetype_2.13.3+dfsg.orig-ft2docs.tar.xz
+#22 CACHED
+
+#23 [build  9/16] ADD --chmod=0444 --checksum=sha256:e7a07cad1b9c803457ec310bc87132429f52171c89f9126c09eb62e203c8c84b https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg-1+deb13u1.debian.tar.xz /inputs/freetype_2.13.3+dfsg-1+deb13u1.debian.tar.xz
+#23 CACHED
+
+#24 [build  5/16] ADD --chmod=0444 --checksum=sha256:931bfa17e59c0ec7db391160f43977e0907f36ea3c39d7e6063731cd4612dd51 https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig-ft2demos.tar.xz.asc /inputs/freetype_2.13.3+dfsg.orig-ft2demos.tar.xz.asc
+#24 CACHED
+
+#25 [build  2/16] ADD --chmod=0444 --checksum=sha256:62af0f5a1b39263679a788880b48449332ac684c543506a1f35254b8e042b5a4 https://deb.debian.org/debian-security/dists/trixie-security/main/source/by-hash/SHA256/62af0f5a1b39263679a788880b48449332ac684c543506a1f35254b8e042b5a4 /inputs/trixie-security-Sources.xz
+#25 CACHED
+
+#26 [build 10/16] COPY native-freetype/prepare.py native-freetype/budget_adapter.py native-freetype/abi-fonts.c /recipe/
+#26 CACHED
+
+#27 [build  8/16] ADD --chmod=0444 --checksum=sha256:686ec73cbf6783b245dd068a09ce807b729ac0f8a46dd70f7867923c32fdf4de https://deb.debian.org/debian-security/pool/updates/main/f/freetype/freetype_2.13.3+dfsg.orig.tar.xz /inputs/freetype_2.13.3+dfsg.orig.tar.xz
+#27 CACHED
+
+#28 [build 11/16] COPY native-freetype/pins-v3.json /recipe/pins.json
+#28 CACHED
+
+#29 [build 12/16] COPY native-freetype/build-v4.py /recipe/build.py
+#29 DONE 0.0s
+
+#30 [build 13/16] COPY native-freetype/patches/CVE-2026-95512.patch /recipe/patches/
+#30 DONE 0.0s
+
+#31 [build 14/16] COPY native-freetype/provenance/trixie-security.InRelease /recipe/provenance/
+#31 DONE 0.0s
+
+#32 [build 15/16] RUN chmod 0755 /inputs && test -z "$(getent passwd 65532)" && test -z "$(getent group 65532)" && printf '%s\n' 'nativebuild:x:65532:65532:Native source builder:/work:/bin/sh' >> /etc/passwd && printf '%s\n' 'nativebuild:x:65532:' >> /etc/group && mkdir /work /export && chown 65532:65532 /work /export
+#32 DONE 0.1s
+
+#33 [build 16/16] RUN --network=none setpriv --no-new-privs --bounding-set=-all --reuid=65532 --regid=65532 --clear-groups -- /usr/bin/python3 -B /recipe/build.py
+#33 0.315 dpkg-source: warning: cannot verify inline signature for /inputs/freetype_2.13.3+dfsg-1+deb13u1.dsc: no acceptable signature found
+#33 0.340 dpkg-source: info: extracting freetype in /work/source
+#33 0.340 dpkg-source: info: unpacking freetype_2.13.3+dfsg.orig.tar.xz
+#33 0.427 dpkg-source: info: unpacking freetype_2.13.3+dfsg.orig-ft2demos.tar.xz
+#33 0.443 dpkg-source: info: unpacking freetype_2.13.3+dfsg.orig-ft2docs.tar.xz
+#33 0.513 dpkg-source: info: unpacking freetype_2.13.3+dfsg-1+deb13u1.debian.tar.xz
+#33 0.517 dpkg-source: info: using patch list from debian/patches/series
+#33 0.517 dpkg-source: info: applying enable-gxvalid-otvalid.patch
+#33 0.518 dpkg-source: info: applying ftoption.patch
+#33 0.519 dpkg-source: info: applying no-web-fonts.patch
+#33 0.521 dpkg-source: info: applying hide-donations-information.patch
+#33 0.523 dpkg-source: info: applying CVE-2026-23865.patch
+#33 0.584 dpkg-source: info: using patch list from debian/patches/series
+#33 0.584 dpkg-source: info: applying CVE-2026-95512.patch
+#33 31.24 AA7_FREETYPE_POST_BUILD_CID ca5b9411a9f617db795a432cada72032e2fcf7c89947095f1697c8689963b2ab
+#33 32.02 AA7_FREETYPE_OUTCOME {"status": "native-private-source-abi-font-checks-pass", "failure": null, "receipt": {"archiveValidSigners": ["B0CAB9266E8C3929798B3EEEBDE6D2B9216EC7A8", "89C87ACEA5DD6B8E6A7068808E9F831205B4BA95"], "developerDscSignatureVerified": false, "originalPackagingHashes": {"debian/copyright": "acdab1506824347784d2cc0a634cfa17dbf525c0d5b4902b4ac9d0d4e1fed6c7", "debian/libfreetype6.symbols": "b33cc6ea3a4205b26e7e2ab9c89b42e0ccf81d2865f9a4099fc93d394da0ecfc", "debian/libfreetype6.install": "458372cd3e2a599dca894c33fb7ed967efb7d453d3cb31e0ce2bd257ce6baba1", "debian/freetype2-doc.docs": "c58c36969092f68958b2ae7505a7c605e0e8da34eed79559dd480a382d0bed46", "debian/control": "e30e131becee17a71f62f32448fe488e210ea823e83a3d965b78f62f92677e3a", "debian/gbp.conf": "cb8c2d38b64ba2334b506730c6ad1882fe3e817faf74e03f944b5e438e15268d", "debian/rules": "81f46435db011ad96f161df19b3af6994a5441d873d4670a36ac2893724d85cc", "debian/freetype2-doc.dirs": "9c8d66a063f659ea8d79a8c7f18bbecc96b96f43b3387f743792b0fbf43ff7c4", "debian/not-installed": "4389e14bcb5dbe5084d912b2231ac967ef44b6f087b7d6c1f38b6a9173464fcf", "debian/freetype2-demos.lintian-overrides": "32c279310ffd2ec5f147ad86a88b4700db58449f2ecd33030c4bae2733fbcc0e", "debian/freetype2-doc.lintian-overrides": "aa603d61e54e6206f0f3bd4e1401e7c3d34be6d25d880f7e81d48bc458f62820", "debian/libfreetype6-udeb.install": "2ef9022c854ddddabbda28c0b77a686479c2b0739753424c0ab0ad643be59e97", "debian/freetype2-doc.doc-base": "d92d24d38f981e7847fc5c61dfce6f371b6fafceb27b20c359ad3eda6d751859", "debian/libfreetype6.docs": "57bb905d0f2ccecbb9d81d40daa17e1e05b109c833ddc766edb0b59561088f20", "debian/freetype2-demos.install": "4e726feddec1c344c8a95b9bef3e4421401fe70b5bf1d8763256741310615627", "debian/libfreetype-dev.install": "deb883370c4a56a1f116e145ef14e42666b28c1b0998dac8784678919bb7f00f", "debian/freetype2-demos.manpages": "79affdfa37f1258c4c0a79def7c7f49ae4b602c07343839d208d3173f307c881", "debian/watch": "73e4e20507414d444ecdfcab0978729ae1e63f8984cea9b4f41120297d7c1dd5", "debian/changelog": "7ca63598447e0339983c810fed7f264ba6427fe6db18b1d7b3d5aced7c0891f6", "debian/source/format": "1be7080d72e6b566df3e236ce2c55efdfbbb8fa1c972d825e5b672ff8773be1a", "debian/source/lintian-overrides": "8b8f0c8ba232cc85b7b597bab4ba2a3b6ef0fd7de5e500cc1ad574167438a83a", "debian/tests/libfreetype-dev": "602cf651fc4525aba6d5e3759d614321ea0c2d403990dab2972f7e0ffcdfa153", "debian/tests/control": "f000e1e3a32afa923998d1e7fb6f6a18bbf14f8fbf7f1cda384fa0359d7f120a", "debian/patches/CVE-2026-23865.patch": "217cbc06a2ef849c4428dae5de95fc1cda1c8f10c38fb38dd84b5ae9b5272fec", "debian/patches/hide-donations-information.patch": "19873001b17d4936d691597030cc4ced362d9e634f23c5b976bb024c59962a32", "debian/patches/no-web-fonts.patch": "40da31d4eec7daa8a2049c2bd6eb1891aa79968e755f5bc5f1f9f93adc64045f", "debian/patches/enable-gxvalid-otvalid.patch": "79978b4e6bc615f11543b49e88fee4bc99d2954becfa7cc23fa7f5588c29e8d7", "debian/patches/series": "8f2ca9a319fe66e4c577ffe7d51dc4a38d9e0babbb8aeed51d5a158c77823c88", "debian/patches/ftoption.patch": "2f2892325de4a6237857b08d7d2138454aa7f6f0728efaa7681bf60b7455461a", "debian/upstream/metadata": "03b5be2c8fbb6e3d0688e7cd4d20b97ea2bfe504c685d203a3bde221cb4452a9", "debian/upstream/signing-key.asc": "2521a7c2ea1de5b2cecd955b86413b1884a21be1f0ace6bed5094a2c3fa5bc81"}, "baselineCidSha256": "ca5b9411a9f617db795a432cada72032e2fcf7c89947095f1697c8689963b2ab", "patchedCidSha256": "29bb98f73bfc74f971aa0ada1ea4ee796f961ea0c66545398343c89b5075eeb6", "vendorPatchSha256": "a72556e95acbdb6d6156cf38e89c66f072180e17634cadbb5f861737b14e3b1e", "sourceVersion": "2.13.3+dfsg-1+deb13u1", "packageVersion": "2.13.3+dfsg-1+deb13u1+resumide1", "noUnstableBinaries": true, "actualCveFontReproduction": "not-run; unavailable and no new font fixture authorized", "postBuildCidSha256": "ca5b9411a9f617db795a432cada72032e2fcf7c89947095f1697c8689963b2ab", "status": "native-private-source-abi-font-checks-pass", "cohort": {"libfreetype6": {"file": "libfreetype6_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb", "sha256": "53977736031a58794116fc26694eb1beb0d768dca53c2e619bee10c6c9f571c6", "version": "2.13.3+dfsg-1+deb13u1+resumide1"}, "libfreetype-dev": {"file": "libfreetype-dev_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb", "sha256": "b6fc3e5f51a58deeacb09853080cd57e01ab309eaf8ed73a4f3d98417e02283c", "version": "2.13.3+dfsg-1+deb13u1+resumide1"}}, "soname": "libfreetype.so.6", "originalExports": 220, "candidateExports": 220, "missingExports": [], "neutralFontMetrics": [{"font": "/usr/share/texmf/fonts/opentype/public/lm/lmroman10-regular.otf", "fontSha256": "1aa18cfefa58132c52ce5de70db1fd1154201c19cd2b2cdaffba4906a33e6852", "byteIdenticalMetrics": true, "baselineLogSha256": "f587f0fdb0f57a86d0e595eaf45e780714ed69f71af3bb205372887d7c62dd75", "candidateLogSha256": "f587f0fdb0f57a86d0e595eaf45e780714ed69f71af3bb205372887d7c62dd75"}, {"font": "/usr/share/texmf/fonts/type1/public/lm/lmr10.pfb", "fontSha256": "84eb01245abb17c0530ca3909427256d73df8bed2d7243b9f2717ca08c010ac8", "byteIdenticalMetrics": true, "baselineLogSha256": "92b36a96760ffcebcb90df1104fc84954d16717168206099f6f33e728f373886", "candidateLogSha256": "92b36a96760ffcebcb90df1104fc84954d16717168206099f6f33e728f373886"}], "strippedLibrarySha256": "eab220e08a609b989d86d98f7b1c97ea24277fd2012f7c73093fbadca1398ead", "strippedLibraryPath": "usr/lib/aarch64-linux-gnu/libfreetype.so.6.20.2", "literalBudgetAdapter": {"sourceBindings": [{"mode": "original", "sourceSha256": "ca5b9411a9f617db795a432cada72032e2fcf7c89947095f1697c8689963b2ab", "literalBlockSha256": "46576f9295cdd905f73afe527c6ef6a1580631dbba55b2982322f5c4ba10a550", "scope": "literal allocation-budget block; not the complete font parser/allocator/decryptor"}, {"mode": "patched", "sourceSha256": "29bb98f73bfc74f971aa0ada1ea4ee796f961ea0c66545398343c89b5075eeb6", "literalBlockSha256": "81949bf4eca8f477a495f50c071e142ea54d8487511f0b40eea00a148a2bf09a", "scope": "literal allocation-budget block; not the complete font parser/allocator/decryptor"}], "programSha256": "a70655edc9b15ab9e0f09cd9344f7392ed04c7e232ef6cdb3d631283c3859ef4", "expectedNeutralCases": 5, "noFontOrPdfInput": true, "wholeCveReproduction": false, "boundary": "Integer division cum_len/4 is preserved, including67 accepted versus68 rejected for stream16."}, "upstreamMeson": {"status": "NOT_RUN_EXTERNAL_FONT_UNAVAILABLE", "registeredTests": 1, "originalDisabledByDefault": true, "fixture": "As.I.Lay.Dying.ttf", "fixtureFetchedOrSubstituted": false}, "originalDebianBuild": {"passed": true, "rulesUnchanged": true, "dhAutoTestPositiveUpstreamCountClaim": false}, "fullConverterProfilesRuntimePending": true, "runtimeAdopted": false}, "phases": [{"name": "baseline-header-version", "exitCode": 0, "seconds": 0.11, "logSha256": "1831c5ecf2109f23646efdf77c7d192c6d81a1428e68b9d31ddf1f9a00f56a13"}, {"name": "compile-old-header-client", "exitCode": 0, "seconds": 0.103, "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, {"name": "baseline-font-0", "exitCode": 0, "seconds": 0.11, "logSha256": "f587f0fdb0f57a86d0e595eaf45e780714ed69f71af3bb205372887d7c62dd75"}, {"name": "baseline-font-1", "exitCode": 0, "seconds": 0.101, "logSha256": "92b36a96760ffcebcb90df1104fc84954d16717168206099f6f33e728f373886"}, {"name": "normal-original-build-dependencies", "exitCode": 0, "seconds": 0.11, "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, {"name": "normal-original-debian-build", "exitCode": 0, "seconds": 30.064, "logSha256": "da08007be776c53d8d481effce08ba413be0d611e9d3b8a1f4ee88883a2f77ba"}, {"name": "extract-libfreetype6", "exitCode": 0, "seconds": 0.11, "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, {"name": "extract-libfreetype-dev", "exitCode": 0, "seconds": 0.101, "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, {"name": "old-header-candidate-linkage", "exitCode": 0, "seconds": 0.11, "logSha256": "0f5e6e8617b59d45b9f0ea6a556f7ad1899184435318e0c380924facd8171d53"}, {"name": "candidate-font-0", "exitCode": 0, "seconds": 0.109, "logSha256": "f587f0fdb0f57a86d0e595eaf45e780714ed69f71af3bb205372887d7c62dd75"}, {"name": "candidate-font-1", "exitCode": 0, "seconds": 0.104, "logSha256": "92b36a96760ffcebcb90df1104fc84954d16717168206099f6f33e728f373886"}, {"name": "compile-literal-budget-adapter", "exitCode": 0, "seconds": 0.11, "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}, {"name": "literal-budget-neutral-cases", "exitCode": 0, "seconds": 0.11, "logSha256": "12a2e0b526f44a4d0982019d4858dae50a1001e884e193560c0b9597dcf600ee"}], "runtimeAdopted": false}
+#33 32.02 AA7_FREETYPE_LOG {"name": "baseline-font-0.log", "bytes": 156, "sha256": "f587f0fdb0f57a86d0e595eaf45e780714ed69f71af3bb205372887d7c62dd75", "tail": "face 1 821 1000 1127 -290\nglyph 65 27 576 0 24 0 550 576\nglyph 103 59 384 0 21 -146 372 384\nglyph 101 50 320 0 21 0 318 384\nglyph 110 77 448 0 24 0 410 384\n"}
+#33 32.02 AA7_FREETYPE_LOG {"name": "baseline-font-1.log", "bytes": 158, "sha256": "92b36a96760ffcebcb90df1104fc84954d16717168206099f6f33e728f373886", "tail": "face 1 822 1000 1127 -290\nglyph 65 1 576 0 24 0 550 576\nglyph 103 139 384 0 21 -146 372 384\nglyph 101 109 320 0 21 0 318 384\nglyph 110 190 448 0 24 0 410 384\n"}
+#33 32.02 AA7_FREETYPE_LOG {"name": "baseline-header-version.log", "bytes": 21, "sha256": "1831c5ecf2109f23646efdf77c7d192c6d81a1428e68b9d31ddf1f9a00f56a13", "tail": "2.13.3+dfsg-1+deb13u1"}
+#33 32.02 AA7_FREETYPE_LOG {"name": "candidate-font-0.log", "bytes": 156, "sha256": "f587f0fdb0f57a86d0e595eaf45e780714ed69f71af3bb205372887d7c62dd75", "tail": "face 1 821 1000 1127 -290\nglyph 65 27 576 0 24 0 550 576\nglyph 103 59 384 0 21 -146 372 384\nglyph 101 50 320 0 21 0 318 384\nglyph 110 77 448 0 24 0 410 384\n"}
+#33 32.02 AA7_FREETYPE_LOG {"name": "candidate-font-1.log", "bytes": 158, "sha256": "92b36a96760ffcebcb90df1104fc84954d16717168206099f6f33e728f373886", "tail": "face 1 822 1000 1127 -290\nglyph 65 1 576 0 24 0 550 576\nglyph 103 139 384 0 21 -146 372 384\nglyph 101 109 320 0 21 0 318 384\nglyph 110 190 448 0 24 0 410 384\n"}
+#33 32.02 AA7_FREETYPE_LOG {"name": "compile-literal-budget-adapter.log", "bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "tail": ""}
+#33 32.02 AA7_FREETYPE_LOG {"name": "compile-old-header-client.log", "bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "tail": ""}
+#33 32.02 AA7_FREETYPE_LOG {"name": "extract-libfreetype-dev.log", "bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "tail": ""}
+#33 32.02 AA7_FREETYPE_LOG {"name": "extract-libfreetype6.log", "bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "tail": ""}
+#33 32.02 AA7_FREETYPE_LOG {"name": "literal-budget-neutral-cases.log", "bytes": 69, "sha256": "12a2e0b526f44a4d0982019d4858dae50a1001e884e193560c0b9597dcf600ee", "tail": "neutral-vendor-budget-cases=5 original-controls=5 patched-controls=5\n"}
+#33 32.02 AA7_FREETYPE_LOG {"name": "normal-original-build-dependencies.log", "bytes": 0, "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "tail": ""}
+#33 32.02 AA7_FREETYPE_LOG {"name": "normal-original-debian-build.log", "bytes": 280717, "sha256": "da08007be776c53d8d481effce08ba413be0d611e9d3b8a1f4ee88883a2f77ba", "tail": "libfreetype-dev/NEWS\ncp src/pcf/README debian/freetype2-doc/usr/share/doc/libfreetype-dev/pcf/\nsed -i 's@\\.\\./\\.\\./js@js@' \\\n    debian/freetype2-doc/usr/share/doc/libfreetype-dev/documentation.html \\\n    debian/freetype2-doc/usr/share/doc/libfreetype-dev/ft2faq.html \\\n    debian/freetype2-doc/usr/share/doc/libfreetype-dev/index.html \\\n    debian/freetype2-doc/usr/share/doc/libfreetype-dev/design/*.html \\\n    debian/freetype2-doc/usr/share/doc/libfreetype-dev/glyphs/*.html \\\n    debian/freetype2-doc/usr/share/doc/libfreetype-dev/tutorial/*.html\nsed -i '/gstatic/d' debian/freetype2-doc/usr/share/doc/libfreetype-dev/reference/*.html\nsed -i '/googleapis/d' debian/freetype2-doc/usr/share/doc/libfreetype-dev/reference/*.html\nsed -i '/assets\\/javascripts/d' debian/freetype2-doc/usr/share/doc/libfreetype-dev/reference/*.html\nmake[1]: Leaving directory '/work/source'\n   dh_installdocs -Nfreetype2-doc\n   debian/rules override_dh_installchangelogs\nmake[1]: Entering directory '/work/source'\ndh_installchangelogs -p freetype2-demos ft2demos/ChangeLog\ndh_installchangelogs --remaining-packages\nmake[1]: Leaving directory '/work/source'\n   dh_installman\n   dh_lintian\n   dh_perl\n   dh_link\n   dh_strip_nondeterminism\n   dh_compress\n   dh_fixperms\n   dh_missing\n   dh_dwz -a\n   dh_strip -a\n   debian/rules override_dh_makeshlibs\nmake[1]: Entering directory '/work/source'\ndh_makeshlibs -V 'libfreetype6 (>= 2.13)' --add-udeb=libfreetype6-udeb\nmake[1]: Leaving directory '/work/source'\n   dh_shlibdeps -a\ndpkg-shlibdeps: warning: diversions involved - output may be incorrect\n diversion by libc6 from: /lib/ld-linux-aarch64.so.1\ndpkg-shlibdeps: warning: diversions involved - output may be incorrect\n diversion by libc6 to: /lib/ld-linux-aarch64.so.1.usr-is-merged\ndpkg-shlibdeps: warning: diversions involved - output may be incorrect\n diversion by libc6 from: /lib/ld-linux-aarch64.so.1\ndpkg-shlibdeps: warning: diversions involved - output may be incorrect\n diversion by libc6 to: /lib/ld-linux-aarch64.so.1.usr-is-merged\ndpkg-shlibdeps: warning: diversions involved - output may be incorrect\n diversion by libc6 from: /lib/ld-linux-aarch64.so.1\ndpkg-shlibdeps: warning: diversions involved - output may be incorrect\n diversion by libc6 to: /lib/ld-linux-aarch64.so.1.usr-is-merged\n   dh_installdeb\n   dh_gencontrol\n   dh_md5sums\n   dh_builddeb\ndpkg-deb: building package 'freetype2-demos-dbgsym' in '../freetype2-demos-dbgsym_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb'.\ndpkg-deb: building package 'libfreetype6' in '../libfreetype6_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb'.\ndpkg-deb: building package 'libfreetype6-dbgsym' in '../libfreetype6-dbgsym_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb'.\ndpkg-deb: building package 'freetype2-doc' in '../freetype2-doc_2.13.3+dfsg-1+deb13u1+resumide1_all.deb'.\ndpkg-deb: building package 'libfreetype-dev' in '../libfreetype-dev_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb'.\ndpkg-deb: building package 'freetype2-demos' in '../freetype2-demos_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb'.\ndpkg-deb: building package 'libfreetype6-udeb' in 'debian/.debhelper/scratch-space/build-libfreetype6-udeb/libfreetype6-udeb_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb'.\n\tRenaming libfreetype6-udeb_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb to libfreetype6-udeb_2.13.3+dfsg-1+deb13u1+resumide1_arm64.udeb\n dpkg-genbuildinfo --build=binary -O../freetype_2.13.3+dfsg-1+deb13u1+resumide1_arm64.buildinfo\n dpkg-genchanges --build=binary -O../freetype_2.13.3+dfsg-1+deb13u1+resumide1_arm64.changes\ndpkg-genchanges: info: binary-only upload (no source code included)\n dpkg-source --after-build .\ndpkg-source: info: unapplying CVE-2026-95512.patch\ndpkg-source: info: unapplying CVE-2026-23865.patch\ndpkg-source: info: unapplying hide-donations-information.patch\ndpkg-source: info: unapplying no-web-fonts.patch\ndpkg-source: info: unapplying ftoption.patch\ndpkg-source: info: unapplying enable-gxvalid-otvalid.patch\ndpkg-buildpackage: info: binary-only upload (no source included)\n"}
+#33 32.02 AA7_FREETYPE_LOG {"name": "old-header-candidate-linkage.log", "bytes": 720, "sha256": "0f5e6e8617b59d45b9f0ea6a556f7ad1899184435318e0c380924facd8171d53", "tail": "\tlinux-vdso.so.1 (0x0000ffffae8ff000)\n\tlibfreetype.so.6 => /work/candidate/usr/lib/aarch64-linux-gnu/libfreetype.so.6 (0x0000ffffae7a0000)\n\tlibc.so.6 => /lib/aarch64-linux-gnu/libc.so.6 (0x0000ffffae5e0000)\n\tlibz.so.1 => /lib/aarch64-linux-gnu/libz.so.1 (0x0000ffffae5a0000)\n\tlibbz2.so.1.0 => /lib/aarch64-linux-gnu/libbz2.so.1.0 (0x0000ffffae570000)\n\tlibpng16.so.16 => /lib/aarch64-linux-gnu/libpng16.so.16 (0x0000ffffae510000)\n\tlibbrotlidec.so.1 => /lib/aarch64-linux-gnu/libbrotlidec.so.1 (0x0000ffffae4e0000)\n\t/lib/ld-linux-aarch64.so.1 (0x0000ffffae8b0000)\n\tlibm.so.6 => /lib/aarch64-linux-gnu/libm.so.6 (0x0000ffffae430000)\n\tlibbrotlicommon.so.1 => /lib/aarch64-linux-gnu/libbrotlicommon.so.1 (0x0000ffffae3f0000)\n"}
+#33 32.02 AA7_FREETYPE_LOG {"name": "source-signature.log", "bytes": 1272, "sha256": "be16b44a8cf3aed047c910611eb027488b1d9cfaed4e5bf8b124628fe9077d1c", "tail": "[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED 05AB90340C0C5E797F44A8C8254CF3B5AEC0A8F0 0\n[GNUPG:] SIG_ID SkWaFrvbCM6M/oi2y6qVx1y6cus 2026-11-05 1793902950\n[GNUPG:] GOODSIG BDE6D2B9216EC7A8 Debian Security Archive Automatic Signing Key (12/bookworm) <ftpmaster@debian.org>\n[GNUPG:] VALIDSIG B0CAB9266E8C3929798B3EEEBDE6D2B9216EC7A8 2026-11-05 1793902950 0 4 0 1 8 01 05AB90340C0C5E797F44A8C8254CF3B5AEC0A8F0\n[GNUPG:] NEWSIG\n[GNUPG:] KEY_CONSIDERED 5E04A1E3223A19A20706E20F9904613D4CCE68C6 0\n[GNUPG:] SIG_ID JjTA7I6sA87Ths1K6wsmeS2/iJ0 2026-11-05 1793902950\n[GNUPG:] GOODSIG 8E9F831205B4BA95 Debian Security Archive Automatic Signing Key (13/trixie) <ftpmaster@debian.org>\n[GNUPG:] VALIDSIG 89C87ACEA5DD6B8E6A7068808E9F831205B4BA95 2026-11-05 1793902950 0 4 0 1 8 01 5E04A1E3223A19A20706E20F9904613D4CCE68C6\ngpgv: Signature made Thu Nov  5 18:22:30 2026 UTC\ngpgv:                using RSA key B0CAB9266E8C3929798B3EEEBDE6D2B9216EC7A8\ngpgv: Good signature from \"Debian Security Archive Automatic Signing Key (12/bookworm) <ftpmaster@debian.org>\"\ngpgv: Signature made Thu Nov  5 18:22:30 2026 UTC\ngpgv:                using RSA key 89C87ACEA5DD6B8E6A7068808E9F831205B4BA95\ngpgv: Good signature from \"Debian Security Archive Automatic Signing Key (13/trixie) <ftpmaster@debian.org>\"\n"}
+#33 DONE 32.2s
+
+#34 [artifacts 1/3] COPY --from=build /export/ /
+#34 DONE 0.0s
+
+#35 [installation 4/8] COPY --from=build /export/libfreetype6_*.deb /export/libfreetype-dev_*.deb /packages/
+#35 DONE 0.0s
+
+#36 [installation 5/8] COPY --from=build /export/source-and-test-receipt.json /proof/
+#36 DONE 0.0s
+
+#37 [installation 6/8] COPY --from=build /export/old-header-fonts /export/original-debian-autopkgtest.sh /probe/
+#37 DONE 0.0s
+
+#38 [installation 7/8] RUN mkdir /scratch && chown 65532:65532 /scratch && chmod 0700 /scratch
+#38 DONE 0.1s
+
+#39 [installation 8/8] RUN --network=none python3 -B /recipe/verify_install.py install && setpriv --no-new-privs --bounding-set=-all --reuid=65532 --regid=65532 --clear-groups -- /usr/bin/python3 -B /recipe/verify_install.py probe
+#39 0.085 Reading package lists...
+#39 0.088 Building dependency tree...
+#39 0.088 Reading state information...
+#39 0.092 The following packages will be upgraded:
+#39 0.092   libfreetype-dev libfreetype6
+#39 0.095 2 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.
+#39 0.095 Need to get 0 B/1022 kB of archives.
+#39 0.095 After this operation, 0 B of additional disk space will be used.
+#39 0.095 Get:1 /packages/libfreetype-dev_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb libfreetype-dev arm64 2.13.3+dfsg-1+deb13u1+resumide1 [600 kB]
+#39 0.097 Get:2 /packages/libfreetype6_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb libfreetype6 arm64 2.13.3+dfsg-1+deb13u1+resumide1 [422 kB]
+#39 0.148 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 18697 files and directories currently installed.)
+#39 0.152 Preparing to unpack .../libfreetype-dev_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb ...
+#39 0.154 Unpacking libfreetype-dev:arm64 (2.13.3+dfsg-1+deb13u1+resumide1) over (2.13.3+dfsg-1+deb13u1) ...
+#39 0.199 Preparing to unpack .../libfreetype6_2.13.3+dfsg-1+deb13u1+resumide1_arm64.deb ...
+#39 0.202 Unpacking libfreetype6:arm64 (2.13.3+dfsg-1+deb13u1+resumide1) over (2.13.3+dfsg-1+deb13u1) ...
+#39 0.228 Setting up libfreetype6:arm64 (2.13.3+dfsg-1+deb13u1+resumide1) ...
+#39 0.230 Setting up libfreetype-dev:arm64 (2.13.3+dfsg-1+deb13u1+resumide1) ...
+#39 0.233 Processing triggers for libc-bin (2.41-12+deb13u4) ...
+#39 0.254 Reading package lists...
+#39 0.256 Building dependency tree...
+#39 0.256 Reading state information...
+#39 DONE 0.4s
+
+#40 [artifacts 2/3] COPY --from=installation /scratch/install-verification.json /install-verification.json
+#40 DONE 0.0s
+
+#41 [artifacts 3/3] COPY --from=installation /scratch/original-debian-autopkgtest.log /original-debian-autopkgtest.log
+#41 DONE 0.0s
+
+#42 exporting to image
+#42 exporting layers 0.0s done
+#42 exporting manifest sha256:ebdb5da76e31fedb83ea91e4b7b65914c94d2a39daa858239c6a6c427cf0d19f done
+#42 exporting config sha256:ef4368b9930fb9f0bc72a2a8cb3ab6290892a91fdec96ea8a6104b84c44b464f done
+#42 exporting attestation manifest sha256:da20db94298800f898b571fa448a609dfa9a2e31f0edf6d77b59f70d050dcc17 done
+#42 exporting manifest list sha256:2a406f79849796a2e40218ef87dc96d32b716e644323b0d761da0a3add4a4d03 done
+#42 naming to docker.io/library/resumide-freetype:aa7-native-xndtfy9v done
+#42 unpacking to docker.io/library/resumide-freetype:aa7-native-xndtfy9v 0.0s done
+#42 DONE 0.1s

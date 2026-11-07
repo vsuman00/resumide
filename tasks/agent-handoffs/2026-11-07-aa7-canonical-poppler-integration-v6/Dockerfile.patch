@@ -1,0 +1,61 @@
+--- a/scripts/latex-runtime/Dockerfile
++++ b/scripts/latex-runtime/Dockerfile
+@@ -1,6 +1,49 @@
+ FROM debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS snapshot
+ ENV DEBIAN_FRONTEND=noninteractive
+ RUN rm -f /etc/apt/sources.list.d/debian.sources && printf '%s\n' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20261106T000000Z trixie main' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security main' > /etc/apt/sources.list
++
++
++# Frozen native Poppler V6 stages; only the snapshot alias avoids a name collision.
++FROM debian:trixie-20261104-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2 AS poppler-snapshot
++ENV DEBIAN_FRONTEND=noninteractive
++RUN test "$(dpkg --print-architecture)" = arm64 && rm -f /etc/apt/sources.list.d/debian.sources && printf '%s\n' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian/20261106T000000Z trixie main' 'deb [check-valid-until=no] http://snapshot.debian.org/archive/debian-security/20261106T000000Z trixie-security main' > /etc/apt/sources.list
++COPY native-expat/apt-transport.py /recipe/apt-transport.py
++RUN printf '%s\n' '8b831a59cd8f2f89925b755973c1ef764daa2722207bfd24742114c67d31ded8  /recipe/apt-transport.py' | sha256sum -c -
++FROM poppler-snapshot AS build-dependencies
++COPY native-poppler/build-pins.json native-poppler/apt_transport_poppler.py native-poppler/dependency-plan.lock.json /recipe/
++RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt_transport_poppler.py && apt-get -o Acquire::Retries=3 install -y --no-install-recommends build-essential debhelper dh-sequence-gir dpkg-dev cmake gir1.2-cairo-1.0-dev gir1.2-gio-2.0-dev gir1.2-gobject-2.0-dev gtk-doc-tools libboost-dev libcairo2-dev libcurl4-gnutls-dev libfontconfig-dev libfreetype-dev libgdk-pixbuf-2.0-dev libgirepository1.0-dev libglib2.0-dev libgpgme-dev libgpgmepp-dev libgtk-3-dev libjpeg-dev liblcms2-dev libnss3-dev libopenjp2-7-dev libpng-dev libtiff-dev pkgconf python3 qt6-base-dev qtbase5-dev zlib1g-dev fakeroot gpgv patch libpoppler-dev=25.03.0-5+deb13u4 libpoppler-private-dev=25.03.0-5+deb13u4 poppler-utils=25.03.0-5+deb13u4 libcairo2-doc libglib2.0-doc && rm -rf /var/lib/apt/lists/*
++FROM build-dependencies AS build
++COPY native-expat/prepare.py /recipe/expat_source.py
++RUN printf '%s\n' '1f0e50caf5b1cb91b891a2d484feae3187746f0d5e45484f62255356747fa59a  /recipe/expat_source.py' | sha256sum -c -
++ADD --chmod=0444 --checksum=sha256:6002f81f463a2d976d84b34170367cc16da2d60bd0ba9ab9d868d6e1c1a935d9 https://deb.debian.org/debian/dists/trixie/main/source/by-hash/SHA256/6002f81f463a2d976d84b34170367cc16da2d60bd0ba9ab9d868d6e1c1a935d9 /inputs/trixie-main-Sources.xz
++ADD --chmod=0444 --checksum=sha256:b895e1e28568a486523f93dd5a8707ecb16767c5f134a6e23510b0597114c628 https://deb.debian.org/debian/pool/main/p/poppler/poppler_25.03.0-5+deb13u4.dsc /inputs/poppler_25.03.0-5+deb13u4.dsc
++ADD --chmod=0444 --checksum=sha256:97da4ff88517a6bbd729529f195f85c8d7a0c3bb4a3d57cb0c685cbb052fe837 https://deb.debian.org/debian/pool/main/p/poppler/poppler_25.03.0.orig.tar.xz /inputs/poppler_25.03.0.orig.tar.xz
++ADD --chmod=0444 --checksum=sha256:2605b5d7e6ce17a307d067048386deedfc41fdac6f75f81ad76050f517fc0de4 https://deb.debian.org/debian/pool/main/p/poppler/poppler_25.03.0-5+deb13u4.debian.tar.xz /inputs/poppler_25.03.0-5+deb13u4.debian.tar.xz
++COPY --chmod=0444 native-poppler/inputs/poppler-testdata.tar.xz /inputs/poppler-testdata.tar.xz
++COPY native-poppler/pins.json native-poppler/build-pins.json native-poppler/prepare_build.py native-poppler/native_geometry.py native-poppler/verify_consumer.py native-poppler/abi-smoke.cc native-poppler/disable-openjpeg-packaging.diff native-poppler/changelog-proposal.diff native-poppler/series-proposal.diff /recipe/
++COPY native-poppler/build-v5.py /recipe/build.py
++COPY native-poppler/verify_native_v6.py /recipe/verify_native.py
++COPY native-poppler/ctest_v5.py native-poppler/ctest_v5_baseline.json /recipe/
++COPY native-poppler/patches/resumide-native-geometry-v1.patch /recipe/patches/
++COPY native-poppler/provenance/trixie-main.InRelease native-poppler/provenance/testdata-files.json /recipe/provenance/
++RUN python3 -c 'import pathlib,stat; root=pathlib.Path("/inputs"); assert root.is_dir() and not root.is_symlink(); print("AA7_POPPLER_INPUT_MODE_BEFORE",oct(stat.S_IMODE(root.stat().st_mode)),flush=True); root.chmod(0o755); assert all(p.is_file() and not p.is_symlink() and stat.S_IMODE(p.stat().st_mode)==0o444 for p in root.iterdir())' && test -z "$(getent passwd 65532)" && test -z "$(getent group 65532)" && printf '%s\n' 'nativebuild:x:65532:65532:Native source builder:/work:/bin/sh' >> /etc/passwd && printf '%s\n' 'nativebuild:x:65532:' >> /etc/group && mkdir /work /export && chown 65532:65532 /work /export
++ENV HOME=/work LANG=C.UTF-8
++RUN --network=none setpriv --no-new-privs --bounding-set=-all --reuid=65532 --regid=65532 --clear-groups -- /usr/bin/python3 -B /recipe/build.py
++FROM poppler-snapshot AS installation
++RUN apt-get -o Acquire::Retries=3 -o APT::Update::Error-Mode=any -o Acquire::Check-Valid-Until=false update && apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y && apt-get -o Acquire::Retries=3 install -y --no-install-recommends python3 ca-certificates && python3 /recipe/apt-transport.py poppler-utils=25.03.0-5+deb13u4 util-linux && apt-get -o Acquire::Retries=3 install -y --no-install-recommends poppler-utils=25.03.0-5+deb13u4 util-linux
++COPY native-poppler/build-pins.json native-poppler/verify_install.py native-poppler/native_geometry.py /recipe/
++COPY --from=build /export/libpoppler147_*.deb /export/poppler-utils_*.deb /packages/
++COPY --from=build /export/source-and-test-receipt.json /proof/
++COPY --from=build /work/source/test/unittestcases/truetype.pdf /probe/truetype.pdf
++RUN mkdir /scratch && chown 65532:65532 /scratch && chmod 0700 /scratch
++RUN --network=none python3 -B /recipe/verify_install.py install && setpriv --no-new-privs --bounding-set=-all --reuid=65532 --regid=65532 --clear-groups -- /usr/bin/python3 -B /recipe/verify_install.py probe
++FROM scratch AS artifacts
++COPY --from=build /export/ /
++COPY --from=installation /scratch/install-verification.json /install-verification.json
++COPY --from=installation /recipe/build-dependency-transport.json /installation-dependency-transport.json
++
++FROM scratch AS native-poppler-runtime-verifier
++COPY native-poppler/install-runtime.py native-poppler/build-pins.json native-poppler/ctest_v5.py native-poppler/ctest_v5_baseline.json /recipe/
+ 
+ FROM snapshot AS native-expat-build
+ COPY native-expat/apt-transport.py /recipe/
+@@ -57,6 +100,8 @@
+     apt-get check; \
+     rm -f /tmp/latex-purge-plan /tmp/latex-purge-expected /tmp/latex-purge-actual; \
+     rm -f /tmp/pinned-font-uri
++# Reuse accepted source-build AND fresh-install proof; no host-produced package input.
++RUN --network=none --mount=type=bind,from=artifacts,source=/,target=/build-input/poppler,readonly --mount=type=bind,from=native-poppler-runtime-verifier,source=/recipe,target=/build-input/poppler-recipe,readonly python3 -I -B /build-input/poppler-recipe/install-runtime.py
+ COPY --from=native-expat-build /export/source-and-test-receipt.json /export/build-outcome.json /opt/latex/native-expat/
+ COPY --from=native-expat-build /recipe/pins.json /opt/latex/native-expat/pins.json
+ RUN --network=none --mount=type=bind,from=native-expat-build,source=/export,target=/build-input/expat,readonly python3 - <<'PYVERIFY'

@@ -1,0 +1,37 @@
+{
+  "recordedAt": "2026-11-06T05:18:40.415894+00:00",
+  "status": "failed",
+  "scope": "Offline cached builder export for parser-only validation; not full compiler runtime",
+  "command": [
+    "docker",
+    "build",
+    "--target",
+    "builder",
+    "--network=none",
+    "--pull=false",
+    "--platform",
+    "linux/arm64",
+    "--tag",
+    "resumide-latex-parser-probe:20261106",
+    "--iidfile",
+    "temporary-iidfile",
+    "--file",
+    "candidate-Dockerfile",
+    "candidate-context"
+  ],
+  "exitCode": 1,
+  "category": "cache_miss_offline_apt_failed_closed",
+  "stage": "builder APT RUN",
+  "details": "The current fail-closed APT command was not cached. Network-none prevented DNS resolution; build failed with APT exit100. No fallback or retry.",
+  "parserVersionPlanned": "6.21.4",
+  "parserPolicyCasesExecuted": 0,
+  "auditContainersStarted": 0,
+  "iidExported": false,
+  "providerOrDatabaseCalls": false,
+  "sourceHashes": {
+    "Dockerfile": "a8e6e80481e93370fd2878b4d53911736539488540b3b79e913992a60e9d9b2f",
+    "requirements.lock": "6c3793776e6b3c3d9a955e11b1eb2de1f192aa0990305fef4bb065f70b402261",
+    "inspect_pdf.py": "abebf24292b7c591758c818994ddee65db475f7fa1fba6ab81cd9d2ca906e152"
+  },
+  "probeVerifierSha256": "b896e544a73da8dbed7e84da0f1a706475089f5bc27c1028e142eb1c6f3db7bf"
+}

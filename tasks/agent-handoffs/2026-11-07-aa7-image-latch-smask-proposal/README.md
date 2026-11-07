@@ -1,0 +1,13 @@
+# Minimal image-boundary follow-up
+
+This isolated defensive proposal starts from the tester's exact c8d4 inspector. Its 49 document cases and packet remain unchanged. No new document fixtures, PDF bytes or parser payloads were generated or executed. The initial a4 proposal and MOCK receipts remain preserved beside the revised candidate.
+
+The patch adds two guards. A per-inspection boolean records any Exception from predecode policy/filter/reference resolution and refuses a successful return afterward. Pinned pypdf can catch that failure and continue with an earlier trailer. Only that policy call is caught: BaseException and original-decoder error handling remain unchanged. The prior hook and configuration still restore on every outcome.
+
+The soft-mask guard preserves SMask=None. Other SMask values must resolve to dictionaries whose G value is a stream with Subtype=Form, so the existing strict Form scan handles the graphics. Installed PDF.js otherwise passes SMask.G directly into its Form interpreter without requiring that subtype. This validates the supported role without changing ordinary declared Form content.
+
+The separate helper uses ordinary pypdf dictionary classes and a mocked reader. It supplies no PDF bytes to a real parser. The saved c8d4 proposal fails exactly the mocked swallowed-error and missing-subtype checks (exit 1). The final 5a640623 candidate passes all four checks (exit 0), including SMask=None, a valid declared Form and exact hook/configuration restoration. Original encoded-data and image-decoder counters stay zero. Only those four MOCK checks were rerun after broadening the exception latch. They ran on host Python 3.14.6 with the retained RECORD-bound pypdf source. These are MOCK policy-boundary checks, not malformed-PDF, browser or worker-runtime proof.
+
+The separate typed 49 helper changes assertions/reporting only. Its stream/base/pdf/fixtures function bodies are byte-identical to the saved helper. Ordinary negative cases require UnsafePDF; only the early-XRef case permits outer PdfReadError with direct UnsafePDF cause, and the malformed-reader control requires PdfReadError. It records causeClass. This helper was not executed.
+
+Integration proposals map both helpers to separate runtime probe files, add the MOCK 4 group after the existing 49 group, and add both source-hash input paths. The original 20 program and saved fixture generation remain unchanged. Root owns integration and actual worker verification. No database, provider, Docker, UI or shared runtime files were changed, and no exception or phase/release acceptance is claimed. Exact commands, outputs, terminal codes and hashes are retained in the receipt files.

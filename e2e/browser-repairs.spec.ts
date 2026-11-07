@@ -1,3 +1,4 @@
+import { createBrowserOwner } from "../scripts/browser-owner-fixture";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { createServerClient } from "@supabase/ssr";
@@ -11,7 +12,7 @@ import { saveJobRequirements } from "../app/lib/server/job-requirement-repositor
 
 test.use({ timezoneId: "America/Los_Angeles", locale: "en-US" });
 
-type Fixture = Awaited<ReturnType<typeof createCanonicalFixture>>;
+type Fixture = Awaited<ReturnType<typeof createBrowserOwner>>;
 async function login(context: BrowserContext, f: Fixture) {
   const cookies: Array<{ name: string; value: string }> = [];
   const client = createServerClient(
@@ -69,7 +70,7 @@ test("privacy initial load and reload are stable across timezones and export use
   page,
   context,
 }) => {
-  const f = await createCanonicalFixture(),
+  const f = await createBrowserOwner(),
     client = await login(context, f);
   const errors = renderingErrors(page);
   const manifest = {
@@ -124,14 +125,15 @@ test("mobile private navigation reaches Privacy and signs out the current sessio
   page,
   context,
 }) => {
-  const f = await createCanonicalFixture(),
+  const f = await createBrowserOwner(),
     client = await login(context, f);
   const errors = renderingErrors(page);
   try {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/account");
+    await page.getByLabel("Open site menu").click();
     await page
-      .locator(".workspace-mobile-tabs")
+      .locator(".workspace-floating-header")
       .getByRole("link", { name: "Privacy" })
       .click();
     await expect(
@@ -140,8 +142,9 @@ test("mobile private navigation reaches Privacy and signs out the current sessio
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth),
     ).toBeLessThanOrEqual(390);
+    await page.getByLabel("Open site menu").click();
     await page
-      .locator(".workspace-mobile-header")
+      .locator(".workspace-floating-header")
       .getByRole("button", { name: "Sign out", exact: true })
       .click();
     await expect(page).toHaveURL("http://127.0.0.1:3110/");
@@ -150,7 +153,7 @@ test("mobile private navigation reaches Privacy and signs out the current sessio
     ).toBeVisible();
     await expect(
       page
-        .locator(".workspace-mobile-header")
+        .locator(".workspace-floating-header")
         .getByRole("button", { name: "Sign out", exact: true }),
     ).toHaveCount(0);
     await page.goto("/privacy");

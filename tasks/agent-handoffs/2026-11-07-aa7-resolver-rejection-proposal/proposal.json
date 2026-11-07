@@ -1,0 +1,24 @@
+{
+  "state": "MINIMAL_DEFENSIVE_RESOLVER_PROPOSAL_MOCK_VERIFIED_NOT_INTEGRATED",
+  "baselineSha256": "5a6406231a085a8176a7fceb3a4190dd8f9a2e1feffc2cf075d2cc4731c5d931",
+  "candidateSha256": "6d3a6fc67be9bd719d62c317cf7960fb6bf38aff14597c52dbf3f3249e245b5f",
+  "change": "Only value.get_object() exceptions normalize to UnsafePDF from the exact cause. BaseException/depth/cycle bounds and every helper fixture/assertion remain unchanged.",
+  "verification": {
+    "exactReversePatchRecoversBaseline": true,
+    "candidateASTParsed": true,
+    "affectedMockUnit": 1,
+    "baselineObserved": "AttributeError",
+    "candidateObserved": "UnsafePDF directly caused by exact AttributeError",
+    "realPypdfIndirectObjectUsed": true,
+    "fakePdfGetterCallsEach": 1,
+    "pdfBytesGenerated": false,
+    "realReaderCalled": false,
+    "decoderCalled": false,
+    "document49Retried": false,
+    "unrelatedMock4Rerun": false,
+    "dockerUsed": false
+  },
+  "failedRuntimeEvidence": "../2026-11-07-aa7-image-candidate-green/failure-review-manifest.json",
+  "meaning": "Actual runtime failure was rejection classification only: both inputs already rejected and zero decoder calls. This proposal is not a claim of a new admission bypass or a successful rebuilt49 run.",
+  "next": "Coordinator review/integration, then fresh immutable image and unchanged49 after Native7 slot release."
+}

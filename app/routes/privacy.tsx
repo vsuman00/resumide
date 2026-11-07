@@ -14,7 +14,7 @@ import WorkspaceShell from "~/components/WorkspaceShell";
 import EvidenceScene3D from "~/components/EvidenceScene3D";
 import { getAuthenticatedUser } from "~/lib/server/auth";
 import { cancelDataRequest, createDataRequest } from "~/lib/server/privacy";
-import { createRequestId } from "~/lib/server/request-context";
+import { requestIdFrom } from "~/lib/server/request-context";
 import {
   createSupabaseAdminClient,
   createSupabaseServerClient,
@@ -88,7 +88,7 @@ export async function action({ request }: Route.ActionArgs) {
     const cancelled = await cancelDataRequest({
       userId: user.id,
       requestId,
-      auditRequestId: createRequestId(),
+      auditRequestId: requestIdFrom(request),
     });
     return data(
       {
@@ -110,7 +110,7 @@ export async function action({ request }: Route.ActionArgs) {
   const created = await createDataRequest({
     userId: user.id,
     kind,
-    requestId: createRequestId(),
+    requestId: requestIdFrom(request),
   });
   return data(
     { error: null, success: `${kind} request ${created.status}.` },

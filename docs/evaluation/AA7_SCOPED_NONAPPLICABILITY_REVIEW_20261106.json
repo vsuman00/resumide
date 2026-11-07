@@ -1,0 +1,58 @@
+{
+  "status": "ENGINEERING_REVIEW_CONCURS_FOR_EXACT_ENTRYPOINT_OWNER_GATE_OPEN",
+  "reviewer": "Primary coordinator",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "image": "sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc",
+  "policyVersion": "latex-source/1.0.0",
+  "proposalSha256": "f47b01ed260d743a554064fa414592e0dd45077b0758b8a86982d46dfaefdbee",
+  "reviewedIds": [
+    "CVE-2026-76642",
+    "CVE-2026-78408",
+    "CVE-2026-78409",
+    "CVE-2026-78410",
+    "CVE-2025-69720",
+    "CVE-2026-9538",
+    "CVE-2022-4055",
+    "CVE-2026-24882"
+  ],
+  "rawHighPackageMatchesInScope": 43,
+  "rawScannerFindingsRemovedOrSuppressed": 0,
+  "productionSourceHashesVerifiedCurrent": {
+    "app/lib/server/latex-sandbox.ts": "e7b0b41aee2d83553c29437264524cf71f4fbb9a6bf8b1f760e4041d5eea2477",
+    "scripts/latex-runtime/supervisor.py": "31f37b52a65b46ebce0625026ae4faaa3ea4b35e62b440635af621eb33b26e7c",
+    "scripts/latex-runtime/inspect_pdf.py": "abebf24292b7c591758c818994ddee65db475f7fa1fba6ab81cd9d2ca906e152",
+    "scripts/latex-runtime/landlock.c": "8f4f7caa93f2a875db2038e17fa4558cd5577c59f883d07cd313c06d2993ea7e",
+    "scripts/latex-runtime/texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa"
+  },
+  "scope": "Documented compiler entrypoint, immutable closure, fixed trusted argv, unprivileged no-capability runtime only. No blanket source-package or alternate-entrypoint conclusion.",
+  "reviewBasis": [
+    "Actual vulnerable component/precondition mappings and exact installed component metadata",
+    "Current source entrypoints plus loader/compiler read and exec grants",
+    "No root/privileged mount or caller descriptor route; affected utility/module paths absent or denied",
+    "Exact source and metadata receipts; original failed native experiment remains failed/unadopted"
+  ],
+  "limits": [
+    "No security-owner/release approval is supplied by the coordinator review.",
+    "ncurses function mapping uses captured vendor evidence, not a newly authenticated source archive.",
+    "ldd/maps corroborate current fixed callers; they do not prove universal future dynamic-import behavior.",
+    "All original proposal invalidation conditions apply; any image, caller, module, privilege, mount, read/exec or policy change requires review.",
+    "XML/PDF/font/image native consumers remain separately under investigation."
+  ],
+  "sourceNativeUtilBuildAdopted": false,
+  "originalProposalsUnchanged": true,
+  "additionalZlibReview": {
+    "id": "CVE-2026-76844",
+    "status": "ENGINEERING_REVIEW_CONCURS_FOR_EXACT_ENTRYPOINT_OWNER_GATE_OPEN",
+    "rawHighPackageMatches": 1,
+    "evidencePath": "tasks/agent-handoffs/2026-11-06-aa7-zlib-path-review.md",
+    "evidenceSha256": "3b5afeb6c907f4ee22ce43f138ced73b083adbb4fe7f19f4e64c20f0157c8637",
+    "symbolAuditSha256": "379fe3a0586e6da98d6e7cdfd7a91ced75375c6516af404c2ebaaa468ca4e6c2",
+    "actualElfsInspected": 125,
+    "allSymbolOutputHashesIndependentlyVerified": true,
+    "basis": "Installed1.3.1 requires error clearing before a later gzip write. Only XeTeX imports gzip-file APIs; none of the125 exact graph/module ELFs imports gzclearerr. INITEX and SyncTeX source error paths were reconciled. No arbitrary future module/RCE conclusion.",
+    "primaryVendorPrerequisiteIndependentlyOpened": "https://security-tracker.debian.org/tracker/CVE-2026-76844",
+    "rawFindingSuppressed": false
+  },
+  "totalRawHighPackageMatchesWithinReviewedScope": 44,
+  "dependencyCallgraphQualification": "Pypdf contains an optional fixed-argv JBIG2 decoder subprocess route beyond the three direct supervisor subprocess families. Exact current-image stdlib PATH check finds no jbig2dec in any of six PATH entries; source configuration/callgraph is separately bound. Explicit disabling is a pending hardening change, not yet adopted."
+}

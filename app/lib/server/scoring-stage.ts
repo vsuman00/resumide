@@ -6,7 +6,7 @@ import { createSupabaseAdminClient } from "./supabase";
 import { hasUncalibratedEvidence } from "./evidence-scoring-guard";
 
 export const PARSER_VERSION = "parse-sim-v1";
-export const RULESET_VERSION = "ats-rules-v3";
+export const RULESET_VERSION = "ats-rules-v4";
 export const NORMALIZER_VERSION = "normalizer-v1";
 
 export function scoreExtractedResume(args: {

@@ -1,6 +1,12 @@
 import { useState } from "react";
 
-const ResumeWriter = ({ writer }: { writer?: ResumeWriter }) => {
+const ResumeWriter = ({
+  writer,
+  unavailable = false,
+}: {
+  writer?: ResumeWriter;
+  unavailable?: boolean;
+}) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [copyError, setCopyError] = useState("");
 
@@ -28,11 +34,24 @@ const ResumeWriter = ({ writer }: { writer?: ResumeWriter }) => {
         aria-labelledby="rewrite-heading"
       >
         <p className="workspace-eyebrow">Grounded suggestions</p>
-        <h2 id="rewrite-heading">No rewrite is available yet</h2>
+        <h2 id="rewrite-heading">
+          {unavailable
+            ? "Writing generation did not complete"
+            : "No rewrite was saved"}
+        </h2>
         <p>
-          The available evidence did not support a safe wording suggestion for
-          this analysis.
+          {unavailable
+            ? "Writing could not be completed for this analysis. You can retry with Generate suggestions above."
+            : "No suggestions are saved for this analysis yet. Use Generate suggestions above to try with this saved resume and job description."}
         </p>
+        <div className="rewrite-empty-actions">
+          <a href="#overview" className="back-button w-fit">
+            Review available feedback
+          </a>
+          <a href="/upload" className="back-button w-fit">
+            Start a new analysis
+          </a>
+        </div>
       </section>
     );
   }
