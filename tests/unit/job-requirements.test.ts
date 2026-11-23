@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   JobRequirementsSchema,
   parseJobRequirements,
+  parseJobRequirementsWithAliases,
+  LOCAL_JD_ALIAS_MODEL_VERSION,
+  JD_PARSER_VERSION,
+  parseJobRequirementsWithRelations,
 } from "../../app/lib/server/job-requirements";
 const context = {
   ownerId: "11111111-1111-4111-8111-111111111111",
@@ -271,5 +275,359 @@ describe("AI/backend JD regression cases", () => {
       importance: "contextual",
       importanceEvidence: { quote: "Key Responsibilities" },
     });
+  });
+});
+
+const localOptions = { modelVersion: "jd-local-alias-parser/1.0.0" as const };
+describe("explicit local alias discovery", () => {
+  it.each([
+    ["JS", "JavaScript", "local-software:javascript"],
+    ["Postgres", "PostgreSQL", "local-software:postgresql"],
+  ])(
+    "discovers literal %s without replacing its quotation",
+    (raw, canonical, conceptId) => {
+      const source = `🌏 Neutral engineering role\nRequirements\n${raw} required`;
+      const doc = parseJobRequirementsWithAliases(
+        source,
+        context,
+        localOptions,
+      );
+      const item = doc.requirements.find((r) => r.value === raw)!;
+      expect(item).toMatchObject({
+        value: raw,
+        evidence: { quote: `${raw} required` },
+        mapping: { kind: "alias", canonicalValue: canonical, conceptId },
+      });
+      expect(item.tokenEvidence).toHaveLength(1);
+      expect(item.tokenEvidence[0].quote).toBe(raw);
+      for (const e of [item.evidence, ...item.tokenEvidence])
+        expect(Array.from(source).slice(e.start, e.end).join("")).toBe(e.quote);
+      expect(item.tokenEvidence[0].start).toBe(
+        Array.from(source.slice(0, source.indexOf(`${raw} required`))).length,
+      );
+    },
+  );
+  it("keeps the default persisted producer and the original alias gap unchanged", () => {
+    const source = "Requirements\nJS required\nPostgres required";
+    const frozen = parseJobRequirements(source, context);
+    expect(JD_PARSER_VERSION).toBe("jd-parser/1.0.2");
+    expect(frozen.producerVersion).toBe("jd-parser/1.0.2");
+    expect(frozen.requirements).toEqual([]);
+    expect(frozen.state).toBe("insufficient");
+    expect(JobRequirementsSchema.safeParse(frozen).success).toBe(true);
+    const local = parseJobRequirementsWithAliases(
+      source,
+      context,
+      localOptions,
+    );
+    expect(local).toMatchObject({
+      modelVersion: LOCAL_JD_ALIAS_MODEL_VERSION,
+      authority: "local_review_only",
+      persistable: false,
+      scoringEligible: false,
+      legacyParserVersion: "jd-parser/1.0.2",
+      inputSha256: frozen.inputSha256,
+      sourceText: source,
+    });
+    expect(local).not.toHaveProperty("producerVersion");
+    expect(JobRequirementsSchema.safeParse(local).success).toBe(false);
+  });
+  it("retains canonical and alias citations in one prospective group without assigning score", () => {
+    const doc = parseJobRequirementsWithAliases(
+      "Requirements\nJS and JavaScript required\nPostgres required\nPostgreSQL preferred\nJS required",
+      context,
+      localOptions,
+    );
+    const javascript = doc.requirements.filter(
+      (r) => r.mapping?.conceptId === "local-software:javascript",
+    );
+    expect(javascript.map((r) => r.value)).toEqual(["JavaScript", "JS", "JS"]);
+    expect(javascript.map((r) => r.mapping?.kind)).toEqual([
+      "exact",
+      "alias",
+      "alias",
+    ]);
+    expect(
+      new Set(javascript.map((r) => r.mapping?.prospectiveCreditGroup)).size,
+    ).toBe(1);
+    expect(new Set(javascript.map((r) => r.id)).size).toBe(3);
+    expect(javascript.map((r) => r.evidence.quote)).toEqual([
+      "JS and JavaScript required",
+      "JS and JavaScript required",
+      "JS required",
+    ]);
+    expect(doc.requirements.every((r) => r.confidence.value === null)).toBe(
+      true,
+    );
+    expect(doc.scoringEligible).toBe(false);
+  });
+  it("does not discover JS inside Node.js, Java inside JavaScript, or Postgres from SQL", () => {
+    const doc = parseJobRequirementsWithAliases(
+      "Requirements\nNode.js required\nJavaScript preferred\nSQL required\nJava required",
+      context,
+      localOptions,
+    );
+    expect(doc.requirements.map((r) => r.value)).toEqual([
+      "Node.js",
+      "JavaScript",
+      "SQL",
+      "Java",
+    ]);
+    expect(doc.requirements.some((r) => r.value === "JS")).toBe(false);
+    expect(
+      doc.requirements.filter(
+        (r) => r.mapping?.conceptId === "local-software:postgresql",
+      ),
+    ).toEqual([]);
+    expect(
+      doc.requirements.find((r) => r.value === "Java")?.mapping,
+    ).toMatchObject({ kind: "unmapped", conceptId: null });
+  });
+  it("preserves negation, conflicting importance and explicit preferred wording", () => {
+    const doc = parseJobRequirementsWithAliases(
+      "Requirements\nNo JS required\nPostgres preferred\nJS required but preferred",
+      context,
+      localOptions,
+    );
+    expect(doc.requirements).toHaveLength(3);
+    expect(doc.requirements[0]).toMatchObject({
+      negated: true,
+      importance: "contextual",
+      minimumYears: null,
+    });
+    expect(doc.requirements[0].ambiguity).toContain("negated_clause_review");
+    expect(doc.requirements[1]).toMatchObject({
+      negated: false,
+      importance: "preferred",
+      importanceBasis: "explicit",
+    });
+    expect(doc.requirements[2]).toMatchObject({
+      importance: "unknown",
+      ambiguity: ["conflicting_importance"],
+    });
+    expect(doc.requirements.every((r) => r.minimumYears === null)).toBe(true);
+  });
+  it("excludes company, benefits and technical titles, then resumes explicit requirements", () => {
+    const source =
+      "Title: JS engineer\nRequirements\nPostgres\nAbout Neutral Company:\nJS and JavaScript drove $900 million revenue\nBenefits\nPostgres credits\nQualifications\nJS required";
+    const doc = parseJobRequirementsWithAliases(source, context, localOptions);
+    expect(doc.requirements.map((r) => r.value)).toEqual(["Postgres", "JS"]);
+    expect(doc.requirements.every((r) => r.importance === "required")).toBe(
+      true,
+    );
+    expect(doc.retainedClauses.map((c) => c.evidence.quote)).toEqual([
+      "Postgres",
+      "JS required",
+    ]);
+  });
+  it("retains unfamiliar required clauses and partial vocabulary without inventing a concept", () => {
+    const source =
+      "🌏 Requirements\nRequirements\nMust have experience with ZephyrCircuit\nPython and ZephyrCircuit required";
+    const doc = parseJobRequirementsWithAliases(source, context, localOptions);
+    expect(doc.requirements.map((r) => r.value)).toEqual(["Python"]);
+    expect(doc.retainedClauses).toMatchObject([
+      {
+        interpretation: "unmapped",
+        reviewRequired: true,
+        requirementIds: [],
+        evidence: { quote: "Must have experience with ZephyrCircuit" },
+      },
+      {
+        interpretation: "partial_vocabulary",
+        reviewRequired: true,
+        evidence: { quote: "Python and ZephyrCircuit required" },
+      },
+    ]);
+    expect(doc.retainedClauses[1].requirementIds).toEqual([
+      doc.requirements[0].id,
+    ]);
+    for (const clause of doc.retainedClauses)
+      expect(
+        Array.from(source)
+          .slice(clause.evidence.start, clause.evidence.end)
+          .join(""),
+      ).toBe(clause.evidence.quote);
+    expect(doc.scoringEligible).toBe(false);
+  });
+  it("retains unknown clauses even when required and preferred cues conflict", () => {
+    const doc = parseJobRequirementsWithAliases(
+      "ZephyrCircuit required but preferred",
+      context,
+      localOptions,
+    );
+    expect(doc.requirements).toEqual([]);
+    expect(doc.retainedClauses).toMatchObject([
+      {
+        importance: "unknown",
+        interpretation: "unmapped",
+        evidence: { quote: "ZephyrCircuit required but preferred" },
+      },
+    ]);
+    expect(doc.state).toBe("review_required");
+  });
+  it("does not promote frozen-parser qualified identifier observations into local concepts", () => {
+    const doc = parseJobRequirementsWithAliases(
+      "Requirements\napp.JavaScript required\nJavaScript required",
+      context,
+      localOptions,
+    );
+    expect(doc.requirements).toHaveLength(2);
+    expect(doc.requirements[0]).toMatchObject({
+      value: "JavaScript",
+      mapping: { kind: "unmapped", conceptId: null },
+      tokenEvidence: [],
+    });
+    expect(doc.requirements[1]).toMatchObject({
+      value: "JavaScript",
+      mapping: { kind: "exact", conceptId: "local-software:javascript" },
+    });
+  });
+  it.each(["$JavaScript", "JavaScript$"])(
+    "does not promote the frozen-parser dollar fragment %s",
+    (identifier) => {
+      const source = `Requirements\n${identifier} required\nJavaScript required`;
+      expect(
+        parseJobRequirements(source, context).requirements.map(
+          (item) => item.value,
+        ),
+      ).toEqual(["JavaScript", "JavaScript"]);
+      const local = parseJobRequirementsWithAliases(
+        source,
+        context,
+        localOptions,
+      );
+      expect(local.requirements[0]).toMatchObject({
+        value: "JavaScript",
+        mapping: { kind: "unmapped", conceptId: null },
+        tokenEvidence: [],
+      });
+      expect(local.requirements[1]).toMatchObject({
+        value: "JavaScript",
+        mapping: { kind: "exact", conceptId: "local-software:javascript" },
+      });
+      expect(local.scoringEligible).toBe(false);
+    },
+  );
+  it("preserves current alternative/year review flags rather than silently evaluating them", () => {
+    const doc = parseJobRequirementsWithAliases(
+      "Requirements\n1-4 years experience with JS or Postgres required",
+      context,
+      localOptions,
+    );
+    expect(doc.requirements.find((r) => r.type === "experience")).toMatchObject(
+      { minimumYears: 1, ambiguity: ["experience_upper_bound_review"] },
+    );
+    expect(doc.requirements.filter((r) => r.type === "skill")).toHaveLength(2);
+    for (const item of doc.requirements.filter((r) => r.type === "skill")) {
+      expect(item.ambiguity).toContain("skill_alternative_review");
+      expect(item.minimumYears).toBeNull();
+    }
+    expect(doc.scoringEligible).toBe(false);
+  });
+  it("preserves all repeated literal token citations without duplicate requirements for one clause", () => {
+    const source = "Requirements\nJS, js and JS required";
+    const doc = parseJobRequirementsWithAliases(source, context, localOptions);
+    expect(doc.requirements).toHaveLength(1);
+    expect(doc.requirements[0].value).toBe("JS");
+    expect(doc.requirements[0].tokenEvidence.map((e) => e.quote)).toEqual([
+      "JS",
+      "js",
+      "JS",
+    ]);
+    expect(
+      new Set(doc.requirements[0].tokenEvidence.map((e) => e.start)).size,
+    ).toBe(3);
+  });
+  it("requires the explicit current local model, preserves unsupported segment and fails bounded work", () => {
+    expect(() =>
+      parseJobRequirementsWithAliases("JS required", context, {
+        modelVersion: "unknown",
+      } as never),
+    ).toThrow("JD_ALIAS_MODEL_UNSUPPORTED");
+    expect(() =>
+      parseJobRequirementsWithAliases(
+        "JS required",
+        context,
+        undefined as never,
+      ),
+    ).toThrow("JD_ALIAS_MODEL_UNSUPPORTED");
+    expect(
+      parseJobRequirementsWithAliases(
+        "JS required",
+        { ...context, locale: "de-DE" },
+        localOptions,
+      ).state,
+    ).toBe("unsupported");
+    expect(
+      parseJobRequirementsWithAliases("", context, localOptions).state,
+    ).toBe("insufficient");
+    expect(() =>
+      parseJobRequirementsWithAliases("x".repeat(20001), context, localOptions),
+    ).toThrow();
+    expect(() =>
+      parseJobRequirementsWithAliases(
+        "Requirements\n" +
+          Array.from({ length: 301 }, () => "JS required").join("\n"),
+        context,
+        localOptions,
+      ),
+    ).toThrow("JD_ITEM_LIMIT");
+  });
+});
+
+describe("explicit local relation parser", () => {
+  it("adds useful typed relations under a separate explicit model without changing A07", () => {
+    const source =
+      "Qualifications\nFastAPI or Flask required\n1–4 years Python experience required";
+    const legacy = parseJobRequirements(source, context);
+    const aliases = parseJobRequirementsWithAliases(
+      source,
+      context,
+      localOptions,
+    );
+    expect(aliases.modelVersion).toBe("jd-local-alias-parser/1.0.0");
+    expect(aliases).not.toHaveProperty("relations");
+    const local = parseJobRequirementsWithRelations(source, context, {
+      modelVersion: "jd-local-relation-parser/1.0.0",
+    });
+    expect(local).toMatchObject({
+      schemaVersion: "jd-local-relational-discovery/1.0.0",
+      modelVersion: "jd-local-relation-parser/1.0.0",
+      baseModelVersion: aliases.modelVersion,
+      persistable: false,
+      scoringEligible: false,
+      authority: "local_review_only",
+      inputSha256: legacy.inputSha256,
+      mappingPolicy: aliases.mappingPolicy,
+    });
+    expect(local.relations.clauses[0].skillExpression.kind).toBe("any_of");
+    expect(local.relations.clauses[1].duration).toMatchObject({
+      kind: "range",
+      lower: { value: 1, inclusive: true },
+      upper: { value: 4, inclusive: true },
+    });
+    expect(JobRequirementsSchema.safeParse(local).success).toBe(false);
+    expect(legacy.producerVersion).toBe("jd-parser/1.0.2");
+  });
+  it("requires explicit relation model selection and keeps unknown groups inspectable", () => {
+    expect(() =>
+      parseJobRequirementsWithRelations(
+        "Python required",
+        context,
+        undefined as never,
+      ),
+    ).toThrow("JD_RELATION_MODEL_UNSUPPORTED");
+    expect(() =>
+      parseJobRequirementsWithRelations("Python required", context, {
+        modelVersion: "unknown",
+      } as never),
+    ).toThrow("JD_RELATION_MODEL_UNSUPPORTED");
+    const local = parseJobRequirementsWithRelations(
+      "FastAPI or (Flask and Python) required",
+      context,
+      { modelVersion: "jd-local-relation-parser/1.0.0" },
+    );
+    expect(local.relations.clauses[0].skillExpression.kind).toBe("unknown");
+    expect(local.scoringEligible).toBe(false);
   });
 });

@@ -1,0 +1,67 @@
+{
+  "id": "CR-U16-S03",
+  "relatedTask": "CR-U09",
+  "status": "VERIFIED_LOCAL_DIRECT_ROUTE_ACCESS",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated worktree, synthetic fixtures only",
+  "sources": {
+    "app/routes/analysis.tsx": "630e35a40c32b8749291691a56b1c5edee0f97b86529fb07cfdcaf7640d99e12",
+    "app/routes/api.analysis-status.ts": "2cea8a2f9c50dd16e1a742e747c1687552d0ac8674ecf8b2bb7358a31900b1fb",
+    "app/routes/resume.tsx": "66bfb2e16fa0a7a4ddf225929fa62ef3b7fe5f1f9d48c3e7dd96c0caf1b505e6",
+    "tests/unit/analysis-status.test.ts": "7134c67b3dad5a90859d45f4c0ddbd7f9a254b4aaa40dc80ff72a07093ad4988",
+    "tests/unit/resume-access-route.test.ts": "d1ef7964c0f843bcbabdfe6926fc88d168f01bb8b1a83c3bcd1c4a8dcd4f229b",
+    "tests/unit/initial-feedback-consumer.test.ts": "d2031239d02ec087c2f0c571b7dc0c156ab4332246d0317f02ae87ea9b9bc095"
+  },
+  "baselineFailures": 8,
+  "focusedTests": {
+    "exitCode": 0,
+    "files": 7,
+    "passed": 151
+  },
+  "typecheck": {
+    "exitCode": 0
+  },
+  "lint": {
+    "exitCode": 0,
+    "errors": 0,
+    "existingHookWarnings": 4
+  },
+  "webBuild": {
+    "exitCode": 0,
+    "reportSha256": "1b302f60b90766b8fbbc2d444bbb45f154bf61e16b709f454de66c3603eef7f5"
+  },
+  "workerBuild": {
+    "exitCode": 0,
+    "reportSha256": "fc35b90a1d8285a3092f930b415c2c9fbfa8b8c4fabd3c2709eb803ab76eadb9"
+  },
+  "browser": {
+    "engine": "Chromium",
+    "app": "Built SSR on loopback",
+    "backend": "Simulated Supabase Auth and Data API",
+    "originalFailure": "The rendered 404 lost no-store through the root error boundary. Route middleware fixed the response.",
+    "originalFailureReportSha256": "c4eaec3d3e710d6e0eadadcd7d077757dd7c1b3aa53ab37a415c995c2d9e8c56",
+    "scriptSha256": "05b55d7f45a2b44aa0c2ed1ed53f1691158026b9a569381f5c1cbada85a900d2",
+    "reportSha256": "f2afcfc8106d1e9f3914e343e5ededf27e1c7606d8bda8ce63e8566d330ecff3",
+    "result": {
+      "ownedOcrRecovery": 200,
+      "inflightDeletion": 404,
+      "pendingDeletion": 404,
+      "ownedEvidenceRedirect": 302,
+      "revokedResult": 404,
+      "staleProgressRemoved": true,
+      "anonymousStatus": 401,
+      "anonymousResultRedirect": 302,
+      "externalRequests": 0
+    }
+  },
+  "managedVerification": false,
+  "remaining": [
+    "Managed Auth and Data API lifecycle",
+    "Leased OCR upload and worker readiness"
+  ],
+  "formatOnlyFollowup": {
+    "suite": "tests/unit/analysis-status.test.ts",
+    "exitCode": 0,
+    "passed": 17
+  }
+}

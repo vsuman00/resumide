@@ -1,0 +1,144 @@
+{
+  "id": "CR-R14-S11",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_LOCAL_ADAPTER_AND_EXACT_WORKER",
+  "before": {
+    "fixture": "Two pending read-only image inspections",
+    "expected": "Third request returns busy before Docker dispatch",
+    "observed": "Third request starts an image inspection and returns runtime_unavailable"
+  },
+  "after": {
+    "synthetic": "At capacity the third request sends no Docker command. Cancelled and missing-image checks release both slots without source writes or container cleanup.",
+    "focusedTestsPassed": 118,
+    "focusedTestFilesPassed": 5,
+    "typecheck": "pass",
+    "check:latex:source": "pass",
+    "lint": {
+      "errors": 0,
+      "warnings": 4
+    },
+    "webBuild": "pass",
+    "workerBuild": "pass"
+  },
+  "worker": {
+    "imageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "lifecycle": [
+      {
+        "name": "production-cancel-cleanup",
+        "pass": true
+      },
+      {
+        "name": "active-production-cancellation-cleanup",
+        "pass": true
+      },
+      {
+        "name": "real-paused-worker-wall-timeout-cleanup",
+        "pass": true,
+        "elapsedMs": 20152
+      },
+      {
+        "name": "actual-two-active-admission-and-cleanup",
+        "pass": true
+      },
+      {
+        "name": "same-process-benign-recovery",
+        "pass": true,
+        "pages": 2,
+        "pdfSha256": "d649b6b2bedbd7622f95a919e994b40ece49c1df268bc1a4c98ba07756c32926"
+      }
+    ],
+    "starterCases": [
+      {
+        "profile": "early-career",
+        "paper": "A4",
+        "sourceSha256": "e07874cb10a6b2c14cc8142a86d18da0c64b56016104859afddc7981ba4ec5b2",
+        "pdfSha256": "f3249b981196c2607dbf79fc1b0dad1d20acb43e31f149bca6d746b3fbd4e87e",
+        "pages": 1,
+        "pdfBytes": 10478,
+        "durationMs": 869,
+        "headingOrderPass": true,
+        "taggedPages": 0
+      },
+      {
+        "profile": "early-career",
+        "paper": "LETTER",
+        "sourceSha256": "8717359165e65c305b64d8062a335eeea7e1e55edf56985c8236f54d03223cb1",
+        "pdfSha256": "e78c67d5f163cc26b94d9f987ce00e52a8d48ebf45679042fae3046c0bf41bbb",
+        "pages": 1,
+        "pdfBytes": 10467,
+        "durationMs": 905,
+        "headingOrderPass": true,
+        "taggedPages": 0
+      },
+      {
+        "profile": "experienced",
+        "paper": "A4",
+        "sourceSha256": "88bb7da1f25c81108db9f1192f9b34fdabd20ed0771ccb49ff212453b6e8ce31",
+        "pdfSha256": "93ff7b686bbe7149e8e55b0309bf25a0e4e1fe6b7a2ed9a90e61292c7130377b",
+        "pages": 1,
+        "pdfBytes": 10840,
+        "durationMs": 912,
+        "headingOrderPass": true,
+        "taggedPages": 0
+      },
+      {
+        "profile": "experienced",
+        "paper": "LETTER",
+        "sourceSha256": "6e12dc7e3576b4223272475d997c217d381fd650d5ef709aabcf5e7855d0c6d3",
+        "pdfSha256": "e7c3f3aea5eee9e932a8ae040b4836558dba1c15b181690b50583270ccadfd18",
+        "pages": 1,
+        "pdfBytes": 10835,
+        "durationMs": 808,
+        "headingOrderPass": true,
+        "taggedPages": 0
+      },
+      {
+        "profile": "document",
+        "paper": "A4",
+        "sourceSha256": "8e26a47e80d31ac32694147ae9acfe41aa4a8d9c20b5fec65cec9a0c41f9adb2",
+        "pdfSha256": "aabaab622eece4f2d2d6fd3e118bf24a1fb4ad249d087a293ec2c731dae417a4",
+        "pages": 1,
+        "pdfBytes": 10206,
+        "durationMs": 804,
+        "headingOrderPass": true,
+        "taggedPages": 0
+      },
+      {
+        "profile": "document",
+        "paper": "LETTER",
+        "sourceSha256": "1d1f2d29630d88b698e716a1cf12f92cba08753718ee45339c5fff51759afc19",
+        "pdfSha256": "5264e422aeb9ec59bc0b56746bce3f4fa857c2f4c8054b077a7579bb3b17128c",
+        "pages": 1,
+        "pdfBytes": 10193,
+        "durationMs": 828,
+        "headingOrderPass": true,
+        "taggedPages": 0
+      }
+    ],
+    "starterSampleP95Ms": 912,
+    "latencyScope": "Six local samples without an approved performance threshold.",
+    "ownedContainersRemaining": 0
+  },
+  "sourceHashes": {
+    "app/lib/server/latex-sandbox.ts": "100252a580c6fe5579040b2e99253b710517ba7a117a691c2b0694305af41096",
+    "tests/unit/latex-sandbox.test.ts": "934c38839424d6cc1ed30e96f0f731c2d94846782457126f6b8fd4950e0c1cfd",
+    "scripts/verify-latex-lifecycle.ts": "940f5d74920c2be069b4f94c55956afe185b32b062682e1c54a6fbed1c819f8e",
+    "scripts/verify-latex-sandbox.ts": "f20e72330d165333f9b0bd5256308151531ad317fe6905298462b968871a1e64",
+    "scripts/benchmark-latex.ts": "1835490a56d05e61bac5d47a4438cfa73e169f6625e35bb80e271a17caa9ec41"
+  },
+  "logHashes": {
+    "before": "c7fea07a54376fd036e970727785cd7592933f3b46e2eca6c7561ec603cd80a4",
+    "tests": "e96cb38186c3fed67373c404ec54979fd28f3c685b6a8f5481b3e65e79ab529a",
+    "final-tests": "ea039d6f393d6b6682d7cc29ea8ee760260e2c678de4f249646e6621b2e70ca0",
+    "lifecycle": "a7610806bbb857987bd2f15a2a1d09fac74179e928fe4b450d5aca08c80e8d52",
+    "benchmark": "7bf4ec3fe5910639e4a2d22065074ed5335d75ebf161dc1b9f9558c77ced6172",
+    "types": "b63c0de51fcb1526e23a41bde9c50d3e1af56b2b08d9bfe50e3d977251642455",
+    "source": "5c93e85bf5abf88f1aead1916a1974f59b7f3a6c62f76efdf1af2c75cfdf4c6c",
+    "web": "845ddcf7b2dec97e58bc7dccfab9ef19653480240a4647bb3257323866fd51fe",
+    "worker": "a99a3a08701af650ee3263d8c7da77a2380ea389997523366d8d02d2d922b81b",
+    "lint": "44f8e8569eab5563a615e4a095db9b679e65d71f39119c3b700b380df224aa6f"
+  },
+  "open": ["Managed verification and release acceptance remain open."]
+}

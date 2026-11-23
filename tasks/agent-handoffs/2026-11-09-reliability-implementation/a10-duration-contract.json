@@ -1,0 +1,23 @@
+{
+  "task": "CR-A10 exact duration coverage helper",
+  "status": "IMPLEMENTATION_SOURCE_ONLY",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "owner": "pricing_validation reused as runtime implementation agent; no pricing",
+  "worktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats",
+  "files": [
+    "app/lib/server/requirement-duration.ts",
+    "tests/unit/requirement-duration.test.ts",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a10-duration.md"
+  ],
+  "purpose": "Independent required deterministic duration helper for actual typed coverage; semantic producer and tests remain separately owned. Not a source/ownership/proficiency/score authority.",
+  "input": "Strict full ISO Gregorian date intervals for an already selected same supported subject, and actual persisted JD duration bounds 0..100integer years. Validate bounds, order, impossibledates/limits. Explicit endpoint ambiguity for to DATE, not silently inclusive.",
+  "policy": [
+    "Sort and union duplicates/overlaps before counting. Preserve lower exclusiveend and upper inclusiveend possible unions. No FTE or continuouspractice inference.",
+    "For one continuous union compare exact start-based calendar anniversaries; retain Feb29->Feb28/March1 ambiguity.",
+    "For disjoint unions use exact minimum/maximum N-calendar-year day lengths over Gregorian400year cycle. No365/365.25 averaging, wholemonth rounding or substitute tenure.",
+    "Evaluate >=,>,<=,<,exactly and both range bounds literally with threevalued pass/fail/unknown semantics. Endpoint/calendar ambiguity remains explicit.",
+    "Version/hash exact deterministic interpretation and limits; preserve unionintervals/count/provenance-independent limitation so next consumer can disclose uncertainty."
+  ],
+  "checks": "Finite essential calendar/leap/boundary/endpoint/disjoint/overlap/duplicate/invalid/limit controls, scopedstatic once. Root finite source review and integrated affected gate later.",
+  "boundaries": "Source/syntheticonly. No SQL/DB/env/providers/services/browser/compiler/Docker/dependency/Git/deployment. No modification to semantic agent files, legacy engine, policy or shared docs."
+}

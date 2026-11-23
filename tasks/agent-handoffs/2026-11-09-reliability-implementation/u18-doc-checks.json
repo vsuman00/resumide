@@ -1,0 +1,39 @@
+{
+  "status": "PASS",
+  "at": "2026-11-10T19:01:02.758115+00:00",
+  "initialFormattingCheck": {
+    "exitCode": 1,
+    "finding": "New completion JSON needed Prettier layout; parsed values preserved by formatting."
+  },
+  "checks": [
+    {
+      "command": [
+        "/Users/vaibhavsuman/.npm/_npx/361c55be1121897e/node_modules/node/bin/node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "tasks/agent-handoffs/2026-11-09-reliability-implementation/u18-closeout.md",
+        "tasks/agent-handoffs/2026-11-09-reliability-implementation/u18-integrated-completion.json",
+        "tasks/reliability-remediation-plan.json",
+        "docs/design/VERIFIED_CORE_ARTIFACTS.md"
+      ],
+      "exitCode": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "output": ""
+    }
+  ],
+  "links": "New report/design links resolve",
+  "DAG": "64 unique IDs, unchanged dependencies, valid topological order",
+  "counts": {
+    "VERIFIED": 2,
+    "PARTIAL": 31,
+    "PLANNED": 31
+  }
+}

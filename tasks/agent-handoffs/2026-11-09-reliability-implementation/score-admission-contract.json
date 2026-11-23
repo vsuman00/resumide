@@ -1,0 +1,22 @@
+{
+  "version": "score-admission-engineering/1.0.0",
+  "task": "CR-A15",
+  "sourcePolicy": "Existing draft score policy only; no new numeric weights, coverage gates, calibration receipt or adoption",
+  "inputStates": [
+    "uncalibrated",
+    "unsupported",
+    "incomplete",
+    "failed or mismatched export/score evidence",
+    "candidate-confirmed but uncalibrated",
+    "successful OCR/provider availability but uncalibrated"
+  ],
+  "required": "Actual existing engine, typed diagnostics and read/admission surfaces continue to publish only withheld dimensions/null value/false eligibility/null coverage and no aggregate; invalid input must reject or withhold. Explain observed blockers, honest available review actions and policy-level unavailability without implying the user can calibrate scores or that correction alone unlocks them. Preserve source/version/history and default-off gates. No new future-adoption API.",
+  "frontendContract": {
+    "prop": "Existing score blockers from d.score.dimensions and d.readiness",
+    "allowedTargets": "Only actual owned analysis evidence/canonical/requirements route links; path supplied from actual route base. No new form/action/RPC or auto-confirmation.",
+    "copy": "No hiring/employer ATS or guaranteed-score promises. Review actions do not promise numerical availability. Unknown blocker safe fallback if encountered.",
+    "presentation": "Accessible labelled explanation with plain-language reasons, distinguish candidate-review actions from service scoring-policy validation. Preserve raw diagnostics elsewhere and no score changes."
+  },
+  "tests": "Real production entrypoints with existing synthetic fixtures; independent invalid/mutated receipt/domain/source cases, original historical semantics preserved. No mirrors/no suppressions/no replacing frozen failures. Genuine old defect RED recorded before repair; already-correct behaviour recorded as verification, not fabricated RED.",
+  "boundary": "Source/synthetic/DOM only; pinned Node22.23.4 sealed empty HOME OS network/dotenv/Git-write denial; no actual DB/env/provider/browser/compiler/OCR/Docker/deps/Git/deploy. No actual authority or real corpus supplied."
+}

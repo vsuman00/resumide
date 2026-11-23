@@ -1,0 +1,200 @@
+{
+  "id": "CR-R14-S16",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_EXACT_IMAGE_NEUTRAL_PDF_POLICY_AND_RENDER",
+  "evidenceTier": "Neutral serialized PDF admission on the installed inspector, separate mock boundary checks, and actual production adapter rendering",
+  "worker": {
+    "imageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "profile": "focused-pdf-policy",
+    "checks": [
+      {
+        "name": "exact-worker-structural-pdf-policy",
+        "pass": true,
+        "checks": [
+          {
+            "name": "plain-letter",
+            "pages": 1
+          },
+          {
+            "name": "internal-destination",
+            "pages": 1
+          },
+          {
+            "name": "https-link",
+            "pages": 1
+          },
+          {
+            "name": "mailto-link",
+            "pages": 1
+          },
+          {
+            "name": "encrypted",
+            "rejected": "UnsafePDF"
+          },
+          {
+            "name": "unembedded-font",
+            "rejected": "UnsafePDF"
+          },
+          {
+            "name": "rotated",
+            "rejected": "UnsafePDF"
+          },
+          {
+            "name": "scaled-user-space",
+            "rejected": "UnsafePDF"
+          },
+          {
+            "name": "crop-mismatch",
+            "rejected": "UnsafePDF"
+          },
+          {
+            "name": "unsupported-media-size",
+            "rejected": "UnsafePDF"
+          },
+          {
+            "name": "unsupported-uri-scheme",
+            "rejected": "UnsafePDF"
+          },
+          {
+            "name": "non-link-annotation",
+            "rejected": "UnsafePDF"
+          },
+          {
+            "name": "empty-embedded-files-marker",
+            "rejected": "UnsafePDF"
+          },
+          {
+            "name": "empty-form-marker",
+            "rejected": "UnsafePDF"
+          },
+          {
+            "name": "unsupported-action-marker",
+            "rejected": "UnsafePDF"
+          },
+          {
+            "name": "truncated-header-only",
+            "rejected": "PdfReadError"
+          }
+        ],
+        "inspectorSha256": "3d604fc822ee9e7f864152199b495360ba028b916c7f4c48d6cf57660ccab7ba"
+      },
+      {
+        "name": "pdf-image-boundaries-mock-policy-checks",
+        "probeSha256": "b14592568042647cecb452115d4ec408ebcc259264aad1b87626042fe5401ca4",
+        "tier": "MOCK policy-boundary checks; ordinary pypdf dictionaries only",
+        "cases": 5,
+        "passed": true,
+        "checks": [
+          {
+            "name": "parser-success-after-policy-error",
+            "mustReject": true,
+            "rejected": true,
+            "errorClass": "UnsafePDF",
+            "pages": null,
+            "mockParserCaughtPolicyThenReturnedSuccess": true,
+            "configurationRestored": true,
+            "getDataHookRestored": true,
+            "inlineHookRestored": true,
+            "pass": true
+          },
+          {
+            "name": "parser-success-after-inline-policy-error",
+            "mustReject": true,
+            "rejected": true,
+            "errorClass": "UnsafePDF",
+            "pages": null,
+            "mockParserCaughtPolicyThenReturnedSuccess": true,
+            "configurationRestored": true,
+            "getDataHookRestored": true,
+            "inlineHookRestored": true,
+            "pass": true
+          },
+          {
+            "name": "SMask-None-supported",
+            "mustReject": false,
+            "rejected": false,
+            "errorClass": null,
+            "pages": 1,
+            "mockParserCaughtPolicyThenReturnedSuccess": false,
+            "configurationRestored": true,
+            "getDataHookRestored": true,
+            "inlineHookRestored": true,
+            "pass": true
+          },
+          {
+            "name": "SMask-G-missing-Subtype",
+            "mustReject": true,
+            "rejected": true,
+            "errorClass": "UnsafePDF",
+            "pages": null,
+            "mockParserCaughtPolicyThenReturnedSuccess": false,
+            "configurationRestored": true,
+            "getDataHookRestored": true,
+            "inlineHookRestored": true,
+            "pass": true
+          },
+          {
+            "name": "SMask-G-valid-Form",
+            "mustReject": false,
+            "rejected": false,
+            "errorClass": null,
+            "pages": 1,
+            "mockParserCaughtPolicyThenReturnedSuccess": false,
+            "configurationRestored": true,
+            "getDataHookRestored": true,
+            "inlineHookRestored": true,
+            "pass": true
+          }
+        ],
+        "attempts": {
+          "originalEncodedData": 0,
+          "imageDecoder": 0,
+          "inlineScanner": 0
+        },
+        "pdfBytesGenerated": false,
+        "realPdfReaderCalled": false,
+        "nativeDecoderExecuted": false,
+        "pass": true
+      },
+      {
+        "name": "exact-worker-rendered-links-and-order",
+        "pass": true,
+        "pages": 2,
+        "safeLinks": 1,
+        "orderedTextChecks": 8,
+        "pdfSha256": "d649b6b2bedbd7622f95a919e994b40ece49c1df268bc1a4c98ba07756c32926"
+      }
+    ],
+    "checksExecuted": 3
+  },
+  "structuralAccepted": 4,
+  "structuralRejected": 12,
+  "ownedConverterContainersRemaining": 0,
+  "focusedTestsPassed": 123,
+  "checks": {
+    "typecheck": "pass",
+    "check:latex:source": "pass"
+  },
+  "sourceHashes": {
+    "app/lib/server/latex-sandbox.ts": "100252a580c6fe5579040b2e99253b710517ba7a117a691c2b0694305af41096",
+    "scripts/latex-runtime/inspect_pdf.py": "3d604fc822ee9e7f864152199b495360ba028b916c7f4c48d6cf57660ccab7ba",
+    "scripts/latex-runtime/verify-pdf-structural-policy.py": "92aabd02b5ef897c6049649a59973b899ba401f10ce367b60fe63d9d18f930c5",
+    "scripts/latex-runtime/verify-image-boundaries-mock.py": "b14592568042647cecb452115d4ec408ebcc259264aad1b87626042fe5401ca4",
+    "scripts/verify-latex-boundaries.ts": "ca0a481aba2659409876db2d236e0b488143912d32a909ae47cd07d2ac46352a",
+    "scripts/verify-latex-sandbox.ts": "81aa8ea1edd3a4590f5ae52f8092a1a69d1c908b59abc64a80364318c95c88ab",
+    "scripts/latex-test-fixtures.ts": "ddee94817eeffe861bbe6fb1cec99e2ba1704b9e64c8a809163b8b546b0aed77",
+    "tests/fixtures/latex.ts": "315c19667af0b54062a09b8db1b1ee05678daed701d34bb2ac28eabb66743de6"
+  },
+  "logHashes": {
+    "structural": "e05b0eb2f59e69a2660569e116022c062522efd50baa1d373bf046fe88045508",
+    "final": "01c5602bfe90525b773fe87ad01943d49c1da06f21ac362fca5a56826d98b94d",
+    "tests": "d8d5254bf8d88d9131db7d7e93d3eebb7eb391f172b09b94f1db14eda8db31cd",
+    "source": "d776806e187eca963fdefcf38f373b00add5ba121afdc2841112e7f3d25cbb9a",
+    "types": "b63c0de51fcb1526e23a41bde9c50d3e1af56b2b08d9bfe50e3d977251642455"
+  },
+  "open": [
+    "Broader native image and decoder policy validation and managed/release acceptance remain open."
+  ]
+}

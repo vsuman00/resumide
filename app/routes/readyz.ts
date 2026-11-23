@@ -1,10 +1,10 @@
 import { getServerConfig } from "~/lib/server/config";
 import { PublicApiError, toErrorResponse } from "~/lib/server/errors";
-import { createRequestId } from "~/lib/server/request-context";
+import { requestIdFrom } from "~/lib/server/request-context";
 import { createSupabaseAdminClient } from "~/lib/server/supabase";
 
-export async function loader() {
-  const requestId = createRequestId();
+export async function loader({ request }: { request: Request }) {
+  const requestId = requestIdFrom(request);
 
   try {
     const config = getServerConfig();

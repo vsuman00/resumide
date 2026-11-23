@@ -1,0 +1,33 @@
+from pathlib import Path
+import json,hashlib,subprocess,shutil,os
+p=Path(__file__).parent;root=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats')
+owned=['app/lib/server/grouped-import-repository.ts','tests/unit/grouped-import-repository.test.ts','supabase/migrations/20261113142537_grouped_original_workspace_read.sql','scripts/verify-grouped-original-read.sql','tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a02-grouped-original-consumer.md']
+sha=lambda b:hashlib.sha256(b).hexdigest()
+archive=p/'frozen-source';archive.mkdir(exist_ok=True,mode=0o700)
+files={}
+for name in owned:
+ b=(root/name).read_bytes();dest=archive/(name.replace('/','__')+'.txt');dest.write_bytes(b);files[name]={'sha256':sha(b),'bytes':len(b),'archive':str(dest)}
+receipts={}
+labels=['focused-terminal','types-fixed','lint-fixed','format-fixed','handoff-format']
+for label in labels:
+ receipt=p/(label+'.json');j=json.loads(receipt.read_text());log=Path(j['log']);assert sha(log.read_bytes())==j['logSha256'];assert j['status']=='PASS';assert not j['changedSourceInputs'];assert j['sourceInputs']==722;assert j['result']['groupCleanupConfirmed'];
+ for name,h in j['sourceHashes'].items():assert sha((root/name).read_bytes())==h,(label,name)
+ receipts[label]={'receipt':str(receipt),'sha256':sha(receipt.read_bytes()),'log':str(log),'logSha256':j['logSha256'],'inputs':j['sourceInputs'],'group':j['process']['processGroup']}
+base=json.loads((p/'module-format-write.json').read_text())['sourceHashes'];unowned={k:h for k,h in base.items() if k not in owned};assert len(unowned)==718
+for name,h in unowned.items():assert sha((root/name).read_bytes())==h,name
+all_groups=[]
+for receipt in p.glob('*.json'):
+ try:j=json.loads(receipt.read_text());g=j.get('process',{}).get('processGroup');
+ except (ValueError,AttributeError):continue
+ if g:all_groups.append(g)
+ps=subprocess.run(['/bin/ps','-axo','pid=,pgid='],capture_output=True,text=True,check=True).stdout
+alive=[{'pid':int(a),'pgid':int(b)} for line in ps.splitlines() if len(parts:=line.split())==2 for a,b in [parts] if int(b) in all_groups]
+assert not alive,alive
+for script in ['build-read.py','build-verifier.py','run.mjs','source-hashes.mjs','types.mjs','finalize.py']:
+ b=(p/script).read_bytes();(archive/(script+'.txt')).write_bytes(b)
+contractsroot=Path('/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tasks/agent-handoffs/2026-11-09-reliability-implementation')
+for name in ['a02-consumer-contract.json','a02-consumer-backend-allocation.json']:
+ b=(contractsroot/name).read_bytes();(archive/(name+'.txt')).write_bytes(b)
+manifest={'task':'CR-A02-S02 backend consumer','status':'FROZEN_SOURCE_SYNTHETIC_VERIFIED_NATIVE_OPEN','owned':files,'terminalChecks':receipts,'unownedBaselineInputs':718,'unownedBaselineStable':True,'allOwnedGroups':sorted(set(all_groups)),'aliveOwnedGroups':alive,'readinessSuccessorSha256':'c2098f91ee32e4035ff30dd5db71c4d7e95944cef24e4b137c8c489841edd5db','review':'read-only peer ACK final four code/test hashes; no reviewer tests','limitations':['SQL unparsed/unapplied/unexecuted','writer remains denied','native concurrency/restore/admission/release open','Root integrated gate pending'],'preservedFailures':['module-types.json','focused-first.json','types.json','lint.json'],'formatMutationReceipts':['module-format-write.json','format-write.json','format-final-write.json','format-test-types-write.json']}
+(p/'final-packet.json').write_text(json.dumps(manifest,indent=2)+'\n')
+print(json.dumps({'packet':str(p/'final-packet.json'),'sha256':sha((p/'final-packet.json').read_bytes()),'owned':files,'unownedStable':len(unowned),'groupsAbsent':len(set(all_groups))},indent=2))

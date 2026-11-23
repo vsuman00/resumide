@@ -1,0 +1,54 @@
+{
+  "task": "CR-U11-S01",
+  "status": "FROZEN_SOURCE_DOM_RECOVERY_ONLY",
+  "at": "2026-11-13T19:54:41.962785+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Fix actual /build compile failure rendering/recovery; no compiler/runtime activation.",
+  "prerequisites": [
+    "CR-R13-S01 verified source/mock117 cases; R13-S02 actual runtime recovery remains open.",
+    "UI-L permits source/mock classification before actual compiler acceptance; preserve default flags and quarantine.",
+    "Read docs/design/LATEX_CONVERTER.md diagnostics/Build naming and actual latex-sandbox quarantine contract."
+  ],
+  "actualGap": [
+    "runtime_unavailable and cleanup_failed currently map to identical retry advice.",
+    "Plain-object compileMessages[code] accepts inherited non-string values such as __proto__/constructor/toString instead of fixed safe fallback."
+  ],
+  "messages": {
+    "runtime_unavailable": "PDF compilation is unavailable right now. Keep your code and try again later.",
+    "cleanup_failed": "PDF compilation needs service recovery. Keep your code and recompile only after the service is restored.",
+    "unknown": "Compilation failed. Check your code and try again, or load an example."
+  },
+  "implementation": "Use an own-property safe fixed mapping in actual route catch, with string-safe fallback. Preserve every other published message and cancellation branch. Do not echo unknown codes/messages or invent customer support channels. Do not clear/bypass server quarantine or add a browser recovery toggle, retry loop, new server state or native fallback.",
+  "preserve": [
+    "Exact source/profile/paper and existing byte limits.",
+    "Busy/single-request/cancel, abort/generation and unmount guards.",
+    "Every compile attempt/source edit invalidates old preview/download; late replies cannot restore it.",
+    "Fresh successful PDF response may create current preview/download; mocks do not establish actual rendering/compile/parity.",
+    "Existing API/auth/loader/server handlers, flags, style/layout/AI integration and sandbox contracts."
+  ],
+  "acceptance": [
+    "Actual current component RED for distinct missing-runtime versus cleanup guidance.",
+    "Actual current component RED for inherited-code handling; preserve unexpected server responses as safe fixed fallback without React crash or raw echo.",
+    "Finite DOM/fake-fetch controls: own published code, unknown/inherited codes, retained source/profile, invalidated old PDF/download, busy/cancel/late response and fresh success.",
+    "One finite read-only source review and one Root affected gate plus full types/lint/web/worker after release."
+  ],
+  "owners": {
+    "frontend": {
+      "worktree": "frontend",
+      "files": [
+        "app/routes/latex.tsx",
+        "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-u11-compile-recovery.md"
+      ]
+    },
+    "backend_test": {
+      "worktree": "backend",
+      "files": [
+        "tests/components/LatexCompileRecovery.test.tsx",
+        "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-u11-compile-recovery-tests.md"
+      ]
+    },
+    "review": "Read-only runtime-contract/component/test review; no edits or tests.",
+    "root": "Contract, dependency sync, integration and shared docs/context."
+  },
+  "bounds": "Only source/DOM/synthetic fake fetch. No compiler, Docker, browser/services, SQL parser/execution, hosted writes, actual env/keys/providers/PII, dependency, Git or deployment operation. Actual compiler lifecycle, restored runtime, rendering/parity/browser/full U11 acceptance remain open."
+}

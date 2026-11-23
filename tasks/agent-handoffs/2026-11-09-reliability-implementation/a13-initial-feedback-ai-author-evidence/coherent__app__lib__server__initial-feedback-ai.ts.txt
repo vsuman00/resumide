@@ -1,0 +1,645 @@
+import OpenAI from "openai";
+import { createHash } from "node:crypto";
+import { z } from "zod";
+import { zodResponseFormat } from "openai/helpers/zod";
+import { ProseGenerationSchema, PROSE_INSTRUCTIONS } from "./qualitative-prose";
+import {
+  QualitativeSourceProseSchema,
+  type QualitativeSourceProse,
+} from "./qualitative-support";
+import { buildRewriteSources } from "./rewrite-sources";
+import {
+  assertAllowedOpenAiBaseUrl,
+  DEFAULT_OPENAI_BASE_URL,
+} from "./egress-policy";
+import { proseModelOptions } from "./openai-model";
+import {
+  readProviderUsage,
+  runProviderAttempt,
+  type ProviderUsage,
+} from "./provider-attempt";
+
+export const INITIAL_FEEDBACK_AI_LIMITS = Object.freeze({
+  sourceUtf16: 100000,
+  contentBytes: 65536,
+  responseBytes: 1048576,
+  payloadBytes: 4194304,
+});
+const usageSchema = z.strictObject({
+  inputTokens: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+  outputTokens: z.number().int().min(0).max(Number.MAX_SAFE_INTEGER),
+});
+const digest = z.string().regex(/^[a-f0-9]{64}$/u);
+export const InitialFeedbackRawSchema = z.strictObject({
+  schemaVersion: z.literal("initial-feedback-raw/1.0.0"),
+  output: z.unknown(),
+  refused: z.boolean(),
+  finishReason: z.string().max(128).nullable(),
+  usage: usageSchema.nullable(),
+});
+export type InitialFeedbackRaw = z.infer<typeof InitialFeedbackRawSchema>;
+export const InitialFeedbackRawCaptureSchema = z.strictObject({
+  raw: InitialFeedbackRawSchema,
+  rawResponseSha256: digest.nullable(),
+});
+export type InitialFeedbackRawCapture = z.infer<
+  typeof InitialFeedbackRawCaptureSchema
+>;
+export const InitialFeedbackGenerationFailureSchema = z.strictObject({
+  schemaVersion: z.literal("initial-feedback-generation-failure/1.0.0"),
+  reason: z.enum([
+    "refused",
+    "truncated",
+    "malformed_json",
+    "schema_invalid",
+    "source_reference_invalid",
+  ]),
+  rawResponseSha256: digest.nullable(),
+});
+export type InitialFeedbackGenerationFailure = z.infer<
+  typeof InitialFeedbackGenerationFailureSchema
+>;
+export type InitialFeedbackAiFailureCode =
+  | "AI_OUTPUT_INVALID"
+  | "AI_REFUSED"
+  | "AI_RATE_LIMITED"
+  | "AI_PROVIDER_UNAVAILABLE"
+  | "AI_TIMEOUT"
+  | "AI_CANCELLED";
+export class InitialFeedbackAiFailure extends Error {
+  readonly usage: ProviderUsage | null;
+  constructor(
+    readonly code: InitialFeedbackAiFailureCode,
+    usage: ProviderUsage | null = null,
+    readonly generationFailure: InitialFeedbackGenerationFailure | null = null,
+  ) {
+    super("Initial writing response is unavailable.");
+    this.name = "InitialFeedbackAiFailure";
+    this.usage = readProviderUsage({
+      prompt_tokens: usage?.inputTokens,
+      completion_tokens: usage?.outputTokens,
+    });
+  }
+}
+export interface InitialFeedbackRawConfig {
+  apiKey: string;
+  model: string;
+  maxOutputTokens: number;
+  timeoutMs: number;
+  baseUrl?: string;
+}
+export interface InitialFeedbackRawRequest {
+  originalSource: string;
+  jobTitle: string;
+  jobDescription: string;
+  idempotencyKey: string;
+  signal?: AbortSignal;
+  onObservedUsage: (usage: ProviderUsage | null) => void | Promise<void>;
+}
+export interface InitialFeedbackRawTransport {
+  execute(
+    request: InitialFeedbackRawRequest,
+  ): Promise<InitialFeedbackRawCapture>;
+}
+const record = (v: unknown): v is Record<string, unknown> =>
+  v !== null && typeof v === "object" && !Array.isArray(v);
+function unicode(text: string, allowNul = false) {
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (!allowNul && c === 0) return false;
+    if (c >= 0xd800 && c <= 0xdbff) {
+      const n = text.charCodeAt(++i);
+      if (!(n >= 0xdc00 && n <= 0xdfff)) return false;
+    } else if (c >= 0xdc00 && c <= 0xdfff) return false;
+  }
+  return true;
+}
+function generation(
+  reason: InitialFeedbackGenerationFailure["reason"],
+  rawResponseSha256: string | null,
+  usage: ProviderUsage | null,
+) {
+  return new InitialFeedbackAiFailure(
+    reason === "refused" ? "AI_REFUSED" : "AI_OUTPUT_INVALID",
+    usage,
+    {
+      schemaVersion: "initial-feedback-generation-failure/1.0.0",
+      reason,
+      rawResponseSha256,
+    },
+  );
+}
+/** Bounded duplicate-aware JSON; escaped key spellings are compared after decoding. */
+function uniqueJson(
+  text: string,
+  maxBytes: number,
+  checkStrings = true,
+): unknown {
+  if (text.length > maxBytes || Buffer.byteLength(text, "utf8") > maxBytes)
+    throw Error("INVALID_JSON");
+  let at = 0,
+    count = 0;
+  const space = () => {
+    while (at < text.length && /[\t\r\n ]/u.test(text[at])) at++;
+  };
+  const string = (): string => {
+    const begin = at++;
+    for (; at < text.length; at++) {
+      if (text[at] === "\\") {
+        at++;
+        continue;
+      }
+      if (text[at] === '"') {
+        at++;
+        const value: unknown = JSON.parse(text.slice(begin, at));
+        if (typeof value !== "string" || (checkStrings && !unicode(value)))
+          throw Error("INVALID_JSON");
+        return value;
+      }
+    }
+    throw Error("INVALID_JSON");
+  };
+  const value = (depth: number): void => {
+    if (depth > 16 || ++count > 10000) throw Error("INVALID_JSON");
+    space();
+    const c = text[at];
+    if (c === '"') {
+      string();
+      return;
+    }
+    if (c === "{") {
+      at++;
+      space();
+      const seen = new Set<string>();
+      if (text[at] === "}") {
+        at++;
+        return;
+      }
+      for (;;) {
+        space();
+        if (text[at] !== '"') throw Error("INVALID_JSON");
+        const key = string();
+        if (seen.has(key)) throw Error("INVALID_JSON");
+        seen.add(key);
+        space();
+        if (text[at++] !== ":") throw Error("INVALID_JSON");
+        value(depth + 1);
+        space();
+        const end = text[at++];
+        if (end === "}") return;
+        if (end !== ",") throw Error("INVALID_JSON");
+      }
+    }
+    if (c === "[") {
+      at++;
+      space();
+      if (text[at] === "]") {
+        at++;
+        return;
+      }
+      for (;;) {
+        value(depth + 1);
+        space();
+        const end = text[at++];
+        if (end === "]") return;
+        if (end !== ",") throw Error("INVALID_JSON");
+      }
+    }
+    const m =
+      /^(?:true|false|null|-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?)/u.exec(
+        text.slice(at),
+      );
+    if (!m) throw Error("INVALID_JSON");
+    if (!/^(?:true|false|null)$/u.test(m[0]) && !Number.isFinite(Number(m[0])))
+      throw Error("INVALID_JSON");
+    at += m[0].length;
+  };
+  value(0);
+  space();
+  if (at !== text.length) throw Error("INVALID_JSON");
+  return JSON.parse(text);
+}
+async function abortable<T>(
+  work: () => Promise<T>,
+  signal: AbortSignal,
+): Promise<T> {
+  if (signal.aborted) throw Error("ABORTED");
+  let rejectAbort: () => void = () => undefined;
+  const aborted = new Promise<never>((_, reject) => {
+    rejectAbort = () => reject(Error("ABORTED"));
+    signal.addEventListener("abort", rejectAbort, { once: true });
+  });
+  try {
+    return await Promise.race([
+      Promise.resolve().then(() => {
+        if (signal.aborted) throw Error("ABORTED");
+        return work();
+      }),
+      aborted,
+    ]);
+  } finally {
+    signal.removeEventListener("abort", rejectAbort);
+  }
+}
+function classify(
+  error: unknown,
+  usage: ProviderUsage | null,
+): InitialFeedbackAiFailure {
+  if (error instanceof InitialFeedbackAiFailure)
+    return new InitialFeedbackAiFailure(
+      error.code,
+      usage ?? error.usage,
+      error.generationFailure,
+    );
+  if (error instanceof OpenAI.APIConnectionTimeoutError)
+    return new InitialFeedbackAiFailure("AI_TIMEOUT", usage);
+  const status = record(error) ? error.status : undefined;
+  return new InitialFeedbackAiFailure(
+    status === 429 ? "AI_RATE_LIMITED" : "AI_PROVIDER_UNAVAILABLE",
+    usage,
+  );
+}
+/** No ownership, consent, dispatch, grounding or publication authority is supplied here. */
+export function createInitialFeedbackRawTransport(
+  config: InitialFeedbackRawConfig,
+  dependencies: { fetch?: typeof globalThis.fetch; now?: () => number } = {},
+): InitialFeedbackRawTransport {
+  let baseUrl: string;
+  try {
+    baseUrl = assertAllowedOpenAiBaseUrl(
+      config.baseUrl ?? DEFAULT_OPENAI_BASE_URL,
+    );
+    if (
+      typeof config.apiKey !== "string" ||
+      !config.apiKey.length ||
+      typeof config.model !== "string" ||
+      !config.model.length ||
+      config.model.length > 100 ||
+      !Number.isSafeInteger(config.maxOutputTokens) ||
+      config.maxOutputTokens < 1 ||
+      config.maxOutputTokens > 32768 ||
+      !Number.isSafeInteger(config.timeoutMs) ||
+      config.timeoutMs < 1 ||
+      config.timeoutMs > 180000
+    )
+      throw Error("INVALID_CONFIG");
+  } catch {
+    throw new InitialFeedbackAiFailure("AI_OUTPUT_INVALID");
+  }
+  const fetchTransport = dependencies.fetch ?? globalThis.fetch,
+    now = dependencies.now ?? Date.now;
+  return {
+    execute: async (request) => {
+      let usage: ProviderUsage | null = null,
+        observed = false,
+        observer: Promise<void> | null = null,
+        transportFailure: InitialFeedbackAiFailure | null = null;
+      const started = now(),
+        deadline = started + config.timeoutMs;
+      const check = () => {
+        const time = now();
+        if (request.signal?.aborted)
+          throw new InitialFeedbackAiFailure("AI_CANCELLED", usage);
+        if (
+          !Number.isFinite(started) ||
+          !Number.isFinite(time) ||
+          time < started ||
+          time >= deadline
+        )
+          throw new InitialFeedbackAiFailure("AI_TIMEOUT", usage);
+      };
+      const observe = (next: ProviderUsage | null): Promise<void> => {
+        if (observed) return observer ?? Promise.resolve();
+        usage = next;
+        observed = true;
+        try {
+          observer = Promise.resolve(request.onObservedUsage(next));
+        } catch {
+          observer = Promise.reject(
+            new InitialFeedbackAiFailure("AI_PROVIDER_UNAVAILABLE", usage),
+          );
+        }
+        void observer.catch(() => undefined);
+        return observer;
+      };
+      try {
+        return await runProviderAttempt({
+          timeoutMs: config.timeoutMs,
+          signal: request.signal,
+          failure: (reason) =>
+            new InitialFeedbackAiFailure(
+              reason === "timeout" ? "AI_TIMEOUT" : "AI_CANCELLED",
+              usage,
+            ),
+          execute: async (signal) => {
+            check();
+            if (
+              typeof request.originalSource !== "string" ||
+              request.originalSource.length === 0 ||
+              request.originalSource.length >
+                INITIAL_FEEDBACK_AI_LIMITS.sourceUtf16 ||
+              !unicode(request.originalSource) ||
+              typeof request.jobTitle !== "string" ||
+              !unicode(request.jobTitle) ||
+              typeof request.jobDescription !== "string" ||
+              !unicode(request.jobDescription) ||
+              typeof request.idempotencyKey !== "string" ||
+              !/^[-A-Za-z0-9._:]{1,256}$/u.test(request.idempotencyKey) ||
+              typeof request.onObservedUsage !== "function"
+            )
+              throw new InitialFeedbackAiFailure("AI_OUTPUT_INVALID", usage);
+            const sources = buildRewriteSources(request.originalSource),
+              user = JSON.stringify({
+                resumeText: request.originalSource,
+                sources,
+                jobTitle: request.jobTitle,
+                jobDescription: request.jobDescription,
+              });
+            if (
+              Buffer.byteLength(user, "utf8") >
+              INITIAL_FEEDBACK_AI_LIMITS.payloadBytes
+            )
+              throw new InitialFeedbackAiFailure("AI_OUTPUT_INVALID", usage);
+            const guardedFetch: typeof globalThis.fetch = async (
+              input,
+              init,
+            ) => {
+              let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+              try {
+                check();
+                const url = new URL(
+                    typeof input === "string"
+                      ? input
+                      : input instanceof URL
+                        ? input.href
+                        : input.url,
+                  ),
+                  method =
+                    init?.method ??
+                    (input instanceof Request ? input.method : "");
+                if (
+                  url.href !== baseUrl + "/chat/completions" ||
+                  method.toUpperCase() !== "POST"
+                )
+                  throw new InitialFeedbackAiFailure(
+                    "AI_PROVIDER_UNAVAILABLE",
+                    usage,
+                  );
+                const response = await abortable(
+                  () => fetchTransport(input, { ...init, redirect: "error" }),
+                  signal,
+                );
+                check();
+                if (
+                  response.redirected ||
+                  (response.status >= 300 && response.status < 400)
+                ) {
+                  void response.body?.cancel().catch(() => undefined);
+                  throw new InitialFeedbackAiFailure(
+                    "AI_PROVIDER_UNAVAILABLE",
+                    usage,
+                  );
+                }
+                if (!response.body)
+                  throw new InitialFeedbackAiFailure(
+                    "AI_OUTPUT_INVALID",
+                    usage,
+                  );
+                reader = response.body.getReader();
+                const bodyReader = reader,
+                  chunks: Uint8Array[] = [];
+                let length = 0;
+                for (;;) {
+                  const chunk = await abortable(
+                    () => bodyReader.read(),
+                    signal,
+                  );
+                  if (chunk.done) break;
+                  length += chunk.value.byteLength;
+                  if (length > INITIAL_FEEDBACK_AI_LIMITS.responseBytes)
+                    throw new InitialFeedbackAiFailure(
+                      "AI_OUTPUT_INVALID",
+                      usage,
+                    );
+                  chunks.push(chunk.value);
+                }
+                // Capture billable counters from complete bounded bytes before
+                // refusing an expired or cancelled response.
+                const bytes = new Uint8Array(length);
+                let offset = 0;
+                for (const chunk of chunks) {
+                  bytes.set(chunk, offset);
+                  offset += chunk.length;
+                }
+                let outer: unknown;
+                try {
+                  outer = uniqueJson(
+                    new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+                    INITIAL_FEEDBACK_AI_LIMITS.responseBytes,
+                    false,
+                  );
+                } catch {
+                  await observe(null);
+                  throw generation("malformed_json", null, usage);
+                }
+                await observe(
+                  readProviderUsage(record(outer) ? outer.usage : undefined),
+                );
+                check();
+                return new Response(bytes, {
+                  status: response.status,
+                  headers: response.headers,
+                });
+              } catch (error) {
+                transportFailure = classify(error, usage);
+                throw transportFailure;
+              } finally {
+                if (reader) {
+                  void reader.cancel().catch(() => undefined);
+                  try {
+                    reader.releaseLock();
+                  } catch {
+                    /* A pending read is cancelled without waiting on hostile stream cleanup. */
+                  }
+                }
+              }
+            };
+            const sdk = new OpenAI({
+              apiKey: config.apiKey,
+              baseURL: baseUrl,
+              organization: null,
+              project: null,
+              adminAPIKey: null,
+              webhookSecret: null,
+              maxRetries: 0,
+              timeout: config.timeoutMs,
+              logLevel: "off",
+              logger: { debug() {}, info() {}, warn() {}, error() {} },
+              fetchOptions: { redirect: "error" },
+              fetch: guardedFetch,
+            });
+            const completion = await sdk.chat.completions.create(
+              {
+                ...proseModelOptions(config.model),
+                max_completion_tokens: config.maxOutputTokens,
+                store: false,
+                n: 1,
+                stream: false,
+                messages: [
+                  { role: "system", content: PROSE_INSTRUCTIONS },
+                  { role: "user", content: user },
+                ],
+                response_format: zodResponseFormat(
+                  ProseGenerationSchema,
+                  "initial_feedback_generation",
+                ),
+              },
+              {
+                headers: { "Idempotency-Key": request.idempotencyKey },
+                signal,
+                maxRetries: 0,
+              },
+            );
+            check();
+            const choice: unknown =
+              Array.isArray(completion.choices) &&
+              completion.choices.length === 1
+                ? completion.choices[0]
+                : null;
+            const message =
+                record(choice) && record(choice.message)
+                  ? choice.message
+                  : null,
+              content = message?.content;
+            const rawResponseSha256 =
+              typeof content === "string" && unicode(content, true)
+                ? createHash("sha256").update(content, "utf8").digest("hex")
+                : null;
+            if (
+              !message ||
+              (message.refusal !== null &&
+                message.refusal !== undefined &&
+                typeof message.refusal !== "string")
+            )
+              throw generation("schema_invalid", rawResponseSha256, usage);
+            const refused =
+              typeof message.refusal === "string" && message.refusal.length > 0;
+            const finishReason =
+              record(choice) && typeof choice.finish_reason === "string"
+                ? choice.finish_reason
+                : null;
+            if (refused) throw generation("refused", rawResponseSha256, usage);
+            if (finishReason !== "stop")
+              throw generation("truncated", rawResponseSha256, usage);
+            if (typeof content !== "string")
+              throw generation("schema_invalid", rawResponseSha256, usage);
+            let output: unknown;
+            try {
+              output = uniqueJson(
+                content,
+                INITIAL_FEEDBACK_AI_LIMITS.contentBytes,
+              );
+            } catch {
+              throw generation("malformed_json", rawResponseSha256, usage);
+            }
+            check();
+            return {
+              raw: InitialFeedbackRawSchema.parse({
+                schemaVersion: "initial-feedback-raw/1.0.0",
+                output,
+                refused,
+                finishReason,
+                usage,
+              }),
+              rawResponseSha256,
+            };
+          },
+        });
+      } catch (error) {
+        let failure = request.signal?.aborted
+          ? new InitialFeedbackAiFailure("AI_CANCELLED", usage)
+          : now() >= deadline
+            ? new InitialFeedbackAiFailure("AI_TIMEOUT", usage)
+            : classify(transportFailure ?? error, usage);
+        if (!observed) {
+          const pending = observe(null);
+          if (!request.signal?.aborted && now() < deadline) {
+            try {
+              await runProviderAttempt({
+                timeoutMs: Math.max(1, Math.floor(deadline - now())),
+                signal: request.signal,
+                failure: (reason) =>
+                  new InitialFeedbackAiFailure(
+                    reason === "timeout" ? "AI_TIMEOUT" : "AI_CANCELLED",
+                    usage,
+                  ),
+                execute: () => pending,
+              });
+            } catch (error) {
+              failure = classify(error, usage);
+            }
+          }
+        }
+        throw new InitialFeedbackAiFailure(
+          failure.code,
+          usage ?? failure.usage,
+          failure.generationFailure,
+        );
+      }
+    },
+  };
+}
+/** Resolves every source reference in order, with no filtering or assessment. */
+export function resolveInitialFeedbackGeneration(
+  originalSource: string,
+  capture: unknown,
+): QualitativeSourceProse {
+  const parsedCapture = InitialFeedbackRawCaptureSchema.safeParse(capture);
+  if (!parsedCapture.success) throw generation("schema_invalid", null, null);
+  const { raw, rawResponseSha256 } = parsedCapture.data,
+    usage = raw.usage;
+  if (raw.refused) throw generation("refused", rawResponseSha256, usage);
+  if (raw.finishReason !== "stop")
+    throw generation("truncated", rawResponseSha256, usage);
+  try {
+    const encoded = JSON.stringify(raw.output);
+    if (typeof encoded !== "string") throw Error("INVALID_JSON");
+    uniqueJson(encoded, INITIAL_FEEDBACK_AI_LIMITS.contentBytes);
+  } catch {
+    throw generation("schema_invalid", rawResponseSha256, usage);
+  }
+  const candidate = ProseGenerationSchema.safeParse(raw.output);
+  if (!candidate.success)
+    throw generation("schema_invalid", rawResponseSha256, usage);
+  let sources: ReturnType<typeof buildRewriteSources>;
+  try {
+    if (
+      typeof originalSource !== "string" ||
+      originalSource.length > INITIAL_FEEDBACK_AI_LIMITS.sourceUtf16 ||
+      !unicode(originalSource)
+    )
+      throw Error("INVALID_SOURCE");
+    sources = buildRewriteSources(originalSource);
+  } catch {
+    throw generation("source_reference_invalid", rawResponseSha256, usage);
+  }
+  const seen = new Set<number>();
+  const bullets = candidate.data.writer.bullets.map((b) => {
+    const source = sources.find((s) => s.id === b.sourceId);
+    if (!source || seen.has(b.sourceId))
+      throw generation("source_reference_invalid", rawResponseSha256, usage);
+    seen.add(b.sourceId);
+    return {
+      original: source.text,
+      rewrite: b.rewrite,
+      reasoning: b.reasoning,
+    };
+  });
+  const resolved = QualitativeSourceProseSchema.safeParse({
+    ...candidate.data,
+    writer: { summary: candidate.data.writer.summary, bullets },
+  });
+  if (!resolved.success)
+    throw generation("schema_invalid", rawResponseSha256, usage);
+  return resolved.data;
+}

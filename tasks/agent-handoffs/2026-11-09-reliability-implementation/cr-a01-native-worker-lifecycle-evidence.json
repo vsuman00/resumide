@@ -1,0 +1,58 @@
+{
+  "task": "CR-A01-S07",
+  "status": "VERIFIED_LOCAL_NATIVE_SQL_LIFECYCLE",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "packetHash": "310f2c7174f4b6f9ab69bd38fc59b6d84ffeabdee55b2d2cdc5da6ffa034ed76",
+  "operationsExecuted": 93,
+  "sourceHashes": {
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/managed-schema-worker-successor-93.json": "727c71d2a058c096fd72475daa4b3efc33c5dbaa15c6f91becb9fbbf0ce71383",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/managed-schema-clean-successor-91.json": "1a136abb977ac80b31b227807efbf981647a4fd6a497415144a001458d4c8484",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-a01-native-worker-lifecycle.py.txt": "ca3f2eda59e2df8d467787561d79e09d5516a5f1c9059354a605cfa3342e2b09",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-a01-native-worker-lifecycle.sql.txt": "6fcd03201e5602fda1f86392f22f137acb0dec3074fccf84759538a93330151a",
+    "scripts/materialize-managed-schema-successor.py": "97b5f416e053ab3c3228977122ad4d155be8ef0e1dec8455111eb4e37cb5282c",
+    "supabase/migrations/20261121224500_analysis_queue_alias_resolution.sql": "37a3dad7c788b0a17908d222f32c8adfca6a53512fdf63ca056aabdaaaf9c0cf",
+    "supabase/migrations/20261121224600_legacy_ai_usage_reader_volatility.sql": "5111d3c9503f132ec1c0f7136b9f933e71a8d1152762cf7e62abb94418f63c17"
+  },
+  "checks": [
+    "Service-role fenced worker readiness and evidence relations",
+    "Tracked upload reservation, dispatch and receipt identity with synthetic object ID",
+    "Admission replay",
+    "Live lease exclusion, real expiry and new fence on reclaim",
+    "Old fence and mismatched count refused before persistence",
+    "Current lease persists two native pages including one blank and replays once",
+    "Owner read allowed, foreign read hidden, no scoring or AI rows created",
+    "Owned deletion prepares exact object plan with original object binding",
+    "Completion withheld pending a matching synthetic absence receipt",
+    "Application records and ledger retired while owner barrier and foreign Auth row survive",
+    "Transaction rollback left zero Auth and queue fixture rows"
+  ],
+  "proofSha256": {
+    "run.log": "726774127af386adac227c88088c3acff19e7b54715ba215029b5c09bfb9a155",
+    "lifecycle.log": "537f080246f0e007e548a8da8cb7c8a70a2560b9d4cadaa5c24e9f95ec3c1529",
+    "privacy-readiness.log": "d0ce41c6fbcb47871ce122945a85804c0c729beec3c958f3f63831c801e4a3b5"
+  },
+  "earlierFailures": [
+    {
+      "reportedError": "column reference \"j.analysis_id\" is ambiguous",
+      "cause": "An actual runtime name collision aborted the first worker claim.",
+      "logSha256": "3fb03e2415e85a9c5528338f2749358e3137b902c9b0ef5398ceadf6fb16bb8c"
+    },
+    {
+      "reportedError": "live evidence write",
+      "cause": "The synthetic envelope omitted the missing_ocr_pages blocker for the blank page.",
+      "logSha256": "27bf1bf4676840ac97340b7f592ee26090f5214b55379d587963b1cfafc44eff"
+    },
+    {
+      "reportedError": "OWNED_AI_DISPOSITION_UNAVAILABLE",
+      "cause": "The authentic deletion preparation hit a sealed readiness mismatch.",
+      "logSha256": "16249beb2153e663a1c804ffdc8b3bf6791a22d3eb2312ad9b6c565587061ab1"
+    }
+  ],
+  "diagnosticLogSha256": "f182348fdf26a8ab1af57ae4d5c4987d00de348772564fe0cddbc0b0a53a8371",
+  "boundaries": [
+    "Disposable UTF-8 PostgreSQL 17 with synthetic Auth and Storage and a fail-closed pg_jsonschema stand-in",
+    "No HTTP, PDF parser or physical Storage I/O in this fixture",
+    "Managed target and consumer acceptance are open",
+    "Deployment not attempted"
+  ]
+}

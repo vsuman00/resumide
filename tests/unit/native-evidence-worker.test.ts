@@ -1,5 +1,7 @@
+import { createHash } from "node:crypto";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const pdfBytes = new Uint8Array([1]);
 const mocks = vi.hoisted(() => ({
   enabled: false,
   layoutEnabled: false,
@@ -16,7 +18,7 @@ vi.mock("../../app/lib/server/config", () => ({
   }),
 }));
 vi.mock("../../app/lib/server/storage", () => ({
-  createResumeStorage: () => ({ download: async () => new Uint8Array([1]) }),
+  createResumeStorage: () => ({ download: async () => pdfBytes }),
 }));
 vi.mock("../../app/lib/server/supabase", () => ({
   createSupabaseAdminClient: () => ({
@@ -27,7 +29,10 @@ vi.mock("../../app/lib/server/supabase", () => ({
           single: async () => ({
             data: {
               status: "extracting",
-              resume_versions: { storage_key: "owned.pdf" },
+              resume_versions: {
+                storage_key: "owned.pdf",
+                checksum: createHash("sha256").update(pdfBytes).digest("hex"),
+              },
             },
             error: null,
           }),

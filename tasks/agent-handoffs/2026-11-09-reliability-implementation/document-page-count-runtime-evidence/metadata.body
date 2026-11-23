@@ -1,0 +1,16 @@
+
+declare checker_oid regprocedure:=to_regprocedure('private.document_page_count_ready()');
+ writer_oid regprocedure:=to_regprocedure('public.persist_document_evidence(uuid,jsonb,text,text,integer)');
+ metadata_oid regprocedure:=to_regprocedure('public.read_document_page_count_readiness()');
+ fenced_oid regprocedure:=to_regprocedure('public.persist_analysis_stage_v2(uuid,text,integer,uuid,text,jsonb)');
+begin
+ return jsonb_build_object(
+  'schemaVersion','document-page-count-readiness/1.0.0',
+  'profileVersion','document-page-count-native/1.0.0',
+  'checkerSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=checker_oid),
+  'writerSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=writer_oid),
+  'metadataSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=metadata_oid),
+  'schemaReady',private.document_page_count_ready(),
+  'writerExecutable',coalesce(has_function_privilege('service_role',writer_oid,'EXECUTE'),false),
+  'fencedWriterExecutable',coalesce(has_function_privilege('service_role',fenced_oid,'EXECUTE'),false));
+end;

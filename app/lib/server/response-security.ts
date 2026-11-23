@@ -15,7 +15,13 @@ export async function responseSecurity(
     environment: config.NODE_ENV,
     cspMode: config.CSP_MODE,
     cspReportUri: config.CSP_REPORT_URI || undefined,
-  }))
+  })) {
+    if (
+      name === "referrer-policy" &&
+      response.headers.get(name) === "no-referrer"
+    )
+      continue;
     response.headers.set(name, value);
+  }
   return response;
 }

@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { getAnalysisConfig } from "./config";
 import {
+  assertResumeSource,
   extractResumeText,
   ResumeExtractionError,
   type ResumeExtractionErrorCode,
@@ -21,7 +22,14 @@ import { buildNativeEvidence } from "./native-evidence";
 import { createSupabaseAdminClient } from "./supabase";
 import { NativeLayoutSchema } from "../native-layout-schema";
 
-import { extractDocumentForReview } from "./document-extraction";
+import { extractDocumentForReviewWithMetadata } from "./document-extraction";
+import {
+  AnalysisStageFenceError,
+  assertAnalysisStageActive,
+  assertAnalysisStageLease,
+  persistAnalysisStage,
+  type AnalysisStageOptions,
+} from "./analysis-stage-fence";
 
 const EXTRACTOR_VERSION = "unpdf-v1";
 
@@ -90,12 +98,13 @@ export async function extractPdfForAnalysis(
           maxPages: args.maxPages,
           maxCharacters: args.maxCharacters,
           includeLayout: args.includeLayout,
+          signal: controller.signal,
         });
         const remainingMs = args.timeoutMs - (performance.now() - startedAt);
         if (controller.signal.aborted || remainingMs <= 0) {
           throw new ExtractionStageFailure("TIMEOUT");
         }
-        return resolveExtraction(
+        const result = await resolveExtraction(
           extracted,
           args,
           {
@@ -108,6 +117,13 @@ export async function extractPdfForAnalysis(
           startedAt,
           controller.signal,
         );
+        if (
+          controller.signal.aborted ||
+          performance.now() - startedAt >= args.timeoutMs
+        ) {
+          throw new ExtractionStageFailure("TIMEOUT");
+        }
+        return result;
       })(),
       new Promise<never>((_, reject) => {
         timeout = setTimeout(() => {
@@ -241,8 +257,11 @@ async function transition(
   next: string,
   processId: string,
   requestId: string,
+  options: AnalysisStageOptions,
 ) {
-  const { data, error } = await createSupabaseAdminClient().rpc(
+  const { data, error } = await persistAnalysisStage(
+    createSupabaseAdminClient(),
+    analysisId,
     "transition_analysis",
     {
       p_analysis_id: analysisId,
@@ -252,14 +271,18 @@ async function transition(
       p_process_id: processId,
       p_request_id: requestId,
     },
+    options,
   );
   if (error || data !== true) throw new Error("Analysis transition failed.");
 }
 
 export async function processExtractionStage(
   analysisId: string,
+  options: AnalysisStageOptions = {},
 ): Promise<void> {
+  assertAnalysisStageActive(options);
   const admin = createSupabaseAdminClient();
+  await assertAnalysisStageLease(admin, analysisId, options);
   const processId = `extractor-${randomUUID()}`;
   const requestId = `worker-${randomUUID()}`;
   const { data, error } = await admin
@@ -269,15 +292,30 @@ export async function processExtractionStage(
     )
     .eq("id", analysisId)
     .single();
+  assertAnalysisStageActive(options);
   if (error || !data) throw new Error("Analysis input is unavailable.");
 
   let status = data.status;
   if (status === "quarantined") {
-    await transition(analysisId, "quarantined", "queued", processId, requestId);
+    await transition(
+      analysisId,
+      "quarantined",
+      "queued",
+      processId,
+      requestId,
+      options,
+    );
     status = "queued";
   }
   if (status === "queued") {
-    await transition(analysisId, "queued", "extracting", processId, requestId);
+    await transition(
+      analysisId,
+      "queued",
+      "extracting",
+      processId,
+      requestId,
+      options,
+    );
     status = "extracting";
   }
   if (status !== "extracting") {
@@ -290,38 +328,54 @@ export async function processExtractionStage(
   if (!version) throw new Error("Resume version is unavailable.");
 
   try {
+    await assertAnalysisStageLease(admin, analysisId, options);
     const bytes = await createResumeStorage().download(version.storage_key);
+    await assertAnalysisStageLease(admin, analysisId, options);
     const config = getAnalysisConfig();
     if (config.EVIDENCE_REVIEW_ENABLED) {
-      const envelope = await extractDocumentForReview({
-        bytes,
-        context: {
-          id: randomUUID(),
-          ownerId: data.owner_id,
+      const { envelope, pageCount } =
+        await extractDocumentForReviewWithMetadata({
+          bytes,
+          context: {
+            id: randomUUID(),
+            ownerId: data.owner_id,
+            analysisId,
+            sourceId: version.id,
+            inputSha256: version.checksum,
+            createdAt: new Date().toISOString(),
+            retentionPolicyId: "resume-retention-v1",
+          },
+          maxBytes: config.MAX_UPLOAD_BYTES,
+          maxPages: config.MAX_PDF_PAGES,
+          maxCharacters: config.MAX_EXTRACTED_CHARACTERS,
+          timeoutMs: config.EXTRACTION_TIMEOUT_MS,
+          signal: options.signal,
+          assertOcrAdmission: async () => {
+            if (!options.lease)
+              throw new AnalysisStageFenceError("ANALYSIS_FENCE_REQUIRED");
+            await assertAnalysisStageLease(admin, analysisId, options);
+          },
+        });
+      assertAnalysisStageActive(options);
+      const { data: persisted, error: persistError } =
+        await persistAnalysisStage(
+          admin,
           analysisId,
-          sourceId: version.id,
-          inputSha256: version.checksum,
-          createdAt: new Date().toISOString(),
-          retentionPolicyId: "resume-retention-v1",
-        },
-        maxBytes: config.MAX_UPLOAD_BYTES,
-        maxPages: config.MAX_PDF_PAGES,
-        maxCharacters: config.MAX_EXTRACTED_CHARACTERS,
-        timeoutMs: config.EXTRACTION_TIMEOUT_MS,
-      });
-      const { data: persisted, error: persistError } = await admin.rpc(
-        "persist_document_evidence",
-        {
-          p_analysis_id: analysisId,
-          p_envelope: envelope,
-          p_process_id: processId,
-          p_request_id: requestId,
-        },
-      );
+          "persist_document_evidence",
+          {
+            p_analysis_id: analysisId,
+            p_envelope: envelope,
+            p_page_count: pageCount,
+            p_process_id: processId,
+            p_request_id: requestId,
+          },
+          options,
+        );
       if (persistError || persisted !== true)
         throw new Error("Document evidence persistence failed.");
       return;
     }
+    assertResumeSource(bytes, config.MAX_UPLOAD_BYTES, version.checksum);
     const extracted = await extractPdfForAnalysis({
       bytes,
       maxBytes: config.MAX_UPLOAD_BYTES,
@@ -330,7 +384,10 @@ export async function processExtractionStage(
       timeoutMs: config.EXTRACTION_TIMEOUT_MS,
       includeLayout: config.NATIVE_LAYOUT_ENABLED,
     });
-    const { data: persisted, error: persistError } = await admin.rpc(
+    assertAnalysisStageActive(options);
+    const { data: persisted, error: persistError } = await persistAnalysisStage(
+      admin,
+      analysisId,
       config.NATIVE_LAYOUT_ENABLED
         ? "persist_native_layout_extraction"
         : "persist_analysis_extraction",
@@ -361,11 +418,13 @@ export async function processExtractionStage(
             }
           : {}),
       },
+      options,
     );
     if (persistError || persisted !== true) {
       throw new Error("Extraction persistence failed.");
     }
   } catch (caught) {
+    assertAnalysisStageActive(options);
     const failureStatus = extractionFailureStatus(caught);
     if (failureStatus) {
       await transition(
@@ -374,6 +433,7 @@ export async function processExtractionStage(
         failureStatus,
         processId,
         requestId,
+        options,
       );
       return;
     }

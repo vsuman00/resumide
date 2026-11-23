@@ -1,0 +1,770 @@
+{
+  "task": "CR-A01-S05",
+  "checkedDate": "2026-11-21",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "checkout": "dirty integration worktree",
+  "status": "VERIFIED_LOCAL",
+  "parentStatus": "PARTIAL",
+  "node": "22.23.4",
+  "inputSha256": {
+    "app/lib/server/extract.ts": "efd4827ea3d54ced7d82898a3a5dc0631ece197a9a11a285b4d27ca96619e732",
+    "app/lib/server/ocr/pdf-detection.ts": "941b751c990bc4b0c1455b9017122b9e419f59db451f87ae3a5c66af9b9ae142",
+    "app/lib/server/document-extraction.ts": "1528909831eb7d0a694b49ffc4e6e585490973d14f2de141ac14da9b91635879",
+    "app/lib/server/extraction-stage.ts": "5f084ec7f59c6482df82539aa68fda7747f69fc196f2d5e192a64b2701238ee8",
+    "tests/unit/document-extraction.test.ts": "5244d3bdedc9e58683f831df61b5d0a40304febffdc358ba94da0172f247cee1",
+    "tests/unit/native-layout-limits.test.ts": "bddaa7ddab570ac6aa52a399f6dacff65366fc34d6378b4776d4424c6b5abec3",
+    "scripts/extraction-benchmark-engineering.ts": "80bf984026899b258ecc57543b814ddb0190b718ca56dc802c367a45f22b90e3",
+    "supabase/migrations/20261117060054_document_evidence_page_count.sql": "f3c88c69d760ed3de8e1b7ecd44e72da84628f6589f19366c4bee3fd11e42f77",
+    "supabase/migrations/20261110082455_analysis_stage_write_fencing.sql": "a6e1775315ad5cb05017a5a3adb86354e1ac21d7d4a458f0986194320b4320cb",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-a01-page-count-native-fixture.py.txt": "243535c5733d94badd49e068deacb8c68156e979f5d6fae48d48bcb721880339",
+    "tests/unit/ocr/extraction-router.test.ts": "9d74c1052661af4bb3c8786dacb9581df755413c87399b4b7dea51a4681a3cf7"
+  },
+  "unit": [
+    {
+      "files": 322,
+      "passed": 6762,
+      "failed": 0,
+      "pending": 0,
+      "sha256": "2fa5945a29ab924599f53ff45dc6d3abe3a66b438298a253f832a41bfa5f2255"
+    },
+    {
+      "files": 1,
+      "passed": 3,
+      "failed": 0,
+      "pending": 0,
+      "sha256": "06ee79a0da32bae22142966ab723a51922746fb6bb88c3291c317e2a6cd9cc61"
+    }
+  ],
+  "staticChecks": {
+    "commands": [
+      "format:check",
+      "check:aa1:source",
+      "typecheck",
+      "lint",
+      "build",
+      "build:worker"
+    ],
+    "exitCode": 0,
+    "lintWarnings": 4,
+    "logSha256": "00d879bd17c08617b549c2d2aef9785a8dc50bdf320c85879083adb036fd6733"
+  },
+  "ocr": {
+    "manifest": {
+      "status": "manifest_frozen_before_recognition",
+      "manifestLock": "eaf3a8d0f92722c63ddc791c1025c0f73795a1b024911fef5fa1a6a1d5857961",
+      "configurationHash": "9f907379ea7e32f2f3f497f02af8b8576a0cb5e207042ced04633c90cabac58a",
+      "receipt": {
+        "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+        "evaluationConfig": {
+          "psm": 3,
+          "maxDpi": 150,
+          "model": "text-fusion"
+        },
+        "versions": {
+          "engine": "tesseract-5.3.0-2/text-fusion-v4",
+          "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+          "languageData": "model-bundle-sha256:74a6c07f4943981367364af90d830c36c6de018cb0c7762caba61e51189c44cc"
+        },
+        "modelManifest": {
+          "schemaVersion": "ocr-text-fusion/4.0.0",
+          "models": [
+            {
+              "id": "fast",
+              "sha256": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2",
+              "oem": 3
+            },
+            {
+              "id": "best",
+              "sha256": "8280aed0782fe27257a68ea10fe7ef324ca0f8d85bd2fd145d1c2b560bcb66ba",
+              "oem": 1
+            }
+          ],
+          "psm": 3,
+          "maxDpi": 150,
+          "thresholdingMethod": 0,
+          "selector": {
+            "version": "aligned-text/4.0.0",
+            "preserveAlphabeticBaseline": true,
+            "preserveUppercaseWhenAlternateIntroducesLowercase": true,
+            "reciprocal": true,
+            "minimumIou": 0.8,
+            "maximumWordsPerLine": 128,
+            "preserveTokensContaining": ["digits", "@", "://", "whitespace"],
+            "policy": "prefer-best-for-unique-aligned-punctuation-text-otherwise-fast",
+            "confidenceCalibration": "none"
+          }
+        },
+        "sourceCode": {
+          "app/lib/server/extraction-benchmark.ts": "d8f392fd233a0f268ea7e3aaf2595a394b3d2da353a191edefc012a15020b5ba",
+          "app/lib/server/extract.ts": "efd4827ea3d54ced7d82898a3a5dc0631ece197a9a11a285b4d27ca96619e732",
+          "app/lib/server/evidence-fields.ts": "a21e2280a556bf97087179dfc6e9b8468e978591d1d24c8b807000fbfc1d8ff7",
+          "app/lib/server/parsing/contact.ts": "41c7c81b820b64a1dde2fb59bceaa9b080e4399f2aa10f6a3179ee04fdccd34e",
+          "app/lib/server/parsing/dates.ts": "eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72",
+          "app/lib/server/parsing/sections.ts": "e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1",
+          "app/lib/server/native-evidence.ts": "dcd756d6970e1a6a0885377c731c9ae73e97684e591eecbf4fc7c9e134fae037",
+          "app/lib/server/native-evidence-schema.ts": "fa26cede5a7a7f4f4910bd6099b44b1bada463eafbdfeb6fd48e164ecea21e39",
+          "app/lib/server/document-evidence.ts": "f4d16c019146924f2390fa764131e3c6b9f69c65531d90315f0a64645a244e67",
+          "app/lib/server/ocr/pdf-detection.ts": "941b751c990bc4b0c1455b9017122b9e419f59db451f87ae3a5c66af9b9ae142",
+          "app/lib/server/ocr/selective.ts": "2d647df8cd51d36fd1fbd489cc7464d8ef3b8f098fc674743b871ea8a7f04325",
+          "app/lib/server/ocr/local-container.ts": "45234904a4dad16ccc5b998c679ce6ae1850f72650edcc2920824bec27fc1f65",
+          "app/lib/server/ocr/profiles.ts": "44eb3115fcff823c2f271917d317b2bbcc824b3efbd0f113fa4045167e39cfa8",
+          "scripts/ocr-runtime/runner.py": "d683e041106fdf1d765c1264dd7fbb7a0a17b971c301e0b6b47e238e1d7bbe63",
+          "scripts/ocr-runtime/Dockerfile": "9d1e7b1066a1b6678c99533fd7e06eb8ff967ab068730bf6024d78269a979991",
+          "scripts/extraction-benchmark-engineering.ts": "80bf984026899b258ecc57543b814ddb0190b718ca56dc802c367a45f22b90e3",
+          "tests/fixtures/native-pdf.ts": "50d1976a1edc2b96c3a34a208d5e7c424447dfcbef61abecf8840726baca2df8",
+          "tests/fixtures/ocr-print-pilot.ts": "b9081984b4865676ca25fe5301cc00e96c57d747075192453b24f8605559ab74",
+          "package-lock.json": "d190bf3f360b0b2c4a309853ae00c19cbd39e1e58458e5730fda4a626a80d3a9",
+          "vitest.config.ts": "ecd6b6d407a69ebc631187b2d281b7c70675c5f5421d098f190b988eb47af399",
+          "tests/fixtures/extraction-repair-development.ts": "c4e81ba36711cff36b06424b215e6191abd713725d14d8c4ddaae553871e04b4",
+          "tests/fixtures/extraction-repair-heldout.ts": "4a588a6c455d7101aa066e84f4574c5e7f8fda72819576f720eee43b4fb2ed66",
+          "docs/evaluation/aa1-repair-20261017-heldout-freeze.json": "6c13d2d3757acf48f70bc8e34a812d32004d5fc1a0a0dab87488693c4bbdd788",
+          "tests/fixtures/extraction-repair-confirmation.ts": "8eccb279f50ff412df5fa3afe49fea46295bf3e8c9cc39e770b056b4f1ae5975",
+          "docs/evaluation/aa1-repair-20261017-confirmation-freeze.json": "1c02a13fcd4c2e3d03715b06cfc00bca5fb885aebfe37a4f54a719e88fcfa893",
+          "app/lib/server/evidence-fields-v1.ts": "ae802d3b4e0757ede32aabec5a4b28616ac4314b160b9dc69bf064b90f86ca55",
+          "tests/fixtures/extraction-repair-validation.ts": "9e4359887ceb615bed85b522dc0782a1e198ecba0eae8b5c9840880808dfc4c0",
+          "tests/fixtures/extraction-repair-verification.ts": "e57cd2345e8e2a13f5e75a62e94734741fee33c6d8b3733aad1cce1801bff1d2",
+          "tests/fixtures/extraction-repair-assessment.ts": "0e91958141554a494b9106269163b9f9948f9afb7c5f615356ca453cf8572135",
+          "tests/fixtures/extraction-repair-acceptance.ts": "17e844b353ccc76c9b0413206fccce4adfa2e337f808caee831a7962dbfb1dfe",
+          "tests/fixtures/extraction-repair-runtime-check.ts": "3e4de155736743cfcbe362cd8b85d6dcd87ce4495b549bfb3f2a42fc5f134e3e"
+        },
+        "sourceFamilies": [
+          {
+            "id": "repair-dev-separated-header",
+            "partition": "development",
+            "authoredSourceHash": "9994502c29586024aa6c42fa7dd327f63f18bbe6916231a4531651048e24a207"
+          },
+          {
+            "id": "repair-dev-title-first",
+            "partition": "development",
+            "authoredSourceHash": "f4f60f1866cacaedbd6366d014186d26e8b7b4e599e8ba9325225e8d016d1a32"
+          },
+          {
+            "id": "repair-dev-inline-employment",
+            "partition": "development",
+            "authoredSourceHash": "7112c27b21dc29f8d6065044116c16b3e8a6045e436e0ff5fd80b9fb8a7a02a1"
+          },
+          {
+            "id": "repair-dev-header-0",
+            "partition": "development",
+            "authoredSourceHash": "efe48dd836b5c23f075f6f00642b9f122be2bf655f104bf711226eaaaf398d1d"
+          },
+          {
+            "id": "repair-dev-header-1",
+            "partition": "development",
+            "authoredSourceHash": "b1b3d4e7d31daef9cd4f475b6436c4da48ad742b6590829a0d7ef178d9e6aa3f"
+          },
+          {
+            "id": "repair-dev-header-2",
+            "partition": "development",
+            "authoredSourceHash": "64cff11b1e2e6db239db5cb4c45dcd4ba3934725985be572d0d369f02b349044"
+          },
+          {
+            "id": "runtime-check-cedar",
+            "partition": "locked",
+            "authoredSourceHash": "5bb4ccc0e3733db5abdc45a4a16f3bb51860c5f63038ad495101fe408f705bbf"
+          },
+          {
+            "id": "runtime-check-harbor",
+            "partition": "locked",
+            "authoredSourceHash": "15c468e9ff190ac7c9158e3759092565c1243e23551cbfe03c90886113e58a5b"
+          },
+          {
+            "id": "runtime-check-maple",
+            "partition": "locked",
+            "authoredSourceHash": "5020e38e9fd016b8b1e0d9238558cd01fc69fe22b30654fd7ae31650da1e58d3"
+          },
+          {
+            "id": "runtime-check-brook",
+            "partition": "locked",
+            "authoredSourceHash": "0619f0c9199e056cd19d53fdd0079e3c2e52982aaa8cf1e66f78b23eaf168cd6"
+          }
+        ],
+        "runtimePlatform": "darwin/arm64",
+        "scope": "synthetic_engineering_only",
+        "partition": "locked",
+        "corpusSet": "runtime-check-20261017"
+      },
+      "sources": [
+        {
+          "id": "print-runtime-check-cedar-clean-v1",
+          "family": "runtime-check-cedar",
+          "segment": "clean",
+          "partition": "locked",
+          "sourceHash": "0b595275dafcff2288a5ac9bc94d0a3e5532327999c3fcf22c36cf23845e9403",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "706277245cefd98cbad62aeceab359e9caa0beabef1168bad116549eeeb56a86"
+        },
+        {
+          "id": "print-runtime-check-cedar-challenging-v1",
+          "family": "runtime-check-cedar",
+          "segment": "challenging",
+          "partition": "locked",
+          "sourceHash": "5b8e1957f8ce0981e3893b51f858fc8656647d570d6c9424941243d3d8870757",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "706277245cefd98cbad62aeceab359e9caa0beabef1168bad116549eeeb56a86"
+        },
+        {
+          "id": "print-runtime-check-cedar-mixed-v1",
+          "family": "runtime-check-cedar",
+          "segment": "mixed",
+          "partition": "locked",
+          "sourceHash": "6b5804d12804c5d87dcbefeb8763cff4b025a6c4ef4226d24871cb603553c652",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "d9330329081ca55e948da44b0bdffe50324209e28b795826151da9ba21e8c638"
+        },
+        {
+          "id": "print-runtime-check-harbor-clean-v1",
+          "family": "runtime-check-harbor",
+          "segment": "clean",
+          "partition": "locked",
+          "sourceHash": "ae4f05fe3654d3fcf24a2bb3b3a2a6a2c7a0488be0797de77479228535446828",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "efc9f6c7132030ffcc6f40cf1f6d807ccd58aee47902cf7e20cd54361b5067af"
+        },
+        {
+          "id": "print-runtime-check-harbor-challenging-v1",
+          "family": "runtime-check-harbor",
+          "segment": "challenging",
+          "partition": "locked",
+          "sourceHash": "96d658a77919db846ed6ce8c2297aca308d4315186d96541ae11fa5597b1d451",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "efc9f6c7132030ffcc6f40cf1f6d807ccd58aee47902cf7e20cd54361b5067af"
+        },
+        {
+          "id": "print-runtime-check-harbor-mixed-v1",
+          "family": "runtime-check-harbor",
+          "segment": "mixed",
+          "partition": "locked",
+          "sourceHash": "918e94320878e84a8c3f93626f53904229bce1acb6cfdff57e26a98158f2aa90",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "026af6311b5b06d751f42c7a5008931877ce58c4b0cc33262382c2ce140450fa"
+        },
+        {
+          "id": "print-runtime-check-maple-clean-v1",
+          "family": "runtime-check-maple",
+          "segment": "clean",
+          "partition": "locked",
+          "sourceHash": "9fe74c4c4ba19130f51f4ea5d42bde2aa8b01b395352a17fe75d609458fb662c",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "105a06da48f4a116c417d93df7baf7bd6a0d9dc795675518d94cbf8deb513def"
+        },
+        {
+          "id": "print-runtime-check-maple-challenging-v1",
+          "family": "runtime-check-maple",
+          "segment": "challenging",
+          "partition": "locked",
+          "sourceHash": "cabed54b57233ba0ff7bddea77ae5a45a4527222638040f8325cd028a612a54b",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "105a06da48f4a116c417d93df7baf7bd6a0d9dc795675518d94cbf8deb513def"
+        },
+        {
+          "id": "print-runtime-check-maple-mixed-v1",
+          "family": "runtime-check-maple",
+          "segment": "mixed",
+          "partition": "locked",
+          "sourceHash": "3454b42a4c42be2bee38d7d1cb11db5eccbcbc66767fce4bd5586f3834e01e7f",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "91a67faa3c4548aa674cae314e114eb9ae2d36990e4736f2b16f448bee2e3f52"
+        },
+        {
+          "id": "print-runtime-check-brook-clean-v1",
+          "family": "runtime-check-brook",
+          "segment": "clean",
+          "partition": "locked",
+          "sourceHash": "94494f30a1bd704e2b55926f19fab44935d8eca1ac6ae760bc1fdd78d1b79132",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "dfebd8aaa1609febdd2b84e4c154c4a31a30bbd95c943ca57e0b1ab9a163a830"
+        },
+        {
+          "id": "print-runtime-check-brook-challenging-v1",
+          "family": "runtime-check-brook",
+          "segment": "challenging",
+          "partition": "locked",
+          "sourceHash": "c7362b4265ca6f382d4a4d72a72dfffc5c63f6d5a9906a82a61982ce008ea8bf",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "dfebd8aaa1609febdd2b84e4c154c4a31a30bbd95c943ca57e0b1ab9a163a830"
+        },
+        {
+          "id": "print-runtime-check-brook-mixed-v1",
+          "family": "runtime-check-brook",
+          "segment": "mixed",
+          "partition": "locked",
+          "sourceHash": "8393974607ed3991b854b5b85320c232a29e460c551bfe680dda6fa966dfefc7",
+          "generatorVersion": "normal-font-pdf-v1",
+          "labelsHash": "24a99af91c0ebd1f05b5dd511ba621f9937ac22fc97d65bc569a654dbb587b6f"
+        }
+      ]
+    },
+    "report": {
+      "schemaVersion": "extraction-report/1.0.0",
+      "fieldEvaluatorVersion": "whitespace-grounded-fields/1.0.0",
+      "mode": "engineering",
+      "partition": "locked",
+      "manifestLock": "eaf3a8d0f92722c63ddc791c1025c0f73795a1b024911fef5fa1a6a1d5857961",
+      "datasetVersion": "aa1-runtime-check-20261017-locked-v1",
+      "producerVersion": "document-evidence/2.0.0",
+      "providerVersion": "tesseract-5.3.0-2/text-fusion-v4/poppler-22.12.0-2+deb12u3/dpi-150",
+      "configurationHash": "9f907379ea7e32f2f3f497f02af8b8576a0cb5e207042ced04633c90cabac58a",
+      "normalizationPolicy": "unicode-codepoint-whitespace-v1",
+      "segments": [
+        {
+          "id": "clean",
+          "scan": "clean",
+          "layout": "single-column",
+          "documents": 4,
+          "sourceFamilies": 4,
+          "metrics": {
+            "nativeCharacterAccuracy": null,
+            "ocrCharacterErrorRate": 0,
+            "fieldPrecision": 1,
+            "fieldRecall": 1,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1
+          },
+          "confidenceIntervals95": {
+            "nativeCharacterAccuracy": null,
+            "ocrCharacterErrorRate": [0, 0],
+            "fieldPrecision": [1, 1],
+            "fieldRecall": [1, 1],
+            "pageCoverage": [1, 1],
+            "orderedLineAgreement": [1, 1]
+          },
+          "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+          "bootstrap": {
+            "unit": "source_family",
+            "resamples": 10000,
+            "seed": 20261011
+          },
+          "failureRate": 0,
+          "abstentionRate": 0,
+          "latencyMs": {
+            "p50": 1418.795083000001,
+            "p95": 1480.432292
+          },
+          "apiFeeMicros": 0,
+          "computeCostMicros": null,
+          "thresholdFailures": []
+        },
+        {
+          "id": "challenging",
+          "scan": "challenging",
+          "layout": "single-column",
+          "documents": 4,
+          "sourceFamilies": 4,
+          "metrics": {
+            "nativeCharacterAccuracy": null,
+            "ocrCharacterErrorRate": 0,
+            "fieldPrecision": 1,
+            "fieldRecall": 1,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1
+          },
+          "confidenceIntervals95": {
+            "nativeCharacterAccuracy": null,
+            "ocrCharacterErrorRate": [0, 0],
+            "fieldPrecision": [1, 1],
+            "fieldRecall": [1, 1],
+            "pageCoverage": [1, 1],
+            "orderedLineAgreement": [1, 1]
+          },
+          "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+          "bootstrap": {
+            "unit": "source_family",
+            "resamples": 10000,
+            "seed": 20261011
+          },
+          "failureRate": 0,
+          "abstentionRate": 0,
+          "latencyMs": {
+            "p50": 1329.1275840000017,
+            "p95": 1416.7099170000001
+          },
+          "apiFeeMicros": 0,
+          "computeCostMicros": null,
+          "thresholdFailures": []
+        },
+        {
+          "id": "mixed",
+          "scan": "clean",
+          "layout": "single-column",
+          "documents": 4,
+          "sourceFamilies": 4,
+          "metrics": {
+            "nativeCharacterAccuracy": 1,
+            "ocrCharacterErrorRate": 0,
+            "fieldPrecision": 1,
+            "fieldRecall": 1,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1
+          },
+          "confidenceIntervals95": {
+            "nativeCharacterAccuracy": [1, 1],
+            "ocrCharacterErrorRate": [0, 0],
+            "fieldPrecision": [1, 1],
+            "fieldRecall": [1, 1],
+            "pageCoverage": [1, 1],
+            "orderedLineAgreement": [1, 1]
+          },
+          "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+          "bootstrap": {
+            "unit": "source_family",
+            "resamples": 10000,
+            "seed": 20261011
+          },
+          "failureRate": 0,
+          "abstentionRate": 0,
+          "latencyMs": {
+            "p50": 1743.949958000001,
+            "p95": 1851.0571250000012
+          },
+          "apiFeeMicros": 0,
+          "computeCostMicros": null,
+          "thresholdFailures": []
+        }
+      ],
+      "failures": [],
+      "releaseBlockers": [
+        "synthetic_corpus_not_representative",
+        "missing_calibratedPolicy",
+        "missing_representativeCorpusReceipt",
+        "missing_approvedThresholdsReceipt",
+        "missing_sampleSizeJustificationReceipt",
+        "independent_human_validation_missing",
+        "calibration_partition_missing"
+      ],
+      "engineeringPassed": true,
+      "releasePassed": false,
+      "exitCode": 0,
+      "perField": [
+        {
+          "field": "name",
+          "truePositive": 12,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        {
+          "field": "email",
+          "truePositive": 12,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        {
+          "field": "phone",
+          "truePositive": 12,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        {
+          "field": "employer",
+          "truePositive": 12,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        {
+          "field": "role",
+          "truePositive": 12,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        {
+          "field": "dates",
+          "truePositive": 12,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        {
+          "field": "education",
+          "truePositive": 12,
+          "falsePositive": 0,
+          "falseNegative": 0
+        },
+        {
+          "field": "certification",
+          "truePositive": 12,
+          "falsePositive": 0,
+          "falseNegative": 0
+        }
+      ],
+      "authoritativeScoresEmitted": 0,
+      "criticalFields": {
+        "predicted": 96,
+        "expected": 96
+      },
+      "resourceMeasurements": {
+        "computeCost": "host_rate_unavailable",
+        "memoryAndCpu": "not_aggregated_in_this_harness"
+      },
+      "limitations": [
+        "4_authored_locked_families_not_representative",
+        "no_calibration_or_representative_recognition",
+        "independent_human_validation_deferred",
+        "single_column_only"
+      ]
+    },
+    "manifestLogSha256": "9ca6b6b354fb81c82ee04baa8dbbac25ffc8021e8e746d24f7f4096a130afc7b",
+    "recognitionLogSha256": "c3a54e969c406b85e5e91ffd8205de536c2513ec5e2395950529489f31053153",
+    "earlierManifestLock": "e8b110b5829075fdf4507adacdfb82aeab1423ba3e1fa63d7b96fb79223c071e",
+    "adverseBeforeFinalReceiptBinding": [
+      {
+        "status": "adverse_receipt_pre_execution",
+        "receiptSha256": "5871955c330e1850796d06cf9177244537dbbd6ecd5ea6c35d0a42e4d900c47d",
+        "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+        "config": {
+          "psm": 3,
+          "maxDpi": 150
+        },
+        "sources": [
+          {
+            "id": "encrypted-valid-blank-v1",
+            "properties": {
+              "encryption": "standard_r2_empty_user_password"
+            },
+            "sourceSha256": "a8df45c54164e3c8d5adf3e6751c48ad1369cfe7cda2323e7190af0a83e39994",
+            "datasetType": "synthetic_engineering_only",
+            "partition": "development",
+            "annotatorType": "ai",
+            "humanValidation": "not_evaluated",
+            "representativeValidity": "not_evaluated",
+            "persistedRawAssets": false
+          },
+          {
+            "id": "oversized-embedded-raster-v1",
+            "properties": {
+              "width": 4000,
+              "height": 4000,
+              "sourcePixels": 16000000,
+              "decodedRasterBytes": 16000000
+            },
+            "sourceSha256": "9b7b7af1ef915d37202708840805c38568580c5f1e57bc5a2afb7453b30fb4c8",
+            "datasetType": "synthetic_engineering_only",
+            "partition": "development",
+            "annotatorType": "ai",
+            "humanValidation": "not_evaluated",
+            "representativeValidity": "not_evaluated",
+            "persistedRawAssets": false
+          }
+        ]
+      },
+      {
+        "status": "adverse_runtime_verified",
+        "receiptSha256": "5871955c330e1850796d06cf9177244537dbbd6ecd5ea6c35d0a42e4d900c47d",
+        "completedAt": "2026-11-21T14:25:42.392Z",
+        "datasetType": "synthetic_engineering_only",
+        "humanValidation": "not_evaluated",
+        "representativeValidity": "not_evaluated",
+        "persistedRawAssets": false,
+        "calibration": "not_evaluated",
+        "productionEnablement": false,
+        "automaticRetries": 0,
+        "results": [
+          {
+            "id": "encrypted-valid-blank-v1",
+            "sourceSha256": "a8df45c54164e3c8d5adf3e6751c48ad1369cfe7cda2323e7190af0a83e39994",
+            "sourceBytes": 651,
+            "properties": {
+              "encryption": "standard_r2_empty_user_password"
+            },
+            "status": "failed",
+            "errorCode": "engine_failure",
+            "wallMs": 438.32075,
+            "createMs": 67.63695799999994,
+            "attachMs": 155.27495799999997,
+            "terminalState": {
+              "exitCode": 1,
+              "oomKilled": false,
+              "running": false
+            },
+            "isolation": "verified",
+            "cleanup": "verified",
+            "nativePreservation": "verified",
+            "startupScope": "new_container_create_and_attach_wall_times_cached_image_not_host_or_engine_cold_start",
+            "resourceUsage": null,
+            "failedResourceReason": "failed_attempt_cpu_and_memory_unmeasured",
+            "renderedPixels": null
+          },
+          {
+            "id": "oversized-embedded-raster-v1",
+            "sourceSha256": "9b7b7af1ef915d37202708840805c38568580c5f1e57bc5a2afb7453b30fb4c8",
+            "sourceBytes": 16249,
+            "properties": {
+              "width": 4000,
+              "height": 4000,
+              "sourcePixels": 16000000,
+              "decodedRasterBytes": 16000000
+            },
+            "status": "insufficient",
+            "errorCode": null,
+            "wallMs": 803.1228329999999,
+            "createMs": 68.30070799999999,
+            "attachMs": 536.2193750000001,
+            "terminalState": {
+              "exitCode": 0,
+              "oomKilled": false,
+              "running": false
+            },
+            "isolation": "verified",
+            "cleanup": "verified",
+            "nativePreservation": "verified",
+            "startupScope": "new_container_create_and_attach_wall_times_cached_image_not_host_or_engine_cold_start",
+            "resourceUsage": {
+              "kind": "child_process_rusage",
+              "cpuTimeMs": 380.488,
+              "maxChildRssBytes": 55099392,
+              "rendererCalls": 1,
+              "recognitionCalls": 1,
+              "containerMemoryPeak": {
+                "kind": "cgroup_v2_memory_peak",
+                "measuredThrough": "recognition_complete",
+                "valueBytes": 49119232,
+                "reason": null
+              }
+            },
+            "failedResourceReason": null,
+            "renderedPixels": 2103750
+          }
+        ]
+      }
+    ],
+    "adverseLogSha256": "50f9d42b9bee961a40ca61ea40aa666d5d923de24cd008f0f5c5ba10557e7f8f",
+    "residualOcrAttempts": 0
+  },
+  "postgres": {
+    "majorVersion": 17,
+    "result": "PASS: measured count, blank page, exact replay, known conflict, unknown historical replay, malformed and wrong-owner rejection, lease and privacy denial, rollback after partial writes, and application-role isolation.",
+    "fixture": "cr-a01-page-count-native-fixture.py.txt",
+    "scope": "Actual five-argument writer, stage dispatcher and lease fence functions on synthetic relations and legacy/privacy dependencies. Full migration preflight/final pins and Supabase catalogue were excluded.",
+    "schemaReady": false,
+    "fullMigrationExecuted": false
+  },
+  "initialFailures": [
+    "Three focused regressions for aggregate reads, destruction and late completion.",
+    "ESLint rejected unsafe finally. Explicit success and error cleanup passed the final checks.",
+    "First native fixture required the pgcrypto extensions schema. Fixture bootstrap was corrected and the actual SQL body was unchanged.",
+    "Final locked run launcher searched the wrong JSON prefix. It reused the already frozen manifest and verified the same lock.",
+    "The first evidence aggregation attempt expected single-line JSON in a formatted runtime log. The parser was corrected.",
+    "First local browser config attempted to proxy loopback. Explicit loopback bypass corrected all 29 harness failures.",
+    "The first legacy OCR router fixture failed privacy preflight until it used a consented synthetic adapter. The corrected fixture then reproduced an apparently successful OCR result accepted after the deadline. The final late-result guard and 86 affected tests passed."
+  ],
+  "notRun": [
+    "isolated managed schema replay and leased app lifecycle",
+    "end-to-end candidate correction/import using the current worker",
+    "representative release validation",
+    "deployment"
+  ],
+  "beforeFinalOcrRouterGuard": {
+    "unit": [
+      {
+        "files": 322,
+        "passed": 6761,
+        "failed": 0,
+        "pending": 0,
+        "sha256": "fb32484d13e0d8376a011aefdf2ebafd1beb1c61fd9ab3b3ccdfa565a69561e2"
+      },
+      {
+        "files": 1,
+        "passed": 3,
+        "failed": 0,
+        "pending": 0,
+        "sha256": "0e595dd242baafae2528ba174ef34fbf1a5bea0ea5900323ffa1c16da76f5931"
+      }
+    ],
+    "staticLogSha256": "3ee813762a045516903bed32e230cc41fa68f6ed1e9c735f40dce54a1f8b8999"
+  },
+  "ocrRouterRedLogSha256": "71bcf8e4e42a422d04cc5264ea44bbe7112799c623132e269c4653a380796f7c",
+  "additionalLocalChecks": {
+    "sourceChecks": [
+      {
+        "command": "check:aa2:source",
+        "exitCode": 0,
+        "sha256": "32e4e359e996ff43b63b5801f4a9f8f7c5e445b984cfea2a9dfc0b0c6ccc822c"
+      },
+      {
+        "command": "check:aa3:source",
+        "exitCode": 0,
+        "sha256": "4ff839033b88af96eefa2642a3700a04119bb9bfa1f9f93c94a53f8fdfa28284"
+      },
+      {
+        "command": "check:aa4:source",
+        "exitCode": 0,
+        "sha256": "ae21a5699172835cbafcc4e4e2a44887b95af36631b913b0a21c1d9a98e8f4d8"
+      },
+      {
+        "command": "check:aa5:source",
+        "exitCode": 0,
+        "sha256": "4344299aed32887d5048c6ce233a83a69f986558e93f020a0d611795ab5b3b75"
+      },
+      {
+        "command": "check:alerts",
+        "exitCode": 0,
+        "sha256": "41a7189f0a76f13cc6a66255b1db74cf27e9afa9090b16854a50f4929fdd0c7a"
+      },
+      {
+        "command": "check:container",
+        "exitCode": 0,
+        "sha256": "8dba541bb02f629442b22c886936e080a9451f534476e6c903d5b8a641ceba64"
+      },
+      {
+        "command": "check:ocr:pilot-source",
+        "exitCode": 0,
+        "sha256": "001421808dfb8efeafe55817602be2a155e55d2ef2400ca4cf01a30970373c2f"
+      },
+      {
+        "command": "format:check:native-layout",
+        "exitCode": 0,
+        "sha256": "73abae45fc8dc711d02af2a76fedfba169c522e3eeb74009370147e84e95ad57"
+      }
+    ],
+    "syntheticBenchmarksAndDrills": [
+      {
+        "command": "benchmark:job-intelligence",
+        "exitCode": 0,
+        "sha256": "08adb0c736f5fc8b15ae74a9f1319f81ba55468c175f81076fb8e7e7c96b5cb1"
+      },
+      {
+        "command": "benchmark:native-layout",
+        "exitCode": 0,
+        "sha256": "3e50321f8d5d06264eb6b187ff573f7923a03102db73236fa638df8aeb6decf1"
+      },
+      {
+        "command": "benchmark:phase5",
+        "exitCode": 0,
+        "sha256": "e81ece8e4916537042919c6d0b670d7f6477a325ec853b84e76ed0fcc433013f"
+      },
+      {
+        "command": "benchmark:render-parity",
+        "exitCode": 0,
+        "sha256": "fbccae8f091386d0120b1bfc16b5db5a1bf7fdf29cc06e83ea6d06a3609d82cd"
+      },
+      {
+        "command": "benchmark:scoring-validity",
+        "exitCode": 0,
+        "sha256": "5859ce914be8ef3e5a1295d7c374250efc7b9246b7ea4d1ef7c8e8be0ac7ae8c"
+      },
+      {
+        "command": "benchmark:writer-grounding",
+        "exitCode": 0,
+        "sha256": "56379aaa2316ad561f2dc841e1da68337b9646b9999f1a28f47509f390f8b1b5"
+      },
+      {
+        "command": "test:load",
+        "exitCode": 0,
+        "sha256": "0d4c1d0f8704e71710652fc2df86d3ae3d4a55e46e9f4bc368898f2c8926aacb"
+      },
+      {
+        "command": "test:restore",
+        "exitCode": 0,
+        "sha256": "5f1d39e5948ccd878f04b52131ff25a15c5186ab2470ed40200b1768b179e405"
+      }
+    ],
+    "browser": {
+      "scope": "Public and signed-out local production build before the last worker-only deadline guard. Browser used an isolated Chrome profile, dummy loopback Supabase and disabled AI.",
+      "passed": 29,
+      "automatedAccessibilityScans": 6,
+      "skipped": 0,
+      "failed": 0,
+      "sha256": "6ebec7ed9aea1659144488211b842a10c01586bbf8399322e1e0184073d3b565",
+      "initialHarnessFailureLogSha256": "11854a81fe3bef62af52487702a70a83fb7c15808bd7379d8ea1ba3ee07d20dc",
+      "excluded": "Readiness and authenticated managed flows"
+    }
+  }
+}

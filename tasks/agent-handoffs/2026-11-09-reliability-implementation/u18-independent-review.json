@@ -1,0 +1,60 @@
+{
+  "status": "PASS",
+  "at": "2026-11-10T18:54:43.603241+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "receipt": "u18-integrated-2894205a-2f95-45b1-94b1-71eeb8067db9.json",
+  "receiptSha256": "521c97dbee5b2a033d4f254fd1d6b960edc77a09593d10343621f13458979107",
+  "logSha256Verified": "8e3cd097e794144aebe23689e45eeaa930ce30c0c4e27c3f5882548850f4862e",
+  "sourceInputsRehashed": 704,
+  "changedSourceInputs": [],
+  "tests": {
+    "passed": 45,
+    "files": 4,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ownedGroups": [
+    {
+      "command": "npm test -- tests/unit/artifact-source-links.test.ts tests/unit/artifact-repository.test.ts tests/unit/artifact-contract.test.ts tests/unit/artifact-route.test.ts",
+      "processGroup": 19328,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run typecheck",
+      "processGroup": 19355,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run lint",
+      "processGroup": 19380,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run build",
+      "processGroup": 19401,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run build:worker",
+      "processGroup": 19431,
+      "independentlyAbsent": true
+    }
+  ],
+  "artifactsVerified": {
+    "build/server/index.js": {
+      "bytes": 869418,
+      "sha256": "4dc2f8b6e8dd44e60ae959a4a8c979188a9138bedcd82409f1345f8c03b89ed8"
+    },
+    "build/worker/analysis.mjs": {
+      "bytes": 168159,
+      "sha256": "cfc31ea7d0f630a0fee9de130cc17226dd633ba84f3c04edadf0e1b68062aca9"
+    }
+  },
+  "sourceReview": {
+    "reviewer": "a04_runtime",
+    "linksSha256": "1207c3f85f0a959465c90b377d11867a8dabb761a5ada632067e4fdb3e3ab573",
+    "repositorySha256": "6f46e7baf4665c4db1eaaad8f1ac8e144ac03be58fef32e167a4c0dc9c6cbbe3",
+    "result": "SOURCE_ACK, no reviewer execution"
+  },
+  "scope": "Actual source-PDF annotation checks and actual PDF/DOCX render workers with independent output parses; owned database/storage boundaries mocked. No native browser/database/provider/Docker/LaTexcompiler/ownerdata/Git/deploy."
+}

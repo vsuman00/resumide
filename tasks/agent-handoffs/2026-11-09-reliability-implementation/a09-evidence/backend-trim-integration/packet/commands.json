@@ -1,0 +1,54 @@
+{
+  "red": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/job-requirement-admission.test.ts",
+      "-t",
+      "stored v2 literal padding|keeps exact v2 literals"
+    ],
+    "expectedExit": 1
+  },
+  "green": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/job-requirement-admission.test.ts",
+      "-t",
+      "stored v2 literal padding|keeps exact v2 literals"
+    ],
+    "expectedExit": 0
+  },
+  "types": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a09-trim-a6bbk672/types.mjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/job-requirement-admission.ts",
+      "tests/unit/job-requirement-admission.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/job-requirement-admission.ts",
+      "tests/unit/job-requirement-admission.test.ts",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a09-admission.md"
+    ],
+    "expectedExit": 0
+  },
+  "profile": {
+    "args": [
+      "--loader",
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a09-trim-a6bbk672/ts-loader.mjs",
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a09-trim-a6bbk672/export-profile.mjs"
+    ],
+    "expectedExit": 0
+  }
+}

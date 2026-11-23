@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "at": "2026-11-10T18:43:28.757949+00:00",
+  "initialCheck": {
+    "exitCode": 1,
+    "finding": "Prettier required layout normalization of updated canonical plan JSON; no application failure."
+  },
+  "repair": {
+    "formatterExitCode": 0,
+    "allParsedValuesPreserved": true
+  },
+  "checks": [
+    {
+      "command": [
+        "/Users/vaibhavsuman/.npm/_npx/361c55be1121897e/node_modules/node/bin/node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "tasks/agent-handoffs/2026-11-09-reliability-implementation/u03-closeout.md",
+        "tasks/agent-handoffs/2026-11-09-reliability-implementation/u03-integrated-completion.json",
+        "tasks/reliability-remediation-plan.json",
+        "docs/design/CANDIDATE_AUTHORING_WORKSPACE.md"
+      ],
+      "exitCode": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "output": ""
+    }
+  ],
+  "links": "New closeout/design relative links resolve",
+  "taskGraph": "64 unique IDs, unchanged dependencies/topological order; counts2/30/32"
+}

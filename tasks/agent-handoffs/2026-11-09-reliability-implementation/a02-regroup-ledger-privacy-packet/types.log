@@ -1,0 +1,6 @@
+{"roots":2,"sourceFiles":10,"diagnostics":1}
+[96mtests/unit/privacy-operations.test.ts[0m:[93m707[0m:[93m45[0m - [91merror[0m[90m TS7053: [0mElement implicitly has an 'any' type because expression of type '"candidateCorrectionOperations" | "candidateCorrectionAssignments" | "candidateCorrectionApplications" | "canonicalCorrectionSnapshots" | "canonicalCorrectionSnapshotFacts" | ... 9 more ... | "canonicalEntryRegroupLinks"' can't be used to index type '{ candidateEntryRegroupBatches: { id: string; owner_id: string; base_revision: number; result_revision: number; command: { operation: string; }; }[]; candidateEntryRegroupGroups: { id: string; owner_id: string; affected_entry_ids: string[]; source_selection: { ...; }; }[]; ... 9 more ...; authoringEvents: never[]; }'.
+  Property 'candidateCorrectionOperations' does not exist on type '{ candidateEntryRegroupBatches: { id: string; owner_id: string; base_revision: number; result_revision: number; command: { operation: string; }; }[]; candidateEntryRegroupGroups: { id: string; owner_id: string; affected_entry_ids: string[]; source_selection: { ...; }; }[]; ... 9 more ...; authoringEvents: never[]; }'.
+
+[7m707[0m       expect(manifest.records[key]).toEqual(records[key]);
+[7m   [0m [91m                                            ~~~~~~~~~~~~[0m

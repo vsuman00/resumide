@@ -1,0 +1,123 @@
+-- Run only on the disposable, socket-only PostgreSQL fixture.
+begin;
+set local plpgsql.check_asserts=on;
+set local statement_timeout='15s';
+
+do $lifecycle$
+declare
+  candidate_id uuid:=gen_random_uuid();
+  second_id uuid:=gen_random_uuid();
+  test_user uuid;
+  test_org uuid;
+  candidate_org uuid;
+  root_id uuid:=gen_random_uuid();
+  source_id uuid:=gen_random_uuid();
+  tested_analysis uuid:=gen_random_uuid();
+  deletion_id uuid:=gen_random_uuid();
+  build_id uuid;
+  rewrite_id uuid;
+  operation_id uuid;
+  first_clock timestamptz;
+  period_value date:=date_trunc('month',clock_timestamp() at time zone 'UTC')::date;
+  policy constant text:='synthetic-disposition-policy';
+  model_value constant text:='synthetic-model';
+  nonce constant text:='synthetic-disposition-reservation';
+  source jsonb;
+  price_surface text;
+  result jsonb;
+  work record;
+  retired integer:=0;
+begin
+  assert current_setting('listen_addresses')='', 'private socket required';
+  assert not exists(select 1 from auth.users) and not exists(select 1 from public.data_requests);
+  insert into auth.users(id,email) values
+    (candidate_id,'disposition-owner@example.test'),(second_id,'disposition-isolation@example.test');
+  insert into private.ai_budget_policies(version,model,monthly_token_limit,monthly_cost_limit_microusd,
+    input_microusd_per_million,output_microusd_per_million,max_attempts,enabled,approval_sha256)
+    values(policy,model_value,2000,5000,100,200,1,true,repeat('b',64));
+  foreach test_user in array array[candidate_id,second_id] loop
+    select o.id into strict test_org from public.organizations o where o.owner_id=test_user;
+    if test_user=candidate_id then
+      candidate_org:=test_org;
+      build_id:=private.ai_budget_source_identity(test_user,test_org,'build_account',null,null,nonce);
+      operation_id:=build_id;
+      price_surface:='build';
+      source:=jsonb_build_object('schemaVersion','ai-budget-source/2.0.0','kind','build_account','requestNonce',nonce);
+    else
+      insert into public.resumes(id,organization_id,owner_id,display_name)
+        values(root_id,test_org,test_user,'synthetic-document.pdf');
+      insert into public.resume_versions(id,resume_id,organization_id,owner_id,storage_key,checksum,bytes,media_type)
+        values(source_id,root_id,test_org,test_user,private.r17_storage_key(test_org,root_id,source_id),
+          repeat('f',64),32,'application/pdf');
+      insert into public.analyses(id,resume_version_id,organization_id,owner_id,status,idempotency_key)
+        values(tested_analysis,source_id,test_org,test_user,'quarantined',gen_random_uuid());
+      rewrite_id:=private.ai_budget_source_operation_id(test_user,test_org,tested_analysis,source_id,nonce);
+      operation_id:=rewrite_id;
+      price_surface:='rewrite';
+      source:=jsonb_build_object('schemaVersion','ai-budget-source/1.0.0','kind','legacy_rewrite',
+        'analysisId',tested_analysis,'resumeVersionId',source_id,'requestNonce',nonce);
+    end if;
+    insert into private.ai_budget_period_openings(organization_id,period,pool_policy_version,
+      opening_spent_tokens,opening_spent_cost_microusd,unresolved_legacy_attempts,evidence_sha256)
+      values(test_org,period_value,policy,0,0,0,repeat('c',64));
+    result:=public.ai_budget_reserve_source_next(test_user,test_org,source,
+      jsonb_build_object('operationId',operation_id,'attemptId',gen_random_uuid(),'surface',price_surface,
+        'payloadSha256',repeat('a',64),'model',model_value,'promptPolicyVersion','synthetic-prompt',
+        'policyVersion',policy,'reservedInputTokens','400','reservedOutputTokens','100'));
+    assert result->>'status'='ok', 'source-bound reservation must succeed';
+  end loop;
+
+  insert into public.data_requests(id,organization_id,user_id,kind)
+    values(deletion_id,candidate_org,candidate_id,'deletion');
+  set local role service_role;
+  result:=public.claim_privacy_request_with_cleanup_credits('synthetic-account-worker',120,3);
+  assert result->>'id'=deletion_id::text and result->>'attempt'='1';
+  result:=public.prepare_deletion_request_with_admission_handoff(deletion_id,'synthetic-account-worker',1);
+  assert result->'storageObjects'='[]'::jsonb;
+  reset role;
+  assert not has_function_privilege('service_role',
+    'private.capture_owned_ai_operation_dispositions(uuid,uuid,uuid,uuid)','EXECUTE');
+
+  select d.prepared_at into strict first_clock from private.owned_ai_deletion_dispositions d
+    where d.owner_id=candidate_id and d.first_request_id=deletion_id
+      and d.expires_at=d.prepared_at+interval '720 hours';
+  assert (select d.prepared_at=first_clock and d.expires_at=first_clock+interval '720 hours'
+    from private.owned_ai_operation_dispositions d where d.operation_id=build_id
+      and d.kind='r03' and d.owner_id=candidate_id and d.source_scope='account_only'
+      and d.phase='prepared' and d.deletion_request_id=deletion_id);
+  assert not exists(select 1 from public.profiles p where p.id=candidate_id)
+    and exists(select 1 from public.profiles p where p.id=second_id)
+    and not exists(select 1 from private.owned_ai_operation_dispositions d where d.operation_id=rewrite_id);
+  assert (select a.state='reserved' from private.ai_budget_attempts a where a.operation_id=build_id);
+
+  set local role service_role;
+  assert public.fail_privacy_request(deletion_id,'synthetic-account-worker',1,'STORAGE_DELETE_FAILED',3);
+  reset role;
+  update public.data_requests set next_attempt_at=clock_timestamp() where id=deletion_id;
+  set local role service_role;
+  result:=public.claim_privacy_request_with_cleanup_credits('synthetic-retry-worker',120,3);
+  assert result->>'id'=deletion_id::text and result->>'attempt'='2';
+  perform public.prepare_deletion_request_with_admission_handoff(deletion_id,'synthetic-retry-worker',2);
+  reset role;
+  assert (select d.prepared_at=first_clock and d.expires_at=first_clock+interval '720 hours'
+    from private.owned_ai_operation_dispositions d where d.operation_id=build_id);
+  raise notice 'PASS: account disposition retains its first deadline across a worker retry';
+
+  set local role service_role;
+  for work in select * from public.claim_expired_resume_objects(clock_timestamp(),1) loop
+    assert work.resume_id=root_id;
+    assert public.complete_retention_item(work.item_id); -- Synthetic Storage-absence receipt.
+    retired:=retired+1;
+  end loop;
+  reset role;
+  assert retired=1 and not exists(select 1 from public.resumes r where r.id=root_id);
+  assert exists(select 1 from private.owned_ai_operation_dispositions d
+    join private.retention_items t on t.id=d.retention_item_id
+    where d.operation_id=rewrite_id and d.owner_id=second_id and d.source_scope='resume_root'
+      and d.resume_id=root_id and d.resume_version_id=source_id and d.analysis_id=tested_analysis
+      and d.prepared_at=t.created_at and d.expires_at=t.created_at+interval '720 hours');
+  assert not exists(select 1 from private.owned_ai_deletion_dispositions d where d.owner_id=second_id);
+  raise notice 'PASS: root retention captures the exact source and deadline independently';
+end;
+$lifecycle$;
+rollback;

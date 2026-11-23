@@ -1,0 +1,531 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/components/JdClauseOrderReview.test.tsx (9 tests | 8 failed) 213ms
+   ✓ shows the complete actual current and reconstructed wording without truncation 117ms
+   × shows the exact saved JD quote and actual importance for preferred=false 21ms
+   × shows the exact saved JD quote and actual importance for preferred=true 14ms
+   × shows both exact source clauses in the real nonidentity order and their codepoint references 11ms
+   × labels the whole exact source claim as current support rather than saved proposal provenance 13ms
+   × shows real citation references and links to the source workspace without inventing an attempt selector 10ms
+   × keeps exact pinned fact and JD version links and renderer references 8ms
+   × stays projected with no save, acknowledgement, decision or undo control and no numeric credit 9ms
+   × uses unique labelled regions and keyboard-accessible source and version references 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/JdClauseOrderReview.test.tsx > shows the exact saved JD quote and actual importance for preferred=false
+TestingLibraryElementError: Unable to find an accessible element with the role "blockquote" and name "Exact saved JD quote"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Review JD-focused clause order":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«r1»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Review JD-focused clause order":
+  [36m<h2[39m
+    [33mid[39m=[32m"«r1»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  blockquote:
+
+  Name "Complete current wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete current wording"[39m
+  [36m/>[39m
+
+  Name "Complete proposed wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete proposed wording"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r1»"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«r1»"[39m
+      [36m>[39m
+        [0mReview JD-focused clause order[0m
+      [36m</h2>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete current wording"[39m
+      [36m>[39m
+        [0mBuilt services using Python; Developed tools using Git[0m
+      [36m</blockquote>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete proposed wording"[39m
+      [36m>[39m
+        [0mDeveloped tools using Git; Built services using Python[0m
+      [36m</blockquote>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/JdClauseOrderReview.test.tsx:27:17
+     25| it.each<[boolean,string]>([[false,"Required job requirement"],[true,"P…
+     26|   const f=await fixture(preferred);show(f);
+     27|   expect(screen.getByRole("blockquote",{name:"Exact saved JD quote"}).…
+       |                 ^
+     28|   expect(screen.getByText(label)).toBeTruthy();
+     29|   expect(screen.getByText(/This explains the order, not proficiency, d…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tests/components/JdClauseOrderReview.test.tsx > shows the exact saved JD quote and actual importance for preferred=true
+TestingLibraryElementError: Unable to find an accessible element with the role "blockquote" and name "Exact saved JD quote"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Review JD-focused clause order":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«r2»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Review JD-focused clause order":
+  [36m<h2[39m
+    [33mid[39m=[32m"«r2»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  blockquote:
+
+  Name "Complete current wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete current wording"[39m
+  [36m/>[39m
+
+  Name "Complete proposed wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete proposed wording"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r2»"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«r2»"[39m
+      [36m>[39m
+        [0mReview JD-focused clause order[0m
+      [36m</h2>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete current wording"[39m
+      [36m>[39m
+        [0mBuilt services using Python; Developed tools using Git[0m
+      [36m</blockquote>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete proposed wording"[39m
+      [36m>[39m
+        [0mDeveloped tools using Git; Built services using Python[0m
+      [36m</blockquote>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/JdClauseOrderReview.test.tsx:27:17
+     25| it.each<[boolean,string]>([[false,"Required job requirement"],[true,"P…
+     26|   const f=await fixture(preferred);show(f);
+     27|   expect(screen.getByRole("blockquote",{name:"Exact saved JD quote"}).…
+       |                 ^
+     28|   expect(screen.getByText(label)).toBeTruthy();
+     29|   expect(screen.getByText(/This explains the order, not proficiency, d…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tests/components/JdClauseOrderReview.test.tsx > shows both exact source clauses in the real nonidentity order and their codepoint references
+TestingLibraryElementError: Unable to find an accessible element with the role "list" and name "Proposed clause order"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Review JD-focused clause order":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«r3»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Review JD-focused clause order":
+  [36m<h2[39m
+    [33mid[39m=[32m"«r3»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  blockquote:
+
+  Name "Complete current wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete current wording"[39m
+  [36m/>[39m
+
+  Name "Complete proposed wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete proposed wording"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r3»"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«r3»"[39m
+      [36m>[39m
+        [0mReview JD-focused clause order[0m
+      [36m</h2>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete current wording"[39m
+      [36m>[39m
+        [0mBuilt services using Python; Developed tools using Git[0m
+      [36m</blockquote>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete proposed wording"[39m
+      [36m>[39m
+        [0mDeveloped tools using Git; Built services using Python[0m
+      [36m</blockquote>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/JdClauseOrderReview.test.tsx:33:29
+     31| it("shows both exact source clauses in the real nonidentity order and …
+     32|   const f=await fixture();show(f);
+     33|   const order=within(screen.getByRole("list",{name:"Proposed clause or…
+       |                             ^
+     34|   expect(order.getAllByRole("blockquote").map(node=>node.textContent))…
+     35|   expect(screen.getByText(/Move source clause 2 before source clause 1…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tests/components/JdClauseOrderReview.test.tsx > labels the whole exact source claim as current support rather than saved proposal provenance
+TestingLibraryElementError: Unable to find an accessible element with the role "blockquote" and name "Whole quoted source claim"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Review JD-focused clause order":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«r4»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Review JD-focused clause order":
+  [36m<h2[39m
+    [33mid[39m=[32m"«r4»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  blockquote:
+
+  Name "Complete current wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete current wording"[39m
+  [36m/>[39m
+
+  Name "Complete proposed wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete proposed wording"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r4»"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«r4»"[39m
+      [36m>[39m
+        [0mReview JD-focused clause order[0m
+      [36m</h2>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete current wording"[39m
+      [36m>[39m
+        [0mBuilt services using Python; Developed tools using Git[0m
+      [36m</blockquote>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete proposed wording"[39m
+      [36m>[39m
+        [0mDeveloped tools using Git; Built services using Python[0m
+      [36m</blockquote>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/JdClauseOrderReview.test.tsx:40:17
+     38| it("labels the whole exact source claim as current support rather than…
+     39|   const f=await fixture();show(f);
+     40|   expect(screen.getByRole("blockquote",{name:"Whole quoted source clai…
+       |                 ^
+     41|   expect(screen.getByText(/Source quotation and current candidate conf…
+     42|   expect(screen.getByText(/These citations describe the current wordin…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  tests/components/JdClauseOrderReview.test.tsx > shows real citation references and links to the source workspace without inventing an attempt selector
+TestingLibraryElementError: Unable to find an accessible element with the role "list" and name "Current source citations"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Review JD-focused clause order":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«r5»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Review JD-focused clause order":
+  [36m<h2[39m
+    [33mid[39m=[32m"«r5»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  blockquote:
+
+  Name "Complete current wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete current wording"[39m
+  [36m/>[39m
+
+  Name "Complete proposed wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete proposed wording"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r5»"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«r5»"[39m
+      [36m>[39m
+        [0mReview JD-focused clause order[0m
+      [36m</h2>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete current wording"[39m
+      [36m>[39m
+        [0mBuilt services using Python; Developed tools using Git[0m
+      [36m</blockquote>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete proposed wording"[39m
+      [36m>[39m
+        [0mDeveloped tools using Git; Built services using Python[0m
+      [36m</blockquote>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/JdClauseOrderReview.test.tsx:46:33
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  tests/components/JdClauseOrderReview.test.tsx > keeps exact pinned fact and JD version links and renderer references
+TestingLibraryElementError: Unable to find an accessible element with the role "link" and name "Inspect the current fact and pinned version"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Review JD-focused clause order":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«r6»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Review JD-focused clause order":
+  [36m<h2[39m
+    [33mid[39m=[32m"«r6»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  blockquote:
+
+  Name "Complete current wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete current wording"[39m
+  [36m/>[39m
+
+  Name "Complete proposed wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete proposed wording"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r6»"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«r6»"[39m
+      [36m>[39m
+        [0mReview JD-focused clause order[0m
+      [36m</h2>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete current wording"[39m
+      [36m>[39m
+        [0mBuilt services using Python; Developed tools using Git[0m
+      [36m</blockquote>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete proposed wording"[39m
+      [36m>[39m
+        [0mDeveloped tools using Git; Built services using Python[0m
+      [36m</blockquote>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/JdClauseOrderReview.test.tsx:52:17
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  tests/components/JdClauseOrderReview.test.tsx > stays projected with no save, acknowledgement, decision or undo control and no numeric credit
+TestingLibraryElementError: Unable to find an accessible element with the role "status"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Review JD-focused clause order":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«r7»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Review JD-focused clause order":
+  [36m<h2[39m
+    [33mid[39m=[32m"«r7»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  blockquote:
+
+  Name "Complete current wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete current wording"[39m
+  [36m/>[39m
+
+  Name "Complete proposed wording":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Complete proposed wording"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r7»"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«r7»"[39m
+      [36m>[39m
+        [0mReview JD-focused clause order[0m
+      [36m</h2>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete current wording"[39m
+      [36m>[39m
+        [0mBuilt services using Python; Developed tools using Git[0m
+      [36m</blockquote>[39m
+      [36m<blockquote[39m
+        [33maria-label[39m=[32m"Complete proposed wording"[39m
+      [36m>[39m
+        [0mDeveloped tools using Git; Built services using Python[0m
+      [36m</blockquote>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/JdClauseOrderReview.test.tsx:58:17
+     56| it("stays projected with no save, acknowledgement, decision or undo co…
+     57|   const f=await fixture();const {container}=show(f);
+     58|   expect(screen.getByRole("status").textContent).toContain("Projected …
+       |                 ^
+     59|   expect(screen.getByText(/The proposed wording has no saved source re…
+     60|   expect(screen.getByText(/Numeric score and score change: unavailable…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  tests/components/JdClauseOrderReview.test.tsx > uses unique labelled regions and keyboard-accessible source and version references
+AssertionError: expected 0 to be greater than 0
+ ❯ tests/components/JdClauseOrderReview.test.tsx:68:83
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed | 1 passed (9)
+   Start at  10:47:20
+   Duration  1.34s (transform 243ms, setup 0ms, import 460ms, tests 213ms, environment 601ms)
+
+JSON report written to /private/tmp/resumide-jd-clause-order-frontend-so3lsz01/red/tests.json

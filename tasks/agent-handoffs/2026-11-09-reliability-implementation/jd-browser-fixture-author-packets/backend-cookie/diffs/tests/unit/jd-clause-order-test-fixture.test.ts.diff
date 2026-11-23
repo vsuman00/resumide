@@ -1,0 +1,19 @@
+--- before/tests/unit/jd-clause-order-test-fixture.test.ts
++++ after/tests/unit/jd-clause-order-test-fixture.test.ts
+@@ -37,8 +37,14 @@
+ vi.mock("@supabase/supabase-js", () => ({ createClient: m.client }));
+ vi.mock("@supabase/ssr", () => ({
+   createServerClient: m.serverClient,
+-  serializeCookieHeader: (name: string, value: string) =>
+-    `${name}=${value}; Path=/`,
++  serializeCookieHeader: (
++    name: string,
++    value: string,
++    options: Record<string, unknown>,
++  ) => {
++    expect(options).toEqual({});
++    return `${name}=${value}; Path=/`;
++  },
+ }));
+ vi.mock("../../app/lib/server/config", () => ({ getServerConfig: m.config }));
+ vi.mock("../../app/lib/server/evidence-review", () => ({

@@ -1,0 +1,135 @@
+{
+  "ids": ["CR-R12-S09", "CR-R14-S05", "CR-U08-S03"],
+  "date": "2026-11-22",
+  "status": "VERIFIED_LOCAL_REAL_COMPILER_AND_CHROME_WITH_SYNTHETIC_SERVICES",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty main checkout and current local ARM64 candidate. All document and account inputs were synthetic.",
+  "priorRuntimeFailure": {
+    "imageId": "sha256:03ef61999d591f973a6aa92f32626e1ef79b8e9286fe3531ad2f708ca5ab27f6",
+    "status": "compile_failed",
+    "observedCause": "Confined XeTeX selected the development article class. Both the minimal control and the early-career starter stopped before writing an XDV file."
+  },
+  "prebuildRefusal": {
+    "packetFingerprint": "e9992e59961e220739c408491a8e59c83c87fa406b237d9e03985b7f912506d8",
+    "code": "owned_image_tag_unavailable",
+    "buildStarted": false,
+    "repair": "Derive and verify a different local tag for each reviewed private output directory."
+  },
+  "candidate": {
+    "image": {
+      "imageId": "sha256:c37bfee59af95475805d0a4646841211a7c5db0077c8b600dfa584ffe2e58798",
+      "platform": "linux/arm64",
+      "user": "65532:65532",
+      "imageBytes": 1062147880,
+      "declaredPorts": 0,
+      "declaredVolumes": 0
+    },
+    "packetFingerprint": "e26f19487d0ab9602f302718c8ad63e408a93fb0d26448e0a49eeb91e750eaf7",
+    "packetSha256": "260cc2244d180c40ca7f7d3cb5b590d353929f2e94a58b31c234cc1d9f88f241",
+    "buildReceiptSha256": "85078daf39c65fdbc6cc0980946c98bfa18d787ecd4cf7a17cd5809376557e70",
+    "daemonOutcome": "completed",
+    "ownedReference": "default/default/9k3u2u03inntuquxjtxn4xpk4",
+    "clientGroupExited": true,
+    "buildTimeMs": 3160,
+    "independentReview": "PASS for the exact stable-path and unique-tag source and packets."
+  },
+  "verification": {
+    "focusedTestsPassed": 136,
+    "typecheck": "PASS",
+    "scopedLint": "PASS",
+    "fullRepositoryLintExistingWarnings": 4,
+    "syntheticBrowserControl": "PASS"
+  },
+  "starterMatrix": {
+    "receiptSha256": "166d417bdf3c2ed76055b40ffa3af7bca8e0a5f744bc7444647f7b9c61ec10b5",
+    "cases": [
+      {
+        "profile": "early-career",
+        "paper": "A4",
+        "pages": 1,
+        "durationMs": 936,
+        "headingOrderPass": true
+      },
+      {
+        "profile": "early-career",
+        "paper": "LETTER",
+        "pages": 1,
+        "durationMs": 771,
+        "headingOrderPass": true
+      },
+      {
+        "profile": "experienced",
+        "paper": "A4",
+        "pages": 1,
+        "durationMs": 772,
+        "headingOrderPass": true
+      },
+      {
+        "profile": "experienced",
+        "paper": "LETTER",
+        "pages": 1,
+        "durationMs": 797,
+        "headingOrderPass": true
+      },
+      {
+        "profile": "document",
+        "paper": "A4",
+        "pages": 1,
+        "durationMs": 758,
+        "headingOrderPass": true
+      },
+      {
+        "profile": "document",
+        "paper": "LETTER",
+        "pages": 1,
+        "durationMs": 786,
+        "headingOrderPass": true
+      }
+    ],
+    "observedP95Ms": 936
+  },
+  "render": {
+    "receiptSha256": "b691266600e20c9005482893533fd0959eb5ae918511a454303f66c749794714",
+    "pages": 2,
+    "embeddedFonts": 8,
+    "taggedPages": 0,
+    "approvedSourceLinks": 1,
+    "ownedContainersRemaining": 0,
+    "pngs": [
+      {
+        "filename": "current-page-1.png",
+        "sha256": "1922c4347b9ecdaf208a9256326a280612404762383dc4a187f9ca4bc37a1224"
+      },
+      {
+        "filename": "current-page-2.png",
+        "sha256": "f8ede6d49802240a9df9169c1197d9917528a72c8bbd4abb24611e8f828ec824"
+      }
+    ],
+    "visualReview": "Both pages showed the expected heading order, math, link and spacing. The first render command used an invalid output directory name and stopped before Docker. The corrected command produced and verified the artifacts."
+  },
+  "browser": {
+    "receiptSha256": "62b03ffbc3efa81c7421165435e753127769410cb2380bd2214e31cc3fee2dbe",
+    "browser": "Google Chrome 157.0.8103.80",
+    "realCompileCount": 3,
+    "responseAndDownloadSha256": [
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f",
+      "3ec3c5e17be268457834e91528b760dd8b1f9c206effd64040db2a4810d195f0",
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f"
+    ],
+    "sourceSequenceSha256": [
+      "77f4f8dc66cc1e103f8d7c503b1d0aba38d3ee9e7f1b9b5bb26531533d425f49",
+      "14c765c47ab01e9eb72699038538b5e15849b1df5807507fd450c6d59b9a982d",
+      "77f4f8dc66cc1e103f8d7c503b1d0aba38d3ee9e7f1b9b5bb26531533d425f49"
+    ],
+    "browserZoomPercent": 200,
+    "viewportCssPixels": [390, 320],
+    "verifiedNewTabAndRetry": true,
+    "verifiedPageTextAndCanvas": true,
+    "simulatedAuthRateAdmissionAndAiSuggestion": true,
+    "ownedContainersRemaining": 0
+  },
+  "releaseAccepted": false,
+  "managedAuthVerified": false,
+  "liveAiVerified": false,
+  "requiredNextEvidence": "Managed authentication and rate admission through the same consumer flow, live provider checks under separate authorization, current native advisory disposition, and formal accessibility and release acceptance."
+}

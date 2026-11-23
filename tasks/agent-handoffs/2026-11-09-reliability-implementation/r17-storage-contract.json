@@ -1,0 +1,33 @@
+{
+  "status": "FROZEN_SOURCE_CONTRACT",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "task": "CR-R17",
+  "prerequisiteSource": "owned-ai-disposition-integrated-review.json",
+  "scope": "Source implementation/synthetic verification; Native/adoption/physical cleanup unverified",
+  "native": {
+    "wire": "claim_expired_resume_objects(p_before timestamptz,p_limit integer) returns table(item_id uuid,resume_id uuid,storage_key text); complete_retention_item(uuid),fail_retention_item(uuid,text) return boolean",
+    "claim": "At most p_limit new exact owned version keys enrolled per call and at most p_limit rows returned; retain root/version inventory until all coverage complete. No total-version cap. Deleted roots with queued/failed/uncovered versions stay eligible. New chunk cannot overwrite foreign identity, reset deleted state or first clocks. Fixed statement/lock deadlines remain; do not claim scan/lock cost is constant or Native performance proved.",
+    "clock": "Use earliest committed retention item including deleted items; preserve created_at/first cause/operation deadlines across chunks/retries. Deleted root with no proved first event must refuse/repair, never start a fresh clock or use mutable updated_at.",
+    "coverage": "Before final root DELETE, every actual version must match root owner/org and its exact stored/generated owned key, all such items must be deleted, and no foreign/extra/mismatched recorded item may authorize cleanup. Recheck under owner/root/source locks. Unenrolled inventory must remain reachable.",
+    "admission": "New dedicated BEFORE INSERT OR UPDATE resume-version guard: shared owner admission and active exact owner/org/root FOR SHARE with nonblocking retry; forbid immutable file/identity rebinding, allow existing legitimate page_count/updated_at updates only on active roots. Do not alter old generic privacy barrier or grant new client writes.",
+    "completion": "Already deleted item returns true idempotently without timestamp/clock changes. Missing item returns false. Queued/failed item requires exact current or separately proved historical authority before changing state; no guessed missing-parent keys.",
+    "failure": "Queued/failed row may acknowledge true after recording failure; missing OR already deleted returns false, with deleted state/timestamps unchanged. A true failure receipt must not mean a silent no-op on a completed item.",
+    "concurrency": "Owner/root/source/item order or nonblocking retry when earlier rows already locked; terminal updates under locks. Wire remains at least once; duplicate delivery of same immutable key is possible. No new lease/exclusivity claim.",
+    "historical": "Source repair does not recover keys erased by the old bug. Missing-parent/untracked historical objects remain explicit repair/unverified until exact authorized inventory/provenance exists."
+  },
+  "node": {
+    "claimReply": [
+      "item_id",
+      "resume_id",
+      "storage_key"
+    ],
+    "strict": "Validate entire array before any removal: UUIDs, exact key frame via createResumeStorageKey and row resume_id correspondence, unique item/key/version, count<=requested limit1..1000; no String coercion, null/unknown as empty, inferred owner or legacy fallback. Native enrollment is ownership authority.",
+    "readiness": "Existing separate9-key metadata schema and6-string expected current disposition profile, schemaReady true before claim. Access/export capabilities independent and may be false. New checker must pin actual claim/complete/fail/admission bodies/ACLs.",
+    "rpcReceipts": "Completion/failure require data===true. RPC errors, missing/false/null/malformed response, timeout/cancellation are not success.",
+    "sweep": "Existing {claimed,completed,failed} success wire and method results retained; optional final options with signal/timeoutMs. One bounded30s default sweep1..30000ms, each metadata/RPC stage<=5000ms and remaining sweep budget; finite/nondecreasing elapsed checks before/after await and before side effects. No new env/config dependency.",
+    "uncertainty": "Removal timeout/cancel stops downstream with uncertainty; cannot claim underlying storage operation cancelled. Completion uncertainty after successful remove MUST NOT call fail or increment completed. Removal error can call fail only while active; failed count increments only after true recorded-failure receipt. Unacknowledged fail stops with fixed safe error.",
+    "cli": "Forward interrupt/termination signal, print no success report on uncertainty, fixed safe diagnostics/exit1; tests import actual CLI using mocks, never start a real worker/service."
+  },
+  "verification": "Reproduce relevant current defects; controlled fake RPC/DOM tests, source/JSON/pin composition checks, then integrated typecheck/lint/web/worker. Model/chunk oracles are engineering only, not SQL transaction/race/object erasure proof. Privileged rollback native verifier stays unparsed/unexecuted. Preserve all old assertions/goldens/failures.",
+  "boundary": "No SQL parsing/execution/advisors, DB/hosted writes, actualenv/keys/PII/PDF/Photos/providers/services/browser/LaTeX/OCR/Docker/deps/workspaceGit/deploy; source/synthetic/fakeRPC only sealed Node22.23.4. Supabase direct, neverDockerDB/reset. Source data flags/grants remain denied/defaultoff."
+}

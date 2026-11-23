@@ -1,0 +1,43 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/initial-feedback-publication-policy.test.ts (18 tests | 1 failed) 13ms
+     ✓ derives frozen dependencies and requires explicit technical inputs 3ms
+     ✓ uses exact27-atom UTF8 framing, not JSON serialization 4ms
+     ✓ ignores input property order while retaining every value 1ms
+     ✓ distinguishes null budget mode from string null and explicit synthetic on policy 0ms
+     ✓ does not normalize technical changes {"model":"GPT-6-luna"} 0ms
+     ✓ does not normalize technical changes {"maxOutputTokens":256} 0ms
+     ✓ does not normalize technical changes {"attemptLimit":2} 0ms
+     ✓ refuses unsupported parameters {"maxOutputTokens":255} 0ms
+     ✓ refuses unsupported parameters {"maxOutputTokens":8001} 0ms
+     ✓ refuses unsupported parameters {"attemptLimit":0} 0ms
+     ✓ refuses unsupported parameters {"attemptLimit":4} 0ms
+     ✓ refuses unsupported parameters {"model":"bad model"} 0ms
+     ✓ refuses unsupported parameters {"model":"bad\ud800"} 0ms
+     ✓ refuses unsupported parameters {"model":"bad\u0000name"} 0ms
+     ✓ refuses unsupported parameters {"budgetPolicyVersion":""} 0ms
+     ✓ matches current source output/attempt bounds and exact prompt 1ms
+     ✓ rejects drifted source profiles, changed hashes and unknown nested fields safely 0ms
+   × preserves the exact historical descriptor and hash while fresh admission uses renewed readiness 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-publication-policy.test.ts > preserves the exact historical descriptor and hash while fresh admission uses renewed readiness
+AssertionError: expected '56a92f65d533a2f1b053078dbb372b1271728…' not to be '56a92f65d533a2f1b053078dbb372b1271728…' // Object.is equality
+ ❯ tests/unit/initial-feedback-publication-policy.test.ts:219:57
+    217|   expect(validateInitialFeedbackPublicationPolicy({...historical,sha25…
+    218|   expect(JSON.stringify(validateInitialFeedbackPublicationPolicy({...h…
+    219|   expect(current.scoringInputProfile.checkerSha256).not.toBe(historica…
+       |                                                         ^
+    220|   expect(current.sha256).not.toBe(oldHash);
+    221|   expect(()=>validateInitialFeedbackPublicationPolicy({...historical, …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 17 passed (18)
+   Start at  13:18:35
+   Duration  179ms (transform 60ms, setup 0ms, import 104ms, tests 13ms, environment 0ms)
+

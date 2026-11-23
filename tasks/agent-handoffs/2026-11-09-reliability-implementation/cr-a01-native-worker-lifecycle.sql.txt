@@ -1,0 +1,184 @@
+-- Run only through the disposable PostgreSQL fixture.
+begin;
+set local statement_timeout='15s';
+set local plpgsql.check_asserts=on;
+
+set local role service_role;
+do $readiness$
+begin
+  perform id from public.document_evidence_attempts limit 0;
+  perform id from public.evidence_corrections limit 0;
+  assert public.worker_schema_readiness(true,false,null,null)->'ready'='true'::jsonb;
+  assert public.read_document_page_count_readiness()->'fencedWriterExecutable'='true'::jsonb;
+end;
+$readiness$;
+reset role;
+
+do $journey$
+declare
+  candidate uuid := gen_random_uuid();
+  outsider uuid := gen_random_uuid();
+  org uuid;
+  analysis uuid := gen_random_uuid();
+  resume uuid := gen_random_uuid();
+  version uuid := gen_random_uuid();
+  job uuid := gen_random_uuid();
+  upload uuid := gen_random_uuid();
+  object_id uuid := gen_random_uuid();
+  evidence_id uuid := gen_random_uuid();
+  deletion uuid := gen_random_uuid();
+  operation uuid;
+  fence1 uuid;
+  fence2 uuid;
+  request jsonb;
+  receipt jsonb;
+  transition jsonb;
+  evidence_envelope jsonb;
+  payload jsonb;
+  inventory jsonb;
+  plan jsonb;
+  key text;
+  checksum text := repeat('a',64);
+  title text := 'Synthetic role';
+  description text := 'Fictional position for the local database fixture.';
+  filename text := 'synthetic-two-page.pdf';
+  worker1 text := 'synthetic-first-worker';
+  worker2 text := 'synthetic-recovered-worker';
+  privacy_worker text := 'synthetic-privacy-worker';
+  graph jsonb := '{
+    "schemaVersion":"native-evidence-v1","extractorVersion":"unpdf-v1","offsetUnit":"unicode_code_point",
+    "pages":[
+      {"id":"page-1","pageNumber":1,"text":"alex@example.test","method":"native_text","confidence":"uncalibrated"},
+      {"id":"page-2","pageNumber":2,"text":"","method":"native_text","confidence":"uncalibrated"}],
+    "spans":[
+      {"id":"page-1-line-1","pageId":"page-1","start":0,"end":17,"text":"alex@example.test"},
+      {"id":"page-2-line-1","pageId":"page-2","start":0,"end":0,"text":""}],
+    "assertions":[
+      {"field":"name","value":null,"state":"not_evaluated","confidence":"uncalibrated","evidence":null},
+      {"field":"email","value":"alex@example.test","state":"review_required","confidence":"uncalibrated","evidence":{"spanId":"page-1-line-1","start":0,"end":17}},
+      {"field":"phone","value":null,"state":"not_evaluated","confidence":"uncalibrated","evidence":null}]
+  }';
+begin
+  assert current_setting('listen_addresses')='', 'socket-only fixture required';
+  assert not exists(select 1 from auth.users), 'clean auth fixture required';
+  assert not exists(select 1 from public.analysis_jobs), 'clean analysis queue required';
+  assert not exists(select 1 from public.data_requests), 'clean privacy queue required';
+  insert into auth.users(id,email) values (candidate,'candidate@example.test'),(outsider,'outside@example.test');
+  select o.id into strict org from public.organizations o where o.owner_id=candidate;
+  insert into public.consents(organization_id,user_id,purpose,policy_version)
+    values(org,candidate,'qualitative_ai','candidate-ai-v1');
+
+  request:=jsonb_build_object('idempotencyKey',gen_random_uuid(),'uploadId',upload,'analysisId',analysis,
+    'resumeId',resume,'versionId',version,'jobId',job,'checksum',checksum,'bytes',1024,
+    'titleSha256',encode(sha256(convert_to(title,'UTF8')),'hex'),
+    'jobSha256',encode(sha256(convert_to(description,'UTF8')),'hex'),
+    'nameSha256',encode(sha256(convert_to(filename,'UTF8')),'hex'),
+    'requestPolicySha256',repeat('b',64),'policyVersion','analysis-admission/1.0.0',
+    'consentPolicyVersion','candidate-ai-v1');
+  request:=request||jsonb_build_object('bindingSha256',private.analysis_admission_hash(request));
+
+  set local role service_role;
+  receipt:=public.prepare_tracked_analysis_admission(candidate,org,request);
+  assert receipt->>'kind'='upload', 'tracked admission did not issue an upload';
+  operation:=(receipt->>'operationId')::uuid;
+  key:=receipt->>'storageKey';
+  assert key='organizations/'||org||'/resumes/'||resume||'/versions/'||version||'.pdf';
+  assert public.begin_analysis_admission_upload(candidate,org,operation,upload,'resumes',key);
+  assert not public.acknowledge_analysis_admission_upload(candidate,org,operation,upload,'resumes',key||'.wrong',object_id);
+  assert public.acknowledge_analysis_admission_upload(candidate,org,operation,upload,'resumes',key,object_id);
+  assert not public.acknowledge_analysis_admission_upload(candidate,org,operation,upload,'resumes',key,gen_random_uuid());
+  receipt:=public.finalize_analysis_admission(candidate,org,operation,upload,request||jsonb_build_object(
+    'jobTitle',title,'jobDescription',description,'displayName',filename,'requestId','synthetic-a01-test'));
+  assert receipt->'created'='true'::jsonb and receipt->>'analysisId'=analysis::text, 'admission did not commit';
+  assert public.prepare_tracked_analysis_admission(candidate,org,request)->>'kind'='replay';
+  receipt:=public.claim_analysis_job_v2(worker1,1);
+  assert receipt->>'analysisId'=analysis::text and receipt->>'attempt'='1', 'initial lease';
+  fence1:=(receipt->>'leaseFence')::uuid;
+  assert public.claim_analysis_job_v2(worker2,120) is null, 'live lease cannot be stolen';
+
+  transition:=jsonb_build_object('p_analysis_id',analysis,'p_actor_id',null,'p_process_id',worker1,
+    'p_request_id','synthetic-a01-test','p_expected_status','quarantined','p_next_status','queued');
+  assert public.persist_analysis_stage_v2(analysis,worker1,1,fence1,'transition_analysis',transition), 'quarantine transition';
+  transition:=transition||'{"p_expected_status":"queued","p_next_status":"extracting"}'::jsonb;
+  assert public.persist_analysis_stage_v2(analysis,worker1,1,fence1,'transition_analysis',transition), 'extracting transition';
+  perform pg_sleep(1.1);
+  receipt:=public.claim_analysis_job_v2(worker2,120);
+  fence2:=(receipt->>'leaseFence')::uuid;
+  assert receipt->>'analysisId'=analysis::text and receipt->>'attempt'='2' and fence1<>fence2, 'expired worker recovered with new fence';
+
+  evidence_envelope:=jsonb_build_object(
+    'schemaVersion','evidence/2.0.0','id',evidence_id,'ownerId',candidate,'analysisId',analysis,'sourceId',version,
+    'inputSha256',checksum,'createdAt','2026-10-11T12:00:00Z','retentionPolicyId','synthetic-evaluation-30d-v1',
+    'nativeSource',graph,'ocrSource',null,'ocrFailure',null,'status','review_required','scoringEligible',false,
+    'confidence','{"kind":"uncalibrated","reason":"calibration_not_approved"}'::jsonb,
+    'spans','[
+      {"id":"native-page-1-line-1","pageId":"page-1","method":"native_text","text":"alex@example.test","start":0,"end":17,"box":null,"confidence":{"kind":"uncalibrated","value":null}},
+      {"id":"native-page-2-line-1","pageId":"page-2","method":"native_text","text":"","start":0,"end":0,"box":null,"confidence":{"kind":"uncalibrated","value":null}}]'::jsonb,
+    'assertions','[{"id":"email-1","field":"email","value":"alex@example.test","evidence":[{"spanId":"native-page-1-line-1","start":0,"end":17}],"state":"review_required","confidence":{"kind":"uncalibrated","value":null}}]'::jsonb,
+    'fields','[{"field":"name","state":"not_evaluated"},{"field":"email","state":"review_required"},{"field":"phone","state":"not_evaluated"},
+      {"field":"employer","state":"not_evaluated"},{"field":"role","state":"not_evaluated"},{"field":"dates","state":"not_evaluated"},{"field":"education","state":"not_evaluated"},{"field":"certification","state":"not_evaluated"}]'::jsonb,
+    'blockers','["uncalibrated_confidence","missing_critical_fields","missing_ocr_pages"]'::jsonb);
+  payload:=jsonb_build_object('p_analysis_id',analysis,'p_envelope',evidence_envelope,'p_process_id',worker2,
+    'p_request_id','synthetic-a01-test','p_page_count',2);
+  assert not public.persist_analysis_stage_v2(analysis,worker1,1,fence1,'persist_document_evidence',payload);
+  assert not public.persist_analysis_stage_v2(analysis,worker2,2,fence2,'persist_document_evidence',payload||'{"p_page_count":1}'::jsonb);
+  reset role;
+  assert not exists(select 1 from public.document_evidence_attempts);
+  assert (select v.page_count is null from public.resume_versions v where v.id=version);
+  set local role service_role;
+  assert public.assert_analysis_stage_lease(analysis,worker2,2,fence2), 'recovered lease is authorized';
+  assert public.persist_analysis_stage_v2(analysis,worker2,2,fence2,'persist_document_evidence',payload), 'live evidence write';
+  assert public.persist_analysis_stage_v2(analysis,worker2,2,fence2,'persist_document_evidence',payload), 'identical evidence replay';
+  assert not public.complete_analysis_job_v2(analysis,worker1,1,fence1);
+  assert public.complete_analysis_job_v2(analysis,worker2,2,fence2), 'handoff completes queue';
+  assert public.claim_analysis_job_v2(worker2,120) is null;
+  reset role;
+
+  assert (select a.status='needs_ocr' from public.analyses a where a.id=analysis);
+  assert (select v.page_count=2 from public.resume_versions v where v.id=version);
+  assert (select count(*)=1 from public.document_evidence_attempts);
+  assert (select e.envelope=evidence_envelope and e.envelope#>>'{nativeSource,pages,1,text}'=''
+    from public.document_evidence_attempts e where e.id=evidence_id);
+  assert not exists(select 1 from public.analysis_jobs);
+  assert not exists(select 1 from public.analysis_deterministic_results);
+  assert not exists(select 1 from public.analysis_ai_runs);
+  perform set_config('request.jwt.claim.sub',outsider::text,true);
+  set local role authenticated;
+  assert not exists(select 1 from public.document_evidence_attempts e where e.id=evidence_id);
+  reset role;
+  perform set_config('request.jwt.claim.sub',candidate::text,true);
+  set local role authenticated;
+  assert exists(select 1 from public.document_evidence_attempts e where e.id=evidence_id);
+  reset role;
+  raise notice 'PASS: tracked admission, real lease expiry and reclaim, immutable evidence, blank page, owner-only read and no score';
+
+  insert into public.data_requests(id,organization_id,user_id,kind) values(deletion,org,candidate,'deletion');
+  set local role service_role;
+  receipt:=public.claim_privacy_request_with_cleanup_credits(privacy_worker,120,3);
+  assert receipt->>'id'=deletion::text and receipt->>'attempt'='1';
+  inventory:=public.capture_analysis_admission_retirement(deletion,privacy_worker,1);
+  assert inventory is not null;
+  plan:=public.prepare_deletion_request_with_admission_handoff(deletion,privacy_worker,1);
+  assert plan#>>'{admissionHandoff,adoptedObjects,0,storageKey}'=key;
+  assert plan#>>'{admissionHandoff,adoptedObjects,0,objectId}'=object_id::text;
+  assert not public.complete_deletion_request_with_admission_retirement(deletion,privacy_worker,1);
+  assert not public.complete_analysis_admission_deletion_object(deletion,privacy_worker,1,upload,gen_random_uuid());
+  -- The synthetic provider outcome begins here. No Storage request is made.
+  assert public.complete_analysis_admission_deletion_object(deletion,privacy_worker,1,upload,object_id);
+  assert public.complete_deletion_request_with_admission_retirement(deletion,privacy_worker,1);
+  reset role;
+  assert (select d.status='completed' from public.data_requests d where d.id=deletion);
+  assert not exists(select 1 from public.analyses where id=analysis);
+  assert not exists(select 1 from public.resume_versions where id=version);
+  assert not exists(select 1 from public.document_evidence_attempts where id=evidence_id);
+  assert not exists(select 1 from private.analysis_admission_operations where id=operation);
+  assert not exists(select 1 from private.analysis_admission_uploads where id=upload);
+  assert not exists(select 1 from private.analysis_admission_upload_transport where upload_id=upload);
+  assert not exists(select 1 from private.privacy_deletion_plans where request_id=deletion);
+  assert exists(select 1 from private.owned_ai_deletion_dispositions where owner_id=candidate);
+  assert exists(select 1 from auth.users where id=outsider);
+  raise notice 'PASS: real privacy plan, bound absence receipt, sealed application-row and ledger retirement';
+end;
+$journey$;
+rollback;
+select 'PASS: synthetic lifecycle transaction rolled back';

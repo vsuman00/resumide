@@ -1,0 +1,50 @@
+{
+  "version": "jd-recommendation-source/1.0.0",
+  "task": "CR-A14",
+  "mode": "Pure deterministic guidance from actual server-owned typed relationship context; existing legacy pattern proposal review improved separately. No new AI/network/write API or numeric policy.",
+  "backendAPI": {
+    "module": "app/lib/server/jd-recommendations.ts",
+    "exports": [
+      "JdRecommendationPlanSchema",
+      "type JdRecommendationPlan",
+      "buildJdRecommendations"
+    ],
+    "signature": "buildJdRecommendations(rawContext:unknown, expected:{analysisId:string,ownerId:string,canonicalVersionId:string,requirementVersionId:string}):JdRecommendationPlan",
+    "admission": "Use validateRequirementRelationshipContext with explicit expected ownership/version selection and recompute evaluateRequirementCoverage. Never accept client-supplied matches/support flags. Derive everything before the existing final owned head/content/source recheck in score-v2-repository typed branch. Add optional jdRecommendations:JdRecommendationPlan to ScoreReadMetadata/read result; preserve old diagnostic/schema/digest bytes and legacy/no-JD branches. No extra RPC/read provider.",
+    "envelope": {
+      "schemaVersion": "jd-recommendations/1.0.0",
+      "binding": "Exact existing available coverage.binding object; no caller substitutes",
+      "coverageDigest": "exact freshly derived coverage.digest",
+      "digest": "SHA256 deterministic complete plan content excluding digest field itself",
+      "items": "at most5 objects using itemShape below",
+      "total": "all unique nonduplicate reviewable typed clauses represented in the prioritized inventory, not just first5",
+      "remainingCount": "total-items.length; preserve unknown/missing requirements in existing complete coverage view",
+      "retainedClauseCount": "count of retained unmapped clauses; visible separately, never silently treated as met",
+      "scoreValue": null,
+      "scoreDelta": null,
+      "qualificationCredit": "not_assessed"
+    },
+    "itemShape": {
+      "id": "deterministic SHA256",
+      "clauseId": "actual clause.id",
+      "requirementQuote": "exact persisted clause.evidence.quote",
+      "importance": "required|preferred|contextual|unknown",
+      "expressionKind": "actual atom|all_of|any_of|unknown",
+      "observation": "source_related_claim|recorded_declaration|listed_skill_only|evidence_gap|review_scope",
+      "target": "null OR {factId,value,basis:source_quote|candidate_declaration,sourceQuote:string|null}; exact CURRENT contribution value and witness basis only; no historic source substituted for current value",
+      "action": "review_claim|clarify_if_true|review_requirement",
+      "reason": "bounded source-derived explanation/why this review is useful; no assertions of proficiency, duration or qualification",
+      "question": "null OR bounded question about actual SAME related current contribution and its missing requirement evidence; numbers optional and truthful",
+      "effort": "review_required"
+    }
+  },
+  "ranking": "Deterministic required before preferred before contextual/unknown; within importance prioritize unique actual related contributions for review, then partial same-clause clarification, then listings/missing/ambiguous review. Preserve logical AND/OR/negation/importance and approved aliases from coverage. Do not treat contextual, negated or unknown clauses as positive qualifications. Do not select arbitrary first target on ambiguous/multiple placements. Dedup only actual semantic duplicateOf groups; never merge different required/preferred meaning or discard distinct clauses. Top5 is display limit, not complete gap coverage.",
+  "truth": "Prioritize actually evidenced Python/FastAPI/API/Git work when present. Pydantic/async/microservices/RAG/agents/cloud questions only when SAME real contribution is related under existing admitted same-clause witnesses; otherwise visible evidence gap with no invented link or resume text. A skill listing is not contribution/proficiency/duration. A declaration is labelled and never upgraded to source quote. New facts require existing separate canonical review/confirmation. No automatic application, no new unsupported rewrite.",
+  "frontend": {
+    "readPanel": "New JdRecommendations component takes {plan:JdRecommendationPlan,base:string}, type-only server import; mount in score route only when model.jdRecommendations exists, keeping current flags/historical state/ownership/version refs. Show up to5 priorities, exact JD quote/current claim/basis/reason/effort/conditional question; remaining+retained counts and no score promise. Review links exact selected canonical version plus #fact-ID and exact selected JD version; source evidence generic. Clearly label pure local guidance, not AI, independent factual verification or qualification score.",
+    "legacyReview": "In existing AuthoringWorkspace show complete current wording beside proposed wording, unchanged source fact IDs/provenance and existing pattern-specific structural rationale/quality warnings. Distinguish projected from saved diagnostics; score/delta remain unavailable. Existing accept/reject/clarify/ack/undo/CAS/proof actions unchanged. Questions remain optional and factual; metrics never mandatory. Add descriptive helper in authoring-ui.ts if useful, preserve existing exports/semantics."
+  },
+  "bounds": "Existing admitted300clauses/1000witnesses; at most5 rendered recommendations; finite string/array/work/output bounds. Invalid/mismatched/unsafe context refuses through existing private error handling, no partial authoritative output or raw errors/PII logs. Retain deterministic byte-stable output and immutable input.",
+  "tests": "Known synthetic fixtures and actual production helper/owned reader/UI calls. Reproduce missing capability first with genuine baseline capability or source assertion, not missing-module failure. Independent expected Python/FastAPI evidence versus unsupported Pydantic/RAG/etc, AND/OR/negation/unknown/dedup, stale/wrong owner/source/pair, declaration/fragment/listing/ambiguous placement, top5+complete counts, deterministic/input immutability, and no qualification/score gain. Existing transitions are exercised only with fakeRPC/DOM, no Native claim.",
+  "boundary": "Source/synthetic/DOM/fakeRPC only; pinned Node22.23.4, sealed empty HOME, OS network/root+WT dotenv/Git-write denial. No parser/DB/env/keys/PII/provider/browser/service/compiler/OCR/Docker/deps/workspace Git/deploy. Default-off flags, IR1.0.4/core602ba/policy230f, all scorer/history/migrations/failures remain fixed."
+}

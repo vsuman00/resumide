@@ -1,0 +1,126 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE",
+  "parent": [
+    "CR-A12",
+    "CR-A13",
+    "CR-R04"
+  ],
+  "owner": "pricing_validation",
+  "files": [
+    "supabase/migrations/20261115082125_owned_ai_usage.sql",
+    "app/lib/server/initial-feedback-profile.ts",
+    "app/lib/server/owned-ai-usage.ts",
+    "app/lib/server/canonical-rewrite-service.ts",
+    "tests/unit/owned-ai-usage.test.ts",
+    "tests/unit/canonical-rewrite-service.test.ts",
+    "tests/unit/owned-ai-usage-sql.test.ts",
+    "scripts/verify-owned-ai-usage.sql",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a13-shared-ai-usage.md"
+  ],
+  "migration": "supabase/migrations/20261115082125_owned_ai_usage.sql",
+  "preimages": {
+    "app/lib/server/initial-feedback-profile.ts": null,
+    "app/lib/server/owned-ai-usage.ts": null,
+    "app/lib/server/canonical-rewrite-service.ts": "4c19b95e96133389ea7b584dd8d8e098f24946f1fc993d73ba2abf013dda8e2e",
+    "tests/unit/owned-ai-usage.test.ts": null,
+    "tests/unit/canonical-rewrite-service.test.ts": "730e7c2ed76d64ee4c63e2b517afdb6efdc80bda7675f8822468e98beff8b6e9",
+    "tests/unit/owned-ai-usage-sql.test.ts": null,
+    "scripts/verify-owned-ai-usage.sql": null,
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a13-shared-ai-usage.md": null,
+    "supabase/migrations/20261115082125_owned_ai_usage.sql": null
+  },
+  "dependencyTransfers": {
+    "app/lib/server/initial-feedback-operation-contract.ts": {
+      "preimage": null,
+      "postimage": "52e9b4e31ee45a8010596c2b64de03b2b57b84f047029bf65c2794040c8549da"
+    },
+    "app/lib/server/initial-feedback-publication-policy.ts": {
+      "preimage": null,
+      "postimage": "b4c33a5bfebf9fe1b22253c40ea8bf84050b63f2da8472ead2b73a1dc44aa6c8"
+    },
+    "app/lib/server/initial-feedback-operation-profile.ts": {
+      "preimage": "91004edbe4ca2abcf535f405991f7bb73bb44af70a7b999cb12aa3e4d9e31799",
+      "postimage": "91004edbe4ca2abcf535f405991f7bb73bb44af70a7b999cb12aa3e4d9e31799"
+    },
+    "app/lib/server/legacy-scoring-input.ts": {
+      "preimage": null,
+      "postimage": "57246d936a251b14b0df1e9b51dd147063da9997820b670ddeb2948e5f08fefa"
+    },
+    "app/lib/server/legacy-scoring-input-profile.ts": {
+      "preimage": "b18bbcd0242245d3a4b47ddbb1477bc121c7e3c566ef06bd00f0a5b081016b94",
+      "postimage": "f2b2410fe652fbbf1963bbbbba5f9e5e1928f2bb177e5262d9edee30a99a101c"
+    },
+    "app/lib/server/initial-feedback-plan-profile.ts": {
+      "preimage": "e9f53e3e9e409fcf69b2c3cf420e3639323fdca8bf1d79f603cf1fc78618e3a1",
+      "postimage": "e9f53e3e9e409fcf69b2c3cf420e3639323fdca8bf1d79f603cf1fc78618e3a1"
+    },
+    "app/lib/server/canonical-rewrite-service.ts": {
+      "preimage": "a1948aedfc1bfcf94e83f917cc603dc845ceb884a787e0372103bff6f5cf274f",
+      "postimage": "4c19b95e96133389ea7b584dd8d8e098f24946f1fc993d73ba2abf013dda8e2e"
+    },
+    "tests/unit/canonical-rewrite-service.test.ts": {
+      "preimage": "0e5f8214fe28e2d80345a01800cc8cb846eb6fe199a5d69bbaeeb44352c145e5",
+      "postimage": "730e7c2ed76d64ee4c63e2b517afdb6efdc80bda7675f8822468e98beff8b6e9"
+    },
+    "app/lib/server/canonical-rewrite-contract.ts": {
+      "preimage": "4f3d4767e4492471a0ea033cd3c6afc01a8a7df663551f5491a84740eeb5dbf4",
+      "postimage": "9986127e127171c98520cd4218855bd54c6068df1c2d948c0bed7fa7fcc9882c",
+      "preimageArchive": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-shared-usage-gfrr1c18/canonical-rewrite-contract-pre-sync.ts.txt",
+      "reason": "Actual current A12 contract dependency; author baseline fixture failed before handler under stale worktree contract, not a product counter RED."
+    },
+    "app/lib/server/qualitative-support.ts": {
+      "preimage": null,
+      "postimage": "602ba4c5f2be916e85e891dbc9e168083db6e978bb821bce9404a66fa777f666",
+      "reason": "Completed actual transitive read dependency closure; prior missing import/builder errors remain setup-only."
+    },
+    "app/lib/server/initial-feedback-contract.ts": {
+      "preimage": null,
+      "postimage": "b8419d239a86762cf4df92b5ec7164bb0c72ae6b8f0d360dd2348ff645b20ae6",
+      "reason": "Completed actual transitive read dependency closure; prior missing import/builder errors remain setup-only."
+    },
+    "app/lib/server/qualitative-prose.ts": {
+      "preimage": "a88c869032919317680f3aba633e5fd2cf46cfb79483daea4424b0939b3a654a",
+      "postimage": "83df6a0d7bd3b8003037a02528819afbcfad63c712ed046640639bb5b17bfadd",
+      "reason": "Completed actual transitive read dependency closure; prior missing import/builder errors remain setup-only."
+    },
+    "app/lib/server/scoring-stage.ts": {
+      "preimage": "fd7d8fa7f9677f03756bf884f80e7470e35ce0b38a5c4f6c1d53dc7984ca86d5",
+      "postimage": "f9c262acc637e26c3f47bd9f9a50ecce87ec2cd0009d3f767a47eda0a193acb6",
+      "reason": "Completed actual transitive read dependency closure; prior missing import/builder errors remain setup-only."
+    },
+    "app/lib/server/config.ts": {
+      "preimage": "6d51eee21b0715ba90b0b4eaf1fba2da6e9f7220d97a0a09dd582293a49311d1",
+      "postimage": "fcc54923e0ade3e3171f437470261075fe07ef7d2735df2298e61c44620c007b",
+      "reason": "Completed actual transitive read dependency closure; prior missing import/builder errors remain setup-only."
+    }
+  },
+  "scope": "Separately versioned shared quota reader and actual complete19-key readiness/11-string source profile only after all real routines exist; strict bounded Node shared usage helper and A12 service caller cutover. No commercial billing or feature activation.",
+  "acceptance": [
+    "Actual source-owned org and UTC month; strict decimal BigInt partition legacy-unlinked +actualA12 claimed operations +allA13 claimed attempts including rejected/partial/unpublished, unknown is hold not0",
+    "Exclude only exactly validated authoritative A12/A13 run links acrossALLmonths BEFORE selecting legacy publication month; legacy unmatched rows remain counted, inconsistent owner/org/analysis/operation/usage links refuse",
+    "Use immutable original claim month for both known and later settlement, never legacy run creation month; include precompat authoritative A12 operation.run_id links",
+    "Counter and full metadata data reader denied inclservice; metadata may be service-readable only; no placeholderpublic bodies/hashes/seeds",
+    "Full19/11 actualsource profile waits real publication factory bodies and actual counter; independent source closure guards all dependencies, no Node JSONB emulation",
+    "A12 caller uses new shared helper only, with no old read_canonical_rewrite_usage or Number-null0 fallback in new mode; preserve old counter/module/profiles bytes and all existing behavior assertions",
+    "Both A12 and newA13 caller cutovers required before adoption; counter observationalquota is notatomicmonthlycap, R03hardreserve independent, no seconddebit",
+    "Finite synthetic Node helper and affectedactual service tests, text-source checks, deferredprivilegedmutatingrollbackscript withrealclaim/month/link/unknownscenarios NOTRUN"
+  ],
+  "boundaries": "Source/synthetic only pinnedsealedNode22; no SQL parsing/execution, DB/advisors/hosted, providers/env/keys/PII, services/browser/compiler/Docker/deps/Git/deploy. Root owns shared docs/migrationorder/flags. Backend owns publication migration/profile and foundationforwardprofile, coordinate actualtablecolumns without overlap.",
+  "scaffold": {
+    "actualMigration": "supabase/migrations/20261115082125_owned_ai_usage.sql",
+    "receipt": "a13-shared-ai-usage-scaffold.json",
+    "sha256": "c9ca86ebabf8caa1b61d4360803b7c84e784cfef7b299e1964fe3c9d41ac5de9",
+    "emptyFileSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "integratedFiles": {
+    "supabase/migrations/20261115082125_owned_ai_usage.sql": "63ddc8a43deba5e794feef0f6c0fefe73be524d6c75a60b70e67087ae82b44b1",
+    "app/lib/server/owned-ai-usage.ts": "38561cea225414c6f69690294bc568ecf6bebaa7b5099dd995a82e93f028c495",
+    "app/lib/server/initial-feedback-profile.ts": "219cee395932854bf67bbbcb727eb4eaab606f8867b47665c1ec5857d89763c6",
+    "app/lib/server/canonical-rewrite-service.ts": "611f3e5dad383584895a339b3b685accca1c2e61a800823092833971b1295232",
+    "tests/unit/owned-ai-usage.test.ts": "483f2c865ea185ece881a37380c1c8b653285e8df6e343c551376dbf66abe20e",
+    "tests/unit/owned-ai-usage-sql.test.ts": "08b6f5ed4e32af11f47f4e60dd92eb44a9541a9ab3340b4c59ce8378757aeaea",
+    "tests/unit/canonical-rewrite-service.test.ts": "c80a253d64c70e35c0167505407fb2960eeec4ceb76e19180505fb4cd789c90a",
+    "scripts/verify-owned-ai-usage.sql": "8006dd6959727d82dfd3aa6e28a6e19658b9e05f56a654b7710eb7d023dae364",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a13-shared-ai-usage.md": "ff6171695133a7035d6b36bbba2c86dcf0be3f81981dd5abbb96307faea869f2"
+  }
+}

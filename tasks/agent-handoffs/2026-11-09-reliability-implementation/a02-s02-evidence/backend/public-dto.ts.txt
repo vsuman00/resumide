@@ -1,0 +1,72 @@
+import { createHash } from "node:crypto";
+import { DocumentEvidenceSchema } from "./document-evidence";
+import {
+  deriveEvidenceReviewTargets,
+  EVIDENCE_TARGET_MODEL_VERSION,
+  type EvidenceReviewTargets,
+  type OwnedEvidenceBinding,
+} from "./evidence-targets";
+
+export const ENTRY_ASSOCIATION_MODEL_VERSION =
+  "evidence-entry-associations/1.0.0" as const;
+
+type Observation = EvidenceReviewTargets["observations"][number];
+type Binding = EvidenceReviewTargets["binding"] & {
+  targetModelVersion: typeof EVIDENCE_TARGET_MODEL_VERSION;
+};
+export type EntryAssociationMember = {
+  observationId: string;
+  assertionId: string;
+  targetId: string;
+  field: Observation["field"];
+  citations: Observation["citations"];
+};
+export type EntryAssociationUnresolvedReason =
+  | "out_of_scope_field"
+  | "outside_supported_employment_section"
+  | "unsupported_labelled_layout"
+  | "missing_employer_anchor"
+  | "incomplete_labelled_block"
+  | "ambiguous_labelled_block"
+  | "unsupported_extractor";
+export type EntryAssociationGroup = {
+  id: string;
+  kind: "employment";
+  association: "explicit_labelled_multiline_candidate";
+  verified: false;
+  pageId: string;
+  method: "native_text" | "local_ocr";
+  observationIds: string[];
+  targetIds: string[];
+  members: EntryAssociationMember[];
+};
+type ReviewBase = {
+  modelVersion: typeof ENTRY_ASSOCIATION_MODEL_VERSION;
+  authority: "derived_review_only";
+  scoringEligible: false;
+  persistable: false;
+  qualificationAssessment: "not_assessed";
+  preservedGroupIds: string[];
+  groups: EntryAssociationGroup[];
+  unresolved: (EntryAssociationMember & {
+    reason: EntryAssociationUnresolvedReason;
+  })[];
+};
+export type EntryAssociationReview = ReviewBase &
+  (
+    | {
+        state: "review_required";
+        binding: Binding;
+        unavailableReason: null;
+      }
+    | {
+        state: "unavailable";
+        binding: Binding | null;
+        unavailableReason:
+          | "invalid_evidence"
+          | "binding_mismatch"
+          | "unsupported_extractor"
+          | "resource_limit";
+      }
+  );
+

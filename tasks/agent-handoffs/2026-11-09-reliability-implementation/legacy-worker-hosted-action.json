@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "resumide-hosted-compatibility-action/1.0.0",
+  "status": "PENDING_OWNER_APPROVAL",
+  "target": "Existing configured Supabase project privately matched in r11-native-schema-preflight.json; recheck binding before mutation",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "dirtyWorktree": true,
+  "applicationGate": "legacy-compatibility-integrated.json",
+  "migration": "supabase/migrations/20261110101800_legacy_worker_compatibility_bridge.sql",
+  "migrationSha256": "a54196112e51a5109ccc143ac20887568bec2e7021dd98328312ba615d69d418",
+  "migrationName": "legacy_worker_compatibility_bridge",
+  "allowedOperations": [
+    {
+      "tool": "supabase.apply_migration",
+      "count": 1,
+      "source": "Exact migration bytes; explicit transaction, known-predecessor guards, local10s statement/1slock/15sidle limits",
+      "changes": [
+        "transition_analysis",
+        "release_analysis_job",
+        "cancel_analysis",
+        "Drop only exact historical analysis_ai_runs_analysis_input_key if present and exact verified shape; current preflight shows absent"
+      ]
+    },
+    {
+      "tool": "supabase.execute_sql",
+      "count": 1,
+      "source": "scripts/verify-legacy-worker-compatibility.sql",
+      "sourceSha256": "31666d5704c0d2b3fb3f7b0cd477dd066d2371b9aa5b7d8c87770bfef00aa136",
+      "mode": "Read-only catalog result; never invoke job/stage/provider routines"
+    },
+    {
+      "tool": "supabase.list_migrations",
+      "count": 1,
+      "purpose": "Confirm application receipt and migration history after success or ambiguous failure"
+    }
+  ],
+  "stopConditions": [
+    "Any source/target mismatch",
+    "Unknown body/grant/index definition",
+    "Timeout, SQL error or malformed/nonmatching metadata result",
+    "No automatic migration retry; inspect catalog/history if outcome ambiguous"
+  ],
+  "candidateRowsReadOrWritten": false,
+  "claimsOrWorkers": false,
+  "providerRequests": false,
+  "otherPendingMigrationsApplied": false,
+  "featureFlagsChanged": false,
+  "webOrWorkerDeployment": false,
+  "behavioralAcceptance": "NOT_SUPPLIED_BY_THIS_PACKET",
+  "nativeRaceAcceptance": "NOT_SUPPLIED_BY_THIS_PACKET",
+  "authorizationRequirement": "tasks/reliability-remediation-plan.md section8 reserves managed DDL/target/configuration decisions at their actual boundary; plan approval does not authorize them.",
+  "ownerQuestionAsked": true,
+  "ownerReplyReceived": false
+}

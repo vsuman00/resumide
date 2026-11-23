@@ -1,0 +1,111 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/initial-feedback-stage.test.ts (7 tests | 5 failed) 64ms
+     × publishes immutable original inputs before legacy reads and keeps the old transport isolated 39ms
+     × replays an owned publication before consent, quota, rate, claim or SDK 16ms
+     × fails pending safely on every queue replay without redispatch or completion 3ms
+     × publishes AI-off deterministic output without fresh authorization or SDK 2ms
+     × uses existing consent and never manufactures it 2ms
+     ✓ requires a real matching lease and respects cancellation before lookup 1ms
+     ✓ leaves the legacy branch selected when the flag is false 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > publishes immutable original inputs before legacy reads and keeps the old transport isolated
+AssertionError: promise rejected "Error: Legacy mutable input lookup forbid…" instead of resolving
+ ❯ tests/unit/initial-feedback-stage.test.ts:612:28
+    610|   it("publishes immutable original inputs before legacy reads and keep…
+    611|     const h = harness(); const old = {execute: vi.fn()};
+    612|     await expect(h.run(old)).resolves.toBe(true);
+       |                            ^
+    613|     expect(old.execute).not.toHaveBeenCalled();
+    614|     expect(h.fetch).toHaveBeenCalledTimes(1);
+
+Caused by: Error: Legacy mutable input lookup forbidden in selected mode
+ ❯ Object.select tests/unit/initial-feedback-stage.test.ts:590:19
+ ❯ Module.processQualitativeStage app/lib/server/qualitative-stage.ts:77:6
+ ❯ tests/unit/initial-feedback-stage.test.ts:612:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > replays an owned publication before consent, quota, rate, claim or SDK
+AssertionError: promise rejected "Error: Legacy mutable input lookup forbid…" instead of resolving
+ ❯ tests/unit/initial-feedback-stage.test.ts:631:25
+    629|   it("replays an owned publication before consent, quota, rate, claim …
+    630|     const h=harness(); h.state.publication=producePublication(h.f,noAi…
+    631|     await expect(h.run()).resolves.toBe(true);
+       |                         ^
+    632|     expect(h.fetch).not.toHaveBeenCalled(); expect(h.reads).toHaveLeng…
+    633|     expect(h.events).not.toContain("consume_analysis_rate_limit");
+
+Caused by: Error: Legacy mutable input lookup forbidden in selected mode
+ ❯ Object.select tests/unit/initial-feedback-stage.test.ts:590:19
+ ❯ Module.processQualitativeStage app/lib/server/qualitative-stage.ts:77:6
+ ❯ tests/unit/initial-feedback-stage.test.ts:631:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > fails pending safely on every queue replay without redispatch or completion
+AssertionError: expected Error: Legacy mutable input lookup forbid… to match object { …(2) }
+
+- Expected
++ Received
+
+- {
+-   "code": "INITIAL_FEEDBACK_PENDING",
+-   "message": "Initial feedback is pending durable completion.",
++ Error {
++   "message": "Legacy mutable input lookup forbidden in selected mode",
+  }
+
+ ❯ tests/unit/initial-feedback-stage.test.ts:638:46
+    636|   it("fails pending safely on every queue replay without redispatch or…
+    637|     const h=harness(); h.state.readPending=true;
+    638|     for(let i=0;i<2;i++) await expect(h.run()).rejects.toMatchObject({…
+       |                                              ^
+    639|     expect(h.fetch).not.toHaveBeenCalled(); expect(h.reads.every(r=>r.…
+    640|     expect(h.events).not.toContain("consume_analysis_rate_limit"); exp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > publishes AI-off deterministic output without fresh authorization or SDK
+AssertionError: promise rejected "Error: Legacy mutable input lookup forbid…" instead of resolving
+ ❯ tests/unit/initial-feedback-stage.test.ts:644:25
+    642|   it("publishes AI-off deterministic output without fresh authorizatio…
+    643|     const h=harness(); mocks.config.AI_ENABLED=false;
+    644|     await expect(h.run()).resolves.toBe(true);
+       |                         ^
+    645|     expect(h.state.publication?.reason).toBe("ai_disabled"); expect(h.…
+    646|     expect(h.events).not.toContain("consume_analysis_rate_limit");
+
+Caused by: Error: Legacy mutable input lookup forbidden in selected mode
+ ❯ Object.select tests/unit/initial-feedback-stage.test.ts:590:19
+ ❯ Module.processQualitativeStage app/lib/server/qualitative-stage.ts:77:6
+ ❯ tests/unit/initial-feedback-stage.test.ts:644:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > uses existing consent and never manufactures it
+AssertionError: promise rejected "Error: Legacy mutable input lookup forbid…" instead of resolving
+ ❯ tests/unit/initial-feedback-stage.test.ts:650:25
+    648|   it("uses existing consent and never manufactures it", async () => {
+    649|     const h=harness(); h.consent.present=false;
+    650|     await expect(h.run()).resolves.toBe(true);
+       |                         ^
+    651|     expect(h.state.publication?.reason).toBe("pre_dispatch_unavailable…
+    652|     expect(h.fetch).not.toHaveBeenCalled(); expect(h.events).not.toCon…
+
+Caused by: Error: Legacy mutable input lookup forbidden in selected mode
+ ❯ Object.select tests/unit/initial-feedback-stage.test.ts:590:19
+ ❯ Module.processQualitativeStage app/lib/server/qualitative-stage.ts:77:6
+ ❯ tests/unit/initial-feedback-stage.test.ts:650:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 2 passed (7)
+   Start at  12:08:06
+   Duration  406ms (transform 148ms, setup 0ms, import 277ms, tests 64ms, environment 0ms)
+

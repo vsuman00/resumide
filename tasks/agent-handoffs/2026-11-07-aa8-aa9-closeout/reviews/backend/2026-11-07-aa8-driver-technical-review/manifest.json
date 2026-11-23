@@ -1,0 +1,190 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "aa7_review AI subagent",
+  "author": "aa7_validation AI subagent",
+  "sourceConclusion": "PASS_NO_BLOCKING_DEFECT",
+  "status": "AI_TECHNICAL_REVIEW_ACCEPTED_FOR_EXACT_SYNTHETIC_REGRESSION_CARD",
+  "files": [
+    {
+      "path": "scripts/verify-evaluation-workflow.ts",
+      "sha256": "6d8d1066e844553d12667562534337045c76f9bcddf995e87b274fd76ed69e4c"
+    },
+    {
+      "path": "tests/fixtures/evaluation-workflow.ts",
+      "sha256": "bee8bd5598c19f19c9dfecad25197993d9381d3702ba5f1b36f671b44241f68a"
+    },
+    {
+      "path": "tests/integration/evaluation-workflow.test.ts",
+      "sha256": "06e7185b389bbf06aba49e54a6fbb6882996b48c97536b7434badfd78a3e3970"
+    }
+  ],
+  "priorObservedReport": {
+    "path": "/Users/vaibhavsuman/.codex/worktrees/aa7-20261030-sandbox/resume_ats/tasks/agent-handoffs/2026-11-07-aa8-workflow-observed.json",
+    "sha256": "58be352e9e2794373a49179539764235e48f16f967d773b2575477079ef06409",
+    "sourceSHA256": "fd569ee4345e679a6ed956acacb189b75584b2a3fc812275ea3d57404b224fba",
+    "latencyScope": "analysis-through-writer only; predates actual-export latency correction",
+    "engineeringChecks": 12,
+    "pilotChecks": 11,
+    "documentCount": 20,
+    "lockedDocuments": 8,
+    "exports": {
+      "pdf": 1,
+      "docx": 1
+    },
+    "numericGatePassed": false,
+    "regressionClaim": "blocked pending actual review",
+    "representativeReady": false,
+    "releaseReady": false
+  },
+  "correctedRuntimeReport": {
+    "path": "docs/evaluation/AA8_AA9_WORKFLOW_20261107.json",
+    "sha256": "9d641194909ef59ee147909a1ab4e2892696a304047f941a51b5bba9f10fffe7",
+    "sourceSHA256": "6d8d1066e844553d12667562534337045c76f9bcddf995e87b274fd76ed69e4c",
+    "CLIExitCode": 0,
+    "status": "engineering_pass",
+    "documentCount": 20,
+    "lockedDocuments": 8,
+    "exports": {
+      "pdf": 1,
+      "docx": 1
+    },
+    "engineeringChecks": 12,
+    "pilotChecks": 11,
+    "statisticsCells": 40,
+    "numericGatePassed": false,
+    "intervalStatusCounts": {
+      "exact_observed": 4,
+      "insufficient_clusters": 14,
+      "withheld": 22
+    },
+    "latencyScope": "before locked application analysis through completed actual exports",
+    "reviewRegistrationInObservedReport": false
+  },
+  "reviewerExecutedTestsOrCLI": false,
+  "blockingFindings": [],
+  "qualifications": [
+    "Synthetic known-source reference scoring and writer proposals, not blind model validation",
+    "One shared serializer and one locked family cluster",
+    "Only two real exported artifacts; unsupported/unmeasured slots stay null",
+    "No self-review of authored claim-control module",
+    "No provider, customer/recruiter/vendor pilot, hosted deletion or launch acceptance"
+  ],
+  "next": "Coordinator may register the actual post-run AI review offline in a new card version; preserve unchanged default blocked run, higher-claim denial and missing-signal stop.",
+  "verificationReceipt": {
+    "path": "docs/evaluation/AA8_AA9_ENGINEERING_VERIFICATION_20261107.json",
+    "sha256": "2babdfb5f8f33261bdd0cb865031c75afa9acfd04826c010838f60b88c4a1960",
+    "status": "ALL_REQUIRED_LOCAL_CHECKS_PASSED_AFTER_TEST_TYPE_REPAIR",
+    "sourceInputCount": 615,
+    "initialCombinedVerifyExitCode": 2,
+    "fullTestRun": {
+      "files": 160,
+      "passed": 1438,
+      "failed": 0
+    },
+    "typeOnlyRepair": {
+      "path": "tests/unit/evaluation-corpus-drill.test.ts",
+      "before": "61a92a0cf9d3b80b35c897fb5225c70ec40dc4d8d7e4695bc6ff598f722dd075",
+      "after": "fdfddb8bbdf2938da3ddc59987b08ea435a7c32cbb6680751952ea1fc8e1636e",
+      "runtimeOrAssertionsChanged": false
+    },
+    "affectedTests": {
+      "passed": 17,
+      "failed": 0
+    },
+    "recoveryCommands": [
+      {
+        "command": "npm",
+        "args": [
+          "run",
+          "check:aa8:source"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": "npm",
+        "args": [
+          "test",
+          "--",
+          "tests/unit/evaluation-corpus-drill.test.ts"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": "npm",
+        "args": [
+          "run",
+          "typecheck"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": "npm",
+        "args": [
+          "run",
+          "build"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": "npm",
+        "args": [
+          "run",
+          "build:worker"
+        ],
+        "exitCode": 0
+      },
+      {
+        "command": "npm",
+        "args": [
+          "run",
+          "--silent",
+          "verify:aa8:workflow"
+        ],
+        "exitCode": 0
+      }
+    ],
+    "sourceStableDuringBothRuns": true
+  },
+  "claimTechnicalReview": {
+    "reference": "aa8_workflow_ai_review_20261107",
+    "reviewDate": "2026-11-07",
+    "accepted": true,
+    "claim": "Regression-tested",
+    "cardVersion": "workflow-evidence/1.0.0",
+    "cardHash": "67864f8e843274e642f643e4d455856e3122a1dda30a1ce600c261ed9b5a74d2",
+    "reviewerKind": "ai",
+    "reviewer": "aa7_review",
+    "driverAuthor": "aa7_validation",
+    "separateFromDriverAuthor": true,
+    "independentHuman": false,
+    "bindings": {
+      "sourceHash": "0208e6941265e9bfde6068b923212c815e7d23ce5522a5fee65edd6f225e2b64",
+      "lockHash": "5ecc3e2862a344624077b813a58657839de0d122b91ffc914ce423a56d4eba8b",
+      "reportHash": "319ece1b998c28adf0140fa7f86d52889c992d289ce43537f39dde6cd6b14c87",
+      "policyHash": "76a64c89888c74a7d46ef85855a671d23cd6fd13a2646a03dc428b03a262fb07",
+      "reportPayloadHash": "a5697431cfdf1b0238d54b3d5734bfee2d3ba774172a38bdee2b8330b37f9f12"
+    },
+    "runtimeReportSHA256": "9d641194909ef59ee147909a1ab4e2892696a304047f941a51b5bba9f10fffe7",
+    "executionReference": "workflow_actual_execution",
+    "executionArtifactHash": "d40505cfa54a9fb08db00c8f1eea1c29992909583f8f8c937e433b740051a159",
+    "acceptedMeaning": "The exact disclosed synthetic local regression/workflow was executed, preserves its expected failures and withholding, and supports only the Regression-tested claim.",
+    "higherClaimsAccepted": false,
+    "representativeClaimAccepted": false,
+    "domainClaimAccepted": false,
+    "vendorOrOutcomeClaimAccepted": false,
+    "activationAuthorized": false,
+    "publicationAuthorized": false,
+    "deploymentAuthorized": false,
+    "observedDefaultNegativePathUnchanged": true,
+    "registeredInObservedReport": false,
+    "successorUse": "A coordinator may reference this review in a metadata-only successor retaining the exact claim, scope and all source/report/policy bindings; authorization of the new card hash remains the coordinator responsibility."
+  },
+  "reviewerDataChecks": {
+    "applicationOrTestRerun": false,
+    "standardNodeJSONSHAOnly": true,
+    "lockedReportPayloadHash": "a5697431cfdf1b0238d54b3d5734bfee2d3ba774172a38bdee2b8330b37f9f12",
+    "cardHash": "67864f8e843274e642f643e4d455856e3122a1dda30a1ce600c261ed9b5a74d2",
+    "executionCasesHash": "d40505cfa54a9fb08db00c8f1eea1c29992909583f8f8c937e433b740051a159",
+    "sourceLockReportPolicyBindingsMatch": true
+  }
+}

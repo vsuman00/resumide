@@ -1,9 +1,16 @@
 import { z } from "zod";
+import { readCandidatePrivacyAccess } from "./privacy-deletion-policy";
 import type { createSupabaseAdminClient } from "./supabase";
 import {
   JobRequirementsSchema,
   parseJobRequirements,
 } from "./job-requirements";
+import {
+  StoredJobRequirementsSchema,
+  createJobRequirementRelations,
+  jobRelationSemanticSha256,
+} from "./job-requirement-admission";
+import { getServerConfig } from "./config";
 import { CanonicalError } from "./canonical-repository";
 import { domainFromJobTitle } from "./job-domain";
 type Client = Pick<
@@ -18,6 +25,24 @@ export const JobRequirementCommandSchema = z.strictObject({
 const missing = () => new CanonicalError(404, "Job requirements not found.");
 const unavailable = () =>
   new CanonicalError(503, "Job requirements are unavailable.");
+function unsupportedRuntime(error: unknown) {
+  if (
+    error instanceof Error &&
+    error.message === "JD_UNICODE_RUNTIME_UNSUPPORTED"
+  )
+    throw new CanonicalError(
+      503,
+      "JD interpretation is unavailable on this server. Retry after its configuration is updated.",
+    );
+}
+function readStoredRequirements(raw: unknown) {
+  try {
+    return StoredJobRequirementsSchema.safeParse(raw);
+  } catch (error) {
+    unsupportedRuntime(error);
+    throw unavailable();
+  }
+}
 async function ownedJob(client: Client, analysisId: string, ownerId: string) {
   if (!id.safeParse(analysisId).success || !id.safeParse(ownerId).success)
     throw missing();
@@ -49,10 +74,15 @@ async function ownedJob(client: Client, analysisId: string, ownerId: string) {
       .maybeSingle(),
     client
       .from("resume_versions")
-      .select("resume_id")
+      .select(
+        "id,resume_id,owner_id,organization_id,active_resume:resumes!resume_versions_resume_id_fkey(id,owner_id,organization_id,status)",
+      )
       .eq("id", a.resume_version_id)
       .eq("owner_id", ownerId)
       .eq("organization_id", a.organization_id)
+      .eq("active_resume.owner_id", ownerId)
+      .eq("active_resume.organization_id", a.organization_id)
+      .eq("active_resume.status", "active")
       .maybeSingle(),
     client
       .from("memberships")
@@ -60,28 +90,52 @@ async function ownedJob(client: Client, analysisId: string, ownerId: string) {
       .eq("user_id", ownerId)
       .eq("organization_id", a.organization_id)
       .maybeSingle(),
-    client
-      .from("data_requests")
-      .select("id")
-      .eq("user_id", ownerId)
-      .eq("kind", "deletion")
-      .neq("status", "failed")
-      .limit(1),
+    readCandidatePrivacyAccess(client, ownerId),
   ]);
-  if ([job, source, membership, deletion].some((r) => r.error))
+  const deletionState = deletion.state;
+  if (
+    [job, source, membership].some((r) => r.error) ||
+    deletionState === "unavailable"
+  )
     throw unavailable();
-  if (!job.data || !source.data || !membership.data || deletion.data?.length)
+  if (
+    !job.data ||
+    !source.data ||
+    !membership.data ||
+    deletionState === "blocked"
+  )
     throw missing();
-  const root = await client
-    .from("resumes")
-    .select("id")
-    .eq("id", source.data.resume_id)
-    .eq("owner_id", ownerId)
-    .eq("organization_id", a.organization_id)
-    .eq("status", "active")
-    .maybeSingle();
-  if (root.error) throw unavailable();
-  if (!root.data) throw missing();
+  const sourceScope = z
+    .object({
+      id,
+      resume_id: id,
+      owner_id: id,
+      organization_id: id,
+      active_resume: z.unknown(),
+    })
+    .safeParse(source.data);
+  if (
+    !sourceScope.success ||
+    sourceScope.data.id !== a.resume_version_id ||
+    sourceScope.data.owner_id !== ownerId ||
+    sourceScope.data.organization_id !== a.organization_id
+  )
+    throw missing();
+  const root = z
+    .object({
+      id,
+      owner_id: id,
+      organization_id: id,
+      status: z.literal("active"),
+    })
+    .safeParse(sourceScope.data.active_resume);
+  if (
+    !root.success ||
+    root.data.id !== sourceScope.data.resume_id ||
+    root.data.owner_id !== ownerId ||
+    root.data.organization_id !== a.organization_id
+  )
+    throw missing();
   const text = z.string().max(20000).safeParse(job.data.description);
   if (!text.success)
     throw new CanonicalError(422, "The JD exceeds the supported limit.");
@@ -103,6 +157,33 @@ export async function loadJobRequirements(
     throw new CanonicalError(422, "Choose a valid history page.");
   if (options.versionId && !id.safeParse(options.versionId).success)
     throw missing();
+  const pendingHead = Promise.resolve(
+    client
+      .from("job_requirement_versions")
+      .select("id,revision")
+      .eq("analysis_id", analysisId)
+      .eq("owner_id", ownerId)
+      .order("revision", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ).then(
+    (value) => ({ value }),
+    (error: unknown) => ({ error }),
+  );
+  const readVersion = (versionId: string) =>
+    client
+      .from("job_requirement_versions")
+      .select("*")
+      .eq("id", versionId)
+      .eq("analysis_id", analysisId)
+      .eq("owner_id", ownerId)
+      .maybeSingle();
+  const pendingVersion = options.versionId
+    ? Promise.resolve(readVersion(options.versionId)).then(
+        (value) => ({ value }),
+        (error: unknown) => ({ error }),
+      )
+    : null;
   const versions = await client
     .from("job_requirement_versions")
     .select("id,revision,parent_version_id,created_at")
@@ -110,14 +191,9 @@ export async function loadJobRequirements(
     .eq("owner_id", ownerId)
     .order("revision", { ascending: false })
     .range(offset, offset + 20);
-  const head = await client
-    .from("job_requirement_versions")
-    .select("id,revision")
-    .eq("analysis_id", analysisId)
-    .eq("owner_id", ownerId)
-    .order("revision", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const headResult = await pendingHead;
+  if ("error" in headResult) throw headResult.error;
+  const head = headResult.value;
   if (versions.error || head.error) throw unavailable();
   const chosen = options.versionId ?? head.data?.id;
   if (!chosen)
@@ -130,16 +206,14 @@ export async function loadJobRequirements(
       nextOffset: null,
       scoringEligible: false as const,
     };
-  const row = await client
-    .from("job_requirement_versions")
-    .select("*")
-    .eq("id", chosen)
-    .eq("analysis_id", analysisId)
-    .eq("owner_id", ownerId)
-    .maybeSingle();
+  const selected = pendingVersion
+    ? await pendingVersion
+    : { value: await readVersion(chosen) };
+  if ("error" in selected) throw selected.error;
+  const row = selected.value;
   if (row.error) throw unavailable();
   if (!row.data) throw missing();
-  const doc = JobRequirementsSchema.safeParse(row.data.content);
+  const doc = readStoredRequirements(row.data.content);
   if (
     !doc.success ||
     doc.data.id !== row.data.id ||
@@ -183,27 +257,67 @@ export async function saveJobRequirements(
     analysisId,
     ownerId,
   );
+  const relationsEnabled = getServerConfig().JOB_RELATIONS_ENABLED;
+  if (!relationsEnabled && command.data.expectedVersionId !== null) {
+    const parent = await client
+      .from("job_requirement_versions")
+      .select("id,content")
+      .eq("id", command.data.expectedVersionId)
+      .eq("analysis_id", analysisId)
+      .eq("owner_id", ownerId)
+      .maybeSingle();
+    if (parent.error) throw unavailable();
+    if (!parent.data) throw missing();
+    if (parent.data.content?.schemaVersion === "requirements/2.0.0")
+      throw new CanonicalError(
+        409,
+        "This JD version contains typed relations. Enable the relation writer before saving a new version.",
+      );
+    const stored = JobRequirementsSchema.safeParse(parent.data.content);
+    if (
+      !stored.success ||
+      parent.data.id !== command.data.expectedVersionId ||
+      stored.data.id !== parent.data.id ||
+      stored.data.ownerId !== ownerId ||
+      stored.data.organizationId !== analysis.organization_id ||
+      stored.data.analysisId !== analysisId ||
+      stored.data.jobId !== analysis.job_id
+    )
+      throw unavailable();
+  }
   let body;
   try {
-    body = parseJobRequirements(sourceText, {
+    const context = {
       ownerId,
       organizationId: analysis.organization_id,
       analysisId,
       jobId: analysis.job_id!,
       domain,
       parentVersionId: command.data.expectedVersionId,
-    });
-  } catch {
+    };
+    body = relationsEnabled
+      ? createJobRequirementRelations(sourceText, {
+          ...context,
+          locale: "en-IN",
+        })
+      : parseJobRequirements(sourceText, context);
+  } catch (error) {
+    unsupportedRuntime(error);
     throw new CanonicalError(422, "The JD exceeds parsing limits.");
   }
-  const result = await client.rpc("save_job_requirements", {
-    p_user_id: ownerId,
-    p_analysis_id: analysisId,
-    p_body: body,
-    p_expected_version: command.data.expectedVersionId,
-    p_idempotency_key: command.data.idempotencyKey,
-    p_request_id: requestId,
-  });
+  const result = await client.rpc(
+    relationsEnabled
+      ? "save_job_requirement_relations"
+      : "save_job_requirements",
+    {
+      p_user_id: ownerId,
+      p_analysis_id: analysisId,
+      p_body: body,
+      p_expected_version: command.data.expectedVersionId,
+      p_idempotency_key: command.data.idempotencyKey,
+      p_request_id: requestId,
+    },
+  );
   if (result.error) {
     if (["22023", "23514", "22P02"].includes(result.error.code))
       throw new CanonicalError(
@@ -218,6 +332,34 @@ export async function saveJobRequirements(
       409,
       "The JD version changed. Reload before retrying.",
     );
+  if (relationsEnabled && result.data?.status === "invalid")
+    throw new CanonicalError(
+      422,
+      "The requirements failed provenance validation.",
+    );
+  if (relationsEnabled && result.data?.status === "unavailable")
+    throw unavailable();
+  if (relationsEnabled) {
+    const applied = z
+      .strictObject({
+        status: z.literal("applied"),
+        versionId: id,
+        revision: z.number().int().positive(),
+        idempotent: z.boolean(),
+        semanticSha256: z
+          .string()
+          .regex(/^[a-f0-9]{64}$/u)
+          .optional(),
+      })
+      .safeParse(result.data);
+    if (
+      !applied.success ||
+      (applied.data.semanticSha256 !== undefined &&
+        applied.data.semanticSha256 !== jobRelationSemanticSha256(body))
+    )
+      throw unavailable();
+    return applied.data;
+  }
   const applied = z
     .object({
       status: z.literal("applied"),

@@ -1,32 +1,45 @@
+import CitedWritingSuggestions from "~/components/CitedWritingSuggestions";
 import {
   data as routeData,
   redirect,
   Link,
   useLoaderData,
   useParams,
+  type HeadersFunction,
 } from "react-router";
 import { useEffect, useState } from "react";
 import type { Route } from "./+types/resume";
 import { useAnalysisStore } from "~/lib/store";
 import { convertPdfToImages } from "~/lib/pdf2img";
+import SavedScoreContext from "~/components/SavedScoreContext";
 import Summary from "~/components/Summary";
-import Details from "~/components/Details";
 import ATS from "~/components/ATS";
 import ParseView from "~/components/ParseView";
 import { readOwnedNativeLayout } from "~/lib/server/layout-read-model";
 import Heatmap from "~/components/Heatmap";
+import RewriteGenerator from "~/components/RewriteGenerator";
 import ResumeWriter from "~/components/ResumeWriter";
 import ResultTabs from "~/components/ResultTabs";
 import EvidenceScene3D from "~/components/EvidenceScene3D";
 import WorkspaceShell from "~/components/WorkspaceShell";
 import { presentLegacyScore } from "~/lib/server/score-v2-contract";
 import { BASELINE_SEMANTICS } from "~/lib/server/qualitative-prose";
-import { scoreBand } from "~/lib/score-band";
 import { AnalysisResultSchema } from "~/lib/server/schema";
 import { getAuthenticatedUser } from "~/lib/server/auth";
+import {
+  CanonicalError,
+  ownedAnalysis,
+} from "~/lib/server/canonical-repository";
 import { recordAuditEvent } from "~/lib/server/privacy";
-import { createRequestId } from "~/lib/server/request-context";
-import { visibleFeedbackGroups } from "~/lib/result-feedback";
+import { requestIdFrom } from "~/lib/server/request-context";
+import {
+  visibleFeedbackGroups,
+  isFeedbackStrength,
+  isFeedbackRepair,
+  feedbackProvenanceMessage,
+  writingUnavailableMessage,
+  type FeedbackProvenance,
+} from "~/lib/result-feedback";
 import {
   createSupabaseAdminClient,
   createSupabaseServerClient,
@@ -35,6 +48,33 @@ import {
 export const meta = () => [
   { title: "Resumide | Review" },
   { name: "description", content: "Detailed overview of your resume" },
+];
+
+export const headers: HeadersFunction = ({
+  parentHeaders,
+  loaderHeaders,
+  errorHeaders,
+}) => {
+  const result = new Headers(parentHeaders);
+  for (const source of [loaderHeaders, errorHeaders]) {
+    if (!source) continue;
+    for (const cookie of source.getSetCookie())
+      result.append("Set-Cookie", cookie);
+  }
+  result.set("Cache-Control", "private, no-store");
+  result.set("X-Robots-Tag", "noindex, nofollow");
+  return result;
+};
+
+export const middleware: Route.MiddlewareFunction[] = [
+  async (_args, next) => {
+    const response = await next();
+    // The root error boundary can render a denied result without this route's
+    // document headers. Keep that response private as well.
+    response.headers.set("Cache-Control", "private, no-store");
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    return response;
+  },
 ];
 
 function buildEvidenceReport(result: AnalysisResult, unscored = false): string {
@@ -82,46 +122,82 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
   const user = await getAuthenticatedUser(
     createSupabaseServerClient(request, headers),
   );
+  headers.set("Cache-Control", "private, no-store");
   if (!user) {
     const next = encodeURIComponent(url.pathname);
-    throw new Response(null, {
-      status: 302,
-      headers: { Location: `/auth?next=${next}` },
-    });
+    throw redirect(`/auth?next=${next}`, { headers });
   }
 
   const admin = createSupabaseAdminClient();
+  const analysisId = params.id;
+  const notFound = () =>
+    new Response("Resume analysis not found.", {
+      status: 404,
+      statusText: "Resume analysis not found",
+      headers,
+    });
+  const unavailable = () =>
+    new Response("Resume analysis is unavailable.", { status: 503, headers });
+  const loadOwnedSource = async () => {
+    try {
+      return await ownedAnalysis(admin, analysisId, user.id);
+    } catch (error) {
+      if (error instanceof CanonicalError && error.status === 404)
+        throw notFound();
+      throw unavailable();
+    }
+  };
+  const source = await loadOwnedSource();
+  const confirmSource = async () => {
+    const current = await loadOwnedSource();
+    if (
+      current.organization_id !== source.organization_id ||
+      current.resumeId !== source.resumeId ||
+      current.resume_version_id !== source.resume_version_id
+    )
+      throw notFound();
+  };
   const { data, error } = await admin
     .from("analyses")
     .select(
-      "id, status, analysis_results(feedback, parse_view, rule_trace, keyword_coverage, created_at), analysis_deterministic_results(ruleset_version), writer_drafts(draft), resume_versions(storage_key, organization_id)",
+      "id, organization_id, resume_version_id, status, analysis_results(feedback, parse_view, rule_trace, keyword_coverage, created_at), analysis_deterministic_results(ruleset_version), writer_drafts(draft)",
     )
-    .eq("id", params.id)
+    .eq("id", analysisId)
     .eq("owner_id", user.id)
+    .eq("organization_id", source.organization_id)
+    .eq("resume_version_id", source.resume_version_id)
+    .abortSignal(request.signal)
     .maybeSingle();
 
-  if (error || !data) {
-    throw new Response("Resume analysis not found.", {
-      status: 404,
-      statusText: "Resume analysis not found",
-    });
-  }
+  if (error) throw unavailable();
+  if (
+    !data ||
+    data.id !== analysisId ||
+    data.organization_id !== source.organization_id ||
+    data.resume_version_id !== source.resume_version_id
+  )
+    throw notFound();
 
   const evidence = await admin
     .from("document_evidence_attempts")
     .select("id")
-    .eq("analysis_id", params.id!)
+    .eq("analysis_id", analysisId)
     .eq("owner_id", user.id)
+    .abortSignal(request.signal)
     .limit(1);
   if (evidence.error)
-    throw new Response("Evidence unavailable", { status: 503 });
-  if (evidence.data?.length)
-    return redirect(`/analysis/${params.id}/evidence`, { headers });
+    throw new Response("Evidence unavailable", { status: 503, headers });
+  if (evidence.data?.length) {
+    await confirmSource();
+    return redirect(`/analysis/${analysisId}/evidence`, { headers });
+  }
 
   if (data.status !== "completed" && data.status !== "partial") {
+    await confirmSource();
     throw new Response(`Analysis is ${data.status}.`, {
       status: data.status === "failed" ? 500 : 202,
       statusText: `Analysis is ${data.status}`,
+      headers,
     });
   }
 
@@ -140,13 +216,31 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
     keywordEvidence: keywords.evidence ?? [],
     writer: data.writer_drafts?.[0]?.draft,
   });
-  const signedResumeUrl = `/analysis/${params.id}/source`;
+  const { loadInitialFeedbackConsumer, isInitialFeedbackConsumerAccessDenied } =
+    await import("~/lib/server/initial-feedback-consumer");
+  let feedbackProvenance: FeedbackProvenance;
+  try {
+    feedbackProvenance = await loadInitialFeedbackConsumer(
+      admin,
+      {
+        ownerId: user.id,
+        organizationId: data.organization_id,
+        analysisId,
+      },
+      result.feedback,
+      { signal: request.signal },
+    );
+  } catch (error) {
+    if (isInitialFeedbackConsumerAccessDenied(error)) throw notFound();
+    throw error;
+  }
+  const signedResumeUrl = `/analysis/${analysisId}/source`;
   await recordAuditEvent({
     userId: user.id,
     action: "analysis.read",
     targetType: "analysis",
     targetId: data.id,
-    requestId: createRequestId(),
+    requestId: requestIdFrom(request),
   });
 
   const nativeLayout = await readOwnedNativeLayout(data.id, user.id);
@@ -166,6 +260,7 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
         kind: unscoredProse ? "deterministic_baseline" : "legacy_blended",
       })
     : null;
+  await confirmSource();
   return routeData(
     {
       result,
@@ -173,7 +268,10 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
       nativeLayout,
       unscoredProse,
       legacy,
-      qualitativeUnavailable: data.status === "partial",
+      qualitativeUnavailable:
+        data.status === "partial" ||
+        feedbackProvenance.publicationState === "deterministic_only",
+      feedbackProvenance,
     },
     { headers },
   );
@@ -187,6 +285,7 @@ const Resume = () => {
     unscoredProse,
     legacy,
     qualitativeUnavailable,
+    feedbackProvenance,
   } = useLoaderData<typeof loader>();
   const { id } = useParams();
   const entry = useAnalysisStore((s) => (id ? s.entries[id] : undefined));
@@ -197,12 +296,6 @@ const Resume = () => {
   const [reportUrl, setReportUrl] = useState("");
   const feedback = result.feedback;
   const score = feedback?.overallScore ?? 0;
-  const scoreLabels = {
-    needs_work: "Needs attention",
-    good_start: "Good start",
-    strong: "Strong",
-  } as const;
-  const scoreLabel = scoreLabels[scoreBand(score)];
 
   useEffect(() => {
     const url = URL.createObjectURL(
@@ -216,22 +309,21 @@ const Resume = () => {
   const feedbackGroups = visibleFeedbackGroups(
     feedback,
     qualitativeUnavailable,
+    feedbackProvenance,
   );
   const repairQueue = feedbackGroups
     .flatMap((group) =>
       group.tips
-        .filter((tip) => tip.type === "improve")
+        .filter(isFeedbackRepair)
         .map((tip) => ({ ...tip, source: group.source })),
     )
     .slice(0, 3);
   const strengthCount = feedbackGroups.reduce(
-    (count, group) =>
-      count + group.tips.filter((tip) => tip.type === "good").length,
+    (count, group) => count + group.tips.filter(isFeedbackStrength).length,
     0,
   );
   const improvementCount = feedbackGroups.reduce(
-    (count, group) =>
-      count + group.tips.filter((tip) => tip.type === "improve").length,
+    (count, group) => count + group.tips.filter(isFeedbackRepair).length,
     0,
   );
 
@@ -321,29 +413,24 @@ const Resume = () => {
         </Link>
       }
     >
-      <p>
-        {unscoredProse
-          ? "Deterministic baseline; model ratings are excluded."
-          : "Historical blended result; qualitative ratings below belong to the legacy scoring method."}{" "}
-        This result is not comparable with v2 scores.
-        {legacy
-          ? ` Saved ${legacy.createdAt}; version: ${legacy.scoringVersion ?? "unrecorded"}.`
-          : " Original date and scoring version are unavailable."}
-      </p>
+      <SavedScoreContext
+        createdAt={legacy?.createdAt}
+        scoringVersion={legacy?.scoringVersion}
+        modelRatingsExcluded={unscoredProse}
+      />
       <section className="result-score-header" aria-label="Analysis summary">
         <div className="result-score-primary">
           <div className="result-score-lockup">
-            <span className={`result-score-value is-${scoreBand(score)}`}>
-              {score}
-            </span>
+            <span className="result-score-value is-uncalibrated">{score}</span>
             <div>
-              <p>{scoreLabel}</p>
+              <p>Uncalibrated</p>
               <span>Legacy analysis score</span>
             </div>
           </div>
           <p className="result-score-note">
-            ATS compatibility guidance based on a parse simulation, not a
-            guarantee from a specific employer system.
+            This historical checklist result does not measure job fit. Missing
+            keywords may still need attention. Start a new analysis to use the
+            latest checks.
           </p>
         </div>
         <a
@@ -510,47 +597,26 @@ const Resume = () => {
                     {qualitativeUnavailable ? (
                       <section role="status">
                         <h2>Writing feedback unavailable</h2>
+                        {feedbackProvenance.currentness === "historical" ? (
+                          <p>{feedbackProvenanceMessage(feedbackProvenance)}</p>
+                        ) : null}
+                        <p>{writingUnavailableMessage(feedbackProvenance)}</p>
                         <p>
-                          The saved deterministic checks remain available.
-                          Writing feedback was not completed and is excluded
-                          from the repair counts.
+                          The saved deterministic checks remain available. The
+                          repair counts exclude AI writing feedback for this
+                          analysis.
                         </p>
-                      </section>
-                    ) : unscoredProse ? (
-                      <section>
-                        <h2>Cited writing suggestions</h2>
-                        <p>Qualitative ratings are unavailable.</p>
-                        {(
-                          [
-                            "toneAndStyle",
-                            "content",
-                            "structure",
-                            "skills",
-                          ] as const
-                        ).map((key) => (
-                          <article key={key}>
-                            <h3>
-                              {key === "toneAndStyle" ? "Tone and style" : key}
-                            </h3>
-                            <ul>
-                              {feedback[key].tips
-                                .filter((tip) => tip.quote)
-                                .map((tip, index) => (
-                                  <li key={index}>
-                                    {tip.tip} {tip.explanation}
-                                    {tip.quote ? (
-                                      <blockquote>{tip.quote}</blockquote>
-                                    ) : null}
-                                  </li>
-                                ))}
-                            </ul>
-                          </article>
-                        ))}
                       </section>
                     ) : (
                       <>
-                        <Summary feedback={feedback} />
-                        <Details feedback={feedback} />
+                        {!unscoredProse ? (
+                          <Summary feedback={feedback} />
+                        ) : null}
+                        <CitedWritingSuggestions
+                          feedback={feedback}
+                          provenance={feedbackProvenance}
+                          includeUncited={!unscoredProse}
+                        />
                       </>
                     )}
                   </div>
@@ -605,6 +671,9 @@ const Resume = () => {
                             </div>
                             <span className="rule-trace-weight">
                               Weight {rule.weight}
+                              {rule.credit === undefined
+                                ? ""
+                                : `; earned ${Number((rule.weight * rule.credit).toFixed(2))}`}
                             </span>
                           </article>
                         ))}
@@ -629,7 +698,15 @@ const Resume = () => {
                     keywordEvidence={result.keywordEvidence}
                   />
                 ),
-                rewrite: <ResumeWriter writer={result.writer} />,
+                rewrite: (
+                  <>
+                    <RewriteGenerator analysisId={id!} />
+                    <ResumeWriter
+                      writer={result.writer}
+                      unavailable={qualitativeUnavailable}
+                    />
+                  </>
+                ),
               }}
             />
           </div>

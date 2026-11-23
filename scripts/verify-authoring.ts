@@ -9,7 +9,9 @@ import {
 import {
   applyAuthoring,
   loadAuthoring,
+  previewClarification,
 } from "../app/lib/server/authoring-repository";
+import { AuthoringCommandSchema } from "../app/lib/server/authoring-contract";
 import { loadScoreDiagnostics } from "../app/lib/server/score-v2-repository";
 const f = await createScoreFixture(),
   other = await createScoreFixture();
@@ -26,8 +28,33 @@ const reject = async (fn: () => Promise<unknown>, status: number) => {
   assertions++;
 };
 const load = () => loadCanonical(f.admin, f.analysisId, f.ownerId);
-const send = (command: unknown) =>
-  applyAuthoring(f.admin, f.analysisId, f.ownerId, command, "aa5-local");
+const send = async (command: unknown) => {
+  const parsed = AuthoringCommandSchema.parse(command);
+  if (parsed.action === "clarify") {
+    const preview = await previewClarification(
+      f.admin,
+      f.analysisId,
+      f.ownerId,
+      {
+        action: "preview_clarification",
+        expectedVersionId: parsed.expectedVersionId,
+        idempotencyKey: parsed.idempotencyKey,
+        targetFactId: parsed.targetFactId,
+        questionKind: parsed.questionKind,
+        value: parsed.value,
+      },
+    );
+    return applyAuthoring(
+      f.admin,
+      f.analysisId,
+      f.ownerId,
+      parsed,
+      "aa5-local",
+      preview.reviewedValueHash,
+    );
+  }
+  return applyAuthoring(f.admin, f.analysisId, f.ownerId, parsed, "aa5-local");
+};
 try {
   const initial = (await load()).current!.document;
   const fact = initial.facts.find((v) => v.type === "contribution")!;

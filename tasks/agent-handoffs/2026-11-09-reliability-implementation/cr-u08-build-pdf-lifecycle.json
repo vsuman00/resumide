@@ -1,0 +1,52 @@
+{
+  "id": "CR-U08-S01",
+  "status": "VERIFIED_BUILD_PREVIEW_LIFECYCLE_WITH_SIMULATED_TRANSPORT",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated checkout with synthetic fixtures",
+  "sources": {
+    "app/components/LatexPdfPreview.tsx": "50c89a4531582224097a04eac9c264f5db9110e6dddf13a8c45dd3908ff34456",
+    "app/routes/latex.tsx": "cc5416fed1bd8ddfb059c99523ba44b639cb0d4ae0dfa8f36628ce85c375110d",
+    "tests/components/LatexPdfPreview.test.tsx": "4be9732966c9b990c4b0281bbe2184a2aa6b9c336bf4c90b6816501d278ddd9e",
+    "tests/components/LatexCompileRecovery.test.tsx": "dc6aed8bcd19ed1a1f9b62c6ce4c7741978fdb29e80f22cc753d949c7b83e0e4",
+    "scripts/verify-local-build-pdf-lifecycle.ts": "2fd3ca75c8df0716e3675c11a932aa6a70a89f08d1a176e65f3a639936fbdd32",
+    "scripts/local-fixture-browser.ts": "372fa419ba68e5c15b742dbb4acd267a0359b67c1b8eb8b9ea5319a5c36e22f4",
+    "tests/fixtures/native-pdf.ts": "50d1976a1edc2b96c3a34a208d5e7c424447dfcbef61abecf8840726baca2df8"
+  },
+  "reproducedRegressions": 3,
+  "redLogSha256": "84fb98ef0d9185662034b29de85f2e27f4edcabec803d27e269897316ddc4106",
+  "focusedTestCommand": "npm test -- tests/components/LatexPdfPreview.test.tsx tests/components/LatexCompileRecovery.test.tsx tests/components/BuildAiAssistant.test.tsx tests/unit/latex-routes.test.ts tests/unit/latex-service.test.ts tests/unit/build-assist.test.ts",
+  "focusedTestsPassed": 273,
+  "typecheckExitCode": 0,
+  "lintExitCode": 0,
+  "existingLintWarnings": 4,
+  "webBuildExitCode": 0,
+  "webBuildLogSha256": "f337b102ee20a200eb52055f192372d3e415b8957f8cf8d01d6f53c0f7ea4db8",
+  "workerBuildExitCode": 0,
+  "browser": {
+    "application": "Built SSR on loopback",
+    "auth": "Simulated Supabase SDK transport",
+    "compileAndSuggest": "Synthetic responses through browser routes",
+    "rendering": "Actual Chromium and PDF.js",
+    "reportSha256": "84f4049cc5f52a3c6529964ba503f0c8a06497d5ac3656e8f62b95a351da64f8",
+    "verified": {
+      "status": "build_pdf_lifecycle_verified_with_simulated_transport",
+      "compilations": [
+        "f9654b7e8c966e6ef1666033651bc18e3f0291b464f076bf998915c506699e34",
+        "7bc2f449039c73ce362ab40b2870f3a3f5fbd585dce65b33b8b232cc259c0561",
+        "f9654b7e8c966e6ef1666033651bc18e3f0291b464f076bf998915c506699e34"
+      ],
+      "verifiedPdfHashes": [
+        "f09fd8a50ab8f5f27658ae7b4c458c87f3f9a0f599cfd32cb16f0c6665a0f0ca",
+        "840cb370c6b97fcd7df4b7d3bc7efdf8659331fa0a9c8cde26b98aa187cbca9f",
+        "f09fd8a50ab8f5f27658ae7b4c458c87f3f9a0f599cfd32cb16f0c6665a0f0ca"
+      ],
+      "suggestionCalls": 1,
+      "canvasAndTextVerified": true,
+      "browser": "Chromium"
+    }
+  },
+  "reviewedCompilerImage": "sha256:5e5c2436bcac0a97c4616d7392d1089ecf7ef7d6d5df9063c02e4498d1e0d431",
+  "reviewedCompilerLocallyPresent": false,
+  "realCompilerVerified": false,
+  "managedVerification": false
+}

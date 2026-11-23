@@ -1,0 +1,60 @@
+{
+  "status": "PASS",
+  "at": "2026-11-10T19:10:15.955299+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "receipt": "jd-review-integrated-6abf0e55-f71d-4e7f-9c69-99b15821bedb.json",
+  "receiptSha256": "f56fc3fadc58e99a43774742bfb70f6dbb24b8e242f5a131f32b34ed536eecee",
+  "sourceInputsRehashed": 706,
+  "changedSourceInputs": [],
+  "logSha256Verified": "1a87be059e633f1edceefc2e1cecec41dc98b0a9390b840c9f0340baf7b4d9dc",
+  "tests": {
+    "files": 5,
+    "passed": 66,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ownedGroups": [
+    {
+      "command": "npm test -- tests/unit/score-v2-engine.test.ts tests/unit/score-v2-contract.test.ts tests/unit/scoring-validity.test.ts tests/unit/score-v2-route.test.ts tests/unit/job-requirement-route.test.ts",
+      "processGroup": 22437,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run typecheck",
+      "processGroup": 22467,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run lint",
+      "processGroup": 22491,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run build",
+      "processGroup": 22512,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run build:worker",
+      "processGroup": 22542,
+      "independentlyAbsent": true
+    }
+  ],
+  "artifactsVerified": {
+    "build/server/index.js": {
+      "bytes": 870500,
+      "sha256": "61944c3d6f47850c45df8a8e591c9f03cd534528e214e65a7d6ef5bed4fa9e55"
+    },
+    "build/worker/analysis.mjs": {
+      "bytes": 168159,
+      "sha256": "cfc31ea7d0f630a0fee9de130cc17226dd633ba84f3c04edadf0e1b68062aca9"
+    }
+  },
+  "sourceReview": {
+    "reviewer": "a04_runtime",
+    "A10": "ACK at8eccbb77/c7cb6368/711ae03b;exactdeclaration samefact/evidence split,datehelper/numericfloorsunchanged",
+    "U04": "ACKe8f5f152;historicalreadonly,currentandinitialnativeform/CAS preserved",
+    "reviewerExecution": false
+  },
+  "scope": "Actual engine/canonical-edit/JD-parse and Router SSR with mocked access/storage; no native browser/DB/SQL/provider/Docker/ownerdata/Git/deploy."
+}

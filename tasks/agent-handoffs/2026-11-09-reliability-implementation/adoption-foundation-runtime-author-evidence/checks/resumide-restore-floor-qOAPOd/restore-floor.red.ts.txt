@@ -1,0 +1,204 @@
+import fs from "node:fs";
+import { isAbsolute, join, resolve } from "node:path";
+import { performance } from "node:perf_hooks";
+
+const maximum = 9223372036854775807n;
+const maxBytes = 1024 * 1024;
+const maxRecords = 4096;
+const fields = ["schemaVersion", "generation", "revision", "fence", "phase"];
+export type RestoreFloorState = Readonly<{
+  schemaVersion: "restore-floor/1.0.0";
+  generation: string;
+  revision: string;
+  fence: string;
+  phase: "quarantined" | "ready";
+}>;
+export type RestoreDeadlineOptions = { signal?: AbortSignal; timeoutMs?: number };
+export class RestoreFloorError extends Error {
+  constructor() {
+    super("Independent restore authority is unavailable.");
+    this.name = "RestoreFloorError";
+  }
+}
+const unavailable = () => new RestoreFloorError();
+export function floorNumber(value: unknown): string {
+  if (
+    typeof value !== "string" ||
+    !/^(0|[1-9][0-9]{0,18})$/u.test(value) ||
+    BigInt(value) > maximum
+  )
+    throw unavailable();
+  return value;
+}
+function next(value: string) {
+  return floorNumber((BigInt(floorNumber(value)) + 1n).toString());
+}
+export function decodeRestoreFloor(value: unknown): RestoreFloorState {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    throw unavailable();
+  const raw = value as Record<string, unknown>;
+  const keys = Reflect.ownKeys(raw);
+  // The provisional RED candidate checks required fields before exact-key hardening.
+  if (fields.some((key) => !keys.includes(key))) throw unavailable();
+  for (const key of keys) {
+    const d = Object.getOwnPropertyDescriptor(raw, key);
+    if (!d || d.get || d.set || !d.enumerable) throw unavailable();
+  }
+  if (
+    raw.schemaVersion !== "restore-floor/1.0.0" ||
+    (raw.phase !== "quarantined" && raw.phase !== "ready")
+  )
+    throw unavailable();
+  return Object.freeze({
+    schemaVersion: "restore-floor/1.0.0",
+    generation: floorNumber(raw.generation),
+    revision: floorNumber(raw.revision),
+    fence: floorNumber(raw.fence),
+    phase: raw.phase,
+  });
+}
+export function sameFloor(a: RestoreFloorState, b: RestoreFloorState) {
+  return fields.every((key) => a[key as keyof typeof a] === b[key as keyof typeof b]);
+}
+function deadline(options: RestoreDeadlineOptions) {
+  const ms = options.timeoutMs ?? 5000;
+  if (!Number.isSafeInteger(ms) || ms < 1 || ms > 5000) throw unavailable();
+  const end = performance.now() + ms;
+  return () => {
+    if (options.signal?.aborted || performance.now() >= end) throw unavailable();
+  };
+}
+/** Explicit independent volume only. Operational rollback protection is not provable by this class. */
+export class RestoreFloorStore {
+  readonly directory: string;
+  private readonly journal: string;
+  private readonly lock: string;
+  constructor(directory: string) {
+    if (!isAbsolute(directory) || resolve(directory) !== directory)
+      throw unavailable();
+    this.directory = directory;
+    this.journal = join(directory, "restore-floor.jsonl");
+    this.lock = join(directory, "restore-floor.lock");
+  }
+  private directoryCheck() {
+    const st = fs.lstatSync(this.directory);
+    if (
+      !st.isDirectory() || st.isSymbolicLink() ||
+      (st.mode & 0o777) !== 0o700 || st.uid !== process.getuid?.() ||
+      fs.realpathSync(this.directory) !== this.directory
+    ) throw unavailable();
+  }
+  private syncDirectory() {
+    const fd = fs.openSync(this.directory, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+    try { fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
+  }
+  private load(ignoreLock = false): { state: RestoreFloorState; advanced: boolean } {
+    this.directoryCheck();
+    if (!ignoreLock && fs.existsSync(this.lock)) throw unavailable();
+    const fd = fs.openSync(this.journal, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+    try {
+      const st = fs.fstatSync(fd);
+      if (!st.isFile() || st.nlink !== 1 || st.uid !== process.getuid?.() ||
+        (st.mode & 0o777) !== 0o600 || st.size < 1 || st.size > maxBytes)
+        throw unavailable();
+      const bytes = fs.readFileSync(fd);
+      if (bytes.length !== st.size || bytes.at(-1) !== 10) throw unavailable();
+      const lines = bytes.toString("utf8").slice(0, -1).split("\n");
+      if (lines.length > maxRecords) throw unavailable();
+      let prior: RestoreFloorState | undefined;
+      let advanced = false;
+      for (const line of lines) {
+        if (line.length > 256) throw unavailable();
+        const state = decodeRestoreFloor(JSON.parse(line));
+        // Canonical serialization also refuses duplicate JSON keys and invalid UTF-8.
+        if (JSON.stringify(state) !== line) throw unavailable();
+        if (!prior) {
+          if (state.generation !== "0" || state.revision !== "0" || state.fence !== "0" || state.phase !== "quarantined") throw unavailable();
+        } else {
+          if (state.revision !== next(prior.revision)) throw unavailable();
+          if (state.fence === next(prior.fence) && state.generation === prior.generation && state.phase === "quarantined") advanced = false;
+          else if (state.fence === prior.fence && state.generation === next(prior.generation) && state.phase === "quarantined" && prior.phase === "quarantined" && !advanced && prior.fence !== "0") advanced = true;
+          else if (state.fence === prior.fence && state.generation === prior.generation && state.phase === "ready" && prior.phase === "quarantined" && state.generation !== "0" && state.fence !== "0") advanced = false;
+          else throw unavailable();
+        }
+        prior = state;
+      }
+      if (!prior) throw unavailable();
+      return { state: prior, advanced };
+    } finally { fs.closeSync(fd); }
+  }
+  read(options: RestoreDeadlineOptions = {}): RestoreFloorState {
+    const active = deadline(options);
+    try { active(); const result = this.load(); active(); return result.state; }
+    catch { throw unavailable(); }
+  }
+  /** Controlled one-time initialization; never called by read, restore or recovery. */
+  bootstrap(options: RestoreDeadlineOptions = {}): RestoreFloorState {
+    return this.mutate(undefined, "bootstrap", options);
+  }
+  quarantine(expected: RestoreFloorState, options: RestoreDeadlineOptions = {}) {
+    return this.mutate(expected, "quarantine", options);
+  }
+  advance(expected: RestoreFloorState, options: RestoreDeadlineOptions = {}) {
+    return this.mutate(expected, "advance", options);
+  }
+  ready(expected: RestoreFloorState, options: RestoreDeadlineOptions = {}) {
+    return this.mutate(expected, "ready", options);
+  }
+  private mutate(expected: RestoreFloorState | undefined, action: "bootstrap" | "quarantine" | "advance" | "ready", options: RestoreDeadlineOptions): RestoreFloorState {
+    const active = deadline(options);
+    let acquired = false;
+    let dirty = false;
+    try {
+      active(); this.directoryCheck();
+      fs.mkdirSync(this.lock, { mode: 0o700 });
+      acquired = true;
+      this.syncDirectory(); active();
+      let state: RestoreFloorState;
+      if (action === "bootstrap") {
+        if (fs.existsSync(this.journal)) throw unavailable();
+        state = decodeRestoreFloor({schemaVersion:"restore-floor/1.0.0",generation:"0",revision:"0",fence:"0",phase:"quarantined"});
+      } else {
+        const current = this.load(true);
+        if (!expected || !sameFloor(decodeRestoreFloor(expected), current.state)) throw unavailable();
+        state = {...current.state, revision:next(current.state.revision)};
+        if (action === "quarantine") state = {...state, fence:next(state.fence), phase:"quarantined"};
+        else if (action === "advance") {
+          if (state.phase !== "quarantined" || state.fence === "0" || current.advanced) throw unavailable();
+          state = {...state, generation:next(state.generation)};
+        } else {
+          if (state.phase !== "quarantined" || state.generation === "0" || state.fence === "0") throw unavailable();
+          state = {...state, phase:"ready"};
+        }
+      }
+      const record = Buffer.from(JSON.stringify(state)+"\n");
+      if (action !== "bootstrap") {
+        const st = fs.lstatSync(this.journal);
+        if (st.size + record.length > maxBytes || Number(state.revision) >= maxRecords) throw unavailable();
+      }
+      active();
+      const fd = fs.openSync(this.journal, fs.constants.O_WRONLY | fs.constants.O_NOFOLLOW | (action === "bootstrap" ? fs.constants.O_CREAT | fs.constants.O_EXCL : fs.constants.O_APPEND), 0o600);
+      try {
+        const st = fs.fstatSync(fd);
+        if (!st.isFile() || st.nlink !== 1 || (st.mode & 0o777) !== 0o600 || st.uid !== process.getuid?.()) throw unavailable();
+        dirty = true;
+        const written = fs.writeSync(fd, record);
+        if (written !== record.length) throw unavailable();
+        fs.fsyncSync(fd); active();
+      } finally { fs.closeSync(fd); }
+      this.syncDirectory(); active();
+      fs.rmdirSync(this.lock); acquired = false;
+      this.syncDirectory(); active();
+      return Object.freeze({...state});
+    } catch {
+      // A potentially mutated/unsynced journal keeps its lock: recovery is never lock stealing.
+      if (!acquired && dirty) {
+        try {fs.mkdirSync(this.lock,{mode:0o700});this.syncDirectory();} catch { /* authority unavailable */ }
+      }
+      if (acquired && !dirty) {
+        try { fs.rmdirSync(this.lock); this.syncDirectory(); } catch { /* unavailable */ }
+      }
+      throw unavailable();
+    }
+  }
+}

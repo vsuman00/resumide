@@ -1,0 +1,421 @@
+/** @vitest-environment jsdom */
+import { useRef } from "react";
+import { webcrypto } from "node:crypto";
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+import BuildAiAssistant from "~/components/BuildAiAssistant";
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
+it("keeps selected-context suggestions dismissed through Escape keyup and permits fresh selection", () => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+  const fetch = vi.fn();
+  vi.stubGlobal("fetch", fetch);
+  function Editor() {
+    const editorRef = useRef<HTMLTextAreaElement>(null);
+    const source = "Neutral first line\nNeutral second line";
+    return (
+      <>
+        <textarea aria-label="Source" ref={editorRef} defaultValue={source} />
+        <BuildAiAssistant
+          source={source}
+          editorRef={editorRef}
+          enabled
+          onApply={vi.fn()}
+        />
+      </>
+    );
+  }
+  render(<Editor />);
+  const editor = screen.getByRole("textbox", {
+    name: "Source",
+  }) as HTMLTextAreaElement;
+  editor.focus();
+  editor.setSelectionRange(0, 18);
+  fireEvent.select(editor);
+  expect(screen.getByRole("dialog", { name: "AI suggestions" })).toBeTruthy();
+  fireEvent.keyDown(editor, { key: "Escape" });
+  expect(screen.queryByRole("dialog", { name: "AI suggestions" })).toBeNull();
+  fireEvent.keyUp(editor, { key: "Escape" });
+  expect(screen.queryByRole("dialog", { name: "AI suggestions" })).toBeNull();
+  editor.setSelectionRange(19, 38);
+  fireEvent.select(editor);
+  expect(screen.getByRole("dialog", { name: "AI suggestions" })).toBeTruthy();
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+const failureSource = "Neutral first line\nNeutral second line";
+function RequestEditor({
+  source,
+  onApply,
+}: {
+  source: string;
+  onApply: (value: string) => void;
+}) {
+  const editorRef = useRef<HTMLTextAreaElement>(null);
+  return (
+    <>
+      <textarea aria-label="Source" ref={editorRef} value={source} readOnly />
+      <BuildAiAssistant
+        source={source}
+        editorRef={editorRef}
+        enabled
+        onApply={onApply}
+      />
+    </>
+  );
+}
+function prepareRequest(response: Promise<Response>) {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+  vi.stubGlobal("crypto", webcrypto);
+  const fetch = vi.fn<typeof globalThis.fetch>(() => response);
+  vi.stubGlobal("fetch", fetch);
+  const onApply = vi.fn();
+  const view = render(
+    <RequestEditor source={failureSource} onApply={onApply} />,
+  );
+  const editor = screen.getByRole("textbox", {
+    name: "Source",
+  }) as HTMLTextAreaElement;
+  editor.focus();
+  editor.setSelectionRange(0, 18);
+  fireEvent.select(editor);
+  expect(screen.getByRole("dialog", { name: "AI suggestions" })).toBeTruthy();
+  expect(fetch).not.toHaveBeenCalled();
+  const consent = screen.getByRole("checkbox", {
+    name: "I agree to send this selected context for this request.",
+  }) as HTMLInputElement;
+  const ask = screen.getByRole("button", {
+    name: "Ask AI",
+  }) as HTMLButtonElement;
+  expect(ask.disabled).toBe(true);
+  fireEvent.click(ask);
+  expect(fetch).not.toHaveBeenCalled();
+  fireEvent.click(consent);
+  expect(ask.disabled).toBe(false);
+  ask.focus();
+  fireEvent.click(ask);
+  return { ...view, fetch, onApply, editor, consent, ask };
+}
+it.each([
+  [
+    "cancelled",
+    409,
+    "The AI request was cancelled.",
+    "The AI request was cancelled. No suggestion was applied.",
+  ],
+  [
+    "output_invalid",
+    422,
+    "The AI response could not be safely used. No edit was applied.",
+    "The AI response could not be used safely. No change was applied.",
+  ],
+  [
+    "request_conflict",
+    409,
+    "This suggestion request cannot be reused. Start a new request.",
+    "This suggestion request cannot be reused. Review the current selection before asking again.",
+  ],
+] as const)(
+  "renders published Build %s as its own safe outcome",
+  async (code, status, error, message) => {
+    const request = prepareRequest(
+      Promise.resolve(Response.json({ code, error }, { status })),
+    );
+    await waitFor(() => expect(request.fetch).toHaveBeenCalledTimes(1));
+    const alert = await screen.findByRole("alert");
+    const init = request.fetch.mock.calls[0][1];
+    expect(init?.signal?.aborted).toBe(false);
+    expect(request.editor.value).toBe(failureSource);
+    expect(request.onApply).not.toHaveBeenCalled();
+    expect(alert.textContent).toBe(message);
+  },
+);
+it.each([
+  ["disabled", 404, "AI suggestions are currently disabled."],
+  [
+    "unauthenticated",
+    401,
+    "Your session has ended. Sign in again before asking for a suggestion.",
+  ],
+  [
+    "forbidden",
+    403,
+    "This request could not be accepted. Keep a copy of your code before reloading.",
+  ],
+  [
+    "rate_limited",
+    429,
+    "Too many requests. Wait a moment before asking again.",
+  ],
+  [
+    "budget_exhausted",
+    429,
+    "The AI service has no capacity for another suggestion. No change was applied.",
+  ],
+  [
+    "budget_exceeded",
+    429,
+    "The AI service has no capacity for another suggestion. No change was applied.",
+  ],
+  ["busy", 429, "AI suggestions are busy. Try again shortly."],
+  ["timeout", 504, "The request timed out. No suggestion was applied."],
+  [
+    "selection_invalid",
+    400,
+    "Select up to 20 nonempty lines and 4,000 characters. Nearby context must also fit the request limit.",
+  ],
+  [
+    "stale_source",
+    409,
+    "Your source or selection changed. Ask again for the current selection.",
+  ],
+  [
+    "invalid_suggestion",
+    422,
+    "The suggestion did not pass checks. No change was applied.",
+  ],
+  [
+    "invalid_request",
+    415,
+    "This suggestion request could not be accepted. Review the source and selected lines.",
+  ],
+  [
+    "consent_required",
+    403,
+    "Review and accept the AI processing notice before asking for a suggestion.",
+  ],
+  [
+    "provider_unavailable",
+    503,
+    "AI suggestions are unavailable. No change was applied.",
+  ],
+] as const)(
+  "handles known or legacy Build code %s without inferring provider details",
+  async (code, status, message) => {
+    const request = prepareRequest(
+      Promise.resolve(
+        Response.json(
+          { code, error: "Synthetic safe server feedback." },
+          { status },
+        ),
+      ),
+    );
+    expect((await screen.findByRole("alert")).textContent).toBe(message);
+    expect(request.fetch).toHaveBeenCalledTimes(1);
+    expect(request.consent.checked).toBe(false);
+    expect(request.editor.value).toBe(failureSource);
+    expect(request.onApply).not.toHaveBeenCalled();
+    expect(
+      screen.queryByText(
+        /provider key|subscription|credits|renews|refund|no charge/iu,
+      ),
+    ).toBeNull();
+  },
+);
+it.each([
+  "__proto__",
+  "constructor",
+  "toString",
+  "future_failure",
+  undefined,
+  null,
+  { unexpected: true },
+])(
+  "uses fixed safe fallback for unknown or malformed Build code %j",
+  async (code) => {
+    const request = prepareRequest(
+      Promise.resolve(
+        Response.json(
+          { code, error: "SYNTHETIC_PRIVATE_DETAIL" },
+          { status: 503 },
+        ),
+      ),
+    );
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "AI suggestions are unavailable. No change was applied. You can try again later.",
+    );
+    expect(screen.queryByText(/SYNTHETIC_PRIVATE_DETAIL/u)).toBeNull();
+    expect(request.fetch).toHaveBeenCalledTimes(1);
+    expect(request.editor.value).toBe(failureSource);
+    expect(request.onApply).not.toHaveBeenCalled();
+  },
+);
+function deferredResponse() {
+  let resolveResponse: ((response: Response) => void) | undefined;
+  const promise = new Promise<Response>((resolve) => {
+    resolveResponse = resolve;
+  });
+  return {
+    promise,
+    finish(response: Response) {
+      if (!resolveResponse)
+        throw Error("Synthetic response was not initialized.");
+      resolveResponse(response);
+    },
+  };
+}
+it("keeps request binding, busy/consent controls and one manual fetch across failure", async () => {
+  const response = deferredResponse();
+  const request = prepareRequest(response.promise);
+  try {
+    await waitFor(() => expect(request.fetch).toHaveBeenCalledTimes(1));
+    const [url, init] = request.fetch.mock.calls[0];
+    expect(url).toBe("/build/suggest");
+    expect(init?.method).toBe("POST");
+    expect(init?.cache).toBe("no-store");
+    const body = JSON.parse(String(init?.body));
+    expect(Object.keys(body).sort()).toEqual([
+      "consent",
+      "endLine",
+      "mode",
+      "policyVersion",
+      "source",
+      "sourceHash",
+      "startLine",
+    ]);
+    expect(body).toMatchObject({
+      source: failureSource,
+      startLine: 1,
+      endLine: 1,
+      mode: "fix",
+      consent: true,
+      policyVersion: "build-ai-selected-context-v2",
+    });
+    expect(body.sourceHash).toMatch(/^[a-f0-9]{64}$/u);
+    expect(init?.signal?.aborted).toBe(false);
+    expect(request.consent.checked).toBe(false);
+    expect(request.consent.disabled).toBe(true);
+    expect(
+      (
+        screen.getByRole("combobox", {
+          name: "Suggestion type",
+        }) as HTMLSelectElement
+      ).disabled,
+    ).toBe(true);
+    const pending = screen.getByRole("button", {
+      name: "Requesting suggestion...",
+    }) as HTMLButtonElement;
+    expect(pending.disabled).toBe(true);
+    fireEvent.click(pending);
+    expect(request.fetch).toHaveBeenCalledTimes(1);
+    response.finish(
+      Response.json(
+        { code: "cancelled", error: "The AI request was cancelled." },
+        { status: 409 },
+      ),
+    );
+    expect((await screen.findByRole("alert")).textContent).toBe(
+      "The AI request was cancelled. No suggestion was applied.",
+    );
+    expect(request.consent.disabled).toBe(false);
+    expect(request.consent.checked).toBe(false);
+    expect(
+      (screen.getByRole("button", { name: "Ask AI" }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(request.fetch).toHaveBeenCalledTimes(1);
+    expect(request.editor.value).toBe(failureSource);
+    expect(request.onApply).not.toHaveBeenCalled();
+  } finally {
+    response.finish(Response.json({ code: "cancelled" }, { status: 409 }));
+  }
+});
+it("preserves explicit cancellation and ignores a late server failure without retrying", async () => {
+  const response = deferredResponse();
+  const request = prepareRequest(response.promise);
+  try {
+    await waitFor(() => expect(request.fetch).toHaveBeenCalledTimes(1));
+    const signal = request.fetch.mock.calls[0][1]?.signal;
+    fireEvent.click(screen.getByRole("button", { name: "Cancel AI request" }));
+    expect(signal?.aborted).toBe(true);
+    expect(screen.getByRole("alert").textContent).toBe(
+      "The request stopped. No suggestion was applied.",
+    );
+    await act(async () => {
+      response.finish(
+        Response.json(
+          {
+            code: "output_invalid",
+            error:
+              "The AI response could not be safely used. No edit was applied.",
+          },
+          { status: 422 },
+        ),
+      );
+    });
+    expect(screen.getByRole("alert").textContent).toBe(
+      "The request stopped. No suggestion was applied.",
+    );
+    expect(request.fetch).toHaveBeenCalledTimes(1);
+    expect(request.editor.value).toBe(failureSource);
+    expect(request.onApply).not.toHaveBeenCalled();
+  } finally {
+    response.finish(Response.json({ code: "cancelled" }, { status: 409 }));
+  }
+});
+it("preserves changed source and rejects a late otherwise-valid suggestion", async () => {
+  const response = deferredResponse();
+  const request = prepareRequest(response.promise);
+  try {
+    await waitFor(() => expect(request.fetch).toHaveBeenCalledTimes(1));
+    const init = request.fetch.mock.calls[0][1];
+    const original = JSON.parse(String(init?.body));
+    const changed = "Updated neutral first line\nNeutral second line";
+    request.rerender(
+      <RequestEditor source={changed} onApply={request.onApply} />,
+    );
+    expect(init?.signal?.aborted).toBe(true);
+    expect(screen.queryByRole("dialog", { name: "AI suggestions" })).toBeNull();
+    await act(async () => {
+      response.finish(
+        Response.json({
+          sourceHash: original.sourceHash,
+          startLine: original.startLine,
+          endLine: original.endLine,
+          mode: original.mode,
+          originalText: "Neutral first line",
+          requiresFactConfirmation: false,
+          suggestion: {
+            operation: "replace",
+            replacement: "Neutral edited first line",
+            explanation: "Synthetic suggestion for the old source.",
+            questions: [],
+          },
+        }),
+      );
+    });
+    expect(request.editor.value).toBe(changed);
+    expect(
+      screen.queryByRole("region", { name: "AI suggestion review" }),
+    ).toBeNull();
+    expect(request.fetch).toHaveBeenCalledTimes(1);
+    expect(request.onApply).not.toHaveBeenCalled();
+  } finally {
+    response.finish(Response.json({ code: "cancelled" }, { status: 409 }));
+  }
+});

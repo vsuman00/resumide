@@ -1,0 +1,1917 @@
+--- baseline/app/routes/analysis.canonical.tsx
++++ candidate/app/routes/analysis.canonical.tsx
+@@ -15,6 +15,17 @@
+ } from "react-router";
+ import WorkspaceShell from "~/components/WorkspaceShell";
+ import CanonicalCorrectionReview from "~/components/CanonicalCorrectionReview";
++import GroupedOriginalImportReview, {
++  type GroupedOriginalFeedback,
++} from "~/components/GroupedOriginalImportReview";
++import {
++  GroupedOriginalError,
++  loadGroupedOriginalWorkspace,
++  previewGroupedOriginalImport,
++  commitGroupedOriginalImport,
++  readGroupedOriginalForm,
++  type GroupedOriginalCommand,
++} from "~/lib/server/grouped-import-repository";
+ import { getAuthenticatedUser } from "~/lib/server/auth";
+ import { getServerConfig } from "~/lib/server/config";
+ import {
+@@ -71,12 +82,30 @@
+ export const shouldRevalidate: ShouldRevalidateFunction = ({
+   actionResult,
+   defaultShouldRevalidate,
+-}) =>
+-  defaultShouldRevalidate ||
+-  (Boolean(actionResult) &&
++}) => {
++  if (
++    actionResult &&
+     typeof actionResult === "object" &&
+-    "submitted" in actionResult &&
+-    isRetainedSubmission(actionResult.submitted));
++    "grouped" in actionResult &&
++    actionResult.grouped &&
++    typeof actionResult.grouped === "object" &&
++    "kind" in actionResult.grouped
++  ) {
++    if (actionResult.grouped.kind === "preview") return false;
++    if (
++      actionResult.grouped.kind === "applied" ||
++      actionResult.grouped.kind === "error"
++    )
++      return true;
++  }
++  return (
++    defaultShouldRevalidate ||
++    (Boolean(actionResult) &&
++      typeof actionResult === "object" &&
++      "submitted" in actionResult &&
++      isRetainedSubmission(actionResult.submitted))
++  );
++};
+ export function meta() {
+   return [{ title: "Review structured resume | Resumide" }];
+ }
+@@ -126,19 +155,22 @@
+     const read = getServerConfig().CANONICAL_CORRECTIONS_ENABLED
+       ? loadCanonicalCorrectionWorkspace
+       : loadCanonical;
+-    const model = await read(
+-      createSupabaseAdminClient(),
++    const admin = createSupabaseAdminClient();
++    const model = await read(admin, params.id ?? "", user.id, {
++      versionId: url.searchParams.get("version") ?? undefined,
++      compareId: url.searchParams.get("compare") ?? undefined,
++      offset: Number(offset),
++    });
++    const groupedOriginal = await loadGroupedOriginalWorkspace(
++      admin,
+       params.id ?? "",
+       user.id,
+-      {
+-        versionId: url.searchParams.get("version") ?? undefined,
+-        compareId: url.searchParams.get("compare") ?? undefined,
+-        offset: Number(offset),
+-      },
+     );
+     return data(
+       {
+         ...model,
++        groupedOriginal,
++        groupedOwnerId: user.id,
+         scoringDiagnosticsEnabled: getServerConfig().SCORING_V2_ENABLED,
+         formKey: randomUUID(),
+         factKeys: Object.fromEntries(
+@@ -177,6 +209,8 @@
+ export async function action({ request, params }: Args) {
+   const headers = privateHeaders();
+   let submitted: RetainedSubmission | undefined;
++  let groupedRequest = false;
++  let groupedSubmitted: GroupedOriginalCommand | undefined;
+   try {
+     enabled();
+     if (request.method !== "POST") {
+@@ -192,6 +226,59 @@
+         { error: "Sign in to review your resume." },
+         { status: 401, headers },
+       );
++    const grouped = new URL(request.url).searchParams.getAll("grouped");
++    groupedRequest = grouped.length > 0;
++    if (groupedRequest) {
++      if (
++        grouped.length !== 1 ||
++        (grouped[0] !== "preview" && grouped[0] !== "commit")
++      )
++        throw new GroupedOriginalError("invalid_command", "review_again", 422);
++      if (
++        !getServerConfig().CANONICAL_CORRECTIONS_ENABLED ||
++        !getServerConfig().EVIDENCE_REVIEW_ENABLED
++      )
++        throw new GroupedOriginalError("disabled", "unavailable", 404);
++      if (grouped[0] === "preview") {
++        const command = await readGroupedOriginalForm(request, "preview");
++        const preview = await previewGroupedOriginalImport(
++          createSupabaseAdminClient(),
++          params.id ?? "",
++          user.id,
++          command,
++        );
++        return data(
++          {
++            success: null,
++            error: null,
++            grouped: { kind: "preview" as const, preview },
++          },
++          { headers },
++        );
++      }
++      groupedSubmitted = await readGroupedOriginalForm(request, "commit");
++      const receipt = await commitGroupedOriginalImport(
++        createSupabaseAdminClient(),
++        params.id ?? "",
++        user.id,
++        groupedSubmitted,
++        randomUUID(),
++      );
++      return data(
++        {
++          success: receipt.idempotent
++            ? "This import was already saved. Open its saved version."
++            : "Entry relationships saved. Confirm the facts separately.",
++          error: null,
++          grouped: {
++            kind: "applied" as const,
++            receipt,
++            resolved: groupedSubmitted,
++          },
++        },
++        { headers },
++      );
++    }
+     const input = await readCanonicalForm(request);
+     if (input.operation === "edit" || input.operation === "rename_section")
+       submitted = input;
+@@ -218,6 +305,29 @@
+       { headers },
+     );
+   } catch (error) {
++    if (groupedRequest) {
++      const failure =
++        error instanceof GroupedOriginalError
++          ? error
++          : new GroupedOriginalError(
++              "unavailable",
++              groupedSubmitted ? "retry_exact" : "unavailable",
++              503,
++            );
++      return data(
++        {
++          error: failure.message,
++          success: null,
++          grouped: {
++            kind: "error" as const,
++            reason: failure.reason,
++            recovery: failure.recovery,
++            ...(groupedSubmitted ? { submitted: groupedSubmitted } : {}),
++          },
++        },
++        { status: failure.status, headers },
++      );
++    }
+     return data(
+       {
+         error:
+@@ -559,6 +669,21 @@
+       <Link to={`/analysis/${model.analysisId}/evidence`}>
+         View source evidence
+       </Link>
++      {model.groupedOriginal && (
++        <GroupedOriginalImportReview
++          key={`${model.groupedOwnerId}:${model.analysisId}`}
++          workspace={model.groupedOriginal}
++          ownerId={model.groupedOwnerId}
++          analysisId={model.analysisId}
++          feedback={
++            feedback && "grouped" in feedback
++              ? (feedback.grouped satisfies GroupedOriginalFeedback)
++              : undefined
++          }
++          busy={busy}
++          fresh={current === undefined && model.headId === null}
++        />
++      )}
+       {corrections && (
+         <CanonicalCorrectionReview
+           corrections={corrections}
+--- baseline/app/components/GroupedOriginalImportReview.tsx
++++ candidate/app/components/GroupedOriginalImportReview.tsx
+@@ -0,0 +1,617 @@
++import { useEffect, useRef, useState } from "react";
++import { Form, Link } from "react-router";
++import { z } from "zod";
++import type {
++  GroupedOriginalAppliedReceipt,
++  GroupedOriginalCommand,
++  GroupedOriginalDisplayGroup,
++  GroupedOriginalError,
++  GroupedOriginalPreview,
++  GroupedOriginalPreviewRequest,
++  GroupedOriginalReason,
++  GroupedOriginalWorkspace,
++} from "~/lib/server/grouped-import-repository";
++
++export type GroupedOriginalFeedback =
++  | { kind: "preview"; preview: GroupedOriginalPreview }
++  | {
++      kind: "applied";
++      receipt: GroupedOriginalAppliedReceipt;
++      resolved: GroupedOriginalCommand;
++    }
++  | {
++      kind: "error";
++      reason: GroupedOriginalReason;
++      recovery: GroupedOriginalError["recovery"];
++      submitted?: GroupedOriginalCommand;
++    };
++type Available = Extract<GroupedOriginalWorkspace, { state: "available" }>;
++type Pending = {
++  schemaVersion: "pending-grouped-original/1.0.0";
++  savedAt: number;
++  command: GroupedOriginalCommand;
++};
++const LIFETIME = 30 * 60 * 1000;
++const uuid = z.uuid().regex(/^[a-f0-9-]+$/);
++const revision = z.number().int().min(0).max(2_147_483_647);
++// Browser storage admission only. The server independently validates every command.
++const pendingCommand = z.strictObject({
++  schemaVersion: z.literal("grouped-original-command/1.0.0"),
++  operation: z.literal("approve_and_import_grouped_original"),
++  binding: z.record(z.string(), z.string().max(200)),
++  expected: z
++    .strictObject({
++      reviewRevision: revision,
++      reviewHeadId: uuid.nullable(),
++      assignmentRevision: revision,
++      assignmentHeadId: uuid.nullable(),
++      associationRevision: revision,
++      associationHeadId: uuid.nullable(),
++      canonicalHeadId: z.null(),
++    })
++    .refine(
++      (v) =>
++        (v.reviewRevision === 0) === (v.reviewHeadId === null) &&
++        (v.assignmentRevision === 0) === (v.assignmentHeadId === null) &&
++        (v.associationRevision === 0) === (v.associationHeadId === null),
++    ),
++  selectedGroupIds: z
++    .array(z.string().regex(/^entry-association-[a-f0-9]{64}$/))
++    .min(1)
++    .max(32)
++    .refine((ids) => new Set(ids).size === ids.length),
++  unselectedDisposition: z.literal("retain_original"),
++  acknowledgement: z.literal(true),
++  previewHash: z.string().regex(/^[a-f0-9]{64}$/),
++  idempotencyKey: uuid,
++});
++const recordSchema = z.strictObject({
++  schemaVersion: z.literal("pending-grouped-original/1.0.0"),
++  savedAt: z.number().int().nonnegative(),
++  command: z.unknown(),
++});
++const bytes = (text: string) => new TextEncoder().encode(text).byteLength;
++function validCommand(
++  value: unknown,
++  workspace: Pick<Available, "binding">,
++): value is GroupedOriginalCommand {
++  const parsed = pendingCommand.safeParse(value);
++  if (!parsed.success) return false;
++  const { binding } = parsed.data;
++  const keys = Object.keys(workspace.binding);
++  if (
++    Object.keys(binding).length !== keys.length ||
++    !keys.every((key) => Object.hasOwn(binding, key))
++  )
++    return false;
++  if (!/^[a-z]{2,3}(?:-[A-Z]{2})?$/.test(binding.effectiveLocale)) return false;
++  if (
++    !Object.entries(workspace.binding).every(
++      ([key, item]) => key === "effectiveLocale" || binding[key] === item,
++    )
++  )
++    return false;
++  const command = JSON.stringify(value);
++  return (
++    bytes(command) <= 16_384 &&
++    bytes(
++      new URLSearchParams({
++        command,
++        relationshipAcknowledgement: "accepted",
++      }).toString(),
++    ) <= 16_384
++  );
++}
++function validRecord(value: unknown, workspace: Available): value is Pending {
++  const parsed = recordSchema.safeParse(value);
++  const now = Date.now();
++  return (
++    parsed.success &&
++    Number.isSafeInteger(parsed.data.savedAt) &&
++    parsed.data.savedAt <= now &&
++    now - parsed.data.savedAt < LIFETIME &&
++    validCommand(parsed.data.command, workspace)
++  );
++}
++const sameFields = (a: object, b: object) =>
++  Object.keys(a).length === Object.keys(b).length &&
++  Object.entries(a).every(([key, value]) =>
++    Object.entries(b).some(
++      ([otherKey, otherValue]) => key === otherKey && value === otherValue,
++    ),
++  );
++const exact = (a: GroupedOriginalCommand, b: GroupedOriginalCommand) =>
++  a.schemaVersion === b.schemaVersion &&
++  a.operation === b.operation &&
++  a.idempotencyKey === b.idempotencyKey &&
++  a.previewHash === b.previewHash &&
++  a.acknowledgement === b.acknowledgement &&
++  a.unselectedDisposition === b.unselectedDisposition &&
++  sameFields(a.binding, b.binding) &&
++  sameFields(a.expected, b.expected) &&
++  JSON.stringify(a.selectedGroupIds) === JSON.stringify(b.selectedGroupIds);
++const fields = { employer: "Employer", role: "Role", dates: "Dates" };
++function Groups({
++  groups,
++  start = 0,
++}: {
++  groups: GroupedOriginalDisplayGroup[];
++  start?: number;
++}) {
++  return groups.map((group, index) => (
++    <article key={group.id} className="account-card">
++      <h4>Possible entry {start + index + 1} (unverified)</h4>
++      <dl>
++        {group.members.map((member) => (
++          <div key={member.assertionId}>
++            <dt>{fields[member.field]}</dt>
++            <dd>{member.value}</dd>
++            <dd>
++              {member.citations.map((citation, n) => (
++                <Link key={`${citation.spanId}:${n}`} to={citation.href}>
++                  View cited source (
++                  {citation.method === "local_ocr"
++                    ? "local OCR"
++                    : "native text"}
++                  )
++                </Link>
++              ))}
++            </dd>
++          </div>
++        ))}
++      </dl>
++    </article>
++  ));
++}
++function CommitForm({
++  command,
++  enabled,
++  busy,
++  destination,
++  onAccepted,
++  retry,
++}: {
++  command: GroupedOriginalCommand;
++  enabled: boolean;
++  busy: boolean;
++  destination: string;
++  onAccepted: (command: GroupedOriginalCommand) => boolean;
++  retry: boolean;
++}) {
++  const [checked, setChecked] = useState(false);
++  const checkbox = useRef<HTMLInputElement>(null);
++  useEffect(() => {
++    const reset = (event: PageTransitionEvent) => {
++      if (event.persisted) {
++        if (checkbox.current) checkbox.current.checked = false;
++        setChecked(false);
++      }
++    };
++    window.addEventListener("pageshow", reset);
++    return () => window.removeEventListener("pageshow", reset);
++  }, []);
++  return (
++    <Form
++      method="post"
++      action={`${destination}?grouped=commit`}
++      onSubmit={(event) => {
++        if (
++          !enabled ||
++          busy ||
++          !checked ||
++          !event.currentTarget.checkValidity() ||
++          !onAccepted(command)
++        ) {
++          event.preventDefault();
++          return;
++        }
++        setChecked(false);
++      }}
++    >
++      <input type="hidden" name="command" value={JSON.stringify(command)} />
++      <label>
++        <input
++          ref={checkbox}
++          type="checkbox"
++          name="relationshipAcknowledgement"
++          value="accepted"
++          required
++          checked={checked}
++          disabled={!enabled || busy}
++          onChange={(event) => setChecked(event.target.checked)}
++        />
++        I reviewed these entry relationships. This does not confirm the facts
++        themselves.
++      </label>
++      <button
++        type="submit"
++        className="back-button"
++        disabled={!enabled || busy || !checked}
++      >
++        {retry ? "Retry the same import" : "Save selected entry relationships"}
++      </button>
++    </Form>
++  );
++}
++function FreshReview({
++  workspace,
++  feedback,
++  busy,
++  destination,
++  onAccepted,
++}: {
++  workspace: Available;
++  feedback?: GroupedOriginalFeedback;
++  busy: boolean;
++  destination: string;
++  onAccepted: (command: GroupedOriginalCommand) => boolean;
++}) {
++  const [selected, setSelected] = useState<string[]>([]);
++  const [locale, setLocale] = useState(workspace.binding.effectiveLocale);
++  const [review, setReview] = useState<{
++    feedback?: GroupedOriginalFeedback;
++    preview: GroupedOriginalPreview | null;
++  }>(() => ({ feedback, preview: null }));
++  let candidate = review.preview;
++  if (feedback !== review.feedback) {
++    candidate = feedback?.kind === "preview" ? feedback.preview : null;
++    setReview({ feedback, preview: candidate });
++  }
++  const selectedGroupIds = workspace.groups
++    .filter((group) => selected.includes(group.id))
++    .map((group) => group.id);
++  const valid =
++    selectedGroupIds.length > 0 &&
++    selectedGroupIds.length <= 32 &&
++    /^[a-z]{2,3}(?:-[A-Z]{2})?$/.test(locale) &&
++    workspace.captured.canonicalHeadId === null;
++  const request: GroupedOriginalPreviewRequest | null = valid
++    ? {
++        schemaVersion: "grouped-original-command/1.0.0",
++        operation: "approve_and_import_grouped_original",
++        binding: { ...workspace.binding, effectiveLocale: locale },
++        expected: { ...workspace.captured, canonicalHeadId: null },
++        selectedGroupIds,
++        unselectedDisposition: "retain_original",
++      }
++    : null;
++  const preview =
++    request &&
++    candidate &&
++    Object.entries(request.binding).every(
++      ([key, value]) =>
++        candidate.command.binding[key as keyof typeof request.binding] ===
++        value,
++    ) &&
++    Object.entries(request.expected).every(
++      ([key, value]) =>
++        candidate.command.expected[key as keyof typeof request.expected] ===
++        value,
++    ) &&
++    JSON.stringify(request.selectedGroupIds) ===
++      JSON.stringify(candidate.command.selectedGroupIds)
++      ? candidate
++      : null;
++  return (
++    <>
++      {!workspace.canPreview && (
++        <p role="status">
++          A new grouped import is unavailable. Review saved corrections or open
++          the latest resume version.
++        </p>
++      )}
++      <Form
++        method="post"
++        action={`${destination}?grouped=preview`}
++        onSubmit={(event) => {
++          if (!workspace.canPreview || busy || !request) event.preventDefault();
++        }}
++      >
++        <input
++          type="hidden"
++          name="command"
++          value={request ? JSON.stringify(request) : ""}
++        />
++        <p>
++          Select up to 32 possible entries. Groups you leave unselected keep
++          their original entries. Dates are shown as extracted text.
++        </p>
++        <fieldset disabled={busy || !workspace.canPreview}>
++          <legend>Choose relationships to preview</legend>
++          {workspace.groups.map((group, index) => (
++            <div key={group.id}>
++              <label>
++                <input
++                  type="checkbox"
++                  checked={selected.includes(group.id)}
++                  onChange={(event) => {
++                    setSelected(
++                      event.target.checked
++                        ? [...selected, group.id]
++                        : selected.filter((id) => id !== group.id),
++                    );
++                    setReview({ feedback, preview: null });
++                  }}
++                />{" "}
++                Select possible entry {index + 1}
++              </label>
++              <Groups groups={[group]} start={index} />
++            </div>
++          ))}
++          <label>
++            Output locale
++            <input
++              value={locale}
++              maxLength={6}
++              pattern="[a-z]{2,3}(-[A-Z]{2})?"
++              required
++              onChange={(event) => {
++                setLocale(event.target.value);
++                setReview({ feedback, preview: null });
++              }}
++            />
++          </label>
++        </fieldset>
++        {selected.length > 32 && (
++          <p role="alert">Choose no more than 32 entries for one import.</p>
++        )}
++        <button
++          type="submit"
++          className="back-button"
++          disabled={busy || !workspace.canPreview || !request}
++        >
++          Preview selected relationships
++        </button>
++      </Form>
++      {preview && (
++        <section aria-label="Selected relationship preview">
++          <h3>Review the selected relationships</h3>
++          <p>
++            This preview has not saved or approved these relationships. Facts
++            still need separate confirmation.
++          </p>
++          <Groups groups={preview.groups} />
++          <CommitForm
++            key={preview.command.idempotencyKey}
++            command={preview.command}
++            enabled={workspace.canCommit && preview.canCommit}
++            busy={busy}
++            destination={destination}
++            onAccepted={onAccepted}
++            retry={false}
++          />
++        </section>
++      )}
++    </>
++  );
++}
++export default function GroupedOriginalImportReview({
++  workspace,
++  ownerId,
++  analysisId,
++  feedback,
++  busy,
++  fresh,
++}: {
++  workspace: GroupedOriginalWorkspace;
++  ownerId: string;
++  analysisId: string;
++  feedback?: GroupedOriginalFeedback;
++  busy: boolean;
++  fresh: boolean;
++}) {
++  const [pending, setPending] = useState<Pending | null>(null);
++  const [storageProblem, setStorageProblem] = useState(false);
++  const [notice, setNotice] = useState("");
++  const [epoch, setEpoch] = useState(0);
++  const available =
++    workspace.state === "available" &&
++    workspace.source.ownerId === ownerId &&
++    workspace.source.analysisId === analysisId
++      ? workspace
++      : null;
++  const sourceKey = available ? JSON.stringify(available.binding) : "";
++  const storageKey = `resumide:grouped-original:pending:${ownerId}:${analysisId}`;
++  const destination = `/analysis/${analysisId}/canonical`;
++  const workspaceRef = useRef(available);
++  workspaceRef.current = available;
++  useEffect(() => {
++    const current = workspaceRef.current;
++    if (!current) return;
++    try {
++      const stored = window.sessionStorage.getItem(storageKey);
++      if (!stored) {
++        setPending(null);
++        return;
++      }
++      let value: unknown;
++      try {
++        value =
++          stored.length <= 20_000 && bytes(stored) <= 20_000
++            ? JSON.parse(stored)
++            : null;
++      } catch {
++        value = null;
++      }
++      if (validRecord(value, current)) setPending(value);
++      else {
++        window.sessionStorage.removeItem(storageKey);
++        setPending(null);
++        setNotice(
++          "The stored import needs a new review. Choose and preview the relationships again.",
++        );
++      }
++    } catch {
++      setStorageProblem(true);
++    }
++  }, [sourceKey, storageKey]);
++  useEffect(() => {
++    if (
++      feedback?.kind === "error" &&
++      feedback.submitted &&
++      workspaceRef.current &&
++      validCommand(feedback.submitted, workspaceRef.current)
++    ) {
++      setPending((previous) =>
++        previous && exact(previous.command, feedback.submitted!)
++          ? previous
++          : {
++              schemaVersion: "pending-grouped-original/1.0.0",
++              savedAt: Date.now(),
++              command: feedback.submitted!,
++            },
++      );
++    }
++    if (feedback?.kind !== "applied") return;
++    setPending((previous) =>
++      previous && exact(previous.command, feedback.resolved) ? null : previous,
++    );
++    try {
++      const stored = window.sessionStorage.getItem(storageKey);
++      if (stored && stored.length <= 20_000) {
++        const record = recordSchema.safeParse(JSON.parse(stored));
++        if (
++          record.success &&
++          validCommand(record.data.command, {
++            binding: feedback.resolved.binding,
++          }) &&
++          exact(record.data.command, feedback.resolved)
++        )
++          window.sessionStorage.removeItem(storageKey);
++      }
++    } catch {
++      setStorageProblem(true);
++    }
++  }, [feedback, storageKey]);
++  useEffect(() => {
++    const reset = (event: PageTransitionEvent) => {
++      if (event.persisted) setEpoch((value) => value + 1);
++    };
++    window.addEventListener("pageshow", reset);
++    return () => window.removeEventListener("pageshow", reset);
++  }, []);
++  useEffect(() => {
++    if (!pending) return;
++    const timeout = window.setTimeout(
++      () => {
++        setPending(null);
++        setNotice(
++          "The pending import expired. Review the relationships again.",
++        );
++        try {
++          const value: unknown = JSON.parse(
++            window.sessionStorage.getItem(storageKey) ?? "null",
++          );
++          if (
++            recordSchema.safeParse(value).success &&
++            typeof value === "object" &&
++            value !== null &&
++            "savedAt" in value &&
++            value.savedAt === pending.savedAt
++          )
++            window.sessionStorage.removeItem(storageKey);
++        } catch {
++          setStorageProblem(true);
++        }
++      },
++      Math.max(0, pending.savedAt + LIFETIME - Date.now()),
++    );
++    return () => window.clearTimeout(timeout);
++  }, [pending, storageKey]);
++  const remember = (command: GroupedOriginalCommand) => {
++    if (!available || !available.canCommit || !validCommand(command, available))
++      return false;
++    const value: Pending =
++      pending && exact(pending.command, command)
++        ? pending
++        : {
++            schemaVersion: "pending-grouped-original/1.0.0",
++            savedAt: Date.now(),
++            command,
++          };
++    if (Date.now() - value.savedAt >= LIFETIME) return false;
++    setPending(value);
++    try {
++      window.sessionStorage.setItem(storageKey, JSON.stringify(value));
++    } catch {
++      setStorageProblem(true);
++    }
++    return true;
++  };
++  const retry =
++    pending && available && validRecord(pending, available) ? pending : null;
++  return (
++    <section aria-labelledby="grouped-original-heading" aria-busy={busy}>
++      <h2 id="grouped-original-heading">Review possible employment entries</h2>
++      <p>
++        These are unverified relationships between extracted employer, role and
++        date values. Reviewing an entry relationship does not confirm its facts
++        or assess qualifications.
++      </p>
++      {notice && <p role="status">{notice}</p>}
++      {storageProblem && (
++        <p role="status">
++          This tab could not store or restore the pending import. Keep this page
++          open to retain an in-memory retry. Reloading may lose it.
++        </p>
++      )}
++      {(!available || !available.canCommit) && (
++        <p role="status">
++          Saving entry relationships is unavailable. An available preview does
++          not save your review.
++        </p>
++      )}
++      {feedback?.kind === "error" && feedback.recovery === "review_again" && (
++        <p role="status">
++          Review the latest source and create a new preview. The earlier command
++          will not be changed automatically.
++        </p>
++      )}
++      {feedback?.kind === "applied" && (
++        <p role="status">
++          {feedback.receipt.idempotent
++            ? "This import was already saved; your current version may be newer."
++            : "Entry relationships were saved. Confirm the facts separately."}{" "}
++          <Link to={`${destination}?version=${feedback.receipt.versionId}`}>
++            Open the saved version
++          </Link>
++        </p>
++      )}
++      {retry && (
++        <section aria-label="Pending original import">
++          <h3>Pending import</h3>
++          <p>
++            The outcome of this original submission may be unknown. Retrying
++            sends the same selections, review captures, locale and request key;
++            it does not create a new review.
++          </p>
++          <CommitForm
++            key={`${retry.command.idempotencyKey}:${epoch}`}
++            command={retry.command}
++            enabled={Boolean(available?.canCommit)}
++            busy={busy}
++            destination={destination}
++            onAccepted={remember}
++            retry
++          />
++        </section>
++      )}
++      {available && fresh && (
++        <FreshReview
++          key={`${JSON.stringify([available.binding, available.captured])}:${epoch}`}
++          workspace={available}
++          feedback={feedback}
++          busy={busy}
++          destination={destination}
++          onAccepted={remember}
++        />
++      )}
++      {!available && (
++        <p>
++          Possible entries are unavailable. Your existing resume review remains
++          available below.
++        </p>
++      )}
++    </section>
++  );
++}
+--- baseline/tests/unit/canonical-route.test.ts
++++ candidate/tests/unit/canonical-route.test.ts
+@@ -6,6 +6,9 @@
+   load: vi.fn(),
+   workspace: vi.fn(),
+   mutate: vi.fn(),
++  groupedLoad: vi.fn(),
++  groupedPreview: vi.fn(),
++  groupedCommit: vi.fn(),
+   enabled: true,
+   correctionsEnabled: false,
+ }));
+@@ -32,7 +35,22 @@
+   loadCanonicalCorrectionWorkspace: mocks.workspace,
+   mutateCanonical: mocks.mutate,
+ }));
+-import { action, loader, headers } from "../../app/routes/analysis.canonical";
++vi.mock("../../app/lib/server/grouped-import-repository", async (original) => ({
++  ...(await original<
++    typeof import("../../app/lib/server/grouped-import-repository")
++  >()),
++  loadGroupedOriginalWorkspace: mocks.groupedLoad,
++  previewGroupedOriginalImport: mocks.groupedPreview,
++  commitGroupedOriginalImport: mocks.groupedCommit,
++}));
++import {
++  action,
++  loader,
++  headers,
++  shouldRevalidate,
++} from "../../app/routes/analysis.canonical";
++import { GroupedOriginalError } from "../../app/lib/server/grouped-import-repository";
++import { GroupedOriginalCommandSchema } from "../../app/lib/server/grouped-import-commands";
+ import {
+   CanonicalError,
+   readCanonicalForm,
+@@ -122,11 +140,65 @@
+     params: { id: id(1) },
+   };
+ }
++function groupedCommand() {
++  return GroupedOriginalCommandSchema.parse({
++    schemaVersion: "grouped-original-command/1.0.0",
++    operation: "approve_and_import_grouped_original",
++    binding: {
++      ownerId: id(5),
++      organizationId: id(6),
++      resumeId: id(7),
++      analysisId: id(1),
++      sourceId: id(8),
++      attemptId: id(9),
++      inputSha256: "a".repeat(64),
++      evidenceSchemaVersion: "evidence/2.0.0",
++      fieldExtractorVersion: "evidence-fields/1.0.1",
++      targetModelVersion: "evidence-targets/1.0.0",
++      associationModelVersion: "evidence-entry-associations/1.0.0",
++      producerVersion: "canonical-engine/1.0.3",
++      admissionPolicyVersion: "grouped-original-admission/1.0.0",
++      structuralTextProfileVersion: "a02-structural-text/1.0.0",
++      correctionProjectionModelVersion: "canonical-corrections/1.0.1",
++      correctionAdmissionPolicyVersion: "candidate-correction-admission/1.0.0",
++      effectiveLocale: "en-IN",
++    },
++    expected: {
++      reviewRevision: 2,
++      reviewHeadId: id(10),
++      assignmentRevision: 1,
++      assignmentHeadId: id(11),
++      associationRevision: 0,
++      associationHeadId: null,
++      canonicalHeadId: null,
++    },
++    selectedGroupIds: [`entry-association-${"b".repeat(64)}`],
++    unselectedDisposition: "retain_original",
++    acknowledgement: true,
++    previewHash: "c".repeat(64),
++    idempotencyKey: id(12),
++  });
++}
++function groupedArgs(body: URLSearchParams, selector = "grouped=commit") {
++  return {
++    request: new Request(
++      `https://example.test/analysis/${id(1)}/canonical?${selector}`,
++      { method: "POST", headers: { Origin: "https://example.test" }, body },
++    ),
++    params: { id: id(1) },
++  };
++}
+ describe("canonical authorization and bounded forms", () => {
+   beforeEach(() => {
+     vi.clearAllMocks();
+     mocks.enabled = true;
+     mocks.correctionsEnabled = false;
++    mocks.groupedLoad.mockResolvedValue({
++      schemaVersion: "grouped-original-workspace/1.0.0",
++      state: "unavailable",
++      reason: "disabled",
++      scoringEligible: false,
++    });
+     mocks.user.mockResolvedValue({ id: id(5) });
+     mocks.mutate.mockResolvedValue({ revision: 2 });
+     mocks.load.mockResolvedValue({ current: null, history: [] });
+@@ -447,4 +519,252 @@
+     expect(result.get("X-Robots-Tag")).toBe("noindex, nofollow");
+     expect(result.getSetCookie()).toHaveLength(2);
+   });
++  describe("grouped query consumer", () => {
++    beforeEach(() => {
++      mocks.correctionsEnabled = true;
++    });
++    it("adds owned grouped metadata without replacing the existing loader model or generated keys", async () => {
++      const workspace = {
++        schemaVersion: "grouped-original-workspace/1.0.0",
++        state: "unavailable",
++        reason: "unavailable",
++        scoringEligible: false,
++      };
++      mocks.groupedLoad.mockResolvedValue(workspace);
++      const response = await loader({
++        request: new Request("https://example.test/canonical"),
++        params: { id: id(1) },
++      });
++      expect(response.data).toMatchObject({
++        current: null,
++        history: [],
++        groupedOriginal: workspace,
++        groupedOwnerId: id(5),
++      });
++      expect(response.data.formKey).toMatch(/^[a-f0-9-]{36}$/);
++      expect(response.data.restoreKey).toMatch(/^[a-f0-9-]{36}$/);
++      expect(mocks.groupedLoad).toHaveBeenCalledWith(undefined, id(1), id(5));
++    });
++    it("uses the strict single-consumption preview parser and authenticated server call", async () => {
++      const full = groupedCommand();
++      const command = {
++        schemaVersion: full.schemaVersion,
++        operation: full.operation,
++        binding: full.binding,
++        expected: full.expected,
++        selectedGroupIds: full.selectedGroupIds,
++        unselectedDisposition: full.unselectedDisposition,
++      };
++      const preview = {
++        schemaVersion: "grouped-original-preview/1.0.0",
++        state: "preview",
++        command: groupedCommand(),
++        groups: [],
++        canCommit: false,
++        scoringEligible: false,
++      };
++      mocks.groupedPreview.mockResolvedValue(preview);
++      const request = groupedArgs(
++        new URLSearchParams({ command: JSON.stringify(command) }),
++        "grouped=preview",
++      );
++      const response = await action(request);
++      expect(response.data).toEqual({
++        error: null,
++        success: null,
++        grouped: { kind: "preview", preview },
++      });
++      expect(mocks.groupedPreview).toHaveBeenCalledWith(
++        undefined,
++        id(1),
++        id(5),
++        command,
++      );
++      expect(request.request.bodyUsed).toBe(true);
++      expect(mocks.mutate).not.toHaveBeenCalled();
++      expect(mocks.groupedCommit).not.toHaveBeenCalled();
++    });
++    it.each([
++      "grouped=wrong",
++      "grouped=preview&grouped=commit",
++      "grouped=commit&grouped=commit",
++    ])("rejects selector %s without a fallback write", async (selector) => {
++      const response = await action(
++        groupedArgs(
++          new URLSearchParams({ command: JSON.stringify(groupedCommand()) }),
++          selector,
++        ),
++      );
++      expect(response.init?.status).toBe(422);
++      expect(response.data).toMatchObject({
++        grouped: { kind: "error", reason: "invalid_command" },
++      });
++      expect(mocks.mutate).not.toHaveBeenCalled();
++      expect(mocks.groupedCommit).not.toHaveBeenCalled();
++      expect(mocks.groupedPreview).not.toHaveBeenCalled();
++    });
++    it.each([
++      "missing_ack",
++      "wrong_ack",
++      "duplicate_command",
++      "duplicate_json",
++      "oversized",
++      "unknown_field",
++    ])("rejects grouped %s before dispatch", async (mode) => {
++      let command = JSON.stringify(groupedCommand());
++      if (mode === "duplicate_json")
++        command = command.replace(
++          '"acknowledgement":true',
++          '"acknowledgement":true,"acknowledgement":true',
++        );
++      if (mode === "oversized") command = "x".repeat(16_385);
++      const body = new URLSearchParams({ command });
++      if (mode !== "missing_ack")
++        body.set(
++          "relationshipAcknowledgement",
++          mode === "wrong_ack" ? "true" : "accepted",
++        );
++      if (mode === "duplicate_command") body.append("command", command);
++      if (mode === "unknown_field") body.set("ownerId", id(5));
++      const response = await action(groupedArgs(body));
++      expect(response.init?.status).toBe(422);
++      expect(response.data).not.toHaveProperty("grouped.submitted");
++      expect(mocks.groupedCommit).not.toHaveBeenCalled();
++      expect(mocks.mutate).not.toHaveBeenCalled();
++    });
++    it.each(["retry_exact", "review_again", "unavailable"] as const)(
++      "retains the exact parsed original command with %s failure disposition",
++      async (recovery) => {
++        const command = groupedCommand();
++        mocks.groupedCommit.mockRejectedValue(
++          new GroupedOriginalError(
++            recovery === "review_again" ? "conflict" : "invalid_result",
++            recovery,
++            recovery === "review_again" ? 409 : 503,
++          ),
++        );
++        const response = await action(
++          groupedArgs(
++            new URLSearchParams({
++              command: JSON.stringify(command),
++              relationshipAcknowledgement: "accepted",
++            }),
++          ),
++        );
++        expect(response.data).toMatchObject({
++          grouped: { kind: "error", recovery, submitted: command },
++          success: null,
++        });
++        expect(mocks.groupedCommit).toHaveBeenCalledWith(
++          undefined,
++          id(1),
++          id(5),
++          command,
++          expect.stringMatching(/^[a-f0-9-]{36}$/),
++        );
++        expect(new Headers(response.init?.headers).get("Cache-Control")).toBe(
++          "private, no-store",
++        );
++        expect(mocks.mutate).not.toHaveBeenCalled();
++      },
++    );
++    it("retains an original command after an unexpected adapter exception without exposing details", async () => {
++      mocks.groupedCommit.mockRejectedValue(
++        Error("synthetic hidden DB detail"),
++      );
++      const command = groupedCommand();
++      const response = await action(
++        groupedArgs(
++          new URLSearchParams({
++            command: JSON.stringify(command),
++            relationshipAcknowledgement: "accepted",
++          }),
++        ),
++      );
++      expect(response.init?.status).toBe(503);
++      expect(response.data).toMatchObject({
++        grouped: {
++          reason: "unavailable",
++          recovery: "retry_exact",
++          submitted: command,
++        },
++      });
++      expect(JSON.stringify(response.data)).not.toContain("hidden DB detail");
++    });
++    it.each([false, true])(
++      "returns the actual applied receipt with idempotent=%s without rebasing the resolved command",
++      async (idempotent) => {
++        const command = groupedCommand();
++        const receipt = {
++          schemaVersion: "grouped-original-result/1.0.0",
++          status: "applied",
++          versionId: id(20),
++          revision: 1,
++          batchId: id(21),
++          associationRevision: 1,
++          associationHeadId: id(21),
++          idempotent,
++          scoringEligible: false,
++        };
++        mocks.groupedCommit.mockResolvedValue(receipt);
++        const response = await action(
++          groupedArgs(
++            new URLSearchParams({
++              command: JSON.stringify(command),
++              relationshipAcknowledgement: "accepted",
++            }),
++          ),
++        );
++        expect(response.data).toMatchObject({
++          error: null,
++          grouped: { kind: "applied", receipt, resolved: command },
++        });
++        if (!("success" in response.data))
++          throw Error("EXPECTED_GROUPED_RESULT");
++        if (idempotent)
++          expect(response.data.success).toContain("already saved");
++      },
++    );
++    it("keeps disabled grouped writes closed before parsing or privileged clients", async () => {
++      mocks.correctionsEnabled = false;
++      const response = await action(
++        groupedArgs(new URLSearchParams({ command: "invalid" })),
++      );
++      expect(response.init?.status).toBe(404);
++      expect(response.data).toMatchObject({
++        grouped: { reason: "disabled", recovery: "unavailable" },
++      });
++      expect(mocks.admin).not.toHaveBeenCalled();
++      expect(mocks.groupedCommit).not.toHaveBeenCalled();
++    });
++    it("revalidates ambiguous commit errors/applied receipts while nonmutating previews avoid revalidation", () => {
++      const base = {
++        currentUrl: new URL("https://example.test/canonical"),
++        nextUrl: new URL("https://example.test/canonical"),
++        currentParams: {},
++        nextParams: {},
++        defaultShouldRevalidate: false,
++      };
++      expect(
++        shouldRevalidate({
++          ...base,
++          actionStatus: 503,
++          actionResult: { grouped: { kind: "error" } },
++        }),
++      ).toBe(true);
++      expect(
++        shouldRevalidate({
++          ...base,
++          actionResult: { grouped: { kind: "applied" } },
++        }),
++      ).toBe(true);
++      expect(
++        shouldRevalidate({
++          ...base,
++          defaultShouldRevalidate: true,
++          actionResult: { grouped: { kind: "preview" } },
++        }),
++      ).toBe(false);
++    });
++  });
+ });
+--- baseline/tests/components/GroupedOriginalImportReview.test.tsx
++++ candidate/tests/components/GroupedOriginalImportReview.test.tsx
+@@ -0,0 +1,732 @@
++/** @vitest-environment jsdom */
++
++import {
++  act,
++  cleanup,
++  fireEvent,
++  render,
++  screen,
++  waitFor,
++  within,
++} from "@testing-library/react";
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++import { createMemoryRouter, RouterProvider } from "react-router";
++import { buildNativeEvidence } from "~/lib/server/native-evidence";
++import {
++  DocumentEvidenceSchema,
++  reconcileDocumentEvidence,
++} from "~/lib/server/document-evidence";
++import {
++  loadGroupedOriginalWorkspace,
++  previewGroupedOriginalImport,
++} from "~/lib/server/grouped-import-repository";
++import {
++  GroupedOriginalCommandSchema,
++  type GroupedOriginalCommand,
++} from "~/lib/server/grouped-import-commands";
++import { CanonicalResumeDraftSchema } from "~/lib/server/canonical-resume-schema";
++
++const mocks = vi.hoisted(() => ({
++  user: vi.fn(),
++  rpc: vi.fn(),
++  canonicalLoad: vi.fn(),
++}));
++
++vi.mock("~/lib/server/auth", () => ({ getAuthenticatedUser: mocks.user }));
++vi.mock("~/lib/server/config", () => ({
++  getServerConfig: () => ({
++    APP_ORIGIN: "https://fixture.test",
++    CANONICAL_AUTHORING_ENABLED: true,
++    CANONICAL_CORRECTIONS_ENABLED: true,
++    EVIDENCE_REVIEW_ENABLED: true,
++    SCORING_V2_ENABLED: false,
++  }),
++}));
++vi.mock("~/lib/server/supabase", () => ({
++  createSupabaseAdminClient: () => ({ rpc: mocks.rpc }),
++  createSupabaseServerClient: vi.fn(),
++}));
++vi.mock("~/lib/server/canonical-repository", async (original) => ({
++  ...(await original<typeof import("~/lib/server/canonical-repository")>()),
++  loadCanonicalCorrectionWorkspace: mocks.canonicalLoad,
++}));
++import CanonicalResume from "~/routes/analysis.canonical";
++import { action, loader, shouldRevalidate } from "~/routes/analysis.canonical";
++
++const id = (value: number) =>
++  `10000000-0000-4000-8000-${String(value).padStart(12, "0")}`;
++function sourceFixture(
++  canCommit = false,
++  text = "Experience\nEmployer: Synthetic North Labs\nRole: Engineer\nDates: 2020 - 2022\nEmployer: Synthetic South Labs\nRole: Analyst\nDates: 2021 - 2023",
++) {
++  const context = {
++    id: id(1),
++    ownerId: id(2),
++    analysisId: id(3),
++    sourceId: id(4),
++    inputSha256: "a".repeat(64),
++    createdAt: "2026-11-13T00:00:00.000Z",
++    retentionPolicyId: "synthetic/1.0.0",
++  };
++  const envelope = DocumentEvidenceSchema.parse(
++    reconcileDocumentEvidence(context, buildNativeEvidence([text])),
++  );
++  const source = {
++    ownerId: context.ownerId,
++    organizationId: id(6),
++    resumeId: id(5),
++    analysisId: context.analysisId,
++    sourceId: context.sourceId,
++    attemptId: context.id,
++    inputSha256: context.inputSha256,
++  };
++  const captured = {
++    reviewRevision: 2,
++    reviewHeadId: id(7),
++    assignmentRevision: 1,
++    assignmentHeadId: id(8),
++    associationRevision: 0,
++    associationHeadId: null,
++    canonicalHeadId: null,
++  };
++  const readData = {
++    schemaVersion: "grouped-original-read/1.0.0",
++    status: "available",
++    compatibilityReady: true,
++    canCommit,
++    freshImportAllowed: true,
++    scoringEligible: false,
++    source,
++    captured,
++    attempt: { id: context.id, attemptNumber: 1, envelope },
++  };
++  const rpc = vi.fn().mockResolvedValue({ data: readData, error: null });
++  return { envelope, source, captured, rpc, readData };
++}
++const storageKey = `resumide:grouped-original:pending:${id(2)}:${id(3)}`;
++const routers: ReturnType<typeof createMemoryRouter>[] = [];
++beforeEach(() => {
++  vi.clearAllMocks();
++  sessionStorage.clear();
++  mocks.user.mockResolvedValue({ id: id(2) });
++});
++afterEach(() => {
++  cleanup();
++  for (const router of routers.splice(0)) router.dispose();
++  vi.restoreAllMocks();
++});
++function baseModel() {
++  return {
++    analysisId: id(3),
++    resumeId: id(5),
++    current: null,
++    headId: null,
++    history: [],
++    nextOffset: null,
++    comparison: null,
++    scoringEligible: false,
++  };
++}
++async function workspaceFixture(canCommit = false) {
++  const fixture = sourceFixture(canCommit);
++  const workspace = await loadGroupedOriginalWorkspace(
++    { rpc: fixture.rpc },
++    id(3),
++    id(2),
++  );
++  if (workspace.state !== "available") throw Error("EXPECTED_OWNED_WORKSPACE");
++  const request = {
++    schemaVersion: "grouped-original-command/1.0.0" as const,
++    operation: "approve_and_import_grouped_original" as const,
++    binding: workspace.binding,
++    expected: { ...workspace.captured, canonicalHeadId: null },
++    selectedGroupIds: workspace.groups.map((group) => group.id),
++    unselectedDisposition: "retain_original" as const,
++  };
++  const preview = await previewGroupedOriginalImport(
++    { rpc: fixture.rpc },
++    id(3),
++    id(2),
++    request,
++  );
++  return { ...fixture, workspace, preview };
++}
++function storageRecord(command: GroupedOriginalCommand, savedAt = Date.now()) {
++  return JSON.stringify({
++    schemaVersion: "pending-grouped-original/1.0.0",
++    savedAt,
++    command,
++  });
++}
++async function wirePage({
++  canCommit = false,
++  outcome = "applied",
++  text,
++}: {
++  canCommit?: boolean;
++  outcome?: "applied" | "ambiguous" | "conflict";
++  text?: string;
++} = {}) {
++  const fixture = sourceFixture(canCommit, text);
++  let saved: ReturnType<typeof CanonicalResumeDraftSchema.parse> | null = null;
++  const commands: unknown[] = [];
++  mocks.canonicalLoad.mockImplementation(async () =>
++    saved
++      ? {
++          ...baseModel(),
++          headId: saved.versionId,
++          current: { sourceId: id(4), revision: 1, document: saved },
++          history: [
++            {
++              id: saved.versionId,
++              revision: 1,
++              parent_version_id: null,
++              created_at: saved.createdAt,
++            },
++          ],
++        }
++      : baseModel(),
++  );
++  mocks.rpc.mockImplementation(
++    async (name: string, args: Record<string, unknown>) => {
++      if (name === "read_grouped_original_workspace")
++        return {
++          data: {
++            ...fixture.readData,
++            freshImportAllowed: saved === null,
++            captured: {
++              ...fixture.captured,
++              canonicalHeadId: saved?.versionId ?? null,
++            },
++          },
++          error: null,
++        };
++      if (name !== "import_canonical_grouped_original")
++        throw Error("UNEXPECTED_RPC");
++      commands.push(args.p_command);
++      const original = CanonicalResumeDraftSchema.parse(args.p_original);
++      const stored = JSON.parse(sessionStorage.getItem(storageKey) ?? "null");
++      if (
++        !args.p_command ||
++        typeof args.p_command !== "object" ||
++        !("idempotencyKey" in args.p_command)
++      )
++        throw Error("EXPECTED_WIRE_COMMAND");
++      expect(stored.command.idempotencyKey).toBe(args.p_command.idempotencyKey);
++      expect(stored).not.toHaveProperty("relationshipAcknowledgement");
++      if (outcome === "conflict")
++        return {
++          data: {
++            schemaVersion: "grouped-original-result/1.0.0",
++            status: "conflict",
++            scoringEligible: false,
++          },
++          error: null,
++        };
++      const idempotent = saved !== null;
++      if (!saved)
++        saved = CanonicalResumeDraftSchema.parse({
++          ...original,
++          producerVersion: "canonical-engine/1.0.3",
++        });
++      const receipt = {
++        schemaVersion: "grouped-original-result/1.0.0",
++        status: "applied",
++        versionId: saved.versionId,
++        revision: 1,
++        batchId: id(40),
++        associationRevision: 1,
++        associationHeadId: id(40),
++        idempotent,
++        scoringEligible: false,
++      };
++      return {
++        data:
++          outcome === "ambiguous" && commands.length === 1
++            ? { ...receipt, unexpected: true }
++            : receipt,
++        error: null,
++      };
++    },
++  );
++  const router = createMemoryRouter(
++    [
++      {
++        path: "/analysis/:id/canonical",
++        loader,
++        action,
++        shouldRevalidate,
++        Component: CanonicalResume,
++        HydrateFallback: () => null,
++      },
++    ],
++    { initialEntries: [`/analysis/${id(3)}/canonical`] },
++  );
++  routers.push(router);
++  render(<RouterProvider router={router} />);
++  await screen.findByRole("heading", {
++    name: "Review possible employment entries",
++  });
++  return { router, commands, fixture };
++}
++async function previewSelection() {
++  fireEvent.click(
++    screen.getByRole("checkbox", { name: "Select possible entry 1" }),
++  );
++  fireEvent.click(
++    screen.getByRole("button", { name: "Preview selected relationships" }),
++  );
++  return screen.findByRole("region", { name: "Selected relationship preview" });
++}
++function accept(region: HTMLElement) {
++  fireEvent.click(
++    within(region).getByRole("checkbox", {
++      name: /I reviewed these entry relationships/,
++    }),
++  );
++}
++
++describe("grouped original import in the actual canonical page", () => {
++  it("shows unverified employment relationships from the real owned workspace DTO", async () => {
++    const fixture = sourceFixture();
++    const groupedOriginal = await loadGroupedOriginalWorkspace(
++      { rpc: fixture.rpc },
++      id(3),
++      id(2),
++    );
++    expect(groupedOriginal.state).toBe("available");
++    if (groupedOriginal.state !== "available")
++      throw Error("EXPECTED_OWNED_WORKSPACE");
++    expect(groupedOriginal.groups).toHaveLength(2);
++    expect(groupedOriginal.canPreview).toBe(true);
++    expect(groupedOriginal.canCommit).toBe(false);
++    const router = createMemoryRouter(
++      [
++        {
++          path: "/analysis/:id/canonical",
++          loader: () => ({
++            analysisId: id(3),
++            resumeId: id(5),
++            current: null,
++            headId: null,
++            history: [],
++            nextOffset: null,
++            comparison: null,
++            scoringEligible: false,
++            formKey: id(10),
++            factKeys: {},
++            retainedKeys: {},
++            restoreKey: id(11),
++            scoringDiagnosticsEnabled: false,
++            groupedOwnerId: id(2),
++            groupedOriginal,
++          }),
++          Component: CanonicalResume,
++        },
++      ],
++      { initialEntries: [`/analysis/${id(3)}/canonical`] },
++    );
++    render(<RouterProvider router={router} />);
++    expect(
++      await screen.findByRole("button", { name: "Import resume for review" }),
++    ).toBeTruthy();
++    expect(
++      screen.getByRole("heading", {
++        name: "Review possible employment entries",
++      }),
++    ).toBeTruthy();
++  });
++
++  it("previews manually with nonzero captures while denied commit remains disabled", async () => {
++    await wirePage();
++    const previewButton = screen.getByRole("button", {
++      name: "Preview selected relationships",
++    });
++    expect(previewButton).toHaveProperty("disabled", true);
++    expect(
++      screen
++        .getAllByRole("checkbox")
++        .every(
++          (input) => !(input instanceof HTMLInputElement) || !input.checked,
++        ),
++    ).toBe(true);
++    expect(screen.getByText("Synthetic North Labs")).toBeTruthy();
++    expect(screen.getByText("2020 - 2022")).toBeTruthy();
++    expect(
++      screen
++        .getAllByRole("link", { name: "View cited source (native text)" })[0]
++        .getAttribute("href"),
++    ).toContain(`/analysis/${id(3)}/evidence#source-`);
++    const region = await previewSelection();
++    expect(
++      within(region).getByRole("button", {
++        name: "Save selected entry relationships",
++      }),
++    ).toHaveProperty("disabled", true);
++    expect(within(region).getByRole("checkbox")).toHaveProperty(
++      "disabled",
++      true,
++    );
++    expect(
++      mocks.rpc.mock.calls.filter(
++        (call) => call[0] === "import_canonical_grouped_original",
++      ),
++    ).toHaveLength(0);
++    expect(sessionStorage.getItem(storageKey)).toBeNull();
++  });
++
++  it("requires named acceptance, stores the exact metadata command before dispatch, and clears matching success", async () => {
++    const page = await wirePage({ canCommit: true });
++    const region = await previewSelection();
++    expect(
++      within(region).getByRole("button", {
++        name: "Save selected entry relationships",
++      }),
++    ).toHaveProperty("disabled", true);
++    const checkbox = within(region).getByRole("checkbox");
++    expect(checkbox.getAttribute("name")).toBe("relationshipAcknowledgement");
++    expect(checkbox.getAttribute("value")).toBe("accepted");
++    fireEvent.submit(checkbox.closest("form")!);
++    expect(page.commands).toHaveLength(0);
++    accept(region);
++    fireEvent.click(
++      within(region).getByRole("button", {
++        name: "Save selected entry relationships",
++      }),
++    );
++    await screen.findByRole("link", { name: "Open the saved version" });
++    expect(page.commands).toHaveLength(1);
++    await waitFor(() => expect(sessionStorage.getItem(storageKey)).toBeNull());
++    expect(
++      screen.getByRole("heading", { name: "Facts and confirmation" }),
++    ).toBeTruthy();
++  });
++
++  it("keeps the original key/captures after an ambiguous save creates a head, reloads unchecked, and replays once manually", async () => {
++    const page = await wirePage({ canCommit: true, outcome: "ambiguous" });
++    const region = await previewSelection();
++    accept(region);
++    fireEvent.click(
++      within(region).getByRole("button", {
++        name: "Save selected entry relationships",
++      }),
++    );
++    let pending = await screen.findByRole("region", {
++      name: "Pending original import",
++    });
++    await screen.findByRole("heading", { name: "Facts and confirmation" });
++    expect(page.commands).toHaveLength(1);
++    const originalStored = sessionStorage.getItem(storageKey)!;
++    const original = GroupedOriginalCommandSchema.parse(
++      JSON.parse(originalStored).command,
++    );
++    expect(original.expected).toMatchObject({
++      reviewRevision: 2,
++      reviewHeadId: id(7),
++      assignmentRevision: 1,
++      assignmentHeadId: id(8),
++      canonicalHeadId: null,
++    });
++    expect(within(pending).getByRole("checkbox")).toHaveProperty(
++      "checked",
++      false,
++    );
++    cleanup();
++    page.router.dispose();
++    const router = createMemoryRouter(
++      [
++        {
++          path: "/analysis/:id/canonical",
++          loader,
++          action,
++          shouldRevalidate,
++          Component: CanonicalResume,
++          HydrateFallback: () => null,
++        },
++      ],
++      { initialEntries: [`/analysis/${id(3)}/canonical`] },
++    );
++    routers.push(router);
++    render(<RouterProvider router={router} />);
++    pending = await screen.findByRole("region", {
++      name: "Pending original import",
++    });
++    expect(within(pending).getByRole("checkbox")).toHaveProperty(
++      "checked",
++      false,
++    );
++    expect(
++      within(pending).getByRole("button", { name: "Retry the same import" }),
++    ).toHaveProperty("disabled", true);
++    expect(page.commands).toHaveLength(1);
++    expect(sessionStorage.getItem(storageKey)).toBe(originalStored);
++    accept(pending);
++    fireEvent.click(
++      within(pending).getByRole("button", { name: "Retry the same import" }),
++    );
++    await screen.findByText(
++      /This import was already saved; your current version may be newer/,
++    );
++    expect(page.commands).toHaveLength(2);
++    expect(page.commands[1]).toEqual(page.commands[0]);
++    await waitFor(() => expect(sessionStorage.getItem(storageKey)).toBeNull());
++  });
++
++  it("keeps conflict recovery separate from a new preview and never retries automatically", async () => {
++    const page = await wirePage({ canCommit: true, outcome: "conflict" });
++    const region = await previewSelection();
++    accept(region);
++    fireEvent.click(
++      within(region).getByRole("button", {
++        name: "Save selected entry relationships",
++      }),
++    );
++    await screen.findByText(
++      /Review the latest source and create a new preview/,
++    );
++    const pending = await screen.findByRole("region", {
++      name: "Pending original import",
++    });
++    expect(within(pending).getByRole("checkbox")).toHaveProperty(
++      "checked",
++      false,
++    );
++    expect(page.commands).toHaveLength(1);
++    expect(sessionStorage.getItem(storageKey)).not.toBeNull();
++  });
++
++  it("invalidates the preview on a changed selection/locale and on persisted pageshow", async () => {
++    await wirePage({ canCommit: true });
++    let region = await previewSelection();
++    const originalKey = JSON.parse(
++      region.querySelector<HTMLInputElement>('input[name="command"]')!.value,
++    ).idempotencyKey;
++    accept(region);
++    fireEvent.change(screen.getByRole("textbox", { name: "Output locale" }), {
++      target: { value: "fr-FR" },
++    });
++    expect(
++      screen.queryByRole("region", { name: "Selected relationship preview" }),
++    ).toBeNull();
++    fireEvent.change(screen.getByRole("textbox", { name: "Output locale" }), {
++      target: { value: "en-IN" },
++    });
++    expect(
++      screen.queryByRole("region", { name: "Selected relationship preview" }),
++    ).toBeNull();
++    fireEvent.click(
++      screen.getByRole("button", { name: "Preview selected relationships" }),
++    );
++    region = await screen.findByRole("region", {
++      name: "Selected relationship preview",
++    });
++    expect(
++      JSON.parse(
++        region.querySelector<HTMLInputElement>('input[name="command"]')!.value,
++      ).idempotencyKey,
++    ).not.toBe(originalKey);
++    expect(within(region).getByRole("checkbox")).toHaveProperty(
++      "checked",
++      false,
++    );
++    accept(region);
++    fireEvent.click(
++      screen.getByRole("checkbox", { name: "Select possible entry 1" }),
++    );
++    fireEvent.click(
++      screen.getByRole("checkbox", { name: "Select possible entry 1" }),
++    );
++    expect(
++      screen.queryByRole("region", { name: "Selected relationship preview" }),
++    ).toBeNull();
++    fireEvent.click(
++      screen.getByRole("button", { name: "Preview selected relationships" }),
++    );
++    region = await screen.findByRole("region", {
++      name: "Selected relationship preview",
++    });
++    expect(within(region).getByRole("checkbox")).toHaveProperty(
++      "checked",
++      false,
++    );
++    fireEvent(window, new PageTransitionEvent("pageshow", { persisted: true }));
++    expect(
++      screen.queryByRole("region", { name: "Selected relationship preview" }),
++    ).toBeNull();
++    fireEvent.click(
++      screen.getByRole("checkbox", { name: "Select possible entry 1" }),
++    );
++    expect(
++      screen.queryByRole("region", { name: "Selected relationship preview" }),
++    ).toBeNull();
++    expect(sessionStorage.getItem(storageKey)).toBeNull();
++  });
++
++  it.each([
++    "expired",
++    "future",
++    "foreign",
++    "unknown_field",
++    "raw_value",
++    "oversized",
++    "bad_json",
++  ])(
++    "rejects %s stored metadata without touching another namespace",
++    async (kind) => {
++      const fixture = await workspaceFixture(true);
++      let value = storageRecord(fixture.preview.command);
++      if (kind === "expired")
++        value = storageRecord(
++          fixture.preview.command,
++          Date.now() - 30 * 60 * 1000,
++        );
++      if (kind === "future")
++        value = storageRecord(fixture.preview.command, Date.now() + 60_000);
++      if (kind === "foreign")
++        value = storageRecord({
++          ...fixture.preview.command,
++          binding: { ...fixture.preview.command.binding, ownerId: id(99) },
++        });
++      if (kind === "unknown_field")
++        value = JSON.stringify({
++          ...JSON.parse(value),
++          relationshipAcknowledgement: "accepted",
++        });
++      if (kind === "raw_value")
++        value = JSON.stringify({
++          ...JSON.parse(value),
++          command: {
++            ...fixture.preview.command,
++            value: "Synthetic forbidden source copy",
++          },
++        });
++      if (kind === "oversized") value = "x".repeat(20_001);
++      if (kind === "bad_json") value = "{";
++      sessionStorage.setItem(storageKey, value);
++      sessionStorage.setItem("other-owner:unrelated", "keep");
++      await wirePage({ canCommit: true });
++      await waitFor(() =>
++        expect(sessionStorage.getItem(storageKey)).toBeNull(),
++      );
++      expect(
++        screen.queryByRole("region", { name: "Pending original import" }),
++      ).toBeNull();
++      expect(sessionStorage.getItem("other-owner:unrelated")).toBe("keep");
++      expect(screen.queryByText("Synthetic forbidden source copy")).toBeNull();
++    },
++  );
++
++  it("restores only metadata, requires fresh named acceptance, and preserves original locale after capture movement", async () => {
++    const fixture = await workspaceFixture(true);
++    const command = {
++      ...fixture.preview.command,
++      binding: { ...fixture.preview.command.binding, effectiveLocale: "fr-FR" },
++    };
++    sessionStorage.setItem(storageKey, storageRecord(command));
++    const page = await wirePage({ canCommit: true });
++    const pending = await screen.findByRole("region", {
++      name: "Pending original import",
++    });
++    expect(within(pending).getByRole("checkbox")).toHaveProperty(
++      "checked",
++      false,
++    );
++    expect(page.commands).toHaveLength(0);
++    expect(JSON.parse(sessionStorage.getItem(storageKey)!).command).toEqual(
++      command,
++    );
++    page.fixture.captured.reviewRevision = 3;
++    page.fixture.captured.reviewHeadId = id(71);
++    await act(async () => {
++      page.router.revalidate();
++    });
++    await waitFor(() => expect(page.router.state.revalidation).toBe("idle"));
++    expect(JSON.parse(sessionStorage.getItem(storageKey)!).command).toEqual(
++      command,
++    );
++    expect(
++      within(
++        screen.getByRole("region", { name: "Pending original import" }),
++      ).getByRole("checkbox"),
++    ).toHaveProperty("checked", false);
++    page.fixture.source.attemptId = id(70);
++    page.fixture.readData.attempt.id = id(70);
++    page.fixture.readData.attempt.envelope = {
++      ...page.fixture.envelope,
++      id: id(70),
++    };
++    await act(async () => {
++      page.router.revalidate();
++    });
++    await waitFor(() => expect(sessionStorage.getItem(storageKey)).toBeNull());
++    expect(
++      screen.queryByRole("region", { name: "Pending original import" }),
++    ).toBeNull();
++  });
++
++  it("resets preview and acknowledgement when actual captured revisions move", async () => {
++    const page = await wirePage({ canCommit: true });
++    const region = await previewSelection();
++    accept(region);
++    page.fixture.captured.reviewRevision = 3;
++    page.fixture.captured.reviewHeadId = id(71);
++    await act(async () => {
++      page.router.revalidate();
++    });
++    await waitFor(() =>
++      expect(
++        screen.queryByRole("region", { name: "Selected relationship preview" }),
++      ).toBeNull(),
++    );
++    expect(
++      screen.getByRole("checkbox", { name: "Select possible entry 1" }),
++    ).toHaveProperty("checked", false);
++    expect(page.commands).toHaveLength(0);
++  });
++
++  it("displays every derived group while bounding each selection to32", async () => {
++    const text =
++      "Experience\n" +
++      Array.from(
++        { length: 33 },
++        (_, index) =>
++          `Employer: Synthetic Org ${index}\nRole: Synthetic Role ${index}\nDates: 2020 - 2022`,
++      ).join("\n");
++    await wirePage({ text });
++    const checkboxes = screen.getAllByRole("checkbox");
++    expect(checkboxes).toHaveLength(33);
++    for (const checkbox of checkboxes) fireEvent.click(checkbox);
++    expect(
++      screen.getByRole("button", { name: "Preview selected relationships" }),
++    ).toHaveProperty("disabled", true);
++    expect(
++      screen.getByText("Choose no more than 32 entries for one import."),
++    ).toBeTruthy();
++    expect(screen.getByText("Synthetic Org 32")).toBeTruthy();
++    expect(
++      mocks.rpc.mock.calls.filter(
++        (call) => call[0] === "import_canonical_grouped_original",
++      ),
++    ).toHaveLength(0);
++  });
++
++  it("reports storage failure honestly and keeps an in-memory retry", async () => {
++    await wirePage({ canCommit: true, outcome: "ambiguous" });
++    const region = await previewSelection();
++    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
++      throw Error("synthetic storage denial");
++    });
++    accept(region);
++    fireEvent.click(
++      within(region).getByRole("button", {
++        name: "Save selected entry relationships",
++      }),
++    );
++    await screen.findByText(
++      /This tab could not store or restore the pending import/,
++    );
++    expect(
++      await screen.findByRole("region", { name: "Pending original import" }),
++    ).toBeTruthy();
++  });
++});

@@ -1,0 +1,75 @@
+{
+  "status": "INTEGRATED_SOURCE_FAKE_SDK_VERIFIED_LIVE_USE_NOT_ALLOCATED",
+  "at": "2026-11-13T19:24:23.090178+00:00",
+  "task": "CR-R01-S02",
+  "contract": "r01-doctor-allocation-contract.json",
+  "contractSha256": "8e2cff0111cd626c1e8b57dad3874bfc77a53906e502ca04ecad866e558233e7",
+  "previousCloseout": "a02-regroup-admission-closeout.md",
+  "dependencySync": "r01-doctor-dependency-sync.json",
+  "owners": {
+    "a01_page_backend": "Three source files and backend handoff, backend worktree.",
+    "a01_page_frontend": "Existing readiness unit file and test handoff, frontend worktree.",
+    "a01_page_review": "Finite read-only coherent source review, no tests.",
+    "root": "Contract, bounded sync, integration, runbook/plans/context and one affected gate."
+  },
+  "apiConfirmed": {
+    "runAiDoctor": "Optional third dependencies {fetch?:typeof globalThis.fetch,now?:()=>number,signal?:AbortSignal}; no file/config loader injection.",
+    "runAllocatedAiReadiness": "Validate declared allocation then privately resolve selected config exactly once.",
+    "legacy": "Import-safe exported runner delegating to doctor, no default live request."
+  },
+  "stagedAdmissionClarification": "Structural/scope/path/time admission precedes selected env/key access. Exact expected-model matching necessarily follows admitted private configuration resolution and precedes SDK dispatch; mismatch is configuration refusal with zero dispatch, not proof of zero config reads.",
+  "noActualLiveAllocation": true,
+  "tests": "Actual current allocated-live CLI RED, then installed SDK/fake fetch only. Preserve all prior offline assertions.",
+  "rootGate": {
+    "session": 55130,
+    "status": "CLOSED_EXIT_ZERO",
+    "tests": 75,
+    "files": 1,
+    "stableInputs": 755,
+    "typesLintWebWorker": "PASS",
+    "receipt": "r01-doctor-integrated-review.json"
+  },
+  "boundaries": "No actual .env/key/provider, SQL parse/execution, database/browser/services/Docker/dependency/Git/deploy operations.",
+  "checkpoint": "r01-doctor-source-checkpoint.json",
+  "actualFindings": [
+    {
+      "kind": "absolute_deadline",
+      "checkpoint": "e7007c0f",
+      "evidence": "red-deadline-isolated",
+      "observed": "One plain-model fake dispatch advanced the injected clock past expiry and returned a complete valid Model; doctor falsely confirmed access with exit0.",
+      "correction": "Persist one admission deadline=min(admissionNow+timeoutMs,expiry), enforce at dispatch/drain/parse/SDK completion and retain timer abort backstop."
+    },
+    {
+      "kind": "sdk_model_path_encoding",
+      "checkpoint": "e7007c0f",
+      "evidence": "red-sdk-colon",
+      "observed": "Installed SDK preserves colon in accepted model IDs, but expected encodeURIComponent URL refused with zero dispatches.",
+      "correction": "Preserve only the SDK literal colon in the already strict bounded model alphabet; exact authority/path/GET guard stays."
+    }
+  ],
+  "nonProof": "Initial clock probe was shadowed by model-path refusal; preserved but not counted as clock RED.",
+  "next": "Finish prose-only handoff integration and formatting/hygiene, then select next unblocked user-visible source task. No repeat of model-access checks.",
+  "peerReview": {
+    "status": "BOUNDED_SOURCE_ACK",
+    "at": "2026-11-13T19:44:46.462664+00:00",
+    "reviewer": "a01_page_review",
+    "readinessSha256": "4a78fa139eb59ed1dee143662d0426048617db8514220ca98158cb55cd3bac9d",
+    "doctorSha256": "a1b00636e541b5136c309f6c5d50e9b68d99e2cd7422bfd6e122ce4528d30526",
+    "legacySha256": "17eb0e6465e56d76c6b74682b88051afcb914b2b9ec96f83b6bf1b36ef3bc08f",
+    "closedFindings": [
+      "Absolute deadline enforced immediately before physical dispatch, after drain/parse and after SDK before confirmation.",
+      "Colon-only unescape matches installed SDK within unchanged bounded model alphabet."
+    ],
+    "requiredFindingsRemaining": 0,
+    "testsRun": false,
+    "providerRequests": 0
+  },
+  "formatCheck": "Root pinned Prettier check of three exact source files PASS; no modifications.",
+  "focusedGreen": {
+    "tests": 75,
+    "files": 1,
+    "source": "4a78fa13/a1b00636/17eb0e64",
+    "testSha256": "0aba1a5a2d214c95b69bfb1f5ff3ad9ac9249bdccee7ec89c666d065974ed819",
+    "scope": "Real installed SDK with fake fetch only; scoped types/lint/format passed."
+  }
+}

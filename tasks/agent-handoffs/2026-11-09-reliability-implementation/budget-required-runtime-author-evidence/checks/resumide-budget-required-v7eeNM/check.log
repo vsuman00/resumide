@@ -1,0 +1,66 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/build-assist-service.test.ts (33 tests | 1 failed | 32 skipped) 14ms
+     ↓ bounds declared input before admission and promptly handles an already-aborted stream
+     ↓ requires the atomic monthly request reservation and content-free audit before provider work
+     ↓ admits at most two active requests and releases both slots on cancellation
+     ↓ fails closed for an unknown monthly usage value null
+     ↓ fails closed for an unknown monthly usage value false
+     ↓ fails closed for an unknown monthly usage value ""
+     ↓ authenticates before privileged admission
+     ↓ fails closed while LATEX_CONVERTER_ENABLED is disabled
+     ↓ fails closed while BUILD_AI_ASSIST_ENABLED is disabled
+     ↓ fails closed while AI_ENABLED is disabled
+     ↓ rejects method GET
+     ↓ rejects method PUT
+     ↓ rejects method DELETE
+     ↓ rejects untrusted Origin https://foreign.test
+     ↓ rejects untrusted Origin null
+     ↓ rejects untrusted Origin 
+     ↓ rejects missing Origin, contradictory fetch metadata and non-JSON content
+     ↓ validates consent/hash/bounds before metadata or provider work {"consent":false}
+     ↓ validates consent/hash/bounds before metadata or provider work {"policyVersion":"old"}
+     ↓ validates consent/hash/bounds before metadata or provider work {"sourceHash":"0000000000000000000000000000000000000000000000000000000000000000"}
+     ↓ validates consent/hash/bounds before metadata or provider work {"startLine":0}
+     ↓ validates consent/hash/bounds before metadata or provider work {"extra":"forged"}
+     ↓ uses independent user/global/month admission, content-free versioned consent and audit
+     ↓ requires an owned membership and fails closed if consent/audit persistence fails
+     ↓ fails closed for budget admission failures
+     ↓ fails closed for rate admission failures
+     ↓ fails closed for storage admission failures
+     ↓ redacts safe provider failure timeout
+     ↓ redacts safe provider failure cancelled
+     ↓ redacts safe provider failure output_invalid
+     ↓ redacts safe provider failure provider_unavailable
+     ↓ never reflects an arbitrary provider exception
+   × requires technical admission even with an injected Build executor 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/build-assist-service.test.ts > requires technical admission even with an injected Build executor
+AssertionError: expected 200 to be 503 // Object.is equality
+
+- Expected
++ Received
+
+- 503
++ 200
+
+ ❯ tests/unit/build-assist-service.test.ts:387:26
+    385|  mocks.config.AI_BUDGET_ENABLED = false;
+    386|  const response = await buildSuggestAction(request());
+    387|  expect(response.status).toBe(503);
+       |                          ^
+    388|  expect(mocks.execute).not.toHaveBeenCalled();
+    389|  expect(mocks.rpc).not.toHaveBeenCalledWith("get_organization_ai_token…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 32 skipped (33)
+   Start at  23:54:43
+   Duration  285ms (transform 97ms, setup 0ms, import 205ms, tests 14ms, environment 0ms)
+
+JSON report written to /tmp/resumide-budget-required-v7eeNM/tests.json

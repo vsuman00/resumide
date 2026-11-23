@@ -1,0 +1,328 @@
+import { AI_BUDGET_SOURCE_PROFILE } from "../../app/lib/server/ai-budget-source-profile";
+import { beforeEach, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({
+  config: vi.fn(),
+  from: vi.fn(),
+  rpc: vi.fn(),
+  owned: vi.fn(),
+  budget: false,
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getAnalysisConfig: mocks.config,
+  getServerConfig: mocks.config,
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseAdminClient: () => ({ from: mocks.from, rpc: mocks.rpc }),
+  createSupabaseServerClient: () => ({}),
+}));
+vi.mock("../../app/lib/server/auth", () => ({
+  getAuthenticatedUser: async () => ({
+    id: "00000000-0000-4000-8000-000000000001",
+  }),
+}));
+vi.mock("../../app/lib/server/privacy", () => ({
+  AI_CONSENT_POLICY_VERSION: "candidate-ai-v1",
+  requireAndRecordAiConsent: async () => undefined,
+}));
+vi.mock("../../app/lib/server/evidence-scoring-guard", () => ({
+  hasUncalibratedEvidence: async () => false,
+}));
+vi.mock("../../app/lib/server/canonical-repository", async (original) => ({
+  ...(await original<
+    typeof import("../../app/lib/server/canonical-repository")
+  >()),
+  ownedAnalysis: mocks.owned,
+}));
+
+import { processQualitativeStage } from "../../app/lib/server/qualitative-stage";
+import { rewriteAction } from "../../app/lib/server/rewrite-service";
+import { QualitativeAiFailure } from "../../app/lib/server/qualitative-ai";
+import { hashAiBudgetBinding } from "../../app/lib/server/ai-budget";
+
+const analysisId = "00000000-0000-4000-8000-000000000003";
+const ownerId = "00000000-0000-4000-8000-000000000001";
+const organizationId = "00000000-0000-4000-8000-000000000002";
+const lease = {
+  workerId: "synthetic-worker",
+  leaseFence: "00000000-0000-4000-8000-000000000004",
+  attempt: 1,
+};
+const source = "- Built a Python API for event ingestion.";
+const writes: string[] = [];
+let rewriteReads = 0;
+let abortOnSourceRead: (() => void) | undefined;
+const qualitativeOutput = () => ({
+  output: {
+    toneAndStyle: { tips: [] },
+    content: { tips: [] },
+    structure: { tips: [] },
+    skills: { tips: [] },
+    writer: { summary: null, bullets: [] },
+  },
+  usage: { inputTokens: 10, outputTokens: 20 },
+});
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.budget = false;
+  rewriteReads = 0;
+  abortOnSourceRead = undefined;
+  writes.length = 0;
+  mocks.owned.mockResolvedValue({});
+  mocks.config.mockImplementation(() => ({
+    APP_ORIGIN: "https://example.test",
+    AI_ENABLED: true,
+    ANALYSIS_FENCING_ENABLED: false,
+    AI_BUDGET_ENABLED: mocks.budget,
+    AI_BUDGET_POLICY_VERSION: "synthetic-budget/1",
+    AI_MONTHLY_TOKEN_LIMIT: 100000,
+    OPENAI_API_KEY: "synthetic-not-a-key",
+    OPENAI_MODEL: "synthetic-model",
+    OPENAI_TIMEOUT_MS: 1000,
+    OPENAI_MAX_OUTPUT_TOKENS: 1000,
+    QUALITATIVE_MAX_ATTEMPTS: 1,
+    MAX_EXTRACTED_CHARACTERS: 100000,
+    AI_INPUT_COST_PER_1K_USD: 0,
+    AI_OUTPUT_COST_PER_1K_USD: 0,
+  }));
+  mocks.from.mockImplementation((table: string) => {
+    const analysis = {
+      id: analysisId,
+      owner_id: ownerId,
+      organization_id: organizationId,
+      status: "completed",
+      request_id: "synthetic-request",
+      resume_version_id: analysisId,
+      job_id: analysisId,
+      jobs: { title: "Engineer", description: "Python API development" },
+      resume_versions: { resumes: { status: "active" } },
+      analysis_extractions: { extracted_text: source },
+      analysis_deterministic_results: { score: 74, rule_trace: [] },
+      writer_drafts: [
+        {
+          id: analysisId,
+          kind: "summary",
+          draft: { summary: null, bullets: [] },
+          updated_at: "2026-11-10T00:00:00Z",
+        },
+      ],
+    };
+    const q = {
+      select: () => q,
+      eq: () => q,
+      limit: () => q,
+      single: async () => ({
+        data: { ...analysis, status: "qualitative_review" },
+        error: null,
+      }),
+      maybeSingle: async () => {
+        if (table === "analyses" && ++rewriteReads === 2) abortOnSourceRead?.();
+        return {
+          data: table === "analyses" ? analysis : { id: analysisId },
+          error: null,
+        };
+      },
+      insert: () => {
+        writes.push(`${table}:insert`);
+        return Promise.resolve({ data: null, error: null });
+      },
+      update: () => {
+        writes.push(`${table}:update`);
+        return q;
+      },
+    };
+    return q;
+  });
+  mocks.rpc.mockImplementation(async (name, args) => {
+    if (name === "read_ai_budget_source_readiness")
+      return {
+        data: {
+          ...AI_BUDGET_SOURCE_PROFILE,
+          schemaReady: true,
+          reserveExecutable: true,
+          exportExecutable: false,
+        },
+        error: null,
+      };
+    if (!name.startsWith("ai_budget_"))
+      return {
+        data: name === "get_organization_ai_tokens_used" ? 0 : true,
+        error: null,
+      };
+    const p = args.p_request;
+    const binding = {
+      userId: args.p_user_id,
+      organizationId: args.p_organization_id,
+      operationId: p.operationId,
+      attemptId: p.attemptId,
+      attemptOrdinal: 1,
+      surface: p.surface,
+      payloadSha256: p.payloadSha256,
+      model: p.model,
+      promptPolicyVersion: p.promptPolicyVersion,
+      policyVersion: p.policyVersion,
+      reservedInputTokens: Number(p.reservedInputTokens),
+      reservedOutputTokens: Number(p.reservedOutputTokens),
+    };
+    const settled = name === "ai_budget_settle";
+    return {
+      data: {
+        schemaVersion: "ai-budget/1.0.0",
+        status: "ok",
+        receipt: {
+          ...binding,
+          schemaVersion: "ai-budget/1.0.0",
+          attemptLimit: 1,
+          bindingSha256: hashAiBudgetBinding(binding),
+          poolPolicyVersion: p.policyVersion,
+          period: "2026-11-01",
+          state: settled
+            ? "settled"
+            : name === "ai_budget_claim_dispatch"
+              ? "dispatched"
+              : name === "ai_budget_mark_unknown"
+                ? "held_unknown"
+                : "reserved",
+          reservedInputTokens: p.reservedInputTokens,
+          reservedOutputTokens: p.reservedOutputTokens,
+          reservedCostMicrousd: String(
+            binding.reservedInputTokens + binding.reservedOutputTokens,
+          ),
+          inputMicrousdPerMillion: "1000000",
+          outputMicrousdPerMillion: "1000000",
+          actualInputTokens: settled ? p.usage.inputTokens : null,
+          actualOutputTokens: settled ? p.usage.outputTokens : null,
+          actualCostMicrousd: settled
+            ? String(Number(p.usage.inputTokens) + Number(p.usage.outputTokens))
+            : null,
+          replayed: false,
+          dispatchAllowed: name === "ai_budget_claim_dispatch",
+          poolBlocked: false,
+        },
+      },
+      error: null,
+    };
+  });
+});
+
+it("rejects an already aborted worker signal before reads or provider dispatch", async () => {
+  const execute = vi.fn().mockResolvedValue(qualitativeOutput());
+  await expect(
+    Reflect.apply(processQualitativeStage, undefined, [
+      analysisId,
+      1,
+      { execute },
+      { signal: AbortSignal.abort(), lease },
+    ]),
+  ).rejects.toMatchObject({ code: "ANALYSIS_CANCELLED" });
+  await expect(
+    Reflect.apply(processQualitativeStage, undefined, [
+      analysisId,
+      2,
+      { execute },
+      { lease },
+    ]),
+  ).rejects.toMatchObject({ code: "ANALYSIS_LEASE_LOST" });
+  expect(execute).not.toHaveBeenCalled();
+  expect(mocks.from).not.toHaveBeenCalled();
+  expect(mocks.rpc).not.toHaveBeenCalled();
+});
+
+it("propagates a worker lease or shutdown abort and rejects an ignoring provider's late result", async () => {
+  const controller = new AbortController();
+  let started!: () => void;
+  const dispatched = new Promise<void>((resolve) => {
+    started = resolve;
+  });
+  let finish!: (value: ReturnType<typeof qualitativeOutput>) => void;
+  let child: AbortSignal | undefined;
+  const execute = vi.fn((request) => {
+    child = request.signal;
+    started();
+    return new Promise<ReturnType<typeof qualitativeOutput>>((resolve) => {
+      finish = resolve;
+    });
+  });
+  const pending = Reflect.apply(processQualitativeStage, undefined, [
+    analysisId,
+    1,
+    { execute },
+    { signal: controller.signal, lease },
+  ]);
+  await dispatched;
+  controller.abort();
+  finish(qualitativeOutput());
+  const outcome = await pending.catch((error: unknown) => error);
+  expect(child?.aborted).toBe(true);
+  expect(outcome).toMatchObject({ code: "ANALYSIS_CANCELLED" });
+  expect(
+    mocks.rpc.mock.calls.some(([name]) => name.startsWith("persist_")),
+  ).toBe(false);
+});
+
+it("settles known cancelled usage without turning cancellation into partial feedback", async () => {
+  mocks.budget = true;
+  const failure = new QualitativeAiFailure("AI_CANCELLED", false, {
+    inputTokens: 10,
+    outputTokens: 20,
+  });
+  await expect(
+    Reflect.apply(processQualitativeStage, undefined, [
+      analysisId,
+      1,
+      { execute: vi.fn().mockRejectedValue(failure) },
+      { lease },
+    ]),
+  ).rejects.toBe(failure);
+  expect(mocks.rpc).toHaveBeenCalledWith(
+    "ai_budget_settle",
+    expect.objectContaining({
+      p_request: expect.objectContaining({
+        usage: { inputTokens: "10", outputTokens: "20" },
+      }),
+    }),
+  );
+  expect(
+    mocks.rpc.mock.calls.some(([name]) => name.startsWith("persist_")),
+  ).toBe(false);
+});
+
+it("keeps accounting but preserves the previous draft when the final source read observes disconnect", async () => {
+  mocks.budget = true;
+  const controller = new AbortController();
+  abortOnSourceRead = () => controller.abort();
+  const response = await rewriteAction(
+    new Request(`https://example.test/resume/${analysisId}/rewrite`, {
+      method: "POST",
+      headers: {
+        Origin: "https://example.test",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Idempotency-Key": analysisId,
+      },
+      body: "aiConsent=accepted",
+      signal: controller.signal,
+    }),
+    analysisId,
+    {
+      execute: vi.fn().mockResolvedValue({
+        output: {
+          summary: null,
+          bullets: [
+            {
+              sourceId: 0,
+              rewrite: "Created a Python API for event ingestion.",
+              reasoning: "Clarifies the contribution.",
+            },
+          ],
+        },
+        usage: { inputTokens: 10, outputTokens: 20 },
+      }),
+    },
+  );
+  expect(response.status).toBe(409);
+  expect(writes).toEqual(["analysis_ai_runs:insert"]);
+  expect(
+    mocks.rpc.mock.calls.filter(([name]) => name === "ai_budget_settle"),
+  ).toHaveLength(1);
+});

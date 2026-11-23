@@ -1,0 +1,110 @@
+{
+  "task": "CR-A02-S02 strict durable whole-entry regroup command and normalization",
+  "status": "CLOSED_SOURCE_PREPARATION_ONLY",
+  "at": "2026-11-13T16:34:18.587811+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "previousSlice": "PROGRESS: pure58/2 andledger/privacy65/3 gatesclosed; latest744inputs, sourceSQLunexecuted, no savedregroupfeature",
+  "owners": {
+    "a01_page_backend": [
+      "app/lib/server/canonical-entry-regroup-commands.ts",
+      "tests/unit/canonical-entry-regroup-commands.test.ts",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/a02-regroup-command-backend.md"
+    ],
+    "a01_page_review": [
+      "supabase/migrations/20261113165140_entry_regroup_command_normalization.sql",
+      "tests/unit/entry-regroup-command-sql.test.ts",
+      "scripts/verify-entry-regroup-command.sql",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/a02-regroup-command-sql.md"
+    ],
+    "a01_page_frontend": [
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/a02-regroup-command-review.md"
+    ],
+    "root": "Shared contract, isolated empty scaffold, dependency synchronization, integration and one combined gate"
+  },
+  "scope": "Nextbounded leaf is nonpersistable durable command normalization/codec preparation, with paired SQL source equivalent if feasible. Actual atomicwriter, producer.4 adoption, lifecycle proof and route remain required later. Preserve firstimportcommand/bytes and core/diff semantics; no fakeauth frompreparation.",
+  "decisionsToFreeze": [],
+  "limits": "No files/tests untilfieldcontractfrozen. No SQLparser/execution/DB/hostwrites/browser/provider/actualenv/key/PII/Docker/Git/dependency/deploy. Existinghostedquestion pending; no repeat/inferredconsent. ExactNode22 syntheticchecks onlyinimplementation. Allpreviousownershipreleased.",
+  "contract": "a02-regroup-command-contract.json",
+  "contractSha256": "c83131bb902476dbc59dde6f660403a0ca4e45082ca69af7cfd7fc138f89c8f9",
+  "synchronizedRuntimeDependencies": [
+    "supabase/migrations/20261113155247_entry_regroup_ledger_foundation.sql",
+    "app/lib/server/canonical-entry-regroup.ts",
+    "tests/unit/canonical-entry-regroup.test.ts",
+    "app/lib/server/grouped-import-command-codec.ts",
+    "supabase/migrations/20261113165140_entry_regroup_command_normalization.sql"
+  ],
+  "nextAtomicConstraints": [
+    "Existing private.entry_association_group_active requires bullet-free origin entry containing only 2..3 member fact IDs; do not reuse for new whole-entry origin. New activity must compare whole carried entry structure/text and all referenced fact type/value/sources against original approval, allowing only state/confirmation and unrelated/section-title edits.",
+    "New composition links permit 1..1000 entries and typed association OR regroup origins. Preserve original approval version and batch; creating_regroup_batch_id is not the common origin of retained links. Selected overlap supersedes explicitly; no implicit reapproval.",
+    "Activity is per original entry/group, never the pure Core global contentDigest. Affected carried content, value, sources or added refs invalidate that group. New snapshot may be explicitly empty, retaining metadata history.",
+    "Restore derives links from exact TARGET, including legacy-empty, rather than parent inheritance. Version producer.4 admission must be paired with actual proof, readers, privacy, old edit/add/restore dispatch and readiness profile; no schema widening alone.",
+    "Atomic replay: narrow owned/privacy/source authority, normalize original immutable base/prefixes, compare original key/normal form/bytes and receipt, return successful prior result before fresh head/prefix caps/CAS. Fresh technical IDs only after replay miss. Old assigned locations are not rewritten; new mappings required."
+  ],
+  "frontendReview": {
+    "status": "COMPLETE_RELEASED_NO_REQUIRED_FINDINGS",
+    "file": "tasks/agent-handoffs/2026-11-09-reliability-implementation/a02-regroup-command-review.md",
+    "sha256": "760fb248ab04086c7ba618bbb489ff0fda76736e23b667fc3e0a6224aafeeab6",
+    "module": "f0de69cd9f25f4722cc0169a2b465ff2641fad2553aadd0856922a008980b49c",
+    "terminalNodeTests": 39,
+    "reviewerTestsRun": false
+  },
+  "nextAtomicSourceNotes": {
+    "child": "Existing canonical-content reviseCanonical replaces changes with the current event, rather than appending all historical changes. Preserve that per-version convention; old immutable versions/events retain history. A regroup can use an edit event targeting the resume root with priorValue null; no new action enum is required merely for placement.",
+    "factory": "Derive child facts/contact/locale unchanged and sections from verified resolver; replace only versionId,parentVersionId,createdAt,producerVersion,state and this version change event. New technical IDs are allocated only after prior replay miss.",
+    "antiForgery": "Prepare immutable pending batch/groups with deferred result FKs before internal canonical save, then verify exact batch command/bytes/hash/base/body/storage key in the new save admission branch. No caller-set session flag or producer retag may authorize .4; service cannot insert protected ledgers directly.",
+    "lineageDispatch": "A new composition header, including an explicitly empty one, owns dispatch even on .2 correction/add or legacy-producer restore children. Version string alone cannot select old/new metadata lifecycle. Restore copies exact target composition; .3 origins remain independently proven through old immutable origin metadata.",
+    "legacyPreservation": "Old v1 source-only approval roots, old command codec and successful first-import receipts remain unchanged. New multi-origin children must not be passed blindly to old entry_association_validate_head, whose producer list rejects .4 and whose current snapshot expects one origin. Use an explicit reviewed metadata dispatch in the paired adoption migration.",
+    "newNormalizers": "Current private entry_regroup_original_base accepts existing producers and calls old head proof for each owned suffix document. .4 adoption must update it together with schema, new composition proof, old C02/edit/add/restore dispatch, readiness and owned readers; do not widen its producer list alone."
+  },
+  "rootFormatCheck": {
+    "status": "FORMAT_ONLY_WARNING_FROZEN_CONTRACT",
+    "affected": "a02-regroup-command-contract.json",
+    "controller": "UNCHANGED_FORMAT_PASS",
+    "action": "After author releases, preserve exact a706 contract as text and format current JSON. Require parsed JSON equality and record both hashes; no behavior/test rerun for whitespace."
+  },
+  "rootGateScope": {
+    "tests": [
+      "tests/unit/canonical-entry-regroup-commands.test.ts",
+      "tests/unit/entry-regroup-command-sql.test.ts"
+    ],
+    "full": ["typecheck", "lint", "build", "build:worker"],
+    "unchangedPriorCampaigns": "Do not repeat Core/diff/first-import/codec campaigns; rehash their exact unchanged implementation. New39-case normalizer and source/oracle cases exercise actual Core/codec."
+  },
+  "originalContractSha256": "a706deba95f1db92dcc1cc84aaa646ae61c67f67b67f8f461b3241608a987fae",
+  "formatOnlyContractSupersession": {
+    "original": "a02-regroup-command-contract-original.json.txt",
+    "currentSha256": "c83131bb902476dbc59dde6f660403a0ca4e45082ca69af7cfd7fc138f89c8f9",
+    "parsedJsonEqual": true,
+    "at": "2026-11-13T17:33:19.951346+00:00"
+  },
+  "sqlIntegration": {
+    "status": "FOUR_RELEASED_FILES_INTEGRATED",
+    "files": {
+      "supabase/migrations/20261113165140_entry_regroup_command_normalization.sql": "c75d39515a7df6f7297c5bf085e2db1fcfe6201dcfa5dc713a8cbe90df16081f",
+      "scripts/verify-entry-regroup-command.sql": "cf166c03239ab3961fc0b0137501069747674dec51441dd9614921cfa2d1c806",
+      "tests/unit/entry-regroup-command-sql.test.ts": "466f299b5035f2b0fca0dba6680fa1062f96d089316ba80fe4ed5af0ef9fcc99",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/a02-regroup-command-sql.md": "2c073b9a0bef0fcfe763e2ffe484ed121ddd50ababd2dc8c1068a48ac51c9da7"
+    },
+    "sourcePeerAck": "c75d / cf166c no required remaining findings",
+    "sqlParsing": "NOT_RUN",
+    "sqlExecution": "NOT_RUN"
+  },
+  "rootGate": {
+    "status": "PASS",
+    "session": 62475,
+    "sessionClosed": true,
+    "tests": 47,
+    "files": 2,
+    "inputs": 748,
+    "priorInputsUnchanged": 744,
+    "receipt": "a02-regroup-command-integrated-review.json"
+  },
+  "allAllocationsReleased": true,
+  "supersededDiagnosis": {
+    "incorrect": "Root inferred current canonical_shape_valid rejected .3 by reading only the last declaration.",
+    "corrected": "Actual forward patch_manifest in20261113131538 widens enum to.3; resolved body572ba admitsit. Necessarynewcheckwasassociationmetadata proof; c75adapterisredundantnotsemanticdifference.",
+    "nativeRed": "NONE",
+    "sourceOrChecksChanged": "NONE",
+    "evidence": "tests/unit/canonical-sql-contract.test.ts alreadyresolvesguardedpostimages; preservesourcechainat.4adoption."
+  }
+}

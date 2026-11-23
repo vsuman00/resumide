@@ -1,0 +1,8 @@
+import { useId } from "react";
+import type { WritingComparison, SavedWritingComparison } from "~/lib/writing-comparison";
+
+// Existing comparison presentation baseline: numerical outcomes are unavailable.
+export default function WritingDiagnosticComparison({comparison}:{comparison:WritingComparison|SavedWritingComparison}) {
+  const heading=useId();
+  return <section aria-labelledby={heading}><h3 id={heading}>{comparison.mode === "projected" ? "Projected writing observations (not saved)" : "Saved writing observations"}</h3><p>Numeric score and delta: unavailable.</p></section>;
+}

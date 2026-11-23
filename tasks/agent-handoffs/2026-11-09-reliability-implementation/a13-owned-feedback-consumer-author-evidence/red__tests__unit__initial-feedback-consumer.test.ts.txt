@@ -1,0 +1,36 @@
+import {beforeEach,expect,it,vi} from 'vitest';
+import {scoreExtractedResume} from '../../app/lib/server/scoring-stage';
+import {buildPartialFeedback} from '../../app/lib/server/qualitative-stage';
+import {createHash} from 'node:crypto';
+import {INITIAL_FEEDBACK_PROFILE} from '../../app/lib/server/initial-feedback-profile';
+const mocks=vi.hoisted(()=>({user:vi.fn(),admin:vi.fn(),audit:vi.fn()}));
+vi.mock('../../app/lib/server/auth',()=>({getAuthenticatedUser:mocks.user}));
+vi.mock('../../app/lib/server/supabase',()=>({createSupabaseServerClient:vi.fn(),createSupabaseAdminClient:mocks.admin}));
+vi.mock('../../app/lib/server/privacy',()=>({recordAuditEvent:mocks.audit}));
+vi.mock('../../app/lib/server/layout-read-model',()=>({readOwnedNativeLayout:vi.fn(async()=>null)}));
+vi.mock('../../app/lib/pdf2img',()=>({convertPdfToImages:vi.fn()}));
+const uuid=(n:number)=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+const source='Built services using Python';
+function harness(){
+ const d=scoreExtractedResume({text:source,pageCount:1,pageTexts:[source],textChecksum:createHash('sha256').update(source).digest('hex'),jobDescription:'Python required'});
+ const feedback=buildPartialFeedback({score:d.score,ruleTrace:d.ruleTrace});
+ feedback.content.tips[0]={type:'good',tip:'Created services using Python',explanation:'Clarifies wording.',quote:source};
+ const record={id:uuid(1),organization_id:uuid(3),status:'completed',analysis_results:{feedback,parse_view:d.parseView,rule_trace:d.ruleTrace,keyword_coverage:d.keywordCoverage,created_at:'2026-11-15T00:00:00Z'},analysis_deterministic_results:{ruleset_version:d.rulesetVersion},writer_drafts:[{draft:{summary:null,bullets:[]}}],resume_versions:{storage_key:'fixture.pdf',organization_id:uuid(3)}};
+ const state:{metadata:unknown;reply:unknown;error:unknown}={metadata:{...INITIAL_FEEDBACK_PROFILE,schemaReady:false,readerExecutable:false,prepareExecutable:false,claimExecutable:false,settleExecutable:false,finishExecutable:false,usageExecutable:false,exportExecutable:false},reply:null,error:null};
+ const rpc=vi.fn(async(name:string)=>name==='read_initial_feedback_readiness'?{data:state.metadata,error:null}:{data:state.reply,error:state.error});
+ const from=vi.fn((table:string)=>{const builder={select:vi.fn(()=>builder),eq:vi.fn(()=>builder),maybeSingle:vi.fn(async()=>({data:record,error:null})),limit:vi.fn(async()=>({data:table==='document_evidence_attempts'?[]:null,error:null}))};return builder;});
+ mocks.user.mockResolvedValue({id:uuid(2)});mocks.admin.mockReturnValue({from,rpc});mocks.audit.mockResolvedValue(undefined);
+ return {d,feedback,record,state,rpc,from};
+}
+async function load(){const {loader}=await import('../../app/routes/resume');const url=new URL(`http://localhost/resume/${uuid(1)}`);return loader({params:{id:uuid(1)},request:new Request(url),url} as Parameters<typeof loader>[0]);}
+beforeEach(()=>vi.clearAllMocks());
+it('exposes recoverable owned-feedback unavailability without losing legacy result',async()=>{
+ const h=harness();const result=await load();
+ expect(result.data.result.feedback).toEqual(h.feedback);
+ expect(result.data).toHaveProperty('feedbackProvenance.status','unavailable');
+ expect(result.init?.headers).toBeTruthy();
+});
+it('refuses actual owned-feedback access denial instead of displaying a stale legacy result',async()=>{
+ const h=harness();h.state.metadata={...INITIAL_FEEDBACK_PROFILE,schemaReady:true,readerExecutable:true,prepareExecutable:false,claimExecutable:false,settleExecutable:false,finishExecutable:false,usageExecutable:false,exportExecutable:false};h.state.error={code:'42501',message:'private access denied'};
+ await expect(load()).rejects.toMatchObject({status:404});
+});

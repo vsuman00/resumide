@@ -1,0 +1,71 @@
+{
+  "status": "REPAIRS_SOURCE_REVIEWED_AND_INTEGRATED_GATE_PASS_NATIVE_OPEN",
+  "tier": "manual_source_review_only",
+  "sqlParsed": false,
+  "sqlExecuted": false,
+  "producerCheckpoint": "4870cb359fc128e4bd7ba3bc42189073d6fa083ffe04f0d38de014409461414b",
+  "sqlCheckpoint": "b957a7d5c406da9aa39e3755d27b894078b8c12ef8b8aa703e3188fd40b966bc",
+  "findings": [
+    {
+      "id": "A11-REVIEW-01",
+      "owner": "pricing_validation",
+      "issue": "SQL transform.case JSON null can propagate UNKNOWN through NOT IN and fall through to lower-case replacement. Node rejects null.",
+      "required": "Explicit string/enum guard and deferred negative vector; never claim SQL execution.",
+      "status": "FINAL_SOURCE_REPAIRED_NATIVE_NOT_RUN",
+      "successorSqlSha256": "95f4f02aa6c327d35a4598dce00bd9fcad06e7c51dbf9261be6d8bd2206dd8a9",
+      "finalSqlSha256": "27ce81ef16a03c05c9665b55b440d99f7e25f6249926d7f67ad4073324f173b1"
+    },
+    {
+      "id": "A11-REVIEW-02",
+      "owner": "backend and runtime",
+      "issue": "Node permits tab after leading verb while SQL required space; SQL additionally rejects CR/LF/semicolon and ASCII negation words. Align one exact portable predicate.",
+      "required": "Actual builder regressions and shared policy/hash alignment before final source release.",
+      "status": "FINAL_SOURCE_REPAIRED_NATIVE_NOT_RUN",
+      "successorSqlSha256": "95f4f02aa6c327d35a4598dce00bd9fcad06e7c51dbf9261be6d8bd2206dd8a9",
+      "finalSqlSha256": "27ce81ef16a03c05c9665b55b440d99f7e25f6249926d7f67ad4073324f173b1"
+    },
+    {
+      "id": "A11-REVIEW-03",
+      "owner": "a01_page_backend",
+      "issue": "Root hypothesized a later matching witness, but current semantic producer emits at most one witness per fact and rejects compound and; proposed counterexample has no admitted whole-current witness.",
+      "required": "Retain actual builder probe as explanation-only. No refactor or semantic expansion required in this allocation.",
+      "status": "NOT_A_CONFIRMED_CURRENT_BUG"
+    },
+    {
+      "id": "A11-REVIEW-04",
+      "owner": "pricing_validation",
+      "issue": "SQL validates selected JD clause existence but not target-skill relevance and does not independently enforce complete observed page coverage.",
+      "required": "Independently rederive finite support/page admission from owned rows or record precise implementation gap; default denial and pause remain.",
+      "status": "FINAL_SOURCE_REPAIRED_NATIVE_NOT_RUN",
+      "successorSqlSha256": "95f4f02aa6c327d35a4598dce00bd9fcad06e7c51dbf9261be6d8bd2206dd8a9",
+      "finalSqlSha256": "27ce81ef16a03c05c9665b55b440d99f7e25f6249926d7f67ad4073324f173b1"
+    },
+    {
+      "id": "A11-REVIEW-05",
+      "owner": "a01_page_backend",
+      "status": "ACTUAL_RED_REPAIRED_ROOT_GATE_PASS",
+      "issue": "Synchronous transport throw precedes attaching Promise.race rejection handlers; finally abort rejects orphan aborted promise.",
+      "red": "New assertion passed but Vitest recorded one unhandled rejection/exit1 on repoe4fdc9e6; this is not an assertion failure.",
+      "repair": "Defer transport execution through Promise.resolve().then before race; keep actual timeout and pre-dispatch abort controls.",
+      "evidence": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a11-typed-path-0n3g1xz1/red-sync.json",
+      "focusedProcess": "Historical agent23206; final backend20cases and Root193cases passed; all final owned groups closed."
+    },
+    {
+      "id": "A11-REVIEW-06",
+      "status": "ACTUAL_RED_REPAIRED_ROOT_GATE_PASS",
+      "owner": "a01_page_backend",
+      "issue": "Final owned read outside abort race outlived request deadline.",
+      "repair": "Race final read against the same abort promise; preserve fresh-read check and reject late output.",
+      "evidence": "Backend final packet red-final-read.json/log; final Root typed repository9/contract11 cases pass."
+    },
+    {
+      "id": "A11-REVIEW-07",
+      "status": "ACTUAL_3_RED_REPAIRED_ROOT_GATE_PASS",
+      "owner": "a01_page_frontend",
+      "issue": "Fresh proposal hidden after recorded rejection; weak receipt revision/result-version acceptance; late undo status after scope change.",
+      "repair": "Clear old receipt only after valid fresh preview; enforce accept+2/rejectbase version relation; scope late undo/reset status.",
+      "evidence": "Frontend root-review-red3/root-review-green3 retained; Root final11DOM cases pass."
+    }
+  ],
+  "rootIntegratedReceipt": "a11-typed-path-integrated-25bc0d85-2742-45a9-aadd-bc8e798a1d63.json"
+}

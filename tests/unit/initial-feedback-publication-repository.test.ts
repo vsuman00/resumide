@@ -1,0 +1,998 @@
+import type { OwnedAiRetirementRow } from "../../app/lib/server/owned-ai-retirement-export";
+import { createHash } from "node:crypto";
+import { describe, expect, it, vi } from "vitest";
+import { scoreExtractedResume } from "../../app/lib/server/scoring-stage";
+import { createInitialFeedbackPublicationPolicy } from "../../app/lib/server/initial-feedback-publication-policy";
+
+import {
+  InitialFeedbackPrepareSchema,
+  InitialFeedbackPublicationSchema,
+  initialFeedbackPartialFeedback,
+  type InitialFeedbackCompletion,
+} from "../../app/lib/server/initial-feedback-operation-contract";
+import {
+  renderInitialFeedbackPlan,
+  compileInitialFeedbackPlan,
+} from "../../app/lib/server/initial-feedback-plan";
+import {
+  BASELINE_SEMANTICS,
+  legacyCategoryFromProse,
+} from "../../app/lib/server/qualitative-prose";
+const uuid = (n: number) =>
+  `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const sha = (s: string) => createHash("sha256").update(s).digest("hex");
+// Explicit test-only opaque expected pins. Not an installed Native/source profile.
+const SYNTHETIC_RPC_PROFILE = {
+  schemaVersion: "initial-feedback-readiness/1.0.0",
+  profileVersion: "initial-feedback-readiness-profile/1.0.0",
+  checkerSha256: "0".repeat(64),
+  readerSha256: "1".repeat(64),
+  prepareSha256: "2".repeat(64),
+  claimSha256: "3".repeat(64),
+  settleSha256: "4".repeat(64),
+  finishSha256: "5".repeat(64),
+  usageSha256: "6".repeat(64),
+  exportSha256: "7".repeat(64),
+  metadataSha256: "8".repeat(64),
+} as const;
+const ready = () => ({
+  ...SYNTHETIC_RPC_PROFILE,
+  schemaReady: true,
+  readerExecutable: true,
+  prepareExecutable: true,
+  claimExecutable: true,
+  settleExecutable: true,
+  finishExecutable: true,
+  usageExecutable: true,
+  exportExecutable: true,
+});
+function fixture(budgetOn = false) {
+  const text = "Built services using Python";
+  const policy = createInitialFeedbackPublicationPolicy({
+    model: "unit-model",
+    maxOutputTokens: 1200,
+    attemptLimit: 3,
+    budgetPolicyVersion: budgetOn ? "unit-budget/1" : null,
+  });
+  // Real scorer/checksum and strict context validation. UUIDs and Native JSONB
+  // digests are synthetic opaque RPC metadata, never JS emulation/native proof.
+  const result = scoreExtractedResume({
+    text,
+    pageCount: 1,
+    pageTexts: [text],
+    textChecksum: sha(text),
+    jobDescription: "Python required",
+  });
+  const context = {
+    scoringContext: {
+      schemaVersion: "legacy-scoring-input/1.0.0",
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      requestId: null,
+      source: {
+        resumeId: uuid(4),
+        resumeVersionId: uuid(5),
+        fileChecksum: "a".repeat(64),
+        bytes: 1000,
+        mediaType: "application/pdf",
+      },
+      extraction: {
+        text,
+        pageCount: 1,
+        pageTexts: [text],
+        textChecksum: sha(text),
+        extractorVersion: "unpdf-v1",
+        contentSha256: "b".repeat(64),
+      },
+      job: {
+        kind: "owned_job",
+        id: uuid(6),
+        title: "Unit role",
+        description: "Python required",
+        companyName: "",
+        contentSha256: "c".repeat(64),
+      },
+      producer: {
+        parserVersion: "parse-sim-v1",
+        rulesetVersion: "ats-rules-v4",
+        normalizerVersion: "normalizer-v1",
+        taxonomyVersion: "skills-taxonomy-v1",
+      },
+      binding: {
+        schemaVersion: "legacy-scoring-binding/1.0.0",
+        analysisId: uuid(1),
+        ownerId: uuid(2),
+        organizationId: uuid(3),
+        resumeId: uuid(4),
+        resumeVersionId: uuid(5),
+        fileChecksum: "a".repeat(64),
+        textChecksum: sha(text),
+        extractionSha256: "b".repeat(64),
+        jobId: uuid(6),
+        jobSha256: "c".repeat(64),
+        inputBindingSha256: "d".repeat(64),
+      },
+    },
+    deterministicResult: result,
+    currentness: "current",
+    generationEligibility: "eligible",
+  };
+  const attempt = {
+    attemptId: uuid(8),
+    ordinal: 1,
+    state: "reserved",
+    claimedAt: null,
+    usage: null,
+    errorCode: null,
+    budgetAttemptId: null,
+  };
+  const operation = {
+    schemaVersion: "initial-feedback-operation/1.0.0",
+    operationId: uuid(7),
+    analysisId: uuid(1),
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    binding: {
+      schemaVersion: "initial-feedback-binding/1.0.0",
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      resumeId: uuid(4),
+      resumeVersionId: uuid(5),
+      scoringInputSha256: "d".repeat(64),
+      deterministicContentSha256: "e".repeat(64),
+      resultChecksum: result.resultChecksum,
+      sourceTextSha256: sha(text),
+      jobId: uuid(6),
+      jobSha256: "c".repeat(64),
+      policy,
+    },
+    bindingSha256: "f".repeat(64),
+    state: "open",
+    attemptLimit: 3,
+    attempts: [attempt],
+    publicationId: null,
+  };
+  const prepared = InitialFeedbackPrepareSchema.parse({
+    schemaVersion: "initial-feedback-prepare/1.0.0",
+    status: "prepared",
+    operation,
+    attempt,
+    context,
+    dispatchAllowed: false,
+    replayed: false,
+  });
+  const scope = {
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    analysisId: uuid(1),
+    lease: { workerId: "unit-worker", attempt: 2, leaseFence: uuid(10) },
+    policy,
+  };
+  return { prepared, scope };
+}
+
+function producePublication(
+  f: ReturnType<typeof fixture>,
+  completion: InitialFeedbackCompletion,
+  attemptId: string | null,
+) {
+  // Synthetic RPC metadata only. Real compiler/render/scorer own all content,
+  // support, original-index mappings and deterministic checksums. Not Native proof.
+  const d = f.prepared.context!.deterministicResult,
+    b = f.prepared.operation.binding;
+  const render =
+    completion.kind === "assessed"
+      ? renderInitialFeedbackPlan(
+          f.prepared.context!.scoringContext.extraction.text,
+          completion.plan,
+        )
+      : null;
+  return InitialFeedbackPublicationSchema.parse({
+    schemaVersion: "initial-feedback-publication/1.0.0",
+    publicationId: uuid(90),
+    state: completion.kind === "assessed" ? "assessed" : "deterministic_only",
+    reason: completion.kind === "assessed" ? null : completion.reason,
+    binding: b,
+    plan: completion.plan,
+    recordedObservation: completion.observation,
+    generationFailure: completion.generationFailure,
+    ownedSupport: render
+      ? {
+          schemaVersion: "initial-feedback-native-support/1.0.0",
+          scope: "retained_output_only",
+          bindingSha256: f.prepared.operation.bindingSha256,
+          planSha256: "1".repeat(64),
+          parts: render.parts,
+          mapping: render.mapping,
+        }
+      : null,
+    prose: render?.prose ?? null,
+    compatibility: {
+      deterministicResult: d,
+      feedback: render
+        ? {
+            scoreSemantics: BASELINE_SEMANTICS,
+            overallScore: d.score,
+            ATS: {
+              score: d.score,
+              tips: d.ruleTrace.slice(0, 4).map((r) => ({
+                type: r.passed ? "good" : "improve",
+                tip: r.detail,
+              })),
+            },
+            toneAndStyle: legacyCategoryFromProse(render.prose.toneAndStyle),
+            content: legacyCategoryFromProse(render.prose.content),
+            structure: legacyCategoryFromProse(render.prose.structure),
+            skills: legacyCategoryFromProse(render.prose.skills),
+          }
+        : initialFeedbackPartialFeedback(d),
+      writer: render?.prose.writer ?? null,
+    },
+    receipt: {
+      schemaVersion: "initial-feedback-receipt/1.0.0",
+      operationId: f.prepared.operation.operationId,
+      attemptId,
+      publicationId: uuid(90),
+      analysisId: b.analysisId,
+      ownerId: b.ownerId,
+      bindingSha256: f.prepared.operation.bindingSha256,
+      publicationSha256: "2".repeat(64),
+      resultSha256: "3".repeat(64),
+      writerSha256: render ? "4".repeat(64) : null,
+      runId: render ? uuid(91) : null,
+      createdAt: "2026-11-15T00:00:00.123456Z",
+      replayed: false,
+    },
+  });
+}
+const noAi: InitialFeedbackCompletion = {
+  kind: "deterministic_only",
+  reason: "ai_disabled",
+  plan: null,
+  observation: null,
+  generationFailure: null,
+};
+import {
+  createInitialFeedbackPublicationRepository,
+  createInitialFeedbackPublicationReader,
+  createInitialFeedbackOwnerExporter,
+} from "../../app/lib/server/initial-feedback-publication-repository";
+import type { InitialFeedbackOperationClient } from "../../app/lib/server/initial-feedback-operation-repository";
+const audit = { processId: "unit-process", requestId: "unit-request" };
+function harness() {
+  const f = fixture();
+  const publication = producePublication(f, noAi, null);
+  const state: {
+    read: unknown;
+    finish: unknown;
+    exported: unknown;
+    metadata: unknown;
+  } = {
+    read: {
+      schemaVersion: "initial-feedback-read/1.0.0",
+      status: "legacy_unbound",
+      analysisId: f.scope.analysisId,
+      reason: "original_input_or_publication_missing",
+    },
+    finish: {
+      schemaVersion: "initial-feedback-finish/1.0.0",
+      status: "published",
+      publication,
+    },
+    exported: {
+      schemaVersion: "initial-feedback-export/1.0.0",
+      operations: [],
+      attempts: [],
+      publications: [],
+    },
+    metadata: ready(),
+  };
+  const rpc = vi.fn<InitialFeedbackOperationClient["rpc"]>(async (name) => ({
+    data: structuredClone(
+      name === "read_initial_feedback_readiness"
+        ? state.metadata
+        : name === "read_initial_feedback"
+          ? state.read
+          : name === "finish_initial_feedback"
+            ? state.finish
+            : state.exported,
+    ),
+    error: null,
+  }));
+  const repository = createInitialFeedbackPublicationRepository(
+    { rpc },
+    {
+      ownerId: f.scope.ownerId,
+      organizationId: f.scope.organizationId,
+      analysisId: f.scope.analysisId,
+      lease: f.scope.lease,
+    },
+    SYNTHETIC_RPC_PROFILE,
+  );
+  return { f, publication, state, rpc, repository };
+}
+function exported(h: ReturnType<typeof harness>) {
+  const op = h.f.prepared.operation,
+    p = h.publication,
+    { receipt, ...core } = p,
+    a = op.attempts[0];
+  return {
+    schemaVersion: "initial-feedback-export/1.0.0",
+    operations: [
+      {
+        operation_id: op.operationId,
+        analysis_id: op.analysisId,
+        owner_id: op.ownerId,
+        organization_id: op.organizationId,
+        resume_id: op.binding.resumeId,
+        resume_version_id: op.binding.resumeVersionId,
+        policy_version: op.binding.policy.version,
+        policy_sha256: op.binding.policy.sha256,
+        binding: op.binding,
+        binding_sha256: op.bindingSha256,
+        attempt_limit: op.attemptLimit,
+        state: "published",
+        publication_id: p.publicationId,
+        created_at: "2026-11-15T00:00:00.123456Z",
+      },
+    ],
+    attempts: [
+      {
+        attempt_id: a.attemptId,
+        operation_id: op.operationId,
+        ordinal: a.ordinal,
+        state: "cancelled_before_dispatch",
+        claim_lease: null,
+        claimed_at: null,
+        usage: null,
+        error_code: null,
+        budget_attempt_id: null,
+        created_at: "2026-11-15T00:00:00.123456Z",
+        owner_id: op.ownerId,
+        organization_id: op.organizationId,
+        analysis_id: op.analysisId,
+      },
+    ],
+    publications: [
+      {
+        id: p.publicationId,
+        operation_id: op.operationId,
+        attempt_id: null,
+        analysis_id: op.analysisId,
+        owner_id: op.ownerId,
+        organization_id: op.organizationId,
+        resume_id: op.binding.resumeId,
+        resume_version_id: op.binding.resumeVersionId,
+        run_id: null,
+        state: p.state,
+        reason: p.reason,
+        binding_sha256: op.bindingSha256,
+        completion: noAi,
+        completion_sha256: "5".repeat(64),
+        publication_core: core,
+        publication_sha256: receipt.publicationSha256,
+        receipt,
+        render: null,
+        plan_sha256: null,
+        render_sha256: null,
+        support_sha256: null,
+        capture_sha256: null,
+        result_content_sha256: receipt.resultSha256,
+        writer_content_sha256: "6".repeat(64),
+        run_content_sha256: null,
+        finish_lease: h.f.scope.lease,
+        process_id: audit.processId,
+        request_id: audit.requestId,
+        created_at: receipt.createdAt,
+      },
+    ],
+  };
+}
+describe("initial-feedback publication RPC boundary (synthetic catalog/rows only)", () => {
+  it.each(["current", "historical"] as const)(
+    "reads actual strict available %s without inventing currentness",
+    async (currentness) => {
+      const h = harness();
+      h.state.read = {
+        schemaVersion: "initial-feedback-read/1.0.0",
+        status: "available",
+        currentness,
+        publication: h.publication,
+      };
+      expect(await h.repository.read()).toEqual(h.state.read);
+      expect(h.rpc.mock.calls).toEqual([
+        ["read_initial_feedback_readiness", {}],
+        [
+          "read_initial_feedback",
+          { p_user_id: h.f.scope.ownerId, p_analysis_id: h.f.scope.analysisId },
+        ],
+      ]);
+    },
+  );
+  it("retains explicit legacy_unbound and pending, not an empty assessed publication", async () => {
+    const h = harness();
+    expect((await h.repository.read()).status).toBe("legacy_unbound");
+    h.state.read = {
+      schemaVersion: "initial-feedback-read/1.0.0",
+      status: "pending",
+      operation: h.f.prepared.operation,
+      attempt: h.f.prepared.operation.attempts[0],
+    };
+    expect((await h.repository.read()).status).toBe("pending");
+  });
+  it("refuses staged reader capability and malformed/missing full metadata before data RPC", async () => {
+    for (const metadata of [
+      null,
+      { ...ready(), readerExecutable: false },
+      { ...ready(), usageSha256: "0".repeat(64) },
+      { ...ready(), oldReady: true },
+    ]) {
+      const h = harness();
+      h.state.metadata = metadata;
+      await expect(h.repository.read()).rejects.toMatchObject({
+        code: "unavailable",
+      });
+      expect(h.rpc).toHaveBeenCalledTimes(1);
+    }
+  });
+  it("correlates publication owner/org/analysis, including self-consistent foreign receipt", async () => {
+    const h = harness(),
+      p = structuredClone(h.publication);
+    p.binding.ownerId = uuid(99);
+    p.receipt.ownerId = uuid(99);
+    h.state.read = {
+      schemaVersion: "initial-feedback-read/1.0.0",
+      status: "available",
+      currentness: "historical",
+      publication: p,
+    };
+    await expect(h.repository.read()).rejects.toMatchObject({
+      code: "unavailable",
+    });
+  });
+  it("finishes exact deterministic-only and unchanged producer numbers using actual native parameter names", async () => {
+    const h = harness();
+    const p = await h.repository.finish(
+      h.f.prepared.operation,
+      null,
+      noAi,
+      audit,
+    );
+    expect(p.compatibility.deterministicResult).toEqual(
+      h.f.prepared.context!.deterministicResult,
+    );
+    expect(h.rpc.mock.calls.at(-1)).toEqual([
+      "finish_initial_feedback",
+      {
+        p_analysis_id: h.f.scope.analysisId,
+        p_lease: h.f.scope.lease,
+        p_operation_id: h.f.prepared.operation.operationId,
+        p_attempt_id: null,
+        p_binding_sha256: h.f.prepared.operation.bindingSha256,
+        p_completion: noAi,
+        p_process_id: audit.processId,
+        p_request_id: audit.requestId,
+      },
+    ]);
+  });
+  it("finishes an actual useful compiled plan without changing content-only support authority", async () => {
+    const h = harness(),
+      source = h.f.prepared.context!.scoringContext.extraction.text;
+    const compiled = compileInitialFeedbackPlan(source, {
+      toneAndStyle: {
+        tips: [
+          {
+            type: "good",
+            tip: "Created services using Python",
+            explanation: "Clarifies wording.",
+            quote: source,
+          },
+        ],
+      },
+      content: { tips: [] },
+      structure: { tips: [] },
+      skills: { tips: [] },
+      writer: { summary: null, bullets: [] },
+    });
+    if (compiled.status !== "available")
+      throw Error("Actual compiler unavailable");
+    const completion: InitialFeedbackCompletion = {
+      kind: "assessed",
+      plan: compiled.plan,
+      observation: compiled.recordedObservation,
+      generationFailure: null,
+    };
+    h.state.finish = {
+      schemaVersion: "initial-feedback-finish/1.0.0",
+      status: "published",
+      publication: producePublication(
+        h.f,
+        completion,
+        h.f.prepared.operation.attempts[0].attemptId,
+      ),
+    };
+    const result = await h.repository.finish(
+      h.f.prepared.operation,
+      h.f.prepared.operation.attempts[0].attemptId,
+      completion,
+      audit,
+    );
+    expect(result.state).toBe("assessed");
+    expect(result.recordedObservation).toEqual(compiled.recordedObservation);
+    expect(compiled.rendered.authority).toBe("source_content_only");
+    expect(compiled.rendered.ownedVersionProof).toBe("not_provided");
+    expect(result.ownedSupport?.scope).toBe("retained_output_only");
+  });
+  it("refuses another completion or receipt binding rather than accepting nonempty saved prose", async () => {
+    const h = harness();
+    const pub = structuredClone(h.publication);
+    pub.receipt.bindingSha256 = "0".repeat(64);
+    h.state.finish = {
+      schemaVersion: "initial-feedback-finish/1.0.0",
+      status: "published",
+      publication: pub,
+    };
+    await expect(
+      h.repository.finish(h.f.prepared.operation, null, noAi, audit),
+    ).rejects.toMatchObject({ code: "unavailable", mutationStatus: "unknown" });
+  });
+  it("refuses invalid audit/foreign operation before any mutation", async () => {
+    const h = harness();
+    await expect(
+      h.repository.finish(h.f.prepared.operation, null, noAi, {
+        ...audit,
+        requestId: "bad\nrequest",
+      }),
+    ).rejects.toMatchObject({ code: "invalid" });
+    expect(h.rpc).not.toHaveBeenCalled();
+  });
+  it("exports complete strict owner rows without current-org/analysis filtering or JSONB digest emulation", async () => {
+    const h = harness();
+    const rows = exported(h),
+      other = structuredClone(rows),
+      op = other.operations[0],
+      a = other.attempts[0],
+      p = other.publications[0];
+    op.operation_id = uuid(107);
+    op.analysis_id = uuid(101);
+    op.organization_id = uuid(103);
+    op.resume_id = uuid(104);
+    op.resume_version_id = uuid(105);
+    op.publication_id = uuid(190);
+    op.binding.analysisId = op.analysis_id;
+    op.binding.organizationId = op.organization_id;
+    op.binding.resumeId = op.resume_id;
+    op.binding.resumeVersionId = op.resume_version_id;
+    a.operation_id = op.operation_id;
+    a.analysis_id = op.analysis_id;
+    a.organization_id = op.organization_id;
+    a.attempt_id = uuid(108);
+    p.id = uuid(190);
+    p.operation_id = op.operation_id;
+    p.analysis_id = op.analysis_id;
+    p.organization_id = op.organization_id;
+    p.resume_id = op.resume_id;
+    p.resume_version_id = op.resume_version_id;
+    p.publication_core.publicationId = p.id;
+    p.publication_core.binding = op.binding;
+    p.receipt.publicationId = p.id;
+    p.receipt.operationId = op.operation_id;
+    p.receipt.analysisId = op.analysis_id;
+    rows.operations.push(op);
+    rows.attempts.push(a);
+    rows.publications.push(p);
+    h.state.exported = JSON.parse(JSON.stringify(rows));
+    expect(await h.repository.exportOwned()).toEqual(h.state.exported);
+    expect(rows.operations.map((x) => x.organization_id)).toEqual([
+      h.f.scope.organizationId,
+      uuid(103),
+    ]);
+    expect(h.rpc.mock.calls.at(-1)).toEqual([
+      "export_initial_feedback_records",
+      { p_user_id: h.f.scope.ownerId },
+    ]);
+  });
+  it("keeps empty owner export versioned and refuses missing/denied results instead of fallback", async () => {
+    const h = harness();
+    expect(await h.repository.exportOwned()).toEqual(h.state.exported);
+    h.state.exported = null;
+    await expect(h.repository.exportOwned()).rejects.toMatchObject({
+      code: "unavailable",
+    });
+  });
+  it("refuses whole export on foreign owner, incomplete member rows or duplicate publication", async () => {
+    const h = harness(),
+      good = exported(h);
+    for (const bad of [
+      { ...good, operations: [{ ...good.operations[0], owner_id: uuid(99) }] },
+      { ...good, attempts: [] },
+      { ...good, publications: [...good.publications, ...good.publications] },
+    ]) {
+      h.state.exported = bad;
+      await expect(h.repository.exportOwned()).rejects.toMatchObject({
+        code: "unavailable",
+      });
+    }
+  });
+  it("fails oversized export whole without returning a prefix", async () => {
+    const h = harness(),
+      good = exported(h);
+    h.state.exported = {
+      ...good,
+      operations: Array.from({ length: 4097 }, () => good.operations[0]),
+    };
+    await expect(h.repository.exportOwned()).rejects.toMatchObject({
+      code: "unavailable",
+    });
+  });
+  it("bounds stalled read without an ignored-abort follow-on data call", async () => {
+    vi.useFakeTimers();
+    const h = harness();
+    h.rpc.mockImplementationOnce(() => new Promise(() => {}));
+    const repository = createInitialFeedbackPublicationRepository(
+      { rpc: h.rpc },
+      {
+        ownerId: h.f.scope.ownerId,
+        organizationId: h.f.scope.organizationId,
+        analysisId: h.f.scope.analysisId,
+        lease: h.f.scope.lease,
+      },
+      SYNTHETIC_RPC_PROFILE,
+      { timeoutMs: 20 },
+    );
+    const check = expect(repository.read()).rejects.toMatchObject({
+      code: "unavailable",
+    });
+    await vi.advanceTimersByTimeAsync(20);
+    await check;
+    vi.useRealTimers();
+    expect(h.rpc).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("read-only publication callers have no fabricated worker context", () => {
+  it("reads an owned publication with lease-free owner/org/analysis scope", async () => {
+    const h = harness();
+    h.state.read = {
+      schemaVersion: "initial-feedback-read/1.0.0",
+      status: "available",
+      currentness: "historical",
+      publication: h.publication,
+    };
+    const repository = Reflect.apply(
+      createInitialFeedbackPublicationRepository,
+      null,
+      [
+        { rpc: h.rpc },
+        {
+          ownerId: h.f.scope.ownerId,
+          organizationId: h.f.scope.organizationId,
+          analysisId: h.f.scope.analysisId,
+        },
+        SYNTHETIC_RPC_PROFILE,
+      ],
+    );
+    expect(await repository.read()).toEqual(h.state.read);
+    expect(h.rpc.mock.calls.at(-1)).toEqual([
+      "read_initial_feedback",
+      { p_user_id: h.f.scope.ownerId, p_analysis_id: h.f.scope.analysisId },
+    ]);
+  });
+  it("exports the complete account using owner identity only, no invented lease/analysis/org", async () => {
+    const h = harness();
+    h.state.exported = JSON.parse(JSON.stringify(exported(h)));
+    const repository = Reflect.apply(
+      createInitialFeedbackPublicationRepository,
+      null,
+      [{ rpc: h.rpc }, { ownerId: h.f.scope.ownerId }, SYNTHETIC_RPC_PROFILE],
+    );
+    expect(await repository.exportOwned()).toEqual(h.state.exported);
+    expect(h.rpc.mock.calls.at(-1)).toEqual([
+      "export_initial_feedback_records",
+      { p_user_id: h.f.scope.ownerId },
+    ]);
+  });
+});
+
+it("keeps readonly facades narrow and refuses insufficient read/finish scopes before IO", async () => {
+  const h = harness(),
+    readScope = {
+      ownerId: h.f.scope.ownerId,
+      organizationId: h.f.scope.organizationId,
+      analysisId: h.f.scope.analysisId,
+    };
+  const reader = createInitialFeedbackPublicationReader(
+      { rpc: h.rpc },
+      readScope,
+      SYNTHETIC_RPC_PROFILE,
+    ),
+    exporter = createInitialFeedbackOwnerExporter(
+      { rpc: h.rpc },
+      { ownerId: h.f.scope.ownerId },
+      SYNTHETIC_RPC_PROFILE,
+    );
+  expect(Object.keys(reader)).toEqual(["read"]);
+  expect(Object.keys(exporter)).toEqual(["exportOwned"]);
+  const readonly = createInitialFeedbackPublicationRepository(
+      { rpc: h.rpc },
+      readScope,
+      SYNTHETIC_RPC_PROFILE,
+    ),
+    ownerOnly = createInitialFeedbackPublicationRepository(
+      { rpc: h.rpc },
+      { ownerId: h.f.scope.ownerId },
+      SYNTHETIC_RPC_PROFILE,
+    );
+  await expect(
+    readonly.finish(h.f.prepared.operation, null, noAi, audit),
+  ).rejects.toMatchObject({ code: "invalid", mutationStatus: "not_sent" });
+  await expect(
+    ownerOnly.finish(h.f.prepared.operation, null, noAi, audit),
+  ).rejects.toMatchObject({ code: "invalid", mutationStatus: "not_sent" });
+  await expect(ownerOnly.read()).rejects.toMatchObject({
+    code: "invalid",
+    mutationStatus: "not_sent",
+  });
+  expect(h.rpc).not.toHaveBeenCalled();
+});
+it("refuses partial mixed and feature-flag scopes without inventing identities", () => {
+  const h = harness();
+  for (const scope of [
+    { ownerId: h.f.scope.ownerId, organizationId: h.f.scope.organizationId },
+    { ownerId: h.f.scope.ownerId, lease: h.f.scope.lease },
+    { ownerId: h.f.scope.ownerId, AI_ENABLED: false },
+    { ownerId: "bad" },
+  ]) {
+    expect(() =>
+      Reflect.apply(createInitialFeedbackPublicationRepository, null, [
+        { rpc: h.rpc },
+        scope,
+        SYNTHETIC_RPC_PROFILE,
+      ]),
+    ).toThrow();
+  }
+  expect(() =>
+    Reflect.apply(createInitialFeedbackPublicationReader, null, [
+      { rpc: h.rpc },
+      { ownerId: h.f.scope.ownerId },
+      SYNTHETIC_RPC_PROFILE,
+    ]),
+  ).toThrow();
+  expect(() =>
+    Reflect.apply(createInitialFeedbackOwnerExporter, null, [
+      { rpc: h.rpc },
+      h.f.scope,
+      SYNTHETIC_RPC_PROFILE,
+    ]),
+  ).toThrow();
+  expect(h.rpc).not.toHaveBeenCalled();
+});
+it("owner-only exports fail closed on missing denied or foreign data and staged capability", async () => {
+  for (const mode of ["missing", "denied", "foreign", "staged"]) {
+    const h = harness(),
+      rows = JSON.parse(JSON.stringify(exported(h)));
+    if (mode === "foreign") rows.operations[0].owner_id = uuid(99);
+    h.state.exported = mode === "foreign" ? rows : null;
+    if (mode === "staged")
+      h.state.metadata = { ...ready(), exportExecutable: false };
+    if (mode === "denied")
+      h.rpc
+        .mockImplementationOnce(async () => ({ data: ready(), error: null }))
+        .mockImplementationOnce(async () => ({
+          data: null,
+          error: { code: "42501", message: "private denied" },
+        }));
+    const exporter = createInitialFeedbackOwnerExporter(
+      { rpc: h.rpc },
+      { ownerId: h.f.scope.ownerId },
+      SYNTHETIC_RPC_PROFILE,
+    );
+    await expect(exporter.exportOwned()).rejects.toThrow();
+    expect(h.rpc).toHaveBeenCalledTimes(mode === "staged" ? 1 : 2);
+    if (mode !== "staged")
+      expect(h.rpc.mock.calls.at(-1)).toEqual([
+        "export_initial_feedback_records",
+        { p_user_id: h.f.scope.ownerId },
+      ]);
+  }
+});
+
+// Explicit synthetic catalog vectors; these are not installed Native pins.
+const retirementProfile = {
+  schemaVersion: "owned-ai-retirement-readiness/1.0.0",
+  profileVersion: "owned-ai-retirement-profile/1.0.0",
+  checkerSha256: "a".repeat(64),
+  captureSha256: "b".repeat(64),
+  exportSha256: "c".repeat(64),
+  metadataSha256: "d".repeat(64),
+} as const;
+function retirementFixture() {
+  const h = harness(),
+    rows = exported(h),
+    p = rows.publications[0],
+    op = rows.operations[0];
+  rows.publications = [];
+  h.state.exported = rows;
+  const proof: {
+    -readonly [K in keyof OwnedAiRetirementRow]: OwnedAiRetirementRow[K];
+  } = {
+    operation_id: op.operation_id,
+    publication_id: p.id,
+    attempt_id: p.attempt_id,
+    run_id: p.run_id,
+    owner_id: op.owner_id,
+    organization_id: op.organization_id,
+    analysis_id: op.analysis_id,
+    resume_id: op.resume_id,
+    resume_version_id: op.resume_version_id,
+    publication_state: p.state,
+    binding_sha256: op.binding_sha256,
+    retired_at: "2026-11-15T00:00:00.123456Z",
+    deletion_request_id: uuid(777),
+    retention_item_id: null,
+  };
+  const actual = h.rpc.getMockImplementation();
+  if (!actual) throw Error("Actual RPC fixture is missing.");
+  h.rpc.mockImplementation((name, args) =>
+    name === "read_owned_ai_retirement_readiness"
+      ? Promise.resolve({
+          data: {
+            ...retirementProfile,
+            schemaReady: true,
+            exportExecutable: true,
+          },
+          error: null,
+        })
+      : name === "export_owned_ai_retirement_records"
+        ? Promise.resolve({
+            data: {
+              schemaVersion: "owned-ai-retirement-export/1.0.0",
+              retirements: [proof],
+            },
+            error: null,
+          })
+        : actual(name, args),
+  );
+  const repository = Reflect.apply(
+    createInitialFeedbackPublicationRepository,
+    null,
+    [
+      { rpc: h.rpc },
+      { ownerId: h.f.scope.ownerId },
+      SYNTHETIC_RPC_PROFILE,
+      { retirementProfile },
+    ],
+  );
+  return { ...h, rows, proof, paired: repository };
+}
+it("paired owner export includes genuine retirement metadata after content cascade", async () => {
+  const h = retirementFixture();
+  expect(await h.paired.exportOwned()).toEqual({
+    ...h.rows,
+    retirements: [h.proof],
+  });
+  expect(h.rpc.mock.calls).toContainEqual([
+    "read_owned_ai_retirement_readiness",
+    {},
+  ]);
+  expect(h.rpc.mock.calls).toContainEqual([
+    "export_owned_ai_retirement_records",
+    { p_user_id: h.f.scope.ownerId },
+  ]);
+});
+
+it("paired mode is mandatory even for empty exports and returns all proof records", async () => {
+  const h = retirementFixture();
+  h.state.exported = {
+    schemaVersion: "initial-feedback-export/1.0.0",
+    operations: [],
+    attempts: [],
+    publications: [],
+  };
+  const original = h.rpc.getMockImplementation()!;
+  h.rpc.mockImplementation((name, args) =>
+    name === "export_owned_ai_retirement_records"
+      ? Promise.resolve({
+          data: {
+            schemaVersion: "owned-ai-retirement-export/1.0.0",
+            retirements: [],
+          },
+          error: null,
+        })
+      : original(name, args),
+  );
+  expect(await h.paired.exportOwned()).toEqual({
+    schemaVersion: "initial-feedback-export/1.0.0",
+    operations: [],
+    attempts: [],
+    publications: [],
+    retirements: [],
+  });
+  expect(h.rpc.mock.calls).toContainEqual([
+    "export_owned_ai_retirement_records",
+    { p_user_id: h.f.scope.ownerId },
+  ]);
+  h.rpc.mockImplementation((name, args) =>
+    name === "read_owned_ai_retirement_readiness"
+      ? Promise.resolve({
+          data: {
+            ...retirementProfile,
+            schemaReady: true,
+            exportExecutable: false,
+          },
+          error: null,
+        })
+      : original(name, args),
+  );
+  await expect(h.paired.exportOwned()).rejects.toMatchObject({
+    code: "unavailable",
+  });
+});
+it("without paired profile the historical strict missing-publication refusal stays", async () => {
+  const h = retirementFixture();
+  await expect(h.repository.exportOwned()).rejects.toMatchObject({
+    code: "unavailable",
+  });
+  expect(
+    h.rpc.mock.calls.some(([n]) => n === "export_owned_ai_retirement_records"),
+  ).toBe(false);
+});
+it("paired mode rejects missing, foreign, mismatched or conflicting retirement authority", async () => {
+  for (const change of [
+    "missing",
+    "foreign",
+    "binding",
+    "attempt",
+    "current",
+  ]) {
+    const h = retirementFixture(),
+      actual = h.rpc.getMockImplementation()!;
+    if (change === "current") h.rows.publications = exported(h).publications;
+    const proof = {
+      ...h.proof,
+      ...(change === "foreign"
+        ? { owner_id: uuid(999) }
+        : change === "binding"
+          ? { binding_sha256: "0".repeat(64) }
+          : change === "attempt"
+            ? { attempt_id: uuid(999) }
+            : {}),
+    };
+    h.rpc.mockImplementation((name, args) =>
+      name === "export_owned_ai_retirement_records"
+        ? Promise.resolve({
+            data: {
+              schemaVersion: "owned-ai-retirement-export/1.0.0",
+              retirements: change === "missing" ? [] : [proof],
+            },
+            error: null,
+          })
+        : actual(name, args),
+    );
+    await expect(h.paired.exportOwned()).rejects.toMatchObject({
+      code: "unavailable",
+    });
+  }
+});
+it("paired terminal unknown proof retains late-known usage and refuses a bare listed attempt", async () => {
+  const h = retirementFixture();
+  const a = h.rows.attempts[0];
+  Object.assign(a, {
+    state: "failed",
+    claim_lease: h.f.scope.lease,
+    claimed_at: "2026-11-15T00:00:00.123456Z",
+    usage: { inputTokens: "11", outputTokens: "7" },
+    error_code: "timeout",
+  });
+  h.proof.attempt_id = a.attempt_id;
+  expect(await h.paired.exportOwned()).toEqual({
+    ...h.rows,
+    retirements: [h.proof],
+  });
+  Object.assign(a, { state: "published", error_code: null });
+  await expect(h.paired.exportOwned()).rejects.toMatchObject({
+    code: "unavailable",
+  });
+});

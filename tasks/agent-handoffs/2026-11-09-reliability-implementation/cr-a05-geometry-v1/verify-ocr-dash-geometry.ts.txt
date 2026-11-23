@@ -1,0 +1,329 @@
+/** Development-only comparison of the pinned worker and a glyph-box experiment. */
+import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { createHash, randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import {
+  extractEvidenceFields,
+  MIXED_OCR_FIELD_PROFILE_V4,
+} from "../app/lib/server/evidence-fields";
+import {
+  createLocalContainerOcrAdapter,
+  type DockerCommand,
+} from "../app/lib/server/ocr/local-container";
+import {
+  extractPdfTextLayers,
+  detectPdfTextProfile,
+} from "../app/lib/server/ocr/pdf-detection";
+import {
+  runSelectiveLocalOcr,
+  type SelectiveOcrRequest,
+} from "../app/lib/server/ocr/selective";
+import { createOcrWorkplaceDevelopmentFixtures } from "../tests/fixtures/ocr-employment-development";
+import { evaluateOcrDocument } from "../tests/fixtures/ocr-evaluation";
+import { evaluateOcrFields } from "../tests/fixtures/ocr-field-evaluation";
+import {
+  createOcrPrintFixture,
+  type Family,
+} from "../tests/fixtures/ocr-print-pilot";
+
+const scriptPath = "scripts/ocr-runtime/dash-geometry-probe.py";
+const experiment = readFileSync(scriptPath, "utf8");
+const hash = (value: string | Uint8Array) =>
+  createHash("sha256").update(value).digest("hex");
+const reviewedImage =
+  "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854";
+const [mode, registeredPath] = process.argv.slice(2);
+assert(
+  (mode === "--manifest-only" && !registeredPath) ||
+    (mode === "--run-registered" && registeredPath),
+  "Select --manifest-only or --run-registered <registration>",
+);
+
+const family: Family = {
+  id: "reliability-dev-slate-glyph-boxes",
+  partition: "development",
+  left: 58,
+  top: 81,
+  gap: 25,
+  lines: [
+    "Demo Candidate Rowan",
+    "Email: rowan.slate@example.test",
+    "Phone: 0000000000",
+    "Work History",
+    "Test Engineer | Fictional Slate Lab | Hybrid | Apr 2020 - May 2024",
+    "Checked routing keys B–Y and the identifier B-Y.",
+    "Compared ranges 3–9 with the test key 3-9.",
+    "Recorded red – blue and green - amber labels.",
+    "Exported notes — including the pre-release flags.",
+    "Recorded temperatures from −4 to 5 Celsius.",
+    "Education: BSc Information Science",
+    "Certification: Demo Systems Assurance Certificate",
+  ],
+  fields: {
+    name: "Demo Candidate Rowan",
+    email: "rowan.slate@example.test",
+    phone: "0000000000",
+    employer: "Fictional Slate Lab",
+    role: "Test Engineer",
+    dates: "Apr 2020 - May 2024",
+    education: "BSc Information Science",
+    certification: "Demo Systems Assurance Certificate",
+  },
+};
+
+const copper = (await createOcrWorkplaceDevelopmentFixtures()).find(
+  ({ id }) => id === "print-reliability-dev-copper-workplace-clean-v1",
+);
+assert(
+  copper?.manifest.sourceSha256 ===
+    "2d9f6735c05e66bf569fcb916668c817d66f12eb633c7ea4f27c90f556b161f1",
+);
+const fixtures = [copper];
+for (const segment of ["clean", "challenging", "mixed"] as const)
+  fixtures.push(await createOcrPrintFixture(1, segment, family));
+assert(fixtures.every(({ manifest }) => manifest.partition === "development"));
+const configuration = { psm: 3, maxDpi: 150 } as const;
+const manifest = {
+  schemaVersion: "ocr-development-glyph-boxes/1.0.0",
+  imageId: reviewedImage,
+  configuration,
+  maxSerialAttempts: fixtures.length * 2,
+  maxWallTimePerAttemptMs: 10_000,
+  fieldProfile: MIXED_OCR_FIELD_PROFILE_V4,
+  files: Object.fromEntries(
+    [
+      "scripts/verify-ocr-dash-geometry.ts",
+      scriptPath,
+      "app/lib/server/ocr/local-container.ts",
+      "app/lib/server/ocr/selective.ts",
+      "app/lib/server/ocr/pdf-detection.ts",
+      "app/lib/server/evidence-fields.ts",
+      "tests/fixtures/ocr-evaluation.ts",
+      "tests/fixtures/ocr-field-evaluation.ts",
+      "tests/fixtures/ocr-print-pilot.ts",
+    ].map((path) => [path, hash(readFileSync(path))]),
+  ),
+  sources: fixtures.map(({ manifest, labels, expectedPageTexts }) => ({
+    id: manifest.id,
+    family: manifest.sourceFamily,
+    partition: manifest.partition,
+    sourceSha256: manifest.sourceSha256,
+    authoredSourceSha256: manifest.authoredSourceSha256,
+    labelsSha256: hash(JSON.stringify(labels)),
+    expectedTextSha256: hash(JSON.stringify(expectedPageTexts)),
+  })),
+};
+
+function docker(
+  args: readonly string[],
+  options: Parameters<DockerCommand>[1],
+) {
+  return execFileSync("docker", args, {
+    env: { HOME: process.env.HOME, PATH: process.env.PATH },
+    input: options.input,
+    encoding: "utf8",
+    maxBuffer: options.maxOutputBytes ?? 4 * 1024 * 1024,
+    timeout: options.timeoutMs,
+    killSignal: "SIGKILL",
+    stdio: ["pipe", "pipe", "pipe"],
+  });
+}
+
+const experimentalCommand: DockerCommand = async (args, options) => {
+  if (options.signal?.aborted) throw new Error("Synthetic worker aborted");
+  try {
+    if (args[0] !== "create") return docker(args, options);
+    const imageIndex = args.indexOf(reviewedImage);
+    if (imageIndex < 0 || !/^(?:1|1,3)$/u.test(args[imageIndex + 1]))
+      throw new Error("Unapproved synthetic worker plan");
+    return docker(
+      [
+        ...args.slice(0, imageIndex),
+        "--entrypoint=/usr/bin/python3",
+        reviewedImage,
+        "-I",
+        "-B",
+        "-c",
+        experiment,
+        args[imageIndex + 1],
+      ],
+      options,
+    );
+  } catch {
+    throw new Error("Synthetic glyph-box worker command failed");
+  }
+};
+
+function noOwnedContainers() {
+  assert.equal(
+    docker(
+      ["ps", "--all", "--quiet", "--filter", "label=resumide.ocr.attempt"],
+      { timeoutMs: 3_000, maxOutputBytes: 4096 },
+    ).trim(),
+    "",
+  );
+}
+
+function marks(expected: string[], actual: string[]) {
+  const characters = ["-", "–", "—", "−"] as const;
+  const pattern = /[-–—−]/gu;
+  const rows = (text: string) =>
+    text
+      .split("\n")
+      .map((line) => line.replace(/\s+/gu, " ").trim())
+      .filter(Boolean);
+  const metrics = characters.map((glyph) => ({
+    codePoint: glyph.codePointAt(0),
+    expected: 0,
+    exact: 0,
+    substituted: 0,
+    unaligned: 0,
+  }));
+  expected.forEach((page, index) => {
+    const observed = rows(actual[index] ?? "");
+    rows(page).forEach((line, lineIndex) => {
+      const candidate = observed[lineIndex] ?? "";
+      const aligned =
+        line.replace(pattern, "#") === candidate.replace(pattern, "#");
+      for (const match of line.matchAll(pattern)) {
+        const position = characters.indexOf(
+          match[0] as (typeof characters)[number],
+        );
+        const counter = metrics[position];
+        counter.expected++;
+        if (!aligned) counter.unaligned++;
+        else if (candidate[match.index] === match[0]) counter.exact++;
+        else counter.substituted++;
+      }
+    });
+  });
+  return metrics;
+}
+
+async function compare() {
+  noOwnedContainers();
+  const results = [];
+  for (const fixture of fixtures) {
+    const { pageTexts } = await extractPdfTextLayers(fixture.bytes, {
+      maxPages: 3,
+      maxCharacters: 100_000,
+    });
+    const routing = detectPdfTextProfile({
+      text: pageTexts.join("\n"),
+      pageTexts,
+      totalPages: pageTexts.length,
+    });
+    const pages = fixture.segment === "mixed" ? [1, 3] : [1];
+    assert.deepEqual(routing.pagesNeedingOcr, pages);
+    for (const variant of ["baseline", "geometry"] as const) {
+      const adapter = createLocalContainerOcrAdapter({
+        bytes: fixture.bytes,
+        imageId: reviewedImage,
+        evaluationConfig: configuration,
+        ...(variant === "geometry" ? { command: experimentalCommand } : {}),
+      });
+      const request: SelectiveOcrRequest = {
+        schemaVersion: "selective-ocr-request-v1",
+        attemptId: randomUUID(),
+        ownerId: randomUUID(),
+        analysisId: randomUUID(),
+        sourceId: randomUUID(),
+        createdAt: new Date().toISOString(),
+        retentionPolicyId: "synthetic-local-30d/1.0.0",
+        sourceSha256: fixture.manifest.sourceSha256,
+        nativePageTexts: pageTexts,
+        selectedPages: pages.map((pageNumber) => ({
+          pageNumber,
+          pageId: `page-${pageNumber}`,
+        })),
+        limits: { maxCharacters: 100_000, maxPages: 3 },
+        remainingDeadlineMs: 15_000,
+        allocation: {
+          id: "owner-approved-synthetic-local-2026-10-04",
+          maxWallTimeMs: 10_000,
+          maxPages: 3,
+          externalApiFeeMicros: 0,
+        },
+        policy: {
+          executionMode: "self_hosted",
+          purpose: "synthetic_local_test",
+          allowThirdPartyProcessing: false,
+        },
+      };
+      const outcome = await runSelectiveLocalOcr(
+        request,
+        {
+          ...adapter,
+          versions:
+            variant === "geometry"
+              ? {
+                  ...adapter.versions,
+                  engine: adapter.versions.engine + "/glyph-box-development-1",
+                }
+              : adapter.versions,
+        },
+        new AbortController().signal,
+      );
+      noOwnedContainers();
+      assert(
+        outcome.status === "review_required",
+        `Unexpected extraction status: ${outcome.status}`,
+      );
+      assert(!outcome.scoringEligible);
+      assert.deepEqual(
+        outcome.pages.map(({ pageNumber }) => pageNumber),
+        pages,
+      );
+      const actual = [...pageTexts];
+      for (const page of outcome.pages) actual[page.pageNumber - 1] = page.text;
+      if (fixture.segment === "mixed")
+        assert(actual[1] === fixture.expectedPageTexts[1]);
+      const spans = actual.flatMap((text, index) => {
+        const page = index + 1;
+        const pageId = `page-${page}`;
+        const method = pages.includes(page) ? "local_ocr" : "native_text";
+        return text
+          .split("\n")
+          .map(
+            (line, order) =>
+              ({
+                text: line,
+                id: `${pageId}-line-${order + 1}`,
+                pageId,
+                page,
+                method,
+              }) as const,
+          )
+          .filter(({ text }) => text.trim());
+      });
+      results.push({
+        fixture: fixture.id,
+        segment: fixture.segment,
+        variant,
+        selectedPages: pages,
+        punctuation: marks(fixture.expectedPageTexts, actual),
+        transcription: evaluateOcrDocument(fixture.expectedPageTexts, actual),
+        fields: evaluateOcrFields(
+          fixture.labels,
+          extractEvidenceFields(spans, MIXED_OCR_FIELD_PROFILE_V4),
+          spans,
+        ),
+      });
+    }
+  }
+  return { results, cleanupVerified: true, scoringEligible: false };
+}
+
+if (mode === "--manifest-only") {
+  process.stdout.write(JSON.stringify(manifest, null, 2) + "\n");
+} else {
+  const registered = readFileSync(registeredPath);
+  assert.equal(
+    JSON.stringify(manifest),
+    JSON.stringify(JSON.parse(registered.toString())),
+    "Registered inputs drifted",
+  );
+  const result = { registrationSha256: hash(registered), ...(await compare()) };
+  process.stdout.write(JSON.stringify(result, null, 2) + "\n");
+}

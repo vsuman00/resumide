@@ -1,0 +1,30 @@
+{
+  "status": "ALLOCATED_LOCALIZED_FIX",
+  "task": "CR-A01-I01",
+  "parentContractSha256": "233b6451b115fd1d09f8edd4db2c987d122a51a57fe5f65cd00a7b658a7bc542",
+  "owner": "backend",
+  "files": [
+    "app/lib/server/parsing/contact.ts",
+    "tests/unit/parsing/contact.test.ts",
+    "tests/unit/preparation-whitespace.test.ts"
+  ],
+  "preimages": {
+    "app/lib/server/parsing/contact.ts": "e5b1959000b229a3f22e52e5cda6abc30bbfd2e8b6f18b55d1d907db3ebb5579",
+    "tests/unit/parsing/contact.test.ts": "2803d98abd8cae2a469aa8e59c868dc039e299aec07483205ee4dcda255f9bf1",
+    "tests/unit/preparation-whitespace.test.ts": null
+  },
+  "profileReceiptSha256": "ca0e1d9043699d37f9cf0372446813775dd12d342a34e3567248d9fdcbf269a0",
+  "profileLogSha256": "2d9ca4d778a94106ed085d22a757dc578f8151c7ff74f269c8b5cc1a1195747d",
+  "measured": {
+    "normalMs": 87.497875,
+    "boundedLinesMs": 106.218959,
+    "singleLongMs": 7790.734792,
+    "contactMaximumMs": 7683.728709,
+    "nativeBuilderMs": 7684.947084,
+    "inclusiveTimesOverlap": true
+  },
+  "authorizedChange": "Only detectLocation splitter becomes /[|\u2022\u00b7]/u; retain label-strip/trim/first15/line order/raw text/offsets/candidate limit and all old semantics. No new cap, normalization, policy, dependency or timeout.",
+  "testRequirements": "All3separators, labels/case/Unicode boundary whitespace, consecutive/empty fragments, long whitespace +valid tail, raw Unicode and interior-whitespace behavior, first15 cutoff; original whole builder case passes original5s. Same staged profile once after fix, remove temporary instrumentation before final regression, preserving all original expectations and cases.",
+  "claimLimit": "Intrinsic shared contact/native parser reproduction; exact100001-space+content source exceeds default PDF100k ingress cap. No reproduced default PDF upload exploit or production latency SLA.",
+  "boundaries": "Existing source/synthetic/fakeRPC strict sealed supervisor only; no DB/provider/browser/NativeSQL/real data/services/Git/deploy."
+}

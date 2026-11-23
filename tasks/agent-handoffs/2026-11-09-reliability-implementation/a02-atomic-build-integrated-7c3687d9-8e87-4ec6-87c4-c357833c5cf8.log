@@ -1,0 +1,53 @@
+
+> test
+> vitest run tests/unit/privacy-operations.test.ts tests/unit/grouped-original-admission-sql.test.ts tests/components/BuildAiAssistant.test.tsx tests/unit/build-assist.test.ts tests/unit/build-assist-service.test.ts tests/unit/canonical-correction-repository.test.ts tests/unit/canonical-sql-contract.test.ts
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats
+
+ ❯ tests/unit/canonical-sql-contract.test.ts (1 test | 1 failed) 13ms
+     × keeps the SQL payload validator identical to the versioned application shape 12ms
+ ✓ tests/unit/privacy-operations.test.ts (34 tests) 34ms
+ ✓ tests/unit/grouped-original-admission-sql.test.ts (15 tests) 21ms
+ ✓ tests/unit/build-assist.test.ts (158 tests) 45ms
+ ✓ tests/unit/build-assist-service.test.ts (32 tests) 81ms
+ ✓ tests/unit/canonical-correction-repository.test.ts (41 tests) 112ms
+ ✓ tests/components/BuildAiAssistant.test.tsx (28 tests) 501ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/canonical-sql-contract.test.ts > canonical cross-language schema contract > keeps the SQL payload validator identical to the versioned application shape
+AssertionError: expected { …(5) } to deeply equal { …(6) }
+
+- Expected
++ Received
+
+@@ -236,11 +236,10 @@
+      "producerVersion": {
+        "enum": [
+          "canonical-engine/1.0.0",
+          "canonical-engine/1.0.1",
+          "canonical-engine/1.0.2",
+-         "canonical-engine/1.0.3",
+        ],
+        "type": "string",
+      },
+      "resumeId": {
+        "format": "uuid",
+
+ ❯ tests/unit/canonical-sql-contract.test.ts:20:33
+     18|     const schema = migration.match(/\$schema\$(.*?)\$schema\$/su)?.[1];
+     19|     expect(schema).toBeDefined();
+     20|     expect(JSON.parse(schema!)).toEqual(
+       |                                 ^
+     21|       z.toJSONSchema(CanonicalResumeDraftSchema, { target: "draft-7" }…
+     22|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 6 passed (7)
+      Tests  1 failed | 308 passed (309)
+   Start at  19:25:29
+   Duration  1.27s (transform 881ms, setup 0ms, import 1.50s, tests 806ms, environment 560ms)
+

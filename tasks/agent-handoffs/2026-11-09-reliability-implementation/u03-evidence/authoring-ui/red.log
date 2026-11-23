@@ -1,0 +1,176 @@
+
+> test
+> vitest run tests/components/WorkspaceRepairs.test.tsx -t U03
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+stderr | tests/components/WorkspaceRepairs.test.tsx > U03 resets acknowledgement after editing the clarification answer
+No `HydrateFallback` element provided to render during initial hydration
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx (10 tests | 5 failed | 5 skipped) 739ms
+   ↓ rebinds writing selection and clears clarification text and confirmation when focus changes
+   ↓ provides Privacy and the current-session sign-out form on mobile surfaces
+   ↓ shows a partial result as saved while marking qualitative feedback unavailable
+   ↓ shows saved extraction as needing review and later stages as blocked
+   ↓ does not label cancelled work as pending or active
+   × U03 resets acknowledgement after editing the clarification answer 199ms
+   × U03 resets same-target acknowledgement after version changes while retaining its draft 117ms
+   × U03 resets retained-correction acknowledgement after current head or draft changes 99ms
+   × U03 resets proposal and recovery acknowledgements after persisted history restore 148ms
+   × U03 confirms the displayed current fact while preserving the separate exact retry 176ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 resets acknowledgement after editing the clarification answer
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:338:59
+    336|   expect(checkbox.checked).toBe(true);
+    337|   fireEvent.change(answer, { target: { value: "Changed answer" } });
+    338|   expect(reviewCheckbox(answer.closest("form")!).checked).toBe(false);
+       |                                                           ^
+    339|   expect(answer.value).toBe("Changed answer");
+    340| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 resets same-target acknowledgement after version changes while retaining its draft
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:359:60
+    357|   await view.revalidate();
+    358|   const current = clarificationAnswer();
+    359|   expect(reviewCheckbox(current.closest("form")!).checked).toBe(false);
+       |                                                            ^
+    360|   expect(current.value).toBe("My unsaved answer");
+    361|   expect(new FormData(current.closest("form")!).get("expectedVersionId…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 resets retained-correction acknowledgement after current head or draft changes
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:380:55
+    378|   };
+    379|   await view.revalidate();
+    380|   expect.soft(reviewCheckbox(recoveryForm()).checked).toBe(false);
+       |                                                       ^
+    381|   if (!reviewCheckbox(recoveryForm()).checked)
+    382|     fireEvent.click(reviewCheckbox(recoveryForm()));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 resets retained-correction acknowledgement after current head or draft changes
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:391:55
+    389|   };
+    390|   await view.revalidate();
+    391|   expect.soft(reviewCheckbox(recoveryForm()).checked).toBe(false);
+       |                                                       ^
+    392|   expect(new FormData(recoveryForm()).get("value")).toBe(
+    393|     "Different retained correction",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 resets proposal and recovery acknowledgements after persisted history restore
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:409:49
+    407|   fireEvent.click(reviewCheckbox(recoveryForm()));
+    408|   fireEvent(window, new PageTransitionEvent("pageshow", { persisted: t…
+    409|   expect.soft(reviewCheckbox(proposal).checked).toBe(false);
+       |                                                 ^
+    410|   expect.soft(reviewCheckbox(recoveryForm()).checked).toBe(false);
+    411| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 resets proposal and recovery acknowledgements after persisted history restore
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:410:55
+    408|   fireEvent(window, new PageTransitionEvent("pageshow", { persisted: t…
+    409|   expect.soft(reviewCheckbox(proposal).checked).toBe(false);
+    410|   expect.soft(reviewCheckbox(recoveryForm()).checked).toBe(false);
+       |                                                       ^
+    411| });
+    412|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 confirms the displayed current fact while preserving the separate exact retry
+AssertionError: expected 'c93281a0-360f-469d-ba53-19ea3a95dc8f' to be 'f1e6f02f-d1c6-4b3b-b655-d08d223627b4' // Object.is equality
+
+Expected: "f1e6f02f-d1c6-4b3b-b655-d08d223627b4"
+Received: "c93281a0-360f-469d-ba53-19ea3a95dc8f"
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:437:6
+    435|   expect
+    436|     .soft(new FormData(confirm).get("expectedVersionId"))
+    437|     .toBe(model.document.versionId);
+       |      ^
+    438|   expect
+    439|     .soft(new FormData(confirm).get("idempotencyKey"))
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 confirms the displayed current fact while preserving the separate exact retry
+AssertionError: expected 'f078619e-f32c-42c6-88d1-1b227f21733b' to be 'b5cc497e-234d-4cf2-80e9-63af1aa5f2fa' // Object.is equality
+
+Expected: "b5cc497e-234d-4cf2-80e9-63af1aa5f2fa"
+Received: "f078619e-f32c-42c6-88d1-1b227f21733b"
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:440:6
+    438|   expect
+    439|     .soft(new FormData(confirm).get("idempotencyKey"))
+    440|     .toBe(model.formKeys[`confirm:${fact.id}`]);
+       |      ^
+    441|   expect(new FormData(confirm).get("targetFactId")).toBe(fact.id);
+    442|   expect(new FormData(retry).get("expectedVersionId")).toBe(oldVersion…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 5 skipped (10)
+   Start at  23:01:55
+   Duration  1.58s (transform 159ms, setup 0ms, import 296ms, tests 739ms, environment 480ms)
+

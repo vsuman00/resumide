@@ -1,11 +1,16 @@
 import { isDeepStrictEqual } from "node:util";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { createSupabaseAdminClient } from "./supabase";
 import { loadCanonical, CanonicalError } from "./canonical-repository";
 import { reviseCanonical, rollbackCanonical } from "./canonical-content";
+import type { CanonicalResumeDraft } from "./canonical-resume-schema";
 import {
   AuthoringCommandSchema,
+  assertAuthoringDiagnosticsAllowed,
+  TypedAuthoringPausedError,
+  TYPED_AUTHORING_PAUSED_MESSAGE,
+  ClarificationKind,
   BulletPattern,
   buildFindings,
   buildSuggestion,
@@ -15,10 +20,113 @@ import {
   type AuthoringCommand,
 } from "./authoring-contract";
 import { loadScoreDiagnostics } from "./score-v2-repository";
+import type { ScoreDiagnostics } from "./score-v2-engine";
+import type { TypedScoreDiagnostics } from "./typed-score-diagnostics";
+function requireProposalDiagnostics(
+  diagnostics: ScoreDiagnostics | TypedScoreDiagnostics,
+): asserts diagnostics is ScoreDiagnostics {
+  try {
+    assertAuthoringDiagnosticsAllowed(diagnostics);
+  } catch (error) {
+    if (error instanceof TypedAuthoringPausedError)
+      throw new CanonicalError(503, TYPED_AUTHORING_PAUSED_MESSAGE);
+    throw error;
+  }
+}
 type Client = Pick<
   ReturnType<typeof createSupabaseAdminClient>,
   "from" | "rpc"
 >;
+const ClarificationPreviewRequestSchema = z.strictObject({
+  action: z.literal("preview_clarification"),
+  expectedVersionId: z.uuid(),
+  idempotencyKey: z.uuid(),
+  targetFactId: z.uuid(),
+  questionKind: ClarificationKind,
+  value: z.string().min(1).max(300),
+});
+const ReviewedValueHashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
+export type ClarificationPreviewRequest = z.infer<
+  typeof ClarificationPreviewRequestSchema
+>;
+type ClarificationCommand = Extract<AuthoringCommand, { action: "clarify" }>;
+export type AuthoringFormInput =
+  | Exclude<AuthoringCommand, { action: "clarify" }>
+  | (ClarificationCommand & { reviewedValueHash?: string })
+  | ClarificationPreviewRequest;
+export type ClarificationPreview = {
+  schemaVersion: "clarification-preview/1.0.0";
+  command: Omit<ClarificationCommand, "confirmation">;
+  beforeValue: string;
+  reviewedValue: string;
+  reviewedValueHash: string;
+};
+
+function deriveClarificationReview(
+  document: CanonicalResumeDraft,
+  request: Pick<
+    ClarificationPreviewRequest,
+    "targetFactId" | "questionKind" | "value"
+  >,
+) {
+  const target = document.facts.find(
+    (fact) => fact.id === request.targetFactId,
+  );
+  if (!target || target.type !== "contribution")
+    throw new CanonicalError(422, "Choose a contribution to clarify.");
+  let reviewedValue;
+  try {
+    reviewedValue = clarifyValue(
+      target.value,
+      request.questionKind,
+      request.value,
+    );
+  } catch {
+    throw new CanonicalError(422, "Provide a bounded clarification answer.");
+  }
+  return {
+    beforeValue: target.value,
+    reviewedValue,
+    reviewedValueHash: createHash("sha256")
+      .update(reviewedValue, "utf8")
+      .digest("hex"),
+  };
+}
+
+export async function previewClarification(
+  client: Client,
+  analysisId: string,
+  ownerId: string,
+  raw: unknown,
+): Promise<ClarificationPreview> {
+  const parsed = ClarificationPreviewRequestSchema.safeParse(raw);
+  if (!parsed.success)
+    throw new CanonicalError(422, "Submit a valid clarification preview.");
+  const request = parsed.data;
+  const canonical = await loadCanonical(client, analysisId, ownerId, {
+    versionId: request.expectedVersionId,
+  });
+  if (!canonical.current)
+    throw new CanonicalError(404, "Structured resume not found.");
+  if (canonical.headId !== request.expectedVersionId)
+    throw new CanonicalError(
+      409,
+      "The resume changed. Reload before reviewing.",
+    );
+  return {
+    schemaVersion: "clarification-preview/1.0.0",
+    command: {
+      action: "clarify",
+      expectedVersionId: request.expectedVersionId,
+      idempotencyKey: request.idempotencyKey,
+      targetFactId: request.targetFactId,
+      questionKind: request.questionKind,
+      value: request.value,
+    },
+    ...deriveClarificationReview(canonical.current.document, request),
+  };
+}
+
 const event = z.object({
   id: z.uuid(),
   action: z.enum([
@@ -43,20 +151,33 @@ export async function loadAuthoring(
   model: Awaited<ReturnType<typeof loadScoreDiagnostics>>,
   focus?: string,
 ) {
+  requireProposalDiagnostics(model.diagnostics);
+  const pendingEvents = Promise.resolve()
+    .then(() =>
+      client
+        .from("authoring_events")
+        .select(
+          "id,action,base_version_id,result_version_id,created_at,command",
+        )
+        .eq("analysis_id", analysisId)
+        .eq("owner_id", ownerId)
+        .order("created_at", { ascending: false })
+        .order("id")
+        .limit(20),
+    )
+    .then(
+      (value) => ({ value }),
+      (error: unknown) => ({ error }),
+    );
   const c = await loadCanonical(client, analysisId, ownerId, {
     versionId: model.canonical.versionId,
   });
   if (!c.current || c.headId !== model.canonical.headId)
     throw new CanonicalError(409, "The resume changed. Reload before editing.");
   const doc = c.current.document;
-  const events = await client
-    .from("authoring_events")
-    .select("id,action,base_version_id,result_version_id,created_at,command")
-    .eq("analysis_id", analysisId)
-    .eq("owner_id", ownerId)
-    .order("created_at", { ascending: false })
-    .order("id")
-    .limit(20);
+  const eventsResult = await pendingEvents;
+  if ("error" in eventsResult) throw eventsResult.error;
+  const events = eventsResult.value;
   const parsed = z.array(event).safeParse(events.data);
   if (events.error || !parsed.success)
     throw new CanonicalError(503, "Authoring history is unavailable.");
@@ -128,6 +249,7 @@ export async function applyAuthoring(
   ownerId: string,
   raw: unknown,
   requestId: string,
+  reviewedValueHash?: string,
 ) {
   const parsed = AuthoringCommandSchema.safeParse(raw);
   if (!parsed.success)
@@ -139,6 +261,22 @@ export async function applyAuthoring(
   });
   if (!canonical.current)
     throw new CanonicalError(404, "Structured resume not found.");
+  let clarificationReview: ReturnType<typeof deriveClarificationReview> | null =
+    null;
+  if (cmd.action === "clarify" && reviewedValueHash !== undefined) {
+    clarificationReview = deriveClarificationReview(
+      canonical.current.document,
+      cmd,
+    );
+    if (
+      !ReviewedValueHashSchema.safeParse(reviewedValueHash).success ||
+      clarificationReview.reviewedValueHash !== reviewedValueHash
+    )
+      throw new CanonicalError(
+        422,
+        "Preview the complete statement again before confirming it.",
+      );
+  }
   const prior = await client
     .from("authoring_events")
     .select("command,result")
@@ -197,6 +335,11 @@ export async function applyAuthoring(
       );
     return { ...receipt.data, idempotent: true };
   }
+  if (cmd.action === "clarify" && !clarificationReview)
+    throw new CanonicalError(
+      422,
+      "Preview the complete statement before confirming it.",
+    );
   if (!prior.data && canonical.headId !== cmd.expectedVersionId)
     throw new CanonicalError(409, "The resume changed. Reload before editing.");
   const doc = canonical.current.document;
@@ -204,9 +347,16 @@ export async function applyAuthoring(
     confirmationBody = null;
   try {
     if (cmd.action === "accept" || cmd.action === "reject") {
-      const score = await loadScoreDiagnostics(client, analysisId, ownerId, {
-        canonical: cmd.expectedVersionId,
-      });
+      const score = await loadScoreDiagnostics(
+        client,
+        analysisId,
+        ownerId,
+        {
+          canonical: cmd.expectedVersionId,
+        },
+        canonical,
+      );
+      requireProposalDiagnostics(score.diagnostics);
       if (cmd.action === "accept")
         validateSuggestion(cmd.patch, doc, score.diagnostics);
       else if (
@@ -243,10 +393,11 @@ export async function applyAuthoring(
       const target = doc.facts.find((f) => f.id === wire.targetFactId);
       if (!target || target.type !== "contribution")
         throw Error("INVALID_TARGET");
-      const value =
-        cmd.action === "clarify"
-          ? clarifyValue(target.value, cmd.questionKind, cmd.value)
-          : cmd.patch.operations[0].value;
+      let value: string;
+      if (cmd.action === "clarify") {
+        if (!clarificationReview) throw Error("MISSING_CLARIFICATION_REVIEW");
+        value = clarificationReview.reviewedValue;
+      } else value = cmd.patch.operations[0].value;
       body = reviseCanonical(doc, {
         operation: "edit",
         factId: target.id,
@@ -331,7 +482,7 @@ export async function applyAuthoring(
 }
 export async function readAuthoringForm(
   request: Request,
-): Promise<AuthoringCommand> {
+): Promise<AuthoringFormInput> {
   if (
     !/^application\/x-www-form-urlencoded(?:;|$)/iu.test(
       request.headers.get("content-type") ?? "",
@@ -374,6 +525,7 @@ export async function readAuthoringForm(
         "confirmation",
         "patch",
         "targetVersionId",
+        "reviewedValueHash",
       ].includes(key) ||
       Object.hasOwn(values, key)
     )
@@ -386,8 +538,24 @@ export async function readAuthoringForm(
       }
     } else values[key] = key === "confirmation" ? value === "true" : value;
   }
+  if (values.action === "preview_clarification") {
+    const result = ClarificationPreviewRequestSchema.safeParse(values);
+    if (!result.success)
+      throw new CanonicalError(422, "Submit a valid clarification preview.");
+    return result.data;
+  }
+  let reviewedValueHash: string | undefined;
+  if (Object.hasOwn(values, "reviewedValueHash")) {
+    const hash = ReviewedValueHashSchema.safeParse(values.reviewedValueHash);
+    if (values.action !== "clarify" || !hash.success)
+      throw new CanonicalError(422, "Submit a valid reviewed statement.");
+    reviewedValueHash = hash.data;
+    delete values.reviewedValueHash;
+  }
   const result = AuthoringCommandSchema.safeParse(values);
   if (!result.success)
     throw new CanonicalError(422, "Submit a valid authoring action.");
-  return result.data;
+  return result.data.action === "clarify" && reviewedValueHash !== undefined
+    ? { ...result.data, reviewedValueHash }
+    : result.data;
 }

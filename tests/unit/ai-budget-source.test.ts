@@ -1,0 +1,655 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  AiBudgetError,
+  hashAiBudgetBinding,
+} from "../../app/lib/server/ai-budget";
+import {
+  createAiBudgetOperationId,
+  runBudgetedAiAttempt,
+} from "../../app/lib/server/ai-budget-attempt";
+import {
+  createSourceBoundAiBudgetClient,
+  createSourceBoundAiBudgetOperationId,
+  withAiBudgetSourceReadiness,
+  type AiBudgetSourceScope,
+} from "../../app/lib/server/ai-budget-source";
+import {
+  AI_BUDGET_SOURCE_PROFILE,
+  AI_BUDGET_SOURCE_PROFILES,
+  AI_BUDGET_SOURCE_REGROUP_PROFILE,
+} from "../../app/lib/server/ai-budget-source-profile";
+const scope = {
+  userId: "11111111-1111-4111-8111-111111111111",
+  organizationId: "22222222-2222-4222-8222-222222222222",
+  source: {
+    schemaVersion: "ai-budget-source/1.0.0",
+    kind: "legacy_rewrite",
+    analysisId: "33333333-3333-4333-8333-333333333333",
+    resumeVersionId: "44444444-4444-4444-8444-444444444444",
+    requestNonce: "shared-request",
+  },
+} satisfies AiBudgetSourceScope;
+// Author-private metadata only. Production callers must import actual backend pins.
+const profile = {
+  schemaVersion: "ai-budget-source-readiness/2.0.0" as const,
+  profileVersion: "ai-budget-source-profile/2.0.0" as const,
+  checkerSha256: "1".repeat(64),
+  reserveSha256: "2".repeat(64),
+  exportSha256: "3".repeat(64),
+  metadataSha256: "4".repeat(64),
+};
+const ready = () => ({
+  ...profile,
+  schemaReady: true,
+  reserveExecutable: true,
+  exportExecutable: false,
+});
+it.each([
+  ["export-generation", AI_BUDGET_SOURCE_PROFILE, true],
+  ["regroup", AI_BUDGET_SOURCE_REGROUP_PROFILE, true],
+  [
+    "mixed",
+    {
+      ...AI_BUDGET_SOURCE_REGROUP_PROFILE,
+      reserveSha256: AI_BUDGET_SOURCE_PROFILE.reserveSha256,
+    },
+    false,
+  ],
+] as const)(
+  "checks the complete %s budget profile",
+  async (_name, installed, allowed) => {
+    const rpc = vi.fn().mockResolvedValue({
+      data: { ...ready(), ...installed },
+      error: null,
+    });
+    const run = vi.fn().mockResolvedValue("admitted");
+    const request = withAiBudgetSourceReadiness(
+      { rpc },
+      AI_BUDGET_SOURCE_PROFILES,
+      "reserveExecutable",
+      run,
+    );
+    if (allowed) {
+      await expect(request).resolves.toBe("admitted");
+      expect(run).toHaveBeenCalledOnce();
+    } else {
+      await expect(request).rejects.toMatchObject({
+        code: "AI_BUDGET_UNAVAILABLE",
+      });
+      expect(run).not.toHaveBeenCalled();
+    }
+    expect(rpc).toHaveBeenCalledExactlyOnceWith(
+      "read_ai_budget_source_readiness",
+      {},
+    );
+  },
+);
+const binding = () => ({
+  userId: scope.userId,
+  organizationId: scope.organizationId,
+  operationId: createSourceBoundAiBudgetOperationId(scope),
+  attemptId: "55555555-5555-4555-8555-555555555555",
+  surface: "rewrite" as const,
+  payloadSha256: "a".repeat(64),
+  model: "synthetic-model",
+  promptPolicyVersion: "synthetic-prompt/1",
+  policyVersion: "synthetic-budget/1",
+  reservedInputTokens: 8,
+  reservedOutputTokens: 4,
+});
+type Reply = { data: unknown; error: unknown };
+function query(raw: Reply | Promise<Reply>, ignoreAbort = false) {
+  const pending = Promise.resolve(raw),
+    aborted = vi.fn();
+  return Object.assign(pending, {
+    aborted,
+    abortSignal: vi.fn((signal: AbortSignal) =>
+      ignoreAbort
+        ? pending
+        : new Promise<Reply>((resolve, reject) => {
+            const abort = () => {
+              aborted();
+              reject(Error("PRIVATE_ABORT"));
+            };
+            if (signal.aborted) abort();
+            else signal.addEventListener("abort", abort, { once: true });
+            void pending.then(
+              (value) => {
+                signal.removeEventListener("abort", abort);
+                resolve(value);
+              },
+              (error) => {
+                signal.removeEventListener("abort", abort);
+                reject(error);
+              },
+            );
+          }),
+    ),
+  });
+}
+function receipt(patch: Record<string, unknown> = {}) {
+  const b = { ...binding(), attemptOrdinal: 1 };
+  return {
+    schemaVersion: "ai-budget/1.0.0",
+    ...b,
+    bindingSha256: hashAiBudgetBinding(b),
+    period: "2026-11-01",
+    state: "reserved",
+    reservedInputTokens: "8",
+    reservedOutputTokens: "4",
+    reservedCostMicrousd: "16",
+    actualInputTokens: null,
+    actualOutputTokens: null,
+    actualCostMicrousd: null,
+    replayed: false,
+    dispatchAllowed: false,
+    poolBlocked: false,
+    attemptLimit: 3,
+    poolPolicyVersion: "synthetic-pool/1",
+    inputMicrousdPerMillion: "1000000",
+    outputMicrousdPerMillion: "2000000",
+    ...patch,
+  };
+}
+function fixture(metadata: unknown = ready()) {
+  let state = receipt();
+  const rpc = vi.fn((name: string, args: Record<string, unknown>) => {
+    if (name === "read_ai_budget_source_readiness")
+      return query({ data: metadata, error: null });
+    if (name === "ai_budget_reserve_source_next")
+      return query({
+        data: {
+          schemaVersion: "ai-budget/1.0.0",
+          status: "ok",
+          receipt: state,
+        },
+        error: null,
+      });
+    if (name === "ai_budget_claim_dispatch")
+      state = receipt({ state: "dispatched", dispatchAllowed: true });
+    else if (name === "ai_budget_release")
+      state = receipt({ state: "released" });
+    else if (name === "ai_budget_mark_unknown")
+      state = receipt({ state: "held_unknown" });
+    else if (name === "ai_budget_settle") {
+      const p = args.p_request as {
+        usage: { inputTokens: string; outputTokens: string };
+      };
+      state = receipt({
+        state: "settled",
+        actualInputTokens: p.usage.inputTokens,
+        actualOutputTokens: p.usage.outputTokens,
+        actualCostMicrousd: String(
+          Number(p.usage.inputTokens) + 2 * Number(p.usage.outputTokens),
+        ),
+      });
+    } else throw Error("UNEXPECTED_GENERIC_RPC");
+    return query({
+      data: { schemaVersion: "ai-budget/1.0.0", status: "ok", receipt: state },
+      error: null,
+    });
+  });
+  return {
+    rpc,
+    client: createSourceBoundAiBudgetClient({ rpc }, scope, profile),
+    setState(value: Record<string, unknown>) {
+      state = receipt(value);
+    },
+  };
+}
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
+describe("OP2 independent codec vectors", () => {
+  it.each([
+    { source: scope.source, expected: "7cd53f15-ba8c-8625-9698-4604dabfcb4b" },
+    {
+      source: {
+        ...scope.source,
+        analysisId: "55555555-5555-4555-8555-555555555555",
+      },
+      expected: "033a7039-590c-8638-b36a-a578dedcf2a9",
+    },
+    {
+      source: {
+        ...scope.source,
+        resumeVersionId: "66666666-6666-4666-8666-666666666666",
+      },
+      expected: "15ae9c0b-12a2-8850-a718-33237bcc533a",
+    },
+    {
+      source: { ...scope.source, requestNonce: " " },
+      expected: "3a4d4106-1f24-8dc3-9b3c-12b3c76b3b03",
+    },
+    {
+      source: { ...scope.source, requestNonce: "a".repeat(128) },
+      expected: "05dff7c7-f067-86a1-a31b-7d95f2e83fce",
+    },
+  ])("matches Root's independent Python bytes %#", ({ source, expected }) =>
+    expect(createSourceBoundAiBudgetOperationId({ ...scope, source })).toBe(
+      expected,
+    ),
+  );
+  it("keeps exact spaces, source distinctions and the old OP1 separate", () => {
+    expect(
+      createSourceBoundAiBudgetOperationId({
+        ...scope,
+        source: { ...scope.source, requestNonce: " shared-request " },
+      }),
+    ).not.toBe(createSourceBoundAiBudgetOperationId(scope));
+    expect(
+      createAiBudgetOperationId({
+        userId: scope.userId,
+        organizationId: scope.organizationId,
+        surface: "rewrite",
+        nonce: scope.source.requestNonce,
+      }),
+    ).not.toBe(createSourceBoundAiBudgetOperationId(scope));
+  });
+  it.each([
+    null,
+    {},
+    { ...scope, userId: "AAAAAAAA-1111-4111-8111-111111111111" },
+    { ...scope, source: { ...scope.source, extra: true } },
+    ...["", "a".repeat(129), "line\nbreak", "nonascii-é"].map(
+      (requestNonce) => ({
+        ...scope,
+        source: { ...scope.source, requestNonce },
+      }),
+    ),
+  ])("refuses malformed JS scope before RPC %#", (input) => {
+    const rpc = vi.fn();
+    expect(() =>
+      createSourceBoundAiBudgetClient({ rpc }, input as never, profile),
+    ).toThrow(AiBudgetError);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+});
+describe("source-only reserve bridge", () => {
+  it("rewrites reserve_next only, sends exact source bytes, and reuses the strict receipt decoder", async () => {
+    const f = fixture();
+    const r = await f.client.reserveNext(binding());
+    expect(r.attemptOrdinal).toBe(1);
+    expect(f.rpc.mock.calls.map(([name]) => name)).toEqual([
+      "read_ai_budget_source_readiness",
+      "ai_budget_reserve_source_next",
+    ]);
+    const expectedRequest = {
+      ...binding(),
+      reservedInputTokens: "8",
+      reservedOutputTokens: "4",
+    };
+    Reflect.deleteProperty(expectedRequest, "userId");
+    Reflect.deleteProperty(expectedRequest, "organizationId");
+    expect(f.rpc.mock.calls[1][1]).toStrictEqual({
+      p_user_id: scope.userId,
+      p_organization_id: scope.organizationId,
+      p_source: scope.source,
+      p_request: expectedRequest,
+    });
+  });
+  it.each([
+    "user",
+    "organization",
+    "operation",
+    "surface",
+    "analysis",
+    "version",
+    "nonce",
+  ])("refuses a mismatched source-bound %s before RPC", async (field) => {
+    const rpc = vi.fn();
+    const changed = structuredClone(scope),
+      b = binding();
+    if (field === "user") b.userId = scope.organizationId;
+    if (field === "organization") b.organizationId = scope.userId;
+    if (field === "operation") b.operationId = scope.source.analysisId;
+    if (field === "surface") Reflect.set(b, "surface", "build");
+    if (field === "analysis") changed.source.analysisId = scope.organizationId;
+    if (field === "version")
+      changed.source.resumeVersionId = scope.organizationId;
+    if (field === "nonce") changed.source.requestNonce = "other-nonce";
+    const c = createSourceBoundAiBudgetClient({ rpc }, changed, profile);
+    await expect(c.reserveNext(b)).rejects.toThrow(AiBudgetError);
+    expect(rpc).not.toHaveBeenCalled();
+  });
+  it.each([
+    null,
+    {},
+    { ...ready(), schemaReady: false },
+    { ...ready(), reserveExecutable: false },
+    { ...ready(), extra: true },
+    ...Object.keys(profile).map((key) => ({
+      ...ready(),
+      [key]: key.endsWith("Sha256") ? "0".repeat(64) : "wrong",
+    })),
+  ])(
+    "refuses malformed/denied current metadata %# without legacy reserve",
+    async (metadata) => {
+      const f = fixture(metadata);
+      await expect(f.client.reserveNext(binding())).rejects.toThrow(
+        AiBudgetError,
+      );
+      expect(f.rpc).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("rejects generic ordinal reserve, malformed receipt and explicit source denial", async () => {
+    const f = fixture();
+    await expect(
+      f.client.reserve({ ...binding(), attemptOrdinal: 1 }),
+    ).rejects.toThrow();
+    expect(f.rpc).not.toHaveBeenCalled();
+    f.setState({ bindingSha256: "0".repeat(64) });
+    await expect(f.client.reserveNext(binding())).rejects.toThrow();
+    const original = f.rpc.getMockImplementation()!;
+    f.rpc.mockImplementation((name, args) =>
+      name === "ai_budget_reserve_source_next"
+        ? query({
+            data: {
+              schemaVersion: "ai-budget/1.0.0",
+              status: "denied",
+              code: "AI_BUDGET_CONFLICT",
+            },
+            error: null,
+          })
+        : original(name, args),
+    );
+    await expect(f.client.reserveNext(binding())).rejects.toMatchObject({
+      code: "AI_BUDGET_CONFLICT",
+    });
+    expect(
+      f.rpc.mock.calls.some(([name]) => name === "ai_budget_reserve_next"),
+    ).toBe(false);
+  });
+  it("delegates post-reserve claims and settlement without another Node readiness lookup", async () => {
+    const f = fixture(),
+      b = { ...binding(), attemptOrdinal: 1 };
+    await f.client.reserveNext(binding());
+    f.rpc.mockClear();
+    await f.client.claimDispatch(b);
+    await f.client.settle(b, { inputTokens: 7, outputTokens: 3 });
+    expect(f.rpc.mock.calls.map(([name]) => name)).toEqual([
+      "ai_budget_claim_dispatch",
+      "ai_budget_settle",
+    ]);
+    expect(f.rpc.mock.calls[1][1]).toMatchObject({
+      p_request: {
+        operationId: b.operationId,
+        attemptId: b.attemptId,
+        usage: { inputTokens: "7", outputTokens: "3" },
+      },
+    });
+  });
+  it("does not redispatch a replayed dispatched or unknown reservation", async () => {
+    for (const state of ["dispatched", "held_unknown", "settled"]) {
+      const f = fixture();
+      f.setState({
+        state,
+        replayed: true,
+        ...(state === "settled"
+          ? {
+              actualInputTokens: "7",
+              actualOutputTokens: "3",
+              actualCostMicrousd: "13",
+            }
+          : {}),
+      });
+      const execute = vi.fn();
+      await expect(
+        runBudgetedAiAttempt({ client: f.client, binding: binding(), execute }),
+      ).rejects.toMatchObject({ code: "AI_BUDGET_STATE" });
+      expect(execute).not.toHaveBeenCalled();
+      expect(
+        f.rpc.mock.calls.some(([name]) => name === "ai_budget_claim_dispatch"),
+      ).toBe(false);
+    }
+  });
+  it("releases the exact reserved binding on cancellation before dispatch", async () => {
+    const f = fixture(),
+      controller = new AbortController(),
+      execute = vi.fn();
+    await expect(
+      runBudgetedAiAttempt({
+        client: f.client,
+        binding: binding(),
+        signal: controller.signal,
+        onAdmitted: () => controller.abort(),
+        execute,
+      }),
+    ).rejects.toThrow();
+    expect(f.rpc.mock.calls.at(-1)).toEqual([
+      "ai_budget_release",
+      expect.objectContaining({
+        p_request: expect.objectContaining({
+          operationId: binding().operationId,
+          attemptId: binding().attemptId,
+          attemptOrdinal: 1,
+        }),
+      }),
+    ]);
+    expect(execute).not.toHaveBeenCalled();
+  });
+  it("keeps known and unknown accounting after cancellation", async () => {
+    const f = fixture(),
+      controller = new AbortController();
+    await expect(
+      runBudgetedAiAttempt({
+        client: f.client,
+        binding: binding(),
+        signal: controller.signal,
+        execute: async (record) => {
+          record({ inputTokens: 7, outputTokens: 3 });
+          controller.abort();
+          throw Error("synthetic-cancelled");
+        },
+      }),
+    ).rejects.toThrow();
+    expect(f.rpc.mock.calls.at(-1)?.[0]).toBe("ai_budget_settle");
+    const unknown = fixture();
+    await expect(
+      runBudgetedAiAttempt({
+        client: unknown.client,
+        binding: binding(),
+        execute: async () => {
+          throw Error("synthetic-unknown");
+        },
+      }),
+    ).rejects.toThrow();
+    expect(unknown.rpc.mock.calls.at(-1)?.[0]).toBe("ai_budget_mark_unknown");
+  });
+  it("shares one bounded metadata/reserve deadline and refuses ignored cancellation", async () => {
+    vi.useFakeTimers();
+    const f = fixture();
+    const metadata = query(
+      new Promise<Reply>((resolve) =>
+        setTimeout(() => resolve({ data: ready(), error: null }), 15),
+      ),
+    );
+    let resolve!: (value: Reply) => void;
+    const pending = query(
+      new Promise<Reply>((done) => {
+        resolve = done;
+      }),
+      true,
+    );
+    f.rpc.mockImplementation((name) =>
+      name === "read_ai_budget_source_readiness" ? metadata : pending,
+    );
+    const c = createSourceBoundAiBudgetClient({ rpc: f.rpc }, scope, profile, {
+      timeoutMs: 20,
+    });
+    const result = c.reserveNext(binding()).catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(20);
+    expect(await result).toBeInstanceOf(AiBudgetError);
+    expect(pending.abortSignal.mock.calls[0][0].aborted).toBe(true);
+    resolve({
+      data: {
+        schemaVersion: "ai-budget/1.0.0",
+        status: "ok",
+        receipt: receipt(),
+      },
+      error: null,
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(f.rpc).toHaveBeenCalledTimes(2);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe("all technical caller source identities", () => {
+  const canonical = {
+    schemaVersion: "ai-budget-source/2.0.0" as const,
+    kind: "canonical_rewrite" as const,
+    analysisId: scope.source.analysisId,
+    resumeVersionId: scope.source.resumeVersionId,
+    operationId: "55555555-5555-4555-8555-555555555555",
+    bindingSha256: "a".repeat(64),
+  };
+  const build = {
+    schemaVersion: "ai-budget-source/2.0.0" as const,
+    kind: "build_account" as const,
+    requestNonce: "shared-request",
+  };
+  const qualitative = {
+    schemaVersion: "ai-budget-source/2.0.0" as const,
+    kind: "legacy_qualitative" as const,
+    analysisId: scope.source.analysisId,
+    resumeVersionId: scope.source.resumeVersionId,
+  };
+  const initial = {
+    schemaVersion: "ai-budget-source/2.0.0" as const,
+    kind: "initial_feedback" as const,
+    analysisId: scope.source.analysisId,
+    resumeVersionId: scope.source.resumeVersionId,
+    operationId: "66666666-6666-4666-8666-666666666666",
+    attemptId: binding().attemptId,
+    lease: {
+      workerId: "source-worker",
+      attempt: 1,
+      leaseFence: "77777777-7777-4777-8777-777777777777",
+    },
+  };
+  const identity = (source: AiBudgetSourceScope["source"]) =>
+    createSourceBoundAiBudgetOperationId({ ...scope, source });
+  it("matches independent A12 and account-only Build OP2 vectors without changing legacy OP2", () => {
+    expect(identity(canonical)).toBe("8cb42107-f602-89c3-838f-2c05c01c79c8");
+    expect(
+      identity({
+        ...canonical,
+        analysisId: "66666666-6666-4666-8666-666666666666",
+      }),
+    ).toBe("244a1e4c-00fa-8c96-82ea-b5eb5e14a853");
+    expect(
+      identity({
+        ...canonical,
+        resumeVersionId: "77777777-7777-4777-8777-777777777777",
+      }),
+    ).toBe("a91ff81a-14c6-8661-9ceb-c6cf211cae0e");
+    expect(identity(build)).toBe("b47ea95f-21e8-8049-99fb-7df1fe878b9b");
+    expect(identity({ ...build, requestNonce: " " })).toBe(
+      "f07631ae-cf6d-886a-912a-bb5be37f0d5c",
+    );
+    expect(identity({ ...build, requestNonce: "a".repeat(128) })).toBe(
+      "4d249a64-2a19-87ae-a3e1-9244fbb4b420",
+    );
+    expect(identity(qualitative)).toBe(qualitative.analysisId);
+    expect(identity(initial)).toBe(initial.operationId);
+    expect(
+      identity({
+        ...initial,
+        attemptId: "88888888-8888-4888-8888-888888888888",
+        lease: { ...initial.lease, attempt: 2 },
+      }),
+    ).toBe(initial.operationId);
+    expect(identity(scope.source)).toBe("7cd53f15-ba8c-8625-9698-4604dabfcb4b");
+  });
+  it.each([build, canonical, qualitative, initial])(
+    "routes only source reserve with exact %j proof",
+    async (source) => {
+      const rpc = vi.fn((name: string) =>
+        query({
+          data:
+            name === "read_ai_budget_source_readiness"
+              ? ready()
+              : {
+                  schemaVersion: "ai-budget/1.0.0",
+                  status: "denied",
+                  code: "AI_BUDGET_DENIED",
+                },
+          error: null,
+        }),
+      );
+      const scoped = { ...scope, source },
+        b = {
+          ...binding(),
+          operationId: identity(source),
+          surface:
+            source.kind === "build_account"
+              ? ("build" as const)
+              : source.kind === "canonical_rewrite"
+                ? ("rewrite" as const)
+                : ("qualitative" as const),
+        };
+      await expect(
+        createSourceBoundAiBudgetClient({ rpc }, scoped, profile).reserveNext(
+          b,
+        ),
+      ).rejects.toMatchObject({ code: "AI_BUDGET_DENIED" });
+      expect(rpc.mock.calls.map(([name]) => name)).toEqual([
+        "read_ai_budget_source_readiness",
+        "ai_budget_reserve_source_next",
+      ]);
+      expect(rpc).toHaveBeenLastCalledWith(
+        "ai_budget_reserve_source_next",
+        expect.objectContaining({ p_source: source }),
+      );
+    },
+  );
+  it.each([
+    { ...build, analysisId: scope.source.analysisId },
+    { ...build, schemaVersion: "ai-budget-source/1.0.0" },
+    { ...qualitative, requestNonce: "invented" },
+    { ...canonical, operationId: undefined },
+    { ...initial, lease: { ...initial.lease, workerId: "invalid worker" } },
+    { ...initial, lease: { ...initial.lease, attempt: 4 } },
+  ])("rejects malformed discriminated proof before RPC %#", (source) => {
+    const rpc = vi.fn();
+    expect(() =>
+      Reflect.apply(createSourceBoundAiBudgetClient, undefined, [
+        { rpc },
+        { ...scope, source },
+        profile,
+      ]),
+    ).toThrow();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+  it("refuses a foreign A12 binding or A13 attempt before metadata and preserves typed IDs outside the bridge", async () => {
+    for (const source of [canonical, initial]) {
+      const rpc = vi.fn();
+      const client = createSourceBoundAiBudgetClient(
+        { rpc },
+        { ...scope, source },
+        profile,
+      );
+      const b = {
+        ...binding(),
+        operationId: identity(source),
+        surface:
+          source.kind === "canonical_rewrite"
+            ? ("rewrite" as const)
+            : ("qualitative" as const),
+      };
+      await expect(
+        client.reserveNext({
+          ...b,
+          ...(source.kind === "canonical_rewrite"
+            ? { payloadSha256: "0".repeat(64) }
+            : { attemptId: "88888888-8888-4888-8888-888888888888" }),
+        }),
+      ).rejects.toThrow();
+      expect(rpc).not.toHaveBeenCalled();
+    }
+    expect(canonical.operationId).toBe("55555555-5555-4555-8555-555555555555");
+    expect(identity(canonical)).not.toBe(canonical.operationId);
+  });
+});

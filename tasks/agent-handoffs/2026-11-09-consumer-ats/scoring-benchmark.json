@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "scoring-validity-engineering/1.0.0",
+  "scope": "known synthetic engineering only",
+  "engineVersion": "score-v2/1.0.1",
+  "policyId": "software-engineering-en-IN/draft-1.0.0",
+  "engineeringPassed": true,
+  "releasePassed": false,
+  "segments": [
+    {
+      "segment": "source_bound_full_dates",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "48ede3c660ea88616666944c0180c0741446a2e926b828f95eb13e24d547898d",
+      "semanticFingerprint": "b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e",
+      "latencyP95Ms": 1.6444999999999936
+    },
+    {
+      "segment": "repeated_jd",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "cd1f086209f5021616ceb191b36d91917fdb60a0b44aa54ba646358191b4304b",
+      "semanticFingerprint": "b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e",
+      "latencyP95Ms": 0.8601250000000391
+    },
+    {
+      "segment": "skill_stuffing",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "a6408a923634360d3e26ec917691899cbd666edce4b9b33e361a37388b50e9d8",
+      "semanticFingerprint": "b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e",
+      "latencyP95Ms": 0.913791999999944
+    },
+    {
+      "segment": "incomplete_pages",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "083b058206b292314a4431661f7c155f6fd0dd2d1e1d8b70344028d629909150",
+      "semanticFingerprint": "56fea55774211bd32599068b5f7368971d777ed68f35eb839226e769230e4d54",
+      "latencyP95Ms": 0.7439580000000205
+    },
+    {
+      "segment": "missing_jd",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 0,
+      "inputFingerprint": "87f94525e029d7248610c737fa373f084e47e06c5eab3db69fbc7a93441bddd8",
+      "semanticFingerprint": "5f41f3220639da14ed6007fd423d8a5fd34674bfe5ca1a4e49e7e1330b1f5bfe",
+      "latencyP95Ms": 0.5214579999999387
+    },
+    {
+      "segment": "synthetic_name_1",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "e72e189afc500b03700e5363cc38723ac971e24df2c2eef7137142043bdc8d3f",
+      "semanticFingerprint": "b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e",
+      "latencyP95Ms": 0.660665999999992
+    },
+    {
+      "segment": "synthetic_name_2",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "b41fb8813efc4fc3cd38cfc67a3cb2ca15ffbd3377fa3b4baa3c567b00836203",
+      "semanticFingerprint": "b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e",
+      "latencyP95Ms": 0.6722909999999729
+    },
+    {
+      "segment": "synthetic_name_3",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "593cfee379341ff1306b1037230ee8e03485fc70e6eff6449a139a20f8bbacca",
+      "semanticFingerprint": "b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e",
+      "latencyP95Ms": 0.7110420000000204
+    },
+    {
+      "segment": "synthetic_name_4",
+      "repetitions": 20,
+      "deterministic": true,
+      "numericValuesWithheld": true,
+      "technicalRuleCount": 6,
+      "groupedRequirementCount": 7,
+      "inputFingerprint": "277f499330768737f8d35663f4b9efde995b3b314368c25b5de0fca29b65ae3c",
+      "semanticFingerprint": "b55b2a990f5e56fa778799e00059fc922a20c515dd52add79a2e1e34f42e242e",
+      "latencyP95Ms": 0.7180409999999711
+    }
+  ],
+  "invariance": {
+    "syntheticNames": 4,
+    "repeatedRequirements": true,
+    "skillStuffing": true,
+    "duplicateBulletCredit": 0.5,
+    "promptInjectionRejected": true,
+    "overlappedMonths": 36
+  },
+  "measurementMethods": [
+    "tie-aware Spearman",
+    "seeded case bootstrap percentile interval",
+    "MAE",
+    "RMSE",
+    "coverage and error by segment"
+  ],
+  "expertAgreement": null,
+  "representativeFairnessError": null,
+  "comprehensionReview": null,
+  "authoritativeScoreAccuracy": null,
+  "providerCalls": 0,
+  "providerCostUsd": 0,
+  "releaseBlockers": [
+    "AA1 locked critical field accuracy failed",
+    "AA3 domain and representative corpus acceptance open",
+    "No approved scoring weights or coverage policy",
+    "No reviewed expert ratings or bootstrap agreement estimates",
+    "No representative fairness/error or comprehension review"
+  ],
+  "fixtureManifestSha256": "d5a45c9dbb47cff79bdf5961363c024762dec17688a5f064a8bd5f0c5ea75cdd",
+  "sourceSha256": "d265843789a362f82753ad9f7b3284467b899bc003c25ca72e42c2dd9c7f8f4b",
+  "executedAt": "2026-11-09T07:01:05.943Z"
+}

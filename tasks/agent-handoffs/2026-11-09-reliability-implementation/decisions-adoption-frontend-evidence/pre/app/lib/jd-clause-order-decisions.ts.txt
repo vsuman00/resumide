@@ -1,0 +1,462 @@
+import { z } from "zod";
+import policy from "./jd-clause-order-decision-policy.json";
+
+const digest = z.string().regex(/^[a-f0-9]{64}$/u);
+const uuid = z.uuid().regex(/^[a-f0-9-]+$/u);
+const revision = z.number().int().min(1).max(2_147_483_647);
+const text = z.string().min(1).max(2000);
+const binding = z.strictObject({
+  source: z.strictObject({
+    ownerId: uuid,
+    organizationId: uuid,
+    resumeId: uuid,
+    analysisId: uuid,
+    sourceId: uuid,
+    attemptId: uuid,
+    inputSha256: digest,
+  }),
+  canonical: z.strictObject({
+    versionId: uuid,
+    revision,
+    contentSha256: digest,
+  }),
+  requirements: z.strictObject({
+    versionId: uuid,
+    revision,
+    inputSha256: digest,
+    contentSha256: digest,
+  }),
+  heads: z.strictObject({
+    canonicalHeadId: uuid,
+    canonicalHeadRevision: revision,
+    requirementHeadId: uuid,
+    requirementHeadRevision: revision,
+  }),
+  profilesSha256: z.literal(policy.body.profilesSha256),
+});
+const policies = z.strictObject({
+  clauseOrderVersion: z.literal(policy.body.draftPolicies.clauseOrderVersion),
+  clauseOrderSha256: z.literal(policy.body.draftPolicies.clauseOrderSha256),
+  writingSupportVersion: z.literal(
+    policy.body.draftPolicies.writingSupportVersion,
+  ),
+});
+const target = z.strictObject({
+  factId: uuid,
+  sectionId: uuid,
+  entryId: uuid,
+  bulletId: uuid.nullable(),
+  currentValueSha256: digest,
+  confirmationActorId: uuid,
+  confirmedAt: z.iso.datetime(),
+});
+const citation = z
+  .strictObject({
+    attemptId: uuid,
+    spanId: z.string().min(1).max(100),
+    pageId: z.string().min(1).max(100),
+    method: z.enum(["native_text", "local_ocr"]),
+    start: z.number().int().min(0).max(200_000),
+    end: z.number().int().min(1).max(200_000),
+    pageStart: z.number().int().min(0).max(500_000),
+    pageEnd: z.number().int().min(1).max(500_000),
+  })
+  .refine((c) => c.end > c.start && c.pageEnd > c.pageStart);
+const citations = z
+  .array(citation)
+  .min(1)
+  .max(20)
+  .refine(
+    (c) =>
+      new Set(
+        c.map((v) => JSON.stringify([v.attemptId, v.spanId, v.start, v.end])),
+      ).size === c.length,
+  );
+const span = z.strictObject({
+  index: z.union([z.literal(0), z.literal(1)]),
+  start: z.number().int().min(0).max(2000),
+  end: z.number().int().min(1).max(2000),
+  sha256: digest,
+});
+const spans = z
+  .tuple([span, span])
+  .refine(
+    (v) =>
+      v.every((c, i) => c.index === i && c.end > c.start) &&
+      v[0].start === 0 &&
+      v[1].start === v[0].end + 2,
+  );
+const transform = z.strictObject({
+  kind: z.literal("reorder_source_clauses"),
+  order: z.tuple([z.literal(1), z.literal(0)]),
+  rendererVersion: z.literal("jd-two-clause-renderer/1.0.0"),
+  terminal: z.enum(["", "."]),
+});
+export const JdClauseOrderCommandSchema = z
+  .strictObject({
+    schemaVersion: z.literal("jd-clause-order-command/2.0.0"),
+    operation: z.enum(["accept", "reject"]),
+    idempotencyKey: uuid,
+    acknowledgement: z.boolean(),
+    draftId: digest,
+    binding,
+    policies,
+    decisionPolicy: z.strictObject({
+      version: z.literal(policy.body.version),
+      sha256: z.literal(policy.sha256),
+    }),
+    target,
+    jdClauseId: digest,
+    sourceClauses: spans,
+    transform,
+    afterSha256: digest,
+    sourceCitations: citations,
+  })
+  .refine(
+    (c) =>
+      c.acknowledgement === (c.operation === "accept") &&
+      (c.operation !== "accept" ||
+        c.binding.canonical.revision <= 2_147_483_645) &&
+      c.target.confirmationActorId === c.binding.source.ownerId &&
+      c.binding.heads.canonicalHeadId === c.binding.canonical.versionId &&
+      c.binding.heads.canonicalHeadRevision === c.binding.canonical.revision &&
+      c.binding.heads.requirementHeadId === c.binding.requirements.versionId &&
+      c.binding.heads.requirementHeadRevision ===
+        c.binding.requirements.revision &&
+      c.sourceCitations.every(
+        (s) => s.attemptId === c.binding.source.attemptId,
+      ),
+  );
+export type JdClauseOrderCommand = z.infer<typeof JdClauseOrderCommandSchema>;
+const viewSpan = z.strictObject({
+  index: z.union([z.literal(0), z.literal(1)]),
+  start: z.number().int().min(0).max(2000),
+  end: z.number().int().min(1).max(2000),
+  text,
+  sha256: digest,
+});
+export const JdClauseOrderDraftViewSchema = z
+  .strictObject({
+    schemaVersion: z.literal("jd-clause-order-draft/2.0.0"),
+    selection: z.strictObject({
+      canonicalVersionId: uuid,
+      requirementVersionId: uuid,
+      clauseId: digest,
+      targetFactId: uuid,
+    }),
+    binding,
+    policies,
+    target,
+    sourceCitations: citations,
+    sourceClauses: z.tuple([viewSpan, viewSpan]),
+    relevance: z.strictObject({
+      clauseId: digest,
+      quote: text,
+      importance: z.enum(["required", "preferred"]),
+      expressionKind: z.literal("atom"),
+      movedSourceClauseIndex: z.literal(1),
+      conceptId: z.string().min(1).max(100).nullable(),
+      sourceSkillValue: text,
+      jdSkillValue: text,
+    }),
+    transform,
+    before: text,
+    after: text,
+    support: z.strictObject({
+      basis: z.literal("source_quote"),
+      offsetSpace: z.literal("current_fact"),
+      writingSupportVersion: z.literal(
+        policy.body.draftPolicies.writingSupportVersion,
+      ),
+      sourceSha256: digest,
+      sourceAnchorIds: z.array(digest).min(1).max(512),
+      operations: z
+        .array(
+          z.enum([
+            "copy_source",
+            "normalize_layout",
+            "replace_equivalent_action",
+            "reorder_independent_clauses",
+            "compose_explicit_role_contribution",
+            "editorial_explanation",
+          ]),
+        )
+        .min(1)
+        .max(32),
+    }),
+    scoreValue: z.null(),
+    scoreDelta: z.null(),
+    qualificationCredit: z.literal("not_assessed"),
+    id: digest,
+  })
+  .refine(
+    (d) =>
+      d.before !== d.after &&
+      d.selection.canonicalVersionId === d.binding.canonical.versionId &&
+      d.selection.requirementVersionId === d.binding.requirements.versionId &&
+      d.selection.targetFactId === d.target.factId &&
+      d.selection.clauseId === d.relevance.clauseId &&
+      d.sourceClauses.every(
+        (c, i) =>
+          c.index === i &&
+          c.end > c.start &&
+          Array.from(d.before).slice(c.start, c.end).join("") === c.text,
+      ) &&
+      d.after ===
+        d.sourceClauses[1].text +
+          "; " +
+          d.sourceClauses[0].text +
+          d.transform.terminal,
+  );
+export type JdClauseOrderDraftView = z.infer<
+  typeof JdClauseOrderDraftViewSchema
+>;
+export const JdClauseOrderReceiptSchema = z.strictObject({
+  schemaVersion: z.literal("jd-clause-order-receipt/2.0.0"),
+  status: z.literal("applied"),
+  action: z.enum(["accept", "reject"]),
+  idempotencyKey: uuid,
+  commandSha256: digest,
+  draftId: digest,
+  baseVersionId: uuid,
+  baseRevision: revision,
+  requirementVersionId: uuid,
+  requirementRevision: revision,
+  versionId: uuid,
+  revision,
+  eventId: uuid,
+  idempotent: z.boolean(),
+});
+export type JdClauseOrderReceipt = z.infer<typeof JdClauseOrderReceiptSchema>;
+export function sameClauseOrderValue(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (!a || !b || typeof a !== "object" || typeof b !== "object") return false;
+  if (Array.isArray(a) || Array.isArray(b))
+    return (
+      Array.isArray(a) &&
+      Array.isArray(b) &&
+      a.length === b.length &&
+      a.every((v, i) => sameClauseOrderValue(v, b[i]))
+    );
+  const x = a as Record<string, unknown>,
+    y = b as Record<string, unknown>;
+  return (
+    Object.keys(x).length === Object.keys(y).length &&
+    Object.keys(x).every(
+      (k) => Object.hasOwn(y, k) && sameClauseOrderValue(x[k], y[k]),
+    )
+  );
+}
+export const JdClauseOrderProposalSchema = z
+  .strictObject({
+    schemaVersion: z.literal("jd-clause-order-proposal/2.0.0"),
+    draft: JdClauseOrderDraftViewSchema,
+    acceptCommand: JdClauseOrderCommandSchema,
+    rejectCommand: JdClauseOrderCommandSchema,
+    acceptCommandSha256: digest,
+    rejectCommandSha256: digest,
+  })
+  .refine((p) => {
+    const d = p.draft;
+    return (
+      p.acceptCommand.idempotencyKey !== p.rejectCommand.idempotencyKey &&
+      (["accept", "reject"] as const).every((op) => {
+        const c = op === "accept" ? p.acceptCommand : p.rejectCommand;
+        return (
+          c.operation === op &&
+          c.draftId === d.id &&
+          c.jdClauseId === d.selection.clauseId &&
+          (
+            [
+              "binding",
+              "policies",
+              "target",
+              "transform",
+              "sourceCitations",
+            ] as const
+          ).every((k) => sameClauseOrderValue(c[k], d[k])) &&
+          sameClauseOrderValue(
+            c.sourceClauses,
+            d.sourceClauses.map((c) => ({
+              index: c.index,
+              start: c.start,
+              end: c.end,
+              sha256: c.sha256,
+            })),
+          ) &&
+          c.afterSha256 === p.acceptCommand.afterSha256
+        );
+      })
+    );
+  });
+export type JdClauseOrderProposal = z.infer<typeof JdClauseOrderProposalSchema>;
+
+/** Framing grants no admission. The server and Native independently prove the atoms. */
+export function clauseOrderCommandAtoms(
+  c: JdClauseOrderCommand,
+): (string | null)[] {
+  const b = c.binding,
+    s = b.source,
+    t = c.target,
+    f = c.transform;
+  return [
+    c.schemaVersion,
+    c.operation,
+    c.idempotencyKey,
+    String(c.acknowledgement),
+    c.draftId,
+    s.ownerId,
+    s.organizationId,
+    s.resumeId,
+    s.analysisId,
+    s.sourceId,
+    s.attemptId,
+    s.inputSha256,
+    b.canonical.versionId,
+    String(b.canonical.revision),
+    b.canonical.contentSha256,
+    b.requirements.versionId,
+    String(b.requirements.revision),
+    b.requirements.inputSha256,
+    b.requirements.contentSha256,
+    b.heads.canonicalHeadId,
+    String(b.heads.canonicalHeadRevision),
+    b.heads.requirementHeadId,
+    String(b.heads.requirementHeadRevision),
+    b.profilesSha256,
+    c.policies.clauseOrderVersion,
+    c.policies.clauseOrderSha256,
+    c.policies.writingSupportVersion,
+    c.decisionPolicy.version,
+    c.decisionPolicy.sha256,
+    t.factId,
+    t.sectionId,
+    t.entryId,
+    t.bulletId,
+    t.currentValueSha256,
+    t.confirmationActorId,
+    t.confirmedAt,
+    c.jdClauseId,
+    f.kind,
+    f.rendererVersion,
+    f.terminal,
+    String(f.order[0]),
+    String(f.order[1]),
+    String(c.sourceClauses.length),
+    ...c.sourceClauses.flatMap((v) => [
+      String(v.index),
+      String(v.start),
+      String(v.end),
+      v.sha256,
+    ]),
+    c.afterSha256,
+    String(c.sourceCitations.length),
+    ...c.sourceCitations.flatMap((v) => [
+      v.attemptId,
+      v.spanId,
+      v.pageId,
+      v.method,
+      String(v.start),
+      String(v.end),
+      String(v.pageStart),
+      String(v.pageEnd),
+    ]),
+  ];
+}
+function portableText(value: string) {
+  for (let i = 0; i < value.length; i++) {
+    const n = value.charCodeAt(i);
+    if (!n) throw Error("CLAUSE_ORDER_CODEC_TEXT");
+    if (n >= 0xd800 && n <= 0xdbff) {
+      const next = value.charCodeAt(++i);
+      if (!(next >= 0xdc00 && next <= 0xdfff))
+        throw Error("CLAUSE_ORDER_CODEC_TEXT");
+    } else if (n >= 0xdc00 && n <= 0xdfff)
+      throw Error("CLAUSE_ORDER_CODEC_TEXT");
+  }
+}
+export function encodeClauseOrderCommandAtoms(
+  atoms: readonly (string | null)[],
+): Uint8Array<ArrayBuffer> {
+  if (!Array.isArray(atoms) || atoms.length > 256)
+    throw Error("CLAUSE_ORDER_CODEC_LIMIT");
+  const encoder = new TextEncoder();
+  let framed = "A11OP2\n";
+  let total = 7;
+  for (const atom of atoms) {
+    if (atom === null) {
+      framed += "N;";
+      total += 2;
+    } else {
+      if (typeof atom !== "string") throw Error("CLAUSE_ORDER_CODEC_ATOM");
+      if (atom.length > 16_384) throw Error("CLAUSE_ORDER_CODEC_LIMIT");
+      portableText(atom);
+      const length = encoder.encode(atom).length;
+      const prefix = `T${length}:`;
+      framed += prefix + atom + ";";
+      total += prefix.length + length + 1;
+    }
+    if (total > 16_384) throw Error("CLAUSE_ORDER_CODEC_LIMIT");
+  }
+  return encoder.encode(framed);
+}
+async function shaBytes(bytes: Uint8Array<ArrayBuffer>): Promise<string> {
+  const value = await globalThis.crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(value), (b) =>
+    b.toString(16).padStart(2, "0"),
+  ).join("");
+}
+async function shaText(value: string) {
+  portableText(value);
+  return shaBytes(new TextEncoder().encode(value));
+}
+export async function clauseOrderCommandSha256(
+  raw: JdClauseOrderCommand,
+): Promise<string> {
+  const c = JdClauseOrderCommandSchema.parse(raw);
+  return shaBytes(encodeClauseOrderCommandAtoms(clauseOrderCommandAtoms(c)));
+}
+export async function validateClauseOrderProposal(
+  raw: unknown,
+): Promise<JdClauseOrderProposal> {
+  const p = JdClauseOrderProposalSchema.parse(raw),
+    d = p.draft;
+  const { id, ...body } = d;
+  if (
+    (await shaText(JSON.stringify(body))) !== id ||
+    (await shaText(d.before)) !== d.target.currentValueSha256 ||
+    (await shaText(d.after)) !== p.acceptCommand.afterSha256 ||
+    (await Promise.all(d.sourceClauses.map((c) => shaText(c.text)))).some(
+      (hash, i) => hash !== d.sourceClauses[i].sha256,
+    ) ||
+    (await clauseOrderCommandSha256(p.acceptCommand)) !==
+      p.acceptCommandSha256 ||
+    (await clauseOrderCommandSha256(p.rejectCommand)) !== p.rejectCommandSha256
+  )
+    throw Error("CLAUSE_ORDER_INVALID_PROPOSAL");
+  return p;
+}
+export async function validateClauseOrderReceipt(
+  raw: unknown,
+  command: JdClauseOrderCommand,
+): Promise<JdClauseOrderReceipt> {
+  const c = JdClauseOrderCommandSchema.parse(command),
+    r = JdClauseOrderReceiptSchema.parse(raw);
+  if (
+    r.action !== c.operation ||
+    r.idempotencyKey !== c.idempotencyKey ||
+    r.commandSha256 !== (await clauseOrderCommandSha256(c)) ||
+    r.draftId !== c.draftId ||
+    r.baseVersionId !== c.binding.canonical.versionId ||
+    r.baseRevision !== c.binding.canonical.revision ||
+    r.requirementVersionId !== c.binding.requirements.versionId ||
+    r.requirementRevision !== c.binding.requirements.revision ||
+    r.revision !==
+      c.binding.canonical.revision + (c.operation === "accept" ? 2 : 0) ||
+    (c.operation === "accept"
+      ? r.versionId === r.baseVersionId
+      : r.versionId !== r.baseVersionId)
+  )
+    throw Error("CLAUSE_ORDER_INVALID_RECEIPT");
+  return r;
+}

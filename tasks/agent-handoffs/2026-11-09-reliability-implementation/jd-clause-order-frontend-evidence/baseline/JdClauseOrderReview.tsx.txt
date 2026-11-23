@@ -1,0 +1,8 @@
+import { useId } from "react";
+import type { JdClauseOrderDraft } from "~/lib/server/jd-clause-order-drafting";
+
+// Initial full-wording presentation, before JD/source/order details are added.
+export default function JdClauseOrderReview({ draft }: { draft: JdClauseOrderDraft }) {
+  const heading = useId();
+  return <section aria-labelledby={heading}><h2 id={heading}>Review JD-focused clause order</h2><blockquote aria-label="Complete current wording">{draft.before}</blockquote><blockquote aria-label="Complete proposed wording">{draft.after}</blockquote></section>;
+}

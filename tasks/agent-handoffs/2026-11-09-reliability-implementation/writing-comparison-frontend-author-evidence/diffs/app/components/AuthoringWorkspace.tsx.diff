@@ -1,0 +1,25 @@
+--- before/app/components/AuthoringWorkspace.tsx
++++ after/app/components/AuthoringWorkspace.tsx
+@@ -1,6 +1,8 @@
+ import { Form, Link, useNavigation } from "react-router";
+ import { useEffect, useState } from "react";
+ import { checkWritingQuality } from "~/lib/writing-quality";
++import { buildProjectedWritingComparison } from "~/lib/writing-comparison";
++import WritingDiagnosticComparison from "~/components/WritingDiagnosticComparison";
+ import type {
+   ClarificationPreview,
+   loadAuthoring,
+@@ -649,6 +651,13 @@
+                 Projected before acceptance: unavailable. Actual after a saved
+                 version: unavailable. Numeric delta: unavailable.
+               </p>
++              <WritingDiagnosticComparison
++                comparison={buildProjectedWritingComparison({
++                  baseVersionId: patch.baseVersionId,
++                  fact: doc.facts.find((f) => f.id === patch.targetFactId)!,
++                  proposedValue: patch.operations[0].value,
++                })}
++              />
+               {model.editable && (
+                 <>
+                   <Form method="post" action={`${base}/author`}>

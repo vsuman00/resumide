@@ -1,0 +1,51 @@
+{
+  "task": "CR-A10 semantic evidence producer",
+  "status": "IMPLEMENTATION_SOURCE_ONLY",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "readerGate": "a10-relationship-context-integrated-review.json",
+  "api": {
+    "file": "app/lib/server/requirement-semantic-evidence.ts",
+    "export": "deriveRequirementSemanticEvidence(rawContext: unknown)",
+    "input": "Only actual strict available RequirementRelationshipContextSchema; derive all witnesses internally. No caller edges/eligibility/proof flags. Parse fail closed."
+  },
+  "output": {
+    "schemaVersion": "requirement-semantic-evidence/1.0.0",
+    "authority": "derived_bounded_semantic_witnesses",
+    "scoringEligible": false,
+    "binding": "Exact source7, attempt, canonical/JD ID/revision/native SHA and policy/profile identities. Native SHA opaque; never recompute with JS serialization.",
+    "witnesses": "Deterministic IDs, exact fact/current location/clause/offset/confirmation refs, tier, actor/action/object, exact approved-alias skill concept mapping, optional explicit full ISO interval; source vs declaration vs observed origin separate.",
+    "unresolved": "Retain concrete missing/ambiguous/unsupported evidence reasons; never silently omit or claim unqualified."
+  },
+  "supportedSubset": [
+    "Exact skill facts yield listed only.",
+    "Exact current source quote with explicit single action/object and using <approved skill> may yield source_contribution.",
+    "Exact current owner-confirmed Responsible for ... using <approved skill> yields candidate_responsibility, never independent proficiency.",
+    "Explicit same-clause skill use with two valid full ISO endpoints yields claimed dated_use. No inference from job tenure/header dates."
+  ],
+  "abstain": [
+    "Negation, future, conditional, quoted claims, ambiguous compound agency, pronouns, unsupported locale/domain/grammar",
+    "Year-only, Present or unbound job dates; co-location, generic confirmation and producer version do not prove relationships",
+    "Old observed ancestor value cannot establish edited current text; exact confirmed edits are declarations only"
+  ],
+  "limits": "Version and hash the exact bounded grammar/action/alias/date policy. Reject limits before expansion; preserve original text and Unicode offsets, no silent truncation. Existing raw writing IR is parsing support only, never ownership authority.",
+  "preserve": "Legacy score engine/repository numeric policy and typed503 unchanged. No authoring unpause. No DB/flags/producer/storage changes. Full typed coverage/consumer comes next.",
+  "ownership": {
+    "backend": [
+      "app/lib/server/requirement-semantic-evidence.ts",
+      "app/lib/server/requirement-relationship-context.ts",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a10-semantic-evidence.md"
+    ],
+    "frontend": [
+      "tests/unit/requirement-semantic-evidence.test.ts",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a10-semantic-evidence.md"
+    ],
+    "reviewer": "Read-only finite source review; existing pricing_validation thread does no pricing.",
+    "root": "Shared contract, synchronization, integration and one combined affected gate."
+  },
+  "verification": "Use actual existing grouped-import/evidence/canonical/JD builders through strict reader-shaped DTO and actual semantic producer. Essential positive tiers and exact-source/declaration counterexamples; binding/agency/negation/date/alias/overlap/limit controls. No hand-authored semantic outputs as substitute. No broad repeat campaigns. Author narrow checks then Root combined gate.",
+  "boundaries": "Source/synthetic only. No SQL parse/execution/advisors/DB/hosted/services/browser/compiler/Docker/providers/env/keys/PII/dependencies/Git/deployment.",
+  "skillIdentity": "Preserve exact JD literal operand matching for unmapped skills such as Python. Approved aliases add only explicitly declared equivalence. Output distinguishes literal-only identity from local mapped concept/alias; no inferred taxonomy. The two alias concepts do not restrict all supported skills.",
+  "inputValidatorAmendment": "Backend may narrowly export validateRequirementRelationshipContext(raw,analysisId,ownerId,options={}) from adapter, extracting existing bounded/schema/status/check path and reusing it in unchanged loader and semantic producer. Validate IDs/options in exported validator. Preserve RPC dispatch/options/errors/all checks. No duplicate proof implementation. Original reader source gate is historical; next combined gate includes original88 and new semantic file due this affected refactor.",
+  "intervalSemantics": "Preserve exact full ISO endpoints and source/declaration provenance; the grammar to DATE does not silently establish end-day inclusion. No FTE/proficiency or scalar year duration inferred. Coverage must later union only same-subject intervals and honor inclusive/exclusive JD bounds using exact Gregorian dates/calendar anniversaries, retaining endpoint/leap ambiguity. Disjoint-year comparisons need exact calendar boundary bands rather than365/365.25 averaging or floored months.",
+  "actualImporterAmendment": "Real canonical import splits explicit Used <skill> from ISO to ISO source lines into date facts and genuine contribution fragments. Producer must support the actual path: a full bounded dated clause may be derived from the exact SAME current cited immutable source span, anchored by real fragment citation(s), never invented whole canonical facts/crossspan stitching/old-origin borrowing. Keep current fact/value/citations/confirmation separate from full immutable source-clause reference and offset space; confirming a fragment does not confirm the full clause. Preserve source-reported vs candidate-declared basis, clause identity/dedup and qualifier guards. Test through actual builders."
+}

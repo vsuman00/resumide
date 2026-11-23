@@ -1,0 +1,63 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/initial-feedback-publication-policy.test.ts (18 tests | 2 failed) 16ms
+     ✓ derives frozen dependencies and requires explicit technical inputs 4ms
+     × uses exact27-atom UTF8 framing, not JSON serialization 7ms
+     ✓ ignores input property order while retaining every value 1ms
+     × distinguishes null budget mode from string null and explicit synthetic on policy 1ms
+     ✓ does not normalize technical changes {"model":"GPT-6-luna"} 0ms
+     ✓ does not normalize technical changes {"maxOutputTokens":256} 0ms
+     ✓ does not normalize technical changes {"attemptLimit":2} 0ms
+     ✓ refuses unsupported parameters {"maxOutputTokens":255} 0ms
+     ✓ refuses unsupported parameters {"maxOutputTokens":8001} 0ms
+     ✓ refuses unsupported parameters {"attemptLimit":0} 0ms
+     ✓ refuses unsupported parameters {"attemptLimit":4} 0ms
+     ✓ refuses unsupported parameters {"model":"bad model"} 0ms
+     ✓ refuses unsupported parameters {"model":"bad\ud800"} 0ms
+     ✓ refuses unsupported parameters {"model":"bad\u0000name"} 0ms
+     ✓ refuses unsupported parameters {"budgetPolicyVersion":""} 0ms
+     ✓ matches current source output/attempt bounds and exact prompt 1ms
+     ✓ rejects drifted source profiles, changed hashes and unknown nested fields safely 1ms
+   ✓ preserves the exact historical descriptor and hash while fresh admission uses renewed readiness 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-publication-policy.test.ts > publication source policy, no registry selection/provider > uses exact27-atom UTF8 framing, not JSON serialization
+AssertionError: expected 'f4f37ab61dc4c4c0f8ee16f9067b90fdcdc37…' to be '5f5eace5226885c3bbaf6c430e656034edbb3…' // Object.is equality
+
+Expected: "5f5eace5226885c3bbaf6c430e656034edbb3f12e42ffa4634faffd8f94619ca"
+Received: "f4f37ab61dc4c4c0f8ee16f9067b90fdcdc37e5377602dbfea5214298fd95c20"
+
+ ❯ tests/unit/initial-feedback-publication-policy.test.ts:92:20
+     90|       createHash("sha256").update(JSON.stringify(d)).digest("hex"),
+     91|     );
+     92|     expect(sha256).toBe(
+       |                    ^
+     93|       "5f5eace5226885c3bbaf6c430e656034edbb3f12e42ffa4634faffd8f94619c…
+     94|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/unit/initial-feedback-publication-policy.test.ts > publication source policy, no registry selection/provider > distinguishes null budget mode from string null and explicit synthetic on policy
+AssertionError: expected 'fe1e584682f88d181046615f6724a62a26297…' to be 'fd7f080752a0aaddd1f9330aa27f2c8bad7da…' // Object.is equality
+
+Expected: "fd7f080752a0aaddd1f9330aa27f2c8bad7daee0feb342030105258c5713de8a"
+Received: "fe1e584682f88d181046615f6724a62a2629760dbcb846576b94ce48ece7ad44"
+
+ ❯ tests/unit/initial-feedback-publication-policy.test.ts:120:23
+    118|         budgetPolicyVersion: "null",
+    119|       });
+    120|     expect(on.sha256).toBe(
+       |                       ^
+    121|       "fd7f080752a0aaddd1f9330aa27f2c8bad7daee0feb342030105258c5713de8…
+    122|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 16 passed (18)
+   Start at  13:26:11
+   Duration  194ms (transform 66ms, setup 0ms, import 110ms, tests 16ms, environment 0ms)
+

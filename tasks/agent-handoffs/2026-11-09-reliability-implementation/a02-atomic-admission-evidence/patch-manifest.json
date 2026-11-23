@@ -1,0 +1,89 @@
+[
+  {
+    "signature": "private.canonical_shape_valid(jsonb)",
+    "sha256": "c90713766245857144ee9ee291684f625eeb297deb5fa317cc92b207ea54794f",
+    "newSha256": "572ba813d4b46eadc23c7cbb39334f1e093a9f2a746e3fd26bfd324f5354ae92",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "serviceExecute": false,
+    "patches": [
+      {
+        "old": "[\"canonical-engine/1.0.0\",\"canonical-engine/1.0.1\",\"canonical-engine/1.0.2\"]",
+        "new": "[\"canonical-engine/1.0.0\",\"canonical-engine/1.0.1\",\"canonical-engine/1.0.2\",\"canonical-engine/1.0.3\"]"
+      }
+    ]
+  },
+  {
+    "signature": "private.correction_scope(uuid,uuid)",
+    "sha256": "65a240608b318de05941e03f33af8f8e9aa5f64ab2a5bdf0b41a1dbca1857048",
+    "newSha256": "e64bf7f02bc07ef92eaa3e47f2c0cf471a34b146eaaa58b036c09760522c0493",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "serviceExecute": false,
+    "patches": [
+      {
+        "old": "  return jsonb_build_object('ownerId',p_user_id",
+        "new": "  if h.id is not null then perform private.entry_association_validate_head(h.id); end if;\n  return jsonb_build_object('ownerId',p_user_id"
+      }
+    ]
+  },
+  {
+    "signature": "private.write_correction_snapshot(uuid,jsonb)",
+    "sha256": "7843a1b6e2ba875c27df1ca67a028e05b6070ca1802cc006f07cb81d7c3a7a22",
+    "newSha256": "374df60f2fb2358a7a5d6c9747ab8e05ba3fddcc3384b1f21f708e86364fdf60",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "serviceExecute": false,
+    "patches": [
+      {
+        "old": "\nend;\n",
+        "new": "\n  perform private.entry_association_write_snapshot(p_version_id,p_command);\nend;\n"
+      }
+    ]
+  },
+  {
+    "signature": "public.import_canonical_original(uuid,uuid,jsonb,jsonb,jsonb,text)",
+    "sha256": "a8a186ee2dc5a8a817c75fa345801fafd284caa8c5d7db5fb9f2180750acdf8b",
+    "newSha256": "1671cf3b6d3c8b0c716b2c2e5c8dc622dee70f468e3ebcdab21a2e088266f49b",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "serviceExecute": true,
+    "patches": [
+      {
+        "old": "      or private.canonical_shape_valid(prior.content) is not true",
+        "new": "      or prior.content->>'producerVersion' not in ('canonical-engine/1.0.0','canonical-engine/1.0.1')\n      or private.canonical_shape_valid(prior.content) is not true"
+      }
+    ]
+  },
+  {
+    "signature": "public.save_canonical_version(uuid,uuid,jsonb,jsonb,text)",
+    "sha256": "efa13971568aace742c6aa98fe823a5ea1b4b2cd3c81c0882de2cb102db10521",
+    "newSha256": "5a6109303ed91cb80c916c2650cfcceed7d8f97737dc65d6e0c03cdfb3d32a1f",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "serviceExecute": true,
+    "patches": [
+      {
+        "old": "  if op not in ('import','edit','confirm','rollback','rename_section') then raise exception 'Invalid canonical operation' using errcode='22023'; end if;",
+        "new": "  if op not in ('import','edit','confirm','rollback','rename_section') then raise exception 'Invalid canonical operation' using errcode='22023'; end if;\n  if op='import' and p_body->>'producerVersion'='canonical-engine/1.0.3' then raise exception 'GROUPED_IMPORT_REQUIRES_ADMISSION' using errcode='22023'; end if;"
+      },
+      {
+        "old": "  if found then\n    if prior.command<>p_command",
+        "new": "  if found then\n    if prior.command->>'operation'='grouped_original_import' or (op='import' and prior.content->>'producerVersion'='canonical-engine/1.0.3') then return jsonb_build_object('status','conflict'); end if;\n    if prior.command<>p_command"
+      },
+      {
+        "old": "  if op='import' and head.id is not null then",
+        "new": "  if head.id is not null then perform private.entry_association_validate_head(head.id); end if;\n  if op in ('edit','confirm','rename_section') and (head.content->>'producerVersion'='canonical-engine/1.0.3' or p_body->>'producerVersion'='canonical-engine/1.0.3')\n    and p_body->'producerVersion' is distinct from head.content->'producerVersion' then raise exception 'GROUPED_PRODUCER_RETAG' using errcode='22023'; end if;\n  if op='import' and head.id is not null then"
+      },
+      {
+        "old": "    if target.id is null or p_body->'facts'<>target.content->'facts'",
+        "new": "    if target.id is not null then perform private.entry_association_validate_head(target.id); end if;\n    if target.id is null or p_body->'producerVersion' is distinct from target.content->'producerVersion' or p_body->'facts'<>target.content->'facts'"
+      }
+    ]
+  }
+]

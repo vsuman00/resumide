@@ -1,0 +1,151 @@
+{
+  "policyVersion": "latex-source/1.0.0",
+  "imageId": "sha256:600c3815bdf12a4e3df6d332c0aea11685fd122f0fc3240b7be3c802fd23bf4f",
+  "sourceHashes": {
+    "app/lib/server/latex-source.ts": "10e3975858dbd91a7de04724d2cf452d358364ce11cf840aaa0bbd9b3496116f",
+    "app/lib/server/latex-sandbox.ts": "e7b0b41aee2d83553c29437264524cf71f4fbb9a6bf8b1f760e4041d5eea2477",
+    "scripts/latex-runtime/Dockerfile": "e34effb8d4f54ef64e1bd5d01019445c46c2b5bbe77ae2df8b2f88ef63b7a372",
+    "scripts/latex-runtime/landlock.c": "6a7e52ea8aff6893084b1df11ebcdff8aa0bec1e1b4a7d14cbdb29ec009e4fd9",
+    "scripts/latex-runtime/supervisor.py": "c77987e4497a0a08b8c8ae0d110a2654821fab3d235419e885013a6b76049ada",
+    "scripts/latex-runtime/inspect_pdf.py": "2adb1ec38e1482112b7aad325d8d219b331534ed623ad24f16df2c137a773fc0",
+    "scripts/latex-runtime/build-closure.py": "b9082fab4027d299824bddce3b5656369fd7458e9a84cd2116aca1a4312c2c90",
+    "scripts/latex-runtime/texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa"
+  },
+  "configuration": {
+    "user": "65532:65532",
+    "network": "none",
+    "memory": 536870912,
+    "memorySwap": 536870912,
+    "cpus": 2000000000,
+    "pids": 64,
+    "readOnly": true,
+    "mounts": [],
+    "security": ["no-new-privileges"],
+    "logDriver": "none"
+  },
+  "limits": {
+    "sourceBytes": 49152,
+    "pdfBytes": 5242880,
+    "pages": 10,
+    "timeoutMs": 20000,
+    "concurrency": 2
+  },
+  "checks": [
+    {
+      "name": "actual-landlock-rights-and-exec",
+      "abi": 8,
+      "deniedReads": 2,
+      "approvedRead": 1,
+      "scratchWrite": 1,
+      "outsideWriteDenied": 1,
+      "shellExecDenied": 1
+    },
+    {
+      "name": "image-runtime-and-closure-binding",
+      "runtimeHashes": {
+        "landlock.c": "6a7e52ea8aff6893084b1df11ebcdff8aa0bec1e1b4a7d14cbdb29ec009e4fd9",
+        "supervisor.py": "c77987e4497a0a08b8c8ae0d110a2654821fab3d235419e885013a6b76049ada",
+        "inspect_pdf.py": "2adb1ec38e1482112b7aad325d8d219b331534ed623ad24f16df2c137a773fc0",
+        "build-closure.py": "b9082fab4027d299824bddce3b5656369fd7458e9a84cd2116aca1a4312c2c90",
+        "texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa"
+      },
+      "manifestSha256": "93efd86d7df5327f53d1f408a1aef84402d43c5a0ea4cc637c849da33aeeb0d0",
+      "closureFiles": 1242,
+      "snapshot": "20261029T000000Z",
+      "packagesSha256": "1ecdad4eff55b0ef9ba0a04cbee3c98200794c3facc5f8c56d9e89dab84b0178"
+    },
+    {
+      "name": "actual-docker-network-and-resource-limits",
+      "networkErrno": 101,
+      "openFilesLimited": true,
+      "processesLimited": true,
+      "fileLimitBytes": 8388608,
+      "memoryChildReturn": -9,
+      "cpuChildReturn": -9,
+      "cpuUserSeconds": 10,
+      "tmpfsLimited": true
+    },
+    {
+      "name": "actual-pdf-parser-active-content-and-bounds",
+      "cases": 19,
+      "failures": []
+    },
+    {
+      "name": "real-macro-math-layout-pdf",
+      "pages": 2,
+      "pdfBytes": 14083,
+      "pdfSha256": "6d4446cd7400d02886b25882fd742ab3d9a7a886b7f2d20b23b9ddb076f34b83",
+      "sourceSha256": "7bb2f9d426e4bec5030315c809d823618e8ef65c876e927a26d040464f3901d0",
+      "taggedPages": 0,
+      "durationMs": 825
+    },
+    {
+      "name": "negative-wrapper-control",
+      "pass": true
+    },
+    {
+      "name": "direct-file-read",
+      "code": "compile_failed",
+      "durationMs": 291
+    },
+    {
+      "name": "constructed-file-read",
+      "code": "compile_failed",
+      "durationMs": 292
+    },
+    {
+      "name": "outside-write",
+      "code": "compile_failed",
+      "durationMs": 300
+    },
+    {
+      "name": "unsupported-package",
+      "code": "compile_failed",
+      "durationMs": 282
+    },
+    {
+      "name": "unsafe-pdf-link",
+      "code": "output_invalid",
+      "durationMs": 468
+    },
+    {
+      "name": "unbounded-pages",
+      "code": "output_invalid",
+      "durationMs": 296
+    },
+    {
+      "name": "overfull-layout",
+      "code": "layout_overflow",
+      "durationMs": 292
+    },
+    {
+      "name": "recursive-macro",
+      "code": "compile_failed",
+      "durationMs": 10192
+    },
+    {
+      "name": "cpu-loop",
+      "code": "compile_failed",
+      "durationMs": 10193
+    },
+    {
+      "name": "production-cancel-cleanup",
+      "pass": true
+    },
+    {
+      "name": "active-production-cancellation-cleanup",
+      "pass": true
+    },
+    {
+      "name": "real-paused-worker-wall-timeout-cleanup",
+      "pass": true
+    },
+    {
+      "name": "actual-two-active-admission-and-cleanup",
+      "pass": true
+    }
+  ],
+  "checksExecuted": 19,
+  "accessibility": "Structural inspection only; assistive-technology and PDF/UA acceptance unrun",
+  "evidence": "Local synthetic engineering; no production or security-owner acceptance"
+}

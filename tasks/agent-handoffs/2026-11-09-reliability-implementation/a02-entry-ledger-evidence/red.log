@@ -1,0 +1,52 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/privacy-operations.test.ts (12 tests | 1 failed | 11 skipped) 5ms
+     ↓ exports immutable evidence and corrections only through the request owner's filters
+     ↓ fails export closed when document_evidence_attempts cannot be read
+     ↓ fails export closed when evidence_corrections cannot be read
+     ↓ fails export closed when canonical export RPC cannot be read
+     ↓ fails export closed when the canonical snapshot is incomplete
+     ↓ fails export closed when JD requirements cannot be exported
+     ↓ builds a versioned export manifest without raw resume text
+     ↓ calculates a UTC retention cutoff
+     ↓ completes an export request and is safe to replay
+     ↓ deletes every object before completing deletion
+     ↓ keeps a retention item retryable when object deletion fails
+     × keeps all ten nonempty metadata collections from the actual workspace RPC consumer 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/privacy-operations.test.ts > complete owned correction and relationship metadata export > keeps all ten nonempty metadata collections from the actual workspace RPC consumer
+AssertionError: expected undefined to deeply equal [ { id: 'synthetic-0', …(2) } ]
+
+- Expected:
+[
+  {
+    "id": "synthetic-0",
+    "owner_id": "metadata-owner",
+    "retained": {
+      "ordinal": 0,
+    },
+  },
+]
+
++ Received:
+undefined
+
+ ❯ tests/unit/privacy-operations.test.ts:376:37
+    374|     });
+    375|     for (const key of entryMetadataCollections)
+    376|       expect(manifest.records[key]).toEqual(metadata[key]);
+       |                                     ^
+    377|     expect(manifest.records.canonicalResumeVersions).toEqual(legacy.ca…
+    378|     expect(database.rpc).toHaveBeenLastCalledWith("export_resume_works…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 skipped (12)
+   Start at  18:49:02
+   Duration  140ms (transform 48ms, setup 0ms, import 79ms, tests 5ms, environment 0ms)
+

@@ -1,0 +1,884 @@
+import { z } from "zod";
+import { useEffect, useId, useRef, useState } from "react";
+import { Form, Link } from "react-router";
+import CanonicalEntryRegroupDiff from "./CanonicalEntryRegroupDiff";
+import type {
+  CanonicalEntryRegroupCommand,
+  CanonicalEntryRegroupRequest,
+  CanonicalEntryRegroupWorkspace,
+  CanonicalEntryRegroupPreview,
+  CanonicalEntryRegroupAppliedReceipt,
+  CanonicalEntryRegroupReason,
+  CanonicalEntryRegroupError,
+} from "~/lib/server/canonical-entry-regroup-repository";
+
+export type CanonicalEntryRegroupFeedback =
+  | { kind: "preview" | "retained"; preview: CanonicalEntryRegroupPreview }
+  | {
+      kind: "applied";
+      receipt: CanonicalEntryRegroupAppliedReceipt;
+      resolved: CanonicalEntryRegroupCommand;
+    }
+  | {
+      kind: "error";
+      reason: CanonicalEntryRegroupReason;
+      recovery: CanonicalEntryRegroupError["recovery"];
+      submitted?: CanonicalEntryRegroupCommand;
+    };
+type Available = Extract<
+  CanonicalEntryRegroupWorkspace,
+  { state: "available" }
+>;
+
+const LIFETIME = 30 * 60 * 1000;
+const MAX_RECORD_BYTES = 20_000;
+const uuid = z.uuid().regex(/^[a-f0-9-]+$/);
+const sha256 = z.string().regex(/^[a-f0-9]{64}$/);
+const revision = z.number().int().min(0).max(2_147_483_647);
+// Storage admission only. The server independently admits the owned original
+// source, immutable base, captured history and full command before any write.
+const pendingCommandSchema = z.strictObject({
+  schemaVersion: z.literal("canonical-entry-regroup-command/1.0.0"),
+  operation: z.literal("approve_whole_entry_regroup"),
+  binding: z.strictObject({
+    ownerId: uuid,
+    organizationId: uuid,
+    resumeId: uuid,
+    analysisId: uuid,
+    sourceId: uuid,
+    attemptId: uuid,
+    inputSha256: sha256,
+    evidenceSchemaVersion: z.literal("evidence/2.0.0"),
+    fieldExtractorVersion: z.literal("evidence-fields/1.0.1"),
+    targetModelVersion: z.literal("evidence-targets/1.0.0"),
+    associationModelVersion: z.literal("evidence-entry-associations/1.0.0"),
+    producerVersion: z.literal("canonical-engine/1.0.4"),
+    admissionPolicyVersion: z.literal("whole-entry-regroup-admission/1.0.0"),
+    structuralTextProfileVersion: z.literal("a02-structural-text/1.0.0"),
+    correctionProjectionModelVersion: z.literal("canonical-corrections/1.0.1"),
+    correctionAdmissionPolicyVersion: z.literal(
+      "candidate-correction-admission/1.0.0",
+    ),
+    regroupModelVersion: z.literal("canonical-entry-regroup/1.0.0"),
+  }),
+  base: z.strictObject({
+    versionId: uuid,
+    revision: z.number().int().min(1).max(2_147_483_646),
+    contentSha256: sha256,
+    locale: z.string().regex(/^[a-z]{2,3}(?:-[A-Z]{2})?$/),
+  }),
+  expected: z.strictObject({
+    reviewRevision: revision,
+    reviewHeadId: uuid.nullable(),
+    assignmentRevision: revision,
+    assignmentHeadId: uuid.nullable(),
+    associationRevision: revision,
+    associationHeadId: uuid.nullable(),
+    regroupRevision: revision,
+    regroupHeadId: uuid.nullable(),
+    canonicalHeadId: uuid,
+  }),
+  selections: z
+    .array(
+      z.strictObject({
+        groupId: z.string().regex(/^entry-association-[a-f0-9]{64}$/),
+        factIds: z.array(uuid).min(2).max(3),
+      }),
+    )
+    .min(1)
+    .max(32),
+  unselectedDisposition: z.literal("retain_eligible_original_origins"),
+  acknowledgement: z.literal(true),
+  previewHash: sha256,
+  idempotencyKey: uuid,
+});
+type Pending = {
+  schemaVersion: "pending-canonical-entry-regroup/1.0.0";
+  savedAt: number;
+  command: CanonicalEntryRegroupCommand;
+};
+// The command's prospective acknowledgement:true remains exact protocol data.
+// Visible wholeEntryAcknowledgement checkbox acceptance is never retained.
+const recordSchema = z.strictObject({
+  schemaVersion: z.literal("pending-canonical-entry-regroup/1.0.0"),
+  savedAt: z.number().int().nonnegative(),
+  command: z.unknown(),
+});
+const bytes = (text: string) => new TextEncoder().encode(text).byteLength;
+const sameFields = (a: object, b: object) =>
+  Object.keys(a).length === Object.keys(b).length &&
+  Object.entries(a).every(
+    ([key, value]) =>
+      Object.hasOwn(b, key) &&
+      Object.entries(b).some(
+        ([other, item]) => other === key && item === value,
+      ),
+  );
+function exactCommand(
+  a: CanonicalEntryRegroupCommand,
+  b: CanonicalEntryRegroupCommand,
+) {
+  return (
+    a.schemaVersion === b.schemaVersion &&
+    a.operation === b.operation &&
+    sameFields(a.binding, b.binding) &&
+    sameFields(a.base, b.base) &&
+    sameFields(a.expected, b.expected) &&
+    a.unselectedDisposition === b.unselectedDisposition &&
+    a.acknowledgement === b.acknowledgement &&
+    a.previewHash === b.previewHash &&
+    a.idempotencyKey === b.idempotencyKey &&
+    a.selections.length === b.selections.length &&
+    a.selections.every(
+      (group, index) =>
+        group.groupId === b.selections[index].groupId &&
+        group.factIds.length === b.selections[index].factIds.length &&
+        group.factIds.every(
+          (factId, member) => factId === b.selections[index].factIds[member],
+        ),
+    )
+  );
+}
+function validCommand(
+  raw: unknown,
+  ownerId: string,
+  analysisId: string,
+): raw is CanonicalEntryRegroupCommand {
+  if (
+    !raw ||
+    typeof raw !== "object" ||
+    Array.isArray(raw) ||
+    !("selections" in raw) ||
+    !Array.isArray(raw.selections) ||
+    raw.selections.length < 1 ||
+    raw.selections.length > 32
+  )
+    return false;
+  for (let i = 0; i < raw.selections.length; i++) {
+    const selection: unknown = raw.selections[i];
+    if (
+      !Object.hasOwn(raw.selections, i) ||
+      !selection ||
+      typeof selection !== "object" ||
+      !("factIds" in selection) ||
+      !Array.isArray(selection.factIds) ||
+      selection.factIds.length < 2 ||
+      selection.factIds.length > 3
+    )
+      return false;
+    for (let j = 0; j < selection.factIds.length; j++)
+      if (
+        !Object.hasOwn(selection.factIds, j) ||
+        typeof selection.factIds[j] !== "string" ||
+        selection.factIds[j].length > 36
+      )
+        return false;
+  }
+  const parsed = pendingCommandSchema.safeParse(raw);
+  if (!parsed.success) return false;
+  const command = parsed.data,
+    expected = command.expected;
+  if (
+    command.binding.ownerId !== ownerId ||
+    command.binding.analysisId !== analysisId ||
+    expected.canonicalHeadId !== command.base.versionId ||
+    [
+      [expected.reviewRevision, expected.reviewHeadId],
+      [expected.assignmentRevision, expected.assignmentHeadId],
+      [expected.associationRevision, expected.associationHeadId],
+      [expected.regroupRevision, expected.regroupHeadId],
+    ].some(([value, head]) => (value === 0) !== (head === null))
+  )
+    return false;
+  const groups = command.selections.map((group) => group.groupId),
+    facts = command.selections.flatMap((group) => group.factIds);
+  if (
+    new Set(groups).size !== groups.length ||
+    new Set(facts).size !== facts.length
+  )
+    return false;
+  const wire = new URLSearchParams({
+    command: JSON.stringify(command),
+    wholeEntryAcknowledgement: "accepted",
+  }).toString();
+  return bytes(wire) <= 16_384;
+}
+function validRecord(
+  raw: unknown,
+  ownerId: string,
+  analysisId: string,
+): raw is Pending {
+  const parsed = recordSchema.safeParse(raw),
+    now = Date.now();
+  return (
+    parsed.success &&
+    Number.isSafeInteger(parsed.data.savedAt) &&
+    parsed.data.savedAt <= now &&
+    now - parsed.data.savedAt < LIFETIME &&
+    validCommand(parsed.data.command, ownerId, analysisId)
+  );
+}
+function parseRecord(
+  text: string | null,
+  ownerId: string,
+  analysisId: string,
+): Pending | null {
+  if (!text || text.length > MAX_RECORD_BYTES || bytes(text) > MAX_RECORD_BYTES)
+    return null;
+  try {
+    const raw: unknown = JSON.parse(text);
+    return validRecord(raw, ownerId, analysisId) ? raw : null;
+  } catch {
+    return null;
+  }
+}
+
+const receiptSchema = z.strictObject({
+  schemaVersion: z.literal("entry-regroup-result/1.0.0"),
+  status: z.literal("applied"),
+  baseVersionId: uuid,
+  baseRevision: z.number().int().positive(),
+  idempotencyKey: uuid,
+  commandSha256: sha256,
+  versionId: uuid,
+  revision: z.number().int().positive(),
+  batchId: uuid,
+  regroupRevision: z.number().int().positive(),
+  regroupHeadId: uuid,
+  idempotent: z.boolean(),
+  scoringEligible: z.literal(false),
+});
+function receiptMatches(raw: unknown, command: CanonicalEntryRegroupCommand) {
+  const parsed = receiptSchema.safeParse(raw);
+  if (!parsed.success) return false;
+  const r = parsed.data;
+  return (
+    r.baseVersionId === command.base.versionId &&
+    r.baseRevision === command.base.revision &&
+    r.idempotencyKey === command.idempotencyKey &&
+    r.commandSha256 === command.previewHash &&
+    r.revision === command.base.revision + 1 &&
+    r.regroupRevision === command.expected.regroupRevision + 1 &&
+    r.regroupHeadId === r.batchId &&
+    r.versionId !== command.base.versionId
+  );
+}
+const fields = { employer: "Employer", role: "Role", dates: "Dates" };
+const states = {
+  unconfirmed: "Unconfirmed",
+  source_supported: "Source supported",
+  candidate_confirmed: "Candidate confirmed",
+};
+function CommitForm({
+  command,
+  enabled,
+  busy,
+  destination,
+  remember,
+  retry,
+}: {
+  command: CanonicalEntryRegroupCommand;
+  enabled: boolean;
+  busy: boolean;
+  destination: string;
+  remember: (command: CanonicalEntryRegroupCommand) => boolean;
+  retry: boolean;
+}) {
+  const [checked, setChecked] = useState(false),
+    checkbox = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const reset = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        if (checkbox.current) checkbox.current.checked = false;
+        setChecked(false);
+      }
+    };
+    window.addEventListener("pageshow", reset);
+    return () => window.removeEventListener("pageshow", reset);
+  }, []);
+  return (
+    <Form
+      method="post"
+      action={`${destination}?regroup=commit`}
+      onSubmit={(event) => {
+        if (
+          !enabled ||
+          busy ||
+          !checked ||
+          !event.currentTarget.checkValidity() ||
+          !remember(command)
+        ) {
+          event.preventDefault();
+          return;
+        }
+        setChecked(false);
+      }}
+    >
+      <input type="hidden" name="command" value={JSON.stringify(command)} />
+      <label>
+        <input
+          ref={checkbox}
+          type="checkbox"
+          name="wholeEntryAcknowledgement"
+          value="accepted"
+          required
+          checked={checked}
+          disabled={!enabled || busy}
+          onChange={(event) => setChecked(event.target.checked)}
+        />
+        I reviewed the whole affected entries, carried facts and bullets,
+        ordering and retired entry destinations. This approves the arrangement,
+        not the accuracy of the facts.
+      </label>
+      <button
+        type="submit"
+        className="back-button"
+        disabled={!enabled || busy || !checked}
+      >
+        {retry
+          ? "Retry the same regroup request"
+          : "Save this entry arrangement"}
+      </button>
+    </Form>
+  );
+}
+function sameSelections(
+  a: CanonicalEntryRegroupRequest,
+  b: CanonicalEntryRegroupRequest,
+) {
+  return (
+    a.selections.length === b.selections.length &&
+    a.selections.every(
+      (group, i) =>
+        group.groupId === b.selections[i].groupId &&
+        group.factIds.length === b.selections[i].factIds.length &&
+        group.factIds.every(
+          (factId, j) => factId === b.selections[i].factIds[j],
+        ),
+    )
+  );
+}
+function FreshReview({
+  workspace,
+  feedback,
+  busy,
+  destination,
+  remember,
+  blocked,
+}: {
+  workspace: Available;
+  feedback?: CanonicalEntryRegroupFeedback;
+  busy: boolean;
+  destination: string;
+  remember: (command: CanonicalEntryRegroupCommand) => boolean;
+  blocked: boolean;
+}) {
+  const prefix = useId(),
+    [selected, setSelected] = useState<string[]>([]),
+    [choices, setChoices] = useState<Record<string, string>>({});
+  const [review, setReview] = useState<{
+    feedback?: CanonicalEntryRegroupFeedback;
+    preview: CanonicalEntryRegroupPreview | null;
+  }>({ feedback, preview: null });
+  let candidate = review.preview;
+  if (feedback !== review.feedback) {
+    candidate = feedback?.kind === "preview" ? feedback.preview : null;
+    setReview({ feedback, preview: candidate });
+  }
+  const invalidate = () => setReview({ feedback, preview: null });
+  const groups = workspace.groups.filter((group) =>
+    selected.includes(group.id),
+  );
+  const selections = groups.map((group) => ({
+    groupId: group.id,
+    factIds: group.members.map(
+      (member) => choices[`${group.id}:${member.assertionId}`] ?? "",
+    ),
+  }));
+  const allFacts = selections.flatMap((selection) => selection.factIds);
+  const valid =
+    groups.length > 0 &&
+    groups.length <= 32 &&
+    new Set(allFacts).size === allFacts.length &&
+    groups.every(
+      (group) =>
+        group.reason === null &&
+        group.members.every((member) =>
+          member.choices.some(
+            (choice) =>
+              choice.factId === choices[`${group.id}:${member.assertionId}`],
+          ),
+        ),
+    );
+  const request: CanonicalEntryRegroupRequest | null =
+    valid && workspace.current.status === "available" && workspace.canPreview
+      ? {
+          schemaVersion: "canonical-entry-regroup-command/1.0.0",
+          operation: "approve_whole_entry_regroup",
+          binding: workspace.binding,
+          base: workspace.base,
+          expected: workspace.current.captured,
+          selections,
+          unselectedDisposition: "retain_eligible_original_origins",
+        }
+      : null;
+  const preview =
+    candidate &&
+    request &&
+    validCommand(
+      candidate.command,
+      workspace.binding.ownerId,
+      workspace.binding.analysisId,
+    ) &&
+    sameFields(candidate.command.binding, request.binding) &&
+    sameFields(candidate.command.base, request.base) &&
+    sameFields(candidate.command.expected, request.expected) &&
+    sameSelections(candidate.command, request)
+      ? candidate
+      : null;
+  return (
+    <section aria-label="New saved-entry arrangement">
+      <p>
+        Choose which saved facts belong together. Selecting a source group
+        combines entire affected entries, including other facts and bullets.
+      </p>
+      <p>
+        Base revision {workspace.base.revision}. Locale: {workspace.base.locale}
+        . The locale is unchanged.
+      </p>
+      {workspace.reviewNotice && (
+        <p>
+          Saved source corrections are present. Review the correction decisions
+          separately; this arrangement does not apply or confirm them.
+        </p>
+      )}
+      {!workspace.canPreview && (
+        <p role="status">
+          A new arrangement is unavailable. Review saved corrections or open the
+          latest saved version.
+        </p>
+      )}
+      <Form
+        method="post"
+        action={`${destination}?regroup=preview`}
+        onSubmit={(event) => {
+          if (!request || !workspace.canPreview || busy) event.preventDefault();
+        }}
+      >
+        <input
+          type="hidden"
+          name="command"
+          value={request ? JSON.stringify(request) : ""}
+        />
+        <fieldset disabled={busy || !workspace.canPreview}>
+          <legend>Source groups and saved fact choices</legend>
+          {workspace.groups.map((group, groupIndex) => (
+            <fieldset key={group.id} className="account-card">
+              <legend>Source group {groupIndex + 1}</legend>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selected.includes(group.id)}
+                  disabled={Boolean(group.reason)}
+                  onChange={(event) => {
+                    invalidate();
+                    setSelected((previous) =>
+                      event.target.checked
+                        ? [...previous, group.id]
+                        : previous.filter((id) => id !== group.id),
+                    );
+                  }}
+                />
+                Include this whole-entry merge {groupIndex + 1}
+              </label>
+              <p>
+                Source method:{" "}
+                {group.method === "local_ocr" ? "Recorded OCR" : "Native text"}.
+                These source relationships remain unverified.
+              </p>
+              {group.reason && (
+                <p>
+                  No supported saved fact choice is available for every source
+                  member. Review this source separately.
+                </p>
+              )}
+              {group.members.map((member, memberIndex) => {
+                const key = `${group.id}:${member.assertionId}`,
+                  selectId = `${prefix}-${groupIndex}-${memberIndex}`;
+                return (
+                  <div key={member.assertionId}>
+                    <p>
+                      {fields[member.field]} source wording:{" "}
+                      {member.sourceValue}
+                    </p>
+                    {member.citations.map((citation) => (
+                      <Link key={citation.spanId} to={citation.href}>
+                        View cited source
+                      </Link>
+                    ))}
+                    <label htmlFor={selectId}>
+                      {fields[member.field]} saved fact for source group{" "}
+                      {groupIndex + 1}
+                    </label>
+                    <select
+                      id={selectId}
+                      value={choices[key] ?? ""}
+                      onChange={(event) => {
+                        invalidate();
+                        setChoices((previous) => ({
+                          ...previous,
+                          [key]: event.target.value,
+                        }));
+                      }}
+                    >
+                      <option value="">Choose a saved fact</option>
+                      {member.choices.map((choice) => (
+                        <option key={choice.factId} value={choice.factId}>
+                          {choice.currentValue}, {choice.locationLabel}
+                        </option>
+                      ))}
+                    </select>
+                    {member.choices.map((choice) => (
+                      <p key={choice.factId}>
+                        Current wording: {choice.currentValue}. State:{" "}
+                        {states[choice.state]}.
+                        {choice.mappedThrough === "owned_ancestor_chain"
+                          ? " Linked through an earlier owned source; the source does not verify edited current wording."
+                          : " Linked through the saved fact's citations."}
+                        {choice.confirmation
+                          ? ` Recorded confirmation: ${choice.confirmation.value}.`
+                          : " No fact confirmation is recorded."}
+                      </p>
+                    ))}
+                  </div>
+                );
+              })}
+            </fieldset>
+          ))}
+        </fieldset>
+        <button
+          type="submit"
+          className="back-button"
+          disabled={!request || busy || !workspace.canPreview}
+        >
+          Preview whole-entry arrangement
+        </button>
+      </Form>
+      {preview && (
+        <>
+          <CanonicalEntryRegroupDiff preparation={preview.preparation} />
+          {blocked && (
+            <p>
+              Resolve the retained request before saving another arrangement.
+            </p>
+          )}
+          <CommitForm
+            key={preview.command.idempotencyKey}
+            command={preview.command}
+            enabled={
+              !blocked &&
+              preview.capability.canRetry &&
+              preview.current.status === "available" &&
+              preview.current.freshCanCommit
+            }
+            busy={busy}
+            destination={destination}
+            remember={remember}
+            retry={false}
+          />
+        </>
+      )}
+    </section>
+  );
+}
+
+export default function CanonicalEntryRegroupReview({
+  workspace,
+  ownerId,
+  analysisId,
+  feedback,
+  busy,
+  fresh,
+}: {
+  workspace: CanonicalEntryRegroupWorkspace;
+  ownerId: string;
+  analysisId: string;
+  feedback?: CanonicalEntryRegroupFeedback;
+  busy: boolean;
+  fresh: boolean;
+}) {
+  const heading = useId(),
+    storageKey = `resumide:canonical-entry-regroup:pending:${ownerId}:${analysisId}`,
+    destination = `/analysis/${analysisId}/canonical`;
+  const [pending, setPending] = useState<Pending | null>(null),
+    [historical, setHistorical] = useState<CanonicalEntryRegroupPreview | null>(
+      null,
+    ),
+    [storageProblem, setStorageProblem] = useState(false),
+    [notice, setNotice] = useState(""),
+    [epoch, setEpoch] = useState(0);
+  useEffect(() => {
+    setHistorical(null);
+    try {
+      const raw = window.sessionStorage.getItem(storageKey),
+        value = parseRecord(raw, ownerId, analysisId);
+      setPending(value);
+      if (raw && !value) {
+        window.sessionStorage.removeItem(storageKey);
+        setNotice(
+          "The stored regroup request is unavailable or expired. Review saved entries again.",
+        );
+      }
+    } catch {
+      setStorageProblem(true);
+    }
+  }, [storageKey, ownerId, analysisId]);
+  useEffect(() => {
+    setHistorical(null);
+    setEpoch((value) => value + 1);
+  }, [workspace]);
+  useEffect(() => {
+    const reset = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setHistorical(null);
+        setEpoch((value) => value + 1);
+      }
+    };
+    window.addEventListener("pageshow", reset);
+    return () => window.removeEventListener("pageshow", reset);
+  }, []);
+  useEffect(() => {
+    if (
+      feedback?.kind === "retained" &&
+      pending &&
+      exactCommand(pending.command, feedback.preview.command)
+    )
+      setHistorical(feedback.preview);
+    if (feedback?.kind === "error") setHistorical(null);
+    if (
+      feedback?.kind !== "applied" ||
+      !validCommand(feedback.resolved, ownerId, analysisId) ||
+      !receiptMatches(feedback.receipt, feedback.resolved)
+    )
+      return;
+    setPending((previous) =>
+      previous && exactCommand(previous.command, feedback.resolved)
+        ? null
+        : previous,
+    );
+    setHistorical(null);
+    try {
+      const stored = parseRecord(
+        window.sessionStorage.getItem(storageKey),
+        ownerId,
+        analysisId,
+      );
+      if (stored && exactCommand(stored.command, feedback.resolved))
+        window.sessionStorage.removeItem(storageKey);
+    } catch {
+      setStorageProblem(true);
+    }
+  }, [feedback, storageKey, ownerId, analysisId, pending]);
+  useEffect(() => {
+    if (!pending) return;
+    const timer = window.setTimeout(
+      () => {
+        setPending(null);
+        setHistorical(null);
+        setNotice(
+          "The retained regroup request expired. Review saved entries again.",
+        );
+        try {
+          const text = window.sessionStorage.getItem(storageKey);
+          if (
+            text &&
+            text.length <= MAX_RECORD_BYTES &&
+            bytes(text) <= MAX_RECORD_BYTES
+          ) {
+            const stored = recordSchema.safeParse(JSON.parse(text));
+            if (
+              stored.success &&
+              stored.data.savedAt === pending.savedAt &&
+              validCommand(stored.data.command, ownerId, analysisId) &&
+              exactCommand(stored.data.command, pending.command)
+            )
+              window.sessionStorage.removeItem(storageKey);
+          }
+        } catch {
+          setStorageProblem(true);
+        }
+      },
+      Math.max(0, pending.savedAt + LIFETIME - Date.now()),
+    );
+    return () => window.clearTimeout(timer);
+  }, [pending, storageKey, ownerId, analysisId]);
+  const remember = (command: CanonicalEntryRegroupCommand) => {
+    if (
+      !validCommand(command, ownerId, analysisId) ||
+      (pending &&
+        (!exactCommand(pending.command, command) ||
+          !validRecord(pending, ownerId, analysisId)))
+    )
+      return false;
+    const value: Pending = pending ?? {
+      schemaVersion: "pending-canonical-entry-regroup/1.0.0",
+      savedAt: Date.now(),
+      command,
+    };
+    setPending(value);
+    try {
+      window.sessionStorage.setItem(storageKey, JSON.stringify(value));
+    } catch {
+      setStorageProblem(true);
+    }
+    return true;
+  };
+  const discardLocalRetry = () => {
+    if (busy || !pending) return;
+    try {
+      window.sessionStorage.removeItem(storageKey);
+      if (window.sessionStorage.getItem(storageKey) !== null) {
+        setNotice(
+          "Could not discard local retry details. The request is still retained on this page.",
+        );
+        return;
+      }
+    } catch {
+      setNotice(
+        "Could not discard local retry details. The request is still retained on this page.",
+      );
+      return;
+    }
+    setPending(null);
+    setHistorical(null);
+    setStorageProblem(false);
+    setEpoch((value) => value + 1);
+    setNotice(
+      "Local retry details were discarded. This does not cancel a save or delete a saved version. Check saved history before starting another arrangement.",
+    );
+  };
+  const retained =
+    historical && pending && exactCommand(historical.command, pending.command)
+      ? historical
+      : null;
+  const applied =
+    feedback?.kind === "applied" &&
+    validCommand(feedback.resolved, ownerId, analysisId) &&
+    receiptMatches(feedback.receipt, feedback.resolved)
+      ? feedback
+      : null;
+  const available =
+    workspace.state === "available" &&
+    workspace.binding.ownerId === ownerId &&
+    workspace.binding.analysisId === analysisId
+      ? workspace
+      : null;
+  return (
+    <section aria-labelledby={heading} aria-busy={busy}>
+      <h2 id={heading}>Regroup saved work entries</h2>
+      <p>
+        This changes the arrangement of whole saved entries in a new version. It
+        does not confirm facts, verify source accuracy or provide a score.
+      </p>
+      <Link to={`${destination}#history-heading`}>Check saved history</Link>
+      {notice && <p role="status">{notice}</p>}
+      {storageProblem && (
+        <p role="status">
+          This tab could not store or restore the regroup request. Keep this
+          page open for an in-memory retry; reloading may lose it.
+        </p>
+      )}
+      {(!available || !available.capability.canRetry) && (
+        <p role="status">
+          Saving a new arrangement is unavailable. An available preview does not
+          save your review.
+        </p>
+      )}
+      {feedback?.kind === "error" && (
+        <p role="status">
+          {!pending
+            ? "Review saved entries and create a new preview before saving another arrangement."
+            : feedback.recovery === "review_again"
+              ? "Review the latest saved entries before starting another arrangement. The retained original request has not been rebased."
+              : "The original request is retained. Review it before retrying; no automatic retry will run."}
+        </p>
+      )}
+      {applied && (
+        <p role="status">
+          {applied.receipt.idempotent
+            ? "This arrangement was already saved; the current version may be newer."
+            : "The entry arrangement was saved. Confirm facts separately."}{" "}
+          <Link to={`${destination}?version=${applied.receipt.versionId}`}>
+            Open the saved arrangement
+          </Link>
+        </p>
+      )}
+      {pending && (
+        <section aria-label="Retained original regroup request">
+          <h3>Retained original request</h3>
+          <p>
+            The outcome may be unknown. This request keeps its original base,
+            source, locale, captures and request key.
+          </p>
+          <p>
+            Discarding local retry details does not cancel a save or delete a
+            saved version. Check saved history to see whether anything was
+            saved.
+          </p>
+          <button
+            type="button"
+            className="back-button"
+            disabled={busy}
+            onClick={discardLocalRetry}
+          >
+            Discard local retry details
+          </button>
+          <Form method="post" action={`${destination}?regroup=resume`}>
+            <input
+              type="hidden"
+              name="command"
+              value={JSON.stringify(pending.command)}
+            />
+            <button type="submit" className="back-button" disabled={busy}>
+              Review retained request
+            </button>
+          </Form>
+          {retained && (
+            <>
+              <CanonicalEntryRegroupDiff preparation={retained.preparation} />
+              <p>
+                This is the original request's arrangement. Retrying uses the
+                same request key and does not rebase onto today's version.
+              </p>
+              <CommitForm
+                key={`${pending.command.idempotencyKey}:${epoch}`}
+                command={pending.command}
+                enabled={retained.capability.canRetry}
+                busy={busy}
+                destination={destination}
+                remember={remember}
+                retry
+              />
+            </>
+          )}
+        </section>
+      )}
+      {available && fresh ? (
+        <FreshReview
+          key={epoch}
+          workspace={available}
+          feedback={feedback}
+          busy={busy}
+          destination={destination}
+          remember={remember}
+          blocked={pending !== null}
+        />
+      ) : (
+        <p>
+          A fresh arrangement requires the latest saved version. A retained
+          original request remains separate.
+        </p>
+      )}
+    </section>
+  );
+}

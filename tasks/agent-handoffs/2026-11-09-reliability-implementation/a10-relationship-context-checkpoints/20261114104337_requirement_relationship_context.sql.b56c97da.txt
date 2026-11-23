@@ -1,0 +1,2647 @@
+-- Owned header context only. No semantic coverage, writer activation or native acceptance.
+begin;
+
+create function private.requirement_relationship_charge(p_cache jsonb,p_kind text,p_id text,p_value jsonb) returns jsonb
+language plpgsql volatile security invoker set search_path='' as $rr_charge$
+declare c jsonb:=private.entry_regroup_work(p_cache,1); item jsonb; units bigint:=0;
+begin
+  if c->'seen' ? (p_kind||':'||p_id) then return c; end if;
+  c:=private.entry_regroup_inspect(c,p_kind,p_id,p_value);
+  -- Strict recursive value traversal; no keyvalue() call on scalar metadata.
+  for item in select value from jsonb_path_query(p_value,'strict $.**') as nodes(value) loop
+    c:=private.entry_regroup_work(c,1);
+    if jsonb_typeof(item)='string' then units:=units+private.grouped_import_utf16_length(item#>>'{}'); end if;
+    if (c->>'text')::bigint+units>8000000 then perform private.correction_fail('unavailable'); end if;
+  end loop;
+  c:=jsonb_set(c,'{text}',to_jsonb((c->>'text')::bigint+units));
+  c:=jsonb_set(c,array['seen',p_kind||':'||p_id,'text'],to_jsonb(units));
+  return c;
+end;
+$rr_charge$;
+
+create function private.requirement_header_context(p_scope jsonb,p_base jsonb,p_cache jsonb) returns jsonb
+language plpgsql volatile security invoker set search_path='' as $rr_headers$
+declare c jsonb:=private.entry_regroup_work(p_cache,1); link jsonb; links jsonb; source_selection jsonb; selected jsonb; members jsonb; result_members jsonb;
+  member jsonb; selected_member jsonb; fact jsonb; origin_fact jsonb; observed jsonb; place jsonb; section jsonb; entry jsonb; bullet jsonb; ref text;
+  index_value jsonb:='{}'; locations jsonb:='{}'; entry_indices jsonb:='{}'; ancestor_index jsonb; step jsonb; row_value jsonb;
+  family text; creation text; batch uuid; group_id uuid; approval uuid; original_version uuid; previous_version uuid; mapped text;
+  expected_count integer; entry_index integer; depth integer; group_index integer:=0; member_index integer; revision_value integer;
+  groups jsonb:='[]'; output jsonb; selection jsonb; resolution jsonb; resolution_key text; had_resolution boolean; version_id uuid:=(p_base->>'versionId')::uuid;
+  a_prefix integer; r_prefix integer; a_head uuid; r_head uuid; seen_groups jsonb:='{}'; seen_facts jsonb:='{}'; seen_assertions jsonb:='{}';
+begin
+  -- The public reader passes only the already proved loaded base and the SAME cache.
+  for fact in select value from jsonb_array_elements(p_base->'content'->'facts') loop c:=private.entry_regroup_work(c,1); index_value:=index_value||jsonb_build_object(fact->>'id',fact); end loop;
+  for ref in select jsonb_array_elements_text(p_base->'content'->'contactFactIds') loop c:=private.entry_regroup_work(c,1); locations:=jsonb_set(locations,array[ref],coalesce(locations->ref,'[]'::jsonb)||jsonb_build_array(jsonb_build_object('kind','contact','sectionId',null,'entryId',null,'bulletId',null))); end loop;
+  for section in select value from jsonb_array_elements(p_base->'content'->'sections') loop
+    c:=private.entry_regroup_work(c,1);
+    for ref in select jsonb_array_elements_text(section->'factIds') loop c:=private.entry_regroup_work(c,1); locations:=jsonb_set(locations,array[ref],coalesce(locations->ref,'[]'::jsonb)||jsonb_build_array(jsonb_build_object('kind','section','sectionId',section->'id','entryId',null,'bulletId',null))); end loop;
+    entry_index:=0;
+    for entry in select value from jsonb_array_elements(section->'entries') loop
+      c:=private.entry_regroup_work(c,1); entry_indices:=entry_indices||jsonb_build_object((section->>'id')||':'||(entry->>'id'),entry_index); entry_index:=entry_index+1;
+      for ref in select jsonb_array_elements_text(entry->'factIds') loop c:=private.entry_regroup_work(c,1); locations:=jsonb_set(locations,array[ref],coalesce(locations->ref,'[]'::jsonb)||jsonb_build_array(jsonb_build_object('kind','entry','sectionId',section->'id','entryId',entry->'id','bulletId',null))); end loop;
+      for bullet in select value from jsonb_array_elements(entry->'bullets') loop
+        c:=private.entry_regroup_work(c,1);
+        for ref in select jsonb_array_elements_text(bullet->'factIds') loop c:=private.entry_regroup_work(c,1); locations:=jsonb_set(locations,array[ref],coalesce(locations->ref,'[]'::jsonb)||jsonb_build_array(jsonb_build_object('kind','bullet','sectionId',section->'id','entryId',entry->'id','bulletId',bullet->'id'))); end loop;
+      end loop;
+    end loop;
+  end loop;
+  if exists(select 1 from public.canonical_entry_regroup_snapshots where canonical_version_id=version_id) then
+    family:='regroup'; select creation_kind into strict creation from public.canonical_entry_regroup_snapshots where canonical_version_id=version_id;
+  elsif exists(select 1 from public.canonical_entry_association_snapshots where canonical_version_id=version_id) then
+    family:='association'; select origin_kind into strict creation from public.canonical_entry_association_snapshots where canonical_version_id=version_id;
+  else family:='none'; creation:=null; end if;
+  c:=private.entry_regroup_work(c,4); links:=private.entry_regroup_links(version_id);
+  for link in select value from jsonb_array_elements(links) loop
+    c:=private.entry_regroup_work(c,1); group_index:=group_index+1;
+    if link->>'originFamily'='regroup' then
+      select g.source_selection,g.batch_id,g.id,g.result_version_id into strict source_selection,batch,group_id,approval from public.candidate_entry_regroup_groups g where g.id=(link->>'regroupGroupId')::uuid;
+      select coalesce(jsonb_agg(jsonb_build_object('sourceOrder',m.source_order,'assertionId',m.assertion_id,'field',m.field,'factId',m.fact_id) order by m.source_order),'[]'::jsonb) into selected
+        from public.candidate_entry_regroup_members m where m.group_id=(link->>'regroupGroupId')::uuid;
+      if batch::text is distinct from link->>'regroupBatchId' then perform private.correction_fail('unavailable'); end if;
+    elsif link->>'originFamily'='association' then
+      select g.source_selection,g.batch_id,g.id,g.result_version_id into strict source_selection,batch,group_id,approval from public.candidate_entry_association_groups g where g.id=(link->>'associationGroupId')::uuid;
+      select coalesce(jsonb_agg(jsonb_build_object('sourceOrder',m.source_order,'assertionId',m.assertion_id,'field',m.field,'factId',m.fact_id) order by m.source_order),'[]'::jsonb) into selected
+        from public.candidate_entry_association_members m where m.group_id=(link->>'associationGroupId')::uuid;
+      if batch::text is distinct from link->>'associationBatchId' then perform private.correction_fail('unavailable'); end if;
+    else perform private.correction_fail('unavailable'); end if;
+    c:=private.entry_regroup_work(c,3+jsonb_array_length(selected));
+    if approval::text is distinct from link->>'originalApprovalVersionId' or seen_groups ? ((link->>'originFamily')||':'||group_id::text)
+      or jsonb_array_length(selected) not between 2 and 3 or jsonb_array_length(selected)<>jsonb_array_length(source_selection->'members') then perform private.correction_fail('unavailable'); end if;
+    seen_groups:=seen_groups||jsonb_build_object((link->>'originFamily')||':'||group_id::text,true); members:='[]'; result_members:='[]'; member_index:=0;
+    for member in select value from jsonb_array_elements(selected) loop
+      c:=private.entry_regroup_work(c,1); member_index:=member_index+1; selected_member:=source_selection->'members'->(member_index-1); fact:=index_value->(member->>'factId');
+      if fact is null or member->>'field' not in ('employer','role','dates') or fact->>'type' is distinct from member->>'field'
+        or member->>'assertionId' is distinct from selected_member->>'assertionId' or member->>'field' is distinct from selected_member->>'field'
+        or member->'sourceOrder'<>to_jsonb(member_index) or seen_facts ? (member->>'factId') or seen_assertions ? (member->>'assertionId') then perform private.correction_fail('unavailable'); end if;
+      seen_facts:=seen_facts||jsonb_build_object(member->>'factId',true); seen_assertions:=seen_assertions||jsonb_build_object(member->>'assertionId',true);
+      if jsonb_array_length(locations->(member->>'factId')) is distinct from 1 then perform private.correction_fail('unavailable'); end if;
+      place:=locations->(member->>'factId')->0;
+      if place->>'kind' not in ('entry','bullet') or place->'sectionId' is distinct from link->'sectionId' or place->'entryId' is distinct from link->'entryId' then perform private.correction_fail('unavailable'); end if;
+      origin_fact:=fact; original_version:=null; mapped:='current_citations'; depth:=0; previous_version:=version_id; revision_value:=(p_base->>'revision')::integer;
+      while jsonb_array_length(origin_fact->'sources')=0 loop
+        if depth>=64 then perform private.correction_fail('unavailable'); end if;
+        step:=private.entry_regroup_version(previous_version,c);c:=step->'cache';row_value:=step->'row';
+        if row_value->'parent_version_id'='null'::jsonb then perform private.correction_fail('unavailable'); end if;
+        previous_version:=(row_value->>'parent_version_id')::uuid;step:=private.entry_regroup_version(previous_version,c);c:=step->'cache';row_value:=step->'row';depth:=depth+1;
+        if (row_value->>'revision')::integer<>revision_value-1 or (row_value->>'owner_id',row_value->>'organization_id',row_value->>'resume_id',row_value->>'source_resume_version_id',row_value->>'source_evidence_version_id')
+          is distinct from (p_scope->>'ownerId',p_scope->>'organizationId',p_scope->>'resumeId',p_scope->>'sourceId',p_scope->>'attemptId') then perform private.correction_fail('unavailable'); end if;
+        revision_value:=(row_value->>'revision')::integer;
+        c:=private.entry_regroup_work(c,1);ancestor_index:=c->'indexes'->previous_version::text;
+        if ancestor_index is null then
+          ancestor_index:='{}';for origin_fact in select value from jsonb_array_elements(row_value->'content'->'facts') loop c:=private.entry_regroup_work(c,1);ancestor_index:=ancestor_index||jsonb_build_object(origin_fact->>'id',origin_fact);end loop;
+          c:=jsonb_set(c,'{indexes}',(c->'indexes')||jsonb_build_object(previous_version::text,ancestor_index));
+        end if;
+        origin_fact:=ancestor_index->(member->>'factId');if origin_fact is null or origin_fact->'type' is distinct from fact->'type' then perform private.correction_fail('unavailable'); end if;
+        mapped:='owned_ancestor_chain';original_version:=previous_version;
+      end loop;
+      members:=members||jsonb_build_array(jsonb_build_object('assertionId',member->'assertionId','field',member->'field','factId',member->'factId','citations',selected_member->'citations','mappedThrough',mapped,'originVersionId',original_version,'location',place));
+      c:=private.entry_regroup_work(c,jsonb_array_length(p_base->'envelope'->'assertions'));
+      select value into strict observed from jsonb_array_elements(p_base->'envelope'->'assertions') where value->>'id'=member->>'assertionId';
+      result_members:=result_members||jsonb_build_array(jsonb_build_object('sourceOrder',member_index,'assertionId',member->'assertionId','field',member->'field','factId',member->'factId',
+        'currentValue',fact->'value','currentState',fact->'state','confirmation',fact->'confirmation','sourceValue',observed->'value','citations',selected_member->'citations','location',place,
+        'mappedThrough',mapped,'originVersionId',original_version,'originFactId',case when original_version is null then null else member->'factId' end));
+    end loop;
+    selection:=source_selection||jsonb_build_object('sectionId',link->'sectionId','anchorEntryId',link->'entryId','insertionIndex',entry_indices->((link->>'sectionId')||':'||(link->>'entryId')),'affectedEntryIds',jsonb_build_array(link->'entryId'),'members',members);
+    -- One source group at a time, with shared loaded proof/cache. The 32-command selection cap is NOT a cap on active context groups.
+    c:=private.entry_regroup_work(c,1+jsonb_array_length(members));
+    resolution_key:=(p_base->>'versionId')||':'||encode(extensions.digest(convert_to(jsonb_build_array(selection)::text,'UTF8'),'sha256'),'hex');
+    had_resolution:=c->'resolutions' ? resolution_key;
+    resolution:=private.entry_regroup_resolve_loaded(p_scope,p_base,jsonb_build_array(selection),c);c:=resolution->'cache';
+    if resolution->'selections' is distinct from jsonb_build_array(selection) then perform private.correction_fail('unavailable'); end if;
+    -- Do not retain another full afterSections copy for every context group. Existing protected memo entries stay.
+    if not had_resolution then c:=jsonb_set(c,'{resolutions}',(c->'resolutions')-resolution_key); end if;
+    resolution:=null;
+    groups:=groups||jsonb_build_array(jsonb_build_object('sectionId',link->'sectionId','entryId',link->'entryId','originFamily',link->'originFamily','batchId',batch,'groupId',group_id,
+      'originalApprovalVersionId',approval,'sourceSelection',source_selection,'members',result_members));
+  end loop;
+  select coalesce(max(association_revision),0) into a_prefix from public.candidate_entry_association_batches where analysis_id=(p_scope->>'analysisId')::uuid and result_revision<=(p_base->>'revision')::integer;
+  select id into a_head from public.candidate_entry_association_batches where analysis_id=(p_scope->>'analysisId')::uuid and association_revision=a_prefix;
+  select coalesce(max(regroup_revision),0) into r_prefix from public.candidate_entry_regroup_batches where analysis_id=(p_scope->>'analysisId')::uuid and result_revision<=(p_base->>'revision')::integer;
+  select id into r_head from public.candidate_entry_regroup_batches where analysis_id=(p_scope->>'analysisId')::uuid and regroup_revision=r_prefix;
+  c:=private.entry_regroup_work(c,4);
+  output:=jsonb_build_object('canonicalVersionId',version_id,'canonicalContentSha256',p_base->'contentSha256','snapshotFamily',family,'creationKind',creation,
+    'associationPrefix',jsonb_build_object('revision',a_prefix,'headId',a_head),'regroupPrefix',jsonb_build_object('revision',r_prefix,'headId',r_head),'groups',groups);
+  c:=private.requirement_relationship_charge(c,'header-output',version_id::text,output);
+  return jsonb_build_object('headerSnapshot',output,'cache',c);
+end;
+$rr_headers$;
+
+create function public.read_requirement_relationship_context(p_user_id uuid,p_analysis_id uuid,p_selection jsonb) returns jsonb
+language plpgsql volatile security definer set search_path='' as $rr_read$
+declare c jsonb:=private.entry_regroup_cache(); scope jsonb; final_scope jsonb; v public.canonical_resume_versions%rowtype; e public.document_evidence_attempts%rowtype;
+  selected_jd public.job_requirement_versions%rowtype; canonical_head public.canonical_resume_heads%rowtype; final_canonical_head public.canonical_resume_heads%rowtype;
+  jd_head public.job_requirement_versions%rowtype; final_jd_head public.job_requirement_versions%rowtype; a public.analyses%rowtype; job public.jobs%rowtype; src public.resume_versions%rowtype;
+  loaded jsonb; base jsonb; step jsonb; row_value jsonb; headers jsonb; ancestors jsonb:='[]'; ancestor_id uuid; depth integer:=0; through integer; result jsonb; item jsonb;
+  profiles jsonb:=$rr_profiles${"evidenceSchemaVersion":"evidence/2.0.0","fieldExtractorVersion":"evidence-fields/1.0.1","targetModelVersion":"evidence-targets/1.0.0","associationModelVersion":"evidence-entry-associations/1.0.0","correctionProjectionVersion":"canonical-corrections/1.0.1","regroupModelVersion":"canonical-entry-regroup/1.0.0","jdAdmissionProfileSha256":"e82d68b1e58cf220d3584a8d510128d4428441a2b02815711e7f198adaeaacb8","aliasPolicyVersion":"jd-local-aliases/1.0.0","aliasLexiconSha256":"e5298fd95320299996a4f5eceff3fc7afcd61ed636aaec386e1d4107a7500fa2","relationPolicyVersion":"jd-local-relation-rules/1.0.0","relationPolicySha256":"fd69dde2640bcdc1cdd76ce622015cb577090d61581515585f7cdfe0cdcd8cdc","unicodePolicyVersion":"jd-unicode-profile/1.0.0","unicodePolicySha256":"f3f8335d9a957bc16e33d61321f28ed7a12c8c81ff8912f0c17c041d86d95571","readinessProfileVersion":"requirement-relationship-readiness/1.0.0","readinessPredecessorSha256":"de6e71fed03732a391e35226d20816acd207267eef5f09c27017cee1f054f3fd"}$rr_profiles$::jsonb;
+begin
+  if private.grouped_import_keys(p_selection,array['canonicalVersionId','requirementVersionId']) is not true
+    or (p_selection->'canonicalVersionId'<>'null'::jsonb and private.grouped_import_uuid(p_selection->'canonicalVersionId') is not true)
+    or (p_selection->'requirementVersionId'<>'null'::jsonb and private.grouped_import_uuid(p_selection->'requirementVersionId') is not true) then perform private.correction_fail('invalid'); end if;
+  c:=private.entry_regroup_work(c,16);
+  if p_selection->'canonicalVersionId'='null'::jsonb then
+    -- Provisional head selection only; exact selected-attempt ownership/privacy is admitted immediately below.
+    select cv.* into strict v from public.analyses x join public.resume_versions source_row on source_row.id=x.resume_version_id
+      join public.canonical_resume_heads h on h.resume_id=source_row.resume_id join public.canonical_resume_versions cv on cv.id=h.version_id
+      where x.id=p_analysis_id and x.owner_id=p_user_id and source_row.owner_id=p_user_id and cv.owner_id=p_user_id;
+  else
+    select * into strict v from public.canonical_resume_versions where id=(p_selection->>'canonicalVersionId')::uuid and owner_id=p_user_id;
+  end if;
+  scope:=private.entry_regroup_scope(p_user_id,p_analysis_id,v.source_evidence_version_id);
+  if private.canonical_correction_write_ready() is not true then perform private.correction_fail('unavailable'); end if;
+  select * into strict a from public.analyses where id=p_analysis_id and owner_id=p_user_id and organization_id=(scope->>'organizationId')::uuid for share;
+  select * into strict job from public.jobs where id=a.job_id and owner_id=p_user_id and organization_id=a.organization_id for share;
+  select * into strict src from public.resume_versions where id=(scope->>'sourceId')::uuid and owner_id=p_user_id and organization_id=a.organization_id for share;
+  select * into strict canonical_head from public.canonical_resume_heads where resume_id=(scope->>'resumeId')::uuid and owner_id=p_user_id for share;
+  select * into strict jd_head from public.job_requirement_versions where analysis_id=p_analysis_id and owner_id=p_user_id order by revision desc limit 1 for share;
+  if p_selection->'requirementVersionId'='null'::jsonb then selected_jd:=jd_head;
+  else select * into strict selected_jd from public.job_requirement_versions where id=(p_selection->>'requirementVersionId')::uuid and analysis_id=p_analysis_id and owner_id=p_user_id for share; end if;
+  c:=private.entry_regroup_work(c,6);
+  if v.resume_id is distinct from (scope->>'resumeId')::uuid or (v.owner_id,v.organization_id,v.source_resume_version_id,v.source_evidence_version_id)
+    is distinct from (p_user_id,a.organization_id,(scope->>'sourceId')::uuid,(scope->>'attemptId')::uuid)
+    or (v.content->>'analysisId',v.content->>'inputSha256') is distinct from (p_analysis_id::text,scope->>'inputSha256')
+    or canonical_head.revision<v.revision or ((canonical_head.version_id=v.id) is distinct from (canonical_head.revision=v.revision))
+    or (p_selection->'canonicalVersionId'='null'::jsonb and v.id is distinct from canonical_head.version_id)
+    or (selected_jd.organization_id,selected_jd.job_id) is distinct from (a.organization_id,a.job_id)
+    or selected_jd.revision>jd_head.revision or ((selected_jd.id=jd_head.id) is distinct from (selected_jd.revision=jd_head.revision))
+    or (src.page_count is not null and src.page_count<1) then perform private.correction_fail('unavailable'); end if;
+  if octet_length(selected_jd.content::text)>1048576 then perform private.correction_fail('unavailable'); end if;
+  c:=private.requirement_relationship_charge(c,'requirements',selected_jd.id::text,selected_jd.content);
+  if private.job_requirement_relations_valid(selected_jd.content) is not true
+    or (selected_jd.content->>'id',selected_jd.content->>'ownerId',selected_jd.content->>'organizationId',selected_jd.content->>'analysisId',selected_jd.content->>'jobId')
+      is distinct from (selected_jd.id::text,p_user_id::text,a.organization_id::text,p_analysis_id::text,a.job_id::text)
+    or selected_jd.content->'parentVersionId' is distinct from coalesce(to_jsonb(selected_jd.parent_version_id),'null'::jsonb)
+    or (selected_jd.content->>'createdAt')::timestamptz is distinct from selected_jd.created_at then perform private.correction_fail('unavailable'); end if;
+  base:=jsonb_build_object('versionId',v.id,'revision',v.revision,'contentSha256',encode(extensions.digest(convert_to(v.content::text,'UTF8'),'sha256'),'hex'),'locale',v.locale);
+  -- Selected immutable prefix only: no current review/assignment caps or entry_regroup_current call.
+  select coalesce(max(regroup_revision),0) into through from public.candidate_entry_regroup_batches where analysis_id=p_analysis_id and result_revision<=v.revision;
+  c:=private.entry_regroup_work(c,1);loaded:=private.entry_regroup_prove_data(scope,base,through,c);c:=loaded->'cache';
+  ancestor_id:=v.parent_version_id;
+  while ancestor_id is not null and depth<64 loop
+    step:=private.entry_regroup_version(ancestor_id,c);c:=step->'cache';row_value:=step->'row';
+    ancestors:=ancestors||jsonb_build_array(jsonb_build_object('versionId',ancestor_id,'revision',row_value->'revision','contentSha256',encode(extensions.digest(convert_to((row_value->'content')::text,'UTF8'),'sha256'),'hex'),'content',row_value->'content'));
+    ancestor_id:=(row_value->>'parent_version_id')::uuid;depth:=depth+1;
+  end loop;
+  headers:=private.requirement_header_context(scope,loaded->'data',c);c:=headers->'cache';
+  select * into strict e from public.document_evidence_attempts where id=(scope->>'attemptId')::uuid;
+  result:=jsonb_build_object('schemaVersion','requirement-relationship-context/1.0.0','status','available','authority','owned_header_relations_only','scoringEligible',false,
+    'source',scope,'sourceMetadata',jsonb_build_object('pageCount',src.page_count),'attempt',jsonb_build_object('id',e.id,'attemptNumber',e.attempt_number,'envelope',e.envelope),
+    'canonical',base||jsonb_build_object('content',loaded->'data'->'content'),'requirements',jsonb_build_object('versionId',selected_jd.id,'revision',selected_jd.revision,
+      'inputSha256',selected_jd.content->'inputSha256','contentSha256',encode(extensions.digest(convert_to(selected_jd.content::text,'UTF8'),'sha256'),'hex'),'content',selected_jd.content),
+    'ancestors',ancestors,'heads',jsonb_build_object('canonicalHeadId',canonical_head.version_id,'canonicalHeadRevision',canonical_head.revision,'requirementHeadId',jd_head.id,'requirementHeadRevision',jd_head.revision),
+    'profiles',profiles,'headerSnapshot',headers->'headerSnapshot');
+  -- Charge output visits without charging immutable document/source bytes a second time.
+  for item in select value from jsonb_path_query(result,'strict $.**') as nodes(value) loop c:=private.entry_regroup_work(c,1);end loop;
+  if octet_length(convert_to(result::text,'UTF8'))>33554432 then perform private.correction_fail('unavailable'); end if;
+  c:=private.entry_regroup_work(c,20);final_scope:=private.entry_regroup_scope(p_user_id,p_analysis_id,v.source_evidence_version_id);
+  select * into strict final_canonical_head from public.canonical_resume_heads where resume_id=v.resume_id and owner_id=p_user_id;
+  select * into strict final_jd_head from public.job_requirement_versions where analysis_id=p_analysis_id and owner_id=p_user_id order by revision desc limit 1;
+  if final_scope is distinct from scope or (final_canonical_head.version_id,final_canonical_head.revision) is distinct from (canonical_head.version_id,canonical_head.revision)
+    or (final_jd_head.id,final_jd_head.revision) is distinct from (jd_head.id,jd_head.revision)
+    or not exists(select 1 from public.analyses where id=p_analysis_id and owner_id=p_user_id and organization_id=a.organization_id and job_id=a.job_id)
+    or not exists(select 1 from public.jobs where id=a.job_id and owner_id=p_user_id and organization_id=a.organization_id)
+    or not exists(select 1 from public.canonical_resume_versions where id=v.id and (content,parent_version_id,revision,source_resume_version_id,source_evidence_version_id) is not distinct from (v.content,v.parent_version_id,v.revision,v.source_resume_version_id,v.source_evidence_version_id))
+    or not exists(select 1 from public.job_requirement_versions where id=selected_jd.id and content=selected_jd.content and revision=selected_jd.revision and job_id=a.job_id)
+    then perform private.correction_fail('unavailable'); end if;
+  return result;
+exception when insufficient_privilege or no_data_found then return jsonb_build_object('schemaVersion','requirement-relationship-context/1.0.0','status','not_found','scoringEligible',false);
+when others then return jsonb_build_object('schemaVersion','requirement-relationship-context/1.0.0','status','unavailable','scoringEligible',false);
+end;
+$rr_read$;
+
+revoke all on function private.requirement_relationship_charge(jsonb,text,text,jsonb),private.requirement_header_context(jsonb,jsonb,jsonb) from public,anon,authenticated,service_role;
+revoke all on function public.read_requirement_relationship_context(uuid,uuid,jsonb) from public,anon,authenticated,service_role;
+grant execute on function public.read_requirement_relationship_context(uuid,uuid,jsonb) to service_role;
+
+-- Exact guarded successor. Every previous body/property/store/ACL check is retained.
+do $rr_readiness_adoption$
+declare routine pg_catalog.pg_proc%rowtype; source text; next_source text;
+  predecessor text:='de6e71fed03732a391e35226d20816acd207267eef5f09c27017cee1f054f3fd'; postimage text:='f88516e99f6ee34120dc66217eea3191486ff0083d9053615e14cd925cdec999';
+  old_manifest text:=$rr_old_catalog$[
+  {
+    "signature": "private.correction_assert_fact_placement(jsonb,uuid,text)",
+    "sha256": "dc457354f50cf9abe54f8e412338502f10d7c68275effaebf2b0d03ff68369fb",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.candidate_owner_lock_keys(uuid[])",
+    "sha256": "71a245029186c9f601dd9730d5ac894a32b91431be0065538ff57f0c949b7c85",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "bigint[]",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.candidate_write_blocked(uuid)",
+    "sha256": "e94533690339986bb0e0889ec2f98de0687c6061e80b490a7040e5c40cadd53b",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.canonical_shape_valid(jsonb)",
+    "sha256": "f981b00bfc627f23efb1b28008c0940cb93d458d439a7e72332c4e355e3c1837",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_admit_new(jsonb,jsonb,jsonb)",
+    "sha256": "33ff0b2956f8dc84cf72a71fde1553c446d2aa1d6b887fb982326ac6393f0370",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_atoms(jsonb,jsonb,jsonb)",
+    "sha256": "c361ebe4f11baa3069999145b2b8da5be0f4afaca8ce1b038099e33e951c14dc",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text[]",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_child_body(jsonb,uuid,jsonb,text,uuid)",
+    "sha256": "2315b0eb5aabd09ce9003268abd528dc7eb5886c5c537ed9f91eff0698a44390",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_citations(jsonb,uuid)",
+    "sha256": "7c49ed406cc85a8395c0953b2a220f86173199e2f7448c01758a8df0ef0f710c",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_command_bytes(text[])",
+    "sha256": "afb4eca3cf9ebd31bf49f5ccbb62f859056c34b177b9ae4fca69dae52a47b797",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "bytea",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_command_sha256(text[])",
+    "sha256": "5571e9221b6738c50923c32813fc8b5f2f74306129227dab0ccb9849b66ffe67",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_fail(text)",
+    "sha256": "5830ddc09c3ab01037c99910e32b7d2af71eaad41d5c0f8a8ec34e89638ac1d7",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_insert_operation(jsonb,jsonb,text,uuid[],uuid[],uuid,uuid,integer,bigint,text)",
+    "sha256": "bc071ad288642b50a116724ad3230864effea2fb944b637dfcd094bc07aa0d35",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "uuid",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_latest(jsonb,jsonb,jsonb)",
+    "sha256": "dce9e9295ec122146bc836a8ffa9c243804727da95465bf90a253ae58859267e",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_location(jsonb,uuid)",
+    "sha256": "1f8e4da690698cdef6d5b9949a5f78d10b72217bd9a87eb2d1cf0703dd98093a",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_normalize(jsonb,jsonb)",
+    "sha256": "dd0dc4ad2ea4e8e56ee633cd395d6caf182015d37f8906f66cbd5ccc8e095764",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_original_import_allowed(jsonb)",
+    "sha256": "7238107de85eb94472214eb2bda16a641a478e61c30d611cc101943b91775f93",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_place(jsonb,jsonb,text,uuid,text,uuid,uuid,uuid)",
+    "sha256": "6da429e9875880782057342788c472697e145ad0ceca12324349b1a5f3ca90cd",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_receipt(uuid,boolean)",
+    "sha256": "1d58cb7258edb1a265cbb69507195b7ee1ab6d8e649be22e5559edf1378fe5ea",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_replay(jsonb,jsonb,jsonb,text)",
+    "sha256": "e5b954bc4ab638d132f6eb2018454b0aa7ab0e3dfb7e5a9f0a9762872a7c92f5",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_scope(uuid,uuid)",
+    "sha256": "0f71daf34a318df946a3ab9e064e442274105b896085b4ac931757d1b0cf6786",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_selector_from_row(public.candidate_correction_assignments,uuid)",
+    "sha256": "ec1be8a462926ed22ae4bb58b4a34fef76d919a5a0c7286df4d19788e75d86cc",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_sorted_citations(jsonb)",
+    "sha256": "b95b7924f4943f09d7976fc943289ed648572dab7c139fd053be5883a963b465",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_uuid(jsonb,boolean)",
+    "sha256": "602919fd3c33bfe75d0999b29879f3dc04a0215e82e92c53c87c9789c4c6c454",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_validate_command(jsonb,boolean)",
+    "sha256": "164e99251599c9520c8eb314c2371600bf5b94a87eca6c641c9b5b2789c42afe",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.evidence_integer(jsonb,bigint,bigint)",
+    "sha256": "6c4e10bfbef2d70d4a40b9c2346962b5ad5dac1415574b7b33707115d234e765",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.evidence_keys(jsonb,text[])",
+    "sha256": "824082145b4e705dfdf1d1be622b7fe4f6959c2fcaec5c69bb28ca0a930e5168",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.lock_candidate_owners(uuid[])",
+    "sha256": "f456097e005450c5cac7c2a601fc6641681bc4afdff1fab0abe649cd4562bd4a",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.save_candidate_authored_fact(uuid,uuid,jsonb,uuid,uuid,text)",
+    "sha256": "e6df4aa5d4bd69b22b1ae1c9ec496e348a3b90ccf98c8e05e0b41cd792fc0a41",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.try_candidate_privacy_write(uuid)",
+    "sha256": "89e7eec219295b7c834c284012ba7144049380935273e1505a994d38efc4156d",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.validate_correction_child(jsonb,uuid,uuid)",
+    "sha256": "92385c2299fb20d4b339805e2cdc4a95c824afad444a4924a61acb2a6e20aecc",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.write_correction_snapshot(uuid,jsonb)",
+    "sha256": "ee63400b8c16169c1fe3abf97eaefeeae2738795508a52267c8e85d19b8f24e5",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "public.apply_authoring_action(uuid,uuid,jsonb,jsonb,jsonb,text)",
+    "sha256": "b25b9b1fd9459834afd59c0b48fe5f65e2143e3640818ded15fa227c2b8170c2",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.apply_candidate_corrections(uuid,uuid,jsonb,jsonb,text)",
+    "sha256": "b562db15226cfcf5818e1e23dda0ea38282b0f54df46607172d249e063834292",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.assign_candidate_correction_targets(uuid,uuid,jsonb,text)",
+    "sha256": "0c8788e948b9481df2ae5a3593a5e7aba044467103f4e13c4cf7959eafb54e34",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.import_canonical_original(uuid,uuid,jsonb,jsonb,jsonb,text)",
+    "sha256": "1671cf3b6d3c8b0c716b2c2e5c8dc622dee70f468e3ebcdab21a2e088266f49b",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.read_candidate_correction_ledger(uuid,uuid)",
+    "sha256": "b380edcf9d0fb9c743ee957e00946ed05049d5b5e6345f68cd1981c1563744b8",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.save_canonical_version(uuid,uuid,jsonb,jsonb,text)",
+    "sha256": "3468ad86309f5f09fb58f36c74fa0498e975df0e9385f5f67dcb89a0656771aa",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "private.grouped_import_command_bytes(text[])",
+    "sha256": "74e9f591ff2958fe9b5d5f2d2f50beb3c0f77f9d70e2eac4078a8873e4f31a6e",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "bytea",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_command_sha256(text[])",
+    "sha256": "7f389fc92cd6d1aef3c15961a77a81718ce8bcce9bc8ee8f09af5a1a3210589c",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_invalid()",
+    "sha256": "e8ae677933aa164cb3bd2c6343116270c21c40a515254e8c3361f1f3ed574c50",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_keys(jsonb,text[])",
+    "sha256": "3e4ce46e18e28c4b47293508b37cf866d1c45619027e048e135d50e3e52a3155",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_whitespace()",
+    "sha256": "03c21f5467b44105d8a28408cfa10d053cd81ee91022beb3709b47165d255ede",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_trim(text)",
+    "sha256": "36fc1b16bb7ef5e8f17db55c1d7de42611ac656d9af6e6e68473dfb43a5d93bb",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": true,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_ascii_lower(text)",
+    "sha256": "cf94af1d2d41e0896f93fbf4e712d692916592e5670d4ba797119870d36161f3",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": true,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_utf16_length(text)",
+    "sha256": "5a96204c0f13fef791f49a0f86c87baae34c5b281369492b65fb6c878027985b",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "integer",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_uuid(jsonb)",
+    "sha256": "d564ea71a6bca9c4cdcbfe14b00fd826979cc13dcabb4d59875eda202ba6e65b",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_source_index(jsonb,jsonb)",
+    "sha256": "4b572e313df3a6ba8707045ea446806b17d804a3d31178f864cca25a46374cba",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_same_span(text,jsonb)",
+    "sha256": "2145e0f14c862f220e59d6a11d22ad96b39857d0c8096fbd79c4fcc47c68043f",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_flush(jsonb,boolean,jsonb)",
+    "sha256": "2ddfc241029796f3cb47ac64f70208f66855cafe161926b7d77e155901e9ba78",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_project_candidates(jsonb,jsonb)",
+    "sha256": "5a9a4f9b6fe9db8b56746c031fb290c1839fe6262410ab799dbad66fd3e6f451",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_check_refs(jsonb,jsonb)",
+    "sha256": "437b7d2f71b961ce48a2d45f3e3014b49e43f703bdde2f45efdbc1e4f8c76808",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_place_original(jsonb,jsonb,jsonb,jsonb)",
+    "sha256": "5cc017c40469f9611aa94f741062756dab1805f11296959daa76a87fbe73bd06",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_association_group_active(uuid,uuid)",
+    "sha256": "62457d48a18d8b024dbae5fe83b371ddd4ffcc5992522b7ba08f34ba1a460289",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_association_validate_head(uuid)",
+    "sha256": "177db5fbecd38fffffaae7151db221e0e0358e246b9c5a0e74bd46d674278e47",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_association_prefix(jsonb)",
+    "sha256": "9b499d875b3f5f46449d9b1331a7978ed1bcda1d4cd621bd1d229013d8539979",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_association_write_snapshot(uuid,jsonb)",
+    "sha256": "25c47b6fd0ad92bec87c3adcb55b2388514664c459b41f9455a380f5b4454a80",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_association_export_records(uuid)",
+    "sha256": "8daff2f43d41cab99ef417a55fdfc73cc17930dcd45923c82c6ac6004c49c1ff",
+    "definer": false,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_original_normalize(jsonb,jsonb,jsonb)",
+    "sha256": "0743af81e482c5477a63718a5a4d2140937d496c89470cea7ab64992530164fe",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_original_atoms(jsonb)",
+    "sha256": "48eb87f1b3ba4efb6caff285f1d7c86acb36ecee525c5e7f0ebf366db01a68ba",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text[]",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_original_scope(uuid,uuid)",
+    "sha256": "d23da79373709d34c0154694c77612e3aee8c70044a798559a5f8a19d6031c83",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_original_receipt(uuid,boolean)",
+    "sha256": "82c3eb4b229a338482459159d2c581419e552163ccda6012d8064aa85a74ba2e",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "public.import_canonical_grouped_original(uuid,uuid,jsonb,jsonb,text)",
+    "sha256": "e1b9822d9274badaa96796657ffa82c269a51b0d02ab3b8930db41c72ba0ff2f",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.reject_correction_ledger_update()",
+    "sha256": "4e04dcaff7d4721e1ec13dd7720cb34601617e18ffe1113b3c144b8b61bc38f7",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "trigger",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.guard_candidate_privacy_write()",
+    "sha256": "3d67b52e4694e18dcb43f571e12da97cd75942324fc8323080e1daf8982e8db9",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "trigger",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "public.export_resume_workspace_records(uuid)",
+    "sha256": "a6c4c996690caabd60a1b396d426fcb328aca8f665b2c50d69faddd6192c439d",
+    "definer": true,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.export_canonical_records(uuid)",
+    "sha256": "d49131630cd8d7a6cce603e5ed6c1308ce8724bfa1a4102bcce34ad85c8f40c1",
+    "definer": true,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.export_job_requirement_records(uuid)",
+    "sha256": "42832d213c4c96f0d11ed724d8a6e06fd6a1a8f37faebb068a60bca4bff670b1",
+    "definer": true,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.export_authoring_records(uuid)",
+    "sha256": "5bb5345d77bd4dacb2e595c094c6eb2d1cf32395e8bd9ed81db39c532422e05f",
+    "definer": true,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.read_grouped_original_workspace(uuid,uuid)",
+    "sha256": "1fd0207d21a252acc3c869d8555e5a809e775a35d458aa79e13ae324dfc10bfe",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "private.entry_regroup_export_records(uuid)",
+    "sha256": "382041169c6481b5f05934af0ba6df37f09ee96547b11bc59baf7414bf8cd1b3",
+    "definer": false,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_original_base(jsonb,jsonb)",
+    "sha256": "e4ecc47f9151beb31b67187e04fca570ebcb3f6a787fd80005a7d84dd96e44cd",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_resolve(jsonb,jsonb,jsonb)",
+    "sha256": "d568b9a5608f419135e56da757eb0085440c3b7e8da7e28390d97420958d56c4",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_normalize(jsonb,jsonb)",
+    "sha256": "a498a8b57fc34e4a094f63fa17e463f2441bdc6dae92574afc75aa810e0c88bf",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_atoms(jsonb)",
+    "sha256": "e4916530cf8faeb619efa928431c987f2fa29fdd3a3b29da138879dc88770e4f",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text[]",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_base_data(jsonb,jsonb,jsonb)",
+    "sha256": "c90b9ad2cdd4dab39080bb1c64466eca4dcad00cb500656fab08125dffd9cd7a",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_resolve_loaded(jsonb,jsonb,jsonb,jsonb)",
+    "sha256": "5bef2519f72961e06634ad4bc452b8694e0a59ae437ab79a458efcbc83245711",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_normalize_loaded(jsonb,jsonb,jsonb,jsonb)",
+    "sha256": "0686d7c2e881f2259c9882f97c7772f6bb1a15e1be36dbae43f9b6b2d9af1c63",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_cache()",
+    "sha256": "bd4c6e4c08549d656109e46f98ef1914ac608fbb69140e2dba283525686f19a4",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_work(jsonb,bigint)",
+    "sha256": "56503f705cfd918c6f6ae79ec0f025aa065ba38c6395fd1b7aa7eb6abe895986",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_inspect(jsonb,text,text,jsonb)",
+    "sha256": "20526b3a3cb4e99f3f0b6b3329dff3a1ce0c4f6f6ee117137a6d6ff645553000",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_load_base(jsonb,jsonb,jsonb)",
+    "sha256": "15844a6c8b96094bffac3c22feb8dafd45092cfffd570090ed11a9da8a24546b",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_child_body(jsonb,jsonb,uuid,uuid,text)",
+    "sha256": "a817fa7132559c1341ee48968903bfdb381732f169f052489e10429e06ffbc47",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_entry_signature(jsonb,uuid,uuid,jsonb)",
+    "sha256": "1f9f3432874ce04a4de6321c80dd4fab249ec2c3f87b69c20b450bc4f65c8dbe",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_links(uuid)",
+    "sha256": "a8155cbf76531970583c2d117e22c17cb9cf54b19a2fdb27e53bf5966fee471d",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_group_active(uuid,jsonb,jsonb)",
+    "sha256": "a4b07dd930b249ba9ac56bbf41b7a85fbb7d5f28b4cdfa44c47b25512bd15c85",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_expected_links(uuid,uuid,uuid,jsonb)",
+    "sha256": "ed1d43afafc5f2223f6acf1357dc9fc677ba414835f7c4b732f92dbe0c81b5b2",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_check_header(uuid,jsonb)",
+    "sha256": "db0b1d90b8a8033a70d5b6073af02c14e34a4c17b19c75a9a339814e0b7a87c7",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_origin_proof(jsonb,integer,jsonb)",
+    "sha256": "9dc8ab467412439269328a2f8167f3a8118c65ecfd4b6841b8b3ccebb4bf47c6",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_scope(uuid,uuid,uuid)",
+    "sha256": "68ebacd268bbb5cb8c488b3761a2762be521956e48bf000116e023aa853b6958",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_prove_data(jsonb,jsonb,integer,jsonb)",
+    "sha256": "3bb33341cf62be466d411b70aa945e31392e0c5f4d0f29593520e5223bc5017b",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_validate_head(uuid)",
+    "sha256": "c399dff24ccf1bd2bd7a8959e72aeb129e73224286653f37644efd5194c1a06b",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_current(jsonb,jsonb)",
+    "sha256": "226d46f1f7caadf4556a2949f26e97fc7cc2205f06020cd5a85cc8244c43234c",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_review_prefix(jsonb,integer,uuid,jsonb)",
+    "sha256": "7d9dbad98af10befbaf9892ce15a10738763165db63fc70b52243f2f7b00702e",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_write_snapshot(uuid,jsonb)",
+    "sha256": "ca8cffaeaa9f50c5ee984747993aaddc0c257cfad120341bf846030465137acd",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_save_version(uuid,uuid,jsonb,jsonb,text)",
+    "sha256": "481b470b8c7d3e901f4e10bdddf5cc4421261c1b49fbe5030dd27e677937a4bc",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_receipt(uuid,boolean)",
+    "sha256": "96a36de3b3d58e422c1bf494f41beda28ed764a765dc2e29ce7c645a17741c1e",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "public.apply_canonical_entry_regroup(uuid,uuid,jsonb,text)",
+    "sha256": "90f0e137e2f9bf97a5d50805c38a79184ab9ecf98823f044eb9144cae93955bc",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "public.read_canonical_entry_regroup_workspace(uuid,uuid,jsonb)",
+    "sha256": "64232d5c1fb96e2345087401a3d23250d0e7557701befe3fef2085c080f05463",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "private.entry_regroup_version(uuid,jsonb)",
+    "sha256": "9ce1bd3954aa2731963aa566111f0e43d18fb335dc6d7c23bc901858d4d79fba",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_merge_work(jsonb,jsonb)",
+    "sha256": "87fb4560dd10bec06b18a369a9b87860629eb5c70fbe6ec0e8411715bf50793c",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_snapshot_work(uuid,jsonb,jsonb)",
+    "sha256": "b6e777207e0a2d034424be7a18b37a9d0f98a331d11e2bd1d5899ea8473d8d7e",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_project_loaded(jsonb,jsonb)",
+    "sha256": "356f13474a2ceabd1a7ec1abfcf64e61c55fbad0d14492706150a82212d6e162",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_correction_snapshot_work(uuid,jsonb,jsonb)",
+    "sha256": "077d5c92baa0b1c235f1d5dcf0731063c8de4a6fe78cbeab8554b4623044a455",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  }
+]$rr_old_catalog$;
+  new_manifest text:=$rr_new_catalog$[
+  {
+    "signature": "private.correction_assert_fact_placement(jsonb,uuid,text)",
+    "sha256": "dc457354f50cf9abe54f8e412338502f10d7c68275effaebf2b0d03ff68369fb",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.candidate_owner_lock_keys(uuid[])",
+    "sha256": "71a245029186c9f601dd9730d5ac894a32b91431be0065538ff57f0c949b7c85",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "bigint[]",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.candidate_write_blocked(uuid)",
+    "sha256": "e94533690339986bb0e0889ec2f98de0687c6061e80b490a7040e5c40cadd53b",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.canonical_shape_valid(jsonb)",
+    "sha256": "f981b00bfc627f23efb1b28008c0940cb93d458d439a7e72332c4e355e3c1837",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_admit_new(jsonb,jsonb,jsonb)",
+    "sha256": "33ff0b2956f8dc84cf72a71fde1553c446d2aa1d6b887fb982326ac6393f0370",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_atoms(jsonb,jsonb,jsonb)",
+    "sha256": "c361ebe4f11baa3069999145b2b8da5be0f4afaca8ce1b038099e33e951c14dc",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text[]",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_child_body(jsonb,uuid,jsonb,text,uuid)",
+    "sha256": "2315b0eb5aabd09ce9003268abd528dc7eb5886c5c537ed9f91eff0698a44390",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_citations(jsonb,uuid)",
+    "sha256": "7c49ed406cc85a8395c0953b2a220f86173199e2f7448c01758a8df0ef0f710c",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_command_bytes(text[])",
+    "sha256": "afb4eca3cf9ebd31bf49f5ccbb62f859056c34b177b9ae4fca69dae52a47b797",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "bytea",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_command_sha256(text[])",
+    "sha256": "5571e9221b6738c50923c32813fc8b5f2f74306129227dab0ccb9849b66ffe67",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_fail(text)",
+    "sha256": "5830ddc09c3ab01037c99910e32b7d2af71eaad41d5c0f8a8ec34e89638ac1d7",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_insert_operation(jsonb,jsonb,text,uuid[],uuid[],uuid,uuid,integer,bigint,text)",
+    "sha256": "bc071ad288642b50a116724ad3230864effea2fb944b637dfcd094bc07aa0d35",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "uuid",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_latest(jsonb,jsonb,jsonb)",
+    "sha256": "dce9e9295ec122146bc836a8ffa9c243804727da95465bf90a253ae58859267e",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_location(jsonb,uuid)",
+    "sha256": "1f8e4da690698cdef6d5b9949a5f78d10b72217bd9a87eb2d1cf0703dd98093a",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_normalize(jsonb,jsonb)",
+    "sha256": "dd0dc4ad2ea4e8e56ee633cd395d6caf182015d37f8906f66cbd5ccc8e095764",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_original_import_allowed(jsonb)",
+    "sha256": "7238107de85eb94472214eb2bda16a641a478e61c30d611cc101943b91775f93",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_place(jsonb,jsonb,text,uuid,text,uuid,uuid,uuid)",
+    "sha256": "6da429e9875880782057342788c472697e145ad0ceca12324349b1a5f3ca90cd",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_receipt(uuid,boolean)",
+    "sha256": "1d58cb7258edb1a265cbb69507195b7ee1ab6d8e649be22e5559edf1378fe5ea",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_replay(jsonb,jsonb,jsonb,text)",
+    "sha256": "e5b954bc4ab638d132f6eb2018454b0aa7ab0e3dfb7e5a9f0a9762872a7c92f5",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_scope(uuid,uuid)",
+    "sha256": "0f71daf34a318df946a3ab9e064e442274105b896085b4ac931757d1b0cf6786",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_selector_from_row(public.candidate_correction_assignments,uuid)",
+    "sha256": "ec1be8a462926ed22ae4bb58b4a34fef76d919a5a0c7286df4d19788e75d86cc",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_sorted_citations(jsonb)",
+    "sha256": "b95b7924f4943f09d7976fc943289ed648572dab7c139fd053be5883a963b465",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_uuid(jsonb,boolean)",
+    "sha256": "602919fd3c33bfe75d0999b29879f3dc04a0215e82e92c53c87c9789c4c6c454",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.correction_validate_command(jsonb,boolean)",
+    "sha256": "164e99251599c9520c8eb314c2371600bf5b94a87eca6c641c9b5b2789c42afe",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.evidence_integer(jsonb,bigint,bigint)",
+    "sha256": "6c4e10bfbef2d70d4a40b9c2346962b5ad5dac1415574b7b33707115d234e765",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.evidence_keys(jsonb,text[])",
+    "sha256": "824082145b4e705dfdf1d1be622b7fe4f6959c2fcaec5c69bb28ca0a930e5168",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.lock_candidate_owners(uuid[])",
+    "sha256": "f456097e005450c5cac7c2a601fc6641681bc4afdff1fab0abe649cd4562bd4a",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.save_candidate_authored_fact(uuid,uuid,jsonb,uuid,uuid,text)",
+    "sha256": "e6df4aa5d4bd69b22b1ae1c9ec496e348a3b90ccf98c8e05e0b41cd792fc0a41",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.try_candidate_privacy_write(uuid)",
+    "sha256": "89e7eec219295b7c834c284012ba7144049380935273e1505a994d38efc4156d",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.validate_correction_child(jsonb,uuid,uuid)",
+    "sha256": "92385c2299fb20d4b339805e2cdc4a95c824afad444a4924a61acb2a6e20aecc",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.write_correction_snapshot(uuid,jsonb)",
+    "sha256": "ee63400b8c16169c1fe3abf97eaefeeae2738795508a52267c8e85d19b8f24e5",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "public.apply_authoring_action(uuid,uuid,jsonb,jsonb,jsonb,text)",
+    "sha256": "b25b9b1fd9459834afd59c0b48fe5f65e2143e3640818ded15fa227c2b8170c2",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.apply_candidate_corrections(uuid,uuid,jsonb,jsonb,text)",
+    "sha256": "b562db15226cfcf5818e1e23dda0ea38282b0f54df46607172d249e063834292",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.assign_candidate_correction_targets(uuid,uuid,jsonb,text)",
+    "sha256": "0c8788e948b9481df2ae5a3593a5e7aba044467103f4e13c4cf7959eafb54e34",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.import_canonical_original(uuid,uuid,jsonb,jsonb,jsonb,text)",
+    "sha256": "1671cf3b6d3c8b0c716b2c2e5c8dc622dee70f468e3ebcdab21a2e088266f49b",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.read_candidate_correction_ledger(uuid,uuid)",
+    "sha256": "b380edcf9d0fb9c743ee957e00946ed05049d5b5e6345f68cd1981c1563744b8",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.save_canonical_version(uuid,uuid,jsonb,jsonb,text)",
+    "sha256": "3468ad86309f5f09fb58f36c74fa0498e975df0e9385f5f67dcb89a0656771aa",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "private.grouped_import_command_bytes(text[])",
+    "sha256": "74e9f591ff2958fe9b5d5f2d2f50beb3c0f77f9d70e2eac4078a8873e4f31a6e",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "bytea",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_command_sha256(text[])",
+    "sha256": "7f389fc92cd6d1aef3c15961a77a81718ce8bcce9bc8ee8f09af5a1a3210589c",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_invalid()",
+    "sha256": "e8ae677933aa164cb3bd2c6343116270c21c40a515254e8c3361f1f3ed574c50",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_keys(jsonb,text[])",
+    "sha256": "3e4ce46e18e28c4b47293508b37cf866d1c45619027e048e135d50e3e52a3155",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_whitespace()",
+    "sha256": "03c21f5467b44105d8a28408cfa10d053cd81ee91022beb3709b47165d255ede",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_trim(text)",
+    "sha256": "36fc1b16bb7ef5e8f17db55c1d7de42611ac656d9af6e6e68473dfb43a5d93bb",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": true,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_ascii_lower(text)",
+    "sha256": "cf94af1d2d41e0896f93fbf4e712d692916592e5670d4ba797119870d36161f3",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": true,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_utf16_length(text)",
+    "sha256": "5a96204c0f13fef791f49a0f86c87baae34c5b281369492b65fb6c878027985b",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "integer",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_uuid(jsonb)",
+    "sha256": "d564ea71a6bca9c4cdcbfe14b00fd826979cc13dcabb4d59875eda202ba6e65b",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_source_index(jsonb,jsonb)",
+    "sha256": "4b572e313df3a6ba8707045ea446806b17d804a3d31178f864cca25a46374cba",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_same_span(text,jsonb)",
+    "sha256": "2145e0f14c862f220e59d6a11d22ad96b39857d0c8096fbd79c4fcc47c68043f",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_flush(jsonb,boolean,jsonb)",
+    "sha256": "2ddfc241029796f3cb47ac64f70208f66855cafe161926b7d77e155901e9ba78",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_project_candidates(jsonb,jsonb)",
+    "sha256": "5a9a4f9b6fe9db8b56746c031fb290c1839fe6262410ab799dbad66fd3e6f451",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_check_refs(jsonb,jsonb)",
+    "sha256": "437b7d2f71b961ce48a2d45f3e3014b49e43f703bdde2f45efdbc1e4f8c76808",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_import_place_original(jsonb,jsonb,jsonb,jsonb)",
+    "sha256": "5cc017c40469f9611aa94f741062756dab1805f11296959daa76a87fbe73bd06",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_association_group_active(uuid,uuid)",
+    "sha256": "62457d48a18d8b024dbae5fe83b371ddd4ffcc5992522b7ba08f34ba1a460289",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_association_validate_head(uuid)",
+    "sha256": "177db5fbecd38fffffaae7151db221e0e0358e246b9c5a0e74bd46d674278e47",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_association_prefix(jsonb)",
+    "sha256": "9b499d875b3f5f46449d9b1331a7978ed1bcda1d4cd621bd1d229013d8539979",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_association_write_snapshot(uuid,jsonb)",
+    "sha256": "25c47b6fd0ad92bec87c3adcb55b2388514664c459b41f9455a380f5b4454a80",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_association_export_records(uuid)",
+    "sha256": "8daff2f43d41cab99ef417a55fdfc73cc17930dcd45923c82c6ac6004c49c1ff",
+    "definer": false,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_original_normalize(jsonb,jsonb,jsonb)",
+    "sha256": "0743af81e482c5477a63718a5a4d2140937d496c89470cea7ab64992530164fe",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_original_atoms(jsonb)",
+    "sha256": "48eb87f1b3ba4efb6caff285f1d7c86acb36ecee525c5e7f0ebf366db01a68ba",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text[]",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_original_scope(uuid,uuid)",
+    "sha256": "d23da79373709d34c0154694c77612e3aee8c70044a798559a5f8a19d6031c83",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.grouped_original_receipt(uuid,boolean)",
+    "sha256": "82c3eb4b229a338482459159d2c581419e552163ccda6012d8064aa85a74ba2e",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "public.import_canonical_grouped_original(uuid,uuid,jsonb,jsonb,text)",
+    "sha256": "e1b9822d9274badaa96796657ffa82c269a51b0d02ab3b8930db41c72ba0ff2f",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.reject_correction_ledger_update()",
+    "sha256": "4e04dcaff7d4721e1ec13dd7720cb34601617e18ffe1113b3c144b8b61bc38f7",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "trigger",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.guard_candidate_privacy_write()",
+    "sha256": "3d67b52e4694e18dcb43f571e12da97cd75942324fc8323080e1daf8982e8db9",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "trigger",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "public.export_resume_workspace_records(uuid)",
+    "sha256": "a6c4c996690caabd60a1b396d426fcb328aca8f665b2c50d69faddd6192c439d",
+    "definer": true,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.export_canonical_records(uuid)",
+    "sha256": "d49131630cd8d7a6cce603e5ed6c1308ce8724bfa1a4102bcce34ad85c8f40c1",
+    "definer": true,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.export_job_requirement_records(uuid)",
+    "sha256": "42832d213c4c96f0d11ed724d8a6e06fd6a1a8f37faebb068a60bca4bff670b1",
+    "definer": true,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.export_authoring_records(uuid)",
+    "sha256": "5bb5345d77bd4dacb2e595c094c6eb2d1cf32395e8bd9ed81db39c532422e05f",
+    "definer": true,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "public.read_grouped_original_workspace(uuid,uuid)",
+    "sha256": "1fd0207d21a252acc3c869d8555e5a809e775a35d458aa79e13ae324dfc10bfe",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "private.entry_regroup_export_records(uuid)",
+    "sha256": "382041169c6481b5f05934af0ba6df37f09ee96547b11bc59baf7414bf8cd1b3",
+    "definer": false,
+    "volatility": "s",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_original_base(jsonb,jsonb)",
+    "sha256": "e4ecc47f9151beb31b67187e04fca570ebcb3f6a787fd80005a7d84dd96e44cd",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_resolve(jsonb,jsonb,jsonb)",
+    "sha256": "d568b9a5608f419135e56da757eb0085440c3b7e8da7e28390d97420958d56c4",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_normalize(jsonb,jsonb)",
+    "sha256": "a498a8b57fc34e4a094f63fa17e463f2441bdc6dae92574afc75aa810e0c88bf",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_atoms(jsonb)",
+    "sha256": "e4916530cf8faeb619efa928431c987f2fa29fdd3a3b29da138879dc88770e4f",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text[]",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_base_data(jsonb,jsonb,jsonb)",
+    "sha256": "c90b9ad2cdd4dab39080bb1c64466eca4dcad00cb500656fab08125dffd9cd7a",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_resolve_loaded(jsonb,jsonb,jsonb,jsonb)",
+    "sha256": "5bef2519f72961e06634ad4bc452b8694e0a59ae437ab79a458efcbc83245711",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_normalize_loaded(jsonb,jsonb,jsonb,jsonb)",
+    "sha256": "0686d7c2e881f2259c9882f97c7772f6bb1a15e1be36dbae43f9b6b2d9af1c63",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_cache()",
+    "sha256": "bd4c6e4c08549d656109e46f98ef1914ac608fbb69140e2dba283525686f19a4",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_work(jsonb,bigint)",
+    "sha256": "56503f705cfd918c6f6ae79ec0f025aa065ba38c6395fd1b7aa7eb6abe895986",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_inspect(jsonb,text,text,jsonb)",
+    "sha256": "20526b3a3cb4e99f3f0b6b3329dff3a1ce0c4f6f6ee117137a6d6ff645553000",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_load_base(jsonb,jsonb,jsonb)",
+    "sha256": "15844a6c8b96094bffac3c22feb8dafd45092cfffd570090ed11a9da8a24546b",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_child_body(jsonb,jsonb,uuid,uuid,text)",
+    "sha256": "a817fa7132559c1341ee48968903bfdb381732f169f052489e10429e06ffbc47",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_entry_signature(jsonb,uuid,uuid,jsonb)",
+    "sha256": "1f9f3432874ce04a4de6321c80dd4fab249ec2c3f87b69c20b450bc4f65c8dbe",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_links(uuid)",
+    "sha256": "a8155cbf76531970583c2d117e22c17cb9cf54b19a2fdb27e53bf5966fee471d",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_group_active(uuid,jsonb,jsonb)",
+    "sha256": "a4b07dd930b249ba9ac56bbf41b7a85fbb7d5f28b4cdfa44c47b25512bd15c85",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_expected_links(uuid,uuid,uuid,jsonb)",
+    "sha256": "ed1d43afafc5f2223f6acf1357dc9fc677ba414835f7c4b732f92dbe0c81b5b2",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_check_header(uuid,jsonb)",
+    "sha256": "db0b1d90b8a8033a70d5b6073af02c14e34a4c17b19c75a9a339814e0b7a87c7",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_origin_proof(jsonb,integer,jsonb)",
+    "sha256": "9dc8ab467412439269328a2f8167f3a8118c65ecfd4b6841b8b3ccebb4bf47c6",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_scope(uuid,uuid,uuid)",
+    "sha256": "68ebacd268bbb5cb8c488b3761a2762be521956e48bf000116e023aa853b6958",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_prove_data(jsonb,jsonb,integer,jsonb)",
+    "sha256": "3bb33341cf62be466d411b70aa945e31392e0c5f4d0f29593520e5223bc5017b",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_validate_head(uuid)",
+    "sha256": "c399dff24ccf1bd2bd7a8959e72aeb129e73224286653f37644efd5194c1a06b",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_current(jsonb,jsonb)",
+    "sha256": "226d46f1f7caadf4556a2949f26e97fc7cc2205f06020cd5a85cc8244c43234c",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_review_prefix(jsonb,integer,uuid,jsonb)",
+    "sha256": "7d9dbad98af10befbaf9892ce15a10738763165db63fc70b52243f2f7b00702e",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_write_snapshot(uuid,jsonb)",
+    "sha256": "ca8cffaeaa9f50c5ee984747993aaddc0c257cfad120341bf846030465137acd",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "void",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_save_version(uuid,uuid,jsonb,jsonb,text)",
+    "sha256": "481b470b8c7d3e901f4e10bdddf5cc4421261c1b49fbe5030dd27e677937a4bc",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_receipt(uuid,boolean)",
+    "sha256": "96a36de3b3d58e422c1bf494f41beda28ed764a765dc2e29ce7c645a17741c1e",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "public.apply_canonical_entry_regroup(uuid,uuid,jsonb,text)",
+    "sha256": "90f0e137e2f9bf97a5d50805c38a79184ab9ecf98823f044eb9144cae93955bc",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "public.read_canonical_entry_regroup_workspace(uuid,uuid,jsonb)",
+    "sha256": "64232d5c1fb96e2345087401a3d23250d0e7557701befe3fef2085c080f05463",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "private.entry_regroup_version(uuid,jsonb)",
+    "sha256": "9ce1bd3954aa2731963aa566111f0e43d18fb335dc6d7c23bc901858d4d79fba",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_merge_work(jsonb,jsonb)",
+    "sha256": "87fb4560dd10bec06b18a369a9b87860629eb5c70fbe6ec0e8411715bf50793c",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_snapshot_work(uuid,jsonb,jsonb)",
+    "sha256": "b6e777207e0a2d034424be7a18b37a9d0f98a331d11e2bd1d5899ea8473d8d7e",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_project_loaded(jsonb,jsonb)",
+    "sha256": "356f13474a2ceabd1a7ec1abfcf64e61c55fbad0d14492706150a82212d6e162",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.entry_regroup_correction_snapshot_work(uuid,jsonb,jsonb)",
+    "sha256": "077d5c92baa0b1c235f1d5dcf0731063c8de4a6fe78cbeab8554b4623044a455",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.requirement_relationship_charge(jsonb,text,text,jsonb)",
+    "sha256": "56bff990033666b3284cd6adfcbbde5ed1c919a5ec6eb945784bff967e74af3a",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.requirement_header_context(jsonb,jsonb,jsonb)",
+    "sha256": "fa0a06f891d4b66259eada7157d0f0e0175a3d4c9ceafddbb92676ef9e18e16d",
+    "definer": false,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "public.read_requirement_relationship_context(uuid,uuid,jsonb)",
+    "sha256": "703dd871b3e6dd70865a0eb94e976ee178deb0ce995e45cec2a772cca0dca768",
+    "definer": true,
+    "volatility": "v",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": true
+  },
+  {
+    "signature": "private.jd_relation_unicode_profile()",
+    "sha256": "b2b854947f586e3cc852ec8bc749643de20724bf3f4277dfb011d2e99705bd1c",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_ln_ranges()",
+    "sha256": "8875ce9d43747b7a790421d87b857cfd42dcbf498c5065c096c74d5caf8ca24b",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_json_schema()",
+    "sha256": "d9ee903106a5a2fe0e811cfe4775480b951f7550eeae60c979a406ce0bdf4824",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_admission_profile()",
+    "sha256": "7122cc04268d96453f0793a89938b3353ecb38f650815f355831841304583333",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_canonical_json(jsonb,boolean,integer)",
+    "sha256": "7a6eb67fc20f8fc535eee9c2f0146cd0a59d2a7c76cacbfcd87882bd27465142",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_in_ranges(jsonb,integer)",
+    "sha256": "36f983db9c4722f8432b1066d1b918f3d3db9e757f421086602cd3cd35a50d25",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_mapping(jsonb,integer)",
+    "sha256": "4d72706ef2cb4a7ec1d741c3bfd5703b08a391a1fb5990b4cf0484e6cdebbd1b",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_lower(text)",
+    "sha256": "d7212b2bd22b2a15a7910932619b0d506de56ad36444c52cf1834b91aed9b9ba",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_fold(text)",
+    "sha256": "e32a71126feebbf25db0744376605d092c1419d4073075ba11d8e57ebbbf0bb6",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_trim(text)",
+    "sha256": "1b6d65f0b811b5d03550dd31fcea9b5284cd53684e33df150f657b6fdb7c3734",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_normalize(text,boolean)",
+    "sha256": "8a2483caca22e7606d57e2cda1457edfc63d3b8a74410a10d457e62220ead34c",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_class_contents(jsonb)",
+    "sha256": "674c5f8edf0911f9bdb0287d98603b40ec19a4eb859b2f6c303aa095e5600308",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_pattern(text)",
+    "sha256": "c81d227248d381d4c4a1173749932f683e8a0d71f82b98f74c214042f8b8b903",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "text",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_matches(text,text,integer,integer,boolean,boolean)",
+    "sha256": "c73784511405c0f49bc532cb699b7a09e3250bd9a94477e6828ac4daf4590c5c",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_test(text,text,boolean)",
+    "sha256": "83ee209f798b3443b3f3dcda6117822cc95bc7fa50e94932a7169253e5e2399e",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": true,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_literals(text,text,text)",
+    "sha256": "4527bd4ce30bda237682292402619aba2d564c2548857e5b70aec39c8f760263",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_source_lines(text)",
+    "sha256": "6c41f695c5498a12cef90971c02cd43e395509ce1a09dea8ccf7569c40bc4bb7",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_heading(text)",
+    "sha256": "12a680a4f4b583f92ea7154de2d0dcb9fd431c5ef73b6e559bccafd9f0a76201",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_importance(text,text)",
+    "sha256": "b0bbf49e261753351636d62f7127e8eaf746a7bae334cd9690b930a12df3bf64",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_alias(text)",
+    "sha256": "9b7f55083c22b97eefa1d1fe09c23402828666c670a923f7be146d9aff05b231",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_alias_mentions(text)",
+    "sha256": "eccec1303b49cf9643b534d87ec78b023c4f36415ac5868300d4b810d69f4ab4",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_requirement(text,jsonb,text,text,integer,integer,jsonb,jsonb,text,boolean,integer)",
+    "sha256": "4eb4eb057fc7c93f833e8f490005a0a27f0024ad0362a585abf92d08e8c4d9e3",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_expected_body(jsonb)",
+    "sha256": "f679d64dc7bc7d41ebe7b1ee5c45b071d4fd0c2ca43acb5de2768d92aff7e8ac",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_duration(text,jsonb,boolean,boolean)",
+    "sha256": "6f2c86616f5e70650568ae5c5a061c7a88f4f6587b4732d84f60b23c7dc4738f",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_relations(text,jsonb,jsonb,boolean)",
+    "sha256": "ae23ec9b00519598b1fcb4e22236b88116300c63f1a5ae9d780d315b66c7004c",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_lengthless_schema(jsonb,integer)",
+    "sha256": "abc139b07ed0c13e976c8a55dfb73317730cfbc5d4675971e6da727e67d38344",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_lengths_valid(jsonb,jsonb,integer)",
+    "sha256": "074552817b548046a112ae63f209ca16453583fb1951f1b3db3be53161d27497",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_utf16_length(text)",
+    "sha256": "bc1565ec115fd07f3126da0afba5d3a068af6b16e0c9092f8442d0db8198a79d",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "integer",
+    "strict": true,
+    "language": "sql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_span(text,integer,integer)",
+    "sha256": "b8fad9b2292eae174c07156a0914b00dccb488c81fa5fd10069243b6cd6877ef",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": true,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_clean(jsonb,text,jsonb,text,integer)",
+    "sha256": "aba05e05ac6198753aea5f201d9f610e0dbb6063465d7fddd7abb0c8efbca9c4",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.jd_relation_project(jsonb)",
+    "sha256": "caf123c971271b825e50f1171795d25168f77c4d787eaa997dfeac9878337262",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "jsonb",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  },
+  {
+    "signature": "private.job_requirement_relations_valid(jsonb)",
+    "sha256": "da8d69330149872fca858f48f97ed2ce90b2ef7ece6a8c15fa6e8d006a19a472",
+    "definer": false,
+    "volatility": "i",
+    "resultType": "boolean",
+    "strict": false,
+    "language": "plpgsql",
+    "serviceExecute": false
+  }
+]$rr_new_catalog$;
+begin
+  select * into strict routine from pg_catalog.pg_proc where oid=to_regprocedure('private.canonical_correction_write_ready()');
+  if routine.prokind<>'f' or routine.proretset or routine.prosecdef or routine.provolatile<>'s' or routine.prorettype<>'boolean'::regtype or routine.proisstrict
+    or routine.proconfig is distinct from array['search_path=""'] or has_function_privilege('service_role',routine.oid,'EXECUTE')
+    or has_function_privilege('anon',routine.oid,'EXECUTE') or has_function_privilege('authenticated',routine.oid,'EXECUTE')
+    or encode(extensions.digest(convert_to(routine.prosrc,'UTF8'),'sha256'),'hex')<>predecessor then raise exception 'RR_READINESS_PREDECESSOR_DRIFT' using errcode='23514'; end if;
+  source:=routine.prosrc;
+  if (length(source)-length(replace(source,old_manifest,'')))/length(old_manifest)<>1 then raise exception 'RR_READINESS_CONTEXT_DRIFT' using errcode='23514'; end if;
+  next_source:=replace(source,old_manifest,new_manifest);
+  if encode(extensions.digest(convert_to(next_source,'UTF8'),'sha256'),'hex')<>postimage then raise exception 'RR_READINESS_POSTIMAGE_DRIFT' using errcode='23514'; end if;
+  execute replace(pg_get_functiondef(routine.oid),source,next_source);
+  if private.canonical_correction_write_ready() is not true then raise exception 'RR_SUCCESSOR_NOT_ADMITTED' using errcode='23514'; end if;
+end;
+$rr_readiness_adoption$;
+commit;

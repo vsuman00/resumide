@@ -1,0 +1,61 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/score-v2-engine.test.ts (20 tests | 1 failed | 19 skipped) 50ms
+     × records an edited and confirmed certification declaration without inventing source evidence 50ms
+     ↓ does not satisfy a subject-specific degree with an unrelated degree
+     ↓ does not reuse general software tenure for skill-specific experience
+     ↓ treats terminal punctuation as formatting in an exact certification requirement
+     ↓ withholds all numeric dimensions even after owner confirmations
+     ↓ reports missing declared pages and JD without merit zero
+     ↓ rejects owner tampering
+     ↓ rejects canonical tampering
+     ↓ rejects requirements tampering
+     ↓ rejects source tampering
+     ↓ rejects fact tampering
+     ↓ rejects promotion tampering
+     ↓ rejects model tampering
+     ↓ unions overlapping dated roles and refuses ambiguous or reversed ranges
+     ↓ keeps negation, unknown importance, credential and skill evidence distinct
+     ↓ withholds observations outside the policy domain or locale
+     ↓ groups repeated clauses without trusting supplied dedup groups
+     ↓ does not infer absent qualifications from unrecovered or aliased words
+     ↓ reproduces 60, 75 with 80% coverage, and justified inapplicability
+     ↓ returns null for zero denominators and rejects inconsistent states
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/score-v2-engine.test.ts > AA4 deterministic diagnostics > records an edited and confirmed certification declaration without inventing source evidence
+AssertionError: expected { …(11) } to match object { state: 'not_evaluated', …(3) }
+(7 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "factIds": [
+      "dc7a62bc-c233-4d42-a83b-e53cb300e04d",
+    ],
+-   "proposedState": "not_evaluated",
+-   "reason": StringContaining "declaration is recorded",
++   "proposedState": "candidate_confirmation_required",
++   "reason": "A matching candidate exists but needs exact source-backed confirmation.",
+    "state": "not_evaluated",
+  }
+
+ ❯ tests/unit/score-v2-engine.test.ts:39:7
+     37|     expect(
+     38|       diagnostics.alignment.find((item) => item.type === "certificatio…
+     39|     ).toMatchObject({
+       |       ^
+     40|       state: "not_evaluated",
+     41|       proposedState: "not_evaluated",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 19 skipped (20)
+   Start at  00:33:42
+   Duration  240ms (transform 91ms, setup 0ms, import 135ms, tests 50ms, environment 0ms)
+

@@ -1,0 +1,63 @@
+{
+  "id": "CR-U03-S02",
+  "status": "ROOT_SOURCE_INTERFACE_APPROVED_NATIVE_NOT_AUTHORIZED",
+  "endpoint": "POST /analysis/:id/author",
+  "previewAction": "preview_clarification",
+  "previewInput": [
+    "expectedVersionId",
+    "idempotencyKey",
+    "targetFactId",
+    "questionKind",
+    "value"
+  ],
+  "previewNeverGrantsConfirmation": true,
+  "previewOutput": {
+    "schemaVersion": "clarification-preview/1.0.0",
+    "command": "Exact clarify target/version/key/kind/answer WITHOUT confirmation",
+    "beforeValue": "Owned named fact value",
+    "reviewedValue": "Exact full clarifyValue output",
+    "reviewedValueHash": "SHA256 of exact UTF8 full output,64lowerhex"
+  },
+  "commit": "Existing clarify action plus explicit confirmation=true and optional form-only reviewedValueHash; metadata excluded from SQLwire.",
+  "order": [
+    "Existing auth/origin/private/source/privacy guards",
+    "Preview requires owned named/current version and derived full bounded value, no mutation",
+    "Commit derives review digest from SAME owned immutable named base; if provided, require exactmatch before replay, without freshhead check",
+    "Owned exact existing command receipt remains replayable without new missing proof and never moves head",
+    "NEW clarification requires matching proof before write and retains existing freshheadCAS/strong SQLsave"
+  ],
+  "nativeForms": "Server-render full preview; one final required confirmation checkbox submits exact immutable review+digest. Never depend on client-only preview/disabled SSR submit.",
+  "limits": "Preserve16KiB encoded request, boundedanswer/result, strictunknown/duplicate/UTF8 checks; digest is equality binding, not proof human read.",
+  "files": {
+    "app/lib/server/authoring-repository.ts": "465c694a79f441b5fcffe19cfb38e7de95c29633f70cdedca6bab639b1f3a05c",
+    "app/routes/analysis.author.tsx": "86cb39473ba716ae1ba241d408d64f986df05e74c304263a50750614c73b6561",
+    "scripts/verify-authoring.ts": "891939956818a9e89700f2c6c73b8f2e0110c4bf2e8d9ce2d79d8d0fb6b6a867",
+    "tests/unit/authoring-forms.test.ts": "23c0184a6ecc8a5903bdd3a0a5261bfba380607421cdcbf1caf3f72ba4e58bb9",
+    "tests/unit/authoring-route.test.ts": "375a28f8f52d833860d3ba7446e2046e29d4d359f3c5921ef3fa6825f788afa5",
+    "e2e/authoring.spec.ts": "69ac8f474a86cc5fc389640a263e6fd50fe2b83d3cfa3d3febd72b7ca648dc61"
+  },
+  "ownership": {
+    "a04_backend": [
+      "app/lib/server/authoring-repository.ts",
+      "app/routes/analysis.author.tsx",
+      "scripts/verify-authoring.ts",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-u03-preview.md"
+    ],
+    "a04_runtime": [
+      "tests/unit/authoring-forms.test.ts",
+      "tests/unit/authoring-route.test.ts",
+      "tests/unit/authoring-clarification-preview.test.ts",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-u03-clarification-preview.md"
+    ],
+    "a04_frontend": [
+      "app/components/AuthoringWorkspace.tsx",
+      "tests/components/WorkspaceRepairs.test.tsx",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-u03-confirmation.md",
+      "e2e/authoring.spec.ts"
+    ]
+  },
+  "testReview": "Existing acknowledgement/focus/pageshow assertions must be preserved semantically in the complete review flow; adapt setup/locators to preview+finalconfirm rather than deleting claims or retaining duplicate acknowledgements. Record intermediate10-pass scope and final adapted assertions separately.",
+  "noNativeOrExternalOperations": true,
+  "browserSourceAlignment": "Update existing native browser scenario to preview/full-value review/finalconfirmation; SOURCE ONLY, no browser run authorized.",
+  "focusHandling": "Preview/final native POST form action preserves existing private focus UUID only; candidate answers/full text never appear in URLs."
+}

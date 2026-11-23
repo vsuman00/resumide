@@ -1,0 +1,65 @@
+{
+  "version": "writing-comparison-source/1.0.0",
+  "task": "CR-A14",
+  "scope": "Actual wording/provenance observations before proposed acceptance and between saved canonical versions; not full JD drafting or requirement/score evaluation. Preserve full A14 drafting scope as open.",
+  "backend": {
+    "module": "app/lib/writing-comparison.ts (pure browser-safe; no Node/server runtime imports)",
+    "exports": [
+      "type WritingComparison",
+      "type SavedWritingComparison",
+      "buildProjectedWritingComparison",
+      "buildSavedWritingComparison"
+    ],
+    "projectedSignature": "buildProjectedWritingComparison({baseVersionId:string,fact:CanonicalFact,proposedValue:string}):WritingComparison",
+    "savedSignature": "buildSavedWritingComparison({before:CanonicalResumeDraft,after:CanonicalResumeDraft,beforeRevision:number,afterRevision:number,changes:ReturnType<typeof compareCanonical>}):SavedWritingComparison",
+    "perFactShape": {
+      "schemaVersion": "writing-comparison/1.0.0",
+      "mode": "projected|saved",
+      "factId": "UUID",
+      "beforeVersionId": "UUID",
+      "afterVersionId": "UUID|null (always null for projected)",
+      "changeKind": "wording_changed|record_only|added|removed|unchanged",
+      "beforeWordCount": "nonnegative integer|null absent",
+      "afterWordCount": "nonnegative integer|null absent",
+      "wordCountDelta": "integer|null if absent; text count only, never a quality/ATS score",
+      "beforeWarnings": "bounded string[] from existing checkWritingQuality(current,current)",
+      "afterWarnings": "bounded string[] from existing checkWritingQuality(proposed,current) when both exist; unchanged helper semantics",
+      "newWarnings": "ordered after-minus-before warnings",
+      "resolvedWarnings": "ordered before-minus-after warnings",
+      "beforeState": "actual fact.state|null absent",
+      "afterState": "actual saved fact.state|not_saved|null absent; never copy confirmation into a proposal",
+      "beforeSourceReferenceCount": "integer|null absent",
+      "afterSourceReferenceCount": "integer|null (null projected)",
+      "beforeConfirmationRecorded": "boolean|null absent",
+      "afterConfirmationRecorded": "boolean|null (null projected)",
+      "scoreValue": null,
+      "scoreDelta": null,
+      "qualificationCredit": "not_assessed"
+    },
+    "savedShape": {
+      "schemaVersion": "saved-writing-comparison/1.0.0",
+      "mode": "saved",
+      "beforeVersionId": "from actual owned loaded other.document",
+      "afterVersionId": "from actual owned loaded current.document",
+      "beforeRevision": "from actual loaded other row",
+      "afterRevision": "from actual loaded current row",
+      "items": "at most50 changed facts with perFact shape, preserving actual compareCanonical order",
+      "total": "all existing comparison rows count",
+      "remainingCount": "total-items.length; original complete fact comparison preserved",
+      "scoreValue": null,
+      "scoreDelta": null,
+      "qualificationCredit": "not_assessed"
+    },
+    "readIntegration": "In actual loadCanonical comparison branch only, derive writingComparison from the already-loaded two owned immutable rows and unchanged compareCanonical output. Add writingComparison:null in no-comparison/no-head branches; no extra RPC/provider. Preserve existing complete comparison output. Use existing owner/source/privacy admission; require same resume/owner/organization/analysis/input hash/evidence version/retention/source identity before labelling comparison. No source substitution from URL, no claim older/newer chronology or accepted transition: selected saved versions may be compared in either direction. No write/history/score/model/flag/schema/migration/consent changes.",
+    "limits": "Bound canonical/fact strings and arrays by existing schemas; max50 diagnostic rows, preserve all raw comparison rows and visible remaining count. Deterministic warnings/counts, immutable inputs. Word counts/warnings are observations, not factual support, qualification or source quality."
+  },
+  "frontend": {
+    "component": "app/components/WritingDiagnosticComparison.tsx; prop {comparison:WritingComparison|SavedWritingComparison}; type-only import of any server types",
+    "projectedMount": "Existing AuthoringWorkspace patch review uses actual selected baseFact+patch.proposedValue through shared helper; show projected/not-saved state without changing existing FormData/ack/accept/reject/clarify/undo/exactretry/CAS/proof controls. No confirmation/source-reference inheritance after a proposed edit. Existing full before/after/provenance remain.",
+    "savedMount": "Existing analysis.canonical fact-comparison section mounts only actual model.writingComparison; existing complete values/state comparison stays visible. Show actual loaded version/revision refs and total/remaining counts; do not infer identities from current URL. Same-version, record-only confirmation, additions/removals/reversed history stay correctly labelled. No claim a manual save equals accepted AI suggestion.",
+    "copy": "Explain observed new/resolved writing warnings, text counts, confirmation/provenance changes; not a quality score or factual verifier. Saved vs projected labels clear. Correct wording may still need candidate review; source references may be historical. Numeric score/delta unavailable. No JD coverage delta unless exact owned JD/policy is actually bound (not supplied here)."
+  },
+  "reviewer": "Review implementation and independently map the exact next broader JD drafting change. Current canonical rewrite policy supports only copy/equivalent-leading-action and typed native protocol is similarly closed. Read actual IR1.0.4, proposal codec/HTTP/native mutation contracts. Propose smallest real versioned implementation path for useful source-backed JD-specific drafting with existing support proof and actual candidate decisions; name concrete owned files/native dependency/policy renewal, preserve old versions. Do not silently call these writing comparisons or copy-only review full drafting. Proposal goes only in own handoff, no policy/production changes now.",
+  "checks": "Known synthetic source only. Genuine baseline missing observations through actual existing read/component, not missing-module RED. Confirm projected no saved refs/confirmation; actual pair/source/hash/owner/version scope; source/citation/confirmation changes do not mean calibrated truth; type-only/source metadata changes vs wording; additions/removals/same/reverse versions; warning changes; optional metrics/no score credit. Existing accept/undo/CAS/assertions remain. Tests exercise actual pure helper and reader/DOM; no Native/browser/provider claim.",
+  "boundary": "Source/synthetic/DOM/fakeRPC only. Pinned Node22.23.4 sealed empty HOME; OS network/root+WT dotenv/Git/common Git pointer write denial. No SQL parser/execution/advisors/DB/env/keys/PII/PDF/Photos/provider/browser/service/compiler/OCR/Docker/deps/workspace Git/deploy. Preserve IR1.0.4/core602ba/policy230f, scorer/history/assertions/failures/default-off flags. No future automatic policy adoption API."
+}

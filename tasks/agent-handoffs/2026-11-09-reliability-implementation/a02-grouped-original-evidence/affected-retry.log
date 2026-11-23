@@ -1,0 +1,99 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ✓ tests/unit/canonical-resume-schema.test.ts (22 tests) 10ms
+ ❯ tests/unit/canonical-grouped-import.test.ts (69 tests | 1 failed) 167ms
+     ✓ prepares two entries from six exact unconfirmed facts using one fresh legacy import 21ms
+     ✓ retains every unselected contact, section, entry, bullet and fact 8ms
+     ✓ normalizes reordered selections and members to rederived source order 3ms
+     ✓ records effective locale without claiming a durable replay identity 3ms
+     ✓ keeps same-span groups and unsupported contexts unchanged beside selected multiline groups 5ms
+     × preserves exact Unicode field values and code-point citations 7ms
+     ✓ uses actual synthetic OCR placement and preserves extraction method citations 8ms
+     ✓ accepts exactly thirty-two actual groups without dropping original facts 15ms
+     ✓ does not emit observation values or factual approval in the receipt 4ms
+     ✓ rejects mismatched intent binding ownerId before constructing a draft 2ms
+     ✓ rejects mismatched intent binding organizationId before constructing a draft 2ms
+     ✓ rejects mismatched intent binding resumeId before constructing a draft 2ms
+     ✓ rejects mismatched intent binding analysisId before constructing a draft 1ms
+     ✓ rejects mismatched intent binding sourceId before constructing a draft 1ms
+     ✓ rejects mismatched intent binding attemptId before constructing a draft 1ms
+     ✓ rejects mismatched intent binding inputSha256 before constructing a draft 2ms
+     ✓ rejects mismatched intent binding evidenceSchemaVersion before constructing a draft 1ms
+     ✓ rejects mismatched intent binding fieldExtractorVersion before constructing a draft 1ms
+     ✓ rejects mismatched intent binding targetModelVersion before constructing a draft 1ms
+     ✓ rejects mismatched intent binding associationModelVersion before constructing a draft 1ms
+     ✓ rejects mismatched intent binding producerVersion before constructing a draft 1ms
+     ✓ rejects mismatched intent binding canonicalHeadId before constructing a draft 1ms
+     ✓ rejects invalid intent case schema without legacy fallback 1ms
+     ✓ rejects invalid intent case acknowledgement without legacy fallback 1ms
+     ✓ rejects invalid intent case disposition without legacy fallback 1ms
+     ✓ rejects invalid intent case extra root without legacy fallback 1ms
+     ✓ rejects invalid intent case extra binding without legacy fallback 1ms
+     ✓ rejects invalid intent case extra selection without legacy fallback 1ms
+     ✓ rejects invalid intent case extra member without legacy fallback 1ms
+     ✓ rejects invalid intent case extra citation without legacy fallback 1ms
+     ✓ rejects invalid intent case copied value without legacy fallback 1ms
+     ✓ rejects invalid intent case original draft without legacy fallback 1ms
+     ✓ rejects invalid intent case empty selection without legacy fallback 1ms
+     ✓ rejects forged or overlapping selector case duplicate group 2ms
+     ✓ rejects forged or overlapping selector case duplicate member 2ms
+     ✓ rejects forged or overlapping selector case missing member 1ms
+     ✓ rejects forged or overlapping selector case wrong group 1ms
+     ✓ rejects forged or overlapping selector case foreign member 1ms
+     ✓ rejects forged or overlapping selector case assertion 1ms
+     ✓ rejects forged or overlapping selector case target 1ms
+     ✓ rejects forged or overlapping selector case field 1ms
+     ✓ rejects forged or overlapping selector case span 1ms
+     ✓ rejects forged or overlapping selector case method 2ms
+     ✓ rejects forged or overlapping selector case start 1ms
+     ✓ rejects forged or overlapping selector case end 1ms
+     ✓ rejects forged or overlapping selector case pageStart 1ms
+     ✓ rejects forged or overlapping selector case pageEnd 1ms
+     ✓ preflights intent groups excess before serialization 1ms
+     ✓ preflights intent members excess before serialization 1ms
+     ✓ preflights intent citations excess before serialization 1ms
+     ✓ preflights intent scalar excess before serialization 1ms
+     ✓ rejects primitive runtime intent case 0 0ms
+     ✓ rejects primitive runtime intent case 1 0ms
+     ✓ rejects primitive runtime intent case 2 0ms
+     ✓ rejects primitive runtime intent case 3 0ms
+     ✓ rejects altered raw evidence before import construction 1ms
+     ✓ preserves original importer limits instead of partially grouping an oversized draft 18ms
+     ✓ rejects whole preparation for mocked legacy deviation duplicate fact 2ms
+     ✓ rejects whole preparation for mocked legacy deviation missing fact 2ms
+     ✓ rejects whole preparation for mocked legacy deviation wrong value 2ms
+     ✓ rejects whole preparation for mocked legacy deviation wrong citation 1ms
+     ✓ rejects whole preparation for mocked legacy deviation extra citation 1ms
+     ✓ rejects whole preparation for mocked legacy deviation unplaced 1ms
+     ✓ rejects whole preparation for mocked legacy deviation multiple places 2ms
+     ✓ rejects whole preparation for mocked legacy deviation mixed entry 1ms
+     ✓ rejects whole preparation for mocked legacy deviation bullet entry 2ms
+     ✓ rejects whole preparation for mocked legacy deviation wrong section 2ms
+     ✓ rejects whole preparation for mocked legacy deviation cross section 1ms
+     ✓ rejects whole preparation for mocked legacy deviation confirmed fact 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/canonical-grouped-import.test.ts > nonpersistable grouped original import > preserves exact Unicode field values and code-point citations
+AssertionError: expected '4512bbd590f4fa555b207d4370faabc3da345…' to be 'cd0bcc70d4f76ea11cf20ff1d5c0d25ce9ce6…' // Object.is equality
+
+Expected: "cd0bcc70d4f76ea11cf20ff1d5c0d25ce9ce631e469865c7c4608d6bd9c58eee"
+Received: "4512bbd590f4fa555b207d4370faabc3da34523970112e59d2df69ffe17c706a"
+
+ ❯ tests/unit/canonical-grouped-import.test.ts:355:63
+    353|           (row) => row.id === value.factId,
+    354|         )!;
+    355|         expect(digest([fact.type, fact.value, fact.sources])).toBe(
+       |                                                               ^
+    356|           digest([
+    357|             assertion.field,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 90 passed (91)
+   Start at  16:32:53
+   Duration  372ms (transform 129ms, setup 0ms, import 215ms, tests 177ms, environment 0ms)
+

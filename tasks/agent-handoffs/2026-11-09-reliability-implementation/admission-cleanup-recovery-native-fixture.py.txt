@@ -1,0 +1,178 @@
+"""Run exact admission recovery SQL using a socket-only PostgreSQL 17 fixture."""
+from pathlib import Path
+import subprocess
+from tempfile import TemporaryDirectory
+
+migrations = Path("supabase/migrations")
+
+def source(prefix):
+    match, = migrations.glob(prefix + "_*.sql")
+    return match.read_text()
+
+def section(text, start, end):
+    start_at = text.index(start)
+    return text[start_at:text.index(end, start_at)]
+
+scaffold = """
+set statement_timeout='5s';
+create role anon;
+create role authenticated;
+create role service_role;
+create schema auth;
+create schema private;
+create schema extensions;
+create extension pgcrypto with schema extensions;
+create table auth.users(id uuid primary key);
+create table public.organizations(id uuid primary key, owner_id uuid);
+create table public.data_requests(id uuid primary key, user_id uuid, kind text, status text,
+  lease_owner text, lease_expires_at timestamptz, attempt_count integer, privacy_generation bigint);
+create table public.analyses(id uuid primary key, owner_id uuid, organization_id uuid, resume_version_id uuid, job_id uuid);
+create table public.analysis_jobs(analysis_id uuid primary key, lease_owner text, lease_expires_at timestamptz);
+create table public.resume_versions(id uuid primary key, owner_id uuid, organization_id uuid,
+  resume_id uuid, storage_key text unique, bytes integer, checksum text);
+create table public.resumes(id uuid primary key, owner_id uuid, organization_id uuid);
+create table public.jobs(id uuid primary key, owner_id uuid, organization_id uuid);
+-- The full catalogue seal is outside this synthetic fixture.
+create function private.privacy_generation_ready() returns boolean language sql as 'select true';
+"""
+
+checks = """
+do $$
+declare
+  owner_id uuid:=gen_random_uuid();
+  foreign_id uuid:=gen_random_uuid();
+  org uuid:=gen_random_uuid();
+  other_org uuid:=gen_random_uuid();
+  claim_id uuid:=gen_random_uuid();
+  export_id uuid:=gen_random_uuid();
+  operation_id uuid;
+  upload_id uuid;
+  resume_id uuid;
+  version_id uuid;
+  job_id uuid;
+  analysis_id uuid;
+  object_id uuid;
+  path text;
+  eligible uuid[]:=array[]::uuid[];
+  held uuid[]:=array[]::uuid[];
+  planned record;
+  receipt jsonb;
+  first_ready uuid;
+  first_object uuid;
+begin
+  insert into auth.users values(owner_id),(foreign_id);
+  insert into public.organizations values(org,owner_id),(other_org,foreign_id);
+  insert into public.data_requests values
+    (claim_id,owner_id,'deletion','processing','same-worker',clock_timestamp()+interval '2 minute',1,1),
+    (export_id,owner_id,'export','processing','same-worker',clock_timestamp()+interval '2 minute',1,1);
+
+  -- Seven eligible writes, then unacknowledged, legacy, adopted, live-job,
+  -- referenced, noncanonical and foreign-owned controls.
+  for kind in 1..14 loop
+    operation_id:=gen_random_uuid();
+    upload_id:=gen_random_uuid();
+    analysis_id:=gen_random_uuid();
+    resume_id:=gen_random_uuid();
+    version_id:=gen_random_uuid();
+    job_id:=gen_random_uuid();
+    object_id:=gen_random_uuid();
+    path:='organizations/'||(case when kind=14 then other_org else org end)||
+      '/resumes/'||resume_id||'/versions/'||version_id||'.pdf';
+    if kind=13 then path:='noncanonical.pdf'; end if;
+    insert into private.analysis_admission_operations(id,organization_id,owner_id,idempotency_key,binding_sha256) values
+      (operation_id,case when kind=14 then other_org else org end,case when kind=14 then foreign_id else owner_id end,
+        gen_random_uuid(),repeat('a',64));
+    insert into private.analysis_admission_uploads(id,operation_id,analysis_id,resume_id,version_id,job_id,storage_key)
+      values(upload_id,operation_id,analysis_id,resume_id,version_id,job_id,path);
+    if kind<>9 then
+      insert into private.analysis_admission_upload_transport(upload_id,bucket,dispatched_at,acknowledged_at,object_id)
+        values(upload_id,'resumes',clock_timestamp(),case when kind<>8 then clock_timestamp() end,case when kind<>8 then object_id end);
+    end if;
+    if kind=10 then
+      update private.analysis_admission_uploads set state='adopted' where id=upload_id;
+      update private.analysis_admission_operations set adopted_upload_id=upload_id where id=operation_id;
+    elsif kind=11 then
+      insert into public.analysis_jobs values(analysis_id,'live',clock_timestamp()+interval '1 minute');
+    elsif kind=12 then
+      insert into public.resume_versions values(gen_random_uuid(),foreign_id,other_org,gen_random_uuid(),path,17,repeat('b',64));
+    end if;
+    if kind<=7 then eligible:=array_append(eligible,upload_id);
+    else held:=array_append(held,upload_id); end if;
+  end loop;
+
+  assert not has_function_privilege('anon','public.claim_analysis_admission_cleanup(uuid,text,integer)','execute');
+  assert not has_function_privilege('authenticated','public.complete_analysis_admission_cleanup(uuid,text,integer,uuid,uuid)','execute');
+  assert has_function_privilege('service_role','public.claim_analysis_admission_cleanup(uuid,text,integer)','execute');
+  assert not has_function_privilege('service_role','private.lock_analysis_admission_cleanup_uploads(uuid,uuid,uuid,boolean)','execute');
+  assert not has_function_privilege('service_role','private.lock_analysis_admission_cleanup_scope(uuid,text,integer)','execute');
+  assert public.claim_analysis_admission_cleanup(export_id,'same-worker',1) is null;
+  assert public.claim_analysis_admission_cleanup(claim_id,'other-worker',1) is null;
+  assert public.claim_analysis_admission_cleanup(claim_id,'same-worker',2) is null;
+  assert not public.complete_analysis_admission_cleanup(claim_id,'same-worker',1,eligible[1],
+    (select t.object_id from private.analysis_admission_upload_transport t where t.upload_id=eligible[1]));
+
+  receipt:=public.claim_analysis_admission_cleanup(claim_id,'same-worker',1);
+  assert receipt->>'requestId'=claim_id::text and receipt->>'attempt'='1';
+  assert jsonb_array_length(receipt->'uploads')=4;
+  for planned in select value from jsonb_array_elements(receipt->'uploads') loop
+    upload_id:=(planned.value->>'uploadId')::uuid;
+    object_id:=(planned.value->>'objectId')::uuid;
+    assert upload_id=any(eligible);
+    assert (select u.state='cleanup_pending' and u.storage_key=planned.value->>'storageKey'
+      from private.analysis_admission_uploads u where u.id=upload_id);
+    assert not public.complete_analysis_admission_cleanup(claim_id,'same-worker',1,upload_id,gen_random_uuid());
+    if first_ready is null then first_ready:=upload_id; first_object:=object_id; end if;
+  end loop;
+
+  update public.data_requests set lease_expires_at=clock_timestamp()-interval '1 second' where id=claim_id;
+  assert public.claim_analysis_admission_cleanup(claim_id,'same-worker',1) is null;
+  assert not public.complete_analysis_admission_cleanup(claim_id,'same-worker',1,first_ready,first_object);
+  update public.data_requests set lease_expires_at=clock_timestamp()+interval '2 minute',attempt_count=2 where id=claim_id;
+  assert not public.complete_analysis_admission_cleanup(claim_id,'same-worker',1,first_ready,first_object);
+  assert public.complete_analysis_admission_cleanup(claim_id,'same-worker',2,first_ready,first_object);
+  assert public.complete_analysis_admission_cleanup(claim_id,'same-worker',2,first_ready,first_object);
+
+  loop
+    receipt:=public.claim_analysis_admission_cleanup(claim_id,'same-worker',2);
+    exit when receipt->'uploads'='[]'::jsonb;
+    for planned in select value from jsonb_array_elements(receipt->'uploads') loop
+      upload_id:=(planned.value->>'uploadId')::uuid;
+      assert upload_id=any(eligible);
+      assert public.complete_analysis_admission_cleanup(claim_id,'same-worker',2,upload_id,(planned.value->>'objectId')::uuid);
+    end loop;
+  end loop;
+
+  assert (select count(*)=7 from private.analysis_admission_uploads u where u.id=any(eligible) and u.state='cleaned');
+  assert not exists(select 1 from private.analysis_admission_uploads u where u.id=any(held) and u.state in ('cleanup_pending','cleaned'));
+  assert (select count(*)=14 from private.analysis_admission_operations);
+  assert (select d.status='processing' from public.data_requests d where d.id=claim_id);
+end;
+$$;
+"""
+
+sql = "\n".join([
+    scaffold,
+    section(source("20261110080809"), "create table private.analysis_admission_operations", "create function private.analysis_admission_denied"),
+    section(source("20261109164851"), "create function private.candidate_owner_lock_keys", "-- A false try-lock"),
+    section(source("20261116075250"), "create function private.privacy_generation_claim", "create function public.complete_privacy_request"),
+    source("20261121130718"), source("20261121132235"), source("20261121203700"), checks,
+])
+
+with TemporaryDirectory(prefix="resumide-admission-recovery-") as tmp:
+    env = {"HOME": tmp, "PATH": "/opt/homebrew/bin:/usr/bin:/bin", "LC_ALL": "C"}
+    data = str(Path(tmp) / "data")
+
+    def run(args, **kwargs):
+        return subprocess.run(args, env=env, timeout=25, text=True, check=True, **kwargs)
+
+    assert run(["postgres", "--version"], capture_output=True).stdout.startswith("postgres (PostgreSQL) 17.")
+    run(["initdb", "-D", data, "--no-sync", "--auth=trust", "-U", "fixture_owner"], stdout=subprocess.DEVNULL)
+    try:
+        run(["pg_ctl","-w","-D",data,"-l",str(Path(tmp)/"postgres.log"),
+             "-o",f"-c listen_addresses='' -c unix_socket_directories={tmp} -c unix_socket_permissions=0700","start"],
+            stdout=subprocess.DEVNULL)
+        run(["psql","-X","-v","ON_ERROR_STOP=1","-h",tmp,"-U","fixture_owner","-d","postgres","-Atq"], input=sql)
+        print("PASS: bounded exact recovery, expired and reclaimed attempts, idempotent receipt, seven excluded controls, and account hold.")
+    finally:
+        if (Path(data) / "postmaster.pid").exists():
+            run(["pg_ctl","-w","-D",data,"-m","immediate","stop"], stdout=subprocess.DEVNULL)

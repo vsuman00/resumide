@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
+import { StorageApiError } from "@supabase/supabase-js";
 import { getServerConfig } from "./config";
+import { runProviderAttempt } from "./provider-attempt";
 import { createSupabaseAdminClient } from "./supabase";
 
 const MAX_SIGNED_URL_SECONDS = 300;
@@ -101,10 +103,72 @@ export class ResumeStorage {
   }
 }
 
-export function createResumeStorage() {
+function resumeStorageBucket(fetch?: typeof globalThis.fetch) {
   const config = getServerConfig();
-  const bucket = createSupabaseAdminClient().storage.from(
+  return createSupabaseAdminClient(fetch).storage.from(
     config.SUPABASE_RESUME_BUCKET,
   );
-  return new ResumeStorage(bucket);
+}
+
+export function createResumeStorage() {
+  return new ResumeStorage(resumeStorageBucket());
+}
+
+function isMissingStorageKey(error: unknown): boolean {
+  return (
+    error instanceof StorageApiError &&
+    error.status === 404 &&
+    error.code === "NoSuchKey"
+  );
+}
+
+/** Confirm absence of an exact key through Storage. */
+export async function removeVerifiedResumeStorageObject(
+  storageKey: string,
+  expected?: { bucket: string; objectId: string },
+  cancellation?: AbortSignal,
+) {
+  const failure = () => new StorageError("STORAGE_DELETE_UNVERIFIED");
+  try {
+    await runProviderAttempt({
+      timeoutMs: 5_000,
+      signal: cancellation,
+      failure,
+      execute: async (signal) => {
+        if (
+          expected &&
+          expected.bucket !== getServerConfig().SUPABASE_RESUME_BUCKET
+        )
+          throw failure();
+        const bucket = resumeStorageBucket((input, init) =>
+          globalThis.fetch(input, {
+            ...init,
+            signal,
+            cache: "no-store",
+            redirect: "error",
+          }),
+        );
+        if (expected) {
+          const before = await bucket.info(storageKey);
+          signal.throwIfAborted();
+          if (before.data === null && isMissingStorageKey(before.error)) return;
+          if (before.error || before.data?.id !== expected.objectId)
+            throw failure();
+        }
+        const removal = await bucket.remove([storageKey]);
+        signal.throwIfAborted();
+        if (removal.error && !isMissingStorageKey(removal.error))
+          throw failure();
+
+        const observation = await bucket.info(storageKey);
+        if (
+          observation.data !== null ||
+          !isMissingStorageKey(observation.error)
+        )
+          throw failure();
+      },
+    });
+  } catch {
+    throw failure();
+  }
 }

@@ -1,0 +1,45 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/rewrite-budget.test.ts (12 tests | 1 failed | 11 skipped) 23ms
+   ↓ settles before persistence and binds the exact production payload and assigned attempt
+   ↓ never dispatches exact header replay twice and conflicts on changed payload under that key
+   ↓ recovers a replayed reserved attempt through its first dispatch claim
+   ↓ uses the accepted request ID for replay and creates fresh operations when no key is supplied
+   ↓ charges known refusal usage without writing or refunding the prior draft
+   ↓ retains a dispatched timeout with unknown usage as a hold
+   ↓ settles observed usage even when the provider output is invalid
+   ↓ keeps known spend when no proposal passes grounding
+   ↓ does not persist a proposal when settlement is unavailable or expose private error text
+   ↓ retains settled spend after run persistence failure or stale draft rejection
+   ↓ rejects an invalid idempotency key before reserve or provider access
+   × requires source admission before reserving and calling the SDK 22ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/rewrite-budget.test.ts > requires source admission before reserving and calling the SDK
+AssertionError: expected 200 to be 503 // Object.is equality
+
+- Expected
++ Received
+
+- 503
++ 200
+
+ ❯ tests/unit/rewrite-budget.test.ts:560:27
+    558|   const ai = transport();
+    559|   const response = await rewriteAction(request(), id, ai);
+    560|   expect(response.status).toBe(503);
+       |                           ^
+    561|   expect(ai.execute).not.toHaveBeenCalled();
+    562|   expect(mocks.rpc).not.toHaveBeenCalledWith("ai_budget_reserve_next",…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 11 skipped (12)
+   Start at  21:22:32
+   Duration  366ms (transform 154ms, setup 0ms, import 279ms, tests 23ms, environment 0ms)
+
+JSON report written to /tmp/resumide-ai-source-runtime-ZxEyRK/tests.json

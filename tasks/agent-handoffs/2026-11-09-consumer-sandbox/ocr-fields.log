@@ -1,0 +1,903 @@
+
+> test:ocr:fields
+> node node_modules/vite-node/vite-node.mjs --config vitest.config.ts scripts/verify-ocr-fields.ts sha256:ab1d5c0fab7533a23584bd533df8459fdf2090fb27fbabe3355bbc7fb750b58c
+
+{"status":"structured_field_receipt_pre_execution","receiptSha256":"903c852b5fb99cd05ec55612d0e57f21346648fe7df2c0f31949791da9537662","imageId":"sha256:ab1d5c0fab7533a23584bd533df8459fdf2090fb27fbabe3355bbc7fb750b58c","config":{"psm":3,"maxDpi":150},"partition":"development","parserSources":[{"path":"app/lib/server/evidence-fields.ts","sha256":"a21e2280a556bf97087179dfc6e9b8468e978591d1d24c8b807000fbfc1d8ff7"},{"path":"app/lib/server/parsing/contact.ts","sha256":"e5b1959000b229a3f22e52e5cda6abc30bbfd2e8b6f18b55d1d907db3ebb5579"},{"path":"app/lib/server/parsing/dates.ts","sha256":"eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72"},{"path":"app/lib/server/parsing/sections.ts","sha256":"e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1"}],"sources":[{"id":"print-alpha-backend-clean-v1","sourceSha256":"89fc819384314a602f671b91a4c56b3781f94e0257d60e447d977ae2ce6c3842","family":"alpha-backend","segment":"clean","labelsSha256":"d5881bebabb39a815caa90b4a6c3061667668f1ec98ca5d16cc1fe5f307c6459"},{"id":"print-alpha-backend-challenging-v1","sourceSha256":"802f7ab383eb954f3da5c5f79ce3976d55312529fe1973bf06e2fa6c4dbaefc5","family":"alpha-backend","segment":"challenging","labelsSha256":"d5881bebabb39a815caa90b4a6c3061667668f1ec98ca5d16cc1fe5f307c6459"},{"id":"print-alpha-backend-mixed-v1","sourceSha256":"549afcd0c6679b8afb92d119c8270d0c34a14f4a7eb8d1b11d75eb0dda7f4f56","family":"alpha-backend","segment":"mixed","labelsSha256":"c2f65d15072e6e3c26aae8da8b3586f1b827c9a3566a86bef53a5bbda72a48da"},{"id":"print-beta-accessibility-clean-v1","sourceSha256":"63e94a180daf44f3bc42936c6c763abbb9372ce303cf915fd69c73f00a8175cc","family":"beta-accessibility","segment":"clean","labelsSha256":"975c0b895250db28038185cf62206d43d8fd5427679455e7ec5882e2f37c516e"},{"id":"print-beta-accessibility-challenging-v1","sourceSha256":"6f21c8699068ddeef7c25cead187747e5173e78efb6f0953263b38f31078cc66","family":"beta-accessibility","segment":"challenging","labelsSha256":"975c0b895250db28038185cf62206d43d8fd5427679455e7ec5882e2f37c516e"},{"id":"print-beta-accessibility-mixed-v1","sourceSha256":"f8cffd89289210dafb93f12e04450b11acd14f6fb1a84a480d1abd044cf3086e","family":"beta-accessibility","segment":"mixed","labelsSha256":"d317dc913873b40e2fbeff5c45d4264fe360f1befe004d4213f2af155555254a"},{"id":"print-gamma-platform-clean-v1","sourceSha256":"2d332c2ecfbbbf21020476f7559cf73417c49667108740e18a301da0cee0ab79","family":"gamma-platform","segment":"clean","labelsSha256":"d1922f96535039ea19f9ebee1f059dce97b0b61dc6349ed96d3e242cae878b98"},{"id":"print-gamma-platform-challenging-v1","sourceSha256":"c1c189f8fc93eae432291e6fd518340baca5acf4c91d71ceb0a00fc655cb80aa","family":"gamma-platform","segment":"challenging","labelsSha256":"d1922f96535039ea19f9ebee1f059dce97b0b61dc6349ed96d3e242cae878b98"},{"id":"print-gamma-platform-mixed-v1","sourceSha256":"075e7d2a9ec1e422f29c7c6854ed55a49e3317d3880cbca6cbbcbafa9e248fcc","family":"gamma-platform","segment":"mixed","labelsSha256":"7c2c33b956763a432608d20e6cfb415a466aa8289e3d02af94380f4257bd8f83"}]}
+{
+  "status": "structured_field_diagnostic_completed",
+  "receiptSha256": "903c852b5fb99cd05ec55612d0e57f21346648fe7df2c0f31949791da9537662",
+  "completedAt": "2026-11-09T07:26:45.999Z",
+  "datasetType": "synthetic_engineering_only",
+  "partition": "development",
+  "documents": 9,
+  "sourceFamilies": 3,
+  "annotatorType": "ai",
+  "humanValidation": "not_evaluated",
+  "representativeValidity": "not_evaluated",
+  "calibratedConfidence": false,
+  "persistedRawAssets": false,
+  "metricScope": "typed_parser_predictions_exact_field_value_page_and_source_grounding_one_to_one",
+  "gate": "diagnostic_only_not_release_acceptance",
+  "confidenceInterval": null,
+  "confidenceIntervalReason": "three_correlated_authored_families_not_representative_release_data",
+  "aggregate": {
+    "truePositive": 72,
+    "falsePositive": 0,
+    "falseNegative": 0,
+    "ungroundedPredictions": 0,
+    "precision": 1,
+    "recall": 1
+  },
+  "perField": [
+    {
+      "field": "name",
+      "truePositive": 9,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "field": "email",
+      "truePositive": 9,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "field": "phone",
+      "truePositive": 9,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "field": "employer",
+      "truePositive": 9,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "field": "role",
+      "truePositive": 9,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "field": "dates",
+      "truePositive": 9,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "field": "education",
+      "truePositive": 9,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "precision": 1,
+      "recall": 1
+    },
+    {
+      "field": "certification",
+      "truePositive": 9,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "precision": 1,
+      "recall": 1
+    }
+  ],
+  "results": [
+    {
+      "id": "print-alpha-backend-clean-v1",
+      "sourceSha256": "89fc819384314a602f671b91a4c56b3781f94e0257d60e447d977ae2ce6c3842",
+      "family": "alpha-backend",
+      "segment": "clean",
+      "status": "review_required",
+      "selectedPages": [
+        1
+      ],
+      "nativePreservation": "verified",
+      "cleanup": "verified",
+      "scoringEligible": false,
+      "metrics": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1,
+        "ungroundedPredictions": 0,
+        "referenceCount": 8,
+        "predictionCount": 8,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "print-alpha-backend-challenging-v1",
+      "sourceSha256": "802f7ab383eb954f3da5c5f79ce3976d55312529fe1973bf06e2fa6c4dbaefc5",
+      "family": "alpha-backend",
+      "segment": "challenging",
+      "status": "review_required",
+      "selectedPages": [
+        1
+      ],
+      "nativePreservation": "verified",
+      "cleanup": "verified",
+      "scoringEligible": false,
+      "metrics": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1,
+        "ungroundedPredictions": 0,
+        "referenceCount": 8,
+        "predictionCount": 8,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "print-alpha-backend-mixed-v1",
+      "sourceSha256": "549afcd0c6679b8afb92d119c8270d0c34a14f4a7eb8d1b11d75eb0dda7f4f56",
+      "family": "alpha-backend",
+      "segment": "mixed",
+      "status": "review_required",
+      "selectedPages": [
+        1,
+        3
+      ],
+      "nativePreservation": "verified",
+      "cleanup": "verified",
+      "scoringEligible": false,
+      "metrics": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1,
+        "ungroundedPredictions": 0,
+        "referenceCount": 8,
+        "predictionCount": 8,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "print-beta-accessibility-clean-v1",
+      "sourceSha256": "63e94a180daf44f3bc42936c6c763abbb9372ce303cf915fd69c73f00a8175cc",
+      "family": "beta-accessibility",
+      "segment": "clean",
+      "status": "review_required",
+      "selectedPages": [
+        1
+      ],
+      "nativePreservation": "verified",
+      "cleanup": "verified",
+      "scoringEligible": false,
+      "metrics": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1,
+        "ungroundedPredictions": 0,
+        "referenceCount": 8,
+        "predictionCount": 8,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "print-beta-accessibility-challenging-v1",
+      "sourceSha256": "6f21c8699068ddeef7c25cead187747e5173e78efb6f0953263b38f31078cc66",
+      "family": "beta-accessibility",
+      "segment": "challenging",
+      "status": "review_required",
+      "selectedPages": [
+        1
+      ],
+      "nativePreservation": "verified",
+      "cleanup": "verified",
+      "scoringEligible": false,
+      "metrics": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1,
+        "ungroundedPredictions": 0,
+        "referenceCount": 8,
+        "predictionCount": 8,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "print-beta-accessibility-mixed-v1",
+      "sourceSha256": "f8cffd89289210dafb93f12e04450b11acd14f6fb1a84a480d1abd044cf3086e",
+      "family": "beta-accessibility",
+      "segment": "mixed",
+      "status": "review_required",
+      "selectedPages": [
+        1,
+        3
+      ],
+      "nativePreservation": "verified",
+      "cleanup": "verified",
+      "scoringEligible": false,
+      "metrics": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1,
+        "ungroundedPredictions": 0,
+        "referenceCount": 8,
+        "predictionCount": 8,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "print-gamma-platform-clean-v1",
+      "sourceSha256": "2d332c2ecfbbbf21020476f7559cf73417c49667108740e18a301da0cee0ab79",
+      "family": "gamma-platform",
+      "segment": "clean",
+      "status": "review_required",
+      "selectedPages": [
+        1
+      ],
+      "nativePreservation": "verified",
+      "cleanup": "verified",
+      "scoringEligible": false,
+      "metrics": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1,
+        "ungroundedPredictions": 0,
+        "referenceCount": 8,
+        "predictionCount": 8,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "print-gamma-platform-challenging-v1",
+      "sourceSha256": "c1c189f8fc93eae432291e6fd518340baca5acf4c91d71ceb0a00fc655cb80aa",
+      "family": "gamma-platform",
+      "segment": "challenging",
+      "status": "review_required",
+      "selectedPages": [
+        1
+      ],
+      "nativePreservation": "verified",
+      "cleanup": "verified",
+      "scoringEligible": false,
+      "metrics": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1,
+        "ungroundedPredictions": 0,
+        "referenceCount": 8,
+        "predictionCount": 8,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "print-gamma-platform-mixed-v1",
+      "sourceSha256": "075e7d2a9ec1e422f29c7c6854ed55a49e3317d3880cbca6cbbcbafa9e248fcc",
+      "family": "gamma-platform",
+      "segment": "mixed",
+      "status": "review_required",
+      "selectedPages": [
+        1,
+        3
+      ],
+      "nativePreservation": "verified",
+      "cleanup": "verified",
+      "scoringEligible": false,
+      "metrics": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1,
+        "ungroundedPredictions": 0,
+        "referenceCount": 8,
+        "predictionCount": 8,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0,
+            "precision": 1,
+            "recall": 1
+          }
+        ]
+      }
+    }
+  ]
+}

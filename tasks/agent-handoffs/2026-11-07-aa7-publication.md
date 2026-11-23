@@ -1,0 +1,9 @@
+# AA7 GitHub publication
+
+Owner requested GitHub commit/publication through AA7, then explicitly stopped any deployment. Isolated branch `chore/aa7-closeout-20261107` was committed as `071828f02f589a7519c6fc1b3712b8c2c2cd0541` and pushed to `vsuman00/resumide`. Fresh remote hash matches, ahead/behind 0/0 and publication worktree clean; main stays a0b2392 with local work preserved. No merge or PR was created.
+
+All 588 final AA7 code-input hashes match the tested private CI snapshot, including package.json reconstructed without the three AA8 metadata scripts. The branch records 1,246 scoped source/evidence files and a deployment guard. Known secret patterns, current configured secret values and known private candidate contact values have zero matches in publication inputs. Twenty previously reviewed visual artifacts match their frozen hashes; unreviewed generated visuals, auth planning, editor settings and unfinished AA8/AA9 work remain local.
+
+Vercel project serving resumide.vercel.app had zero queued/building deployments. Preview deployments disabled, ignored-build command `exit 0`, and committed vercel.json sets git.deploymentEnabled false for all branches. Post-push lookup finds zero deployments for this commit. GitHub Actions has zero runs for the skip-ci commit: hosted legacy Docker database jobs were not launched. No deployment, migration, promotion or worker release ran.
+
+Reused the unchanged AA7 source evidence: 1,242 unit tests, 71 browser cases and 28 runtime groups. No green AA7 runtime/browser/scan repetition. Authored code/publication-prose whitespace check passes; the full diff check intentionally remains non-green for retained checksum-bound raw logs, metadata, patches and frozen provenance. Those bytes were not rewritten. Preserve residual advisories, failed receipts and all separate release obligations.

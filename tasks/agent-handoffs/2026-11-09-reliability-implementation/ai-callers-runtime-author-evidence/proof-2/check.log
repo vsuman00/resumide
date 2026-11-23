@@ -1,0 +1,50 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/build-assist-budget.test.ts (14 tests | 1 failed) 98ms
+     ✓ denies the shared pool before provider dispatch even when the legacy allowance is available 20ms
+     ✓ uses one 24232+768 shared reservation and charges actual usage while retaining user/global/consent/audit gates 6ms
+     ✓ rejects an invalid HTTP idempotency key before ledger/provider work 1ms
+     ✓ recovers an unclaimed RESERVED replay through the first dispatch CAS 2ms
+     ✓ does not dispatch or alter accounting for a prior DISPATCHED replay 1ms
+     ✓ binds changed payload to the same namespaced HTTP key instead of granting another operation 3ms
+     ✓ settles observed safe usage even when the provider output is rejected 2ms
+     ✓ charges and fences known usage above the reservation before output rejection without changing old bounded metrics 3ms
+     ✓ holds unknown or invalid numeric usage undefined without an invented zero 2ms
+     ✓ holds unknown or invalid numeric usage {"prompt_tokens":1.5,"completion_tokens":10} without an invented zero 1ms
+     ✓ holds a post-claim cancellation without refunding the dispatched attempt 52ms
+     ✓ withholds a valid suggestion when known settlement fails 1ms
+     ✓ retains the known charge when result delivery fails afterward 1ms
+   × requires current source admission before Build SDK dispatch 1ms
+ ✓ tests/unit/privacy.test.ts (37 tests) 203ms
+ ✓ tests/unit/initial-feedback-service.test.ts (17 tests) 168ms
+ ✓ tests/unit/ai-budget-source-export.test.ts (41 tests) 154ms
+ ✓ tests/unit/privacy-operations.test.ts (54 tests) 83ms
+ ✓ tests/unit/owned-ai-privacy-export.test.ts (37 tests) 130ms
+ ✓ tests/unit/ai-budget-source.test.ts (51 tests) 21ms
+ ✓ tests/unit/provider-cancellation.test.ts (6 tests) 32ms
+ ✓ tests/unit/canonical-rewrite-repository.test.ts (29 tests) 971ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/build-assist-budget.test.ts > requires current source admission before Build SDK dispatch
+AssertionError: expected 403 to be 503 // Object.is equality
+
+- Expected
++ Received
+
+- 503
++ 403
+
+ ❯ tests/unit/build-assist-budget.test.ts:498:27
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 8 passed (9)
+      Tests  1 failed | 285 passed (286)
+   Start at  21:58:14
+   Duration  1.51s (transform 749ms, setup 0ms, import 1.59s, tests 1.86s, environment 0ms)
+
+JSON report written to /tmp/resumide-ai-callers-runtime-AUSJmx/tests.json

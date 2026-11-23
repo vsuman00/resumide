@@ -1,0 +1,1161 @@
+{
+  "revision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "worktree": "dirty",
+  "nodeVersion": "22.23.4",
+  "runnerPlatform": "darwin/arm64",
+  "workerPlatform": "linux/arm64",
+  "testedSources": {
+    "scripts/verify-ocr-pilot.ts": "85aab83b66a1716d3053aa5fc3d5e0bf3bf2fe951f1c29a89684458e5392bb0c",
+    "scripts/verify-ocr-fields.ts": "0b279af7504fafa8d31db76e246540582c9a9d238c0dd93a58cf2fd1c91e7798",
+    "tests/fixtures/ocr-supported-development.ts": "25ea8943cbd5490bbe9431a6cd2a18f5988233a45bd8df9e0a432d008fd1e6f4",
+    "tests/unit/ocr/ocr-pilot-cli.test.ts": "1095250542c4a366f6ce04456e47240a5682d23142d3b9d1038d70f7e29f3448",
+    "scripts/ocr-runtime/Dockerfile": "9d1e7b1066a1b6678c99533fd7e06eb8ff967ab068730bf6024d78269a979991",
+    "scripts/ocr-runtime/runner.py": "d683e041106fdf1d765c1264dd7fbb7a0a17b971c301e0b6b47e238e1d7bbe63",
+    "app/lib/server/ocr/local-container.ts": "45234904a4dad16ccc5b998c679ce6ae1850f72650edcc2920824bec27fc1f65",
+    "app/lib/server/ocr/pdf-detection.ts": "941b751c990bc4b0c1455b9017122b9e419f59db451f87ae3a5c66af9b9ae142",
+    "app/lib/server/ocr/selective.ts": "2d647df8cd51d36fd1fbd489cc7464d8ef3b8f098fc674743b871ea8a7f04325",
+    "tests/fixtures/ocr-evaluation.ts": "44dacec8286e1eccbb1f303da53dd1edbd69ac018a5f6094dfb9fa32e74e0246",
+    "tests/fixtures/ocr-field-evaluation.ts": "4a3c36350c6820a130e9cc356e378fde7109db8742c2668c0410a7031edcf455"
+  },
+  "transcription": [
+    {
+      "manifestVerifiedAgainstRegistration": true,
+      "receipt": {
+        "status": "evaluation_receipt_pre_execution",
+        "datasetId": "ocr-reliability-development/1.0.0",
+        "partition": "development",
+        "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+        "evaluationConfig": {
+          "psm": 3,
+          "maxDpi": 300
+        },
+        "manifestSha256": "5a4782d359f0508715e03887e74ce35a45bc0c029cd2cc36f849531935839d1e",
+        "versions": {
+          "engine": "tesseract-5.3.0-2",
+          "renderer": "poppler-22.12.0-2+deb12u3",
+          "languageData": "sha256:7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+        },
+        "evaluationReceiptSha256": "86d5bc26002ed92f59aa3190f53f01b3737f18874edcd2d0fb1cbef863d39415"
+      },
+      "completedAt": "2026-11-21T21:56:23.150Z",
+      "fullReportSha256": "9fca8aec556366e1d8e35776a5d618af1f9e29bc2d1f8db1b5efcb8a6456a494",
+      "exitCode": 0,
+      "segments": [
+        {
+          "segment": "clean",
+          "documents": 2,
+          "sourceFamilies": 2,
+          "characterErrorRate": 0,
+          "macroPageAvailability": 1,
+          "macroOrderedLineAgreement": 1,
+          "macroExactPositionLineAgreement": 1,
+          "maximumCer": 0.01,
+          "screeningGate": "passed",
+          "confidenceInterval95": [0, 0],
+          "intervalReason": null,
+          "bootstrap": {
+            "unit": "source_family",
+            "resamples": 10000,
+            "seed": 20261004
+          },
+          "failureRate": 0,
+          "abstentionRate": 0,
+          "latencyMs": {
+            "p50": 1099.1647080000002,
+            "p95": 1430.0128750000003,
+            "max": 1430.0128750000003
+          },
+          "apiFeeMicros": 0,
+          "computeCost": {
+            "value": null,
+            "reason": "host_rate_unavailable"
+          },
+          "representativeValidity": "not_evaluated",
+          "minimumExactPositionLineAgreement": 0.98
+        },
+        {
+          "segment": "challenging",
+          "documents": 2,
+          "sourceFamilies": 2,
+          "characterErrorRate": 0,
+          "macroPageAvailability": 1,
+          "macroOrderedLineAgreement": 1,
+          "macroExactPositionLineAgreement": 1,
+          "maximumCer": 0.03,
+          "screeningGate": "passed",
+          "confidenceInterval95": [0, 0],
+          "intervalReason": null,
+          "bootstrap": {
+            "unit": "source_family",
+            "resamples": 10000,
+            "seed": 20261004
+          },
+          "failureRate": 0,
+          "abstentionRate": 0,
+          "latencyMs": {
+            "p50": 1012.9491670000002,
+            "p95": 1420.1115,
+            "max": 1420.1115
+          },
+          "apiFeeMicros": 0,
+          "computeCost": {
+            "value": null,
+            "reason": "host_rate_unavailable"
+          },
+          "representativeValidity": "not_evaluated",
+          "minimumExactPositionLineAgreement": 0.98
+        },
+        {
+          "segment": "mixed",
+          "documents": 2,
+          "sourceFamilies": 2,
+          "characterErrorRate": 0,
+          "macroPageAvailability": 1,
+          "macroOrderedLineAgreement": 1,
+          "macroExactPositionLineAgreement": 1,
+          "maximumCer": 0.01,
+          "screeningGate": "passed",
+          "confidenceInterval95": [0, 0],
+          "intervalReason": null,
+          "bootstrap": {
+            "unit": "source_family",
+            "resamples": 10000,
+            "seed": 20261004
+          },
+          "failureRate": 0,
+          "abstentionRate": 0,
+          "latencyMs": {
+            "p50": 1785.96425,
+            "p95": 1932.7953749999997,
+            "max": 1932.7953749999997
+          },
+          "apiFeeMicros": 0,
+          "computeCost": {
+            "value": null,
+            "reason": "host_rate_unavailable"
+          },
+          "representativeValidity": "not_evaluated",
+          "minimumExactPositionLineAgreement": 0.98
+        }
+      ],
+      "observedChildStarts": {
+        "renderer": 8,
+        "recognition": 8,
+        "scope": "successful_observations_only_failed_attempts_unknown"
+      },
+      "cpuTime": {
+        "value": 6974.744,
+        "unit": "ms",
+        "scope": "sum_of_observed_successful_child_processes_only",
+        "observedDocuments": 6,
+        "unmeasuredDocuments": 0
+      },
+      "peakMemory": {
+        "value": 175542272,
+        "unit": "bytes",
+        "source": "cgroup_v2_memory_peak",
+        "scope": "maximum_observed_successful_container_peak_through_recognition",
+        "observedDocuments": 6,
+        "unmeasuredDocuments": 0,
+        "reason": null,
+        "limitations": "failed_attempts_and_post_recognition_serialization_unmeasured"
+      },
+      "results": [
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-clean-v1",
+          "sourceSha256": "0833ae1bcdef1d739864a197218bb562a55b38bcda72ec65c87b237b087d5b0a",
+          "segment": "clean",
+          "status": "review_required",
+          "selectedPages": [1],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 387,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        },
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-challenging-v1",
+          "sourceSha256": "6ae3fd7b9c5e174e9f3853e8c2fa2284f9555646ec7d99f4611bc7e92d5b1e85",
+          "segment": "challenging",
+          "status": "review_required",
+          "selectedPages": [1],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 387,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        },
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-mixed-v1",
+          "sourceSha256": "6d967a2ea6d1990d95fa16fa5eeff11feb58485187b876c24b37c04069d07d22",
+          "segment": "mixed",
+          "status": "review_required",
+          "selectedPages": [1, 3],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 386,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-clean-v1",
+          "sourceSha256": "1074aef3bcae7d2b229cc191d59858cd58d15dffd20beb2a85473baa7ece6ca9",
+          "segment": "clean",
+          "status": "review_required",
+          "selectedPages": [1],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 364,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-challenging-v1",
+          "sourceSha256": "5f1318594036b2fb7a3c327aac1465eb03afb9ae8c4a43c7cfb10e6d739e4f66",
+          "segment": "challenging",
+          "status": "review_required",
+          "selectedPages": [1],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 364,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-mixed-v1",
+          "sourceSha256": "f4aba8e5dc66f3688ab14744f5a2f809da8045a551c1f50c62539bbf20897ee8",
+          "segment": "mixed",
+          "status": "review_required",
+          "selectedPages": [1, 3],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 363,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        }
+      ]
+    },
+    {
+      "manifestVerifiedAgainstRegistration": true,
+      "receipt": {
+        "status": "evaluation_receipt_pre_execution",
+        "datasetId": "ocr-reliability-development/1.0.0",
+        "partition": "development",
+        "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+        "evaluationConfig": {
+          "psm": 3,
+          "maxDpi": 150
+        },
+        "manifestSha256": "5a4782d359f0508715e03887e74ce35a45bc0c029cd2cc36f849531935839d1e",
+        "versions": {
+          "engine": "tesseract-5.3.0-2",
+          "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+          "languageData": "sha256:7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+        },
+        "evaluationReceiptSha256": "284c0c9151c3b6c79f856fef2cf9795717c8478f4320b43e6f61dfc1124c55d2"
+      },
+      "completedAt": "2026-11-21T21:56:31.191Z",
+      "fullReportSha256": "bd957f46878c83c9256c6f6bea6158504da4d2bcab4553a1957591e2673c794c",
+      "exitCode": 0,
+      "segments": [
+        {
+          "segment": "clean",
+          "documents": 2,
+          "sourceFamilies": 2,
+          "characterErrorRate": 0,
+          "macroPageAvailability": 1,
+          "macroOrderedLineAgreement": 1,
+          "macroExactPositionLineAgreement": 1,
+          "maximumCer": 0.01,
+          "screeningGate": "passed",
+          "confidenceInterval95": [0, 0],
+          "intervalReason": null,
+          "bootstrap": {
+            "unit": "source_family",
+            "resamples": 10000,
+            "seed": 20261004
+          },
+          "failureRate": 0,
+          "abstentionRate": 0,
+          "latencyMs": {
+            "p50": 661.6391669999994,
+            "p95": 862.7105840000002,
+            "max": 862.7105840000002
+          },
+          "apiFeeMicros": 0,
+          "computeCost": {
+            "value": null,
+            "reason": "host_rate_unavailable"
+          },
+          "representativeValidity": "not_evaluated",
+          "minimumExactPositionLineAgreement": 0.98
+        },
+        {
+          "segment": "challenging",
+          "documents": 2,
+          "sourceFamilies": 2,
+          "characterErrorRate": 0,
+          "macroPageAvailability": 1,
+          "macroOrderedLineAgreement": 1,
+          "macroExactPositionLineAgreement": 1,
+          "maximumCer": 0.03,
+          "screeningGate": "passed",
+          "confidenceInterval95": [0, 0],
+          "intervalReason": null,
+          "bootstrap": {
+            "unit": "source_family",
+            "resamples": 10000,
+            "seed": 20261004
+          },
+          "failureRate": 0,
+          "abstentionRate": 0,
+          "latencyMs": {
+            "p50": 632.744584,
+            "p95": 783.3588329999998,
+            "max": 783.3588329999998
+          },
+          "apiFeeMicros": 0,
+          "computeCost": {
+            "value": null,
+            "reason": "host_rate_unavailable"
+          },
+          "representativeValidity": "not_evaluated",
+          "minimumExactPositionLineAgreement": 0.98
+        },
+        {
+          "segment": "mixed",
+          "documents": 2,
+          "sourceFamilies": 2,
+          "characterErrorRate": 0,
+          "macroPageAvailability": 1,
+          "macroOrderedLineAgreement": 1,
+          "macroExactPositionLineAgreement": 1,
+          "maximumCer": 0.01,
+          "screeningGate": "passed",
+          "confidenceInterval95": [0, 0],
+          "intervalReason": null,
+          "bootstrap": {
+            "unit": "source_family",
+            "resamples": 10000,
+            "seed": 20261004
+          },
+          "failureRate": 0,
+          "abstentionRate": 0,
+          "latencyMs": {
+            "p50": 853.390375,
+            "p95": 1073.778625,
+            "max": 1073.778625
+          },
+          "apiFeeMicros": 0,
+          "computeCost": {
+            "value": null,
+            "reason": "host_rate_unavailable"
+          },
+          "representativeValidity": "not_evaluated",
+          "minimumExactPositionLineAgreement": 0.98
+        }
+      ],
+      "observedChildStarts": {
+        "renderer": 8,
+        "recognition": 8,
+        "scope": "successful_observations_only_failed_attempts_unknown"
+      },
+      "cpuTime": {
+        "value": 3364.7340000000004,
+        "unit": "ms",
+        "scope": "sum_of_observed_successful_child_processes_only",
+        "observedDocuments": 6,
+        "unmeasuredDocuments": 0
+      },
+      "peakMemory": {
+        "value": 51695616,
+        "unit": "bytes",
+        "source": "cgroup_v2_memory_peak",
+        "scope": "maximum_observed_successful_container_peak_through_recognition",
+        "observedDocuments": 6,
+        "unmeasuredDocuments": 0,
+        "reason": null,
+        "limitations": "failed_attempts_and_post_recognition_serialization_unmeasured"
+      },
+      "results": [
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-clean-v1",
+          "sourceSha256": "0833ae1bcdef1d739864a197218bb562a55b38bcda72ec65c87b237b087d5b0a",
+          "segment": "clean",
+          "status": "review_required",
+          "selectedPages": [1],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 387,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        },
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-challenging-v1",
+          "sourceSha256": "6ae3fd7b9c5e174e9f3853e8c2fa2284f9555646ec7d99f4611bc7e92d5b1e85",
+          "segment": "challenging",
+          "status": "review_required",
+          "selectedPages": [1],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 387,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        },
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-mixed-v1",
+          "sourceSha256": "6d967a2ea6d1990d95fa16fa5eeff11feb58485187b876c24b37c04069d07d22",
+          "segment": "mixed",
+          "status": "review_required",
+          "selectedPages": [1, 3],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 386,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-clean-v1",
+          "sourceSha256": "1074aef3bcae7d2b229cc191d59858cd58d15dffd20beb2a85473baa7ece6ca9",
+          "segment": "clean",
+          "status": "review_required",
+          "selectedPages": [1],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 364,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-challenging-v1",
+          "sourceSha256": "5f1318594036b2fb7a3c327aac1465eb03afb9ae8c4a43c7cfb10e6d739e4f66",
+          "segment": "challenging",
+          "status": "review_required",
+          "selectedPages": [1],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 364,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-mixed-v1",
+          "sourceSha256": "f4aba8e5dc66f3688ab14744f5a2f809da8045a551c1f50c62539bbf20897ee8",
+          "segment": "mixed",
+          "status": "review_required",
+          "selectedPages": [1, 3],
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "wordGeometry": "contract_validated",
+          "ocrMetrics": {
+            "errors": 0,
+            "referenceCharacters": 363,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          },
+          "criticalValueTextRecovery": {
+            "recovered": 8,
+            "reference": 8,
+            "reason": "exact_source_value_substring_not_structured_field_precision_or_recall"
+          }
+        }
+      ]
+    }
+  ],
+  "fields": {
+    "receipt": {
+      "status": "structured_field_receipt_pre_execution",
+      "receiptSha256": "3a08e9228de3c8dee6ef6096241260b3d43945be9c3cbb71776c62dc1e512ce2",
+      "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+      "config": {
+        "psm": 3,
+        "maxDpi": 150
+      },
+      "partition": "development",
+      "parserSources": [
+        {
+          "path": "app/lib/server/evidence-fields.ts",
+          "sha256": "a21e2280a556bf97087179dfc6e9b8468e978591d1d24c8b807000fbfc1d8ff7"
+        },
+        {
+          "path": "app/lib/server/parsing/contact.ts",
+          "sha256": "41c7c81b820b64a1dde2fb59bceaa9b080e4399f2aa10f6a3179ee04fdccd34e"
+        },
+        {
+          "path": "app/lib/server/parsing/dates.ts",
+          "sha256": "eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72"
+        },
+        {
+          "path": "app/lib/server/parsing/sections.ts",
+          "sha256": "e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1"
+        }
+      ],
+      "sources": [
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-clean-v1",
+          "sourceSha256": "0833ae1bcdef1d739864a197218bb562a55b38bcda72ec65c87b237b087d5b0a",
+          "family": "reliability-dev-saffron-data-20261110",
+          "segment": "clean",
+          "labelsSha256": "53411851a6e49e2b14839ab8e95c0ae1b7daeb493c86d6df2c7afcfbba0cb457"
+        },
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-challenging-v1",
+          "sourceSha256": "6ae3fd7b9c5e174e9f3853e8c2fa2284f9555646ec7d99f4611bc7e92d5b1e85",
+          "family": "reliability-dev-saffron-data-20261110",
+          "segment": "challenging",
+          "labelsSha256": "53411851a6e49e2b14839ab8e95c0ae1b7daeb493c86d6df2c7afcfbba0cb457"
+        },
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-mixed-v1",
+          "sourceSha256": "6d967a2ea6d1990d95fa16fa5eeff11feb58485187b876c24b37c04069d07d22",
+          "family": "reliability-dev-saffron-data-20261110",
+          "segment": "mixed",
+          "labelsSha256": "c7279a4e2093407ab265236ad5b7d97744abc75e50794c747ba004e6a25a5163"
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-clean-v1",
+          "sourceSha256": "1074aef3bcae7d2b229cc191d59858cd58d15dffd20beb2a85473baa7ece6ca9",
+          "family": "reliability-dev-mistral-security-20261110",
+          "segment": "clean",
+          "labelsSha256": "2a6852816738712cb7306a63f0ebf749bebe1c56db0f6bd34ef4579ed02838d3"
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-challenging-v1",
+          "sourceSha256": "5f1318594036b2fb7a3c327aac1465eb03afb9ae8c4a43c7cfb10e6d739e4f66",
+          "family": "reliability-dev-mistral-security-20261110",
+          "segment": "challenging",
+          "labelsSha256": "2a6852816738712cb7306a63f0ebf749bebe1c56db0f6bd34ef4579ed02838d3"
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-mixed-v1",
+          "sourceSha256": "f4aba8e5dc66f3688ab14744f5a2f809da8045a551c1f50c62539bbf20897ee8",
+          "family": "reliability-dev-mistral-security-20261110",
+          "segment": "mixed",
+          "labelsSha256": "79c295774e1380ca1d31117b5f8aa02a02673a6dd1f525510dd17e15448362f0"
+        }
+      ]
+    },
+    "completedAt": "2026-11-21T21:57:19.933Z",
+    "fullReportSha256": "a71ebd76d1d4036e067bc68b46247e4f0c3460bc2f7bd2d6f224f9be42697a61",
+    "aggregate": {
+      "truePositive": 47,
+      "falsePositive": 0,
+      "falseNegative": 1,
+      "ungroundedPredictions": 0,
+      "precision": 1,
+      "recall": 0.9791666666666666
+    },
+    "perSegment": [
+      {
+        "segment": "clean",
+        "truePositive": 16,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "ungroundedPredictions": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      {
+        "segment": "challenging",
+        "truePositive": 16,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "ungroundedPredictions": 0,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      {
+        "segment": "mixed",
+        "truePositive": 15,
+        "falsePositive": 0,
+        "falseNegative": 1,
+        "ungroundedPredictions": 0,
+        "precision": 1.0,
+        "recall": 0.9375
+      }
+    ],
+    "perField": [
+      {
+        "field": "name",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "field": "email",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "field": "phone",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "field": "employer",
+        "truePositive": 5,
+        "falsePositive": 0,
+        "falseNegative": 1,
+        "precision": 1,
+        "recall": 0.8333333333333334
+      },
+      {
+        "field": "role",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "field": "dates",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "field": "education",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      {
+        "field": "certification",
+        "truePositive": 6,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "precision": 1,
+        "recall": 1
+      }
+    ],
+    "confidenceInterval": null,
+    "confidenceIntervalReason": "two_authored_families_with_shared_generator",
+    "results": [
+      {
+        "id": "print-reliability-dev-saffron-data-20261110-clean-v1",
+        "segment": "clean",
+        "status": "review_required",
+        "selectedPages": [1],
+        "nativePreservation": "verified",
+        "cleanup": "verified",
+        "scoringEligible": false,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          }
+        ]
+      },
+      {
+        "id": "print-reliability-dev-saffron-data-20261110-challenging-v1",
+        "segment": "challenging",
+        "status": "review_required",
+        "selectedPages": [1],
+        "nativePreservation": "verified",
+        "cleanup": "verified",
+        "scoringEligible": false,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          }
+        ]
+      },
+      {
+        "id": "print-reliability-dev-saffron-data-20261110-mixed-v1",
+        "segment": "mixed",
+        "status": "review_required",
+        "selectedPages": [1, 3],
+        "nativePreservation": "verified",
+        "cleanup": "verified",
+        "scoringEligible": false,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "employer",
+            "truePositive": 0,
+            "falsePositive": 0,
+            "falseNegative": 1
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          }
+        ]
+      },
+      {
+        "id": "print-reliability-dev-mistral-security-20261110-clean-v1",
+        "segment": "clean",
+        "status": "review_required",
+        "selectedPages": [1],
+        "nativePreservation": "verified",
+        "cleanup": "verified",
+        "scoringEligible": false,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          }
+        ]
+      },
+      {
+        "id": "print-reliability-dev-mistral-security-20261110-challenging-v1",
+        "segment": "challenging",
+        "status": "review_required",
+        "selectedPages": [1],
+        "nativePreservation": "verified",
+        "cleanup": "verified",
+        "scoringEligible": false,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          }
+        ]
+      },
+      {
+        "id": "print-reliability-dev-mistral-security-20261110-mixed-v1",
+        "segment": "mixed",
+        "status": "review_required",
+        "selectedPages": [1, 3],
+        "nativePreservation": "verified",
+        "cleanup": "verified",
+        "scoringEligible": false,
+        "perField": [
+          {
+            "field": "name",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "email",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "phone",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "employer",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "role",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "dates",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "education",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          },
+          {
+            "field": "certification",
+            "truePositive": 1,
+            "falsePositive": 0,
+            "falseNegative": 0
+          }
+        ]
+      }
+    ]
+  }
+}

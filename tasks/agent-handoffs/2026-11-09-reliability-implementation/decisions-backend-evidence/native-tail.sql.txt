@@ -1,0 +1,201 @@
+create function public.apply_jd_clause_order_action(p_user_id uuid,p_analysis_id uuid,p_command jsonb,p_request_id text) returns jsonb
+language plpgsql volatile security definer set search_path='' as $jd_clause_apply$
+declare a public.analyses%rowtype; source_row public.resume_versions%rowtype; root public.resumes%rowtype; current_head public.canonical_resume_heads%rowtype;
+  canonical public.canonical_resume_versions%rowtype; jd public.job_requirement_versions%rowtype; prior public.authoring_events%rowtype;
+  context jsonb; fact jsonb; location jsonb;
+  native_binding jsonb; replacement text; command_sha text; created text; event_id uuid; edit_id uuid; confirm_id uuid;
+  edit_body jsonb; confirm_body jsonb; saved jsonb; result_value jsonb; canonical_command jsonb; result_version uuid; result_revision integer;
+  profiles jsonb:=$profiles${"evidenceSchemaVersion":"evidence/2.0.0","fieldExtractorVersion":"evidence-fields/1.0.1","targetModelVersion":"evidence-targets/1.0.0","associationModelVersion":"evidence-entry-associations/1.0.0","correctionProjectionVersion":"canonical-corrections/1.0.1","regroupModelVersion":"canonical-entry-regroup/1.0.0","jdAdmissionProfileSha256":"e82d68b1e58cf220d3584a8d510128d4428441a2b02815711e7f198adaeaacb8","aliasPolicyVersion":"jd-local-aliases/1.0.0","aliasLexiconSha256":"e5298fd95320299996a4f5eceff3fc7afcd61ed636aaec386e1d4107a7500fa2","relationPolicyVersion":"jd-local-relation-rules/1.0.0","relationPolicySha256":"fd69dde2640bcdc1cdd76ce622015cb577090d61581515585f7cdfe0cdcd8cdc","unicodePolicyVersion":"jd-unicode-profile/1.0.0","unicodePolicySha256":"f3f8335d9a957bc16e33d61321f28ed7a12c8c81ff8912f0c17c041d86d95571","readinessProfileVersion":"requirement-relationship-readiness/1.0.0","readinessPredecessorSha256":"de6e71fed03732a391e35226d20816acd207267eef5f09c27017cee1f054f3fd"}$profiles$::jsonb;
+begin
+  perform private.jd_clause_validate(p_command);
+  if p_user_id is null or p_analysis_id is null or p_request_id is distinct from p_command->>'idempotencyKey'
+    or p_command->'binding'->'source'->>'ownerId' is distinct from p_user_id::text
+    or p_command->'binding'->'source'->>'analysisId' is distinct from p_analysis_id::text then perform private.correction_fail('invalid'); end if;
+  -- Establish the actual owner before the common mutex and before any row lock.
+  select * into a from public.analyses where id=p_analysis_id and owner_id=p_user_id;
+  if not found then perform private.correction_fail('not_found'); end if;
+  perform private.lock_candidate_owners(array[p_user_id]);
+  if private.try_candidate_privacy_write(p_user_id) is not true then perform private.correction_fail('not_found'); end if;
+  select r.* into root from public.resumes r join public.resume_versions s on s.resume_id=r.id
+    where s.id=a.resume_version_id and r.owner_id=p_user_id and r.organization_id=a.organization_id for update of r;
+  if not found or root.status is distinct from 'active' then perform private.correction_fail('not_found'); end if;
+  select * into a from public.analyses where id=p_analysis_id and owner_id=p_user_id and organization_id=root.organization_id for update;
+  if not found then perform private.correction_fail('not_found'); end if;
+  select * into source_row from public.resume_versions where id=a.resume_version_id and resume_id=root.id and owner_id=p_user_id and organization_id=a.organization_id for share;
+  if not found then perform private.correction_fail('not_found'); end if;
+  perform 1 from public.memberships where organization_id=a.organization_id and user_id=p_user_id and role in ('owner','admin','member') for share;
+  if not found then perform private.correction_fail('not_found'); end if;
+  if (p_command->'binding'->'source'->>'organizationId',p_command->'binding'->'source'->>'resumeId',p_command->'binding'->'source'->>'sourceId',p_command->'binding'->'source'->>'inputSha256')
+    is distinct from (a.organization_id::text,root.id::text,source_row.id::text,source_row.checksum) then perform private.correction_fail('not_found'); end if;
+  command_sha:=private.jd_clause_fingerprint(private.jd_clause_atoms(p_command));
+  -- Current access precedes exact replay; fresh heads are checked only afterward.
+  select * into prior from public.authoring_events where analysis_id=p_analysis_id and idempotency_key=(p_command->>'idempotencyKey')::uuid;
+  if found then
+    if prior.command is distinct from p_command or (prior.owner_id,prior.organization_id,prior.resume_id) is distinct from (p_user_id,a.organization_id,root.id)
+      or prior.action is distinct from p_command->>'operation'
+      or prior.base_version_id::text is distinct from p_command->'binding'->'canonical'->>'versionId'
+      or private.jd_clause_receipt(prior.result,p_command,prior.id,prior.result_version_id) is not true then perform private.correction_fail('conflict'); end if;
+    -- Check actual immutable ledger parents; an event or caller digest is not source authority.
+    if not exists(select 1 from public.canonical_resume_versions v where v.id=prior.base_version_id
+      and (v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id)=(p_user_id,a.organization_id,root.id,source_row.id)
+      and v.source_evidence_version_id::text=p_command->'binding'->'source'->>'attemptId'
+      and v.revision=(p_command->'binding'->'canonical'->>'revision')::integer)
+      or (p_command->>'operation'='accept' and not exists(select 1 from public.canonical_resume_versions v
+        where v.id=prior.result_version_id and (v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id)=(p_user_id,a.organization_id,root.id,source_row.id)
+        and v.revision=(p_command->'binding'->'canonical'->>'revision')::integer+2)) then perform private.correction_fail('conflict');end if;
+    return prior.result||jsonb_build_object('idempotent',true);
+  end if;
+  if private.jd_clause_schema_ready() is not true then perform private.correction_fail('unavailable'); end if;
+  select * into current_head from public.canonical_resume_heads where resume_id=root.id and owner_id=p_user_id and organization_id=a.organization_id for update;
+  if not found then perform private.correction_fail('conflict'); end if;
+  select * into canonical from public.canonical_resume_versions where id=current_head.version_id and owner_id=p_user_id and organization_id=a.organization_id and resume_id=root.id;
+  if not found or canonical.source_resume_version_id<>source_row.id then perform private.correction_fail('conflict'); end if;
+  select * into jd from public.job_requirement_versions where analysis_id=p_analysis_id and owner_id=p_user_id and organization_id=a.organization_id order by revision desc limit 1 for share;
+  if not found or jd.job_id is distinct from a.job_id then perform private.correction_fail('conflict'); end if;
+  native_binding:=jsonb_build_object('source',jsonb_build_object('ownerId',p_user_id,'organizationId',a.organization_id,'resumeId',root.id,'analysisId',p_analysis_id,'sourceId',source_row.id,'attemptId',canonical.source_evidence_version_id,'inputSha256',source_row.checksum),
+    'canonical',jsonb_build_object('versionId',canonical.id,'revision',canonical.revision,'contentSha256',private.typed_authoring_sha256(canonical.content::text)),
+    'requirements',jsonb_build_object('versionId',jd.id,'revision',jd.revision,'inputSha256',jd.content->>'inputSha256','contentSha256',private.typed_authoring_sha256(jd.content::text)),
+    'heads',jsonb_build_object('canonicalHeadId',current_head.version_id,'canonicalHeadRevision',current_head.revision,'requirementHeadId',jd.id,'requirementHeadRevision',jd.revision),'profilesSha256','f1aa440e764197f8aab96ddb9bf5c84dbdfdf177ff04063f15e6c4ccff78df62');
+  if p_command->'binding' is distinct from native_binding then perform private.correction_fail('conflict'); end if;
+  -- Existing owned reader independently re-proves source, typed headers, JD and privacy.
+  context:=public.read_requirement_relationship_context(p_user_id,p_analysis_id,jsonb_build_object('canonicalVersionId',canonical.id,'requirementVersionId',jd.id));
+  if context->>'status' is distinct from 'available' or context->'profiles' is distinct from profiles
+    or context->'source' is distinct from native_binding->'source'
+    or context->'heads' is distinct from native_binding->'heads'
+    or context->'canonical'->'content' is distinct from canonical.content
+    or context->'requirements'->'content' is distinct from jd.content then perform private.correction_fail('unavailable'); end if;
+  select x.value into fact from jsonb_array_elements(canonical.content->'facts') x(value) where x.value->>'id'=p_command->'target'->>'factId';
+  if fact is null or fact->>'type' is distinct from 'contribution' or fact->>'state' is distinct from 'candidate_confirmed'
+    or fact->'confirmation'->>'actorId' is distinct from p_user_id::text or fact->'confirmation'->>'value' is distinct from fact->>'value'
+    or fact->'confirmation'->>'confirmedAt' is distinct from p_command->'target'->>'confirmedAt'
+    or private.typed_authoring_sha256(fact->>'value') is distinct from p_command->'target'->>'currentValueSha256' then perform private.correction_fail('invalid'); end if;
+  location:=private.correction_location(canonical.content,(fact->>'id')::uuid);
+  if jsonb_array_length(location)<>1 or location->0->>'kind' not in ('entry','bullet')
+    or location->0->'sectionId' is distinct from p_command->'target'->'sectionId'
+    or location->0->'entryId' is distinct from p_command->'target'->'entryId'
+    or location->0->'bulletId' is distinct from p_command->'target'->'bulletId' then perform private.correction_fail('invalid'); end if;
+  if p_command->'target'->'bulletId'<>'null'::jsonb and not exists(
+    select 1 from jsonb_array_elements(canonical.content->'sections') s(value)
+    cross join lateral jsonb_array_elements(s.value->'entries') e(value)
+    cross join lateral jsonb_array_elements(e.value->'bullets') b(value)
+    where s.value->'id'=p_command->'target'->'sectionId' and e.value->'id'=p_command->'target'->'entryId'
+      and b.value->'id'=p_command->'target'->'bulletId' and b.value->'factIds'=jsonb_build_array(fact->'id')) then perform private.correction_fail('invalid');end if;
+  -- Independent complete-source grammar, exact original quote/ranges/JD and fixed reconstruction.
+  replacement:=private.jd_clause_reconstruct(context,fact,p_command);
+  event_id:=gen_random_uuid();result_version:=canonical.id;result_revision:=canonical.revision;
+  if p_command->>'operation'='accept' then
+    if canonical.revision>2147483645 then perform private.correction_fail('invalid'); end if;
+    edit_id:=gen_random_uuid();confirm_id:=gen_random_uuid();created:=to_char(clock_timestamp() at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"');
+    edit_body:=private.typed_authoring_child(canonical.content,(fact->>'id')::uuid,replacement,false,created,edit_id,gen_random_uuid());
+    confirm_body:=private.typed_authoring_child(edit_body,(fact->>'id')::uuid,replacement,true,created,confirm_id,gen_random_uuid());
+    canonical_command:=jsonb_build_object('operation','edit','expectedVersionId',canonical.id,'idempotencyKey',edit_id,'factId',fact->>'id','value',replacement,'targetVersionId',null);
+    saved:=public.save_canonical_version(p_user_id,source_row.id,edit_body,canonical_command,p_request_id);
+    if saved->>'status' is distinct from 'applied' or saved->>'versionId' is distinct from edit_id::text or saved->'idempotent' is distinct from 'false'::jsonb or saved->'revision' is distinct from to_jsonb(canonical.revision+1) then perform private.correction_fail('conflict'); end if;
+    canonical_command:=jsonb_build_object('operation','confirm','expectedVersionId',edit_id,'idempotencyKey',confirm_id,'factId',fact->>'id','value',null,'targetVersionId',null);
+    saved:=public.save_canonical_version(p_user_id,source_row.id,confirm_body,canonical_command,p_request_id);
+    if saved->>'status' is distinct from 'applied' or saved->>'versionId' is distinct from confirm_id::text or saved->'idempotent' is distinct from 'false'::jsonb or saved->'revision' is distinct from to_jsonb(canonical.revision+2) then perform private.correction_fail('conflict'); end if;
+    result_version:=confirm_id;result_revision:=canonical.revision+2;
+  end if;
+  result_value:=jsonb_build_object('schemaVersion','jd-clause-order-receipt/2.0.0','status','applied','action',p_command->>'operation','idempotencyKey',p_command->>'idempotencyKey','commandSha256',command_sha,
+    'draftId',p_command->>'draftId','baseVersionId',canonical.id,'baseRevision',canonical.revision,'requirementVersionId',jd.id,'requirementRevision',jd.revision,'versionId',result_version,'revision',result_revision,'eventId',event_id,'idempotent',false);
+  if private.jd_clause_receipt(result_value,p_command,event_id,case when p_command->>'operation'='accept' then result_version else null end) is not true then perform private.correction_fail('invalid');end if;
+  insert into public.authoring_events(id,analysis_id,resume_id,owner_id,organization_id,base_version_id,result_version_id,idempotency_key,action,command,result,retention_policy_id)
+    values(event_id,p_analysis_id,root.id,p_user_id,a.organization_id,canonical.id,case when p_command->>'operation'='accept' then result_version else null end,(p_command->>'idempotencyKey')::uuid,p_command->>'operation',p_command,result_value,canonical.content->>'retentionPolicyId');
+  insert into public.audit_events(organization_id,actor_id,action,target_type,target_id,outcome,request_id)
+    values(a.organization_id,p_user_id,'jd_clause_order.'||(p_command->>'operation'),'authoring_event',event_id,'success',p_request_id);
+  return result_value;
+exception
+  when insufficient_privilege then return jsonb_build_object('status','not_found');
+  when sqlstate 'P0C01' or unique_violation then return jsonb_build_object('status','conflict');
+  when invalid_parameter_value or invalid_text_representation or numeric_value_out_of_range then return jsonb_build_object('status','invalid');
+  when others then return jsonb_build_object('status','unavailable');
+end;
+$jd_clause_apply$;
+
+create function private.jd_clause_schema_ready() returns boolean
+language plpgsql stable security invoker set search_path='' as $jd_clause_checker$
+declare owner_oid oid;item jsonb;routine pg_catalog.pg_proc%rowtype;role_name text;service_allowed boolean;service_granted boolean;
+ manifest jsonb:=$jd_clause_manifest$[{"signature":"private.jd_clause_policy()","language":"sql","strict":false,"definer":false,"volatility":"i","result":"jsonb","acl":"private","sha256":"87d879a81e08b0cd70c6e509364afcfbc706c4376ebd3e505c3656725fd25679"},{"signature":"private.jd_clause_characters()","language":"sql","strict":false,"definer":false,"volatility":"i","result":"jsonb","acl":"private","sha256":"8ecd2c7cf50499dd647df82c7b5388584d169270157d1e6d34e6e36f2b504597"},{"signature":"private.jd_clause_uuid(jsonb)","language":"sql","strict":false,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"0fe80e03cf817ddb31a83a27a9800b3cf00ef7e9699c4bfbea30f1532687b6cc"},{"signature":"private.jd_clause_digest(jsonb)","language":"sql","strict":false,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"d172d1ace105a3ce9045d12718924f0e91fedf1ca09ba484b542b4552c797c08"},{"signature":"private.jd_clause_fold(text,jsonb)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"text","acl":"private","sha256":"ca80f6075297e868560df6bfecfb7a9d79f2fe7e61e93a0fe5924118e9282366"},{"signature":"private.jd_clause_metadata(text,jsonb)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"text","acl":"private","sha256":"2a78e4a615d7246f17581f1d464b7dccaec2bcc40ca8b281146060c83d794da3"},{"signature":"private.jd_clause_forbidden(text,jsonb,jsonb)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"fd69656907b97828f69663a9daa45b8afec42d73cd67f6c98ed02591134bd5ac"},{"signature":"private.jd_clause_field(text,text,jsonb)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"8e82e839769df76297c245ea0569cae79d83a0958df51182dc8ac36edf0e1905"},{"signature":"private.jd_clause_parse(text,boolean,jsonb,jsonb)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"jsonb","acl":"private","sha256":"2526823dfdd7533f0f756f528fa22417e82a872b2141f8503fc807a139ca876d"},{"signature":"private.jd_clause_key(text,jsonb,jsonb)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"text","acl":"private","sha256":"60685d8826c3d46e69f20ad898146b5ced12ac84b7e1c4c2de1ed54d56630592"},{"signature":"private.jd_clause_role(text,text,jsonb,jsonb)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"cfc43f3ee79cc56853038b3868dc87e5c4528b172242cf49b12c56c90e070055"},{"signature":"private.jd_clause_literal(text)","language":"sql","strict":true,"definer":false,"volatility":"i","result":"text","acl":"private","sha256":"6418c2c5f8cf3e3a8b156a2232e27630669a6a8fd91f93cfa67b7abc81bd7ce6"},{"signature":"private.jd_clause_skill(text,jsonb)","language":"sql","strict":true,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"04558bd77ac0c4adf1170d277a0962d6e43f298e4ed728d154f6f83dcb2b1409"},{"signature":"private.jd_clause_validate(jsonb)","language":"plpgsql","strict":false,"definer":false,"volatility":"i","result":"void","acl":"private","sha256":"ecfbb5ba9e97d4e698152451c2073f4c46d3058c00a52e2f44084fd7c145f921"},{"signature":"private.jd_clause_atoms(jsonb)","language":"plpgsql","strict":false,"definer":false,"volatility":"i","result":"text[]","acl":"private","sha256":"d51815cd260d0c79da3b164a54bd0a9d4209c226f85e86c158b0e6fa418f944b"},{"signature":"private.jd_clause_fingerprint(text[])","language":"plpgsql","strict":false,"definer":false,"volatility":"i","result":"text","acl":"private","sha256":"62792b31ae7a1b7a9cdecd8a22ee09fd56e73836524f0e287c7354600c6f790c"},{"signature":"private.jd_clause_stream(jsonb)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"jsonb","acl":"private","sha256":"5b772c1d2bcf311e7065919df28bf687b318d528b048fb80af02eb227311b06e"},{"signature":"private.jd_clause_scope(jsonb,text,jsonb,jsonb)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"void","acl":"private","sha256":"46e35560f9e581876b31bec279c8267ab758fee237ae545918baa0af967ed39f"},{"signature":"private.jd_clause_reconstruct(jsonb,jsonb,jsonb)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"text","acl":"private","sha256":"418a455614dc7843644833921ca8f9041f607e6f2a48335da12eaa2d5f70acc5"},{"signature":"private.jd_clause_receipt(jsonb,jsonb,uuid,uuid)","language":"plpgsql","strict":false,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"bc567eefe940dc5af0151f753765161426f2c4092c68b7e5c9c564c9dd1b90f3"},{"signature":"private.typed_authoring_write_ready()","language":"plpgsql","strict":false,"definer":false,"volatility":"s","result":"boolean","acl":"private","sha256":"322683b240b609bdedb204e4a27ea43a3c0544912760f19e2eda6b48f822206f"},{"signature":"private.canonical_correction_write_ready()","language":"plpgsql","strict":false,"definer":false,"volatility":"s","result":"boolean","acl":"private","sha256":"04ca51c95e50a05af227197b25e455a001428a1d360b3f3a1add793f84339d53"},{"signature":"private.typed_authoring_child(jsonb,uuid,text,boolean,text,uuid,uuid)","language":"plpgsql","strict":false,"definer":false,"volatility":"v","result":"jsonb","acl":"private","sha256":"8827d407fd816ecff41c289123d6aa99a83f2339089bf926e6ad86c77ee351ff"},{"signature":"private.typed_authoring_sha256(text)","language":"sql","strict":true,"definer":false,"volatility":"i","result":"text","acl":"private","sha256":"6f6bcd17a64de775ab50c2381a933dcc4a02b1b9057bcd849c759ddb0648d727"},{"signature":"private.typed_authoring_uuid(jsonb)","language":"sql","strict":false,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"a78cd8517907f514c7126f5a0b348712cefa6d54b8f1f261787370c8843e5f63"},{"signature":"private.evidence_keys(jsonb,text[])","language":"sql","strict":false,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"824082145b4e705dfdf1d1be622b7fe4f6959c2fcaec5c69bb28ca0a930e5168"},{"signature":"private.evidence_integer(jsonb,bigint,bigint)","language":"sql","strict":false,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"6c4e10bfbef2d70d4a40b9c2346962b5ad5dac1415574b7b33707115d234e765"},{"signature":"private.jd_relation_trim(text)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"text","acl":"private","sha256":"1b6d65f0b811b5d03550dd31fcea9b5284cd53684e33df150f657b6fdb7c3734"},{"signature":"private.jd_relation_pattern(text)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"text","acl":"private","sha256":"c81d227248d381d4c4a1173749932f683e8a0d71f82b98f74c214042f8b8b903"},{"signature":"private.jd_relation_test(text,text,boolean)","language":"sql","strict":true,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"83ee209f798b3443b3f3dcda6117822cc95bc7fa50e94932a7169253e5e2399e"},{"signature":"private.jd_relation_mapping(jsonb,integer)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"jsonb","acl":"private","sha256":"4d72706ef2cb4a7ec1d741c3bfd5703b08a391a1fb5990b4cf0484e6cdebbd1b"},{"signature":"private.jd_relation_in_ranges(jsonb,integer)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"boolean","acl":"private","sha256":"36f983db9c4722f8432b1066d1b918f3d3db9e757f421086602cd3cd35a50d25"},{"signature":"private.jd_relation_fold(text)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"text","acl":"private","sha256":"e32a71126feebbf25db0744376605d092c1419d4073075ba11d8e57ebbbf0bb6"},{"signature":"private.jd_relation_lower(text)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"text","acl":"private","sha256":"d7212b2bd22b2a15a7910932619b0d506de56ad36444c52cf1834b91aed9b9ba"},{"signature":"private.jd_relation_alias(text)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"jsonb","acl":"private","sha256":"9b7f55083c22b97eefa1d1fe09c23402828666c670a923f7be146d9aff05b231"},{"signature":"private.grouped_import_utf16_length(text)","language":"plpgsql","strict":true,"definer":false,"volatility":"i","result":"integer","acl":"private","sha256":"5a96204c0f13fef791f49a0f86c87baae34c5b281369492b65fb6c878027985b"},{"signature":"private.correction_location(jsonb,uuid)","language":"plpgsql","strict":false,"definer":false,"volatility":"i","result":"jsonb","acl":"private","sha256":"1f8e4da690698cdef6d5b9949a5f78d10b72217bd9a87eb2d1cf0703dd98093a"},{"signature":"private.correction_fail(text)","language":"plpgsql","strict":false,"definer":false,"volatility":"i","result":"void","acl":"private","sha256":"5830ddc09c3ab01037c99910e32b7d2af71eaad41d5c0f8a8ec34e89638ac1d7"},{"signature":"private.lock_candidate_owners(uuid[])","language":"plpgsql","strict":false,"definer":false,"volatility":"v","result":"void","acl":"private","sha256":"f456097e005450c5cac7c2a601fc6641681bc4afdff1fab0abe649cd4562bd4a"},{"signature":"private.try_candidate_privacy_write(uuid)","language":"plpgsql","strict":false,"definer":true,"volatility":"v","result":"boolean","acl":"private","sha256":"89e7eec219295b7c834c284012ba7144049380935273e1505a994d38efc4156d"},{"signature":"public.read_requirement_relationship_context(uuid,uuid,jsonb)","language":"plpgsql","strict":false,"definer":true,"volatility":"v","result":"jsonb","acl":"optional_service","sha256":"703dd871b3e6dd70865a0eb94e976ee178deb0ce995e45cec2a772cca0dca768"},{"signature":"public.save_canonical_version(uuid,uuid,jsonb,jsonb,text)","language":"plpgsql","strict":false,"definer":true,"volatility":"v","result":"jsonb","acl":"optional_service","sha256":"3468ad86309f5f09fb58f36c74fa0498e975df0e9385f5f67dcb89a0656771aa"},{"signature":"public.apply_jd_clause_order_action(uuid,uuid,jsonb,text)","language":"plpgsql","strict":false,"definer":true,"volatility":"v","result":"jsonb","acl":"optional_service","sha256":"486f9b257010c2c26f5465d009b3d32f4549e5d94e6e30534d80b6f14169cf0e"},{"signature":"public.read_jd_clause_order_readiness()","language":"plpgsql","strict":false,"definer":true,"volatility":"s","result":"jsonb","acl":"metadata","sha256":"85d5cd1e3cffed6a9b1ea3f2c2f337525af60253d4771145d03aff1c6f47af71"}]$jd_clause_manifest$::jsonb;
+begin
+ select p.proowner into owner_oid from pg_catalog.pg_proc p where p.oid=to_regprocedure('private.canonical_correction_write_ready()');
+ if owner_oid is null or owner_oid in(select oid from pg_catalog.pg_roles where rolname in('anon','authenticated','service_role')) then return false;end if;
+ for item in select m.value from jsonb_array_elements(manifest) m(value) loop
+  select * into routine from pg_catalog.pg_proc where oid=to_regprocedure(item->>'signature');
+  if not found or routine.prokind<>'f' or routine.proretset or routine.proowner<>owner_oid
+   or routine.prorettype<>to_regtype(item->>'result') or routine.provolatile<>item->>'volatility'
+   or routine.prosecdef is distinct from (item->>'definer')::boolean or routine.proisstrict is distinct from (item->>'strict')::boolean
+   or routine.prolang<>(select oid from pg_catalog.pg_language where lanname=item->>'language')
+   or routine.proconfig is distinct from array['search_path=""']
+   or encode(extensions.digest(convert_to(routine.prosrc,'UTF8'),'sha256'),'hex') is distinct from item->>'sha256' then return false;end if;
+  service_allowed:=item->>'acl' in('optional_service','metadata');
+  if exists(select 1 from aclexplode(coalesce(routine.proacl,acldefault('f',routine.proowner))) a
+   where a.grantee<>routine.proowner and (not service_allowed or a.grantee<>(select oid from pg_catalog.pg_roles where rolname='service_role')
+     or a.privilege_type<>'EXECUTE' or a.is_grantable)) then return false;end if;
+  foreach role_name in array array['anon','authenticated','service_role'] loop
+   if has_function_privilege(role_name,routine.oid,'EXECUTE') and (role_name<>'service_role' or not service_allowed) then return false;end if;
+  end loop;
+  service_granted:=exists(select 1 from aclexplode(coalesce(routine.proacl,acldefault('f',routine.proowner))) a
+    where a.grantee=(select oid from pg_catalog.pg_roles where rolname='service_role') and a.privilege_type='EXECUTE' and not a.is_grantable);
+  if has_function_privilege('service_role',routine.oid,'EXECUTE') is distinct from (service_allowed and service_granted) then return false;end if;
+  if item->>'acl'='metadata' and not service_granted then return false;end if;
+ end loop;
+ -- The externally pinned checker has no recursive self-hash, and stays owner-only.
+ select * into routine from pg_catalog.pg_proc where oid=to_regprocedure('private.jd_clause_schema_ready()');
+ if not found or routine.proowner<>owner_oid or routine.prokind<>'f' or routine.proretset or routine.proisstrict or routine.prosecdef
+  or routine.provolatile<>'s' or routine.prorettype<>'boolean'::regtype
+  or routine.prolang<>(select oid from pg_catalog.pg_language where lanname='plpgsql')
+  or routine.proconfig is distinct from array['search_path=""']
+  or exists(select 1 from aclexplode(coalesce(routine.proacl,acldefault('f',routine.proowner))) a where a.grantee<>routine.proowner) then return false;end if;
+ foreach role_name in array array['anon','authenticated','service_role'] loop
+  if has_function_privilege(role_name,routine.oid,'EXECUTE') then return false;end if;
+ end loop;
+ -- Full current frozen predecessor catalogue/schema/trigger closure remains authoritative.
+ if private.typed_authoring_write_ready() is not true then return false;end if;
+ return true;
+exception when others then return false;
+end;
+$jd_clause_checker$;
+create function public.read_jd_clause_order_readiness() returns jsonb
+language plpgsql stable security definer set search_path='' as $jd_clause_metadata$
+declare checker_oid oid:=to_regprocedure('private.jd_clause_schema_ready()');writer_oid oid:=to_regprocedure('public.apply_jd_clause_order_action(uuid,uuid,jsonb,text)');metadata_oid oid:=to_regprocedure('public.read_jd_clause_order_readiness()');ready boolean;
+begin
+ ready:=private.jd_clause_schema_ready();
+ return jsonb_build_object('schemaVersion','jd-clause-order-readiness/2.0.0','profileVersion','jd-clause-order-native/2.0.0',
+  'checkerSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=checker_oid),
+  'writerSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=writer_oid),
+  'metadataSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=metadata_oid),
+  'schemaReady',coalesce(ready,false),'writerExecutable',coalesce(has_function_privilege('service_role',writer_oid,'EXECUTE'),false));
+end;
+$jd_clause_metadata$;
+revoke all on function private.jd_clause_policy() from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_characters() from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_uuid(jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_digest(jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_fold(text,jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_metadata(text,jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_forbidden(text,jsonb,jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_field(text,text,jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_parse(text,boolean,jsonb,jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_key(text,jsonb,jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_role(text,text,jsonb,jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_literal(text) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_skill(text,jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_validate(jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_atoms(jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_fingerprint(text[]) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_stream(jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_scope(jsonb,text,jsonb,jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_reconstruct(jsonb,jsonb,jsonb) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_receipt(jsonb,jsonb,uuid,uuid) from public,anon,authenticated,service_role;
+revoke all on function public.apply_jd_clause_order_action(uuid,uuid,jsonb,text) from public,anon,authenticated,service_role;
+revoke all on function private.jd_clause_schema_ready() from public,anon,authenticated,service_role;
+revoke all on function public.read_jd_clause_order_readiness() from public,anon,authenticated,service_role;
+grant execute on function public.read_jd_clause_order_readiness() to service_role;
+
+do $jd_clause_final$
+begin
+ if private.jd_clause_schema_ready() is not true then raise exception 'JD_CLAUSE_ORDER_SCHEMA_DRIFT' using errcode='23514';end if;
+ if has_function_privilege('service_role','public.apply_jd_clause_order_action(uuid,uuid,jsonb,text)','EXECUTE') then raise exception 'JD_CLAUSE_ORDER_WRITER_UNEXPECTEDLY_EXECUTABLE' using errcode='42501';end if;
+end;
+$jd_clause_final$;
+commit;

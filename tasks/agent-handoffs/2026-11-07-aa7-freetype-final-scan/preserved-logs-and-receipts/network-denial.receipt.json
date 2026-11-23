@@ -1,0 +1,43 @@
+{
+  "command": [
+    "/usr/bin/sandbox-exec",
+    "-p",
+    "(version 1)(allow default)(deny network*)",
+    "/usr/bin/python3",
+    "-I",
+    "-B",
+    "-c",
+    "import errno,json,socket\ns=socket.socket(socket.AF_INET,socket.SOCK_STREAM)\ns.settimeout(2)\ntry:\n r=s.connect_ex(('127.0.0.1',9))\nexcept OSError as e:\n r=e.errno\nfinally:\n s.close()\nprint(json.dumps({'errno':r}))\nraise SystemExit(0 if r in (errno.EPERM,errno.EACCES) else 1)"
+  ],
+  "exitCode": 0,
+  "seconds": 0.107,
+  "boundFailure": null,
+  "stdout": {
+    "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-final-ft-scan-8l75fsg6/network-denial.stdout",
+    "identity": [
+      16777230,
+      29153019,
+      13,
+      501,
+      20,
+      384,
+      1,
+      1794040036090989493
+    ],
+    "sha256": "965925add64bafb3530eda6925e6f773d831b39246bd3f8beb9d06de8b10cf04"
+  },
+  "stderr": {
+    "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-final-ft-scan-8l75fsg6/network-denial.stderr",
+    "identity": [
+      16777230,
+      29153020,
+      0,
+      501,
+      20,
+      384,
+      1,
+      1794040035998927669
+    ],
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

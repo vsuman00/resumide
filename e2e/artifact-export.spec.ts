@@ -88,7 +88,18 @@ test("semantic preview, checked PDF/DOCX and stale-version safety", async ({
   const f = await prepare();
   try {
     await login(context, f);
-    await page.goto(`/analysis/${f.analysisId}/export`);
+    const current = (await loadCanonical(f.admin, f.analysisId, f.ownerId))
+      .current!.document;
+    await page.goto(`/analysis/${f.analysisId}/canonical`);
+    const preview = page.getByRole("link", {
+      name: "Preview and export this version",
+    });
+    await expect(preview).toHaveAttribute(
+      "href",
+      `/analysis/${f.analysisId}/export?version=${current.versionId}`,
+    );
+    await preview.focus();
+    await page.keyboard.press("Enter");
     await expect(
       page.getByRole("heading", { name: "Preview your saved resume" }),
     ).toBeVisible();

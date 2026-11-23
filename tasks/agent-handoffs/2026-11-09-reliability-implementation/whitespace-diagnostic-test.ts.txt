@@ -1,0 +1,46 @@
+import {expect,it,vi} from "vitest";
+import * as contact from "../../app/lib/server/parsing/contact";
+import * as native from "../../app/lib/server/native-evidence";
+import * as evidence from "../../app/lib/server/document-evidence";
+import * as canonical from "../../app/lib/server/canonical-content";
+import * as job from "../../app/lib/server/job-requirement-admission";
+import * as relationship from "../../app/lib/server/requirement-relationship-context";
+import * as score from "../../app/lib/server/score-v2-repository";
+import {createJdClauseOrderFixture} from "../fixtures/jd-clause-order";
+import {createJdClauseOrderStore} from "../fixtures/jd-clause-order-store";
+
+type Stage={calls:number;elapsedMs:number;maximumMs:number};
+function profileStages(){
+ const timings:Record<string,Stage>={};
+ const add=(stage:string,start:number)=>{const ms=performance.now()-start,row=timings[stage]??{calls:0,elapsedMs:0,maximumMs:0};row.calls++;row.elapsedMs+=ms;row.maximumMs=Math.max(row.maximumMs,ms);timings[stage]=row;};
+ const sync=<T>(stage:string,call:()=>T):T=>{const start=performance.now();try{return call();}finally{add(stage,start);}};
+ const asyncCall=async<T>(stage:string,call:()=>Promise<T>):Promise<T>=>{const start=performance.now();try{return await call();}finally{add(stage,start);}};
+ const actual={contact:contact.parseContact,native:native.buildNativeEvidence,reconciliation:evidence.reconcileDocumentEvidence,import:canonical.importCanonicalEvidence,confirmation:canonical.reviseCanonical,job:job.createJobRequirementRelations,context:relationship.loadRequirementRelationshipContext,score:score.loadScoreDiagnostics};
+ vi.spyOn(contact,"parseContact").mockImplementation((...args)=>sync("parse_contact",()=>actual.contact(...args)));
+ vi.spyOn(native,"buildNativeEvidence").mockImplementation((...args)=>sync("native_builder",()=>actual.native(...args)));
+ vi.spyOn(evidence,"reconcileDocumentEvidence").mockImplementation((...args)=>sync("reconciliation",()=>actual.reconciliation(...args)));
+ vi.spyOn(canonical,"importCanonicalEvidence").mockImplementation((...args)=>sync("canonical_import",()=>actual.import(...args)));
+ vi.spyOn(canonical,"reviseCanonical").mockImplementation((...args)=>sync("canonical_confirmation",()=>actual.confirmation(...args)));
+ vi.spyOn(job,"createJobRequirementRelations").mockImplementation((...args)=>sync("typed_jd",()=>actual.job(...args)));
+ vi.spyOn(relationship,"loadRequirementRelationshipContext").mockImplementation((...args)=>asyncCall("relationship_context",()=>actual.context(...args)));
+ vi.spyOn(score,"loadScoreDiagnostics").mockImplementation((...args)=>asyncCall("owned_score",()=>actual.score(...args)));
+ return timings;
+}
+
+it.each(["normal","bounded_lines","single_long_line"] as const)("prepares actual synthetic %s source within the unchanged five-second floor",async(variant)=>{
+ const timings=profileStages(),start=performance.now();
+ const prefix=variant==="normal"?"":variant==="bounded_lines"?Array(120).fill(" ".repeat(900)).join("\n")+"\n":" ".repeat(100001)+"\n";
+ try{
+ const f=await createJdClauseOrderFixture({header:prefix+"Experience\nSoftware Engineer at Orchard Labs"});
+ const model=await score.loadScoreDiagnostics(createJdClauseOrderStore(f.context).client,f.owned.analysisId,f.owned.ownerId,{},undefined,{clauseOrderPreview:true});
+ expect(model).toHaveProperty("typedCoverage.state","available");
+ expect(model.jdRecommendations).toBeDefined();
+ expect(model.jdClauseOrderPlan?.state).toBe(variant==="normal"?"available":"unavailable");
+ expect(model.jdClauseOrderPlan?.reason).toBe(variant==="normal"?null:"unsupported_context");
+ expect(performance.now()-start).toBeLessThan(5000);
+ }finally{
+ // Inclusive durations overlap: parse_contact is a leaf of native/reconciliation/context work.
+ console.info(JSON.stringify({profile:"synthetic_preparation_whitespace",variant,elapsedMs:performance.now()-start,stages:timings}));
+ vi.restoreAllMocks();
+ }
+});

@@ -1,0 +1,273 @@
+{
+  "ids": ["CR-R18-S06", "CR-R18-S07"],
+  "date": "2026-11-22",
+  "status": "VERIFIED_LOCAL_PARSER_UPGRADE_AND_DEBIAN_SOURCE_INVENTORY",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "imageId": "sha256:9cb37dc1261bcf9018d007db04554c4c5bc02443237f60b0139a761bc31ca865",
+  "priorImageId": "sha256:c37bfee59af95475805d0a4646841211a7c5db0077c8b600dfa584ffe2e58798",
+  "platform": "linux/arm64",
+  "parser": {
+    "previousVersion": "6.21.4",
+    "currentVersion": "7.1.1",
+    "wheelBytes": 421026,
+    "wheelSha256": "04c5680d4b4cfa04ab505b09393fc949860c34a4dad6565284d11a2f5c3ce8b1",
+    "license": "BSD-3-Clause",
+    "publishedSourceCommit": "f0174823a10baf2a6bf387470c2ecb29f8637ab4",
+    "publisherEvidence": "PyPI lists Trusted Publishing and an attestation to the pinned source commit. The downloaded wheel matched the published SHA-256.",
+    "source": "https://pypi.org/project/pypdf/7.1.1/#files"
+  },
+  "reviewedBuild": {
+    "fingerprint": "3fc5a74e100708fe64888bd97effd15ad5df8cf3257efabfab2703068e2bba1a",
+    "packetSha256": "8abbf64198b3c93f68fe1fb205842a4e41c85e1c2505cbece18602e3eca3079c",
+    "receiptSha256": "76da481d2cfd577791e88825b89a3885ed7048711813f7e340933733ba9b3d0c",
+    "clientGroupExited": true,
+    "independentReadOnlyReview": "PASS"
+  },
+  "runtime": {
+    "neutralOnePageHostProbe": "PASS",
+    "mockBoundaryChecks": 5,
+    "mockCallsToInlineScannerOrDecoder": 0,
+    "mockHooksRestored": true,
+    "installedParserReceiptSha256": "c783e240f291e997e1f2ff399cb9daec2c3ab5d4512445ebce17e94edbcc4329",
+    "latexSourceChecks": "PASS",
+    "typecheck": "PASS",
+    "starterCombinations": 6,
+    "sampleP95Ms": 849,
+    "benchmarkSha256": "e04f530b3680c3417ff0791a7a290239518cfb161fc8a63221218364bc9d188e",
+    "pdfRenderPages": 2,
+    "embeddedFonts": 8,
+    "renderReceiptSha256": "409f6bdad4c8f3e2fcf34acc487d31c9656bdb256ff8c5d7c2323504d0758521",
+    "chromeVerifiedPdfHashes": [
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f",
+      "3ec3c5e17be268457834e91528b760dd8b1f9c206effd64040db2a4810d195f0",
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f"
+    ],
+    "chromeReceiptSha256": "73312739e3007316804e931c44b46baa4f0fe36a7fbd4512b7af10d230ac256c",
+    "chromeServiceFixtures": ["Auth", "rate admission", "AI suggestion"],
+    "ownedContainersRemaining": 0
+  },
+  "native": {
+    "scope": "Exact installed Debian and vendored Python packages. Debian matches bind the unchanged dpkg database and package lock.",
+    "debianBinaryPackages": 216,
+    "debianSourcePackages": 153,
+    "vendorSourcePackagesMatched": 106,
+    "vendoredPythonPackages": 1,
+    "dpkgStatusSha256": "db16bbebbbf2b5ea0c2355e64905c299526798382abe713e96e6153ee82a9ca9",
+    "packageLockSha256": "72a9c99d73b84d730265fac634fc6e2948f0d99da760f94c2356a8e49d0bca04",
+    "closureSha256": "b8504b445f0df36481e393319c2bc79dfe012d4b707618cbb570e2bc53223259",
+    "debianCatalog": {
+      "source": "https://security-tracker.debian.org/tracker/data/json",
+      "feedSha256": "5e4aeb30c9ed9a70785c6315b61b3632b864947bba85f57f7c19e07ea6a46338",
+      "feedBytes": 92194458,
+      "additionalSourceAdvisoryMatchCount": 3118,
+      "classifications": {
+        "installed_version_at_or_above_debian_fix": 2488,
+        "open_in_debian": 389,
+        "debian_resolved_without_fixed_version": 216,
+        "installed_version_older_than_debian_fix": 19,
+        "undetermined_in_debian": 6
+      },
+      "comparisonCount": 1254,
+      "unresolvedByUrgency": [
+        {
+          "urgency": "low",
+          "classification": "open_in_debian",
+          "count": 4
+        },
+        {
+          "urgency": "not yet assigned",
+          "classification": "installed_version_older_than_debian_fix",
+          "count": 19
+        },
+        {
+          "urgency": "not yet assigned",
+          "classification": "open_in_debian",
+          "count": 191
+        },
+        {
+          "urgency": "not yet assigned",
+          "classification": "undetermined_in_debian",
+          "count": 6
+        },
+        {
+          "urgency": "unimportant",
+          "classification": "open_in_debian",
+          "count": 194
+        }
+      ],
+      "matchTableSha256": "e07245ecab57c3c6e25aec929fa60a733d3833833b62f855e9adb8608575f5c1",
+      "rawRetainedIn": "/private/tmp/resumide-r18-current-inventory.tUL1SA"
+    },
+    "publishedFixIsNewer": [
+      {
+        "id": "CVE-2026-95512",
+        "source": "freetype",
+        "sourceVersion": "2.13.3+dfsg-1+deb13u1+resumide1",
+        "fixedVersion": "2.13.3+dfsg-1+deb13u2",
+        "urgency": "not yet assigned",
+        "customBuild": true
+      },
+      {
+        "id": "CVE-2026-18374",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-19499",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-19542",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-5435",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-6238",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-6368",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-6791",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-77117",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-80489",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-8674",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-86805",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-89092",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-95818",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-97399",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-129975",
+        "source": "gpgme1.0",
+        "sourceVersion": "1.24.2-3",
+        "fixedVersion": "1.24.2-3+deb13u1",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-58055",
+        "source": "nghttp2",
+        "sourceVersion": "1.64.0-1.1+deb13u1",
+        "fixedVersion": "1.64.0-1.1+deb13u2",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-27171",
+        "source": "zlib",
+        "sourceVersion": "1:1.3.dfsg+really1.3.1-1",
+        "fixedVersion": "1:1.3.dfsg+really1.3.1-1+deb13u1",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      },
+      {
+        "id": "CVE-2026-85091",
+        "source": "zlib",
+        "sourceVersion": "1:1.3.dfsg+really1.3.1-1",
+        "fixedVersion": "1:1.3.dfsg+really1.3.1-1+deb13u1",
+        "urgency": "not yet assigned",
+        "customBuild": false
+      }
+    ],
+    "sbom": {
+      "componentCount": 217,
+      "schema": "https://cyclonedx.org/docs/1.6/json/",
+      "schemaValidation": "PASS",
+      "sha256": "9ef98768c616a58ba72f9e43e8220fa2322b1778eef0cde9894ec607b38123c2",
+      "projectPath": "docs/evaluation/RESUMIDE_LATEX_WORKER_SBOM_20261122.cdx.json"
+    }
+  },
+  "trivyMetadataAttempt": {
+    "exitCode": 124,
+    "terminalMetadataReceipt": false,
+    "cacheObservation": "IN_PROGRESS",
+    "publishedBundleObserved": false,
+    "signatureVerified": false,
+    "scannerExecuted": false
+  },
+  "releaseAccepted": false,
+  "remaining": "Complete Trivy trust and catalog admission, unfiltered exact-image scans for the main, OCR and LaTeX images, custom backport and reachability disposition, and formal release acceptance."
+}

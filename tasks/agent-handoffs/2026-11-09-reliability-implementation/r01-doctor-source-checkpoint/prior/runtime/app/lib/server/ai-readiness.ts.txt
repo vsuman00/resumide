@@ -1,0 +1,326 @@
+import { constants } from "node:fs";
+import { lstat, open, realpath, stat } from "node:fs/promises";
+import { isAbsolute, relative, resolve, sep } from "node:path";
+import { parseEnv } from "node:util";
+import {
+  isAllowedOpenAiBaseUrl,
+  DEFAULT_OPENAI_BASE_URL,
+} from "./egress-policy.ts";
+import { DEFAULT_OPENAI_MODEL } from "./openai-model.ts";
+
+const MAX_ENV_BYTES = 128 * 1024;
+const settingNames = {
+  apiKey: "OPENAI_API_KEY",
+  model: "OPENAI_MODEL",
+  baseUrl: "OPENAI_BASE_URL",
+  aiEnabled: "AI_ENABLED",
+  buildAiEnabled: "BUILD_AI_ASSIST_ENABLED",
+  organization: "OPENAI_ORG_ID",
+  project: "OPENAI_PROJECT_ID",
+  logging: "OPENAI_LOG",
+} as const;
+type Setting = keyof typeof settingNames;
+type Environment = Readonly<Record<string, string | undefined>>;
+export type AiReadinessIssue =
+  | "workspace_unavailable"
+  | "env_path_invalid"
+  | "env_path_outside_workspace"
+  | "env_path_symlink"
+  | "env_file_missing"
+  | "env_file_not_regular"
+  | "env_file_too_large"
+  | "env_file_unavailable"
+  | "env_parse_invalid"
+  | "duplicate_definitions"
+  | "credential_missing"
+  | "credential_format_unrecognized"
+  | "model_missing_or_malformed"
+  | "endpoint_not_allowed"
+  | "flag_invalid"
+  | "cached_configuration_differs";
+export type AiReadinessInput = {
+  source?: "env_file" | "process";
+  workspaceRoot?: string;
+  envFile?: string;
+  environment?: Environment;
+  /** A caller-provided snapshot only; no running process is inspected. */
+  cachedEnvironment?: Environment;
+};
+function settings<T>(value: T): Record<Setting, T> {
+  return {
+    apiKey: value,
+    model: value,
+    baseUrl: value,
+    aiEnabled: value,
+    buildAiEnabled: value,
+    organization: value,
+    project: value,
+    logging: value,
+  };
+}
+function inside(root: string, path: string) {
+  const part = relative(root, path);
+  return part !== ".." && !part.startsWith(`..${sep}`) && !isAbsolute(part);
+}
+/** Let Node decide which assignments exist, including its quote fallbacks. */
+function definitions(text: string) {
+  const counts = settings(0);
+  let prefix = "__RESUMIDE_AI_ASSIGNMENT_";
+  while (text.includes(prefix)) prefix = "_" + prefix;
+  const markers = new Map<string, Setting>();
+  const names = Object.values(settingNames).join("|");
+  const pattern = new RegExp(
+    `^([^\\S\\n]*(?:export[^\\S\\n]+)?)(${names})([^\\S\\n]*=)`,
+    "gm",
+  );
+  // This private copy preserves quotes and values. Replaced names inside a
+  // quoted value stay data; only marker keys emitted by parseEnv are counted.
+  const marked = text.replace(
+    pattern,
+    (_match, before: string, key: string, after: string) => {
+      const name = (Object.keys(settingNames) as Setting[]).find(
+        (name) => settingNames[name] === key,
+      )!;
+      const marker = `${prefix}${markers.size}`;
+      markers.set(marker, name);
+      return before + marker + after;
+    },
+  );
+  const parsed = parseEnv(marked);
+  for (const [marker, name] of markers) {
+    if (Object.hasOwn(parsed, marker)) counts[name]++;
+  }
+  return counts;
+}
+
+function effective(environment: Environment) {
+  return {
+    OPENAI_API_KEY: environment.OPENAI_API_KEY,
+    OPENAI_ORG_ID: environment.OPENAI_ORG_ID,
+    OPENAI_PROJECT_ID: environment.OPENAI_PROJECT_ID,
+    OPENAI_LOG: environment.OPENAI_LOG,
+    OPENAI_MODEL:
+      environment.OPENAI_MODEL === undefined
+        ? DEFAULT_OPENAI_MODEL
+        : environment.OPENAI_MODEL,
+    OPENAI_BASE_URL:
+      environment.OPENAI_BASE_URL === undefined
+        ? DEFAULT_OPENAI_BASE_URL
+        : environment.OPENAI_BASE_URL,
+    AI_ENABLED:
+      environment.AI_ENABLED === undefined ? "true" : environment.AI_ENABLED,
+    BUILD_AI_ASSIST_ENABLED:
+      environment.BUILD_AI_ASSIST_ENABLED === undefined
+        ? "false"
+        : environment.BUILD_AI_ASSIST_ENABLED,
+  };
+}
+
+/** Offline metadata only. Plausibility is never authentication or live readiness. */
+export async function readAiReadiness(input: AiReadinessInput = {}) {
+  const source = input.source ?? "env_file";
+  const inherited = input.environment ?? process.env;
+  const issues = new Set<AiReadinessIssue>();
+  let fileEnvironment: Record<string, string | undefined> = {};
+  let counts = settings(0);
+  let fileRead = false;
+  let workspaceResolved = false;
+  let pathWithinWorkspace: boolean | null = null;
+  let fileModifiedAtUtc: string | null = null;
+  if (source === "env_file") {
+    let root: string | undefined;
+    try {
+      root = await realpath(input.workspaceRoot ?? process.cwd());
+      if (!(await stat(root)).isDirectory())
+        throw new Error("Unavailable workspace");
+      workspaceResolved = true;
+    } catch {
+      issues.add("workspace_unavailable");
+    }
+    if (root) {
+      const envFile = input.envFile ?? ".env";
+      if (!envFile || envFile.includes("\0")) issues.add("env_path_invalid");
+      else {
+        const path = resolve(root, envFile);
+        pathWithinWorkspace = inside(root, path);
+        if (!pathWithinWorkspace) issues.add("env_path_outside_workspace");
+        else {
+          try {
+            const metadata = await lstat(path);
+            if (metadata.isSymbolicLink()) issues.add("env_path_symlink");
+            else if (!metadata.isFile()) issues.add("env_file_not_regular");
+            else if (!inside(root, await realpath(path))) {
+              pathWithinWorkspace = false;
+              issues.add("env_path_outside_workspace");
+            } else {
+              const handle = await open(
+                path,
+                constants.O_RDONLY | constants.O_NOFOLLOW,
+              );
+              try {
+                const opened = await handle.stat();
+                if (!opened.isFile()) issues.add("env_file_not_regular");
+                else if (opened.size > MAX_ENV_BYTES)
+                  issues.add("env_file_too_large");
+                else {
+                  const bytes = Buffer.alloc(MAX_ENV_BYTES + 1);
+                  let length = 0;
+                  while (length < bytes.length) {
+                    const read = await handle.read(
+                      bytes,
+                      length,
+                      bytes.length - length,
+                      length,
+                    );
+                    if (!read.bytesRead) break;
+                    length += read.bytesRead;
+                  }
+                  if (length > MAX_ENV_BYTES) issues.add("env_file_too_large");
+                  else {
+                    const payload = bytes.subarray(0, length),
+                      text = payload.toString("utf8");
+                    if (
+                      !Buffer.from(text, "utf8").equals(payload) ||
+                      text.includes("\0")
+                    )
+                      issues.add("env_parse_invalid");
+                    else {
+                      fileEnvironment = parseEnv(text);
+                      counts = definitions(text);
+                      fileRead = true;
+                      fileModifiedAtUtc = opened.mtime.toISOString();
+                    }
+                  }
+                }
+              } finally {
+                await handle.close();
+              }
+            }
+          } catch (error) {
+            const code =
+              error && typeof error === "object" && "code" in error
+                ? error.code
+                : null;
+            issues.add(
+              code === "ENOENT" ? "env_file_missing" : "env_file_unavailable",
+            );
+          }
+        }
+      }
+    }
+  }
+  const overrides = settings(false),
+    differs = settings(false);
+  const selected: Record<string, string | undefined> =
+    source === "env_file" ? { ...fileEnvironment } : {};
+  for (const name of Object.keys(settingNames) as Setting[]) {
+    const key = settingNames[name];
+    if (inherited[key] !== undefined) {
+      selected[key] = inherited[key];
+      if (source === "env_file") {
+        overrides[name] = true;
+        differs[name] = inherited[key] !== fileEnvironment[key];
+      }
+    }
+  }
+  if (Object.values(counts).some((count) => count > 1))
+    issues.add("duplicate_definitions");
+  const config = effective(selected);
+  const key = config.OPENAI_API_KEY;
+  const present = typeof key === "string" && key.length > 0;
+  const formatPlausible = present && /^sk-[A-Za-z0-9_-]{20,}$/.test(key);
+  if (!present) issues.add("credential_missing");
+  else if (!formatPlausible) issues.add("credential_format_unrecognized");
+  const endpointAllowed = isAllowedOpenAiBaseUrl(config.OPENAI_BASE_URL);
+  if (!endpointAllowed) issues.add("endpoint_not_allowed");
+  const modelPresent = config.OPENAI_MODEL.length > 0;
+  const modelPlausible =
+    modelPresent &&
+    /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$/.test(config.OPENAI_MODEL);
+  if (!modelPlausible) issues.add("model_missing_or_malformed");
+  const flag = (value: string) => {
+    if (value === "true") return true;
+    if (value === "false") return false;
+    issues.add("flag_invalid");
+    return null;
+  };
+  const flags = {
+    aiEnabled: flag(config.AI_ENABLED),
+    buildAiEnabled: flag(config.BUILD_AI_ASSIST_ENABLED),
+  };
+  const cached =
+    input.cachedEnvironment === undefined
+      ? null
+      : effective(input.cachedEnvironment);
+  const matches =
+    cached === null
+      ? null
+      : (Object.keys(settingNames) as Setting[]).every(
+          (name) => cached[settingNames[name]] === config[settingNames[name]],
+        );
+  if (matches === false) issues.add("cached_configuration_differs");
+  const context = (
+    name: "OPENAI_ORG_ID" | "OPENAI_PROJECT_ID" | "OPENAI_LOG",
+  ) => ({
+    present: typeof selected[name] === "string" && selected[name]!.length > 0,
+    source:
+      inherited[name] !== undefined
+        ? ("process_env" as const)
+        : fileEnvironment[name] !== undefined
+          ? ("env_file" as const)
+          : ("missing" as const),
+  });
+  return {
+    schemaVersion: "ai-readiness/offline-v1" as const,
+    mode: "offline" as const,
+    status: issues.size
+      ? ("configuration_issues" as const)
+      : ("configuration_plausible" as const),
+    authentication: "not_tested" as const,
+    providerRequests: 0 as const,
+    source: {
+      selected: source,
+      workspaceResolved,
+      pathWithinWorkspace,
+      fileRead,
+      fileModifiedAtUtc,
+      parser: "node:util.parseEnv",
+      automaticFallback: false as const,
+      definitions: counts,
+      processOverrides: overrides,
+      processDiffersFromFile: differs,
+    },
+    credential: {
+      present,
+      formatPlausible,
+      noSurroundingWhitespace: present ? key === key.trim() : null,
+      source:
+        inherited.OPENAI_API_KEY !== undefined
+          ? ("process_env" as const)
+          : fileEnvironment.OPENAI_API_KEY !== undefined
+            ? ("env_file" as const)
+            : ("missing" as const),
+    },
+    endpoint: {
+      allowed: endpointAllowed,
+      usesDefault: selected.OPENAI_BASE_URL === undefined,
+    },
+    model: {
+      present: modelPresent,
+      usesDefault: selected.OPENAI_MODEL === undefined,
+      identifierPlausible: modelPlausible,
+    },
+    flags,
+    sdkContext: {
+      organization: context("OPENAI_ORG_ID"),
+      project: context("OPENAI_PROJECT_ID"),
+      logging: context("OPENAI_LOG"),
+    },
+    cache: {
+      compared: cached !== null,
+      matchesEffective: matches,
+      restartRequired: matches === null ? null : !matches,
+    },
+    issues: [...issues],
+  };
+}

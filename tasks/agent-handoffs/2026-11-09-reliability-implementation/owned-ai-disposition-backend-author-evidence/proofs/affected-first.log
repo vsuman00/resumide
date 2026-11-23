@@ -1,0 +1,98 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ✓ tests/unit/canonical-rewrite-workspace.test.ts (29 tests) 529ms
+ ✓ tests/unit/initial-feedback-operation-repository.test.ts (32 tests) 150ms
+ ✓ tests/unit/initial-feedback-service.test.ts (16 tests) 145ms
+ ✓ tests/unit/initial-feedback-stage.test.ts (13 tests) 128ms
+ ✓ tests/unit/typed-authoring-readiness.test.ts (33 tests) 9ms
+ ✓ tests/unit/initial-feedback-publication-policy.test.ts (19 tests) 13ms
+ ✓ tests/unit/initial-feedback-operation-sql.test.ts (13 tests) 6ms
+ ✓ tests/unit/owned-ai-disposition-sql.test.ts (8 tests) 8ms
+ ❯ tests/unit/owned-ai-retirement-sql.test.ts (9 tests | 1 failed) 6ms
+     ✓ requires actual retirement authority before accepting a missing publication 1ms
+     ✓ captures within the two real producer transactions before parent erasure 0ms
+     ✓ requires live durable authority and actual immutable source/publication/run rows 0ms
+     ✓ keeps link validation in one snapshot across all months and validates retained attempts without runs 0ms
+     × pins real composed source bodies without a self-hash cycle 3ms
+     ✓ guards the exact table identities, attributes, ACLs and producer predecessors 0ms
+     ✓ exports whole owner scope with separate staged capability and no false existing-export authority 0ms
+     ✓ preserves frozen accounting and publication sources 0ms
+     ✓ keeps Native deletion, corruption and export proof deferred 0ms
+ ❯ tests/unit/initial-feedback-late-settlement-sql.test.ts (8 tests | 2 failed) 8ms
+     ✓ does not make exact terminal accounting depend on an erasable publication row 1ms
+     ✓ preserves9ffc/6bc/63dd source bytes and the publication profile 0ms
+     ✓ changes only the erasable-row condition while retaining every old guard 0ms
+     × changes only the exact guard hash in the operation source manifest 3ms
+     × changes only the exact operation checker hash in the full source manifest 1ms
+     ✓ guards exact preimages/postimages and keeps all three private routines denied 1ms
+     ✓ adds no storage/policy/admission path and leaves the usage-retirement defect separate 0ms
+     ✓ retains a real owner-scoped cascade/late-settlement verifier as explicitly unrun 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-late-settlement-sql.test.ts > late-known forward source closure > changes only the exact guard hash in the operation source manifest
+AssertionError: expected '007ba402596474817e3584b4c3359e352f0fe…' to be '2f5dc596054e962f56059afbe62c2b6bccace…' // Object.is equality
+
+Expected: "2f5dc596054e962f56059afbe62c2b6bccacec60e845a0f1a493e121ca532fc0"
+Received: "007ba402596474817e3584b4c3359e352f0fef2a1bce0ff878eb8bc0d164b0c5"
+
+ ❯ tests/unit/initial-feedback-late-settlement-sql.test.ts:127:24
+    125|       ),
+    126|     );
+    127|     expect(hash(next)).toBe(operationProfile.checkerSha256);
+       |                        ^
+    128|   });
+    129|   it("changes only the exact operation checker hash in the full source…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/unit/initial-feedback-late-settlement-sql.test.ts > late-known forward source closure > changes only the exact operation checker hash in the full source manifest
+AssertionError: expected '\ndeclare item jsonb;p pg_catalog.pg_…' to be '\ndeclare item jsonb;p pg_catalog.pg_…' // Object.is equality
+
+- Expected
++ Received
+
+@@ -1,8 +1,8 @@
+
+  declare item jsonb;p pg_catalog.pg_proc%rowtype;owner_oid oid;service_oid oid;role_name text;
+-  manifest jsonb:=$shared_usage_catalog$[{"signature":"private.initial_feedback_publication_ready()","sha256":"e3b968b748f2e67983a034885c920510566bb71c69fc3d7bc0204b7d22b005d4","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"s","acl":"private"},{"signature":"public.read_initial_feedback(uuid,uuid)","sha256":"57701a307d3087720642d9b4057eac87b770465e81726c000c5238708bcfc47b","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.finish_initial_feedback(uuid,jsonb,uuid,uuid,text,jsonb,text,text)","sha256":"966cdb270ca5a4c1ab8fe6a6dd9097b5d46ebb2b2218f8047b794646cca315a8","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.export_initial_feedback_records(uuid)","sha256":"eefd5842be1eb38fe1e0f17ea148f1708eae634c2a8fe42ab94467c9839fe0cd","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"private.initial_feedback_operation_ready()","sha256":"2f5dc596054e962f56059afbe62c2b6bccacec60e845a0f1a493e121ca532fc0","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"s","acl":"private"},{"signature":"public.prepare_initial_feedback(uuid,jsonb,jsonb,uuid)","sha256":"93b7af8445710cd105e2da67eb27f7d9b8d9c52cd7ec924a6ab6f6aa69548f92","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.settle_initial_feedback_attempt(uuid,uuid,text,jsonb,text)","sha256":"739919dedaa5080c4bb8f3c556a9f9b1528fb88747edef9764588bd9038d4148","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.claim_initial_feedback_dispatch(uuid,jsonb,uuid,uuid,text,jsonb)","sha256":"335cef3a4e4f948b4c3b3c17ea9a3159368cab5df6e5a7a1389bc0f46759766a","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"private.ifo_usage_valid(jsonb)","sha256":"eaad99f9a4064320c648f12452b1f9a4007d872431c21e98a7eded66b4e9018c","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"i","acl":"private"},{"signature":"private.owned_ai_usage_owner(uuid,uuid)","sha256":"6c8dc21f6ef2cca5778cbfac9808a570507873d2f1ff8ac14f21e7393e18aa16","resultType":"public.analyses","language":"plpgsql","definer":false,"strict":false,"volatility":"v","acl":"private"},{"signature":"public.read_initial_feedback_usage(uuid,uuid)","sha256":"b242c0e264b0dfa5307f742a77e7a3cc0818bc9c18c88b946d9b27ee0a25889f","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"private.canonical_rewrite_ready()","sha256":"e98f6ec0de0a09ec002a85d97d007cb71a49c261bbcba746d82c688a7281251b","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"s","acl":"private"},{"signature":"public.read_initial_feedback_readiness()","sha256":"2bafa1e30a02308604ad0114ab114189aef6e8323379e443ab7a96a64b2196d6","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"s","acl":"metadata"}]$shared_usage_catalog$::jsonb;
++  manifest jsonb:=$shared_usage_catalog$[{"signature":"private.initial_feedback_publication_ready()","sha256":"e3b968b748f2e67983a034885c920510566bb71c69fc3d7bc0204b7d22b005d4","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"s","acl":"private"},{"signature":"public.read_initial_feedback(uuid,uuid)","sha256":"57701a307d3087720642d9b4057eac87b770465e81726c000c5238708bcfc47b","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.finish_initial_feedback(uuid,jsonb,uuid,uuid,text,jsonb,text,text)","sha256":"966cdb270ca5a4c1ab8fe6a6dd9097b5d46ebb2b2218f8047b794646cca315a8","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.export_initial_feedback_records(uuid)","sha256":"eefd5842be1eb38fe1e0f17ea148f1708eae634c2a8fe42ab94467c9839fe0cd","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"private.initial_feedback_operation_ready()","sha256":"007ba402596474817e3584b4c3359e352f0fef2a1bce0ff878eb8bc0d164b0c5","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"s","acl":"private"},{"signature":"public.prepare_initial_feedback(uuid,jsonb,jsonb,uuid)","sha256":"93b7af8445710cd105e2da67eb27f7d9b8d9c52cd7ec924a6ab6f6aa69548f92","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.settle_initial_feedback_attempt(uuid,uuid,text,jsonb,text)","sha256":"739919dedaa5080c4bb8f3c556a9f9b1528fb88747edef9764588bd9038d4148","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.claim_initial_feedback_dispatch(uuid,jsonb,uuid,uuid,text,jsonb)","sha256":"335cef3a4e4f948b4c3b3c17ea9a3159368cab5df6e5a7a1389bc0f46759766a","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"private.ifo_usage_valid(jsonb)","sha256":"eaad99f9a4064320c648f12452b1f9a4007d872431c21e98a7eded66b4e9018c","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"i","acl":"private"},{"signature":"private.owned_ai_usage_owner(uuid,uuid)","sha256":"6c8dc21f6ef2cca5778cbfac9808a570507873d2f1ff8ac14f21e7393e18aa16","resultType":"public.analyses","language":"plpgsql","definer":false,"strict":false,"volatility":"v","acl":"private"},{"signature":"public.read_initial_feedback_usage(uuid,uuid)","sha256":"b242c0e264b0dfa5307f742a77e7a3cc0818bc9c18c88b946d9b27ee0a25889f","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"private.canonical_rewrite_ready()","sha256":"e98f6ec0de0a09ec002a85d97d007cb71a49c261bbcba746d82c688a7281251b","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"s","acl":"private"},{"signature":"public.read_initial_feedback_readiness()","sha256":"2bafa1e30a02308604ad0114ab114189aef6e8323379e443ab7a96a64b2196d6","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"s","acl":"metadata"}]$shared_usage_catalog$::jsonb;
+  begin
+   select oid into service_oid from pg_catalog.pg_roles where rolname='service_role';
+   select proowner into owner_oid from pg_catalog.pg_proc where oid=to_regprocedure('public.persist_deterministic_analysis(uuid,text,jsonb,text,jsonb,text,text,text,text,jsonb,text,integer,text)');
+   if service_oid is null or owner_oid is null then return false;end if;
+   for item in select value from jsonb_array_elements(manifest) loop
+
+ ❯ tests/unit/initial-feedback-late-settlement-sql.test.ts:132:18
+    130|     const old = bodyIn(oldUsage, "private.initial_feedback_ready")!;
+    131|     const next = bodyIn(forward, "private.initial_feedback_ready")!;
+    132|     expect(next).toBe(
+       |                  ^
+    133|       old.replace(
+    134|         hash(bodyIn(original, "private.initial_feedback_operation_read…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/unit/owned-ai-retirement-sql.test.ts > owned AI retirement source contract; SQL unparsed/unexecuted > pins real composed source bodies without a self-hash cycle
+AssertionError: expected '1a04acf95f9daa172cf1874269e6ee0988e04…' to be '2f735266a5f2e7c44578b0bed2c2cfec2e671…' // Object.is equality
+
+Expected: "2f735266a5f2e7c44578b0bed2c2cfec2e671d4665f32a480389c5e397e664c2"
+Received: "1a04acf95f9daa172cf1874269e6ee0988e0433d5085407f8d9cb6cfd5ff557c"
+
+ ❯ tests/unit/owned-ai-retirement-sql.test.ts:129:40
+    127|       ["public.read_owned_ai_retirement_readiness", retirement.metadat…
+    128|     ])
+    129|       expect(hash(body(source, name))).toBe(value);
+       |                                        ^
+    130|     for (const [name, tag, self, count] of [
+    131|       [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed | 8 passed (10)
+      Tests  3 failed | 177 passed (180)
+   Start at  13:33:20
+   Duration  2.48s (transform 405ms, setup 0ms, import 932ms, tests 1.00s, environment 0ms)
+

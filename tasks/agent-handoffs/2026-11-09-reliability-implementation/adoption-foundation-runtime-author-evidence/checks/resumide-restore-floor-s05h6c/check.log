@@ -1,0 +1,83 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/restore-floor.test.ts (0 test)
+ ❯ tests/unit/restore-admission.test.ts (29 tests | 1 failed) 1746ms
+     ✓ orders durable quarantine, actual fence, durable floor, one transition, commit proof and ready before reopening 51ms
+     ✓ requires all trusted adapters without a default allow implementation 13ms
+     ✓ refuses malformed or stale fence evidence 0 before any transition 23ms
+     ✓ refuses malformed or stale fence evidence 1 before any transition 25ms
+     ✓ refuses malformed or stale fence evidence 2 before any transition 23ms
+     ✓ refuses malformed or stale fence evidence 3 before any transition 23ms
+     ✓ does not advance or transition after a fence adapter fails 24ms
+     ✓ does not transition if durable floor acknowledgement fails 25ms
+     ✓ never infers commit from counts or retries an uncertain native transition 39ms
+     ✓ requires exact committed instance and guards instead of Boolean/echo/count success 0 43ms
+     ✓ requires exact committed instance and guards instead of Boolean/echo/count success 1 49ms
+     ✓ requires exact committed instance and guards instead of Boolean/echo/count success 2 44ms
+     ✓ reconciles an acknowledged commit at the exact generation without another transition 62ms
+     ✓ unknown recovery permits neither retry nor ready and cannot manufacture a recovery grant 53ms
+     ✓ proven noncommit permits only a new fenced higher generation, with a one-use unforgeable grant 124ms
+     ✓ refuses a commit witness whose generation differs from the prospective floor 51ms
+     ✓ cancellation while fencing leaves quarantine and prevents a late destructive call 56ms
+     ✓ shared deadline returns before an ignored native call completes and never publishes late ready 142ms
+     ✓ a delayed older controller cannot publish ready after a successor acquires authority 64ms
+     × failed ready durability or reopening never returns admission success 104ms
+     ✓ an ignored delayed reopen cannot outlive cancellation or reopen under a stale token 98ms
+     ✓ rejects authentic older candidate despite valid manifest checksums 85ms
+     ✓ rejects authentic missing-guard candidate despite valid manifest checksums 82ms
+     ✓ rejects forged candidate epoch/timestamp rather than treating them as authority 86ms
+     ✓ accepts only authentic current checkpoint provenance, without re-running the transition 99ms
+     ✓ rejects a pre-clock snapshot after the first account preparation cutover boundary 85ms
+     ✓ rejects a pre-clock snapshot after the first root retirement capture cutover boundary 75ms
+     ✓ rejects a pre-clock snapshot after the final expiry fold cutover boundary 79ms
+     ✓ rejects missing state and invalid/cancelled caller bounds without adapter calls 18ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/restore-floor.test.ts [ tests/unit/restore-floor.test.ts ]
+Error: Transform failed with 1 error:
+/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats/tests/unit/restore-floor.test.ts:53:107: ERROR: "await" can only be used inside an "async" function
+  Plugin: vite:esbuild
+  File: /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats/tests/unit/restore-floor.test.ts:53:107
+  
+  "await" can only be used inside an "async" function
+  51 |    it("returns a bounded unavailable result while an issued disk sync is still pending",async()=>{
+  52 |      const {store,dir}=fixture();const zero=await store.bootstrap();let release!:()=>void;const entered=new Promise<void>(done=>{faultHandles(handle=>{const original=handle.sync.bind(handle);vi.spyOn(handle,"sync").mockImplementation(async()=>{if((await handle.stat()).isFile()){done();await new Promise<void>(r=>{release=r;});}await original();});});
+  53 |      const pending=store.quarantine(zero,{timeoutMs:100});const rejection=expect(pending).rejects.toThrow();await entered;await rejection;expect(fs.existsSync(join(dir,"restore-floor.lock"))).toBe(true);release();await new Promise(r=>setTimeout(r,20));await expect(store.read()).rejects.toThrow();
+     |                                                                                                             ^
+  54 |    });
+  55 |    it("checks cancellation and finite timeout before mutation",async()=>{const {store}=fixture();const zero=await store.bootstrap();const ac=new AbortController();ac.abort();await expect(store.quarantine(zero,{signal:ac.signal})).rejects.toThrow();expect(await store.read()).toEqual(zero);for(const timeoutMs of [0,5001,Infinity,NaN])await expect(store.quarantine(zero,{timeoutMs})).rejects.toThrow();});
+  
+ ❯ failureErrorWithLog ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/restore-admission.test.ts > restore quarantine and admission > failed ready durability or reopening never returns admission success
+RestoreFloorError: Independent restore authority is unavailable.
+ ❯ unavailable app/lib/server/restore-floor.ts:24:27
+     22|   }
+     23| }
+     24| const unavailable = () => new RestoreFloorError();
+       |                           ^
+     25| export function floorNumber(value: unknown): string {
+     26|   if (typeof value !== "string" || !/^(0|[1-9][0-9]{0,18})$/u.test(val…
+ ❯ RestoreFloorStore.bounded app/lib/server/restore-floor.ts:59:18
+ ❯ tests/unit/restore-admission.test.ts:70:158
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  1 failed | 28 passed (29)
+   Start at  13:33:55
+   Duration  1.90s (transform 46ms, setup 0ms, import 83ms, tests 1.75s, environment 0ms)
+
+JSON report written to /tmp/resumide-restore-floor-s05h6c/tests.json

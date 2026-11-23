@@ -1,0 +1,36 @@
+[96mtests/unit/grouped-import-source-sql.test.ts[0m:[93m196[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType '{ organizationId: string; resumeId: string; associationModelVersion: "evidence-entry-associations/1.0.0"; producerVersion: "canonical-engine/1.0.3"; canonicalHeadId: null; ownerId: string; ... 6 more ...; targetModelVersion: typeof EVIDENCE_TARGET_MODEL_VERSION; }' is not assignable to type '{ ownerId: string; organizationId: string; resumeId: string; analysisId: string; sourceId: string; inputSha256: string; attemptId: string; evidenceSchemaVersion: "evidence/2.0.0"; fieldExtractorVersion: "evidence-fields/1.0.1"; targetModelVersion: "evidence-targets/1.0.0"; associationModelVersion: "evidence-entry-as...'.
+  Types of property 'fieldExtractorVersion' are incompatible.
+    Type 'string | null' is not assignable to type '"evidence-fields/1.0.1"'.
+      Type 'null' is not assignable to type '"evidence-fields/1.0.1"'.
+
+[7m196[0m         binding: {
+[7m   [0m [91m        ~~~~~~~[0m
+
+  [96mapp/lib/server/canonical-grouped-import.ts[0m:[93m49[0m:[93m3[0m
+    [7m49[0m   binding: bindingSchema,
+    [7m  [0m [96m  ~~~~~~~~~~~~~~~~~~~~~~[0m
+    The expected type comes from property 'binding' which is declared here on type '{ schemaVersion: "grouped-original-selection/1.0.0"; binding: { ownerId: string; organizationId: string; resumeId: string; analysisId: string; sourceId: string; inputSha256: string; attemptId: string; ... 5 more ...; canonicalHeadId: null; }; acknowledgement: "relationship_only_not_fact_confirmation"; unselectedDisp...'
+[96mtests/unit/grouped-import-source-sql.test.ts[0m:[93m206[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType '{ groupId: string; members: EntryAssociationMember[]; }[]' is not assignable to type '{ groupId: string; members: { observationId: string; assertionId: string; targetId: string; field: "employer" | "role" | "dates"; citations: { spanId: string; pageId: string; method: "native_text" | "local_ocr"; start: number; end: number; pageStart: number; pageEnd: number; }[]; }[]; }[]'.
+  Type '{ groupId: string; members: EntryAssociationMember[]; }' is not assignable to type '{ groupId: string; members: { observationId: string; assertionId: string; targetId: string; field: "employer" | "role" | "dates"; citations: { spanId: string; pageId: string; method: "native_text" | "local_ocr"; start: number; end: number; pageStart: number; pageEnd: number; }[]; }[]; }'.
+    Types of property 'members' are incompatible.
+      Type 'EntryAssociationMember[]' is not assignable to type '{ observationId: string; assertionId: string; targetId: string; field: "employer" | "role" | "dates"; citations: { spanId: string; pageId: string; method: "native_text" | "local_ocr"; start: number; end: number; pageStart: number; pageEnd: number; }[]; }[]'.
+        Type 'EntryAssociationMember' is not assignable to type '{ observationId: string; assertionId: string; targetId: string; field: "employer" | "role" | "dates"; citations: { spanId: string; pageId: string; method: "native_text" | "local_ocr"; start: number; end: number; pageStart: number; pageEnd: number; }[]; }'.
+          Types of property 'field' are incompatible.
+            Type '"name" | "email" | "phone" | "education" | "certification" | "employer" | "role" | "dates"' is not assignable to type '"employer" | "role" | "dates"'.
+              Type '"name"' is not assignable to type '"employer" | "role" | "dates"'.
+
+[7m206[0m         selections: review.groups
+[7m   [0m [91m        ~~~~~~~~~~[0m
+
+  [96mapp/lib/server/canonical-grouped-import.ts[0m:[93m52[0m:[93m3[0m
+    [7m 52[0m   selections: z
+    [7m   [0m [96m  ~~~~~~~~~~~~~[0m
+    [7m 53[0m     .array(
+    [7m   [0m [96m~~~~~~~~~~~[0m
+    [7m...[0m 
+    [7m 59[0m     .min(1)
+    [7m   [0m [96m~~~~~~~~~~~[0m
+    [7m 60[0m     .max(32),
+    [7m   [0m [96m~~~~~~~~~~~~[0m
+    The expected type comes from property 'selections' which is declared here on type '{ schemaVersion: "grouped-original-selection/1.0.0"; binding: { ownerId: string; organizationId: string; resumeId: string; analysisId: string; sourceId: string; inputSha256: string; attemptId: string; ... 5 more ...; canonicalHeadId: null; }; acknowledgement: "relationship_only_not_fact_confirmation"; unselectedDisp...'
+{"roots":3,"sourceFiles":24,"diagnostics":2}

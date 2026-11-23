@@ -1,0 +1,379 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/owned-ai-privacy-export.test.ts (38 tests | 1 failed | 37 skipped) 21ms
+     ↓ requires the disposition export even when every feature is off
+     ↓ includes R03 and retired A13 personal records even with all AI flags off
+     ↓ refuses the whole export when mandatory read_ai_budget_source_readiness is denied
+     ↓ refuses the whole export when mandatory export_owned_ai_budget_sources is denied
+     ↓ refuses the whole export when mandatory read_owned_ai_budget_export_readiness is denied
+     ↓ refuses the whole export when mandatory export_owned_ai_budget_records is denied
+     ↓ refuses the whole export when mandatory read_initial_feedback_readiness is denied
+     ↓ refuses the whole export when mandatory export_initial_feedback_records is denied
+     ↓ refuses the whole export when mandatory read_owned_ai_retirement_readiness is denied
+     ↓ refuses the whole export when mandatory export_owned_ai_retirement_records is denied
+     ↓ refuses the whole export when mandatory read_owned_ai_disposition_readiness is denied
+     ↓ refuses the whole export when mandatory export_owned_ai_disposition_records is denied
+     ↓ does not publish an incomplete manifest for budget_schema
+     ↓ does not publish an incomplete manifest for budget_owner
+     ↓ does not publish an incomplete manifest for budget_parent
+     ↓ does not publish an incomplete manifest for budget_unsafe_number
+     ↓ does not publish an incomplete manifest for budget_omission
+     ↓ does not publish an incomplete manifest for feedback_schema
+     ↓ does not publish an incomplete manifest for feedback_owner
+     ↓ does not publish an incomplete manifest for retirement_owner
+     ↓ does not publish an incomplete manifest for retirement_binding
+     ↓ does not publish an incomplete manifest for missing_retirement
+     ↓ does not publish an incomplete manifest for budget_limit
+     ↓ does not publish an incomplete manifest for feedback_limit
+     ↓ does not publish an incomplete manifest for retirement_limit
+     ↓ does not publish an incomplete manifest for disposition_owner
+     ↓ does not publish an incomplete manifest for disposition_clock
+     ↓ does not publish an incomplete manifest for disposition_incomplete
+     ↓ does not publish an incomplete manifest for disposition_repair_clock
+     ↓ does not publish an incomplete manifest for disposition_limit
+     ↓ requires actual native capabilities even for empty personal collections
+     ↓ fails the actual manifest when the mandatory disposition RPC never settles
+     ↓ preserves exact decimal counters beyond JSON safe-integer costs
+   ↓ includes source registrations only with the exact exported budget operation binding
+   ↓ refuses inconsistent multi-RPC registration closure: missing_operation
+   ↓ refuses inconsistent multi-RPC registration closure: wrong_binding
+   ↓ refuses inconsistent multi-RPC registration closure: different_organization
+   × requires retained legacy usage accounting even when all feature flags are off 21ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/owned-ai-privacy-export.test.ts > requires retained legacy usage accounting even when all feature flags are off
+AssertionError: promise resolved "{ version: 'resumide-export-v1', …(5) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "account": {
++     "id": "a0000000-0000-4000-8000-000000000001",
++   },
++   "aiBudgetExportMetadata": {
++     "omissions": {
++       "foreignOperatorIdentity": "redacted",
++       "foreignTargetHistory": "redacted",
++       "periodOpenings": "not_subject_attributable",
++       "sharedPools": "not_subject_attributable",
++     },
++     "ownerId": "a0000000-0000-4000-8000-000000000001",
++     "schemaVersion": "owned-ai-budget-export/1.0.0",
++   },
++   "files": [],
++   "generatedAt": "2026-11-15T17:25:48.568Z",
++   "records": {
++     "aiBudgetAttempts": [
++       {
++         "actual_cost_microusd": null,
++         "actual_input_tokens": null,
++         "actual_output_tokens": null,
++         "created_at": "2026-11-15T00:00:00.123456Z",
++         "id": "a0000000-0000-4000-8000-000000000022",
++         "operation_id": "a0000000-0000-4000-8000-000000000021",
++         "ordinal": 1,
++         "organization_id": "a0000000-0000-4000-8000-000000000020",
++         "period": "2026-10-01",
++         "reserved_cost_microusd": "2000",
++         "state": "held_unknown",
++         "updated_at": "2026-11-15T00:00:00.123456Z",
++       },
++     ],
++     "aiBudgetEvents": [
++       {
++         "attempt_id": "a0000000-0000-4000-8000-000000000022",
++         "cost_microusd": null,
++         "created_at": "2026-11-15T00:00:00.123456Z",
++         "evidence_sha256": null,
++         "id": "a0000000-0000-4000-8000-000000000025",
++         "input_tokens": null,
++         "kind": "reserve",
++         "operator_disposition": "none",
++         "operator_id": null,
++         "output_tokens": null,
++         "reconciliation_id": null,
++       },
++       {
++         "attempt_id": "a0000000-0000-4000-8000-000000000022",
++         "cost_microusd": null,
++         "created_at": "2026-11-15T00:00:00.123456Z",
++         "evidence_sha256": null,
++         "id": "a0000000-0000-4000-8000-000000000026",
++         "input_tokens": null,
++         "kind": "dispatch",
++         "operator_disposition": "none",
++         "operator_id": null,
++         "output_tokens": null,
++         "reconciliation_id": null,
++       },
++       {
++         "attempt_id": "a0000000-0000-4000-8000-000000000022",
++         "cost_microusd": null,
++         "created_at": "2026-11-15T00:00:00.123456Z",
++         "evidence_sha256": null,
++         "id": "a0000000-0000-4000-8000-000000000027",
++         "input_tokens": null,
++         "kind": "unknown",
++         "operator_disposition": "none",
++         "operator_id": null,
++         "output_tokens": null,
++         "reconciliation_id": null,
++       },
++     ],
++     "aiBudgetOperations": [
++       {
++         "attempt_limit": 3,
++         "binding_sha256": "c6b6657d970f85395a9e674b55fa9425fb91bed6d617a75edf45cf03737dd984",
++         "created_at": "2026-11-15T00:00:00.123456Z",
++         "id": "a0000000-0000-4000-8000-000000000021",
++         "input_microusd_per_million": "1000000",
++         "model": "unit-model",
++         "organization_id": "a0000000-0000-4000-8000-000000000020",
++         "output_microusd_per_million": "1000000",
++         "payload_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
++         "policy_version": "unit-budget/1",
++         "prompt_policy_version": "unit/1",
++         "reserved_input_tokens": "1000",
++         "reserved_output_tokens": "1000",
++         "surface": "build",
++         "user_id": "a0000000-0000-4000-8000-000000000001",
++       },
++     ],
++     "aiBudgetOperatorActions": [
++       {
++         "created_at": "2026-11-15T00:00:00.123456Z",
++         "evidence_sha256": "3333333333333333333333333333333333333333333333333333333333333333",
++         "kind": "reconcile",
++         "operator_id": "a0000000-0000-4000-8000-000000000001",
++         "reconciliation_id": "a0000000-0000-4000-8000-000000000031",
++       },
++     ],
++     "aiBudgetReconciliationOperators": [
++       {
++         "approval_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
++         "enabled": false,
++         "operator_id": "a0000000-0000-4000-8000-000000000001",
++         "organization_id": "a0000000-0000-4000-8000-000000000030",
++       },
++     ],
++     "aiBudgetSourceRegistrations": [],
++     "analyses": [],
++     "analysisExtractions": [],
++     "analysisResults": [],
++     "auditEvents": [],
++     "authoringEvents": [],
++     "candidateCorrectionApplications": [],
++     "candidateCorrectionAssignments": [],
++     "candidateCorrectionOperations": [],
++     "candidateEntryAssociationBatches": [],
++     "candidateEntryAssociationGroups": [],
++     "candidateEntryAssociationMembers": [],
++     "candidateEntryRegroupBatches": [],
++     "candidateEntryRegroupGroups": [],
++     "candidateEntryRegroupMembers": [],
++     "canonicalCorrectionSnapshotFacts": [],
++     "canonicalCorrectionSnapshots": [],
++     "canonicalEntryAssociationLinks": [],
++     "canonicalEntryAssociationSnapshots": [],
++     "canonicalEntryRegroupLinks": [],
++     "canonicalEntryRegroupSnapshots": [],
++     "canonicalResumeHeads": [],
++     "canonicalResumeVersions": [],
++     "canonicalRewriteHeads": [],
++     "canonicalRewriteOperations": [],
++     "canonicalRewriteVersions": [],
++     "changeEvents": [],
++     "consents": [],
++     "dataRequests": [],
++     "documentEvidenceAttempts": [],
++     "evidenceCorrections": [],
++     "initialFeedbackAttempts": [
++       {
++         "analysis_id": "a0000000-0000-4000-8000-000000000040",
++         "attempt_id": "a0000000-0000-4000-8000-000000000046",
++         "budget_attempt_id": null,
++         "claim_lease": {
++           "attempt": 1,
++           "leaseFence": "a0000000-0000-4000-8000-000000000047",
++           "workerId": "unit-worker",
++         },
++         "claimed_at": "2026-11-15T00:00:00.123456Z",
++         "created_at": "2026-11-15T00:00:00.123456Z",
++         "error_code": "unknown",
++         "operation_id": "a0000000-0000-4000-8000-000000000044",
++         "ordinal": 1,
++         "organization_id": "a0000000-0000-4000-8000-000000000041",
++         "owner_id": "a0000000-0000-4000-8000-000000000001",
++         "state": "held_unknown",
++         "usage": null,
++       },
++     ],
++     "initialFeedbackOperations": [
++       {
++         "analysis_id": "a0000000-0000-4000-8000-000000000040",
++         "attempt_limit": 3,
++         "binding": {
++           "analysisId": "a0000000-0000-4000-8000-000000000040",
++           "deterministicContentSha256": "5555555555555555555555555555555555555555555555555555555555555555",
++           "jobId": null,
++           "jobSha256": null,
++           "organizationId": "a0000000-0000-4000-8000-000000000041",
++           "ownerId": "a0000000-0000-4000-8000-000000000001",
++           "policy": {
++             "attemptLimit": 3,
++             "budgetPolicyVersion": null,
++             "maxOutputTokens": 1200,
++             "model": "unit-model",
++             "planProfile": {
++               "checkerSha256": "c5d8c0e8e5ac52c8b06a4fad5ea78f6fe6e42297bbbfd51cd2779243c8418b36",
++               "metadataSha256": "3c133694d11334e9430821945c94782b562ab1efb3f26bb8d4e7a9f2699369c5",
++               "policySha256": "972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48",
++               "policyVersion": "initial-feedback-plan-policy/1.0.0",
++               "profileVersion": "initial-feedback-plan-profile/1.0.0",
++               "rendererSha256": "c8bc131aacc7f9ddd8e30dcca8f5f429e78ee84180e5dd4542254883001cedc6",
++               "schemaVersion": "initial-feedback-plan-readiness/1.0.0",
++             },
++             "planSha256": "972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48",
++             "planVersion": "initial-feedback-plan-policy/1.0.0",
++             "promptVersion": "qualitative-cited-prose/3.0.0",
++             "provider": "openai",
++             "scoringInputProfile": {
++               "checkerSha256": "31eda986fe7a6ba0607197e1ddfd3316a977f93900007097b815d8e77b573fed",
++               "contextSha256": "d64ba9ac11ba732c983cd195cd7d83fba878e67f4ae0bffc8b6e166a600a8bd9",
++               "exportSha256": "e4c17997fdbec81d931e4838b3522c6c7d3c861b0bfa07b6fb3ab5ece160f0a2",
++               "finishSha256": "5db61206ed04f32af7052fce2d64e2ccf414d6fea13645f58eecf67f616b61a2",
++               "metadataSha256": "f18e6abfd698c4dbf4f7f6040fb577b2e49e78e4125bfd9d31e8166d0e678da8",
++               "profileVersion": "legacy-scoring-profile/1.0.0",
++               "readerSha256": "2ea3c5071d8d56e421a37053127dea08fe8eb08ce91e4de9f5c3b4c4b1172ccf",
++               "schemaVersion": "legacy-scoring-readiness/1.0.0",
++             },
++             "sha256": "6c031527a6509cecef4804cedc2780558ea2c0c77eb912645b0140cdd3fc26a9",
++             "supportSha256": "230f22333dd468f3bf78395b118330ec1ff78de18be9da5349356e84d0f6bd13",
++             "supportVersion": "qualitative-content-support/1.0.0",
++             "version": "initial-feedback-publication/1.0.0",
++             "writingSupportPolicyVersion": "legacy-source-transforms/1.0.4",
++           },
++           "resultChecksum": "6666666666666666666666666666666666666666666666666666666666666666",
++           "resumeId": "a0000000-0000-4000-8000-000000000042",
++           "resumeVersionId": "a0000000-0000-4000-8000-000000000043",
++           "schemaVersion": "initial-feedback-binding/1.0.0",
++           "scoringInputSha256": "4444444444444444444444444444444444444444444444444444444444444444",
++           "sourceTextSha256": "7777777777777777777777777777777777777777777777777777777777777777",
++         },
++         "binding_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
++         "created_at": "2026-11-15T00:00:00.123456Z",
++         "operation_id": "a0000000-0000-4000-8000-000000000044",
++         "organization_id": "a0000000-0000-4000-8000-000000000041",
++         "owner_id": "a0000000-0000-4000-8000-000000000001",
++         "policy_sha256": "6c031527a6509cecef4804cedc2780558ea2c0c77eb912645b0140cdd3fc26a9",
++         "policy_version": "initial-feedback-publication/1.0.0",
++         "publication_id": "a0000000-0000-4000-8000-000000000045",
++         "resume_id": "a0000000-0000-4000-8000-000000000042",
++         "resume_version_id": "a0000000-0000-4000-8000-000000000043",
++         "state": "published",
++       },
++     ],
++     "initialFeedbackPublications": [],
++     "jobRequirementVersions": [],
++     "jobRequirements": [],
++     "jobs": [],
++     "legacyScoringInputs": [],
++     "memberships": [],
++     "ownedAiDeletionDispositions": [
++       {
++         "expires_at": "2026-12-15T00:00:00.123456Z",
++         "first_request_id": "a0000000-0000-4000-8000-000000000048",
++         "owner_id": "a0000000-0000-4000-8000-000000000001",
++         "phase": "prepared",
++         "prepared_at": "2026-11-15T00:00:00.123456Z",
++       },
++     ],
++     "ownedAiOperationDispositions": [
++       {
++         "analysis_id": null,
++         "deletion_request_id": "a0000000-0000-4000-8000-000000000048",
++         "effective_expires_at": "2026-12-15T00:00:00.123456Z",
++         "expires_at": "2026-12-15T00:00:00.123456Z",
++         "first_cause": "account_preparation",
++         "kind": "r03",
++         "operation_id": "a0000000-0000-4000-8000-000000000021",
++         "organization_id": "a0000000-0000-4000-8000-000000000020",
++         "owner_id": "a0000000-0000-4000-8000-000000000001",
++         "phase": "prepared",
++         "prepared_at": "2026-11-15T00:00:00.123456Z",
++         "resume_id": null,
++         "resume_version_id": null,
++         "retention_item_id": null,
++         "source_scope": "account_only",
++       },
++       {
++         "analysis_id": "a0000000-0000-4000-8000-000000000040",
++         "deletion_request_id": "a0000000-0000-4000-8000-000000000048",
++         "effective_expires_at": "2026-12-15T00:00:00.123456Z",
++         "expires_at": "2026-12-15T00:00:00.123456Z",
++         "first_cause": "account_preparation",
++         "kind": "a13",
++         "operation_id": "a0000000-0000-4000-8000-000000000044",
++         "organization_id": "a0000000-0000-4000-8000-000000000041",
++         "owner_id": "a0000000-0000-4000-8000-000000000001",
++         "phase": "prepared",
++         "prepared_at": "2026-11-15T00:00:00.123456Z",
++         "resume_id": "a0000000-0000-4000-8000-000000000042",
++         "resume_version_id": "a0000000-0000-4000-8000-000000000043",
++         "retention_item_id": null,
++         "source_scope": "resume_root",
++       },
++     ],
++     "ownedAiRetirements": [
++       {
++         "analysis_id": "a0000000-0000-4000-8000-000000000040",
++         "attempt_id": "a0000000-0000-4000-8000-000000000046",
++         "binding_sha256": "8888888888888888888888888888888888888888888888888888888888888888",
++         "deletion_request_id": "a0000000-0000-4000-8000-000000000048",
++         "operation_id": "a0000000-0000-4000-8000-000000000044",
++         "organization_id": "a0000000-0000-4000-8000-000000000041",
++         "owner_id": "a0000000-0000-4000-8000-000000000001",
++         "publication_id": "a0000000-0000-4000-8000-000000000045",
++         "publication_state": "deterministic_only",
++         "resume_id": "a0000000-0000-4000-8000-000000000042",
++         "resume_version_id": "a0000000-0000-4000-8000-000000000043",
++         "retention_item_id": null,
++         "retired_at": "2026-11-15T00:00:00.123456Z",
++         "run_id": null,
++       },
++     ],
++     "profile": [
++       {
++         "id": "a0000000-0000-4000-8000-000000000001",
++       },
++     ],
++     "resumeFacts": [],
++     "resumeVersions": [],
++     "resumes": [],
++     "writerDrafts": [],
++   },
++   "version": "resumide-export-v1",
+  }
+
+ ❯ tests/unit/owned-ai-privacy-export.test.ts:728:83
+    726|   const f = fixture();
+    727|   f.replies.export_owned_legacy_ai_usage_records = { data: null, error…
+    728|   await expect(new SupabasePrivacyRequestRepository().buildExportManif…
+       |                                                                                   ^
+    729| });
+    730|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 37 skipped (38)
+   Start at  22:55:48
+   Duration  276ms (transform 131ms, setup 0ms, import 191ms, tests 21ms, environment 0ms)
+
+JSON report written to /tmp/resumide-usage-retention-Momd4X/tests.json

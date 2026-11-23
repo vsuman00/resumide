@@ -1,0 +1,60 @@
+{
+  "id": "CR-U19-S04",
+  "status": "VERIFIED_LOCAL_STALE_CANONICAL_RECOVERY_A11Y",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR on loopback, simulated Auth and Storage, disposable PostgreSQL 17 service-role reads and writes",
+  "sources": {
+    "app/routes/analysis.canonical.tsx": "d6e1c8056bd19059549bf1d6860a8a4afbc8cd4a370b934874b1f89eb5ec1f3f",
+    "app/lib/server/canonical-repository.ts": "23c4402d3c20e341b4072d1faf3af93237a520cc0ae755010192629aaa985afd",
+    "scripts/verify-local-correction-browser.ts": "6708cb036e0e31483c4504b4e78aca6f9df066bb243ab5ee29b2a411df75cbf5",
+    "scripts/verify-local-correction-journey.py": "9a756c17fe34b5dedb182bf7cfa18ab81727fbf498c18922de3b6f143b553cf8",
+    "scripts/verify-local-correction-journey.ts": "5ec7e2ce46543db363183faee988bad71de2454a0e48f347204b28f15e7afeb2",
+    "scripts/local-fixture-browser.ts": "372fa419ba68e5c15b742dbb4acd267a0359b67c1b8eb8b9ea5319a5c36e22f4",
+    "package-lock.json": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41"
+  },
+  "baseline": {
+    "missingFocus": ["stale save alert", "reviewed save result"],
+    "retainedDraftAndNative409AlreadyWorked": true,
+    "logSha256": "cffdc97d4a5047e742f79ae4f8c30afbc7dbab1e8de9d5309618271d02fe2f07"
+  },
+  "focusedTests": {
+    "passed": 253,
+    "files": 6,
+    "logSha256": "b2c9a8314309b8a72fe15b3b60b00378c7c535b96d2dad64eb26deae2af009fc"
+  },
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed with four existing warnings",
+    "fixtureLint": "passed",
+    "webBuildLogSha256": "7e1ea149e0b054aebbc6a6b03c7009fabee46ab0483b9e1ab6d1b2ffac4dbb81",
+    "workerBuildLogSha256": "68a7c52f6271a1792f52234672f385727b8b52ac287eb7d9c0a63101b5885564"
+  },
+  "browser": {
+    "staleTabViewport": {
+      "width": 320,
+      "height": 640
+    },
+    "scopedAxe": "Retained correction region in dark theme with reduced motion",
+    "schemaOperations": 100,
+    "orderedDigest": "4e253744226912aab1c9411cb03e528f8fbdaa10984aa5933a88ff380601293a",
+    "logSha256": "0fbfd4905f0d6f4a5da8793f148d8233304052d62ea47cd39c1d74bfc804cef0",
+    "result": {
+      "browser": "Chromium",
+      "keyboardCorrectionSavedAndApplied": true,
+      "threeFeedbackMessagesFocused": true,
+      "targetAndControlsFitNarrowWidths": true,
+      "selectedTargetLabelVisible": true,
+      "forcedColorsAndReducedMotion": true,
+      "correctionReviewBlockingAxeViolations": 0,
+      "postgresServiceRole": true,
+      "pdfAndDocxContentChecked": true,
+      "staleSaveKeptExactDraft": true,
+      "keyboardReviewedFreshVersion": true,
+      "conflictAndSuccessFocused": true,
+      "retainedReviewBlockingAxeViolations": 0
+    }
+  },
+  "manualScreenReaderVerified": false,
+  "browserZoomVerified": false,
+  "managedSupabaseVerified": false
+}

@@ -1,0 +1,45 @@
+from pathlib import Path
+import re,json,hashlib
+r=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats')
+t=Path('/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-decisions-original-backend-2culevnm')
+old=(r/'supabase/migrations/20261114143053_typed_authoring_transactions.sql').read_text()
+s=old[old.index('create function public.apply_typed_authoring_action'):old.index('-- Access is DENIED')]
+s=s.replace('public.apply_typed_authoring_action','public.apply_jd_clause_order_action').replace('$ta_apply$','$jd_clause_apply$')
+s=s.replace('perform private.typed_authoring_validate(p_command);','perform private.jd_clause_validate(p_command);')
+s=s.replace('command_sha:=private.typed_authoring_atoms_sha256(private.typed_authoring_atoms(p_command));','command_sha:=private.jd_clause_fingerprint(private.jd_clause_atoms(p_command));')
+a=s.index('    if prior.command is distinct from p_command');b=s.index('    return prior.result',a)
+s=s[:a]+'''    if prior.command is distinct from p_command or (prior.owner_id,prior.organization_id,prior.resume_id) is distinct from (p_user_id,a.organization_id,root.id)
+      or prior.action is distinct from p_command->>'operation'
+      or prior.base_version_id::text is distinct from p_command->'binding'->'canonical'->>'versionId'
+      or private.jd_clause_receipt(prior.result,p_command,prior.id,prior.result_version_id) is not true then perform private.correction_fail('conflict'); end if;
+    -- Check actual immutable ledger parents; an event or caller digest is not source authority.
+    if not exists(select 1 from public.canonical_resume_versions v where v.id=prior.base_version_id
+      and (v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id)=(p_user_id,a.organization_id,root.id,source_row.id)
+      and v.source_evidence_version_id::text=p_command->'binding'->'source'->>'attemptId'
+      and v.revision=(p_command->'binding'->'canonical'->>'revision')::integer)
+      or (p_command->>'operation'='accept' and not exists(select 1 from public.canonical_resume_versions v
+        where v.id=prior.result_version_id and (v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id)=(p_user_id,a.organization_id,root.id,source_row.id)
+        and v.revision=(p_command->'binding'->'canonical'->>'revision')::integer+2)) then perform private.correction_fail('conflict');end if;
+'''+s[b:]
+s=s.replace('if private.canonical_correction_write_ready() is not true','if private.jd_clause_schema_ready() is not true')
+a=s.index('  if not exists(select 1 from jsonb_array_elements(jd.content');b=s.index('  select x.value into fact',a);s=s[:a]+s[b:]
+a=s.index('  for cite in select value from jsonb_array_elements(fact');b=s.index('  event_id:=gen_random_uuid()',a)
+s=s[:a]+'''  if p_command->'target'->'bulletId'<>'null'::jsonb and not exists(
+    select 1 from jsonb_array_elements(canonical.content->'sections') s(value)
+    cross join lateral jsonb_array_elements(s.value->'entries') e(value)
+    cross join lateral jsonb_array_elements(e.value->'bullets') b(value)
+    where s.value->'id'=p_command->'target'->'sectionId' and e.value->'id'=p_command->'target'->'entryId'
+      and b.value->'id'=p_command->'target'->'bulletId' and b.value->'factIds'=jsonb_build_array(fact->'id')) then perform private.correction_fail('invalid');end if;
+  -- Independent complete-source grammar, exact original quote/ranges/JD and fixed reconstruction.
+  replacement:=private.jd_clause_reconstruct(context,fact,p_command);
+'''+s[b:]
+s=s.replace("'typed-authoring-receipt/1.0.0'","'jd-clause-order-receipt/2.0.0'")
+s=s.replace("'baseVersionId',canonical.id","'draftId',p_command->>'draftId','baseVersionId',canonical.id")
+s=s.replace("'typed_authoring.'||(p_command->>'operation')","'jd_clause_order.'||(p_command->>'operation')")
+s=s.replace('  insert into public.authoring_events(','''  if private.jd_clause_receipt(result_value,p_command,event_id,case when p_command->>'operation'='accept' then result_version else null end) is not true then perform private.correction_fail('invalid');end if;
+  insert into public.authoring_events(''')
+# Remove unused variables inherited from v1; no local/table alias collisions.
+s=s.replace("context jsonb; fact jsonb; span jsonb; cite jsonb; actual_citations jsonb:='[]'; seen text[]:='{}'; location jsonb;","context jsonb; fact jsonb; location jsonb;")
+s=s.replace('command_sha text; value_text text;', 'command_sha text;')
+(t/'writer.sql.txt').write_text(s)
+print(json.dumps({'writerFragment':str(t/'writer.sql.txt'),'bytes':len(s.encode()),'sha256':hashlib.sha256(s.encode()).hexdigest()}))

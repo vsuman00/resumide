@@ -1,0 +1,223 @@
+import { describe, expect, it, vi } from "vitest";
+import { ownedAnalysis } from "../../app/lib/server/canonical-repository";
+import { loadJobRequirements } from "../../app/lib/server/job-requirement-repository";
+import {
+  INACTIVE_DELETION_STATUSES,
+  isBlockingDeletionRequest,
+} from "../../app/lib/privacy-deletion";
+
+type Row = Record<string, unknown>;
+type Filter = { operator: "eq" | "neq"; column: string; value: unknown };
+const ids = {
+  owner: "10000000-0000-4000-8000-000000000001",
+  other: "10000000-0000-4000-8000-000000000002",
+  analysis: "10000000-0000-4000-8000-000000000003",
+  organization: "10000000-0000-4000-8000-000000000004",
+  source: "10000000-0000-4000-8000-000000000005",
+  resume: "10000000-0000-4000-8000-000000000006",
+  job: "10000000-0000-4000-8000-000000000007",
+  deletion: "10000000-0000-4000-8000-000000000008",
+};
+it("shares the same finite inactive states with the browser and keeps unknown deletion states blocking", () => {
+  expect(INACTIVE_DELETION_STATUSES).toEqual(["failed", "cancelled"]);
+  for (const status of [
+    "failed",
+    "cancelled",
+    "queued",
+    "processing",
+    "completed",
+    "unrecognized-status",
+  ])
+    expect(isBlockingDeletionRequest({ kind: "deletion", status })).toBe(
+      !["failed", "cancelled"].includes(status),
+    );
+  expect(isBlockingDeletionRequest({ kind: "export", status: "queued" })).toBe(
+    false,
+  );
+});
+function deletion(status: string, userId = ids.owner) {
+  return { id: ids.deletion, user_id: userId, kind: "deletion", status };
+}
+
+// Filtered, thenable query doubles exercise the real readers. They do not prove
+// hosted SQL, RLS, grants, transaction isolation or complete deletion history.
+function database(
+  options: {
+    deletions?: Row[];
+    policyError?: unknown;
+    malformedPolicy?: boolean;
+    foreignAnalysis?: boolean;
+  } = {},
+) {
+  const tables: Record<string, Row[]> = {
+    analyses: [
+      {
+        id: ids.analysis,
+        owner_id: options.foreignAnalysis ? ids.other : ids.owner,
+        organization_id: ids.organization,
+        resume_version_id: ids.source,
+        job_id: ids.job,
+      },
+    ],
+    resume_versions: [
+      {
+        id: ids.source,
+        resume_id: ids.resume,
+        owner_id: ids.owner,
+        organization_id: ids.organization,
+        active_resume: {
+          id: ids.resume,
+          owner_id: ids.owner,
+          organization_id: ids.organization,
+          status: "active",
+        },
+      },
+    ],
+    jobs: [
+      {
+        id: ids.job,
+        owner_id: ids.owner,
+        organization_id: ids.organization,
+        title: "Engineer",
+        description: "Develop Python APIs.",
+      },
+    ],
+    memberships: [{ user_id: ids.owner, organization_id: ids.organization }],
+    data_requests: options.deletions ?? [],
+    job_requirement_versions: [],
+  };
+  const queries: Array<{ table: string; filters: Filter[] }> = [];
+  const from = (table: string) => {
+    const query = { table, filters: [] as Filter[] };
+    queries.push(query);
+    let limit = Infinity;
+    const valueAt = (row: Row, column: string) =>
+      column
+        .split(".")
+        .reduce<unknown>(
+          (value, key) =>
+            value && typeof value === "object"
+              ? (value as Row)[key]
+              : undefined,
+          row,
+        );
+    const result = (single: boolean) => {
+      if (table === "data_requests" && options.policyError)
+        return { data: null, error: options.policyError };
+      if (table === "data_requests" && options.malformedPolicy)
+        return { data: null, error: null };
+      const rows = (tables[table] ?? [])
+        .filter((row) =>
+          query.filters.every((filter) =>
+            filter.operator === "eq"
+              ? valueAt(row, filter.column) === filter.value
+              : valueAt(row, filter.column) !== filter.value,
+          ),
+        )
+        .slice(0, limit);
+      return { data: single ? (rows[0] ?? null) : rows, error: null };
+    };
+    const chain = {
+      select: () => chain,
+      eq: (column: string, value: unknown) => {
+        query.filters.push({ operator: "eq", column, value });
+        return chain;
+      },
+      neq: (column: string, value: unknown) => {
+        query.filters.push({ operator: "neq", column, value });
+        return chain;
+      },
+      limit: (value: number) => {
+        limit = value;
+        return chain;
+      },
+      order: () => chain,
+      range: () => chain,
+      maybeSingle: async () => result(true),
+      then: (
+        resolve: (value: unknown) => unknown,
+        reject?: (error: unknown) => unknown,
+      ) =>
+        Promise.resolve()
+          .then(() => result(false))
+          .then(resolve, reject),
+    };
+    return chain;
+  };
+  const client = { from, rpc: vi.fn() } as unknown as Parameters<
+    typeof ownedAnalysis
+  >[0];
+  return { client, queries };
+}
+
+describe.each([
+  {
+    name: "canonical source",
+    read: (client: Parameters<typeof ownedAnalysis>[0]) =>
+      ownedAnalysis(client, ids.analysis, ids.owner),
+    expected: { owner_id: ids.owner, resumeId: ids.resume },
+  },
+  {
+    name: "job requirements",
+    read: (client: Parameters<typeof ownedAnalysis>[0]) =>
+      loadJobRequirements(client, ids.analysis, ids.owner),
+    expected: { analysisId: ids.analysis, current: null, history: [] },
+  },
+])("$name deletion access", ({ read, expected }) => {
+  it("allows a failed or successfully withdrawn deletion", async () => {
+    for (const status of ["cancelled", "failed"]) {
+      const db = database({ deletions: [deletion(status)] });
+      await expect(read(db.client)).resolves.toMatchObject(expected);
+      expect(
+        db.queries.find((q) => q.table === "data_requests")?.filters,
+      ).toEqual(
+        expect.arrayContaining([
+          { operator: "neq", column: "status", value: "failed" },
+          { operator: "neq", column: "status", value: "cancelled" },
+        ]),
+      );
+    }
+  });
+  it("blocks queued, processing, completed and unknown deletion states", async () => {
+    for (const status of [
+      "queued",
+      "processing",
+      "completed",
+      "unrecognized-status",
+    ]) {
+      const db = database({ deletions: [deletion(status)] });
+      await expect(read(db.client)).rejects.toMatchObject({ status: 404 });
+    }
+  });
+  it("does not let another owner's deletion block this owner", async () => {
+    const db = database({ deletions: [deletion("queued", ids.other)] });
+    await expect(read(db.client)).resolves.toMatchObject(expected);
+    expect(
+      db.queries
+        .filter((q) => q.table === "data_requests")
+        .every((q) =>
+          q.filters.some(
+            (f) =>
+              f.operator === "eq" &&
+              f.column === "user_id" &&
+              f.value === ids.owner,
+          ),
+        ),
+    ).toBe(true);
+  });
+  it("fails closed when the deletion lookup fails", async () => {
+    const db = database({
+      policyError: { message: "synthetic-private-policy-error" },
+    });
+    await expect(read(db.client)).rejects.toMatchObject({ status: 503 });
+  });
+  it("fails closed when the deletion lookup is not an array", async () => {
+    const db = database({ malformedPolicy: true });
+    await expect(read(db.client)).rejects.toMatchObject({ status: 503 });
+  });
+  it("rejects a foreign analysis before reading its deletion history", async () => {
+    const db = database({ foreignAnalysis: true });
+    await expect(read(db.client)).rejects.toMatchObject({ status: 404 });
+    expect(db.queries.some((q) => q.table === "data_requests")).toBe(false);
+  });
+});

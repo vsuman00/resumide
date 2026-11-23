@@ -1,0 +1,712 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createHash } from "node:crypto";
+import { scoreFixture, SCORE_SOURCE } from "../fixtures/scoring-v2";
+import {
+  createRequirementContextFixture,
+  requirementFixtureId,
+} from "../fixtures/requirement-context";
+import { createEvaluationWorkflowFixture } from "../fixtures/evaluation-workflow";
+import {
+  buildScoreDiagnostics,
+  type ScoreDiagnostics,
+} from "../../app/lib/server/score-v2-engine";
+import {
+  getDraftScorePolicy,
+  ScoreDimensionId,
+  ScorePolicyDraftSchema,
+  WithheldScoreV2Schema,
+} from "../../app/lib/server/score-v2-contract";
+import { buildTypedScoreDiagnostics } from "../../app/lib/server/typed-score-diagnostics";
+import { loadScoreDiagnostics } from "../../app/lib/server/score-v2-repository";
+import { type loadCanonical } from "../../app/lib/server/canonical-repository";
+import { buildNativeEvidence } from "../../app/lib/server/native-evidence";
+import { reconcileDocumentEvidence } from "../../app/lib/server/document-evidence";
+import { runSelectiveLocalOcr } from "../../app/lib/server/ocr/selective";
+import { runProviderAttempt } from "../../app/lib/server/provider-attempt";
+import {
+  ArtifactOptionsSchema,
+  buildRenderPlan,
+  verifyArtifact,
+} from "../../app/lib/server/artifact-contract";
+import { createEvaluationPartitionLock } from "../../app/lib/server/evaluation-partitions";
+import { proposeEvaluationCalibration } from "../../app/lib/server/evaluation-calibration";
+import {
+  EVALUATION_METRICS,
+  hashEvaluationCalibration,
+  runLockedEvaluation,
+} from "../../app/lib/server/evaluation-runner";
+import {
+  assessEvaluationClaim,
+  hashEvaluationClaimCard,
+  hashLockedEvaluationReport,
+  type EvaluationClaimAuthority,
+} from "../../app/lib/server/evaluation-claims";
+
+// Only the owned persistence reader is supplied. All admission/score/evaluation code is real.
+const readers = vi.hoisted(() => ({ canonical: vi.fn() }));
+vi.mock("../../app/lib/server/canonical-repository", async (original) => ({
+  ...(await original<
+    typeof import("../../app/lib/server/canonical-repository")
+  >()),
+  loadCanonical: readers.canonical,
+}));
+beforeEach(() => {
+  readers.canonical.mockReset();
+});
+const digest = (s: string) => createHash("sha256").update(s).digest("hex");
+const evidenceContext = (e: ReturnType<typeof scoreFixture>["evidence"]) => ({
+  id: e.id,
+  ownerId: e.ownerId,
+  analysisId: e.analysisId,
+  sourceId: e.sourceId,
+  inputSha256: e.inputSha256,
+  createdAt: e.createdAt,
+  retentionPolicyId: e.retentionPolicyId,
+});
+
+function withheld(
+  d: Pick<ScoreDiagnostics, "score" | "readinessAggregate" | "policyState">,
+) {
+  expect(d.score.state).toBe("withheld");
+  expect(d.score.calibrationReceipt).toBeNull();
+  expect(d.readinessAggregate).toBeNull();
+  expect(d.policyState).toBe("draft");
+  expect(d.score.dimensions.map((x) => x.id).sort()).toEqual(
+    [...ScoreDimensionId.options].sort(),
+  );
+  for (const dimension of d.score.dimensions) {
+    expect(dimension.value).toBeNull();
+    expect(dimension.eligible).toBe(false);
+    expect(dimension.coverage).toBeNull();
+    expect(dimension.blockers).toContain("calibration_not_approved");
+  }
+  expect(WithheldScoreV2Schema.safeParse(d.score).success).toBe(true);
+}
+
+describe("current release admission across actual score entrypoints", () => {
+  it("full source and candidate confirmation retain observed recovery/diagnostics without numeric authority", () => {
+    const input = scoreFixture();
+    expect(
+      input.canonical.facts.every((f) => f.state === "candidate_confirmed"),
+    ).toBe(true);
+    const policy = getDraftScorePolicy(),
+      before = structuredClone(input);
+    const result = buildScoreDiagnostics(input);
+    withheld(result);
+    expect(result.readiness.observedPageCoverage).toBe(1);
+    expect(result.readiness.confirmedFactCount).toBeGreaterThan(0);
+    expect(result.readiness.blockers).toContain("coverage_policy_unknown");
+    expect(input).toEqual(before);
+    expect(getDraftScorePolicy()).toEqual(policy);
+  });
+  it.each([
+    "incomplete",
+    "missing-JD",
+    "wrong-domain",
+    "wrong-locale",
+    "unsupported",
+    "failed",
+  ] as const)("preserves withholding for %s after confirmation", (mode) => {
+    const input = scoreFixture();
+    let expectedPageCount: number | undefined;
+    if (mode === "incomplete") expectedPageCount = 2;
+    if (mode === "wrong-domain") input.requirements.domain = "healthcare";
+    if (mode === "wrong-locale") input.canonical.locale = "hi-IN";
+    if (mode === "unsupported" || mode === "failed")
+      input.evidence = reconcileDocumentEvidence(
+        evidenceContext(input.evidence),
+        input.evidence.nativeSource,
+        null,
+        { code: mode === "unsupported" ? "unsupported" : "timeout" },
+      );
+    const result = buildScoreDiagnostics({
+      ...input,
+      requirements: mode === "missing-JD" ? null : input.requirements,
+      ...(expectedPageCount ? { expectedPageCount } : {}),
+    });
+    withheld(result);
+    expect(result.readiness.blockers).toContain(
+      mode === "missing-JD"
+        ? "job_description_missing"
+        : mode === "wrong-domain" ||
+            mode === "wrong-locale" ||
+            mode === "unsupported"
+          ? "unsupported_input"
+          : "critical_evidence_missing",
+    );
+  });
+  it("successful bounded fake provider work and real OCR normalization do not calibrate recovered pages", async () => {
+    const input = scoreFixture(),
+      native = buildNativeEvidence([SCORE_SOURCE, ""]);
+    const recognize = vi.fn(async () => ({
+      durationMs: 1,
+      pages: [
+        {
+          pageId: "page-2",
+          pageNumber: 2,
+          imageSha256: "b".repeat(64),
+          widthPixels: 100,
+          heightPixels: 100,
+          rotation: 0,
+          text: "Recovered",
+          words: [
+            {
+              text: "Recovered",
+              start: 0,
+              end: 9,
+              box: { x: 0.1, y: 0.1, width: 0.8, height: 0.1 },
+              confidence: 99,
+            },
+          ],
+        },
+      ],
+    }));
+    const outcome = await runSelectiveLocalOcr(
+      {
+        schemaVersion: "selective-ocr-request-v1",
+        attemptId: input.evidence.id,
+        ownerId: input.evidence.ownerId,
+        analysisId: input.evidence.analysisId,
+        sourceId: input.evidence.sourceId,
+        createdAt: input.evidence.createdAt,
+        retentionPolicyId: input.evidence.retentionPolicyId,
+        sourceSha256: input.evidence.inputSha256,
+        nativePageTexts: [SCORE_SOURCE, ""],
+        selectedPages: [{ pageNumber: 2, pageId: "page-2" }],
+        remainingDeadlineMs: 1000,
+        limits: { maxCharacters: 100000, maxPages: 10 },
+        allocation: {
+          id: "synthetic-admission",
+          maxWallTimeMs: 1000,
+          maxPages: 10,
+          externalApiFeeMicros: 0,
+        },
+        policy: {
+          executionMode: "self_hosted",
+          purpose: "synthetic_local_test",
+          allowThirdPartyProcessing: false,
+        },
+      },
+      {
+        versions: {
+          engine: "fixture/1",
+          renderer: "fixture/1",
+          languageData: "fixture/1",
+        },
+        recognize,
+      },
+    );
+    expect(outcome.status).toBe("review_required");
+    expect(recognize).toHaveBeenCalledTimes(1);
+    if (
+      outcome.status !== "review_required" &&
+      outcome.status !== "insufficient"
+    )
+      throw Error("SYNTHETIC_OCR_NOT_NORMALIZED");
+    expect(outcome.scoringEligible).toBe(false);
+    input.evidence = reconcileDocumentEvidence(
+      evidenceContext(input.evidence),
+      native,
+      outcome,
+    );
+    const execute = vi.fn(async () => ({
+      status: "available",
+      usage: { inputTokens: 2, outputTokens: 1 },
+    }));
+    expect(
+      await runProviderAttempt({
+        timeoutMs: 1000,
+        execute,
+        failure: (reason) => Error(reason),
+      }),
+    ).toHaveProperty("status", "available");
+    expect(execute).toHaveBeenCalledTimes(1);
+    const result = buildScoreDiagnostics({ ...input, expectedPageCount: 2 });
+    expect(result.readiness.observedPageCoverage).toBe(1);
+    withheld(result);
+  });
+  it.each(["verified", "export_verification_failed"] as const)(
+    "actual %s artifact evidence supplies no scoring adoption surface",
+    (state) => {
+      const input = scoreFixture(),
+        plan = buildRenderPlan(input.canonical),
+        options = ArtifactOptionsSchema.parse({
+          versionId: plan.versionId,
+          format: "pdf",
+          pageSize: "A4",
+          templateId: "software-engineering-single-column",
+        });
+      const report = verifyArtifact(
+        plan,
+        options,
+        {
+          text: plan.blocks.map((b) => b.text).join("\n"),
+          links: plan.blocks.flatMap((b) => (b.link ? [b.link] : [])),
+          linkBindings: plan.blocks.flatMap((b) =>
+            b.link
+              ? [`${b.link}|${b.text.normalize("NFC").replace(/\s+/gu, "")}`]
+              : [],
+          ),
+          pages: 1,
+          layoutPass: state === "verified",
+          structuralAccessibility: true,
+          diagnostics: [],
+        },
+        new Uint8Array([1]),
+        1,
+      );
+      expect(report.state).toBe(state);
+      withheld(buildScoreDiagnostics(input));
+      // Unknown receipt injection is rejected by the current strict API, not a newly invented adoption parameter.
+      expect(() =>
+        buildScoreDiagnostics({ ...input, exportReport: report } as Parameters<
+          typeof buildScoreDiagnostics
+        >[0]),
+      ).toThrow();
+    },
+  );
+  it.each([
+    "owner",
+    "organization",
+    "analysis",
+    "source-version",
+    "source-digest",
+    "citation",
+  ] as const)(
+    "rejects tampered %s binding instead of producing an authoritative score",
+    (field) => {
+      const input = scoreFixture();
+      if (field === "owner")
+        input.canonical.ownerId = requirementFixtureId(901);
+      if (field === "organization")
+        input.requirements.organizationId = requirementFixtureId(902);
+      if (field === "analysis")
+        input.evidence.analysisId = requirementFixtureId(903);
+      if (field === "source-version")
+        input.canonical.sourceEvidenceVersionId = requirementFixtureId(904);
+      if (field === "source-digest")
+        input.canonical.inputSha256 = "0".repeat(64);
+      if (field === "citation")
+        input.canonical.facts.find(
+          (f) => f.sources.length,
+        )!.sources[0].attemptId = requirementFixtureId(905);
+      expect(() => buildScoreDiagnostics(input)).toThrow();
+    },
+  );
+  it.each([
+    "calibration-receipt",
+    "weight",
+    "coverage",
+    "dimension",
+    "state",
+  ] as const)(
+    "rejects an unauthorized %s in the numerical contract",
+    (field) => {
+      const policy = getDraftScorePolicy(),
+        score = buildScoreDiagnostics(scoreFixture()).score;
+      const changedPolicy: Record<string, unknown> = structuredClone(policy),
+        changedScore: Record<string, unknown> = structuredClone(score);
+      if (field === "calibration-receipt") {
+        changedPolicy.calibrationReceipt = "synthetic-pass";
+        changedScore.calibrationReceipt = "synthetic-pass";
+      }
+      if (field === "weight") {
+        changedPolicy.dimensions = policy.dimensions.map((d) => ({
+          ...d,
+          weight: 1,
+        }));
+        changedScore.dimensions = score.dimensions.map((d) => ({
+          ...d,
+          value: 100,
+          eligible: true,
+        }));
+      }
+      if (field === "coverage") {
+        changedPolicy.dimensions = policy.dimensions.map((d) => ({
+          ...d,
+          minimumCoverage: 0,
+        }));
+        changedScore.dimensions = score.dimensions.map((d) => ({
+          ...d,
+          coverage: 1,
+        }));
+      }
+      if (field === "dimension") {
+        changedPolicy.dimensions = [
+          policy.dimensions[0],
+          policy.dimensions[0],
+          policy.dimensions[2],
+        ];
+        changedScore.dimensions = [
+          score.dimensions[0],
+          score.dimensions[0],
+          score.dimensions[2],
+        ];
+      }
+      if (field === "state") {
+        changedPolicy.state = "approved";
+        changedScore.state = "evaluated";
+      }
+      expect(ScorePolicyDraftSchema.safeParse(changedPolicy).success).toBe(
+        false,
+      );
+      expect(WithheldScoreV2Schema.safeParse(changedScore).success).toBe(false);
+    },
+  );
+});
+
+describe("typed context and owned score read admission", () => {
+  it.each([null, 1, 3])(
+    "typed confirmed coverage keeps scores withheld at declared page count %s",
+    async (pageCount) => {
+      const fixture = await createRequirementContextFixture({
+        confirm: true,
+        pageCount,
+      });
+      const before = structuredClone(fixture.context);
+      const result = buildTypedScoreDiagnostics(fixture.context);
+      expect(result.typedCoverage.state).toBe("available");
+      withheld(result.diagnostics);
+      expect(result.diagnostics.readiness.declaredPageCount).toBe(pageCount);
+      expect(fixture.context).toEqual(before);
+    },
+  );
+  it.each([
+    "owner",
+    "source",
+    "attempt",
+    "binding-hash",
+    "eligibility",
+  ] as const)("rejects a forged typed %s claim", async (field) => {
+    const { context } = await createRequirementContextFixture({
+      confirm: true,
+    });
+    if (field === "owner") context.source.ownerId = requirementFixtureId(901);
+    if (field === "source") context.source.sourceId = requirementFixtureId(902);
+    if (field === "attempt") context.attempt.id = requirementFixtureId(903);
+    if (field === "binding-hash")
+      context.canonical.contentSha256 = "0".repeat(64);
+    const raw: unknown =
+      field === "eligibility" ? { ...context, scoringEligible: true } : context;
+    expect(() => buildTypedScoreDiagnostics(raw)).toThrow();
+  });
+  function storedRead() {
+    const input = scoreFixture();
+    const snapshot: Awaited<ReturnType<typeof loadCanonical>> = {
+      analysisId: input.canonical.analysisId,
+      resumeId: input.canonical.resumeId,
+      current: {
+        document: input.canonical,
+        revision: 1,
+        sourceId: input.evidence.sourceId,
+      },
+      headId: input.canonical.versionId,
+      history: [],
+      nextOffset: null,
+      comparison: null,
+      scoringEligible: false,
+    };
+    readers.canonical.mockResolvedValue(snapshot);
+    const evidenceRow = {
+      envelope: input.evidence,
+      resume_version_id: input.evidence.sourceId,
+      input_sha256: input.evidence.inputSha256,
+    };
+    const rows: Record<string, { data: unknown; error: unknown }> = {
+      analyses: { data: { job_id: null }, error: null },
+      document_evidence_attempts: { data: evidenceRow, error: null },
+      resume_versions: { data: { page_count: 1 }, error: null },
+    };
+    const client = { from: vi.fn(), rpc: vi.fn() } satisfies Parameters<
+      typeof loadScoreDiagnostics
+    >[0];
+    client.from.mockImplementation((table: string) => {
+      if (!rows[table]) throw Error("UNEXPECTED_OWNED_READ");
+      return {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn(async () => rows[table]),
+      };
+    });
+    return {
+      input,
+      snapshot,
+      evidenceRow,
+      rows,
+      client,
+      read: (selection: unknown = {}) =>
+        loadScoreDiagnostics(
+          client,
+          input.canonical.analysisId,
+          input.canonical.ownerId,
+          selection,
+          snapshot,
+        ),
+    };
+  }
+  it("owned read performs final source/head recheck while returning only withheld diagnostics", async () => {
+    const f = storedRead();
+    const result = await f.read();
+    withheld(result.diagnostics);
+    expect(readers.canonical).toHaveBeenCalledExactlyOnceWith(
+      f.client,
+      f.input.canonical.analysisId,
+      f.input.canonical.ownerId,
+      { versionId: f.input.canonical.versionId },
+    );
+    expect(
+      f.client.from.mock.calls.filter(([table]) => table === "analyses"),
+    ).toHaveLength(2);
+    expect(result.diagnostics.readiness.blockers).toContain(
+      "job_description_missing",
+    );
+  });
+  it.each([
+    "read-error",
+    "source-version",
+    "source-hash",
+    "unknown-receipt",
+  ] as const)("owned read refuses %s without number fallback", async (mode) => {
+    const f = storedRead();
+    if (mode === "read-error")
+      f.rows.document_evidence_attempts.error = {
+        message: "synthetic unavailable",
+      };
+    if (mode === "source-version")
+      f.evidenceRow.resume_version_id = requirementFixtureId(908);
+    if (mode === "source-hash") f.evidenceRow.input_sha256 = "f".repeat(64);
+    await expect(
+      f.read(
+        mode === "unknown-receipt" ? { calibrationReceipt: "synthetic" } : {},
+      ),
+    ).rejects.toThrow();
+  });
+});
+
+function calibrationFixture() {
+  const { partitionInput } = createEvaluationWorkflowFixture();
+  const lock = createEvaluationPartitionLock(partitionInput).lock;
+  if (!lock) throw Error("SYNTHETIC_PARTITION_LOCK_UNAVAILABLE");
+  const candidates = ScoreDimensionId.options.map((dimension) => ({
+    version: "candidate_synthetic",
+    dimension,
+    weights: [{ featureId: "signal_synthetic", weight: 1 }],
+    minimumCoverage: 1,
+    threshold: 70,
+  }));
+  const input = {
+    schemaVersion: 1,
+    proposalVersion: "proposal_synthetic",
+    previousPolicyVersion: getDraftScorePolicy().id,
+    rationaleReference: "rationale_synthetic",
+    partition: "calibration",
+    actorGroups: ["workflow_calibration_group"],
+    lock,
+    currentPartitionInput: partitionInput,
+    candidates,
+  };
+  const observations = lock.records
+    .filter((r) => r.partition === "calibration")
+    .flatMap((record) =>
+      ScoreDimensionId.options.map((dimension) => ({
+        sourceId: record.id,
+        sourceHash: record.contentHash,
+        dimension,
+        features: [{ featureId: "signal_synthetic", credit: 0.8 }],
+        referenceScore: 80,
+        referencePositive: true,
+        state: "evaluated",
+      })),
+    );
+  return { input, observations, lock, partitionInput };
+}
+let evaluated:
+  Promise<Awaited<ReturnType<typeof evaluationFixture>>> | undefined;
+async function evaluationFixture() {
+  const f = calibrationFixture();
+  const calibration = await proposeEvaluationCalibration(
+    f.input,
+    () => f.observations,
+  );
+  expect(calibration.status).toBe("proposed");
+  const records = f.lock.records.filter((r) => r.partition === "locked_test");
+  const input = {
+    schemaVersion: 1,
+    evaluationVersion: "evaluation_synthetic",
+    seed: 7,
+    actorGroups: ["workflow_locked_group"],
+    lock: f.lock,
+    calibration,
+    requiredSegments: ["native"],
+    documents: records.map((r) => ({
+      sourceId: r.id,
+      sourceHash: r.contentHash,
+      segmentId: "native",
+    })),
+    policies: EVALUATION_METRICS.map((id) => ({
+      id,
+      kind:
+        id === "safe_failure"
+          ? "exact_zero"
+          : id === "latency" || id === "cost"
+            ? "mean_upper"
+            : "success",
+      threshold:
+        id === "safe_failure" ? 0 : id === "latency" || id === "cost" ? 10 : 0,
+      minimumClusters: 2,
+    })),
+    sampleJustificationReference: null,
+  };
+  const report = await runLockedEvaluation(
+    input,
+    () =>
+      records.map((r) => ({
+        sourceId: r.id,
+        sourceHash: r.contentHash,
+        segmentId: "native",
+        values: Object.fromEntries(
+          EVALUATION_METRICS.map((id) => [id, id === "safe_failure" ? 0 : 0.8]),
+        ),
+      })),
+    {
+      currentPartitionInput: () => f.partitionInput,
+      authorizeCalibration: (b) =>
+        b.payloadHash === hashEvaluationCalibration(calibration) &&
+        b.lockHash === f.lock.lockHash,
+    },
+  );
+  expect(report.status).toBe("assessed");
+  const receipt = (reference: string) => ({
+    reference,
+    artifactHash: digest(reference),
+  });
+  const card = {
+    schemaVersion: 1,
+    version: "admission-card/1.0.0",
+    previousVersion: "admission-card/0.9.0",
+    kind: "evidence",
+    claim: "Regression-tested",
+    scope: {
+      domain: "software_engineering",
+      language: "en",
+      locale: "IN",
+      segments: ["native"],
+    },
+    bindings: {
+      sourceHash: digest("synthetic-source-manifest"),
+      lockHash: report.lockHash!,
+      reportHash: report.evaluationHash!,
+      policyHash: report.calibrationHash!,
+      reportPayloadHash: hashLockedEvaluationReport(report)!,
+    },
+    execution: receipt("execution_synthetic"),
+    review: {
+      ...receipt("review_synthetic"),
+      reviewerKind: "ai",
+      independent: false,
+    },
+    sampleJustification: null,
+    vendor: null,
+    outcomeStudy: null,
+    limitations: ["synthetic_scope_only"],
+    createdAt: "2026-11-07T00:00:00Z",
+    expiresAt: "2026-12-01T00:00:00Z",
+    monitorLimits: {
+      maximumSignalAgeMs: 60000,
+      complaintRate: 0.1,
+      correctionRate: 0.5,
+      latencyMs: 1000,
+      costUsd: 10,
+      fairnessDisparity: 0.1,
+      errorRate: 0.05,
+    },
+  };
+  const authority: EvaluationClaimAuthority = {
+    authorize: (b) =>
+      b.cardHash === hashEvaluationClaimCard(card) &&
+      b.reportPayloadHash === hashLockedEvaluationReport(report) &&
+      b.sourceHash === card.bindings.sourceHash &&
+      b.lockHash === report.lockHash &&
+      b.policyHash === report.calibrationHash,
+  };
+  return { calibration, report, card, authority };
+}
+const pipeline = () => (evaluated ??= evaluationFixture());
+describe("offline receipts cannot confer runtime score authority", () => {
+  it("successful synthetic calibration/evaluation/technical claim never adopts a numerical policy", async () => {
+    const f = await pipeline();
+    expect(f.calibration.productionAdoptionAllowed).toBe(false);
+    expect(f.calibration.representativeCalibrationEligible).toBe(false);
+    expect(f.report.releaseReady).toBe(false);
+    expect(f.report.representativeReady).toBe(false);
+    expect(f.report.evidenceTier).toBe("synthetic_engineering");
+    const claim = assessEvaluationClaim(
+      f.card,
+      f.report,
+      "2026-11-08T00:00:00Z",
+      f.authority,
+    );
+    expect(claim.status).toBe("eligible");
+    expect(claim.activationAllowed).toBe(false);
+    withheld(buildScoreDiagnostics(scoreFixture()));
+    expect(getDraftScorePolicy().calibrationReceipt).toBeNull();
+  });
+  it.each([
+    "locked-test",
+    "tampered-lock",
+    "wrong-source",
+    "wrong-source-hash",
+  ] as const)(
+    "rejects %s calibration provenance without production adoption",
+    async (mode) => {
+      const f = calibrationFixture();
+      if (mode === "locked-test") f.input.partition = "locked_test";
+      if (mode === "tampered-lock")
+        f.input.lock = { ...f.input.lock, lockHash: "0".repeat(64) };
+      if (mode === "wrong-source")
+        f.observations[0].sourceId = f.lock.records.find(
+          (r) => r.partition === "locked_test",
+        )!.id;
+      if (mode === "wrong-source-hash")
+        f.observations[0].sourceHash = "0".repeat(64);
+      const reader = vi.fn(() => f.observations);
+      const result = await proposeEvaluationCalibration(f.input, reader);
+      expect(result.status).toBe("rejected");
+      expect(result.productionAdoptionAllowed).toBe(false);
+      if (mode === "locked-test" || mode === "tampered-lock")
+        expect(reader).not.toHaveBeenCalled();
+      withheld(buildScoreDiagnostics(scoreFixture()));
+    },
+  );
+  it.each([
+    "expired",
+    "wrong-domain",
+    "wrong-locale",
+    "wrong-source",
+    "tampered-report",
+    "missing-authority",
+    "higher-claim",
+  ] as const)(
+    "withholds numerical release for %s claim evidence",
+    async (mode) => {
+      const f = await pipeline(),
+        card = structuredClone(f.card),
+        report = structuredClone(f.report);
+      if (mode === "wrong-domain") card.scope.domain = "healthcare";
+      if (mode === "wrong-locale") card.scope.locale = "US";
+      if (mode === "wrong-source") card.bindings.sourceHash = "0".repeat(64);
+      if (mode === "tampered-report") report.measuredDocumentCount += 1;
+      if (mode === "higher-claim") card.claim = "Corpus-validated";
+      const result = assessEvaluationClaim(
+        card,
+        report,
+        mode === "expired" ? "2026-12-02T00:00:00Z" : "2026-11-08T00:00:00Z",
+        mode === "missing-authority" ? undefined : f.authority,
+      );
+      expect(result.status).not.toBe("eligible");
+      expect(result.activationAllowed).toBe(false);
+      expect(result.higherClaimEligible).toBe(false);
+      withheld(buildScoreDiagnostics(scoreFixture()));
+    },
+  );
+});

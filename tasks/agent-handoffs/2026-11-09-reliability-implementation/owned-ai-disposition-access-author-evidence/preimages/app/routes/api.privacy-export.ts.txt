@@ -1,0 +1,94 @@
+import { getAuthenticatedUser } from "~/lib/server/auth";
+import {
+  filterBlockingDeletions,
+  deletionAccessState,
+} from "~/lib/server/privacy-deletion-policy";
+import {
+  methodNotAllowedResponse,
+  PublicApiError,
+  toErrorResponse,
+} from "~/lib/server/errors";
+import { requestIdFrom } from "~/lib/server/request-context";
+import {
+  createSupabaseAdminClient,
+  createSupabaseServerClient,
+} from "~/lib/server/supabase";
+
+async function requireExportAccess(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+) {
+  const query = admin
+    .from("data_requests")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("kind", "deletion");
+  filterBlockingDeletions(query);
+  const result = await query.limit(1);
+  const state = deletionAccessState(result);
+  if (state === "unavailable") {
+    throw new PublicApiError(
+      "SERVICE_UNAVAILABLE",
+      "Privacy access is unavailable. Try again later.",
+      503,
+      true,
+    );
+  }
+  if (state === "blocked") {
+    throw new PublicApiError("NOT_FOUND", "Export not found.", 404);
+  }
+}
+
+export async function loader({
+  request,
+  params,
+}: {
+  request: Request;
+  params: { id?: string };
+}) {
+  const requestId = requestIdFrom(request);
+  if (request.method !== "GET") {
+    return methodNotAllowedResponse(requestId, ["GET"]);
+  }
+  try {
+    const headers = new Headers({ "X-Request-Id": requestId });
+    const user = await getAuthenticatedUser(
+      createSupabaseServerClient(request, headers),
+    );
+    if (!user) {
+      throw new PublicApiError(
+        "UNAUTHENTICATED",
+        "Sign in to download your export.",
+        401,
+      );
+    }
+    if (!params.id) {
+      throw new PublicApiError("NOT_FOUND", "Export not found.", 404);
+    }
+    const admin = createSupabaseAdminClient();
+    await requireExportAccess(admin, user.id);
+    const { data, error } = await admin
+      .from("data_requests")
+      .select("id, result_manifest")
+      .eq("id", params.id)
+      .eq("user_id", user.id)
+      .eq("kind", "export")
+      .eq("status", "completed")
+      .maybeSingle();
+    if (error || !data?.result_manifest) {
+      throw new PublicApiError("NOT_FOUND", "Export not found.", 404);
+    }
+    await requireExportAccess(admin, user.id);
+    return Response.json(data.result_manifest, {
+      headers: {
+        ...Object.fromEntries(headers),
+        "Cache-Control": "no-store",
+        "Content-Disposition": 'attachment; filename="resumide-export.json"',
+      },
+    });
+  } catch (error) {
+    const response = toErrorResponse(error, requestId);
+    response.headers.set("Cache-Control", "no-store");
+    return response;
+  }
+}

@@ -1,0 +1,86 @@
+# Proposed upload-admission retirement repair
+
+Status: PROPOSED DESIGN; policy and implementation allocation pending. Prepared against dirty HEAD `a0b239299d75b0bd64b588fe743ebe2975fb28b9`. This document changes no application, SQL, grants or flags. No tests, SQL parsing/execution, services, network, database or browser ran. Root owns the canonical task sequence and acceptance.
+
+## Decision boundary
+
+The owner still needs to choose **erasure or approved unlinking** for non-AI admission metadata, including any necessary restricted retry/disposition record. Neither option is selected here. The decision must state permitted fields, purpose/access, start event, maximum duration, expiry and restore treatment. A retry or migration must not silently restart a clock. Unknown historical clocks stay unknown until repaired with evidence.
+
+[ADR-0020](../../../docs/decisions/0020-owned-ai-accounting-retention.md) already accepts a 30-day maximum for linkable **AI accounting** metadata after first durable deletion preparation, with original-period attribution and conservative unresolved-cost holds. That decision is preserved, not extended to admission history. `RETENTION_DAYS` selects resume roots; it supplies no independent admission-retention policy. Admission cannot destroy required AI settlement evidence or release unknown spend to enable Auth deletion.
+
+Until policy, implementation and actual acceptance exist, retain exact private cleanup obligations and report the unresolved hold. Holding is a safety response to uncertainty, not permission for indefinite identified retention or a successful erasure claim. A persistent hold needs an accountable repair path and monitoring; it must not become the finished product.
+
+## Current source and missing behavior
+
+The [admission migration](../../../supabase/migrations/20261110080809_analysis_admission_binding.sql), lines 3–47, binds owner/org/idempotency/hash/adopted-upload/time to uploads containing operation/analysis/resume/version/job IDs, exact key, state and time. Auth/organization FKs are RESTRICT, uploads restrict their operation, and `(adopted_upload_id,id)` restricts the adopted upload. Both DELETE triggers always refuse; adopted operations also reject UPDATE. Direct table privileges are revoked.
+
+`cleanup_analysis_admission()` only compensates exact unadopted `prepared → cleanup_pending → cleaned` uploads; durable rows remain. The [ingestion client](../../../app/lib/server/analysis-ingestion.ts) retains ambiguous upload/finalize outcomes rather than deleting a possibly adopted object. Preserve that behavior. The composite binding hash cannot recover missing checksum/size or candidate metadata; use exact surviving source/trusted object evidence, never invented values.
+
+The latest [privacy preparation](../../../supabase/migrations/20261116075250_privacy_export_generation.sql), lines 202–271, captures AI dispositions, plans `resume_versions` objects and deletes content/profile children. It omits admission intents/orphans, Auth and organizations. [Privacy workers](../../../app/lib/server/privacy-worker.ts) remove planned exact keys before completing bookkeeping. [Root retention](../../../supabase/migrations/20261115143547_retention_root_coverage.sql) protects tombstones and exact version-key coverage, not every prepared intent. Its [client](../../../app/lib/server/retention.ts) explicitly distinguishes a timed-out wait from stopped Storage work.
+
+The [cleanup finding](jd-browser-cleanup-gap.md), [privacy map](../../../docs/security/PRIVACY_DATA_MAP.md) lines 44–47/71–82, [CR-R17 dependency on CR-R19](../../reliability-remediation-plan.md#cr-r17) and [current tasks](../../todo.md) already record these adoption gaps.
+
+## Proposed lifecycle and proof
+
+Introduce a purpose-bound retirement operation with an immutable cause, subject/scope, selected policy version, first committed preparation and exact closure. These are proposed concepts, not allocated table/RPC names or a new authority marker. Persist only policy-approved metadata. The binding must come from an actual owned deletion request with its current database-issued attempt/generation/live lease, or a distinct admitted root-retention operation with its narrower scope. A browser fixture or arbitrary owner UUID is not authority.
+
+1. **Fence and enroll.** Reuse the candidate-owner lock domain/write barrier under supported transaction isolation; avoid reverse blocking while holding row locks and recheck durable access state after acquisition. Account deletion covers every owned operation across organizations and departed memberships. Root retirement covers only proven root scope; an operation spanning other uploads cannot be wholly retired without complete eligible closure. Bounded batches must prove exhaustion. Fence new prepare/finalize/replay/source writes; unknown ownership, skipped locks or corrupt references hold completion.
+2. **Capture obligations.** Before erasing supporting sources, persist exact relationships for adopted, prepared, pending, cleaned, abandoned and duplicate-loser uploads. Validate surviving owned analysis/resume/version/job/key bindings. A cleaned marker does not exclude a late upload. Coalesce physical obligations only with exact shared-reference proof; never delete by prefix.
+3. **Quiesce and reconcile.** Resolve lost responses from durable state. Check actual owned jobs/attempts/fences and outcomes; live work, conflicts and unknown external writes hold retirement. The [worker lease contract](../../../supabase/migrations/20261110080810_lease_fencing_and_verification_scope.sql) fences database writes. Expired/dead-lettered leases do not prove that a process or remote request stopped.
+4. **Drain objects.** An admission intent has no upload lease, and Storage runs outside its transaction. Pair a new durable retirement/intake fence with trusted writer revocation/drain and exact late-write reconciliation. Checks before/after upload cannot atomically cancel an external write; invent no maximum request lifetime. If no-late-write proof is unavailable, retain the obligation and refuse final retirement. Remove only the admitted bucket/key, recording the outcome and trusted absence evidence required by the reviewed adapter. Acknowledgement, absence and cancellation are distinct evidence.
+5. **Finalize.** Revalidate authority, attempt/generation/lease, enrollment, receipts and absence of new references. Apply the selected disposition atomically to the exact closure. Distinguish prior committed retirement from corruption/lost response; absence alone is insufficient. Wider owner completion still requires every other store/object.
+
+Enrollment and finalization are database transactions; Storage/Auth calls are external steps in a durable recoverable operation, not a claimed cross-service atomic transaction. Repeated calls must preserve the first event, exact scope and completed obligations. A stale worker cannot acknowledge or finalize a reclaimed operation. Interruption leaves the barrier and durable plan usable by the legitimate successor.
+
+## Erase versus unlink: implementation alternatives
+
+**Erasure:** a reviewed terminal transition could permit only clearing the adopted pointer, deleting its complete uploads and then its operation inside one authorized transaction. This example resolves the FK cycle; it is not approval to change that pointer today. Ordinary mutation remains denied. Required retry proof must survive Auth/request cascades.
+
+**Unlinking:** decide necessary fields, location and expiry. Removing Auth FKs or copying rows is insufficient: storage paths, org/source/job/operation IDs, idempotency keys, hashes and times can reconnect subjects. Encryption/hashing is not anonymity. Any remaining mapping is personal metadata with export/access/expiry obligations. Preserve no-new-work/replay safety without enabling a second job through erased idempotency history.
+
+No broad CASCADE, disabled trigger, superuser maintenance, caller-set marker or general service-role bypass. Derive the narrowly allowed transition from protected durable state through a fixed definer path. Preserve historical receipts/migrations and default-off flags.
+
+## Auth, organizations, export and restore
+
+Admission retirement does not authorize Auth/org deletion. Inventory remaining AI, reconciliation-actor, request, audit and old export links. Owner export must include all retained admission records across organizations/flags or fail explicitly; include abandoned intents without content parents. Keep content, credentials and authority tokens out of logs.
+
+Account deletion is not organization-wide deletion. Existing owner-Auth cascades may affect other members: require authorized transfer/disposition or refuse, preserving foreign-owner data and accounting. A fixture must prove exclusive ownership, not infer it from a synthetic label. Test session/token/signed-URL invalidation separately from an Auth response.
+
+Old completed/failed/cancelled requests cannot manufacture authority or restart clocks. Missing intent/source/object proof enters historical repair; do not synthesize it. Cover old manifests and duplicated personal linkage, not just the latest export. Root retention remains narrower than account deletion.
+
+Reapply durable retirement/non-admission before restored data serves or writers resume. The [restore foundation](../../../app/lib/server/restore-admission.ts) requires independently available journal state surviving Auth/request cascades. Pre-retirement backups must not revive upload/replay, lose object obligations or restart deadlines. Journal linkage/duration also requires the selected policy.
+
+## Proposed forward migration and least privilege
+
+After policy and explicit allocation, propose an additive forward migration with exact preimages/postimages/catalogue/ACL checks and affected readiness/profile successors. Add protected retirement/obligation state, narrowly revise the circular-FK/immutable lifecycle, and pair preparation/finalization/export consumers. Split into ordered migrations if inventory requires. No filename, grant, SQL implementation or execution is allocated now.
+
+Keep private RLS/no broad policies/no direct anon/authenticated/service-role DML. Fixed definer RPCs use empty search paths and enforce actual worker authority plus owner/scope/attempt/generation in SQL. Metadata readiness grants no mutation authority; private helpers remain inaccessible. Only the minimum approved worker RPC grant follows staged adoption. No global queue claim, arbitrary-owner purge or dynamic SQL. The target/exact DDL approval remains separately pending.
+
+## Acceptance matrix: required future evidence
+
+Every row is a requirement, not a claimed pass. Source/unit checks can establish validation branches; actual roles, transactions, Storage/Auth and process races need an admitted direct-Supabase target and separately approved actors.
+
+| Case                                              | Required result and evidence                                                                                                                          |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Adopted success and exact replay                  | Full owned closure enrolled; replay cannot recreate work after retirement; object and metadata disposition follow policy.                             |
+| Unadopted prepared/pending/cleaned                | Every intent included; known absent, deleted and unknown outcomes remain distinct; no successful compensation is counted as ledger erasure.           |
+| Multiple uploads and duplicate loser              | Adopted winner is protected during ordinary compensation; retirement covers all exact uploads without double deletion or broad prefix matching.       |
+| Lost upload/finalize response                     | Resolve against durable state; adopted object is not deleted as a losing upload; unknown external outcome holds finalization.                         |
+| Live/stale/expired lease and reclaimed worker     | Exact current worker attempt/generation required; stale acknowledgements rejected; expiry alone cannot certify remote quiescence.                     |
+| Concurrent prepare/finalize/replay                | Owner fence serializes the transition; no post-enrollment row/object escapes the complete plan.                                                       |
+| Late Storage write after absence check            | Trusted drain/revocation plus reconciliation prevents resurrection, or retirement stays explicitly held.                                              |
+| Concurrent root retention/privacy preparation     | Same owner/root lock order, exact scope and receipts; no deadlock-driven authority expansion or lost obligation.                                      |
+| Storage denial, timeout, late completion          | Durable retry plan survives; no invented stopped request, absence or full-cleanup receipt.                                                            |
+| SQL exception at each finalization boundary       | Entire database transition rolls back; prior external deletions remain recorded/reconcilable; source rows cannot silently become untracked.           |
+| Duplicate command or lost final response          | Exact idempotent committed result, unchanged first clock and no repeated destructive scope.                                                           |
+| FK cycle and immutable triggers                   | Only the authorized terminal transition succeeds; direct pointer change, row delete and unrelated mutation fail.                                      |
+| anon/authenticated/service-role roles             | Direct/private helper access denied; permitted worker RPC still refuses forged owner, request, attempt, generation and object scope.                  |
+| Foreign owner or shared organization              | No foreign data, memberships or accounting erased; missing transfer/exclusive-owner proof blocks organization/Auth disposition.                       |
+| Historical missing source/intent/receipt          | Explicit repair hold; no synthesized checksum, lease, clock or deletion history.                                                                      |
+| Account export with flags off/departed membership | Every retained admission collection included or whole export fails explicitly; no raw content/authority leakage.                                      |
+| Restore before preparation/finalization           | Independent disposition reapplied before serving/writing; no clock restart, identity resurrection or missing outstanding object plan.                 |
+| AI linkage and unresolved spend                   | Original-month usage and unknown holds preserved under ADR-0020; admission repair grants no provider or accounting purge bypass.                      |
+| Auth deletion and session recovery                | Exact remaining FK/actor inventory clears; old-session behavior tested independently; no Auth-only full-erasure assertion.                            |
+| Resource bounds and interruption                  | Bounded batches prove total coverage; crash/restart preserves all obligations, fences and stable clock; failure remains retryable or explicitly held. |
+
+Smallest safe implementation slice after policy: a default-denied retirement enrollment/proof foundation for the two admission stores, including immutable cause/clock, all-intent/object closure, protected authority and mandatory owner export, with focused source/mock regressions. Keep destructive finalization unavailable until writer/Storage quiescence proof and the chosen erase/unlink lifecycle are implemented together with their role/race tests. Then integrate exact privacy/retention consumers and native verification in dependency order. This staging makes a concrete prerequisite testable; it does not complete the browser fixture, CR-R17/CR-R19, Auth erasure or release acceptance.

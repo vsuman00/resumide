@@ -1,0 +1,13 @@
+# Dedicated JD2 browser harness source
+
+Implemented source only. The fixed Root build binding has `expectedTargetUrl: null`, so the dedicated configuration and server entry refuse before fixture access, application import or serving. No target or worker execution is approved by this leaf.
+
+The helper composes the existing managed owned-fixture guard with strict managed URL and browser declaration checks using the passed environment. It has no legacy localhost bypass or ambient browser-environment dependency. It checks the actual pinned Node/Unicode/ICU/V8 versions, feature values, provider sentinel, private ledgers, and regular source/artifact bytes. It rejects missing, changed, symlinked and extra build files. These are local configuration and point-in-time integrity checks, not project isolation, management identity or owner permission.
+
+Production callers read only the fixed Root JSON. The optional local-root parameter exists for disposable-filesystem unit fixtures. Synthetic positive tests do not change the production target binding. The returned web environment contains an explicit allowlist; proxy, PostgreSQL, dotenv, Node injection and unrelated provider settings are refused or excluded before application imports. Native layout, AI, Build, export, rewrite, correction and initial-feedback features stay off for this journey.
+
+The new configuration selects only `jd-clause-order.journey.ts`, one Chromium worker, no retries, no server reuse, port 3110, and no screenshot, trace, video or persisted storage state. Its quoted command invokes the new exact `--serve` entry, which validates, replaces the inherited environment, then imports the existing server. The Playwright parent must also be launched with the separately reviewed sealed environment. The real matching worker remains an external operator action requiring separate isolated/global-worker approval.
+
+Final author checks pass 78 local synthetic cases and scoped three-file lint/format checks. The first run passed 77 cases with one formatting-sensitive source-order assertion failure; correcting its lookup changed no product behavior. The first lint failure was an unused import. Both receipts are preserved in `/private/tmp/resumide-jd-browser-runtime/release.json`, with final hashes, snapshots and process cleanup evidence.
+
+No browser, server, worker, PDF parser, hosted request, SQL, provider, environment file, deployment or feature activation ran. Existing configurations, guards, package scripts and application code are unchanged. This future journey is not included in default browser discovery and has not supplied browser acceptance; its dedicated campaign and remaining Native/cleanup/consumer checks remain open.

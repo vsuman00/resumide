@@ -1,0 +1,52 @@
+
+declare a public.analyses%rowtype; r public.resumes%rowtype; v public.resume_versions%rowtype;
+  e public.document_evidence_attempts%rowtype; h public.canonical_resume_versions%rowtype;
+  review_max bigint; review_count bigint; assignment_max bigint; assignment_count bigint; initial_owner uuid;
+begin
+  select owner_id into initial_owner from public.analyses where id=p_analysis_id;
+  if initial_owner is distinct from p_user_id or p_user_id is null then perform private.correction_fail('not_found'); end if;
+  -- Only the frozen candidate owner, before ANY row lock. Never add owners later.
+  perform private.lock_candidate_owners(array[p_user_id]);
+  if not private.try_candidate_privacy_write(p_user_id) then perform private.correction_fail('not_found'); end if;
+  select root.* into r from public.resumes root join public.resume_versions source on source.resume_id=root.id
+    join public.analyses analysis on analysis.resume_version_id=source.id
+    where analysis.id=p_analysis_id and analysis.owner_id=p_user_id and source.owner_id=p_user_id
+      and root.owner_id=p_user_id and source.organization_id=analysis.organization_id and root.organization_id=analysis.organization_id
+    for update of root;
+  if not found or r.status<>'active' then perform private.correction_fail('not_found'); end if;
+  select * into a from public.analyses where id=p_analysis_id and owner_id=p_user_id and organization_id=r.organization_id for update;
+  if not found then perform private.correction_fail('not_found'); end if;
+  perform 1 from public.memberships where organization_id=r.organization_id and user_id=p_user_id and role in ('owner','admin','member') for share;
+  if not found then perform private.correction_fail('not_found'); end if;
+  select * into v from public.resume_versions where id=a.resume_version_id and resume_id=r.id
+    and owner_id=p_user_id and organization_id=r.organization_id for share;
+  if not found then perform private.correction_fail('not_found'); end if;
+  select * into e from public.document_evidence_attempts where analysis_id=a.id
+    order by attempt_number desc limit 1 for share;
+  if not found or (e.owner_id,e.organization_id,e.resume_version_id,e.input_sha256)
+    is distinct from (p_user_id,r.organization_id,v.id,v.checksum)
+    or e.envelope->>'id' is distinct from e.id::text or e.envelope->>'analysisId' is distinct from a.id::text
+    or e.envelope->>'ownerId' is distinct from p_user_id::text or e.envelope->>'sourceId' is distinct from v.id::text
+    or e.envelope->>'inputSha256' is distinct from v.checksum or e.envelope->>'schemaVersion' is distinct from 'evidence/2.0.0'
+    or jsonb_typeof(e.envelope->'assertions') is distinct from 'array' or jsonb_typeof(e.envelope->'spans') is distinct from 'array' then
+    perform private.correction_fail('unavailable'); end if;
+  select coalesce(max(revision),0),count(*) into review_max,review_count from public.evidence_corrections where analysis_id=a.id;
+  select coalesce(max(assignment_revision),0),count(*) into assignment_max,assignment_count
+    from public.candidate_correction_assignments where analysis_id=a.id;
+  if review_max>1000 or review_count<>review_max or assignment_max>1000 or assignment_count<>assignment_max
+    or exists(select 1 from public.evidence_corrections where analysis_id=a.id and (owner_id,organization_id) is distinct from (p_user_id,r.organization_id))
+    or exists(select 1 from public.candidate_correction_assignments where analysis_id=a.id
+      and (owner_id,organization_id,resume_id,source_resume_version_id,input_sha256) is distinct from (p_user_id,r.organization_id,r.id,v.id,v.checksum)) then
+    perform private.correction_fail('unavailable'); end if;
+  select version.* into h from public.canonical_resume_heads head join public.canonical_resume_versions version on version.id=head.version_id
+    where head.resume_id=r.id for update of head;
+  if found and ((h.owner_id,h.organization_id,h.source_resume_version_id) is distinct from (p_user_id,r.organization_id,v.id)
+    or h.content->>'analysisId' is distinct from a.id::text or private.canonical_shape_valid(h.content) is not true) then
+    perform private.correction_fail('conflict'); end if;
+  if h.id is not null then perform private.entry_association_validate_head(h.id); end if;
+  return jsonb_build_object('ownerId',p_user_id,'organizationId',r.organization_id,'resumeId',r.id,'analysisId',a.id,
+    'sourceId',v.id,'attemptId',e.id,'inputSha256',v.checksum,'evidenceSchemaVersion','evidence/2.0.0',
+    'fieldExtractorVersion',e.envelope->'fieldExtractorVersion','targetModelVersion','evidence-targets/1.0.0',
+    'projectionModelVersion','canonical-corrections/1.0.1','admissionPolicyVersion','candidate-correction-admission/1.0.0',
+    'reviewRevision',review_max,'assignmentRevision',assignment_max,'headId',h.id,'headRevision',h.revision,'headAttemptId',h.source_evidence_version_id);
+end;

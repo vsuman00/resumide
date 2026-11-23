@@ -1,0 +1,109 @@
+--- a/tests/common.h
++++ b/tests/common.h
+@@ -63,7 +63,10 @@
+ #  define _XCS(s) L##s
+ #else
+ #  ifdef XML_UNICODE
+-#    error "No support for UTF-16 character without wchar_t in tests"
++#    include "resumide_utf16_test.h"
++#    define XML_FMT_STR "s"
++#    define XCS(s) _XCS(s)
++#    define _XCS(s) u##s
+ #  else
+ #    define XML_FMT_STR "s"
+ #    define XCS(s) s
+--- a/tests/basic_tests.c
++++ b/tests/basic_tests.c
+@@ -952,7 +952,7 @@
+         snprintf(buffer, sizeof(buffer),
+                  "attribute value not normalized: %" XML_FMT_STR
+                  "='%" XML_FMT_STR "'",
+-                 attrname, value);
++                 resumide_utf16_diag(attrname), resumide_utf16_diag(value));
+         fail(buffer);
+       }
+     }
+--- a/tests/handlers.c
++++ b/tests/handlers.c
+@@ -199,12 +199,12 @@
+   char buffer[1024];
+   if (xcscmp(elemstr[0], name) != 0) {
+     snprintf(buffer, sizeof(buffer),
+-             "unexpected start string: '%" XML_FMT_STR "'", name);
++             "unexpected start string: '%" XML_FMT_STR "'", resumide_utf16_diag(name));
+     fail(buffer);
+   }
+   if (xcscmp(elemstr[1], atts[0]) != 0) {
+     snprintf(buffer, sizeof(buffer),
+-             "unexpected attribute string: '%" XML_FMT_STR "'", atts[0]);
++             "unexpected attribute string: '%" XML_FMT_STR "'", resumide_utf16_diag(atts[0]));
+     fail(buffer);
+   }
+   g_triplet_start_flag = XML_TRUE;
+@@ -220,7 +220,7 @@
+   if (xcscmp(elemstr[0], name) != 0) {
+     char buffer[1024];
+     snprintf(buffer, sizeof(buffer),
+-             "unexpected end string: '%" XML_FMT_STR "'", name);
++             "unexpected end string: '%" XML_FMT_STR "'", resumide_utf16_diag(name));
+     fail(buffer);
+   }
+   g_triplet_end_flag = XML_TRUE;
+--- a/tests/structdata.c
++++ b/tests/structdata.c
+@@ -48,6 +48,7 @@
+ #include "structdata.h"
+ #include "minicheck.h"
+ #include "../lib/xcs.h"
++#include "resumide_utf16_test.h"
+ 
+ #define STRUCT_EXTENSION_COUNT 8
+ 
+@@ -134,7 +135,7 @@
+           snprintf(buffer, sizeof(buffer),
+                    "struct '%" XML_FMT_STR
+                    "' expected (%d,%d,%d), got (%d,%d,%d)",
+-                   got->str, want->data0, want->data1, want->data2, got->data0,
++                   resumide_utf16_diag(got->str), want->data0, want->data1, want->data2, got->data0,
+                    got->data1, got->data2);
+           StructData_Dispose(storage);
+           fail(buffer);
+--- /dev/null
++++ b/tests/resumide_utf16_test.h
+@@ -0,0 +1,25 @@
++/* Test-only C11 adapter for the unchanged Debian UTF-16/non-wchar ABI. */
++#ifndef RESUMIDE_UTF16_TEST_H
++#define RESUMIDE_UTF16_TEST_H
++#include <stdio.h>
++#include <uchar.h>
++_Static_assert(sizeof(XML_Char) == 2, "native XML_Char must remain UTF-16");
++_Static_assert(_Generic((char16_t *)0, XML_Char *: 1, default: 0),
++               "C11 UTF-16 literals must match the existing XML_Char type");
++/* ponytail: upstream tests are single-threaded; four buffers preserve printf argument independence. */
++static inline const char *resumide_utf16_diag(const XML_Char *value) {
++  static char buffers[4][256];
++  static unsigned slot;
++  char *output = buffers[slot++ % 4];
++  size_t used = 0;
++  if (value == NULL) return "(null)";
++  while (*value && used + 10 < 256) {
++    unsigned unit = *value++;
++    if (unit >= 32 && unit <= 126 && unit != 92) output[used++] = (char)unit;
++    else { snprintf(output + used, 256 - used, "\\u%04x", unit); used += 6; }
++  }
++  if (*value) { output[used++] = '.'; output[used++] = '.'; output[used++] = '.'; }
++  output[used] = 0;
++  return output;
++}
++#endif
+--- a/tests/misc_tests.c
++++ b/tests/misc_tests.c
+@@ -224,7 +224,7 @@
+   if (! versions_equal(&read_version, &parsed_version))
+     fail("Version mismatch");
+ 
+-  if (xcscmp(version_text, XCS("expat_2.10.0"))
++  if (strcmp(version_text, "expat_2.10.0")
+       != 0) /* needs bump on releases */
+     fail("XML_*_VERSION in expat.h out of sync?\n");
+ }

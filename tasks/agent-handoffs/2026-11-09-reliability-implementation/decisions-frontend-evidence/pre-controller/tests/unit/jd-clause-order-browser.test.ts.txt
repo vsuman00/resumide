@@ -1,0 +1,107 @@
+import { webcrypto } from "node:crypto";
+import { afterAll, beforeAll, expect, it, vi } from "vitest";
+import vectors from "../../tasks/agent-handoffs/2026-11-09-reliability-implementation/decisions-golden-vectors.json";
+import { createJdClauseOrderFixture, jdClauseOrderFixtureId as id } from "../fixtures/jd-clause-order";
+import { buildClauseOrderProposal, clauseOrderCommandSha256 as nodeCommandSha256 } from "../../app/lib/server/clause-order-authoring";
+import { clauseOrderCommandAtoms, clauseOrderCommandSha256, JdClauseOrderCommandSchema, JdClauseOrderProposalSchema, validateClauseOrderProposal, validateClauseOrderReceipt, type JdClauseOrderProposal } from "../../app/lib/jd-clause-order-decisions";
+import { encodeClauseOrderCommandAtoms } from "../../app/lib/jd-clause-order-decisions";
+
+beforeAll(() => { vi.stubGlobal("crypto", webcrypto); });
+afterAll(() => { vi.unstubAllGlobals(); });
+
+it("frames null, empty and multibyte atoms in exact A11OP2 UTF8 bytes", () => {
+  const bytes = encodeClauseOrderCommandAtoms([null, "", "é", "🙂"]);
+  expect(Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("")).toBe("4131314f50320a4e3b54303a3b54323ac3a93b54343af09f99823b");
+});
+it("preserves atom boundaries and Unicode bytes without normalizing text", () => {
+  expect(encodeClauseOrderCommandAtoms(["a", "bc"])).not.toEqual(encodeClauseOrderCommandAtoms(["ab", "c"]));
+  expect(encodeClauseOrderCommandAtoms([null])).not.toEqual(encodeClauseOrderCommandAtoms([""]));
+  expect(encodeClauseOrderCommandAtoms(["é"])).not.toEqual(encodeClauseOrderCommandAtoms(["e\u0301"]));
+});
+it.each<string>(["\u0000", "\ud800", "\udfff", "x\ud800y"])("rejects non-Postgres text %j before UTF8 replacement", atom => {
+  expect(() => encodeClauseOrderCommandAtoms([atom])).toThrow("CLAUSE_ORDER_CODEC_TEXT");
+});
+it("enforces exact atom and framed-byte bounds", () => {
+  expect(encodeClauseOrderCommandAtoms(Array(256).fill(null))).toHaveLength(519);
+  expect(() => encodeClauseOrderCommandAtoms(Array(257).fill(null))).toThrow();
+  expect(encodeClauseOrderCommandAtoms(["x".repeat(16369)])).toHaveLength(16384);
+  expect(() => encodeClauseOrderCommandAtoms(["x".repeat(16370)])).toThrow();
+});
+
+it.each(vectors.vectors)("matches independent Python framing and SHA $sha256", async vector => {
+  const bytes = encodeClauseOrderCommandAtoms(vector.atoms);
+  expect(Array.from(bytes, b => b.toString(16).padStart(2,"0")).join("")).toBe(vector.framedHex);
+  const digest = await webcrypto.subtle.digest("SHA-256",bytes);
+  expect(Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2,"0")).join("")).toBe(vector.sha256);
+});
+
+async function actualProposal() {
+  const f = await createJdClauseOrderFixture();
+  return buildClauseOrderProposal(f.context, {analysisId:f.owned.analysisId,ownerId:f.owned.ownerId}, {canonicalVersionId:f.context.canonical.versionId,requirementVersionId:f.context.requirements.versionId,clauseId:f.context.requirements.content.relations.clauses[0].id,targetFactId:f.targetFactId}, {acceptKey:id(90),rejectKey:id(91)});
+}
+it("validates actual Node producer output without changing ordered draft identity", async () => {
+  const p = await actualProposal();
+  expect(await validateClauseOrderProposal(p)).toEqual(p);
+  expect(JdClauseOrderProposalSchema.parse(p).draft.sourceClauses[0]).toEqual(p.draft.sourceClauses[0]);
+  expect(Object.keys(JdClauseOrderProposalSchema.parse(p).draft.sourceClauses[0])).toEqual(["index","start","end","text","sha256"]);
+});
+it("agrees with the Node byte hash and includes the key in exact 53+8N command atoms", async () => {
+  const p = await actualProposal(), c = p.acceptCommand;
+  const atoms = clauseOrderCommandAtoms(c);
+  expect(atoms).toHaveLength(53+8*c.sourceCitations.length);
+  expect(atoms.slice(0,5)).toEqual([c.schemaVersion,c.operation,c.idempotencyKey,"true",c.draftId]);
+  expect(atoms[32]).toBe(c.target.bulletId);
+  expect(atoms.slice(43,47)).toEqual(["0",String(c.sourceClauses[0].start),String(c.sourceClauses[0].end),c.sourceClauses[0].sha256]);
+  expect(await clauseOrderCommandSha256(c)).toBe(nodeCommandSha256(c));
+  expect(await clauseOrderCommandSha256(c)).toBe(p.acceptCommandSha256);
+  expect(await clauseOrderCommandSha256({...c,idempotencyKey:id(92)})).not.toBe(p.acceptCommandSha256);
+});
+const malformed: {name:string; change:(p:JdClauseOrderProposal)=>unknown}[] = [
+  {name:"legacy proposal downgrade",change:p=>({...p,schemaVersion:"typed-authoring-proposal/1.0.0"})},
+  {name:"unknown proposal key",change:p=>({...p,canSave:true})},
+  {name:"foreign profile",change:p=>({...p,acceptCommand:{...p.acceptCommand,binding:{...p.acceptCommand.binding,profilesSha256:"0".repeat(64)}}})},
+  {name:"wrong decision policy",change:p=>({...p,acceptCommand:{...p.acceptCommand,decisionPolicy:{...p.acceptCommand.decisionPolicy,sha256:"0".repeat(64)}}})},
+  {name:"unacknowledged acceptance",change:p=>({...p,acceptCommand:{...p.acceptCommand,acknowledgement:false}})},
+  {name:"uppercase UUID wire",change:p=>({...p,acceptCommand:{...p.acceptCommand,idempotencyKey:"ABCDEFAB-CDEF-4ABC-8ABC-ABCDEFABCDEF"}})},
+  {name:"same accept/reject key",change:p=>({...p,rejectCommand:{...p.rejectCommand,idempotencyKey:p.acceptCommand.idempotencyKey}})},
+  {name:"substituted JD clause",change:p=>({...p,rejectCommand:{...p.rejectCommand,jdClauseId:"0".repeat(64)}})},
+  {name:"identity order",change:p=>({...p,acceptCommand:{...p.acceptCommand,transform:{...p.acceptCommand.transform,order:[0,1]}}})},
+  {name:"permuted spans",change:p=>({...p,acceptCommand:{...p.acceptCommand,sourceClauses:[p.acceptCommand.sourceClauses[1],p.acceptCommand.sourceClauses[0]]}})},
+  {name:"duplicate citation range",change:p=>({...p,acceptCommand:{...p.acceptCommand,sourceCitations:[p.acceptCommand.sourceCitations[0],p.acceptCommand.sourceCitations[0]]}})},
+  {name:"free replacement authority",change:p=>({...p,acceptCommand:{...p.acceptCommand,after:p.draft.after}})},
+  {name:"changed reviewed JD quote",change:p=>({...p,draft:{...p.draft,relevance:{...p.draft.relevance,quote:"Unreviewed requirement"}}})},
+  {name:"changed whole source text",change:p=>({...p,draft:{...p.draft,before:p.draft.before+"."}})},
+  {name:"changed reviewed clause bytes",change:p=>({...p,draft:{...p.draft,sourceClauses:[{...p.draft.sourceClauses[0],text:"Different source"},p.draft.sourceClauses[1]]}})},
+  {name:"no-change proposal",change:p=>({...p,draft:{...p.draft,after:p.draft.before}})},
+  {name:"wrong command SHA",change:p=>({...p,acceptCommandSha256:"0".repeat(64)})},
+  {name:"key changed after hashing",change:p=>({...p,acceptCommand:{...p.acceptCommand,idempotencyKey:id(93)}})},
+];
+it.each(malformed)("rejects $name", async ({change}) => {
+  await expect(validateClauseOrderProposal(change(await actualProposal()))).rejects.toThrow();
+});
+it("rejects a self-consistently rehashed wrong after digest against actual reviewed wording", async () => {
+  const p = await actualProposal();
+  p.acceptCommand.afterSha256="0".repeat(64); p.rejectCommand.afterSha256="0".repeat(64);
+  p.acceptCommandSha256=nodeCommandSha256(p.acceptCommand);p.rejectCommandSha256=nodeCommandSha256(p.rejectCommand);
+  await expect(validateClauseOrderProposal(p)).rejects.toThrow();
+});
+it("rejects a fresh accepting base without room for edit and confirmation", async () => {
+  const p = await actualProposal(), c=p.acceptCommand;
+  expect(JdClauseOrderCommandSchema.safeParse({...c,binding:{...c.binding,canonical:{...c.binding.canonical,revision:2147483646},heads:{...c.binding.heads,canonicalHeadRevision:2147483646}}}).success).toBe(false);
+});
+function acceptedReceipt(p:JdClauseOrderProposal) {
+  const c=p.acceptCommand;
+  return {schemaVersion:"jd-clause-order-receipt/2.0.0",status:"applied",action:"accept",idempotencyKey:c.idempotencyKey,commandSha256:p.acceptCommandSha256,draftId:c.draftId,baseVersionId:c.binding.canonical.versionId,baseRevision:c.binding.canonical.revision,requirementVersionId:c.binding.requirements.versionId,requirementRevision:c.binding.requirements.revision,versionId:id(94),revision:c.binding.canonical.revision+2,eventId:id(95),idempotent:true};
+}
+it("accepts a complete exact replay receipt and a zero-head-movement rejection receipt", async () => {
+  const p=await actualProposal(), a=acceptedReceipt(p), c=p.rejectCommand;
+  expect(await validateClauseOrderReceipt(a,p.acceptCommand)).toEqual(a);
+  const rejected={...a,action:"reject",idempotencyKey:c.idempotencyKey,commandSha256:p.rejectCommandSha256,versionId:c.binding.canonical.versionId,revision:c.binding.canonical.revision};
+  expect(await validateClauseOrderReceipt(rejected,c)).toEqual(rejected);
+});
+it.each<[string,unknown]>([
+  ["schemaVersion","typed-authoring-receipt/1.0.0"],["commandSha256","0".repeat(64)],["draftId","0".repeat(64)],["action","reject"],["idempotencyKey",id(99)],["baseVersionId",id(99)],["baseRevision",999],["requirementVersionId",id(99)],["requirementRevision",999],["revision",999],["eventId","not-an-event"],["idempotent","yes"],["extra",true],
+])("rejects a receipt with uncorrelated %s", async (key,value) => {
+  const p=await actualProposal();
+  await expect(validateClauseOrderReceipt({...acceptedReceipt(p),[key]:value},p.acceptCommand)).rejects.toThrow();
+});

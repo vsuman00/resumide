@@ -1,0 +1,106 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "parent": "CR-A13",
+  "design": "backend-a13-scoring-input-design.md",
+  "designSha256": "c2bf87e8257a731d932c33536c5b5e1782166a70360d226f54b383f290289ef6",
+  "contract": "Original design ready|committed worker/read; bound|legacy_unbound saved context; native digest distinct JS checksum; actual requestId nullable audit context; original process/request IDs not replay keys; exact static lease/input/result replay before freshness, ownership/privacy active first.",
+  "workerOwner": "a01_page_backend",
+  "workerFiles": [
+    "app/lib/server/legacy-scoring-input.ts",
+    "tests/unit/legacy-scoring-input.test.ts",
+    "app/lib/server/scoring-stage.ts",
+    "tests/unit/scoring-stage.test.ts",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a13-scoring-input.md"
+  ],
+  "nativeOwner": "pricing_validation",
+  "nativeFiles": [
+    "supabase/migrations/20261115045834_legacy_scoring_input.sql",
+    "app/lib/server/legacy-scoring-input-profile.ts",
+    "tests/unit/legacy-scoring-input-sql.test.ts",
+    "scripts/verify-legacy-scoring-input.sql",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a13-scoring-input.md"
+  ],
+  "privacyOwner": "a01_page_frontend_after_bootstrap_release",
+  "privacyFiles": [
+    "app/lib/server/privacy-worker.ts",
+    "tests/unit/privacy.test.ts",
+    "tests/unit/privacy-operations.test.ts",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a13-scoring-input-privacy.md"
+  ],
+  "coordinatorFiles": [
+    "app/lib/server/config.ts",
+    ".env.example",
+    "tests/unit/config.test.ts"
+  ],
+  "preimage": {
+    "app/lib/server/legacy-scoring-input.ts": null,
+    "tests/unit/legacy-scoring-input.test.ts": null,
+    "app/lib/server/scoring-stage.ts": "fd7d8fa7f9677f03756bf884f80e7470e35ce0b38a5c4f6c1d53dc7984ca86d5",
+    "tests/unit/scoring-stage.test.ts": "8c36593ae4e7d2fa37de178ce8adfa739706148aaac9feeb7d3675767dc6759e",
+    "app/lib/server/config.ts": "6d51eee21b0715ba90b0b4eaf1fba2da6e9f7220d97a0a09dd582293a49311d1",
+    ".env.example": "7d9c176daffb64f861dd36366edbd6a62a6cdeb628d0b3a4e42ae48a05236460",
+    "tests/unit/config.test.ts": "3521a16f289d89d588b049fb431355d8c7560b4d7cb500856e24be15f59315b9",
+    "app/lib/server/privacy-worker.ts": "33f4dca1c3002fd24895e44406d38be14666c264ad9c39c4e18185d215cf6015",
+    "tests/unit/privacy.test.ts": "f5648b20c2ef31ec83b291d3ebe4b2783ac505d5723424c127fefd80af72e4e6",
+    "tests/unit/privacy-operations.test.ts": "d57bb01f031defebfcdfcedced2075fcb5ba13e910ad85ac132007e15662049d"
+  },
+  "defaultFlag": "LEGACY_SCORING_INPUT_ENABLED=false",
+  "acceptance": [
+    "unchanged legacy numeric function/versions/checksum and frozen assertions",
+    "strict bounded proof/current lease/owner/source/JD binding, no fallback when enabled",
+    "atomic old persist/result/proof source; exact replay, no backfill, historical editedJD",
+    "paired failclosed owned export + native cascades before worker adoption",
+    "new native writer and feature disabled; actual SQL transactions/native/privacy/race tests remain open"
+  ],
+  "boundaries": "Source/synthetic/DOM/fakeRPC sealed Node22. NO SQLparse/execution/advisors/DB/hosted/services/provider/env/PII/browser/Docker/dependencies/Git/deploy.",
+  "contractAmendment": {
+    "workerReadSkipped": {
+      "schemaVersion": "legacy-scoring-read/1.0.0",
+      "status": "skipped",
+      "analysisId": "actual owned requestedUUID",
+      "reason": "not_scoring"
+    },
+    "proof": "Native owner/privacy/active source checks before skipped; no unbound backfill or fake context; existing scoring+unbounddet remains unavailable."
+  },
+  "stagingPrivacyLimitation": "All new data RPCs/export denied in staged source, readiness metadata service-readable. New privacy export must failclosed until native adoption; never silently omit snapshots when featureoff. Exact transition to be reviewed before runtime activation.",
+  "privacyWholeAccountContract": "request.organizationId is queue context, not export filter. All rows must match request.userId and row/context/binding/receipt nativeidentity/digest correlations. Multiple ownedorgs accepted; no filtering/skipping by currentmembership or queueorg. Missing/failed/denied/malformed/foreign export failsclosed. No flagoff omission.",
+  "privacyFixtureAmendment": "Only existing fakeRPC adapter adds versioned empty export_legacy_scoring_inputs response; preserve all prior case IDs/assertions, no empty fallback production.",
+  "pureContextValidation": "Expose existing exact checkContext validation for privacy reuse; no weaker duplicate schema/policy or env/provider calls.",
+  "checksumCorrection": {
+    "status": "SOURCE_PEER_RESOLVED_BEFORE_FIRST_ROOT_GATE",
+    "owner": "a01_page_backend",
+    "preimage": {
+      "app/lib/server/legacy-scoring-input.ts": "e5d487996953e2075122a3b20fbcb5d07c4915d41a81291ae5fd13cd3ba8e3e5",
+      "tests/unit/legacy-scoring-input.test.ts": "ac189493702063deb4eeaa7c1d70b4f9d0ff3a856b0ea4f46c75b32b3c8b3c08"
+    },
+    "handoff": "backend-a13-scoring-input-checksum-fix.md",
+    "acceptance": "Reconstruct exact unchanged current producer nested key order; original existing JSchecksum selfconsistency atfinish andsavedread, JSONB-key-reordered realbuilder positive; changedscore/unchangedhash RED. No rescore/newhashalgo/native/schema/profile or oldscorer changes. Native numeric correctness retains trustedworker boundary.",
+    "evidence": "runtime-a13-scoring-input-peer.md",
+    "postimage": {
+      "app/lib/server/legacy-scoring-input.ts": "28aef84b37a6c1ac36139f045e91b7d31cd88346036d7aec85c24b179492fdba",
+      "tests/unit/legacy-scoring-input.test.ts": "73b8fff4cfc5645eee5c05bf289eefbfceb4b42a2e90942316dd3387b052c27f"
+    }
+  },
+  "integratedFiles": {
+    "app/lib/server/legacy-scoring-input.ts": "28aef84b37a6c1ac36139f045e91b7d31cd88346036d7aec85c24b179492fdba",
+    "app/lib/server/scoring-stage.ts": "f9c262acc637e26c3f47bd9f9a50ecce87ec2cd0009d3f767a47eda0a193acb6",
+    "tests/unit/legacy-scoring-input.test.ts": "73b8fff4cfc5645eee5c05bf289eefbfceb4b42a2e90942316dd3387b052c27f",
+    "tests/unit/scoring-stage.test.ts": "6d6ac8dffddbcd74df5920cec5299c0e8829179df6777f87d96a10ce73bb284c",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a13-scoring-input.md": "80d005d5234601973d8f8dbc6dfef2ff9d8dc34b9cf23df189f3c8dabb780e96",
+    "supabase/migrations/20261115045834_legacy_scoring_input.sql": "2cb4e2e684d4f4270085a541911422637b811aba8b02ce668f5dab4833dc8f80",
+    "app/lib/server/legacy-scoring-input-profile.ts": "b18bbcd0242245d3a4b47ddbb1477bc121c7e3c566ef06bd00f0a5b081016b94",
+    "tests/unit/legacy-scoring-input-sql.test.ts": "04308fdc67f82b88a9b71b9dd180d1d7b41e721d115bc30a2e22622988b54094",
+    "app/lib/server/privacy-worker.ts": "5bcd063714e86a0bd7da68a50768b0082fe2b270468bde1a60d88a14aff30e6f",
+    "tests/unit/privacy.test.ts": "0563764fe92e9379fad5b4a5c471ff43004beb120f8f830039ad58c6bbb122dd",
+    "tests/unit/privacy-operations.test.ts": "457e882ac8543f713a5676b3229caca2efa458a478cb2c6feea4d2d84493eddd",
+    "scripts/verify-legacy-scoring-input.sql": "f36c0056a51a562bf44a861c89062c475d79f483ba5edd9a4aabf4358df4fee7",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a13-scoring-input.md": "0204db37f9dc9fb091c2ce2bd3c713c61bf5a73e9716d86638eb2d6139703a30",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a13-scoring-input-privacy.md": "cec766e021881b93582f342831e60074b7cb1e4b50344c67f08806d94f135dcf",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a13-scoring-input-peer.md": "840f3b711e5ed9211a4b08a36250664f23ea06212602157590384244de560152",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a13-scoring-input-checksum-fix.md": "34141fc96046791d124eb0aaf85a6ddb647e1283979fdfbd32e57511a7c7599e",
+    "app/lib/server/config.ts": "fcc54923e0ade3e3171f437470261075fe07ef7d2735df2298e61c44620c007b",
+    ".env.example": "572ad59acaa3ff8ecadee08b76eb8f53e3cd94c18bae065d3e258684459abdd3",
+    "tests/unit/config.test.ts": "ee514f3d5cb0d37e963b4b9abd7d9fd8d6c7dd10ce8746f00997ddd7fbd20c4d"
+  }
+}

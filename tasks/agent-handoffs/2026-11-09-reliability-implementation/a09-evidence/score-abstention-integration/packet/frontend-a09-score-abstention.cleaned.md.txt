@@ -1,0 +1,33 @@
+# A09 typed JD score and proposal abstention
+
+Stored typed requirements now stop with an actionable `503` before the legacy scoring engine. The two affected test files passed all 34 cases after synchronization with admission module `488af6707e3a0669b5ab4b6baa387f249e12c56355e8c42c680b4ddf2658282a`. Scoped static checks passed. Root owns integration and the final combined gate; A09/A10, native acceptance and release remain open.
+
+## Scope and behavior
+
+This four-file leaf follows `a09-score-abstention-allocation.json`, SHA-256 `c91e147bbad271afbdb097e42e7abb4278279e1508d3944cba31cb39bf65b875`, on base `a0b239299d75b0bd64b588fe743ebe2975fb28b9` with preserved dirty inputs. The frozen wire SHA-256 is `181ed171444fdb114e00c45e771dcb4419cba9ac70f25daba62de7e6c50f9d3b`.
+
+The score repository checks the selected stored discriminator after its existing owned reads, canonical binding, expected-head checks and document-evidence integrity checks. A `requirements/2.0.0` document raises `CanonicalError(503)` with a message directing the candidate to the saved JD review and explaining that scoring diagnostics and proposals await typed coverage. Current and historical typed versions have the same boundary. No typed content is converted into legacy observations or independent keyword credit.
+
+The production delta against the allocated dirty baseline contains only that guard, a local document binding and the narrowed engine argument. The engine's strict legacy input remains unchanged. Legacy and no-JD diagnostics still withhold authoritative numbers, and their final ownership/privacy, head and analysis-job checks remain byte-identical.
+
+The score route waits for diagnostics before loading authoring. Its new case enables authoring, injects the safe repository failure and verifies the actionable `503`, private no-store/noindex headers and zero proposal-loader calls. Source inspection also confirms that accept/reject calls the same read model before suggestion validation/rebuilding and preserves `CanonicalError` before its save RPC. That action path was inspected rather than separately executed here. Canonical-only clarification and manual editing keep their existing scope.
+
+## Reproduction and verification
+
+The preserved RED run used the actual score repository with validated complete stored-v2 fixtures from local relation discovery and mocked owned readers/storage. Current and historical selections each reached the real legacy engine once and returned its generic integrity `422`; both failed the expected explicit `503` and zero-engine-call assertions. The failure was behavioral, with no missing helper or import failure.
+
+After the fix and reviewed admission-module sync, the sealed Node `v22.23.4` run passed 34 cases across `score-snapshot-binding.test.ts` and `score-v2-route.test.ts`. The 17 new cases cover typed current/history abstention; owned-reader denials; stale expected-head precedence over evidence failures; evidence binding/storage failures; legacy/no-JD diagnostics and withheld dimensions; final legacy head/job/privacy checks; and private route error propagation before proposals. All nine original declarations, representing 17 prior cases, remain byte-identical and passed.
+
+Scoped TypeScript used three roots, three ambient inputs and 466 source files with zero diagnostics. Scoped ESLint, Prettier, diff and preservation checks passed. The test/static receipts bind stable source hashes and absent owned process groups. Configuration was synthetic and dotenv loading was disabled. No database, provider or Docker operation ran; no real environment, owner data, Git mutation or deployment was used. Browser, native database, RLS/concurrency and full integrated build acceptance are outside this evidence.
+
+## Receipts and frozen source
+
+Receipts are in `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a09-score-wqwtz7uk/`: `baseline.json`, original source snapshots, `red.json/log`, `green.json/log`, individual static receipts/logs, `assertion-preservation.json`, prose reports and `final-source-packet.json`. Source snapshots retain the pre-change state. Root can archive this packet before the temporary directory is removed.
+
+| File | SHA-256 |
+| --- | --- |
+| `app/lib/server/score-v2-repository.ts` | `4127d2bca52f59936654ee8ba0b46bd4db79ed2bf3a03984756d3965c6fe0549` |
+| `tests/unit/score-snapshot-binding.test.ts` | `d5605d0cbe47b61b67f23ce2326e93bdb9e88b9235c2257b2336d41619752b5a` |
+| `tests/unit/score-v2-route.test.ts` | `cf20bf99bfd4c1c7359166b84b9ed83614270f120eb01217f9724ace528056de` |
+
+The terminal packet records this handoff's separate final hash. Root owns shared contracts, migration order, task status and `CONTEXT.md`.

@@ -1,0 +1,363 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { INITIAL_FEEDBACK_PUBLICATION_PROFILE as publicationProfile } from "../../app/lib/server/initial-feedback-publication-profile";
+// Historical source-profile snapshot; every original assertion remains unchanged.
+const operationProfile = Object.freeze({
+  schemaVersion: "initial-feedback-operation-readiness/1.0.0",
+  profileVersion: "initial-feedback-operation-profile/1.0.0",
+  checkerSha256:
+    "a88195b8cc89503549d43a9fe23f649bd9b4d9abecdad8461974f3ed9c7e1b9d",
+  prepareSha256:
+    "93b7af8445710cd105e2da67eb27f7d9b8d9c52cd7ec924a6ab6f6aa69548f92",
+  claimSha256:
+    "335cef3a4e4f948b4c3b3c17ea9a3159368cab5df6e5a7a1389bc0f46759766a",
+  settleSha256:
+    "739919dedaa5080c4bb8f3c556a9f9b1528fb88747edef9764588bd9038d4148",
+  metadataSha256:
+    "8b38d923165d34fab6a4462cf9940a0447e501cc74ec657b93efc569953fe5e7",
+});
+
+// Source-byte/protocol controls ONLY. This never parses or executes SQL.
+const read = (path: string) =>
+  readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+const sql = read(
+  "supabase/migrations/20261115081345_initial_feedback_publications.sql",
+);
+const previous = read(
+  "supabase/migrations/20261115072701_initial_feedback_operations.sql",
+);
+const hash = (s: string) =>
+  createHash("sha256").update(s, "utf8").digest("hex");
+const bodyIn = (text: string, name: string) => {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const m = new RegExp(
+    `create(?: or replace)? function ${escaped}\\([\\s\\S]*?\\)\\s*returns [\\s\\S]*?\\bas\\s+(\\$[A-Za-z0-9_]*\\$)([\\s\\S]*?)\\1;`,
+    "u",
+  ).exec(text);
+  if (!m) throw new Error("Missing source routine.");
+  return m[2];
+};
+const body = (name: string) => bodyIn(sql, name);
+const tag = (text: string, name: string) =>
+  JSON.parse(text.split(`$${name}$`)[1]);
+type Entry = { signature: string; sha256: string; acl: string };
+const checker = body("private.initial_feedback_operation_ready");
+const manifest = tag(checker, "ifo_catalog") as Entry[];
+const finish = body("public.finish_initial_feedback");
+const prepare = body("public.prepare_initial_feedback");
+const exported = body("public.export_initial_feedback_records");
+
+describe("forward owned initial-feedback publication source", () => {
+  it("preserves the actual foundation preimage and all13 historical assertions", () => {
+    expect(hash(previous)).toBe(
+      "9ffc4851feb8a43097c4d007b5a0730135bd51353ecd4cff7de66793d744e52c",
+    );
+    const historical = read(
+      "tests/unit/initial-feedback-operation-sql.test.ts",
+    );
+    expect(historical).toContain("Frozen historical910");
+    expect(historical.match(/\bit\(/gu)).toHaveLength(13);
+    expect(historical).toContain(
+      "7f5b37d5bb4f46acc5aa3926d2fbf9da83b8d9dc7687f86ed086a2571f1be0ca",
+    );
+    expect(sql).toContain("INITIAL_FEEDBACK_PUBLICATION_PREIMAGE_DRIFT");
+  });
+  it("pins every actual new/forward body and both real source profiles", () => {
+    const postimages = tag(sql, "ifpub_postimages") as Entry[];
+    expect(postimages).toHaveLength(20);
+    expect(new Set(postimages.map((x) => x.signature)).size).toBe(20);
+    for (const entry of postimages)
+      expect(hash(body(entry.signature.split("(")[0]))).toBe(entry.sha256);
+    const pairs = [
+      [
+        publicationProfile,
+        {
+          checkerSha256: "private.initial_feedback_publication_ready",
+          readerSha256: "public.read_initial_feedback",
+          finishSha256: "public.finish_initial_feedback",
+          exportSha256: "public.export_initial_feedback_records",
+          metadataSha256: "public.read_initial_feedback_publication_readiness",
+        },
+      ],
+      [
+        operationProfile,
+        {
+          checkerSha256: "private.initial_feedback_operation_ready",
+          prepareSha256: "public.prepare_initial_feedback",
+          settleSha256: "public.settle_initial_feedback_attempt",
+        },
+      ],
+    ] as const;
+    for (const [profile, entries] of pairs)
+      for (const [key, name] of Object.entries(entries))
+        expect(hash(body(name))).toBe((profile as Record<string, string>)[key]);
+    expect(operationProfile.claimSha256).toBe(
+      hash(bodyIn(previous, "public.claim_initial_feedback_dispatch")),
+    );
+    expect(operationProfile.metadataSha256).toBe(
+      hash(
+        bodyIn(previous, "public.read_initial_feedback_operation_readiness"),
+      ),
+    );
+  });
+  it("composes real62-body closure and preserves unchanged numerical, source and pure proof dependencies", () => {
+    expect(manifest).toHaveLength(62);
+    const before = tag(
+      bodyIn(previous, "private.initial_feedback_operation_ready"),
+      "ifo_catalog",
+    ) as Entry[];
+    const replaced = new Set([
+      "private.ifo_immutable()",
+      "private.ifo_attempt_guard()",
+      "public.prepare_initial_feedback(uuid,jsonb,jsonb,uuid)",
+      "public.settle_initial_feedback_attempt(uuid,uuid,text,jsonb,text)",
+    ]);
+    for (const entry of before)
+      if (!replaced.has(entry.signature))
+        expect(manifest.find((x) => x.signature === entry.signature)).toEqual(
+          entry,
+        );
+    for (const name of [
+      "public.persist_qualitative_analysis",
+      "public.persist_partial_analysis",
+      "private.render_initial_feedback_plan",
+    ])
+      expect(manifest.some((x) => x.signature.startsWith(`${name}(`))).toBe(
+        true,
+      );
+    expect(checker).toContain("private.legacy_scoring_ready() is not true");
+    expect(checker).toContain(
+      "private.initial_feedback_plan_ready() is not true",
+    );
+    expect(checker).toContain(
+      "proconfig is distinct from array['search_path=\"\"']",
+    );
+    expect(checker).toContain("is_grantable");
+    expect(checker).toContain("document_evidence_no_qualitative_score");
+    expect(checker).toContain("document_evidence_no_result");
+  });
+  it("owns real publication rows, native run links,29 columns and exact lifecycle keys", () => {
+    const columns = tag(checker, "ifo_columns")
+      .initial_feedback_publications as Array<[string, string, boolean]>;
+    expect(columns).toHaveLength(29);
+    expect(columns.find((x) => x[0] === "writer_content_sha256")).toEqual([
+      "writer_content_sha256",
+      "text",
+      true,
+    ]);
+    expect(columns.find((x) => x[0] === "finish_lease")).toEqual([
+      "finish_lease",
+      "jsonb",
+      true,
+    ]);
+    expect(columns.find((x) => x[0] === "attempt_id")?.[2]).toBe(false);
+    expect(sql).toContain(
+      "run_id uuid unique references public.analysis_ai_runs(id) on delete cascade",
+    );
+    expect(sql).toContain(
+      "operation_id uuid not null unique references private.initial_feedback_operations(operation_id) on delete restrict",
+    );
+    expect(sql).toContain("on delete cascade");
+    expect(tag(checker, "ifo_fks")).toHaveLength(15);
+    expect(tag(checker, "ifo_triggers")).toContainEqual({
+      table: "private.initial_feedback_publications",
+      name: "initial_feedback_publication_immutable",
+      function: "private.ifpub_immutable()",
+      type: 19,
+    });
+  });
+  it("keeps publication core outside receipt and exact completion/native digest domains separate", () => {
+    expect(sql).toContain("not(publication_core?'receipt')");
+    expect(sql).toContain(
+      "publication_sha256=private.ifo_sha(publication_core::text)",
+    );
+    expect(sql).toContain(
+      "completion_sha256=private.ifo_sha(completion::text)",
+    );
+    expect(finish).toContain(
+      "'planSha256',private.ifo_sha((p_completion->'plan')::text)",
+    );
+    expect(finish).toContain("'publicationSha256',private.ifo_sha(core::text)");
+    expect(finish).toContain("private.ifo_sha(rendered::text)");
+    expect(finish).toContain("private.ifo_sha(proof::text)");
+    expect(finish).not.toMatch(/JSON\.stringify|p_grounded|p_supported/u);
+  });
+  it("admits current and stored original source before prior replay, then fresh guards", () => {
+    const current = finish.indexOf("a:=private.legacy_scoring_access"),
+      original = finish.indexOf("original:=private.ifo_original"),
+      prior = finish.indexOf("if op.state='published'"),
+      fresh = finish.indexOf("if a.status<>'qualitative_review'");
+    expect(current).toBeLessThan(original);
+    expect(original).toBeLessThan(prior);
+    expect(prior).toBeLessThan(fresh);
+    expect(finish).toContain("pub.completion is distinct from p_completion");
+    expect(finish).toContain("pub.attempt_id is distinct from p_attempt_id");
+    expect(finish).toContain("pub.finish_lease is distinct from p_lease");
+    expect(prepare.indexOf("if op.state='published'")).toBeLessThan(
+      prepare.indexOf("if a.status<>'qualitative_review'"),
+    );
+    expect(prepare).toContain(
+      "'context',null,'dispatchAllowed',false,'replayed',true",
+    );
+    expect(prepare).toContain(
+      "next_attempt.ordinal=previous_attempt.ordinal+1",
+    );
+  });
+  it("invokes one unchanged renderer and independently checks complete retained correspondence", () => {
+    expect(
+      finish.match(/private\.render_initial_feedback_plan\(/gu),
+    ).toHaveLength(1);
+    expect(finish).toContain(
+      "original->'scoringContext'->'extraction'->>'text'",
+    );
+    const correspondence = body("private.ifpub_correspondence");
+    expect(correspondence).toContain("expected is distinct from observed");
+    expect(correspondence).toContain("value->'retained'='true'::jsonb");
+    expect(correspondence).toContain("part->'title',observed->'title'");
+    expect(correspondence).toContain(
+      "part->'explanation',observed->'explanation'",
+    );
+    expect(correspondence).toContain("part->'rewrite',observed->'rewrite'");
+    expect(correspondence).toContain("part->'reasoning',observed->'reasoning'");
+    expect(correspondence).toContain("summary,observed_summary");
+    expect(correspondence).toContain(
+      "ids is distinct from observed->'citation'->'anchorIds'",
+    );
+    expect(body("private.ifpub_part_matches")).toContain(
+      "ids=p_observed->'anchorIds'",
+    );
+    expect(body("private.ifpub_capture_valid")).toContain("having count(*)>1");
+    expect(finish).toContain("'scope','retained_output_only'");
+  });
+  it("copies actual original numbers and producer output atomically with rollback on false/final drift", () => {
+    expect(finish).toContain(
+      "public.persist_qualitative_analysis(a.id,feedback,op.binding_sha256",
+    );
+    expect(finish).toContain(
+      "public.persist_partial_analysis(a.id,feedback,p_process_id,p_request_id) is not true",
+    );
+    expect(finish).toContain(
+      "private.ifo_original(a) is distinct from original",
+    );
+    expect(finish).toContain("r.feedback is distinct from feedback");
+    expect(finish).toContain(
+      "private.try_candidate_privacy_write(a.owner_id) is not true",
+    );
+    expect(finish).toContain("if exists(select 1 from public.analysis_results");
+    expect(finish).toContain(
+      "exists(select 1 from public.analysis_ai_runs where analysis_id=a.id)",
+    );
+    const feedback = body("private.ifpub_feedback");
+    expect(feedback).toContain("p_result->'ruleTrace'");
+    expect(feedback).toContain("where ord<=4");
+    expect(feedback).toContain("deterministic_baseline_no_model_ratings/1.0.0");
+  });
+  it("preserves logical partial absence separately from its real old empty writer row", () => {
+    const producer = read(
+      "supabase/migrations/20260910110000_version_skill_taxonomy.sql",
+    );
+    const partial = bodyIn(producer, "public.persist_partial_analysis");
+    expect(partial).toContain("insert into public.writer_drafts");
+    expect(partial).toContain(
+      "jsonb_build_object('summary', null, 'bullets', '[]'::jsonb)",
+    );
+    expect(finish).toContain("writer jsonb:=null");
+    expect(finish).toContain(
+      "'writerSha256',case when writer is null then null else writer_sha end",
+    );
+    expect(finish).toContain(
+      "writer_sha:=private.ifo_sha(private.ifpub_writer_json(w)::text)",
+    );
+    expect(body("private.ifpub_json")).toContain(
+      "core->'compatibility'->'writer'<>'null'::jsonb",
+    );
+  });
+  it("requires exact known usage and actual settled budget links without numeric clipping", () => {
+    expect(finish).toContain(
+      "att.state<>'known' or att.usage is null or att.error_code is not null",
+    );
+    expect(finish).toContain("::numeric>2147483647");
+    expect(finish).toContain("budget_att.state<>'settled'");
+    expect(finish).toContain(
+      "budget_att.actual_input_tokens is distinct from (att.usage->>'inputTokens')::numeric",
+    );
+    expect(finish).toContain("budget_op.payload_sha256<>op.binding_sha256");
+    expect(finish).not.toContain("public.ai_budget_settle(");
+    expect(finish).toContain(
+      "where user_id=a.owner_id and purpose='qualitative_ai' and policy_version='candidate-ai-v1'",
+    );
+  });
+  it("cancels only unclaimed metadata, prevents late dispatch and preserves late known accounting", () => {
+    expect(finish).toContain("and claimed_at is not null)");
+    expect(finish).toContain(
+      "state='cancelled_before_dispatch' where operation_id=op.operation_id and state='reserved' and claimed_at is null",
+    );
+    const guard = body("private.ifo_attempt_guard");
+    expect(guard).toContain(
+      "op.state<>'open' or op.publication_id is not null",
+    );
+    expect(guard).toContain("old.state='held_unknown' and old.usage is null");
+    expect(guard).toContain("new.state='failed' and new.usage is not null");
+    const settled = body("public.settle_initial_feedback_attempt");
+    expect(settled).toContain("if att.state='published'");
+    expect(settled).toContain("'state','known'");
+    expect(settled).not.toContain(
+      "update private.initial_feedback_publications",
+    );
+    expect(settled).not.toContain("legacy_scoring_access");
+    expect(
+      bodyIn(previous, "public.claim_initial_feedback_dispatch"),
+    ).toContain("op.state<>'open' or op.publication_id is not null");
+  });
+  it("reads actual owned projections and exports complete bounded account records with all calls staged denied", () => {
+    const reader = body("public.read_initial_feedback");
+    expect(reader).toContain("original:=private.ifo_original(a)");
+    expect(reader).toContain(
+      "'reason','original_input_or_publication_missing'",
+    );
+    expect(reader).toContain(
+      "'status','available','currentness',ctx->>'currentness'",
+    );
+    expect(body("private.ifpub_json")).toContain(
+      "private.ifpub_run_json(run)::text",
+    );
+    expect(exported).toContain("where o.owner_id=p_user_id");
+    expect(exported).toContain(">12288");
+    expect(exported).toContain(">4096");
+    expect(exported).toContain(">33554432");
+    expect(exported.indexOf("total_bytes>33554432")).toBeLessThan(
+      exported.indexOf("operation_rows:=array_append"),
+    );
+    expect(exported).not.toMatch(/select[^;]+jsonb_agg/iu);
+    expect(exported).not.toMatch(/currentness|enabled|status='active'/u);
+    for (const name of [
+      "public.finish_initial_feedback(uuid,jsonb,uuid,uuid,text,jsonb,text,text)",
+      "public.read_initial_feedback(uuid,uuid)",
+      "public.export_initial_feedback_records(uuid)",
+    ])
+      expect(sql).toContain(
+        `revoke all on function ${name} from public,anon,authenticated,service_role;`,
+      );
+    expect(sql).toContain(
+      "grant execute on function public.read_initial_feedback_publication_readiness() to service_role;",
+    );
+    expect(sql).not.toMatch(
+      /grant execute on function public\.(finish_initial_feedback|read_initial_feedback\(|export_initial_feedback_records)/u,
+    );
+    expect(sql).not.toMatch(
+      /insert into private\.initial_feedback_(policies|selections)/u,
+    );
+    expect(sql).toContain("CHECK/default reconciliation");
+  });
+  it("retains a privileged mutating rollback-only verifier without claiming execution", () => {
+    const verifier = read("scripts/verify-initial-feedback-publications.sql");
+    expect(verifier).toContain("UNPARSED/UNEXECUTED");
+    expect(verifier).toContain("PRIVILEGED MUTATING ROLLBACK-ONLY");
+    expect(verifier).toContain("public.finish_initial_feedback");
+    expect(verifier).toContain("set constraints all immediate;");
+    expect(verifier).toContain("rollback;");
+    expect(verifier).toContain("changed_completion_conflicts");
+    expect(verifier).toContain("late_known_preserves_publication");
+  });
+});

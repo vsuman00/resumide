@@ -1,0 +1,151 @@
+
+> test
+> vitest run tests/unit/initial-feedback-plan.test.ts tests/unit/initial-feedback-plan-oracles.test.ts tests/unit/initial-feedback-plan-sql.test.ts tests/unit/qualitative-support.test.ts tests/unit/qualitative-feedback-support.test.ts tests/unit/writing-support-usefulness.test.ts
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats
+
+ ✓ tests/unit/initial-feedback-plan-sql.test.ts (12 tests) 7ms
+ ✓ tests/unit/writing-support-usefulness.test.ts (20 tests) 23ms
+ ✓ tests/unit/initial-feedback-plan-oracles.test.ts (12 tests) 31ms
+ ✓ tests/unit/initial-feedback-plan.test.ts (18 tests) 40ms
+ ✓ tests/unit/qualitative-support.test.ts (24 tests) 25ms
+ ✓ tests/unit/qualitative-feedback-support.test.ts (17 tests) 20ms
+
+ Test Files  6 passed (6)
+      Tests  103 passed (103)
+   Start at  12:10:55
+   Duration  358ms (transform 385ms, setup 0ms, import 789ms, tests 146ms, environment 0ms)
+
+
+> typecheck
+> react-router typegen && tsc
+
+
+> lint
+> eslint app/routes app/lib/server app/lib/native-layout-schema.ts app/lib/native-layout-structure.ts tests e2e app/components scripts/verify-local-ocr.ts vite.worker.config.ts scripts/check-container.mjs
+
+
+> build
+> react-router build
+
+Using Vite Environment API (experimental)
+vite v6.4.5 building for production...
+transforming...
+node_modules/zod/v4/core/util.js (400:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/regexes.js (74:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 282 modules transformed.
+Generated an empty chunk: "auth.callback".
+Generated an empty chunk: "auth.logout".
+Generated an empty chunk: "latex.compile".
+Generated an empty chunk: "build.suggest".
+Generated an empty chunk: "latex.legacy".
+Generated an empty chunk: "latex.compile-legacy".
+Generated an empty chunk: "resume.rewrite".
+Generated an empty chunk: "analysis.source".
+Generated an empty chunk: "analysis.artifact".
+Generated an empty chunk: "analysis.author.typed".
+Generated an empty chunk: "analysis.rewrite".
+Generated an empty chunk: "analysis.rewrite.workspace".
+Generated an empty chunk: "api.analyze".
+Generated an empty chunk: "api.analysis-status".
+Generated an empty chunk: "api.analysis-cancel".
+Generated an empty chunk: "api.telemetry".
+Generated an empty chunk: "api.privacy-export".
+Generated an empty chunk: "api.not-found".
+Generated an empty chunk: "metrics".
+Generated an empty chunk: "healthz".
+Generated an empty chunk: "readyz".
+Generated an empty chunk: "chrome-devtools".
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                             15.10 kB │ gzip:   1.66 kB
+build/client/assets/WorkspaceShell-Cp2OACIv.css               0.29 kB │ gzip:   0.19 kB
+build/client/assets/SiteNavigation-CekEXlv7.css               2.70 kB │ gzip:   0.94 kB
+build/client/assets/resume-Bnjh1IjJ.css                       3.28 kB │ gzip:   1.05 kB
+build/client/assets/latex-CACerNXU.css                       12.38 kB │ gzip:   3.08 kB
+build/client/assets/root-BV2zG3Pa.css                       142.06 kB │ gzip:  24.18 kB
+build/client/assets/auth.callback-l0sNRNKZ.js                 0.00 kB │ gzip:   0.02 kB
+build/client/assets/auth.logout-l0sNRNKZ.js                   0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.compile-l0sNRNKZ.js                 0.00 kB │ gzip:   0.02 kB
+build/client/assets/build.suggest-l0sNRNKZ.js                 0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.legacy-l0sNRNKZ.js                  0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.compile-legacy-l0sNRNKZ.js          0.00 kB │ gzip:   0.02 kB
+build/client/assets/resume.rewrite-l0sNRNKZ.js                0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.source-l0sNRNKZ.js               0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.artifact-l0sNRNKZ.js             0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.author.typed-l0sNRNKZ.js         0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.rewrite-l0sNRNKZ.js              0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.rewrite.workspace-l0sNRNKZ.js    0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analyze-l0sNRNKZ.js                   0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analysis-status-l0sNRNKZ.js           0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analysis-cancel-l0sNRNKZ.js           0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.telemetry-l0sNRNKZ.js                 0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.privacy-export-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.not-found-l0sNRNKZ.js                 0.00 kB │ gzip:   0.02 kB
+build/client/assets/metrics-l0sNRNKZ.js                       0.00 kB │ gzip:   0.02 kB
+build/client/assets/healthz-l0sNRNKZ.js                       0.00 kB │ gzip:   0.02 kB
+build/client/assets/readyz-l0sNRNKZ.js                        0.00 kB │ gzip:   0.02 kB
+build/client/assets/chrome-devtools-l0sNRNKZ.js               0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.score-Bv5QNDz8.js                0.28 kB │ gzip:   0.21 kB
+build/client/assets/analyses-CUbz12ER.js                      0.34 kB │ gzip:   0.26 kB
+build/client/assets/PublicShell-26rMaOTU.js                   0.67 kB │ gzip:   0.36 kB
+build/client/assets/WorkspaceShell-CBi4vyzo.js                0.78 kB │ gzip:   0.36 kB
+build/client/assets/store-DL7ZpJ9l.js                         0.79 kB │ gzip:   0.48 kB
+build/client/assets/preload-helper-ckwbz45p.js                1.14 kB │ gzip:   0.66 kB
+build/client/assets/account-C0sJEUiL.js                       2.11 kB │ gzip:   0.93 kB
+build/client/assets/EvidenceScene3D-C1MTRLDB.js               2.41 kB │ gzip:   0.93 kB
+build/client/assets/root-BbnDxozQ.js                          3.32 kB │ gzip:   1.63 kB
+build/client/assets/auth-DjeZoUqy.js                          3.41 kB │ gzip:   1.35 kB
+build/client/assets/analysis.export-DOp1547T.js               3.64 kB │ gzip:   1.55 kB
+build/client/assets/ResumeWriter-BwemFjm6.js                  3.64 kB │ gzip:   1.28 kB
+build/client/assets/index-CMdmomBl.js                         3.92 kB │ gzip:   1.54 kB
+build/client/assets/SiteNavigation-DcJlVsJa.js                4.28 kB │ gzip:   1.80 kB
+build/client/assets/privacy-CLc8yGGa.js                       7.00 kB │ gzip:   2.31 kB
+build/client/assets/analysis-OvfTLToQ.js                      8.53 kB │ gzip:   2.89 kB
+build/client/assets/analysis.requirements-CZjm-SoJ.js         9.17 kB │ gzip:   3.05 kB
+build/client/assets/home-Dv0bMP9g.js                          9.22 kB │ gzip:   2.82 kB
+build/client/assets/analysis.evidence-1x1I0dXr.js            15.26 kB │ gzip:   4.77 kB
+build/client/assets/latex-NEd-5UVD.js                        34.94 kB │ gzip:  11.71 kB
+build/client/assets/resume-BDKhHT3e.js                       46.68 kB │ gzip:  14.84 kB
+build/client/assets/analysis.canonical-BpuMDeZW.js           53.42 kB │ gzip:  14.41 kB
+build/client/assets/upload-B-U9Esmv.js                       70.39 kB │ gzip:  20.46 kB
+build/client/assets/analysis.author-B2QnEuP3.js              76.60 kB │ gzip:  20.64 kB
+build/client/assets/schemas-y6rdr-jf.js                      94.87 kB │ gzip:  26.91 kB
+build/client/assets/chunk-BV7QT456-BdP_oTIi.js              133.72 kB │ gzip:  44.97 kB
+build/client/assets/entry.client-BbqgV4JK.js                179.94 kB │ gzip:  57.23 kB
+build/client/assets/pdf-DCt7qnim.js                         390.14 kB │ gzip: 115.82 kB
+✓ built in 2.01s
+vite v6.4.5 building SSR bundle for production...
+transforming...
+✓ 199 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                   0.23 kB
+build/server/assets/server-build-Cr18k5A9.css    160.71 kB
+build/server/index.js                          1,526.70 kB
+
+✓ 1 asset cleaned from React Router server build.
+build/server/assets/server-build-Cr18k5A9.css
+
+✓ built in 679ms
+
+> build:worker
+> vite build --config vite.worker.config.ts
+
+vite v6.4.5 building for production...
+transforming...
+✓ 59 modules transformed.
+rendering chunks...
+computing gzip size...
+build/worker/analysis.mjs  198.44 kB │ gzip: 56.42 kB
+✓ built in 187ms

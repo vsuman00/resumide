@@ -1,0 +1,54 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/initial-feedback-stage.test.ts (13 tests | 1 failed) 137ms
+     ✓ publishes immutable original inputs before legacy reads and keeps the old transport isolated 77ms
+     ✓ replays an owned publication before consent, quota, rate, claim or SDK 16ms
+     ✓ fails pending safely on every queue replay without redispatch or completion 2ms
+     ✓ publishes AI-off deterministic output without fresh authorization or SDK 4ms
+     ✓ uses existing consent and never manufactures it 4ms
+     ✓ requires a real matching lease and respects cancellation before lookup 1ms
+     ✓ leaves the legacy branch selected when the flag is false 1ms
+     ✓ uses the bounded worker failure path for unresolved accounting and never redispatches 9ms
+     ✓ never dispatches when the once-only claim loses 3ms
+     ✓ uses the exact budget-on selected policy and both accounting paths 11ms
+     ✓ refuses an unselected Native policy before consent, quota or provider with no budget-off fallback 1ms
+     ✓ rejects malformed selected dependencies before scope lookup 1ms
+     × cancels the installed SDK attempt and retains unknown spend without legacy publication or redispatch 5ms
+ ✓ tests/unit/initial-feedback-service.test.ts (16 tests) 150ms
+ ✓ tests/unit/analysis-worker-fence.test.ts (13 tests) 51ms
+ ✓ tests/unit/writer-worker-transport.test.ts (1 test) 20ms
+ ✓ tests/unit/qualitative-stage.test.ts (10 tests) 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > cancels the installed SDK attempt and retains unknown spend without legacy publication or redispatch
+AssertionError: expected { …(7) } to match object { state: 'held_unknown', …(2) }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "errorCode": "cancelled",
++   "errorCode": null,
+    "state": "held_unknown",
+    "usage": null,
+  }
+
+ ❯ tests/unit/initial-feedback-stage.test.ts:898:30
+    896|     controller.abort();
+    897|     await expect(running).rejects.toMatchObject({ code: "ANALYSIS_CANC…
+    898|     expect(h.op.attempts[0]).toMatchObject({
+       |                              ^
+    899|       state: "held_unknown",
+    900|       usage: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 52 passed (53)
+   Start at  12:13:16
+   Duration  1.28s (transform 257ms, setup 0ms, import 627ms, tests 367ms, environment 0ms)
+

@@ -1,0 +1,68 @@
+{
+  "status": "PASS",
+  "at": "2026-11-10T18:39:40.333205+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "receipt": "u03-retention-e0a36cc1-1e3a-4660-a508-a34546e8eeff.json",
+  "receiptSha256": "3b1872d0569f9e7d63aea1d8877f039ce3bcafb9f43ffd69248de061aaa7c972",
+  "sourceInputsRehashed": 703,
+  "changedSourceInputsDuringRun": [],
+  "logSha256Verified": "45fa81296515205415794c202dd907b35131a0ec85f0ce679e3b7c5433308145",
+  "tests": {
+    "files": 2,
+    "passed": 47,
+    "failed": 0,
+    "skipped": 0
+  },
+  "ownedProcessGroups": [
+    {
+      "command": "npm test -- tests/unit/canonical-route.test.ts tests/components/CanonicalCorrections.test.tsx",
+      "processGroup": 16807,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run typecheck",
+      "processGroup": 16832,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run lint",
+      "processGroup": 16857,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run build",
+      "processGroup": 16878,
+      "independentlyAbsent": true
+    },
+    {
+      "command": "npm run build:worker",
+      "processGroup": 16908,
+      "independentlyAbsent": true
+    }
+  ],
+  "artifactHashesAndSizesVerified": {
+    "build/server/index.js": {
+      "bytes": 865229,
+      "sha256": "4667b295c98001baefb54274484040c42ee1814458c9707432be28249029db50"
+    },
+    "build/worker/analysis.mjs": {
+      "bytes": 168159,
+      "sha256": "cfc31ea7d0f630a0fee9de130cc17226dd633ba84f3c04edadf0e1b68062aca9"
+    }
+  },
+  "inheritedAuthoringEvidence": {
+    "receipt": "u03-integrated-8779993b-e9be-4f97-97fc-01b4c3bba1cd.json",
+    "receiptSha256": "71dfb2b14daafba815f56aa735340182d844e9489cac5db29c024eb881c82b5f",
+    "logSha256Verified": "63a67045ffe7787062de8cbbf8774f9618a2d8fd0bd716c74ec2a84cda8eb5d4",
+    "unchangedCases": 60,
+    "changedOldSourceInputs": [
+      "app/routes/analysis.canonical.tsx",
+      "tests/components/CanonicalCorrections.test.tsx",
+      "tests/unit/canonical-route.test.ts"
+    ],
+    "reason": "Only canonical route and its two tests changed; all old authoring cases and all other recorded source/contract inputs remain byte-identical. No authoring repetition.",
+    "combinedUniqueCases": 107,
+    "freshFullSevenFileRunAfterDelta": false
+  },
+  "nativeSqlBrowserProvidersDockerOwnerDataGitDeploy": "NOT_RUN"
+}

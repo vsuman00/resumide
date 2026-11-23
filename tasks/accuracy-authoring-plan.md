@@ -213,60 +213,88 @@ The canonical resume renders to approved, profile-appropriate PDF and DOCX templ
 
 Critical-field and normalized-text parity pass for every released template/format/locale combination. Failure removes the verified label and blocks the artifact from the recommended download action.
 
-## 11. Phase AA7: Sandboxed LaTeX rendering
+## 11. Phase AA7: Standalone sandboxed LaTeX-to-PDF conversion
 
 ### Outcome
 
-Candidates can generate, preview, download, and optionally inspect LaTeX source without exposing the worker or user data to arbitrary TeX execution.
+Candidates can edit supported single-file LaTeX on a separate page, compile and preview a PDF, then download it for manual upload. The owner approved this scoped replacement of the canonical-to-LaTeX path on 2026-10-30 through ADR-0016/E-007. No analyzer/canonical integration, source export, persisted source/PDF, arbitrary-project compatibility or ATS-verified claim.
+
+**Local status, 2026-10-30:** Implementation and synthetic verification are complete under ADR-0016/E-007. Canonical verification:1,052 tests/126 files;94 focused cases;6 browser scenarios;19 real runtime groups;6 example/paper combinations. Default-off and formal AA7 release/accessibility/security gates remain open. [Closeout](../docs/evaluation/AA7_ENGINEERING_CLOSEOUT_20261030.md).
 
 ### Vertical slices
 
 - `AA070`: Approve LaTeX compiler/runtime threat model and package allowlist.
-- `AA071`: Implement canonical-to-LaTeX renderer with complete escaping tests.
+- `AA071`: Implement bounded, source-preserving admission and immutable source/hash/policy binding.
 - `AA072`: Implement isolated compilation with no shell escape/network/host access and hard resource limits.
-- `AA073`: Add profile templates rather than one fixed student/technology layout.
-- `AA074`: Add LaTeX diagnostics, preview, source download, and safe failure UX.
-- `AA075`: Add compiled-PDF parse-back and accessibility/template benchmark.
+- `AA073`: Add neutral editable starter profiles with measured package/font/page support.
+- `AA074`: Add the two-pane editor, safe diagnostics, current-buffer PDF preview/download, cancellation and stale-response protection.
+- `AA075`: Add compiled-PDF safety checks and known-output synthetic recovery/accessibility-limit benchmarks.
+
+### Owner-requested Build follow-up
+
+The public workspace is now `/build`, with fixed legacy redirects. The owner also approved bounded contextual AI fixes, rewrites and resume wording proposals using the configured key. The assistant is independent of canonical authoring: transient source-bound patches, per-request consent, review/Apply/Undo and explicit unverified-fact confirmation. No scoring or verified provenance is added. Default-off flags and all formal gates remain unchanged. See the [design](../docs/design/LATEX_CONVERTER.md#inline-ai-assistance-follow-up) and [coordinator record](agent-handoffs/2026-10-30-build-ai-coordinator.md). Controlled-mock verification passed locally; two live smokes returned HTTP 401 and a subsequent owner-requested synthetic provider probe succeeded; live end-to-end acceptance remains separate.
+
+### Private engineering closure, November 6
+
+AA070-AA075 private implementation and internal validation are complete on exact candidate19d2, with existing scope and default-off production policy preserved. All20runtimegroups/20PDFcases,6profile-paper cases,1,203applicationtests/145files and full13browser cases pass. Direct Supabase fixtures were cleaned; Docker was worker-only. Paired scans and license metadata are recorded with residual findings and unknowns, not accepted as production clearance. See the [private candidate closeout](../docs/evaluation/AA7_PRIVATE_CANDIDATE_CLOSEOUT_20261106.md). Public testing, independent representative review and release activation were not requested and did not occur. GateAA7 below remains open; optional further image composition changes are separately reviewed work.
+
+### Current private engineering closeout, November 7
+
+AA070–AA075 are complete and privately verified on worker `4b83ffec…`: 28 runtime groups, 1,242 unit tests and 71 browser cases pass, with exact cleanup. The confirmed native repair is tested; no current functional defect is reproduced. [Current closeout](../docs/evaluation/AA7_FREETYPE_FINAL_CLOSEOUT_20261107.md) preserves the 947 raw image advisories, historical vendor-test disposition and deferred release requirements. Keep green engineering tasks closed; do not turn release-risk research into another AA7 implementation loop.
 
 ### Gate AA7
+
+**CLOSED / OWNER ACCEPTED, 2026-11-07:** The owner explicitly instructed closure and progression to AA8 after disclosure of final evidence and residual risks. [ADR-0017](../docs/decisions/0017-aa7-owner-acceptance-and-aa8-start.md) records the exact accepted worker, limitations and continuing default-off/deployment boundary. This supplies phase-owner acceptance without rewriting failures or claiming all vulnerabilities fixed.
 
 Security-owner sandbox review, malicious-input tests, resource exhaustion tests, render parity, accessibility evidence, and rollback plan pass before production enablement.
 
 ## 12. Phase AA8: Representative validity and staged claims
 
-### Outcome
+**Current owner scope (2026-11-07):** [ADR-0018](../docs/decisions/0018-solo-prerelease-aa8-aa9-verification.md) requires complete prerelease software and synthetic workflow verification with the sole owner and AI subagent technical review. Representative acquisition, independent-human research, customer/recruiter/vendor runs and the owner's launch review are deferred to demo/RC/pre-launch. The original empirical gates below remain prerequisites for the corresponding public claims; they do not require an unavailable team before current engineering proceeds.
+
+**Prerelease engineering complete / verified, 2026-11-07:** All ten AA080–AA086 and AA090–AA092 software/workflow tasks pass current ADR-0018 acceptance. The follow-up audit closed the missing trusted future-corpus authority path. Current full verification passes 1,453 tests, source checks, types, lint, web/worker builds and the local workflow CLI; [current evidence](../docs/evaluation/AA8_AA9_COMPLETION_TRACKING_20261107.json) bridges the exact four changed source/test files without rewriting the [earlier closeout](../docs/evaluation/AA8_AA9_ENGINEERING_CLOSEOUT_20261107.md). Deferred empirical claim gates remain separate.
+
+### Deferred empirical outcome
 
 Resumide earns one domain-level accuracy claim using a locked representative corpus, documented uncertainty, and independent expert review.
 
 ### Vertical slices
 
-- `AA080`: Acquire permitted data for the first domain under approved governance.
-- `AA081`: Run independent annotation, adjudication, and agreement analysis.
-- `AA082`: Freeze development/calibration/test partitions and near-duplicate controls.
-- `AA083`: Calibrate scoring dimensions without using the locked test partition.
-- `AA084`: Run locked extraction, requirement, scoring, writer, render, fairness, latency, cost, and failure evaluations.
-- `AA085`: Publish a versioned model/ruleset/dataset card and limitations report.
-- `AA086`: Promote only the achieved claim level and stage rollout with monitoring/rollback.
+- [x] `AA080`: Permission-aware corpus intake, provenance/access and byte lifecycle.
+- [x] `AA081`: Annotation/adjudication, agreement and truthful evidence tiers.
+- [x] `AA082`: Immutable development/calibration/test locks and leakage/access controls.
+- [x] `AA083`: Development/calibration-only offline fitting, sensitivity and rollback references.
+- [x] `AA084`: Locked application workflow, per-segment statistics, withholding and failure gates.
+- [x] `AA085`: Versioned evidence/dataset/ruleset/model cards and limitations.
+- [x] `AA086`: Achieved-claim guards, monitoring, stop and rollback proposals.
 
 ### Gate AA8
+
+Current prerelease engineering gate is complete under ADR-0018. The following deferred representative-claim gate is separate:
 
 The lower confidence bound for every required segment meets the approved gate. An aggregate pass cannot hide a failed segment. Independent reviewers approve construct validity and claim language.
 
 ## 13. Phase AA9: Recruiter and vendor calibration pilot
 
-### Outcome
+**Current owner scope:** Implement the full advisory/comparison workflow now under ADR-0018. Verify notice, override/rationale, corrections/appeals, retention, audit, monitoring, stop and rollback with synthetic fixtures and actual AI technical review. Keep customer/vendor outcomes and launch acceptance separate and deferred.
+
+### Deferred empirical outcome
 
 An allowlisted pilot can define a transparent job rubric and compare Resumide extraction/matching with a named ATS environment without enabling autonomous rejection.
 
 ### Vertical slices
 
-- `AA090`: Design recruiter calibration, notice, override, correction, and appeal contract.
-- `AA091`: Run one controlled named-vendor/version ingestion comparison with synthetic/consented data.
-- `AA092`: Run one career-center or recruiter pilot with fairness, security, legal, and human-oversight review.
+- [x] `AA090`: Transparent advisory protocol, notice, override, corrections and appeals.
+- [x] `AA091`: Controlled ingestion-comparison interfaces and synthetic observations.
+- [x] `AA092`: Local advisory-pilot controls, retention/audit, stop and rollback.
 
 ### Gate AA9
 
+Current prerelease engineering gate is complete under ADR-0018. Real customer/vendor/recruiter runs and owner launch review are deferred. The following external-claim gate is separate:
+
 Pilot evidence supports only the named domain/vendor/configuration. No automatic rejection, hidden score, or general vendor-equivalence claim is enabled.
+
+**Tracking:** [All ten completions](../plan.plan.md), [operator tutorial](../tutorial.md), [release-only requirements](aa8-aa9-release-readiness.md). The checked slices above describe the owner-approved software scope; real-world experiments are not labeled completed.
 
 ## 14. Verification checkpoints
 

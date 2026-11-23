@@ -1,0 +1,136 @@
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m170[0m:[93m22[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m170[0m   const ops = unique(data.operations, (o) => o.id),
+[7m   [0m [91m                     ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m171[0m:[93m18[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m171[0m     ats = unique(data.attempts, (a) => a.id);
+[7m   [0m [91m                 ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m172[0m:[93m10[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m172[0m   unique(data.events, (e) => e.id);
+[7m   [0m [91m         ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m173[0m:[93m10[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m173[0m   unique(data.events, (e) => `${e.attempt_id}/${e.kind}`);
+[7m   [0m [91m         ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m175[0m:[93m5[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m175[0m     data.reconciliationOperators,
+[7m   [0m [91m    ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m180[0m:[93m10[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m180[0m       ...data.events.filter((e) => e.reconciliation_id !== null),
+[7m   [0m [91m         ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m181[0m:[93m10[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m181[0m       ...data.operatorActions,
+[7m   [0m [91m         ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m187[0m:[93m20[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m187[0m   for (const op of data.operations)
+[7m   [0m [91m                   ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m189[0m:[93m19[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m189[0m   for (const a of data.attempts) {
+[7m   [0m [91m                  ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m201[0m:[93m12[0m - [91merror[0m[90m TS18048: [0m'op' is possibly 'undefined'.
+
+[7m201[0m       cost(op.reserved_input_tokens, op.reserved_output_tokens, op)
+[7m   [0m [91m           ~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m201[0m:[93m38[0m - [91merror[0m[90m TS18048: [0m'op' is possibly 'undefined'.
+
+[7m201[0m       cost(op.reserved_input_tokens, op.reserved_output_tokens, op)
+[7m   [0m [91m                                     ~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m201[0m:[93m65[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ id: string; organization_id: string; user_id: string; surface: "rewrite" | "build" | "qualitative"; payload_sha256: string; model: string; prompt_policy_version: string; policy_version: string; ... 6 more ...; created_at: string; } | undefined' is not assignable to parameter of type '{ id: string; organization_id: string; user_id: string; surface: "rewrite" | "build" | "qualitative"; payload_sha256: string; model: string; prompt_policy_version: string; policy_version: string; ... 6 more ...; created_at: string; }'.
+  Type 'undefined' is not assignable to type '{ id: string; organization_id: string; user_id: string; surface: "rewrite" | "build" | "qualitative"; payload_sha256: string; model: string; prompt_policy_version: string; policy_version: string; ... 6 more ...; created_at: string; }'.
+
+[7m201[0m       cost(op.reserved_input_tokens, op.reserved_output_tokens, op)
+[7m   [0m [91m                                                                ~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m210[0m:[93m63[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ id: string; organization_id: string; user_id: string; surface: "rewrite" | "build" | "qualitative"; payload_sha256: string; model: string; prompt_policy_version: string; policy_version: string; ... 6 more ...; created_at: string; } | undefined' is not assignable to parameter of type '{ id: string; organization_id: string; user_id: string; surface: "rewrite" | "build" | "qualitative"; payload_sha256: string; model: string; prompt_policy_version: string; policy_version: string; ... 6 more ...; created_at: string; }'.
+  Type 'undefined' is not assignable to type '{ id: string; organization_id: string; user_id: string; surface: "rewrite" | "build" | "qualitative"; payload_sha256: string; model: string; prompt_policy_version: string; policy_version: string; ... 6 more ...; created_at: string; }'.
+
+[7m210[0m           cost(a.actual_input_tokens, a.actual_output_tokens, op)
+[7m   [0m [91m                                                              ~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m219[0m:[93m16[0m - [91merror[0m[90m TS18048: [0m'op' is possibly 'undefined'.
+
+[7m219[0m     groups.set(op.id, [...(groups.get(op.id) ?? []), a]);
+[7m   [0m [91m               ~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m219[0m:[93m39[0m - [91merror[0m[90m TS18048: [0m'op' is possibly 'undefined'.
+
+[7m219[0m     groups.set(op.id, [...(groups.get(op.id) ?? []), a]);
+[7m   [0m [91m                                      ~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m221[0m:[93m20[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m221[0m   for (const op of data.operations) {
+[7m   [0m [91m                   ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m230[0m:[93m19[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m230[0m   for (const e of data.events) {
+[7m   [0m [91m                  ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m236[0m:[93m9[0m - [91merror[0m[90m TS18048: [0m'a' is possibly 'undefined'.
+
+[7m236[0m         a.state !== "settled" ||
+[7m   [0m [91m        ~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m237[0m:[93m28[0m - [91merror[0m[90m TS18048: [0m'a' is possibly 'undefined'.
+
+[7m237[0m         e.input_tokens !== a.actual_input_tokens ||
+[7m   [0m [91m                           ~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m238[0m:[93m29[0m - [91merror[0m[90m TS18048: [0m'a' is possibly 'undefined'.
+
+[7m238[0m         e.output_tokens !== a.actual_output_tokens ||
+[7m   [0m [91m                            ~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m239[0m:[93m29[0m - [91merror[0m[90m TS18048: [0m'a' is possibly 'undefined'.
+
+[7m239[0m         e.cost_microusd !== a.actual_cost_microusd
+[7m   [0m [91m                            ~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m265[0m:[93m16[0m - [91merror[0m[90m TS18048: [0m'a' is possibly 'undefined'.
+
+[7m265[0m     events.set(a.id, [...(events.get(a.id) ?? []), e]);
+[7m   [0m [91m               ~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m265[0m:[93m38[0m - [91merror[0m[90m TS18048: [0m'a' is possibly 'undefined'.
+
+[7m265[0m     events.set(a.id, [...(events.get(a.id) ?? []), e]);
+[7m   [0m [91m                                     ~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m267[0m:[93m19[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m267[0m   for (const a of data.attempts) {
+[7m   [0m [91m                  ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m304[0m:[93m5[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m304[0m     data.reconciliationOperators.some((o) => o.operator_id !== ownerId) ||
+[7m   [0m [91m    ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m305[0m:[93m5[0m - [91merror[0m[90m TS18048: [0m'data' is possibly 'undefined'.
+
+[7m305[0m     data.operatorActions.some((a) => a.operator_id !== ownerId)
+[7m   [0m [91m    ~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m308[0m:[93m3[0m - [91merror[0m[90m TS2322: [0mType '{ schemaVersion: "owned-ai-budget-export/1.0.0"; ownerId: string; operations: { id: string; organization_id: string; user_id: string; surface: "rewrite" | "build" | "qualitative"; payload_sha256: string; ... 9 more ...; created_at: string; }[]; ... 4 more ...; omissions: { ...; }; } | undefined' is not assignable to type '{ schemaVersion: "owned-ai-budget-export/1.0.0"; ownerId: string; operations: { id: string; organization_id: string; user_id: string; surface: "rewrite" | "build" | "qualitative"; payload_sha256: string; ... 9 more ...; created_at: string; }[]; ... 4 more ...; omissions: { ...; }; }'.
+  Type 'undefined' is not assignable to type '{ schemaVersion: "owned-ai-budget-export/1.0.0"; ownerId: string; operations: { id: string; organization_id: string; user_id: string; surface: "rewrite" | "build" | "qualitative"; payload_sha256: string; ... 9 more ...; created_at: string; }[]; ... 4 more ...; omissions: { ...; }; }'.
+
+[7m308[0m   return data;
+[7m   [0m [91m  ~~~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m390[0m:[93m8[0m - [91merror[0m[90m TS18048: [0m'ready' is possibly 'undefined'.
+
+[7m390[0m       !ready.schemaReady ||
+[7m   [0m [91m       ~~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m391[0m:[93m8[0m - [91merror[0m[90m TS18048: [0m'ready' is possibly 'undefined'.
+
+[7m391[0m       !ready.exportExecutable ||
+[7m   [0m [91m       ~~~~~[0m
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m392[0m:[93m22[0m - [91merror[0m[90m TS2769: [0mNo overload matches this call.
+  Overload 1 of 2, '(o: { [s: string]: string; } | ArrayLike<string>): [string, string][]', gave the following error.
+    Argument of type '{ schemaVersion: "owned-ai-budget-export-readiness/1.0.0"; profileVersion: "owned-ai-budget-export-profile/1.0.0"; checkerSha256: string; exportSha256: string; metadataSha256: string; } | undefined' is not assignable to parameter of type '{ [s: string]: string; } | ArrayLike<string>'.
+      Type 'undefined' is not assignable to type '{ [s: string]: string; } | ArrayLike<string>'.
+  Overload 2 of 2, '(o: {}): [string, any][]', gave the following error.
+    Argument of type '{ schemaVersion: "owned-ai-budget-export-readiness/1.0.0"; profileVersion: "owned-ai-budget-export-profile/1.0.0"; checkerSha256: string; exportSha256: string; metadataSha256: string; } | undefined' is not assignable to parameter of type '{}'.
+      Type 'undefined' is not assignable to type '{}'.
+
+[7m392[0m       Object.entries(expected).some(
+[7m   [0m [91m                     ~~~~~~~~[0m
+
+[96mapp/lib/server/owned-ai-budget-export.ts[0m:[93m393[0m:[93m27[0m - [91merror[0m[90m TS18048: [0m'ready' is possibly 'undefined'.
+
+[7m393[0m         ([key, value]) => ready[key as keyof typeof ready] !== value,
+[7m   [0m [91m                          ~~~~~[0m
+
+{"rootFiles":4,"sourceFiles":51,"diagnostics":31}

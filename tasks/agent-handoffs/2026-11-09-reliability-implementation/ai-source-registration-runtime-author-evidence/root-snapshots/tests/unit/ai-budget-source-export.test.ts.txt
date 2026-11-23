@@ -1,0 +1,230 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  readAiBudgetSourceExport,
+  validateAiBudgetSourceExport,
+  AiBudgetSourceExportError,
+} from "../../app/lib/server/ai-budget-source-export";
+import { createSourceBoundAiBudgetOperationId } from "../../app/lib/server/ai-budget-source";
+const id = (n: number) =>
+  `d0000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const owner = id(1);
+// Explicit synthetic test profile; never production source pins.
+const profile = {
+  schemaVersion: "ai-budget-source-readiness/1.0.0" as const,
+  profileVersion: "ai-budget-source-profile/1.0.0" as const,
+  checkerSha256: "1".repeat(64),
+  reserveSha256: "2".repeat(64),
+  exportSha256: "3".repeat(64),
+  metadataSha256: "4".repeat(64),
+};
+const ready = () => ({
+  ...profile,
+  schemaReady: true,
+  reserveExecutable: false,
+  exportExecutable: true,
+});
+function row(n = 1, org = id(2)) {
+  const source = {
+    schemaVersion: "ai-budget-source/1.0.0" as const,
+    kind: "legacy_rewrite" as const,
+    analysisId: id(3),
+    resumeVersionId: id(4),
+    requestNonce: `synthetic-request-${n}`,
+  };
+  return {
+    operationId: createSourceBoundAiBudgetOperationId({
+      userId: owner,
+      organizationId: org,
+      source,
+    }),
+    ownerId: owner,
+    organizationId: org,
+    kind: source.kind,
+    analysisId: source.analysisId,
+    resumeId: id(5),
+    resumeVersionId: source.resumeVersionId,
+    requestNonce: source.requestNonce,
+    bindingSha256: "a".repeat(64),
+    registeredAt: "2026-11-15T00:00:00.123456Z",
+  };
+}
+const fixture = () => ({
+  schemaVersion: "owned-ai-budget-sources/1.0.0",
+  ownerId: owner,
+  sources: [row()],
+});
+type Reply = { data: unknown; error: unknown };
+function client(data: unknown = fixture(), metadata: unknown = ready()) {
+  const signals: AbortSignal[] = [];
+  const rpc = vi.fn((name: string) => ({
+    abortSignal(signal: AbortSignal): Promise<Reply> {
+      signals.push(signal);
+      return Promise.resolve({
+        data: name === "read_ai_budget_source_readiness" ? metadata : data,
+        error: null,
+      });
+    },
+    then<TResult1 = Reply, TResult2 = never>(
+      yes?: ((reply: Reply) => TResult1 | PromiseLike<TResult1>) | null,
+      no?: ((error: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+    ) {
+      return Promise.resolve({
+        data: name === "read_ai_budget_source_readiness" ? metadata : data,
+        error: null,
+      }).then(yes, no);
+    },
+  }));
+  return { rpc, signals };
+}
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
+describe("mandatory owner-wide source registration export", () => {
+  it("requires exact export capability and preserves the complete owner set across organizations", async () => {
+    const data = { ...fixture(), sources: [row(), row(2, id(9))] },
+      db = client(data);
+    expect(await readAiBudgetSourceExport(db, owner, profile)).toEqual(data);
+    expect(db.rpc.mock.calls).toEqual([
+      ["read_ai_budget_source_readiness", {}],
+      ["export_owned_ai_budget_sources", { p_user_id: owner }],
+    ]);
+    expect(db.signals[0]).toBe(db.signals[1]);
+  });
+  it("accepts empty retained inventory only with actual independent export readiness", async () => {
+    const data = { ...fixture(), sources: [] };
+    expect(
+      await readAiBudgetSourceExport(client(data), owner, profile),
+    ).toEqual(data);
+  });
+  it.each([
+    null,
+    {},
+    { ...ready(), schemaReady: false },
+    { ...ready(), exportExecutable: false },
+    { ...ready(), extra: true },
+    { ...ready(), exportSha256: "0".repeat(64) },
+  ])("refuses malformed/denied export metadata %#", async (metadata) => {
+    const db = client(fixture(), metadata);
+    await expect(readAiBudgetSourceExport(db, owner, profile)).rejects.toEqual(
+      new AiBudgetSourceExportError(),
+    );
+    expect(db.rpc).toHaveBeenCalledTimes(1);
+  });
+  it.each(
+    [
+      null,
+      {},
+      [],
+      { ...fixture(), ownerId: id(99) },
+      { ...fixture(), sources: undefined },
+      { ...fixture(), extra: true },
+    ].map((data) => ({ data })),
+  )("refuses incomplete/open/foreign owner export %#", async ({ data }) => {
+    await expect(
+      readAiBudgetSourceExport(client(data), owner, profile),
+    ).rejects.toEqual(new AiBudgetSourceExportError());
+  });
+  it.each([
+    "operationId",
+    "ownerId",
+    "organizationId",
+    "kind",
+    "analysisId",
+    "resumeId",
+    "resumeVersionId",
+    "requestNonce",
+    "bindingSha256",
+    "registeredAt",
+  ])("requires exact source field %s", (key) => {
+    const data = fixture();
+    Reflect.deleteProperty(data.sources[0], key);
+    expect(() => validateAiBudgetSourceExport(data, owner)).toThrow(
+      AiBudgetSourceExportError,
+    );
+  });
+  it.each([
+    { operationId: id(99) },
+    { ownerId: id(99) },
+    { organizationId: id(99) },
+    { analysisId: id(99) },
+    { resumeVersionId: id(99) },
+    { requestNonce: "other-request" },
+    { bindingSha256: "wrong" },
+    { registeredAt: "2026-11-15T00:00:00Z" },
+    { registeredAt: "2026-11-15T00:00:00.1234567Z" },
+    { registeredAt: "2026-02-30T00:00:00.123456Z" },
+    { extra: true },
+  ])("recomputes OP2 and rejects malformed immutable rows %#", (patch) => {
+    const data = fixture();
+    Object.assign(data.sources[0], patch);
+    expect(() => validateAiBudgetSourceExport(data, owner)).toThrow(
+      AiBudgetSourceExportError,
+    );
+  });
+  it("refuses duplicate registrations without truncation", () => {
+    const data = fixture();
+    data.sources.push(row());
+    expect(() => validateAiBudgetSourceExport(data, owner)).toThrow(
+      AiBudgetSourceExportError,
+    );
+  });
+  it("accepts4096 source rows and refuses4097 as one incomplete export", () => {
+    const data = {
+      ...fixture(),
+      sources: Array.from({ length: 4096 }, (_, i) => row(i)),
+    };
+    expect(validateAiBudgetSourceExport(data, owner).sources).toHaveLength(
+      4096,
+    );
+    data.sources.push(row(99999));
+    expect(() => validateAiBudgetSourceExport(data, owner)).toThrow(
+      AiBudgetSourceExportError,
+    );
+  });
+  it("bounds raw bytes and never invokes object or array getters", () => {
+    expect(() =>
+      validateAiBudgetSourceExport(
+        { ...fixture(), extra: "x".repeat(33554432) },
+        owner,
+      ),
+    ).toThrow(AiBudgetSourceExportError);
+    const getter = vi.fn(() => {
+        throw Error("PRIVATE_GETTER");
+      }),
+      data = fixture();
+    Object.defineProperty(data.sources, "0", { get: getter, enumerable: true });
+    expect(() => validateAiBudgetSourceExport(data, owner)).toThrow(
+      AiBudgetSourceExportError,
+    );
+    expect(getter).not.toHaveBeenCalled();
+  });
+  it.each([
+    "read_ai_budget_source_readiness",
+    "export_owned_ai_budget_sources",
+  ])("bounds missing %s and refuses late cancelled data", async (method) => {
+    vi.useFakeTimers();
+    const db = client(),
+      original = db.rpc.getMockImplementation()!;
+    db.rpc.mockImplementation((name) =>
+      name === method
+        ? {
+            abortSignal(signal: AbortSignal) {
+              db.signals.push(signal);
+              return new Promise<Reply>(() => {});
+            },
+            then() {
+              return new Promise<never>(() => {});
+            },
+          }
+        : original(name),
+    );
+    const pending = readAiBudgetSourceExport(db, owner, profile, {
+      timeoutMs: 20,
+    }).catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(20);
+    expect(await pending).toEqual(new AiBudgetSourceExportError());
+    expect(db.signals.every((signal) => signal.aborted)).toBe(true);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});

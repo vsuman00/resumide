@@ -1,0 +1,96 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE",
+  "task": "CR-A12 forward prose publication and exact canonical usage compatibility",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "createdAt": "2026-11-14T19:24:20.779767+00:00",
+  "predecessorReceipt": "a12-rewrite-integrated-54da8d96-616a-44d0-846b-7abbb9a530d2.json",
+  "predecessorInputs": 838,
+  "changedAtAdmission": [],
+  "finding": "a12-rewrite-guard-compatibility-finding.json",
+  "migration": "supabase/migrations/20261114192207_canonical_rewrite_compatibility.sql",
+  "migrationPredecessor": "20261114181344_canonical_rewrite_operations.sql",
+  "ownership": {
+    "runtime": [
+      "supabase/migrations/20261114192207_canonical_rewrite_compatibility.sql",
+      "app/lib/server/canonical-rewrite-readiness-profile.ts",
+      "app/lib/server/canonical-rewrite-usage.ts",
+      "tests/unit/canonical-rewrite-usage.test.ts",
+      "scripts/verify-canonical-rewrite-compatibility.sql",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a12-rewrite-compatibility.md"
+    ],
+    "backend": [
+      "app/lib/server/canonical-rewrite-contract.ts",
+      "app/lib/server/canonical-rewrite-service.ts",
+      "tests/unit/canonical-rewrite-service.test.ts",
+      "tests/unit/canonical-rewrite-contract.test.ts",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a12-rewrite-compatibility.md"
+    ],
+    "frontend": [
+      "tests/unit/canonical-rewrite-route.test.ts",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a12-rewrite-compatibility.md"
+    ],
+    "root": [
+      "shared exact contract/migration order",
+      "integration/review/combined gate",
+      "plans/design/privacy/CONTEXT"
+    ]
+  },
+  "contract": {
+    "publication": "Forward guarded finish removes only protected legacy analysis_ai_runs INSERT. Existing private operation.run_id/state/usage is canonical technical run; immutable version/head/projection/receipt remain atomic. Do not weaken old scoring guard/base138/typed13 or frozen original migration/candidate/support policies.",
+    "usageRpc": "public.read_canonical_rewrite_usage(p_user_id uuid,p_analysis_id uuid): owned analysis/org, server-derived current UTC month, unchanged legacy totals + all claimed canonical known usage including rejected; unresolved claimed usage count, original immutable claimed_at month for late settlement.",
+    "usageDto": {
+      "schemaVersion": "canonical-rewrite-usage/1.0.0",
+      "profileVersion": "canonical-rewrite-readiness-profile/1.0.1",
+      "keys": [
+        "schemaVersion",
+        "profileVersion",
+        "usageSha256",
+        "ownerId",
+        "organizationId",
+        "analysisId",
+        "periodStart",
+        "periodEnd",
+        "legacyTokens",
+        "canonicalTokens",
+        "totalTokens",
+        "unknownClaims"
+      ],
+      "period": "YYYY-MM-DD UTC month start/end; caller cannot select org/period. Reject ambiguous/cross-month response conservatively.",
+      "tokens": "canonical nonnegative decimal strings; BigInt components must sum; unknownClaims>0 refuses admission, never coerced zero.",
+      "pin": "actual catalog usage function SHA matched to actual released profile"
+    },
+    "helper": "readCanonicalRewriteUsage(client,{ownerId,organizationId,analysisId},options?{signal,timeoutMs<=5000,now}) strict admission, no old-counter fallback; service compares BigInt known+reserve to cap.",
+    "readiness": "Successor profile1.0.1 requires usageSha256 +actual updated checker/finish/metadata pins and exact new counter definition/ACL. Existing source/draft/support policies unchanged.",
+    "privacy": "No new content store; existing operation/version/head export includes retained canonical run metadata. Retention/erasure activation HOLD remains.",
+    "limits": "Budget-off monthly read is still a snapshot, not an atomic global cap or month/dispatch concurrency proof; existing shared budget transaction remains authoritative when enabled.",
+    "fixtureAmendment": "Only hardcoded syntheticprofile in canonical-rewrite-contract.test updates version1.0.1+required syntheticvalidhex usageSha. Original assertions/case IDs stay; actual routefixtures require real released profile pins."
+  },
+  "acceptance": [
+    "Actual old service can wrongly dispatch from legacy0 despite canonical spend/unknown metadata: preserve finite behavioral RED",
+    "Unknown/malformed/foreign/wrong-profile/period/components never dispatch or fallback",
+    "Exact owned replay precedes newcounter/provider work; old28 service/9route assertions retained with honest successor DTO fixtures",
+    "Source-body review proves only intended finish INSERT removed; all existing score guards/frozenpolicies unchanged",
+    "Forward native counter/profile/checker proofs and deferred verifier remain unparsed/unexecuted/default-denied",
+    "One coordinated affected application gate plus fulltypes/lint/web/worker on integrated candidate; preserve failed attempts/receipts"
+  ],
+  "boundaries": "Pinned sealed Node22 source/synthetic/fakeRPC only. No SQL parse/execution/advisors/DB/hosted writes/services/browser/compiler/Docker/providers/actual env/keys/PII/dependencies/Git/deployment. Supabase direct; never DockerDB. Original351 candidate remains frozen historical, full64goal ACTIVE.",
+  "serviceTestTransfer": "Original runtime0e5 service.test released/frozen; successor ownership transferred tobackend. Runtime owns newusage.test only.",
+  "integratedFiles": {
+    "supabase/migrations/20261114192207_canonical_rewrite_compatibility.sql": "00833163ac60a1d80909b6b73533525e7dbc7697f62388dcc17d01d74b62c248",
+    "app/lib/server/canonical-rewrite-readiness-profile.ts": "d80052f60c25dbb45210c8ddefaa11fde67a1f817ac43e398a6c89523a93a151",
+    "app/lib/server/canonical-rewrite-usage.ts": "a51cfb8cd780f04cb254f43691f53f8110efa6a656ea85a2069e5ceaac2a4c33",
+    "app/lib/server/canonical-rewrite-contract.ts": "9986127e127171c98520cd4218855bd54c6068df1c2d948c0bed7fa7fcc9882c",
+    "app/lib/server/canonical-rewrite-service.ts": "4c19b95e96133389ea7b584dd8d8e098f24946f1fc993d73ba2abf013dda8e2e",
+    "tests/unit/canonical-rewrite-service.test.ts": "730e7c2ed76d64ee4c63e2b517afdb6efdc80bda7675f8822468e98beff8b6e9",
+    "tests/unit/canonical-rewrite-contract.test.ts": "249a9319d8d1539e67f6132e256a4f05bb11bbb322dd791095a975b6586cf058",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a12-rewrite-compatibility.md": "7da656e08d7cc46a5c7650758effe6310ae7516e4cf11e016e549115cea915d9",
+    "tests/unit/canonical-rewrite-route.test.ts": "5a0d5d90f8019fd0b5a3c736c6b53f56cf4b89827b9815e741fa9227366d086a",
+    "tests/unit/canonical-rewrite-usage.test.ts": "c597b4c38299851183d97cc0ea272a9a35f29323b27e7f490f96dccccd4488ec",
+    "scripts/verify-canonical-rewrite-compatibility.sql": "9ae2f7e6f1a5383a714e0e9249f9aadba0ad8ff19ca723a94e0b46d34041daf7",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a12-rewrite-compatibility.md": "ef1d524322b855c3c345e4f327d475715e4033d916df9d59bf55d33347c866e8",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a12-rewrite-compatibility.md": "5b2146479c152727715a74a426b1cdb86d3c476d0763a76675dac0a666ee97e9"
+  },
+  "sourceReview": "a12-rewrite-compatibility-source-review.json",
+  "sourceProfileSha256": "d80052f60c25dbb45210c8ddefaa11fde67a1f817ac43e398a6c89523a93a151",
+  "remaining": "Native execution/catalog/ACL/transactions/privacy/races/cleanup; actualfresh-v2 draft initialization prerequisite under separate source design; broader consumer/provider/usefulness. Budget-off remains snapshot read, not atomic cap."
+}

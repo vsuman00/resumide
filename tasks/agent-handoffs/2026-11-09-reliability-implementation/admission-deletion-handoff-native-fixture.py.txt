@@ -1,0 +1,225 @@
+"""Exercise the sealed preparation and adopted Storage handoff with PostgreSQL 17."""
+import ast
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+from tempfile import TemporaryDirectory
+
+migrations = Path("supabase/migrations")
+fixtures = Path(__file__).parent
+
+def source(prefix):
+    file, = migrations.glob(prefix + "_*.sql")
+    return file.read_text()
+
+def section(text, start, end):
+    start_at = text.index(start)
+    return text[start_at:text.index(end, start_at)]
+
+def literal(file, name):
+    return next(
+        ast.literal_eval(node.value)
+        for node in ast.parse((fixtures / file).read_text()).body
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in node.targets)
+    )
+
+scaffold = literal("admission-cleanup-recovery-native-fixture.py.txt", "scaffold")
+scaffold += """
+alter table public.data_requests add column next_attempt_at timestamptz not null default clock_timestamp(),
+  add column last_error_code text, add column created_at timestamptz not null default clock_timestamp(),
+  add column organization_id uuid, add column completed_at timestamptz, add column result_manifest jsonb;
+alter table public.analyses add column status text not null default 'completed';
+alter table public.resumes add column status text not null default 'active';
+alter table public.resume_versions add foreign key(resume_id) references public.resumes(id) on delete cascade;
+create table public.privacy_request_steps(request_id uuid, step_key text, status text, completed_at timestamptz,
+  attempt_count integer default 0,last_error_code text);
+create table public.document_evidence_attempts(id uuid primary key, analysis_id uuid, owner_id uuid,
+  organization_id uuid,resume_version_id uuid,input_sha256 text,attempt_number integer,envelope jsonb);
+create table public.consents(user_id uuid);
+create table public.memberships(user_id uuid);
+create table public.profiles(id uuid);
+create table private.owned_ai_deletion_dispositions(owner_id uuid primary key,first_request_id uuid,
+  prepared_at timestamptz,expires_at timestamptz,phase text);
+-- Existing accounting consumers are outside this fixture; the real preparation stores the account marker.
+create function private.privacy_generation_current() returns bigint language sql as 'select 1::bigint';
+create function private.privacy_generation_advance(uuid) returns void language sql as 'select';
+create function private.capture_owned_ai_operation_dispositions(uuid,uuid,uuid,uuid) returns void
+language plpgsql as $fixture_failure$
+begin
+  if current_setting('fixture.fail_after_plan',true)='on' then
+    raise exception 'Synthetic failure after the plan was inserted';
+  end if;
+end;
+$fixture_failure$;
+create function private.capture_owned_legacy_ai_usage(uuid,uuid,uuid,uuid) returns void language sql as 'select';
+create function private.retire_initial_feedback_publications(uuid,uuid,uuid,uuid) returns void language sql as 'select';
+"""
+
+manifest = source("20261115131621").split("$disposition_patches$",2)[1]
+blocked = next(x for x in json.loads(manifest) if x["signature"] == "private.candidate_write_blocked(uuid)")
+assert hashlib.sha256(blocked["new"].encode()).hexdigest()==blocked["after"]
+durable_guard = """create function private.candidate_write_blocked(p_owner_id uuid)
+returns boolean language sql volatile set search_path='' as $hold$""" + blocked["new"] + "$hold$;"
+
+seed = """
+create temporary table fixture_adopted(
+  request_id uuid, owner_id uuid, org_id uuid, analysis_id uuid, resume_id uuid, version_id uuid,
+  job_id uuid, upload_id uuid, object_id uuid, operation_id uuid, storage_key text
+);
+insert into fixture_adopted
+select gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),
+  gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),'';
+update fixture_adopted set storage_key='organizations/'||org_id||'/resumes/'||resume_id||'/versions/'||version_id||'.pdf';
+
+insert into auth.users select owner_id from fixture_adopted;
+insert into public.organizations select org_id,owner_id from fixture_adopted;
+insert into public.data_requests(id,user_id,kind,status,lease_owner,lease_expires_at,attempt_count,privacy_generation,organization_id)
+  select request_id,owner_id,'deletion','processing','worker',clock_timestamp()+interval '5 minutes',1,1,org_id from fixture_adopted;
+insert into public.privacy_request_steps(request_id,step_key,status)
+  select request_id,step,'queued' from fixture_adopted cross join (values('database'),('objects')) list(step);
+insert into public.resumes select resume_id,owner_id,org_id,'active' from fixture_adopted;
+insert into public.resume_versions select version_id,owner_id,org_id,resume_id,storage_key,100,repeat('b',64) from fixture_adopted;
+insert into public.jobs select job_id,owner_id,org_id from fixture_adopted;
+insert into public.analyses select analysis_id,owner_id,org_id,version_id,job_id,'completed' from fixture_adopted;
+insert into public.analysis_jobs select analysis_id,'recorded-worker',clock_timestamp()-interval '1 hour' from fixture_adopted;
+insert into private.analysis_admission_operations(id,organization_id,owner_id,idempotency_key,binding_sha256)
+  select operation_id,org_id,owner_id,gen_random_uuid(),repeat('a',64) from fixture_adopted;
+insert into private.analysis_admission_uploads(id,operation_id,analysis_id,resume_id,version_id,job_id,storage_key)
+  select upload_id,operation_id,analysis_id,resume_id,version_id,job_id,storage_key from fixture_adopted;
+insert into private.analysis_admission_upload_transport(upload_id,bucket,dispatched_at,acknowledged_at,object_id)
+  select upload_id,'resumes',clock_timestamp(),clock_timestamp(),object_id from fixture_adopted;
+update private.analysis_admission_uploads set state='adopted' where id=(select upload_id from fixture_adopted);
+update private.analysis_admission_operations set adopted_upload_id=(select upload_id from fixture_adopted)
+  where id=(select operation_id from fixture_adopted);
+"""
+
+baseline = "--baseline" in sys.argv
+prepare = "public.prepare_deletion_request" if baseline else "public.prepare_deletion_request_with_admission_handoff"
+handoff = """
+do $$
+declare f fixture_adopted%rowtype; plan jsonb;
+begin
+  select * into strict f from fixture_adopted;
+  begin
+    perform PREPARE(f.request_id,'worker',1);
+    raise exception 'Recorded worker did not hold deletion';
+  exception when sqlstate 'P0A01' then null;end;
+  assert exists(select 1 from public.resume_versions where id=f.version_id);
+  assert not exists(select 1 from private.privacy_deletion_plans where request_id=f.request_id);
+  delete from public.analysis_jobs where analysis_id=f.analysis_id;
+
+  begin
+    perform public.prepare_deletion_request(f.request_id,'worker',1);
+    raise exception 'The legacy path bypassed the transaction handoff';
+  exception when sqlstate 'P0A01' then null;end;
+  assert exists(select 1 from public.resume_versions where id=f.version_id);
+
+  begin
+    plan:=PREPARE(f.request_id,'worker',1);
+  exception when sqlstate 'P0A01' then
+    raise exception 'Adopted source could not enter the durable deletion plan';
+  end;
+  assert plan#>>'{admissionHandoff,adoptedObjects,0,objectId}'=f.object_id::text;
+  assert plan#>>'{admissionHandoff,adoptedObjects,0,storageKey}'=f.storage_key;
+  assert plan#>>'{admissionHandoff,adoptedObjects,0,verified}'='false';
+  assert not exists(select 1 from public.resume_versions where id=f.version_id);
+  assert exists(select 1 from private.privacy_deletion_plans where request_id=f.request_id);
+  assert exists(select 1 from private.owned_ai_deletion_dispositions where owner_id=f.owner_id);
+  assert exists(select 1 from private.analysis_admission_deletion_handoffs where request_id=f.request_id and authorized_xid is null);
+  assert (select status='completed' from public.privacy_request_steps where request_id=f.request_id and step_key='database');
+  assert not public.complete_analysis_admission_deletion_object(f.request_id,'worker',1,f.upload_id,gen_random_uuid());
+  assert public.complete_analysis_admission_deletion_object(f.request_id,'worker',1,f.upload_id,f.object_id);
+end;
+$$;
+""".replace("PREPARE(",prepare+"(")
+
+retry = """
+do $$
+declare f fixture_adopted%rowtype; plan jsonb;
+begin
+  select * into strict f from fixture_adopted;
+  begin
+    perform public.prepare_deletion_request(f.request_id,'worker',1);
+    raise exception 'Legacy retry reused the new handoff';
+  exception when sqlstate 'P0A01' then null;end;
+  begin
+    perform public.complete_privacy_request(f.request_id,'worker',1,'{"deleted":true}');
+    raise exception 'Account completion passed while the original admission ledger remained';
+  exception when sqlstate 'P0A01' then null;end;
+  assert (select status='processing' from public.data_requests where id=f.request_id);
+  assert exists(select 1 from private.privacy_deletion_plans where request_id=f.request_id);
+  update public.data_requests set status='failed' where id=f.request_id;
+  assert private.candidate_write_blocked(f.owner_id);
+  update public.data_requests set status='processing', attempt_count=2 where id=f.request_id;
+  assert not public.complete_analysis_admission_deletion_object(f.request_id,'worker',1,f.upload_id,f.object_id);
+  plan:=public.prepare_deletion_request_with_admission_handoff(f.request_id,'worker',2);
+  assert plan#>>'{admissionHandoff,adoptedObjects,0,verified}'='true';
+  assert plan#>>'{admissionHandoff,attempt}'='2';
+  assert private.analysis_admission_export_records(f.owner_id)#>>'{analysisAdmissionRetirementCaptures,0,deletionHandoff,firstAttempt}'='1';
+  assert not has_table_privilege('service_role','private.analysis_admission_deletion_handoffs','SELECT,INSERT,UPDATE,DELETE');
+end;
+$$;
+"""
+
+rollback = """
+do $$
+declare f fixture_adopted%rowtype;
+begin
+  select * into strict f from fixture_adopted;
+  delete from public.analysis_jobs where analysis_id=f.analysis_id;
+  perform set_config('fixture.fail_after_plan','on',true);
+  begin
+    perform public.prepare_deletion_request_with_admission_handoff(f.request_id,'worker',1);
+    raise exception 'Expected the injected failure';
+  exception when raise_exception then
+    assert sqlerrm='Synthetic failure after the plan was inserted';
+  end;
+  assert exists(select 1 from public.resume_versions where id=f.version_id);
+  assert not exists(select 1 from private.privacy_deletion_plans where request_id=f.request_id);
+  assert not exists(select 1 from private.analysis_admission_deletion_handoffs where request_id=f.request_id);
+  assert not exists(select 1 from private.owned_ai_deletion_dispositions where owner_id=f.owner_id);
+  insert into public.analysis_jobs values(f.analysis_id,'recorded-worker',clock_timestamp()-interval '1 hour');
+end;
+$$;
+"""
+
+gen = source("20261116075250")
+transport_start = seed.index("insert into private.analysis_admission_upload_transport")
+versions = ["20261121091814","20261121130718","20261121132235","20261121203700","20261121205500",
+            "20261121211200","20261121212400"]
+sql = "\n".join([
+    scaffold,
+    section(source("20260911130000"),"create table private.privacy_deletion_plans","revoke all on private.privacy_deletion_plans"),
+    section(source("20261110080809"),"create table private.analysis_admission_operations","create function private.analysis_admission_denied"),
+    section(source("20261109164851"),"create function private.candidate_owner_lock_keys","-- A false try-lock"),
+    section(gen,"create function private.privacy_generation_claim","create function public.fail_privacy_request"),
+    section(gen,"create function public.prepare_deletion_request","create function private.privacy_generation_catalogue"),
+    section(source("20261110080810"),"create function private.analysis_job_v2_review_handoff","create function public.claim_analysis_job_v2"),
+    durable_guard,
+    section(source("20261110085512"),"create function private.try_candidate_privacy_write","create function private.serialize_deletion_request"),
+    # Seed pre-existing records before the current admission intake triggers.
+    seed[:transport_start], *(source(version) for version in versions), seed[transport_start:],
+    "" if baseline else source("20261121214800"), "" if baseline else rollback,
+    handoff, "" if baseline else retry,
+])
+
+with TemporaryDirectory(prefix="resumide-adopted-handoff-") as tmp:
+    env = {"HOME": tmp, "PATH": "/opt/homebrew/bin:/usr/bin:/bin", "LC_ALL": "C"}
+    data = str(Path(tmp) / "data")
+
+    def run(argv, **options):
+        return subprocess.run(argv, env=env, timeout=25, text=True, check=True, **options)
+
+    assert run(["postgres","--version"],capture_output=True).stdout.startswith("postgres (PostgreSQL) 17.")
+    run(["initdb","-D",data,"--no-sync","--auth=trust","-U","fixture_owner"],stdout=subprocess.DEVNULL)
+    try:
+        run(["pg_ctl","-w","-D",data,"-l",str(Path(tmp)/"postgres.log"),
+             "-o",f"-c listen_addresses='' -c unix_socket_directories={tmp} -c unix_socket_permissions=0700","start"],
+            stdout=subprocess.DEVNULL)
+        run(["psql","-X","-v","ON_ERROR_STOP=1","-h",tmp,"-U","fixture_owner","-d","postgres","-Atq"],input=sql)
+        print("PASS: bound handoff, transactional rollback, prepared-owner barrier, exact object receipt, retry, and continued completion hold.")
+    finally:
+        if (Path(data)/"postmaster.pid").exists():
+            run(["pg_ctl","-w","-D",data,"-m","immediate","stop"],stdout=subprocess.DEVNULL)

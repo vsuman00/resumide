@@ -1,0 +1,51 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats[39m
+
+ [31m❯[39m tests/unit/worker-readiness.test.ts [2m([22m[2m17 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m16 skipped[39m[2m)[22m[32m 5[2mms[22m[39m
+[31m     [31m×[31m blocks selected initial feedback without its metadata capabilities[39m[32m 5[2mms[22m[39m
+     [2m[90m↓[39m[22m checks score and correction storage before claiming work
+     [2m[90m↓[39m[22m stops on missing storage without exposing provider error content
+     [2m[90m↓[39m[22m stops enabled capabilities when the required read-only RPC is missing
+     [2m[90m↓[39m[22m checks only the selected capability metadata: {"fencing":true,"budget":false}
+     [2m[90m↓[39m[22m checks only the selected capability metadata: {"fencing":false,"budget":true}
+     [2m[90m↓[39m[22m checks only the selected capability metadata: {"fencing":true,"budget":true}
+     [2m[90m↓[39m[22m keeps disabled AI budget in legacy table-only readiness
+     [2m[90m↓[39m[22m rejects missing, invalid, mismatched or unready capability metadata 0
+     [2m[90m↓[39m[22m rejects missing, invalid, mismatched or unready capability metadata 1
+     [2m[90m↓[39m[22m rejects missing, invalid, mismatched or unready capability metadata 2
+     [2m[90m↓[39m[22m rejects missing, invalid, mismatched or unready capability metadata 3
+     [2m[90m↓[39m[22m rejects missing, invalid, mismatched or unready capability metadata 4
+     [2m[90m↓[39m[22m rejects missing, invalid, mismatched or unready capability metadata 5
+     [2m[90m↓[39m[22m does not issue any query when startup is already aborted
+     [2m[90m↓[39m[22m bounds a missing probe response and aborts its actual query signal
+     [2m[90m↓[39m[22m cannot accept a late success from a query that ignores cancellation
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/unit/worker-readiness.test.ts[2m > [22mworker schema readiness[2m > [22mblocks selected initial feedback without its metadata capabilities
+[31m[1mAssertionError[22m: promise resolved "undefined" instead of rejecting[39m
+
+[32m- Expected:[39m
+Error {
+  "message": "rejected promise",
+}
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m tests/unit/worker-readiness.test.ts:[2m78:5[22m[39m
+    [90m 76|[39m     [35mawait[39m [34mexpect[39m(
+    [90m 77|[39m       [34massertWorkerSchemaReady[39m(fixture[33m.[39mclient [35mas[39m never[33m,[39m options)[33m,[39m
+    [90m 78|[39m     )[33m.[39mrejects[33m.[39m[34mtoMatchObject[39m({ code[33m:[39m [32m"WORKER_SCHEMA_INVALID"[39m })[33m;[39m
+    [90m   |[39m     [31m^[39m
+    [90m 79|[39m   })[33m;[39m
+    [90m 80|[39m   it("checks score and correction storage before claiming work", async…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m16 skipped[39m[90m (17)[39m
+[2m   Start at [22m 17:36:48
+[2m   Duration [22m 132ms[2m (transform 26ms, setup 0ms, import 61ms, tests 5ms, environment 0ms)[22m
+

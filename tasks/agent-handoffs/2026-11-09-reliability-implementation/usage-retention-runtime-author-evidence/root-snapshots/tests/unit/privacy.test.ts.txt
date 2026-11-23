@@ -1,0 +1,848 @@
+import { OWNED_LEGACY_AI_USAGE_PROFILE } from "../../app/lib/server/owned-legacy-ai-usage-profile";
+import { AI_BUDGET_SOURCE_PROFILE } from "../../app/lib/server/ai-budget-source-profile";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createHash } from "node:crypto";
+import { OWNED_AI_BUDGET_EXPORT_PROFILE } from "../../app/lib/server/owned-ai-budget-export-profile";
+import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
+import type { OwnedAiDispositionExport } from "../../app/lib/server/owned-ai-disposition-export";
+import {
+  INITIAL_FEEDBACK_PROFILE,
+  OWNED_AI_RETIREMENT_PROFILE,
+} from "../../app/lib/server/initial-feedback-profile";
+const mocks = vi.hoisted(() => ({
+  from: vi.fn(),
+  rpc: vi.fn(),
+  error: { code: "55P03", message: "private barrier detail" },
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseAdminClient: () => ({ from: mocks.from, rpc: mocks.rpc }),
+}));
+import {
+  AI_CONSENT_POLICY_VERSION,
+  requireAndRecordAiConsent,
+  createDataRequest,
+  cancelDataRequest,
+} from "../../app/lib/server/privacy";
+import { PublicApiError } from "../../app/lib/server/errors";
+import { SupabasePrivacyRequestRepository } from "../../app/lib/server/privacy-worker";
+import { scoreExtractedResume } from "../../app/lib/server/scoring-stage";
+
+const filters: unknown[][] = [];
+const ownerId = "00000000-0000-4000-8000-000000000001";
+const requestId = "00000000-0000-4000-8000-000000000002";
+beforeEach(() => {
+  vi.resetAllMocks();
+  filters.length = 0;
+  mocks.error = { code: "55P03", message: "private barrier detail" };
+  mocks.from.mockImplementation((table: string) => {
+    const query = {
+      select: () => query,
+      limit: () => query,
+      eq: (field: string, value: string) => {
+        filters.push([table, field, value]);
+        return query;
+      },
+      update: (value: unknown) => {
+        filters.push([table, "update", value]);
+        return query;
+      },
+      insert: async (value: unknown) => {
+        filters.push([table, "insert", value]);
+        return { error: mocks.error };
+      },
+      maybeSingle: async () =>
+        table === "memberships"
+          ? { data: { organization_id: requestId }, error: null }
+          : { data: null, error: mocks.error },
+    };
+    return query;
+  });
+});
+
+describe("privacy policy", () => {
+  it("uses an explicit versioned AI consent policy", () => {
+    expect(AI_CONSENT_POLICY_VERSION).toBe("candidate-ai-v1");
+  });
+
+  it("denies AI transfer before any database call when consent is absent", async () => {
+    await expect(
+      requireAndRecordAiConsent({
+        userId: "user-1",
+        accepted: false,
+        requestId: "request-1",
+      }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN", status: 403 });
+  });
+});
+
+describe("privacy mutation contention", () => {
+  it("maps actual request creation contention to a safe retryable 503", async () => {
+    const error: unknown = await createDataRequest({
+      userId: ownerId,
+      kind: "deletion",
+      requestId: "synthetic-request",
+    }).catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(PublicApiError);
+    expect(error).toMatchObject({
+      code: "SERVICE_UNAVAILABLE",
+      status: 503,
+      retryable: true,
+      message: "Privacy changes are busy. Try again shortly.",
+    });
+    expect(error).not.toHaveProperty("cause");
+    expect(String(error) + JSON.stringify(error)).not.toContain(
+      "private barrier detail",
+    );
+    expect(mocks.from).not.toHaveBeenCalledWith("audit_events");
+    expect(filters).toContainEqual(["memberships", "user_id", ownerId]);
+    expect(filters).toContainEqual(["memberships", "role", "owner"]);
+  });
+
+  it("maps actual cancellation contention while retaining exact owner and queued predicates", async () => {
+    const error: unknown = await cancelDataRequest({
+      userId: ownerId,
+      requestId,
+      auditRequestId: "synthetic-request",
+    }).catch((caught: unknown) => caught);
+    expect(error).toBeInstanceOf(PublicApiError);
+    expect(error).toMatchObject({
+      code: "SERVICE_UNAVAILABLE",
+      status: 503,
+      retryable: true,
+    });
+    expect(error).not.toHaveProperty("cause");
+    expect(String(error) + JSON.stringify(error)).not.toContain(
+      "private barrier detail",
+    );
+    expect(filters).toContainEqual([
+      "data_requests",
+      "update",
+      { status: "cancelled" },
+    ]);
+    expect(filters).toContainEqual(["data_requests", "id", requestId]);
+    expect(filters).toContainEqual(["data_requests", "user_id", ownerId]);
+    expect(filters).toContainEqual(["data_requests", "status", "queued"]);
+    expect(mocks.from).not.toHaveBeenCalledWith("audit_events");
+  });
+
+  it("keeps unknown SQL failures as fixed generic errors without attaching private details", async () => {
+    mocks.error = { code: "XX000", message: "private barrier detail" };
+    for (const [mutation, message] of [
+      [
+        () =>
+          createDataRequest({
+            userId: ownerId,
+            kind: "deletion",
+            requestId: "synthetic-request",
+          }),
+        "Privacy request could not be created.",
+      ],
+      [
+        () =>
+          cancelDataRequest({
+            userId: ownerId,
+            requestId,
+            auditRequestId: "synthetic-request",
+          }),
+        "Privacy request could not be cancelled.",
+      ],
+    ] as const) {
+      const error: unknown = await mutation().catch(
+        (caught: unknown) => caught,
+      );
+      expect(error).toBeInstanceOf(Error);
+      expect(error).not.toBeInstanceOf(PublicApiError);
+      expect(error).toHaveProperty("message", message);
+      expect(error).not.toHaveProperty("cause");
+      expect(String(error) + JSON.stringify(error)).not.toContain(
+        "private barrier detail",
+      );
+    }
+  });
+});
+
+// Persisted native identifiers/digests are synthetic. The result checksum uses
+// the unchanged scorer; this is an export-decoder test, not installed SQL proof.
+const exportUuid = (n: number) =>
+  `90000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const hashText = (value: string) =>
+  createHash("sha256").update(value).digest("hex");
+function scoringInputRow(
+  organizationId = exportUuid(2),
+  analysisId = exportUuid(3),
+) {
+  const text = "Experience\nBuilt services using Python";
+  const description =
+    "Python experience required.\nFictional original job requirement.";
+  const textChecksum = hashText(text);
+  const context = {
+    schemaVersion: "legacy-scoring-input/1.0.0",
+    analysisId,
+    ownerId,
+    organizationId,
+    requestId: null,
+    source: {
+      resumeId: exportUuid(4),
+      resumeVersionId: exportUuid(5),
+      fileChecksum: "1".repeat(64),
+      bytes: 1234,
+      mediaType: "application/pdf",
+    },
+    extraction: {
+      text,
+      pageCount: 1,
+      pageTexts: [text],
+      textChecksum,
+      extractorVersion: "fixture-extractor-v1",
+      contentSha256: "2".repeat(64),
+    },
+    job: {
+      kind: "owned_job",
+      id: exportUuid(6),
+      title: "Fictional engineer",
+      description,
+      companyName: "Fictional company",
+      contentSha256: "3".repeat(64),
+    },
+    binding: {
+      schemaVersion: "legacy-scoring-binding/1.0.0",
+      analysisId,
+      ownerId,
+      organizationId,
+      resumeId: exportUuid(4),
+      resumeVersionId: exportUuid(5),
+      fileChecksum: "1".repeat(64),
+      textChecksum,
+      extractionSha256: "2".repeat(64),
+      jobId: exportUuid(6),
+      jobSha256: "3".repeat(64),
+      inputBindingSha256: "4".repeat(64),
+    },
+    producer: {
+      parserVersion: "parse-sim-v1",
+      rulesetVersion: "ats-rules-v4",
+      normalizerVersion: "normalizer-v1",
+      taxonomyVersion: "skills-taxonomy-v1",
+    },
+  };
+  const result = scoreExtractedResume({
+    text,
+    pageCount: 1,
+    pageTexts: [text],
+    jobDescription: description,
+    textChecksum,
+  });
+  return {
+    analysis_id: analysisId,
+    organization_id: organizationId,
+    owner_id: ownerId,
+    resume_id: context.source.resumeId,
+    resume_version_id: context.source.resumeVersionId,
+    extraction_analysis_id: analysisId,
+    job_id: context.job.id,
+    worker_id: "fixture-scorer",
+    attempt: 1,
+    lease_fence: exportUuid(7),
+    process_id: "fixture-process",
+    request_id: "fixture-request",
+    input_context: context,
+    input_binding_sha256: context.binding.inputBindingSha256,
+    result_checksum: result.resultChecksum,
+    deterministic_content_sha256: "5".repeat(64),
+    created_at: "2026-11-15T00:00:00.123456Z",
+  };
+}
+const privacyExportRequest = {
+  id: requestId,
+  kind: "export" as const,
+  userId: ownerId,
+  organizationId: exportUuid(2),
+  attempt: 1,
+  workerId: "privacy-fixture",
+};
+const oldWorkspaceCollections = [
+  "canonicalResumeVersions",
+  "resumeFacts",
+  "canonicalResumeHeads",
+  "changeEvents",
+  "jobRequirementVersions",
+  "jobRequirements",
+  "authoringEvents",
+  "candidateCorrectionOperations",
+  "candidateCorrectionAssignments",
+  "candidateCorrectionApplications",
+  "canonicalCorrectionSnapshots",
+  "canonicalCorrectionSnapshotFacts",
+  "candidateEntryAssociationBatches",
+  "candidateEntryAssociationGroups",
+  "candidateEntryAssociationMembers",
+  "canonicalEntryAssociationSnapshots",
+  "canonicalEntryAssociationLinks",
+  "candidateEntryRegroupBatches",
+  "candidateEntryRegroupGroups",
+  "candidateEntryRegroupMembers",
+  "canonicalEntryRegroupSnapshots",
+  "canonicalEntryRegroupLinks",
+];
+function privacyExportStore(data: unknown, error: unknown = null) {
+  const subjects = new Set([privacyExportRequest.userId]);
+  const dispositions: Pick<
+    OwnedAiDispositionExport,
+    "accounts" | "operations"
+  > = { accounts: [], operations: [] };
+  const dispositionMetadata = {
+    ...OWNED_AI_DISPOSITION_PROFILE,
+    schemaReady: true,
+    exportExecutable: true,
+    accessExecutable: false,
+  };
+  mocks.from.mockImplementation((table: string) => {
+    if (table === "analysis_scoring_inputs")
+      throw Error("PRIVATE_TABLE_FALLBACK_FORBIDDEN");
+    const query = {
+      select: vi.fn(() => query),
+      eq: vi.fn(async () => ({ data: [], error: null })),
+    };
+    return query;
+  });
+  mocks.rpc.mockImplementation(
+    async (name: string, args: Record<string, unknown> = {}) => {
+      if ("p_user_id" in args && !subjects.has(String(args.p_user_id)))
+        return { data: null, error: { code: "42501" } };
+      if (name === "read_owned_legacy_ai_usage_readiness")
+        return {
+          data: {
+            ...OWNED_LEGACY_AI_USAGE_PROFILE,
+            schemaReady: true,
+            exportExecutable: true,
+          },
+          error: null,
+        };
+      if (name === "export_owned_legacy_ai_usage_records")
+        return {
+          data: {
+            schemaVersion: "owned-legacy-ai-usage-export/1.0.0",
+            ownerId: args.p_user_id,
+            records: [],
+          },
+          error: null,
+        };
+      if (name === "read_ai_budget_source_readiness")
+        return {
+          data: {
+            ...AI_BUDGET_SOURCE_PROFILE,
+            schemaReady: true,
+            reserveExecutable: false,
+            exportExecutable: true,
+          },
+          error: null,
+        };
+      if (name === "export_owned_ai_budget_sources")
+        return {
+          data: {
+            schemaVersion: "owned-ai-budget-sources/2.0.0",
+            ownerId: args.p_user_id,
+            sources: [],
+          },
+          error: null,
+        };
+      if (name === "read_owned_ai_disposition_readiness")
+        return { data: dispositionMetadata, error: null };
+      if (name === "export_owned_ai_disposition_records")
+        return {
+          data: {
+            schemaVersion: "owned-ai-disposition-export/1.0.0",
+            ownerId: args.p_user_id,
+            ...dispositions,
+          },
+          error: null,
+        };
+      if (name === "export_legacy_scoring_inputs") return { data, error };
+      if (name === "export_resume_workspace_records")
+        return {
+          data: Object.fromEntries(
+            oldWorkspaceCollections.map((key) => [key, []]),
+          ),
+          error: null,
+        };
+      if (name === "export_canonical_rewrite_records")
+        return {
+          data: {
+            schemaVersion: "canonical-rewrite-export/1.0.0",
+            canonicalRewriteOperations: [],
+            canonicalRewriteVersions: [],
+            canonicalRewriteHeads: [],
+          },
+          error: null,
+        };
+      const paired =
+        name === "read_owned_ai_budget_export_readiness"
+          ? {
+              ...OWNED_AI_BUDGET_EXPORT_PROFILE,
+              schemaReady: true,
+              exportExecutable: true,
+            }
+          : name === "export_owned_ai_budget_records"
+            ? {
+                schemaVersion: "owned-ai-budget-export/1.0.0",
+                ownerId: privacyExportRequest.userId,
+                operations: [],
+                attempts: [],
+                events: [],
+                reconciliationOperators: [],
+                operatorActions: [],
+                omissions: {
+                  sharedPools: "not_subject_attributable",
+                  periodOpenings: "not_subject_attributable",
+                  foreignOperatorIdentity: "redacted",
+                  foreignTargetHistory: "redacted",
+                },
+              }
+            : name === "read_initial_feedback_readiness"
+              ? {
+                  ...INITIAL_FEEDBACK_PROFILE,
+                  schemaReady: true,
+                  readerExecutable: true,
+                  prepareExecutable: true,
+                  claimExecutable: true,
+                  settleExecutable: true,
+                  finishExecutable: true,
+                  usageExecutable: true,
+                  exportExecutable: true,
+                }
+              : name === "export_initial_feedback_records"
+                ? {
+                    schemaVersion: "initial-feedback-export/1.0.0",
+                    operations: [],
+                    attempts: [],
+                    publications: [],
+                  }
+                : name === "read_owned_ai_retirement_readiness"
+                  ? {
+                      ...OWNED_AI_RETIREMENT_PROFILE,
+                      schemaReady: true,
+                      exportExecutable: true,
+                    }
+                  : name === "export_owned_ai_retirement_records"
+                    ? {
+                        schemaVersion: "owned-ai-retirement-export/1.0.0",
+                        retirements: [],
+                      }
+                    : undefined;
+      if (paired !== undefined) return { data: paired, error: null };
+      throw Error("UNEXPECTED_EXPORT_RPC");
+    },
+  );
+  return { dispositions, dispositionMetadata, subjects };
+}
+afterEach(() => vi.useRealTimers());
+describe("original legacy scoring-input privacy export", () => {
+  it("includes retained owner dispositions without treating export capability as access permission", async () => {
+    const f = privacyExportStore({
+      schemaVersion: "legacy-scoring-export/1.0.0",
+      scoringInputs: [],
+    });
+    f.dispositions.accounts.push({
+      owner_id: privacyExportRequest.userId,
+      first_request_id: requestId,
+      prepared_at: "2026-11-15T00:00:00.123456Z",
+      expires_at: "2026-12-15T00:00:00.123456Z",
+      phase: "prepared",
+    });
+    const manifest =
+      await new SupabasePrivacyRequestRepository().buildExportManifest(
+        privacyExportRequest,
+      );
+    expect(manifest.records.ownedAiDeletionDispositions).toEqual(
+      f.dispositions.accounts,
+    );
+    expect(manifest.records.ownedAiOperationDispositions).toEqual([]);
+    expect(f.dispositionMetadata.accessExecutable).toBe(false);
+    expect(mocks.rpc).toHaveBeenCalledWith(
+      "export_owned_ai_disposition_records",
+      { p_user_id: privacyExportRequest.userId },
+    );
+    expect(mocks.rpc).not.toHaveBeenCalledWith(
+      "read_candidate_privacy_access",
+      expect.anything(),
+    );
+  });
+  it("refuses the complete legacy export when its distinct disposition capability is denied", async () => {
+    const f = privacyExportStore({
+      schemaVersion: "legacy-scoring-export/1.0.0",
+      scoringInputs: [],
+    });
+    f.dispositionMetadata.exportExecutable = false;
+    await expect(
+      new SupabasePrivacyRequestRepository().buildExportManifest(
+        privacyExportRequest,
+      ),
+    ).rejects.toThrow("Privacy export data is unavailable.");
+    expect(mocks.rpc).not.toHaveBeenCalledWith(
+      "export_owned_ai_disposition_records",
+      expect.anything(),
+    );
+  });
+  it("includes complete original scoring snapshots across the same owner's historical organizations", async () => {
+    const base = scoringInputRow(exportUuid(2), exportUuid(22));
+    const noJob = {
+      ...base,
+      job_id: null,
+      input_context: {
+        ...base.input_context,
+        job: { kind: "none" },
+        extraction: { ...base.input_context.extraction, pageTexts: [] },
+        binding: {
+          ...base.input_context.binding,
+          jobId: null,
+          jobSha256: null,
+        },
+      },
+      result_checksum: scoreExtractedResume({
+        text: base.input_context.extraction.text,
+        pageCount: 1,
+        pageTexts: [],
+        jobDescription: "",
+        textChecksum: base.input_context.extraction.textChecksum,
+      }).resultChecksum,
+    };
+    const originalSourceRow = scoringInputRow();
+    const rows = [
+      originalSourceRow,
+      scoringInputRow(exportUuid(20), exportUuid(21)),
+      noJob,
+    ];
+    privacyExportStore({
+      schemaVersion: "legacy-scoring-export/1.0.0",
+      scoringInputs: rows,
+    });
+    const manifest =
+      await new SupabasePrivacyRequestRepository().buildExportManifest(
+        privacyExportRequest,
+      );
+    expect(manifest.records.legacyScoringInputs).toEqual(rows);
+    expect(mocks.rpc).toHaveBeenCalledWith("export_legacy_scoring_inputs", {
+      p_user_id: ownerId,
+    });
+    expect(
+      mocks.rpc.mock.calls.filter(
+        ([name]) => name === "export_legacy_scoring_inputs",
+      ),
+    ).toHaveLength(1);
+    expect(mocks.from).not.toHaveBeenCalledWith("analysis_scoring_inputs");
+    expect(manifest.records.legacyScoringInputs[0]).toHaveProperty(
+      "input_context.job.description",
+      originalSourceRow.input_context.job.description,
+    );
+    expect(manifest.records.legacyScoringInputs[0]).toHaveProperty(
+      "input_context.requestId",
+      null,
+    );
+    expect(manifest.records.legacyScoringInputs[1]).toHaveProperty(
+      "organization_id",
+      exportUuid(20),
+    );
+    expect(manifest.records.legacyScoringInputs[2]).toHaveProperty(
+      "job_id",
+      null,
+    );
+    expect(manifest.records.legacyScoringInputs[2]).toHaveProperty(
+      "input_context.extraction.pageTexts",
+      [],
+    );
+  });
+  it("accepts an explicitly versioned empty export and still reads the native collection", async () => {
+    privacyExportStore({
+      schemaVersion: "legacy-scoring-export/1.0.0",
+      scoringInputs: [],
+    });
+    const manifest =
+      await new SupabasePrivacyRequestRepository().buildExportManifest(
+        privacyExportRequest,
+      );
+    expect(manifest.records.legacyScoringInputs).toEqual([]);
+    expect(mocks.rpc).toHaveBeenCalledWith("export_legacy_scoring_inputs", {
+      p_user_id: ownerId,
+    });
+  });
+  it.each([
+    ["missing response", null],
+    ["missing collection", { schemaVersion: "legacy-scoring-export/1.0.0" }],
+    [
+      "wrong version",
+      { schemaVersion: "legacy-scoring-export/2.0.0", scoringInputs: [] },
+    ],
+    [
+      "nonarray collection",
+      { schemaVersion: "legacy-scoring-export/1.0.0", scoringInputs: {} },
+    ],
+    [
+      "unknown envelope field",
+      {
+        schemaVersion: "legacy-scoring-export/1.0.0",
+        scoringInputs: [],
+        partial: true,
+      },
+    ],
+  ])(
+    "refuses %s without manufacturing an empty or partial collection",
+    async (_label, data) => {
+      privacyExportStore(data);
+      await expect(
+        new SupabasePrivacyRequestRepository().buildExportManifest(
+          privacyExportRequest,
+        ),
+      ).rejects.toThrow("Privacy export data is unavailable.");
+      expect(
+        mocks.rpc.mock.calls.filter(
+          ([name]) => name === "export_legacy_scoring_inputs",
+        ),
+      ).toHaveLength(1);
+    },
+  );
+  const corruptions: Array<
+    [string, (row: ReturnType<typeof scoringInputRow>) => void]
+  > = [
+    [
+      "foreign row owner",
+      (row) => {
+        row.owner_id = exportUuid(99);
+      },
+    ],
+    [
+      "foreign embedded owner",
+      (row) => {
+        row.input_context.ownerId = exportUuid(99);
+      },
+    ],
+    [
+      "embedded organization",
+      (row) => {
+        row.input_context.organizationId = exportUuid(99);
+      },
+    ],
+    [
+      "binding organization",
+      (row) => {
+        row.input_context.binding.organizationId = exportUuid(99);
+      },
+    ],
+    [
+      "extraction identity",
+      (row) => {
+        row.extraction_analysis_id = exportUuid(99);
+      },
+    ],
+    [
+      "source resume identity",
+      (row) => {
+        row.resume_id = exportUuid(99);
+      },
+    ],
+    [
+      "source version identity",
+      (row) => {
+        row.resume_version_id = exportUuid(99);
+      },
+    ],
+    [
+      "job identity",
+      (row) => {
+        row.job_id = exportUuid(99);
+      },
+    ],
+    [
+      "input binding digest",
+      (row) => {
+        row.input_binding_sha256 = "6".repeat(64);
+      },
+    ],
+    [
+      "extraction content digest",
+      (row) => {
+        row.input_context.binding.extractionSha256 = "6".repeat(64);
+      },
+    ],
+    [
+      "exact source checksum",
+      (row) => {
+        row.input_context.extraction.text += " Changed text.";
+      },
+    ],
+    [
+      "result checksum shape",
+      (row) => {
+        row.result_checksum = "invalid";
+      },
+    ],
+    [
+      "native content digest shape",
+      (row) => {
+        row.deterministic_content_sha256 = "invalid";
+      },
+    ],
+    [
+      "unsafe worker identity",
+      (row) => {
+        row.worker_id = "unsafe worker";
+      },
+    ],
+    [
+      "attempt bounds",
+      (row) => {
+        row.attempt = 4;
+      },
+    ],
+    [
+      "timestamp shape",
+      (row) => {
+        row.created_at = "not-a-native-timestamp";
+      },
+    ],
+    [
+      "invalid calendar date",
+      (row) => {
+        row.created_at = "2026-02-31T00:00:00Z";
+      },
+    ],
+  ];
+  it.each(corruptions)(
+    "refuses %s and does not complete a misleading export",
+    async (_label, mutate) => {
+      const row = scoringInputRow();
+      mutate(row);
+      privacyExportStore({
+        schemaVersion: "legacy-scoring-export/1.0.0",
+        scoringInputs: [row],
+      });
+      const error: unknown = await new SupabasePrivacyRequestRepository()
+        .buildExportManifest(privacyExportRequest)
+        .catch((caught: unknown) => caught);
+      expect(error).toBeInstanceOf(Error);
+      expect(error).toHaveProperty(
+        "message",
+        "Privacy export data is unavailable.",
+      );
+      expect(error).not.toHaveProperty("cause");
+      expect(mocks.from).not.toHaveBeenCalledWith("analysis_scoring_inputs");
+    },
+  );
+  it("requires all row and nested fields and rejects unknown row fields", async () => {
+    const original = scoringInputRow();
+    for (const key of Object.keys(original)) {
+      const row: Record<string, unknown> = { ...original };
+      delete row[key];
+      privacyExportStore({
+        schemaVersion: "legacy-scoring-export/1.0.0",
+        scoringInputs: [row],
+      });
+      await expect(
+        new SupabasePrivacyRequestRepository().buildExportManifest(
+          privacyExportRequest,
+        ),
+      ).rejects.toThrow("Privacy export data is unavailable.");
+    }
+    for (const row of [
+      { ...original, unexpected: true },
+      {
+        ...original,
+        input_context: {
+          ...original.input_context,
+          producer: { ...original.input_context.producer, unexpected: true },
+        },
+      },
+    ]) {
+      privacyExportStore({
+        schemaVersion: "legacy-scoring-export/1.0.0",
+        scoringInputs: [row],
+      });
+      await expect(
+        new SupabasePrivacyRequestRepository().buildExportManifest(
+          privacyExportRequest,
+        ),
+      ).rejects.toThrow("Privacy export data is unavailable.");
+    }
+  });
+  it("fails the whole collection on duplicate analysis identity or row-count overflow", async () => {
+    const row = scoringInputRow();
+    for (const rows of [
+      [row, structuredClone(row)],
+      Array.from({ length: 4097 }, () => row),
+    ]) {
+      privacyExportStore({
+        schemaVersion: "legacy-scoring-export/1.0.0",
+        scoringInputs: rows,
+      });
+      await expect(
+        new SupabasePrivacyRequestRepository().buildExportManifest(
+          privacyExportRequest,
+        ),
+      ).rejects.toThrow("Privacy export data is unavailable.");
+    }
+  });
+  it("rejects the oversized envelope without returning partial snapshots", async () => {
+    const row = scoringInputRow();
+    row.input_context.job.description = "x".repeat(32 * 1024 * 1024);
+    privacyExportStore({
+      schemaVersion: "legacy-scoring-export/1.0.0",
+      scoringInputs: [row],
+    });
+    await expect(
+      new SupabasePrivacyRequestRepository().buildExportManifest(
+        privacyExportRequest,
+      ),
+    ).rejects.toThrow("Privacy export data is unavailable.");
+  });
+  it.each(["42501", "42883"])(
+    "refuses staged or missing native export %s with no flag-off omission or private error",
+    async (code) => {
+      privacyExportStore(null, { code, message: "PRIVATE_EXPORT_DETAIL" });
+      const error: unknown = await new SupabasePrivacyRequestRepository()
+        .buildExportManifest(privacyExportRequest)
+        .catch((caught: unknown) => caught);
+      expect(error).toHaveProperty(
+        "message",
+        "Privacy export data is unavailable.",
+      );
+      expect(String(error) + JSON.stringify(error)).not.toContain(
+        "PRIVATE_EXPORT_DETAIL",
+      );
+      expect(error).not.toHaveProperty("cause");
+      expect(
+        mocks.rpc.mock.calls.filter(
+          ([name]) => name === "export_legacy_scoring_inputs",
+        ),
+      ).toHaveLength(1);
+    },
+  );
+  it("bounds a native export that never settles, without retrying or leaking its body", async () => {
+    privacyExportStore({
+      schemaVersion: "legacy-scoring-export/1.0.0",
+      scoringInputs: [],
+    });
+    const ordinary = mocks.rpc.getMockImplementation();
+    if (!ordinary) throw Error("EXPECTED_EXPORT_FAKE");
+    mocks.rpc.mockImplementation((name: string, ...args: unknown[]) =>
+      name === "export_legacy_scoring_inputs"
+        ? new Promise(() => undefined)
+        : ordinary(name, ...args),
+    );
+    vi.useFakeTimers();
+    const result = new SupabasePrivacyRequestRepository()
+      .buildExportManifest(privacyExportRequest)
+      .then(
+        () => "unexpected success",
+        (error: unknown) => error,
+      );
+    await vi.advanceTimersByTimeAsync(5001);
+    expect(await result).toHaveProperty(
+      "message",
+      "Privacy export data is unavailable.",
+    );
+    expect(
+      mocks.rpc.mock.calls.filter(
+        ([name]) => name === "export_legacy_scoring_inputs",
+      ),
+    ).toHaveLength(1);
+  });
+});

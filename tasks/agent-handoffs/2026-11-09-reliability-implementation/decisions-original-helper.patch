@@ -1,0 +1,80 @@
+--- before/app/lib/server/jd-clause-order-drafting.ts
++++ after/app/lib/server/jd-clause-order-drafting.ts
+@@ -200,13 +200,55 @@
+   }
+ }
+ 
+-function requireDraftContext(context: RequirementRelationshipContext) {
++/** Rebuild the original proposal binding from an owned immutable selected pair.
++ * Current reader heads remain untouched; only Native decides fresh-head admission. */
++export function rebuildOriginalJdClauseOrderDraft(
++  rawContext: unknown,
++  expected: { analysisId: string; ownerId: string },
++  rawSelection: unknown,
++): JdClauseOrderDraft {
++  try {
++    const selection = JdClauseOrderSelectionSchema.parse(rawSelection);
++    const context = validateRequirementRelationshipContext(
++      rawContext,
++      expected.analysisId,
++      expected.ownerId,
++      {
++        canonicalVersionId: selection.canonicalVersionId,
++        requirementVersionId: selection.requirementVersionId,
++      },
++    );
++    const proposalHeads = {
++      canonicalHeadId: context.canonical.versionId,
++      canonicalHeadRevision: context.canonical.revision,
++      requirementHeadId: context.requirements.versionId,
++      requirementHeadRevision: context.requirements.revision,
++    };
++    return draftFromValidated(
++      context,
++      expected,
++      selection,
++      requireDraftContext(context, "original"),
++      undefined,
++      proposalHeads,
++    );
++  } catch (error) {
++    if (error instanceof TypedAuthoringError) throw error;
++    fail("invalid_context");
++  }
++}
++
++function requireDraftContext(
++  context: RequirementRelationshipContext,
++  freshness: "fresh" | "original" = "fresh",
++) {
+   const { canonical, requirements, heads, attempt } = context;
+   if (
+-    canonical.versionId !== heads.canonicalHeadId ||
+-    canonical.revision !== heads.canonicalHeadRevision ||
+-    requirements.versionId !== heads.requirementHeadId ||
+-    requirements.revision !== heads.requirementHeadRevision
++    freshness === "fresh" &&
++    (canonical.versionId !== heads.canonicalHeadId ||
++      canonical.revision !== heads.canonicalHeadRevision ||
++      requirements.versionId !== heads.requirementHeadId ||
++      requirements.revision !== heads.requirementHeadRevision)
+   )
+     fail("stale_inputs");
+   if (
+@@ -259,6 +301,7 @@
+   selection: z.infer<typeof JdClauseOrderSelectionSchema>,
+   streams = requireDraftContext(context),
+   preparedWriting?: ReturnType<typeof prepareWritingContext>,
++  proposalHeads?: z.infer<typeof TypedAuthoringBindingSchema>["heads"],
+ ): JdClauseOrderDraft {
+   const { canonical, requirements, heads, attempt } = context;
+   const fact = canonical.content.facts.find(
+@@ -404,7 +447,7 @@
+         inputSha256: requirements.inputSha256,
+         contentSha256: requirements.contentSha256,
+       },
+-      heads,
++      heads: proposalHeads ?? heads,
+       profilesSha256: sha(JSON.stringify(context.profiles)),
+     },
+     policies: {

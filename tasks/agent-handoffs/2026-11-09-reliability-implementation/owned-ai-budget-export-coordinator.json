@@ -1,0 +1,498 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE",
+  "owner": "pricing_validation",
+  "parent": [
+    "CR-R03",
+    "CR-R19"
+  ],
+  "files": [
+    "supabase/migrations/20261115102625_owned_ai_budget_export.sql",
+    "app/lib/server/owned-ai-budget-export.ts",
+    "app/lib/server/owned-ai-budget-export-profile.ts",
+    "tests/unit/owned-ai-budget-export.test.ts",
+    "tests/unit/owned-ai-budget-export-sql.test.ts",
+    "scripts/verify-owned-ai-budget-export.sql",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-owned-ai-budget-export.md"
+  ],
+  "migration": "supabase/migrations/20261115102625_owned_ai_budget_export.sql",
+  "scope": "Read-only owner-wide technical budget export only; no ledger mutations, newdebit, expiry, worker activation or fake readiness",
+  "acceptance": [
+    "Read actual R03 schema/guards/operations contract; no invented row signatures. Preserve old migrations/body bytes. Actual CLI scaffold before body.",
+    "Export owned operations, their attempts and events across organizations/flags/periods; include own reconciliation operator records and own operator action metadata without another subjects attempt/operation/usage history. Explicit foreign actor/target redaction, never raw shared pool/opening histories as owner data.",
+    "Canonical string numeric counters and UTC timestamps, preserve nullable unknown usage. Reject NaN/infinity/noninteger/negative/oversize or inconsistent cost/state. No JSON numeric precision loss/zero/clip.",
+    "Separate exact versioned envelope, bounded complete replies (fail whole export rather than truncate) and closed Node schemas with full owner/parent/uniqueness/cost correlations. No membership/current-content eligibility filtering of retained owned records.",
+    "Native export securitydefiner with empty searchpath/default dataDENIED; metadata-only optional service grant. Real closed table/function/role/ACL source profile with no selfhash cycles; do not claim existing R03 runtime ready.",
+    "Explicit seven-key readiness (two versions,two bools,checker/export/metadata hashes) and corresponding five-string source profile; actual catalog body hashes, no placeholder/defaultfake pins.",
+    "Strict Node owner-only adapter with explicit profile, abort/deadline/malformed/permission failure closed, safe fixed errors. FakeRPC/SOURCE tests before/after; privileged rollback verifier draft UNRUN.",
+    "Paired privacy worker adoption is next separate leaf, no feature flag omission; preserve unknown holds and original periods. No source/PII/provider/environment material in logs."
+  ],
+  "actorPolicy": "For own budget events, foreign operator UUID is redacted explicitly; preserve that an operator acted. For subject-as-operator actions on another owners attempt, export only subjects own actor/action timestamp/reconciliation evidence receipt, no foreign attempt/operation/owner IDs or token/cost history. Document exact omission/redaction scope; never claim pools/openings attributed to subject without a real row relationship.",
+  "boundaries": "Source/synthetic/fakeRPC only; no SQL parse/execute/advisors/DB/hosted/services/provider/env/PII/deps/Git/deploy",
+  "preimages": {
+    "app/lib/server/owned-ai-budget-export.ts": null,
+    "app/lib/server/owned-ai-budget-export-profile.ts": null,
+    "tests/unit/owned-ai-budget-export.test.ts": null,
+    "tests/unit/owned-ai-budget-export-sql.test.ts": null,
+    "scripts/verify-owned-ai-budget-export.sql": null,
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-owned-ai-budget-export.md": null,
+    "supabase/migrations/20261115102625_owned_ai_budget_export.sql": null
+  },
+  "readOnlySourceSync": {
+    "sourceInputs": 878,
+    "copiedFiles": {
+      "app/components/AuthoringWorkspace.tsx": {
+        "preimage": "1059f826db304d395907ccaff91117942af2cfbe2a7f1a86855b66a14a2275cb",
+        "postimage": "2df2550159d9a600b636fafd5c8d8c57778febb94b2cf8beecdc5d597c21aebc"
+      },
+      "app/components/CanonicalEntryRegroupReview.tsx": {
+        "preimage": null,
+        "postimage": "f47a7b609da2f44acf1d902c7d22e6fa57cd22d4a1822361e509a93432ba19fc"
+      },
+      "app/components/CanonicalRewritePanel.tsx": {
+        "preimage": null,
+        "postimage": "370162aadc0af706fb94ce2a1a9576f3f9fc0e714581c6d0e9c1f8bdbf233d5c"
+      },
+      "app/components/ParseView.tsx": {
+        "preimage": "4be66a398fc83a8c58ec9e283a76cf419ecce4d9fe7463fb05aa47a65f00eeea",
+        "postimage": "d28be85410b17a4541f68783abac2dcaef4c6bba3f4e0dbe393a09cb5101f4cf"
+      },
+      "app/components/ResumeWriter.tsx": {
+        "preimage": "5e486e008fb15c4a4c1bd5f44a57185607c2abc328c675d86c2b31ed9574836e",
+        "postimage": "dd1c6f75dd77444894b0db5069ae8a4b7482d64f0f23fa449b955719bf806484"
+      },
+      "app/components/RewriteGenerator.tsx": {
+        "preimage": "8ce7ac0affd281c489811a0fbf84a99cad2f56de40f274b0efdc357f23b27a7d",
+        "postimage": "92d49a51e4a0bae2e078273559bcec6faf1c982e4b146f88182fc01bd014a9ff"
+      },
+      "app/components/TypedAuthoringBridge.tsx": {
+        "preimage": "1d96b4831dceb5f92e4ce1f4b80f080a73d9715360f718eecf27274fe3cf1be5",
+        "postimage": "71640929e75a8e4ca738ed3a543ab88453aa87b04fee8060f8ea76357e3d6c10"
+      },
+      "app/components/TypedAuthoringReview.tsx": {
+        "preimage": "7e037d1854931c6a38b7eb027969ff5b3a7dfb667d00651c82567768a3140e93",
+        "postimage": "7daad5e0623441475e6f19c606683151d26b11d5cb749feb34dd59dcc733fa71"
+      },
+      "app/lib/server/artifact-repository.ts": {
+        "preimage": "f260234939e537eb5c92a6db3b01bc8d899f619975176bc78a68144c9e0df861",
+        "postimage": "6f46e7baf4665c4db1eaaad8f1ac8e144ac03be58fef32e167a4c0dc9c6cbbe3"
+      },
+      "app/lib/server/artifact-source-links.ts": {
+        "preimage": "1fbc9cd2f5c129fe7924f0b6f54467a3e2b7fb417fdb5a177677e62027c8d3c3",
+        "postimage": "1207c3f85f0a959465c90b377d11867a8dabb761a5ada632067e4fdb3e3ab573"
+      },
+      "app/lib/server/canonical-rewrite-workspace.ts": {
+        "preimage": null,
+        "postimage": "f73e1f4722b72d1bbfe685d7e2460a2864a8ad2b49dda30a4b678c4c618b08de"
+      },
+      "app/lib/server/initial-feedback-ai.ts": {
+        "preimage": null,
+        "postimage": "67035c816131428a0005cd48ee3af44578d1e30c5bf64b6df020c24d9e5df809"
+      },
+      "app/lib/server/initial-feedback-operation-repository.ts": {
+        "preimage": null,
+        "postimage": "22304ba67520f6679cd5dc60dfa12ee6c68d14265d63f5eeec70240d14ea87aa"
+      },
+      "app/lib/server/initial-feedback-plan.ts": {
+        "preimage": null,
+        "postimage": "f4645db230b01a456d8cb8868deac1f38bd9d1764fbd5a10981146bd24d3c554"
+      },
+      "app/lib/server/privacy-worker.ts": {
+        "preimage": "33f4dca1c3002fd24895e44406d38be14666c264ad9c39c4e18185d215cf6015",
+        "postimage": "5bcd063714e86a0bd7da68a50768b0082fe2b270468bde1a60d88a14aff30e6f"
+      },
+      "app/lib/server/qualitative-ai.ts": {
+        "preimage": "8d1d052042085620d94ca5f32abff23619ee0fd10bbc7f62fce0fb42f28c1b98",
+        "postimage": "df99c8e26a9a5b14fbebf519a57782395d7c27d9bb517417b5ea9c3f54229203"
+      },
+      "app/lib/server/rewrite-service.ts": {
+        "preimage": "05b3c9dc81e314e95d952c79429fd5a4d2d580cca47e03b87f606fdfb494bdea",
+        "postimage": "a507e2841722e7c777383e72a12810d128fd5058e2afe8441d9cf8213027c1fb"
+      },
+      "app/lib/server/typed-authoring-http.ts": {
+        "preimage": "7beb93b7a7579ca4eaf74b7a2147c4917b6fa48ad5a85f4b363b247e3c3e5f7b",
+        "postimage": "b7b23cd128678f96189ff2d14f74db5b8f845d800b7a71f950b516287fe299b3"
+      },
+      "app/lib/server/typed-authoring-readiness.ts": {
+        "preimage": null,
+        "postimage": "26668c00228ed6e7dc661b66e8eff1d3355f8ac0deaf0e7b108202c3f8445f28"
+      },
+      "app/lib/server/typed-authoring-repository.ts": {
+        "preimage": "c0cb217cda8eec5f24fc88c4fb5e9cc76f812a9a9a416c3c74cc21aa5b12ca24",
+        "postimage": "87580647b7114aa99dad5cf783fd338f54cd57d75f083b8ebd19b58a8109a596"
+      },
+      "app/routes.ts": {
+        "preimage": "2d7b3ea38738e355808489d4c971b23950ea5471917e5d3eac450e5905d4d3dd",
+        "postimage": "b49bc5517a17765c254899481c57cea4d7774b10c11930c9b63dd8826a094f38"
+      },
+      "app/routes/analysis.canonical.tsx": {
+        "preimage": "50f0f0061efba370ab1cc40d0ff8b0c9f687b574dbccedc1aaa073bf8e808ebf",
+        "postimage": "533b24c2e1fcfefd4ce5787492946f6dd9951cb433150dd466785791fcdf6af1"
+      },
+      "app/routes/analysis.evidence.tsx": {
+        "preimage": "79f8ab2a0f7a68f72347edfc9aa05a863eb413484cc163714dffa320a853f939",
+        "postimage": "b7066a60bebf73bc55e0d4bca3efa7a2eae434027292796a25ad35ae9678cf9f"
+      },
+      "app/routes/analysis.requirements.tsx": {
+        "preimage": "332f9e5b048c68c53ec28b81b8762969d87b1d30232fc4487350c75c10f4ae78",
+        "postimage": "7882ec477852f56cd0a0627d6e0ae6673e5e57ba5c028320e58fc0942ebd3f38"
+      },
+      "app/routes/analysis.rewrite.workspace.ts": {
+        "preimage": null,
+        "postimage": "99d74a89bfcdc57a38373a3f92142ef80a5ad2201c1b4228f737ab49a407dcf4"
+      },
+      "app/routes/analysis.score.tsx": {
+        "preimage": "8c6b061977217a55c6736e88cff54692b3294c9359b679950199cdf197ca749d",
+        "postimage": "e13535841c0d0666012e7b7acace043d03f4810b7dd202144a989f5587546e9b"
+      },
+      "e2e/authoring.spec.ts": {
+        "preimage": "69ac8f474a86cc5fc389640a263e6fd50fe2b83d3cfa3d3febd72b7ca648dc61",
+        "postimage": "a3cc24b1a46aa11e7acebdda33a56ee6986bd8cefa20f08e62c0710333c5a93b"
+      },
+      "scripts/scoring-validity-engineering.ts": {
+        "preimage": "3747fa6683f59c74ca1013dcd76b7fe503e2ad2bcb3df613380590c5f34eed7b",
+        "postimage": "711ae03b3a5c07130857c20cb098165792bd4d1a8b4218fe166c77f99bceab72"
+      },
+      "scripts/verify-authoring.ts": {
+        "preimage": "891939956818a9e89700f2c6c73b8f2e0110c4bf2e8d9ce2d79d8d0fb6b6a867",
+        "postimage": "02fce91e1e5a94e91df2f148c9606d1d0dac1f1c13427321dd5b2e9f7d14dfe2"
+      },
+      "scripts/verify-entry-regroup-admission.sql": {
+        "preimage": null,
+        "postimage": "4bca1dcc948b9cd26a21af8ed21404d00ffef04eb8b947bc147fe0da7540ca7d"
+      },
+      "scripts/verify-entry-regroup-ledger.sql": {
+        "preimage": null,
+        "postimage": "e6d26d73eb248ce40c482a24a7de272201477da351f9dcb5d68781c210762a94"
+      },
+      "scripts/verify-grouped-import-source.sql": {
+        "preimage": null,
+        "postimage": "5f94e7af34bba4523f6cc7314710bab90e94249eca52537fdb770d217db78b24"
+      },
+      "scripts/verify-grouped-original-read.sql": {
+        "preimage": null,
+        "postimage": "213eb56d27541ac3178d1b1e0a0eace372ad92e36a97b4bcf0c801cd1bbf53ee"
+      },
+      "scripts/verify-initial-feedback-publications.sql": {
+        "preimage": null,
+        "postimage": "6311bd25525da2fe71e987c79915620bfdfe75923aba039a63f9248a46b07cfd"
+      },
+      "scripts/verify-stored-scoring-source-access.sql": {
+        "preimage": null,
+        "postimage": "a888db2a7a5ea03fd05ece142e7c5205e4011ec421b7f58f7a1642b50c8d8727"
+      },
+      "supabase/migrations/20261115064102_stored_scoring_source_access.sql": {
+        "preimage": null,
+        "postimage": "9e857437bbd3d5995d7942b365406f9eb9f96197d3495853747cf950fdb1c1b2"
+      },
+      "tests/components/BuildAiAssistant.test.tsx": {
+        "preimage": "45c3e02d3ee034c7da5a149138b154cebd3c612c9074601babb3a40a1a5295e1",
+        "postimage": "ed736478debccec4587c4a52d55eeb007968a6d3197ae065eda625e08dc5b824"
+      },
+      "tests/components/CanonicalCorrections.test.tsx": {
+        "preimage": "c4512586717e37ce498b452f78921e17c2448d784717486c731badbdcecd6fad",
+        "postimage": "4986eb3db4b581107c2b6d270eeb9fc56406e60ab9035ba8c11e4c7271cca696"
+      },
+      "tests/components/CanonicalEntryRegroupDiff.test.tsx": {
+        "preimage": null,
+        "postimage": "9ddc3a1010c7488ea2a3a23bcf3bb58016ac44159edb0cfc862ea7a7a3959863"
+      },
+      "tests/components/CanonicalEntryRegroupReview.test.tsx": {
+        "preimage": null,
+        "postimage": "441e29250642baa237b6d6d5cab16c85185c562ad29308e019e1fbcde5d53e4b"
+      },
+      "tests/components/CanonicalRewritePanel.test.tsx": {
+        "preimage": null,
+        "postimage": "03ae07a3cc368c8e49b892030d74195444e3e7f0752ffe04a307c6ac5bd627cf"
+      },
+      "tests/components/GroupedOriginalImportReview.test.tsx": {
+        "preimage": null,
+        "postimage": "7c695d06008a2d91317ad8f0d23535f348eb088d0cfa52019241fe799b00fb05"
+      },
+      "tests/components/LatexCompileRecovery.test.tsx": {
+        "preimage": null,
+        "postimage": "47c40f234390bdb01da7e6e599d8b123aba2bddadf1adecc860f08bceebdf8d5"
+      },
+      "tests/components/Phase6Accessibility.test.tsx": {
+        "preimage": "42c292cc4b14f2778e7e4b0e55566c78cd0c07e1310d370400aab6541e614db4",
+        "postimage": "3158358972a85c44c680fb8d1af07cce925c031de4e2b9ab216135fb4a4981c9"
+      },
+      "tests/components/RequirementCoverageReview.test.tsx": {
+        "preimage": null,
+        "postimage": "970af1eae402982a5df0ef0316401d6ca8e64cdf4ce8cd92e2a483f614e89758"
+      },
+      "tests/components/ResumeWriter.test.tsx": {
+        "preimage": "08b8c05b47e1c2b38100b59b30d72e848068d5e1ae6b2a0416ffedd2ac8c3b87",
+        "postimage": "4ec3f41ee33d829d4514a610482c5bd6d05a965aade67d73fbb3104f8ea7b8d8"
+      },
+      "tests/components/RewriteGenerator.test.tsx": {
+        "preimage": "21ca68e55d7b8ba6ec9565795aaa4a7bed883cc9db27287c4538b96cfb944ce9",
+        "postimage": "daa991e2522ba19dbc84fb50c48ef275bfaa615fa67b975051cd5b63b767572e"
+      },
+      "tests/components/TypedAuthoringBridge.test.tsx": {
+        "preimage": null,
+        "postimage": "dde79015802068b924ef3d466e7f6e48cfc9be06830ef791602633b075617b75"
+      },
+      "tests/components/TypedAuthoringReview.test.tsx": {
+        "preimage": null,
+        "postimage": "499f34c9e09eda527e75c2e259b82044d2847aee1d4404ded5bef7b7ce229f9a"
+      },
+      "tests/components/WorkspaceRepairs.test.tsx": {
+        "preimage": "bc1deceb39cdb0834139752cad184a8b4dd048d8715bd9c0aa93caa6af6bd01b",
+        "postimage": "44370248cd8cf028e60aa5fd44f5afc73316cf1cacd12da3f135ee49dc92bb26"
+      },
+      "tests/fixtures/initial-feedback-plan-oracles.json": {
+        "preimage": null,
+        "postimage": "7b0e3da37bd4d1531bdcde710e3f47f800213d64ae30fab93b22e60474279042"
+      },
+      "tests/unit/ai-readiness.test.ts": {
+        "preimage": "410ce738586858c141227e022d7b43abce4a070cc37abd15bbf47b92da6cf4eb",
+        "postimage": "0aba1a5a2d214c95b69bfb1f5ff3ad9ac9249bdccee7ec89c666d065974ed819"
+      },
+      "tests/unit/artifact-repository.test.ts": {
+        "preimage": "5375a804fb554a93b94dd3798c94d932e0cada8e510330b60f2e8a7d12cf4b17",
+        "postimage": "a04170e8bfc95bd5cec34825c42f359b52bf2ee488f1772c8a51b86eb2e845fe"
+      },
+      "tests/unit/artifact-source-links.test.ts": {
+        "preimage": "188d8343b997e4426db9c7a590bc7449dd1ab0de18e5697add5165ea6aac6ac5",
+        "postimage": "5d2e46927f374f7c015308776caa5102fd21b6a01c2235d4d74758007babc52a"
+      },
+      "tests/unit/authoring-proposals.test.ts": {
+        "preimage": "e3439d4e333bf4ec48a13958f3670ace29223e690e3fba688557bb9c4c2cd05b",
+        "postimage": "451f46426c436306c4ea86937afa844b3c92f7d93c228debe10b4a40a5bcfdf8"
+      },
+      "tests/unit/canonical-corrections.test.ts": {
+        "preimage": "872a1f8e21242b1eb38d9efa24c431908211f492ed7c8a02e7cbaa76e292c7af",
+        "postimage": "8b261cdd879fd14dfcfb971a789797d0e545efddb1f67704d686255bcd9ec464"
+      },
+      "tests/unit/canonical-grouped-import.test.ts": {
+        "preimage": null,
+        "postimage": "8fce5d4feb0074561ce126f236945723243c59c08b6e24c3e9d22fdd2ebb0807"
+      },
+      "tests/unit/canonical-rewrite-contract.test.ts": {
+        "preimage": null,
+        "postimage": "249a9319d8d1539e67f6132e256a4f05bb11bbb322dd791095a975b6586cf058"
+      },
+      "tests/unit/canonical-rewrite-repository.test.ts": {
+        "preimage": null,
+        "postimage": "490cd0aede2609501cf424e97c62eb55c8a707a08bf960a1f03942bdaf9acfa8"
+      },
+      "tests/unit/canonical-rewrite-route.test.ts": {
+        "preimage": null,
+        "postimage": "5a0d5d90f8019fd0b5a3c736c6b53f56cf4b89827b9815e741fa9227366d086a"
+      },
+      "tests/unit/canonical-rewrite-score.test.ts": {
+        "preimage": null,
+        "postimage": "a0fa7b958ce7546953cde37ff093d708652f1ad006329f3b0bbf00563aa5b0c7"
+      },
+      "tests/unit/canonical-rewrite-workspace.test.ts": {
+        "preimage": null,
+        "postimage": "208d19001f6f93942de9c11899394becbc1db034c4fee6dd4562ef4d8a4352fd"
+      },
+      "tests/unit/canonical-route.test.ts": {
+        "preimage": "0256c28fedaa6959417d478ebf316a6803596ea46af9c50eabebdfa2c0e592b1",
+        "postimage": "c1a934ce8c12822b18f4c53a96010f286336240932887f9ac395f33b3d2c0438"
+      },
+      "tests/unit/config.test.ts": {
+        "preimage": "89506aeacd9978ff7a879a2364e9e7a9e768ce8ac05b845fcf7a44cfb7336c90",
+        "postimage": "ee514f3d5cb0d37e963b4b9abd7d9fd8d6c7dd10ce8746f00997ddd7fbd20c4d"
+      },
+      "tests/unit/entry-regroup-admission-sql.test.ts": {
+        "preimage": null,
+        "postimage": "ed354793da1032edd9b2f8b13be99312bb541b66f234bddbe566fec2344f3ae9"
+      },
+      "tests/unit/entry-regroup-ledger.test.ts": {
+        "preimage": null,
+        "postimage": "2c7ad1a9a2d2c9fa5d7f8192e562da7ca88cb0534b57b0049108b9e316140f18"
+      },
+      "tests/unit/evidence-entry-associations.test.ts": {
+        "preimage": null,
+        "postimage": "3c2ae64d94155f5b7093877756a34a79e4c1f647bb106ef8add01ebca6ec5168"
+      },
+      "tests/unit/evidence-review-route.test.ts": {
+        "preimage": "5ebd93471e4af2a7e47cbe7e39ab81b3cbdba9c6ddbce32f297ad6c7f4487963",
+        "postimage": "5f62c5986cf9c1688ddc9b856e1c76c61e1412733cf015213c642ff45bca04f7"
+      },
+      "tests/unit/grouped-import-commands.test.ts": {
+        "preimage": null,
+        "postimage": "9fec9667ca5d764a2e6f687dc7ad2abe7fd47d5d1fef870db04016a369de69d5"
+      },
+      "tests/unit/grouped-import-repository.test.ts": {
+        "preimage": null,
+        "postimage": "99dc86ddb3f8efd9727d606dcae95f15fdd12c86263fcf433d78e19614dd44c8"
+      },
+      "tests/unit/grouped-import-source-sql.test.ts": {
+        "preimage": null,
+        "postimage": "eb13f6aa8bfd84105be6996fc948f901ea4fe32a270716830c90b23c41e9f2ba"
+      },
+      "tests/unit/grouped-original-admission-sql.test.ts": {
+        "preimage": null,
+        "postimage": "e5ca16839d11707b462099f5571162c072e630aa9872c6f5c7a5d3453ec9feec"
+      },
+      "tests/unit/initial-feedback-ai.test.ts": {
+        "preimage": null,
+        "postimage": "8452eb9ed636d43bfc0e63718fdfe2d492ef725aa60b0678464c22b0a32367e5"
+      },
+      "tests/unit/initial-feedback-operation-contract.test.ts": {
+        "preimage": null,
+        "postimage": "f69ac6eba160b54a6afc71a9ae90a9200b63e858e1fd1534684359b2b1978e57"
+      },
+      "tests/unit/initial-feedback-operation-repository.test.ts": {
+        "preimage": null,
+        "postimage": "97e119bba9ed30961cf3eb269fdeef97960f09050a6f5a34829582b924bf51c7"
+      },
+      "tests/unit/initial-feedback-operation-sql.test.ts": {
+        "preimage": "95658ac8920c7f03a6820bc9480aa7af9fb2d02f56cd6c0f1bf7274b102f4cad",
+        "postimage": "18169658256aac3104791b702a40f101b357b203a17226bd5f8fe9559b47aa71"
+      },
+      "tests/unit/initial-feedback-plan-oracles.test.ts": {
+        "preimage": null,
+        "postimage": "c3ff8271c3437ebd6ea8cbdc9e3cacb5ecb6024cbc2a8e8e5075f1271275f4ae"
+      },
+      "tests/unit/initial-feedback-plan.test.ts": {
+        "preimage": null,
+        "postimage": "96fd45229bc39c1d63e9be4fb78ff7eab5e3e429fbb9862a347ba5b9ed0ea688"
+      },
+      "tests/unit/initial-feedback-publication-policy.test.ts": {
+        "preimage": null,
+        "postimage": "5fdaa9c764c517be57e4f3153dc62bd611cb70498efb67176f52c0807cb95579"
+      },
+      "tests/unit/initial-feedback-publication-repository.test.ts": {
+        "preimage": null,
+        "postimage": "c4b9f2db35eec1a2915070da270a41854a295a982ca7965516d8a4122b2a4408"
+      },
+      "tests/unit/initial-feedback-result-validation.test.ts": {
+        "preimage": null,
+        "postimage": "b600ca776dde2ab4f247ec199c5968bbcc3216e493f8922740a8521246e78338"
+      },
+      "tests/unit/job-requirement-admission-repository.test.ts": {
+        "preimage": null,
+        "postimage": "68ca144cbeea08b7ed577910d59a8ebe84685d30c8e6a7d85f7db20111ad21b6"
+      },
+      "tests/unit/job-requirement-admission.test.ts": {
+        "preimage": null,
+        "postimage": "056593774744d95915e4753c5336029cc51a62684d21ddf576871d74e39a73fb"
+      },
+      "tests/unit/job-requirement-route.test.ts": {
+        "preimage": "a412be7c2f2fc51c637b85327badf4b8acfb65f5517be742dc47da36ab085e4b",
+        "postimage": "0e235284079511db15f72b123a4f6db34481217f69e780f13d602e8341ad35ed"
+      },
+      "tests/unit/legacy-scoring-input-sql.test.ts": {
+        "preimage": "04308fdc67f82b88a9b71b9dd180d1d7b41e721d115bc30a2e22622988b54094",
+        "postimage": "1161b334a5a2e4d8c77023a7a2c9ecb72027c81271c1e8b9fa9ab21b76273091"
+      },
+      "tests/unit/legacy-scoring-input.test.ts": {
+        "preimage": null,
+        "postimage": "73b8fff4cfc5645eee5c05bf289eefbfceb4b42a2e90942316dd3387b052c27f"
+      },
+      "tests/unit/native-page-diagnostics.test.ts": {
+        "preimage": null,
+        "postimage": "156f97e1730c6358ed58f891e183b01f299b23ac3940691c662a83cdcd94b010"
+      },
+      "tests/unit/privacy-operations.test.ts": {
+        "preimage": "d57bb01f031defebfcdfcedced2075fcb5ba13e910ad85ac132007e15662049d",
+        "postimage": "457e882ac8543f713a5676b3229caca2efa458a478cb2c6feea4d2d84493eddd"
+      },
+      "tests/unit/privacy.test.ts": {
+        "preimage": "f5648b20c2ef31ec83b291d3ebe4b2783ac505d5723424c127fefd80af72e4e6",
+        "postimage": "0563764fe92e9379fad5b4a5c471ff43004beb120f8f830039ad58c6bbb122dd"
+      },
+      "tests/unit/qualitative-feedback-support.test.ts": {
+        "preimage": null,
+        "postimage": "710a7b230ee5818833eeed584cc88803a0d07691cf768e0b188f9315b4d172b7"
+      },
+      "tests/unit/qualitative-support.test.ts": {
+        "preimage": null,
+        "postimage": "85e1cf6df23ff4ac55a8260246815670e5bfd61598544a71b1ff973ebe5a72cb"
+      },
+      "tests/unit/requirement-coverage.test.ts": {
+        "preimage": null,
+        "postimage": "0354ba9f61431cad65cf3caf42704f731d6e9744b638bde6dbb883a4163ffcac"
+      },
+      "tests/unit/requirement-relationship-context.test.ts": {
+        "preimage": null,
+        "postimage": "8bf3703dfa0ca007e2c56eba408d8f8132b1e9308b9bc450dd822736e429c1b3"
+      },
+      "tests/unit/requirement-semantic-evidence.test.ts": {
+        "preimage": null,
+        "postimage": "6898b01f3706f11719d47f3153ccbd5edd4e5a65642605ee1d93f162a2193331"
+      },
+      "tests/unit/rewrite-service.test.ts": {
+        "preimage": "5934579dba97d7792296487119f6b0e154dd69e8ba997c7a150339059c7f27cb",
+        "postimage": "119fee398c563ccb4e706bca12db9a0cb9a21a6769a0060b38cd9615c809af69"
+      },
+      "tests/unit/score-snapshot-binding.test.ts": {
+        "preimage": "80b2b37fe7a18b090bb210974331bb7606aee1701537d8365efde69ed61a0e5e",
+        "postimage": "d5605d0cbe47b61b67f23ce2326e93bdb9e88b9235c2257b2336d41619752b5a"
+      },
+      "tests/unit/score-v2-engine.test.ts": {
+        "preimage": "24102afa725b97704ef6a3f5522537e33247788aa21a4f29ca815aafe66eb2ba",
+        "postimage": "b9fb1206205f85c2a3572d803b102c69165a7fa9fad9b1b1a04a64ba2ba168fe"
+      },
+      "tests/unit/score-v2-route.test.ts": {
+        "preimage": "244d125b9a7c79e8434669478250e795de219f002b91716fafd9cdc8f509b8fc",
+        "postimage": "cf20bf99bfd4c1c7359166b84b9ed83614270f120eb01217f9724ace528056de"
+      },
+      "tests/unit/scoring-stage.test.ts": {
+        "preimage": "8c36593ae4e7d2fa37de178ce8adfa739706148aaac9feeb7d3675767dc6759e",
+        "postimage": "6d6ac8dffddbcd74df5920cec5299c0e8829179df6777f87d96a10ce73bb284c"
+      },
+      "tests/unit/typed-authoring-contract.test.ts": {
+        "preimage": null,
+        "postimage": "f504fa96b1135bba9f248866eb8f791cf6ac53f220d863e6c3404835aaec2aac"
+      },
+      "tests/unit/typed-authoring-declaration-route.test.ts": {
+        "preimage": null,
+        "postimage": "93604ff1a0feabfadd3182b0ea71085967948be3b59a1955b030f92e688c13ea"
+      },
+      "tests/unit/typed-authoring-declaration-score.test.ts": {
+        "preimage": null,
+        "postimage": "b383eb2ce2c58b521690102d758bad0c01f9ca3c260921426c1a1766de0a8f50"
+      },
+      "tests/unit/typed-authoring-declaration.test.ts": {
+        "preimage": null,
+        "postimage": "d5111a46cb5726e6010035900ec4eeef62d2bf0203ab980d210c57e8c3cd4ab3"
+      },
+      "tests/unit/typed-authoring-http-route.test.ts": {
+        "preimage": "ed3a0cdeedbd347cbd92322d102997fe0cce8df9e856ce7af4123cb6076d6c30",
+        "postimage": "6b738bcb5d9f8db6287225831300a53e4539eb62893ca0df9c739a15e7890d78"
+      },
+      "tests/unit/typed-authoring-http.test.ts": {
+        "preimage": null,
+        "postimage": "d1cc1fff3af856c126fb04594e38dc8fca2d0a888b55cb856b7433f9ca541306"
+      },
+      "tests/unit/typed-authoring-protocol.test.ts": {
+        "preimage": null,
+        "postimage": "3688b36bf3c63cd8f5702da47240acf24eaf0277cb1458fec612359a6ffccf80"
+      },
+      "tests/unit/typed-authoring-readiness-route.test.ts": {
+        "preimage": null,
+        "postimage": "c207acd15999a4741986f5be6f9e7bb2d10cd616bf1161cc2609807998d3fc6b"
+      },
+      "tests/unit/typed-authoring-readiness.test.ts": {
+        "preimage": null,
+        "postimage": "d54735980935638f4b88050f186fd9ae51a5104f78eae090711ac301c6bfa21e"
+      },
+      "tests/unit/typed-authoring-repository.test.ts": {
+        "preimage": null,
+        "postimage": "9c2bac8f0858568274baceede5a8d461fd5e9fc3835ce7fbc07285ca64975c9f"
+      },
+      "tests/unit/typed-score-route.test.ts": {
+        "preimage": null,
+        "postimage": "229d5d6f47a84d2e3c34b790749c205e35e1088d786b593eb9dde6c318f762e6"
+      }
+    },
+    "archive": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-r03-source-sync-_w8994gu",
+    "reason": "Quiescent entire source closure avoids repeated stale or missing worktree dependencies; no deletions"
+  },
+  "scaffoldReceiptSha256": "b0d7def71f378ced0f1e1bdc38fbf6fe647c1f5614849a65bae9a52bc9f33a5e",
+  "acceptedWire": "Strict8key owned-ai-budget-export/1.0.0 with ownerId, operations,attempts,events,reconciliationOperators,operatorActions,closedomissions. Exactactualrow projections; foreign actor/target redacted; Native7keyreadiness/5stringprofile.",
+  "integratedFiles": {
+    "supabase/migrations/20261115102625_owned_ai_budget_export.sql": "de681bc0447b72918698f431f9ea189aef42617c7dde541f5ce685451cfe9bdf",
+    "app/lib/server/owned-ai-budget-export.ts": "834f7037cf64f227d4b056152b105ac78836d8718c8e6fd883cdb8184b2eabda",
+    "app/lib/server/owned-ai-budget-export-profile.ts": "985cf18192de167c1ad8af47e08038ed618c68bc7f973484f188f077a52af6e5",
+    "tests/unit/owned-ai-budget-export.test.ts": "8d5c3179b04e2d94352681e8f07031b5832fcc812d36ab902eea6b8cd21bded9",
+    "tests/unit/owned-ai-budget-export-sql.test.ts": "91c920e6ab8b7c87f0a757bdad8caa1300b7555915c34a820e83566e0e192b2d",
+    "scripts/verify-owned-ai-budget-export.sql": "3cdffaf719ceed3cb1868b85799985fd579ce514434c116c603dea4d8b3cfb2e",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-owned-ai-budget-export.md": "2295694c39cdf362017216a43d3a0085489c685388f623b82c36c6ae56cb0c72"
+  }
+}

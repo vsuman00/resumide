@@ -1,0 +1,74 @@
+{
+  "slices": {
+    "CR-U17-S03": "VERIFIED_LOCAL_IDEMPOTENT_PRIVACY_FORM_REPLAY",
+    "CR-U17-S04": "VERIFIED_LOCAL_POSTGRES_PRIVACY_AUDIT_GRANTS"
+  },
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated SSR build on loopback and disposable PostgreSQL 17",
+  "sources": {
+    "app/routes/privacy.tsx": "bbb7c09f2d73b0ce95f1f667d2980121eeaeee79725110792f13f520f95a2879",
+    "app/lib/server/privacy.ts": "f565fa960c0a83edfb16c2f6457d96fcc93693f65293c979b7c407e7d057d28c",
+    "tests/unit/privacy-route.test.ts": "4058506f4668c933718bd0a721f51a44826d5b5ae47444b9d472652d0b378c67",
+    "tests/unit/privacy.test.ts": "e8e5bee8ed5d81c183f00ab8fae63506a7cfb69ec5a76b8ddac346db2330ed9f",
+    "scripts/verify-local-privacy-journey.ts": "84e3e2790df169a2c5fdcb258ccd0e957522f5d1f83ca5e4cad74b61aabe568f",
+    "scripts/verify-local-privacy-request-audit.py": "2089003d94554826d670a480504ddb4b58a9e6d02d4e96724a5ac3909108c96d",
+    "supabase/migrations/20261122063000_privacy_request_audit_permissions.sql": "f7f4191673456c9b68c861c9ea4f016fd7ac30cf7f398a384a13ff17bb1c3d38",
+    "package-lock.json": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41"
+  },
+  "baseline": {
+    "routeTestsFailed": 3,
+    "routeLogSha256": "c4f9eacafc7cbeff150c5f3824cb6054dfe1e131dc887fd2122c20bb96df2c3c",
+    "repositoryReplayDeniedAuditBeforeGrant": true
+  },
+  "focusedTests": {
+    "passed": 234,
+    "files": 7,
+    "logSha256": "0b07566f52570bea8c197e46be1d20a89460809fe19b0a09e22f18be6894cd72"
+  },
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed with four existing warnings",
+    "fixtureLint": "passed",
+    "webBuildLogSha256": "1e87159229cf72938c934ac27adbc6a8db0030bddebc6aa6adbdda5b91d0ee2c",
+    "workerBuildLogSha256": "1db50f2827bfc96a429434ef021cbb340852ea2f34f007f4777eb82cb5d037e7"
+  },
+  "browser": {
+    "transport": "Simulated Auth and Data API with the real SDK",
+    "result": {
+      "browser": "Chromium",
+      "refreshCalls": 1,
+      "missingAuditRecoveredOnRetry": true,
+      "deletionReplaysKeptSingleRequest": true,
+      "newFormMadeIndependentRequest": true,
+      "exactNativeDownload": true,
+      "queuedAndPreparedDeletionBlockedDownload": true,
+      "cancelledDeletionRestoredDownload": true,
+      "completionCopyDistinguishedFromErasure": true,
+      "physicalDeletionVerified": false,
+      "managedSupabaseVerified": false
+    }
+  },
+  "database": {
+    "packet": "correction-commit-repair",
+    "orderedDigest": "4e253744226912aab1c9411cb03e528f8fbdaa10984aa5933a88ff380601293a",
+    "logSha256": "f1933e04599a8dc115a4cb7e7bb82926b4d6951b7965cb53c3d0af53c1b9a379",
+    "result": {
+      "auditInsertIgnoredDuplicate": true,
+      "baselineAuditGrantMissing": true,
+      "cancelledReplayDidNotRequeue": true,
+      "clientGrantsPreserved": true,
+      "contendedRetrySqlstate": "55P03",
+      "duplicateSqlstate": "23505",
+      "freshRequestAccepted": true,
+      "pendingDeletionDeniedNewExport": true,
+      "postgresMajor": 17,
+      "replayedOperations": 100,
+      "singleDeletionCreatedThreeSteps": true
+    }
+  },
+  "managedMigrationApplied": false,
+  "remaining": [
+    "Deletion re-authentication",
+    "Managed acceptance and exact cleanup"
+  ]
+}

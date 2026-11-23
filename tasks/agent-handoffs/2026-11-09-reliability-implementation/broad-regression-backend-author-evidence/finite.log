@@ -1,0 +1,111 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/canonical-rewrite-route.test.ts (11 tests | 4 failed) 645ms
+   × runs the actual authenticated resource and producer with declaration=false, then exact replay dispatches once 184ms
+   × runs the actual authenticated resource and producer with declaration=true, then exact replay dispatches once 89ms
+   ✓ refuses final draft movement after dispatch while preserving previous drafts and technical usage 60ms
+   ✓ refuses a changed request under an existing operation identity without redispatch 61ms
+   ✓ does not redispatch a retained reserved operation 34ms
+   ✓ does not redispatch a retained dispatched operation 34ms
+   ✓ does not redispatch a retained unknown operation 33ms
+   ✓ keeps fixed errors and prevents reads for malformed consent, duplicate fields and foreign ownership 32ms
+   ✓ preserves method, flag, origin and authentication guards before private dispatch 32ms
+   × refuses known canonical spend through the actual resource before provider dispatch 45ms
+   × refuses unknown canonical claim through the actual resource before provider dispatch 40ms
+ ❯ tests/unit/score-snapshot-binding.test.ts (19 tests | 2 failed) 147ms
+   ✓ rejects a mismatched owner in an internal scoring snapshot 3ms
+   ✓ rejects a mismatched analysis in an internal scoring snapshot 0ms
+   ✓ rejects a mismatched version in an internal scoring snapshot 0ms
+     × fails closed for a current stored v2 row when the owned typed context is unavailable 62ms
+     × fails closed for a historical stored v2 row when the owned typed context is unavailable 8ms
+     ✓ preserves an owned-reader denial 404 before typed abstention 6ms
+     ✓ preserves an owned-reader denial 503 before typed abstention 6ms
+     ✓ preserves expectedCanonical conflict precedence over evidence failure and typed abstention 5ms
+     ✓ preserves expectedRequirements conflict precedence over evidence failure and typed abstention 5ms
+     ✓ preserves hash evidence integrity failure before typed abstention 6ms
+     ✓ preserves source evidence integrity failure before typed abstention 5ms
+     ✓ preserves evidenceRow storage failure before typed abstention 5ms
+     ✓ preserves sourceRow storage failure before typed abstention 4ms
+     ✓ preserves the legacy diagnostics path and withheld dimensions 8ms
+     ✓ preserves the no-JD diagnostics path and withheld dimensions 6ms
+     ✓ preserves the final legacy canonical head check 5ms
+     ✓ preserves the final legacy JD head check 5ms
+     ✓ preserves the final legacy job binding check 5ms
+     ✓ preserves the final legacy privacy check 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/canonical-rewrite-route.test.ts > runs the actual authenticated resource and producer with declaration=false, then exact replay dispatches once
+ FAIL  tests/unit/canonical-rewrite-route.test.ts > runs the actual authenticated resource and producer with declaration=true, then exact replay dispatches once
+AssertionError: expected undefined to deeply equal { …(2) }
+
+- Expected:
+{
+  "p_analysis_id": "30000000-0000-4000-8000-000000000004",
+  "p_user_id": "30000000-0000-4000-8000-000000000001",
+}
+
++ Received:
+undefined
+
+ ❯ tests/unit/canonical-rewrite-route.test.ts:420:7
+    418|         ([name]) => name === "read_canonical_rewrite_usage",
+    419|       )?.[1],
+    420|     ).toEqual({
+       |       ^
+    421|       p_user_id: f.owned.ownerId,
+    422|       p_analysis_id: f.owned.analysisId,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/unit/canonical-rewrite-route.test.ts > refuses known canonical spend through the actual resource before provider dispatch
+ FAIL  tests/unit/canonical-rewrite-route.test.ts > refuses unknown canonical claim through the actual resource before provider dispatch
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tests/unit/canonical-rewrite-route.test.ts:592:7
+    590|     expect(
+    591|       names.filter((name) => name === "read_canonical_rewrite_usage"),
+    592|     ).toHaveLength(1);
+       |       ^
+    593|     expect(names).not.toContain("get_organization_ai_tokens_used");
+    594|     expect(names).not.toContain("claim_canonical_rewrite_dispatch");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/unit/score-snapshot-binding.test.ts > A09 score typed JD boundary > fails closed for a current stored v2 row when the owned typed context is unavailable
+ FAIL  tests/unit/score-snapshot-binding.test.ts > A09 score typed JD boundary > fails closed for a historical stored v2 row when the owned typed context is unavailable
+AssertionError: expected Error: Relationship context is unavailabl… { …(2) } to match object { status: 503, …(1) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "message": "Typed scoring diagnostics are unavailable. Reload before continuing.",
++ RequirementRelationshipContextError {
+    "status": 503,
+  }
+
+ ❯ tests/unit/score-snapshot-binding.test.ts:230:26
+    228|           (failure: unknown) => failure,
+    229|         );
+    230|       expect.soft(error).toMatchObject({
+       |                          ^
+    231|         status: 503,
+    232|         message: typedUnavailable,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  6 failed | 24 passed (30)
+   Start at  16:38:15
+   Duration  1.66s (transform 430ms, setup 0ms, import 726ms, tests 791ms, environment 0ms)
+

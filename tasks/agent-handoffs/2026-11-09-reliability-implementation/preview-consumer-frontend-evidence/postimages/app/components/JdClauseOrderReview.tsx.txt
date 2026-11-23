@@ -1,0 +1,221 @@
+import { useId } from "react";
+import { Link } from "react-router";
+import type {
+  JdClauseOrderDraft,
+  JdClauseOrderPlan,
+} from "~/lib/server/jd-clause-order-drafting";
+
+/** Projected review only; admission and reconstruction belong to the owned server. */
+export default function JdClauseOrderReview({
+  draft,
+}: {
+  draft: JdClauseOrderDraft;
+}) {
+  const heading = useId();
+  const base = `/analysis/${draft.binding.source.analysisId}`;
+  return (
+    <section
+      className="account-card"
+      aria-labelledby={heading}
+      style={{ overflowWrap: "anywhere" }}
+    >
+      <h2 id={heading}>Review JD-focused clause order</h2>
+      <p role="status">
+        Projected review only. This draft has not been saved. This preview
+        cannot save or undo changes.
+      </p>
+      <section aria-label="Saved job requirement">
+        <h3>Saved job requirement</h3>
+        <p>
+          {draft.relevance.importance === "required"
+            ? "Required job requirement"
+            : "Preferred job requirement"}
+        </p>
+        <blockquote
+          aria-label="Exact saved JD quote"
+          className="whitespace-pre-wrap break-words"
+        >
+          {draft.relevance.quote}
+        </blockquote>
+        <p>
+          The moved source clause names {draft.relevance.sourceSkillValue},
+          related to {draft.relevance.jdSkillValue} in this saved requirement.
+          This explains the order, not proficiency, duration or qualification.
+        </p>
+      </section>
+      <div className="grid min-w-0 gap-4 md:grid-cols-2">
+        <div className="min-w-0">
+          <h3>Complete current wording</h3>
+          <blockquote
+            aria-label="Complete current wording"
+            className="whitespace-pre-wrap break-words"
+          >
+            {draft.before}
+          </blockquote>
+        </div>
+        <div className="min-w-0">
+          <h3>Complete proposed wording</h3>
+          <blockquote
+            aria-label="Complete proposed wording"
+            className="whitespace-pre-wrap break-words"
+          >
+            {draft.after}
+          </blockquote>
+        </div>
+      </div>
+      <h3>Proposed clause order</h3>
+      <p>
+        Move source clause 2 before source clause 1. Both clauses keep their
+        exact wording; only their order changes.
+      </p>
+      <ol aria-label="Proposed clause order">
+        {draft.transform.order.map((index) => {
+          const clause = draft.sourceClauses[index];
+          return (
+            <li key={clause.index}>
+              <p>Source clause {clause.index + 1}</p>
+              <blockquote
+                aria-label={`Source clause ${clause.index + 1} in proposed order`}
+                className="whitespace-pre-wrap break-words"
+              >
+                {clause.text}
+              </blockquote>
+              <details>
+                <summary>Clause text reference</summary>
+                <p>
+                  Current-fact codepoint characters {clause.start} to{" "}
+                  {clause.end}, with the end excluded. Clause digest:{" "}
+                  <code>{clause.sha256}</code>.
+                </p>
+              </details>
+            </li>
+          );
+        })}
+      </ol>
+      <section aria-label="Source support for current wording">
+        <h3>Source support for the current wording</h3>
+        <blockquote
+          aria-label="Whole quoted source claim"
+          className="whitespace-pre-wrap break-words"
+        >
+          {draft.before}
+        </blockquote>
+        <p>
+          Source quotation and current candidate confirmation are not
+          independent verification. These citations describe the current
+          wording, not a saved version of the proposal.
+        </p>
+        <ul aria-label="Current source citations">
+          {draft.sourceCitations.map((citation, index) => (
+            <li key={`${citation.spanId}:${index}`}>
+              <Link
+                to={`${base}/evidence#source-${encodeURIComponent(citation.spanId)}`}
+              >
+                Review source workspace
+              </Link>
+              <p>
+                Recorded source:{" "}
+                {citation.method === "native_text"
+                  ? "native text"
+                  : "local OCR"}
+                ; span <code>{citation.spanId}</code>, characters{" "}
+                {citation.start} to {citation.end}.
+              </p>
+              <details>
+                <summary>Source citation references</summary>
+                <p>
+                  Attempt <code>{citation.attemptId}</code>; page{" "}
+                  <code>{citation.pageId}</code>; page characters{" "}
+                  {citation.pageStart} to {citation.pageEnd}.
+                </p>
+              </details>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <nav aria-label="Pinned drafting inputs">
+        <p>
+          <Link
+            to={`${base}/canonical?version=${encodeURIComponent(draft.binding.canonical.versionId)}#fact-${encodeURIComponent(draft.target.factId)}`}
+          >
+            Inspect the current fact and pinned version
+          </Link>
+        </p>
+        <p>
+          <Link
+            to={`${base}/requirements?version=${encodeURIComponent(draft.binding.requirements.versionId)}`}
+          >
+            Inspect the saved job requirements
+          </Link>
+        </p>
+      </nav>
+      <details>
+        <summary>Draft and policy references</summary>
+        <p>
+          Draft <code>{draft.id}</code>. Resume version{" "}
+          <code>{draft.binding.canonical.versionId}</code>; job requirements
+          version <code>{draft.binding.requirements.versionId}</code>.
+        </p>
+        <p>
+          Clause-order policy <code>{draft.policies.clauseOrderVersion}</code>;
+          writing support <code>{draft.support.writingSupportVersion}</code>;
+          renderer <code>{draft.transform.rendererVersion}</code>.
+        </p>
+      </details>
+      <p>
+        The proposed wording has no saved source references or confirmation.
+        Numeric score and score change: unavailable. Qualification credit: not
+        assessed. Review every claim; reordering does not establish new
+        qualifications.
+      </p>
+    </section>
+  );
+}
+
+export function JdClauseOrderPlanReview({ plan }: { plan: JdClauseOrderPlan }) {
+  const heading = useId();
+  return (
+    <section aria-labelledby={heading}>
+      <h2 id={heading}>JD-focused wording previews</h2>
+      <p>
+        These are bounded source-supported previews, not a complete improvement
+        assessment. No wording has been saved by this preview.
+      </p>
+      <p>
+        Candidate fact/requirement pairs inspected: {plan.inspectedPairCount}.
+      </p>
+      <p>Projected previews shown: {plan.drafts.length}.</p>
+      {plan.reason === "historical_inputs" && (
+        <p role="status">
+          Fresh clause-order previews are unavailable for these historical input
+          versions. Their saved wording and diagnostic view remain unchanged.
+        </p>
+      )}
+      {plan.reason === "unsupported_context" && (
+        <p role="status">
+          The selected context is outside this preview's admitted source scope.
+          Your diagnostics and JD priorities remain available for review.
+        </p>
+      )}
+      {plan.reason === "no_admitted_pairs" && (
+        <p role="status">
+          No clause-order draft was admitted among the candidate pairs examined.
+          This bounded preview does not assess every way to improve the resume.
+        </p>
+      )}
+      {plan.truncated && (
+        <p role="status">
+          The scan reached its inspection or preview limit. Some candidate pairs
+          were not examined.
+        </p>
+      )}
+      {plan.drafts.map((draft) => (
+        <JdClauseOrderReview key={draft.id} draft={draft} />
+      ))}
+      <p>
+        Numeric score and score change: unavailable. Qualification credit: not
+        assessed. These previews cannot save or undo changes.
+      </p>
+    </section>
+  );
+}

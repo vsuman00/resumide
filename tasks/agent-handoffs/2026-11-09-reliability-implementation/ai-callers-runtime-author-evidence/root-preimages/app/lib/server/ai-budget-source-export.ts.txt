@@ -1,0 +1,95 @@
+import { z } from "zod";
+import {
+  AiBudgetSourceSchema,
+  AiBudgetSourceUuidSchema,
+  assertAiBudgetSourceJson,
+  createSourceBoundAiBudgetOperationId,
+  withAiBudgetSourceReadiness,
+  type AiBudgetSourceProfile,
+  type AiBudgetSourceRpcClient,
+  type AiBudgetSourceOptions,
+} from "./ai-budget-source";
+const row = z.strictObject({
+  operationId: AiBudgetSourceUuidSchema,
+  ownerId: AiBudgetSourceUuidSchema,
+  organizationId: AiBudgetSourceUuidSchema,
+  kind: z.literal("legacy_rewrite"),
+  analysisId: AiBudgetSourceUuidSchema,
+  resumeId: AiBudgetSourceUuidSchema,
+  resumeVersionId: AiBudgetSourceUuidSchema,
+  requestNonce: AiBudgetSourceSchema.shape.requestNonce,
+  bindingSha256: z.string().regex(/^[a-f0-9]{64}$/u),
+  registeredAt: z.iso
+    .datetime()
+    .regex(/^(?!0000)\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{6}Z$/u),
+});
+const envelope = z.strictObject({
+  schemaVersion: z.literal("owned-ai-budget-sources/1.0.0"),
+  ownerId: AiBudgetSourceUuidSchema,
+  sources: z.array(row).max(4096),
+});
+export type AiBudgetSourceExport = z.infer<typeof envelope>;
+export class AiBudgetSourceExportError extends Error {
+  constructor() {
+    super("AI budget source export is unavailable.");
+    this.name = "AiBudgetSourceExportError";
+  }
+}
+export function validateAiBudgetSourceExport(
+  raw: unknown,
+  ownerId: string,
+): AiBudgetSourceExport {
+  try {
+    AiBudgetSourceUuidSchema.parse(ownerId);
+    assertAiBudgetSourceJson(raw);
+    const value = envelope.parse(raw),
+      seen = new Set<string>();
+    if (value.ownerId !== ownerId) throw new AiBudgetSourceExportError();
+    for (const item of value.sources) {
+      if (
+        item.ownerId !== ownerId ||
+        seen.has(item.operationId) ||
+        item.operationId !==
+          createSourceBoundAiBudgetOperationId({
+            userId: item.ownerId,
+            organizationId: item.organizationId,
+            source: {
+              schemaVersion: "ai-budget-source/1.0.0",
+              kind: item.kind,
+              analysisId: item.analysisId,
+              resumeVersionId: item.resumeVersionId,
+              requestNonce: item.requestNonce,
+            },
+          })
+      )
+        throw new AiBudgetSourceExportError();
+      seen.add(item.operationId);
+    }
+    return value;
+  } catch {
+    throw new AiBudgetSourceExportError();
+  }
+}
+export async function readAiBudgetSourceExport(
+  client: AiBudgetSourceRpcClient,
+  ownerId: string,
+  profile: AiBudgetSourceProfile,
+  options: AiBudgetSourceOptions = {},
+): Promise<AiBudgetSourceExport> {
+  try {
+    AiBudgetSourceUuidSchema.parse(ownerId);
+    return await withAiBudgetSourceReadiness(
+      client,
+      profile,
+      "exportExecutable",
+      async (call) =>
+        validateAiBudgetSourceExport(
+          await call("export_owned_ai_budget_sources", { p_user_id: ownerId }),
+          ownerId,
+        ),
+      options,
+    );
+  } catch {
+    throw new AiBudgetSourceExportError();
+  }
+}

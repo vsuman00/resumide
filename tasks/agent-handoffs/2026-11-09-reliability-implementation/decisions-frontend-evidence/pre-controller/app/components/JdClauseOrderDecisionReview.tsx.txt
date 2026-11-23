@@ -1,0 +1,9 @@
+import type { JdClauseOrderCommand, JdClauseOrderProposal } from "~/lib/jd-clause-order-decisions";
+export type JdClauseOrderDecisionReviewProps = {
+  proposal: JdClauseOrderProposal;
+  onDecision: (command: JdClauseOrderCommand, reviewAcknowledgement: "accepted" | null) => Promise<unknown>;
+};
+/** Provisional test-first surface. Decision authority is supplied by the owning route. */
+export default function JdClauseOrderDecisionReview(_props: JdClauseOrderDecisionReviewProps) {
+  return <section aria-label="Review clause-order decision"><p role="status">Preparing the decision review.</p></section>;
+}

@@ -1,0 +1,37 @@
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats[39m
+
+ [2m[90m↓[39m[22m tests/components/CanonicalEntryRegroupDiff.test.tsx[2m > [22mactual whole-entry prepared diff[2m > [22mrenders the complete affected section and crossed untouched entry in before/after order
+ [2m[90m↓[39m[22m tests/components/CanonicalEntryRegroupDiff.test.tsx[2m > [22mactual whole-entry prepared diff[2m > [22mshows edited current wording and recorded confirmation separately from original source provenance
+ [2m[90m↓[39m[22m tests/components/CanonicalEntryRegroupDiff.test.tsx[2m > [22mactual whole-entry prepared diff[2m > [22mshows every carried heading fact and repeated bullet without asserting global order preservation
+ [2m[90m↓[39m[22m tests/components/CanonicalEntryRegroupDiff.test.tsx[2m > [22mactual whole-entry prepared diff[2m > [22mshows the exact base and every retired donor/retained anchor mapping
+ [2m[90m↓[39m[22m tests/components/CanonicalEntryRegroupDiff.test.tsx[2m > [22mactual whole-entry prepared diff[2m > [22mrenders a real already-grouped changed:false plan as preview only with no action controls
+ [2m[90m↓[39m[22m tests/components/CanonicalEntryRegroupDiff.test.tsx[2m > [22mactual whole-entry prepared diff[2m > [22mescapes carried bullets and edited values returned through the real producer
+ [2m[90m↓[39m[22m tests/components/CanonicalEntryRegroupDiff.test.tsx[2m > [22mactual whole-entry prepared diff[2m > [22mdoes not mutate a frozen prepared DTO or synthesize a canonical child
+ [31m×[39m tests/components/CanonicalEntryRegroupDiff.test.tsx[2m > [22mactual whole-entry prepared diff[2m > [22mshows each anchor's actual after position when earlier groups remove donor entries[32m 61[2mms[22m[39m
+[31m   → expected 'Retained employer entry: 1b09c1af-c40…' to contain 'proposed placement: Experience, entry…'[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/components/CanonicalEntryRegroupDiff.test.tsx[2m > [22mactual whole-entry prepared diff[2m > [22mshows each anchor's actual after position when earlier groups remove donor entries
+[31m[1mAssertionError[22m: expected 'Retained employer entry: 1b09c1af-c40…' to contain 'proposed placement: Experience, entry…'[39m
+
+Expected: [32m"proposed placement: Experience, entry 2"[39m
+Received: [31m"Retained employer entry: 1b09c1af-c401-4639-b638-d0c131e033d5; proposed position 4."[39m
+
+[36m [2m❯[22m tests/components/CanonicalEntryRegroupDiff.test.tsx:[2m385:48[22m[39m
+    [90m383|[39m     const anchor = screen.getAllByText(plan.groups[1].anchorEntryId).f…
+    [90m384|[39m     [34mexpect[39m(anchor)[33m.[39m[34mtoBeTruthy[39m()[33m;[39m
+    [90m385|[39m     expect(anchor!.closest("li")?.textContent).toContain("proposed pla…
+    [90m   |[39m                                                [31m^[39m
+    [90m386|[39m   })[33m;[39m
+    [90m387|[39m })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m7 skipped[39m[90m (8)[39m
+[2m   Start at [22m 21:05:32
+[2m   Duration [22m 929ms[2m (transform 128ms, setup 0ms, import 272ms, tests 62ms, environment 521ms)[22m
+

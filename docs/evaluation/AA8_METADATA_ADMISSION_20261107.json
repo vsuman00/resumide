@@ -1,0 +1,59 @@
+{
+  "status": "AA080_METADATA_FOUNDATION_IMPLEMENTED_VERIFIED",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "sourceHashes": {
+    "app/lib/server/evaluation-corpus.ts": "212c6dfc732cef2e6d9c7a048ef1d7a8df37058ee5e8b98f2bf5dd5206628fc3",
+    "tests/fixtures/evaluation-corpus.ts": "a39d653b894c7e3dd1b069961c4f6b679bc0025cde9f89764f348049d307313d",
+    "tests/unit/evaluation-corpus.test.ts": "0b98a4b7f0c9314218f2f3137e3d0372e465e18be5dc0fe216cb022e13f69013",
+    "scripts/verify-evaluation-corpus.ts": "602407888b65ef05aff2efa5ab096889b1279c43735d8a8f1f2ae08f724e5ab3",
+    "package.json": "d63f1175fa76dc01b00a3b450add07ac97865e7ddaa1e3e4d845a2c394692a78"
+  },
+  "checks": [
+    {
+      "command": "npm run test:aa8:corpus",
+      "exitCode": 0,
+      "tests": 44,
+      "files": 1
+    },
+    {
+      "command": "npm run check:aa8:source",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run typecheck",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run lint",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 0
+    },
+    {
+      "command": "npm run build:worker",
+      "exitCode": 0,
+      "finalBuildBytes": 115667
+    },
+    {
+      "command": "14 actual metadata CLI subprocess cases",
+      "passed": 14,
+      "total": 14,
+      "receiptSha256": "dc4f5e8ea775d19cfed24713553fb7cb1725a1fe050ca698d17b18dffa621494"
+    }
+  ],
+  "buildOrchestrationCorrection": "Initial concurrent web and worker commands both exited0, but React Router cleaned build/worker output. Worker build was rerun after web; both final artifacts exist. No application source fix or other test rerun.",
+  "buildOutputs": {
+    "build/server/index.js": 668063,
+    "build/worker/analysis.mjs": 115667
+  },
+  "buildWarnings": "Existing Zod PURE annotation warnings and empty resource-route chunks; build exits0.",
+  "aa7ChecksRerun": false,
+  "databaseDockerProviderCalls": false,
+  "rawCorpusDocumentsAcquired": 0,
+  "representativeReady": false,
+  "releaseReady": false,
+  "aa080AcquisitionComplete": false,
+  "gateAA7": "CLOSED_OWNER_ACCEPTED_ADR0017"
+}

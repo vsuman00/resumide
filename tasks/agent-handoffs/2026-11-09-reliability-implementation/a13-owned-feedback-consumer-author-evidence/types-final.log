@@ -1,0 +1,8 @@
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m483[0m:[93m3[0m - [91merror[0m[90m TS2322: [0mType '{ overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structure: { ...; }; skills: { ...; }; scoreSemantics?: "deter...' is not assignable to type '{ scoreSemantics: "deterministic_baseline_no_model_ratings/1.0.0"; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structure: { ...; }...'.
+  Types of property 'scoreSemantics' are incompatible.
+    Type '"deterministic_baseline_no_model_ratings/1.0.0" | undefined' is not assignable to type '"deterministic_baseline_no_model_ratings/1.0.0"'.
+      Type 'undefined' is not assignable to type '"deterministic_baseline_no_model_ratings/1.0.0"'.
+
+[7m483[0m   p.compatibility.feedback = FeedbackSchema.parse(
+[7m   [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+{"roots":10,"sourceFiles":91,"diagnostics":1}

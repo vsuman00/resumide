@@ -1,0 +1,83 @@
+--- before/app/components/WritingDiagnosticComparison.tsx
++++ after/app/components/WritingDiagnosticComparison.tsx
+@@ -3,6 +3,9 @@
+   WritingComparison,
+   SavedWritingComparison,
+ } from "~/lib/writing-comparison";
++import type { compareCanonical } from "~/lib/server/canonical-content";
++
++type FactChange = ReturnType<typeof compareCanonical>[number];
+ 
+ const changes = {
+   wording_changed: "Wording changed",
+@@ -37,13 +40,45 @@
+     </div>
+   );
+ }
+-function FactObservations({ item }: { item: WritingComparison }) {
++function FactObservations({
++  item,
++  factChange,
++}: {
++  item: WritingComparison;
++  factChange?: FactChange;
++}) {
+   const projected = item.mode === "projected";
+   const Heading = projected ? "h6" : "h4";
+   return (
+     <article className="account-card" style={{ overflowWrap: "anywhere" }}>
+       <Heading>Fact {item.factId}</Heading>
+       <p>{changes[item.changeKind]}</p>
++      {!projected && (
++        <>
++          <p>Saved wording before:</p>
++          <blockquote
++            aria-label="Saved wording before"
++            style={{ whiteSpace: "pre-wrap" }}
++          >
++            {factChange
++              ? (factChange.before?.value ?? "Absent")
++              : "Unavailable"}
++          </blockquote>
++          <p>Saved wording after:</p>
++          <blockquote
++            aria-label="Saved wording after"
++            style={{ whiteSpace: "pre-wrap" }}
++          >
++            {factChange ? (factChange.after?.value ?? "Absent") : "Unavailable"}
++          </blockquote>
++          {!factChange && (
++            <p>
++              Saved wording is unavailable because its comparison row is
++              missing.
++            </p>
++          )}
++        </>
++      )}
+       <table aria-label="Writing and record observations">
+         <caption>Text and recorded state in the selected comparison</caption>
+         <thead>
+@@ -106,8 +141,10 @@
+ /** Read-only observations. Saved identities come exclusively from the owned reader. */
+ export default function WritingDiagnosticComparison({
+   comparison,
++  factChanges,
+ }: {
+   comparison: WritingComparison | SavedWritingComparison;
++  factChanges?: readonly FactChange[];
+ }) {
+   const heading = useId();
+   const saved = comparison.schemaVersion === "saved-writing-comparison/1.0.0";
+@@ -168,7 +205,11 @@
+         records a candidate declaration, not independent verification.
+       </p>
+       {items.map((item) => (
+-        <FactObservations key={item.factId} item={item} />
++        <FactObservations
++          key={item.factId}
++          item={item}
++          factChange={factChanges?.find((change) => change.id === item.factId)}
++        />
+       ))}
+       {saved && comparison.items.length === 0 && (
+         <p>No fact changes in the selected saved pair.</p>

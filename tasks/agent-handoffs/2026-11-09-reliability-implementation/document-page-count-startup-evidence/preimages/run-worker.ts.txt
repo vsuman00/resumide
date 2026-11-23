@@ -1,0 +1,56 @@
+import { processQueuedAnalysis } from "../app/lib/server/analysis-worker";
+import { AnalysisJobQueue } from "../app/lib/server/jobs";
+import { runWorkerLoop } from "../app/lib/server/worker-runner";
+import {
+  assertWorkerSchemaReady,
+  WorkerReadinessError,
+} from "../app/lib/server/worker-readiness";
+import { createSupabaseAdminClient } from "../app/lib/server/supabase";
+import { getServerConfig } from "../app/lib/server/config";
+
+const shutdown = new AbortController();
+const stop = () => shutdown.abort();
+process.once("SIGINT", stop);
+process.once("SIGTERM", stop);
+let started = false;
+
+try {
+  const config = getServerConfig();
+  await assertWorkerSchemaReady(createSupabaseAdminClient(), {
+    analysisFencingEnabled: config.ANALYSIS_FENCING_ENABLED,
+    initialFeedbackEnabled: config.INITIAL_FEEDBACK_ENABLED,
+    legacyScoringInputEnabled: config.LEGACY_SCORING_INPUT_ENABLED,
+    aiEnabled: config.AI_ENABLED,
+    aiBudgetEnabled: config.AI_BUDGET_ENABLED,
+    aiBudgetPolicyVersion: config.AI_BUDGET_POLICY_VERSION,
+    model: config.OPENAI_MODEL,
+    timeoutMs: config.READINESS_TIMEOUT_MS,
+    signal: shutdown.signal,
+  });
+  if (!shutdown.signal.aborted) {
+    const queue = new AnalysisJobQueue();
+    started = true;
+    process.stdout.write("[resumide] analysis worker ready\n");
+    await runWorkerLoop(queue, processQueuedAnalysis, {
+      signal: shutdown.signal,
+      shutdownTimeoutMs: config.SHUTDOWN_TIMEOUT_MS,
+    });
+  }
+} catch (error) {
+  if (!(
+    shutdown.signal.aborted &&
+    !started &&
+    error instanceof WorkerReadinessError &&
+    error.code === "WORKER_STARTUP_CANCELLED"
+  )) {
+    process.stderr.write(
+      started
+        ? "[resumide] worker runtime failed; in-flight work may require recovery.\n"
+        : `[resumide] worker startup failed (${error instanceof WorkerReadinessError ? error.code : "CONFIGURATION_OR_DATABASE_UNAVAILABLE"}); verify configuration and selected migrations. No jobs were claimed during startup.\n`,
+    );
+    process.exitCode = 1;
+  }
+} finally {
+  process.removeListener("SIGINT", stop);
+  process.removeListener("SIGTERM", stop);
+}

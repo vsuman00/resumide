@@ -1,0 +1,50 @@
+
+> test
+> vitest run tests/unit/job-requirement-route.test.ts -t U04 history
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/job-requirement-route.test.ts (12 tests | 1 failed | 9 skipped) 49ms
+     ↓ checks origin and authentication before privileged clients
+     ↓ defaults off and rejects invalid pagination
+     ↓ saves using authenticated identity and private headers
+     ↓ rejects client supplied ownerId
+     ↓ rejects client supplied sourceText
+     ↓ rejects client supplied score
+     ↓ rejects client supplied __proto__
+     ↓ rejects duplicate and oversized forms
+     × U04 history withholds current-head Save while displaying a historical JD snapshot 41ms
+     ✓ U04 history preserves the current native form and exact expected-head/key fields 5ms
+     ✓ U04 history preserves the empty native form and exact expected-head/key fields 2ms
+     ↓ retains refreshed cookies on private responses
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/job-requirement-route.test.ts > JD route authorization > U04 history withholds current-head Save while displaying a historical JD snapshot
+AssertionError: expected '<div class="workspace-shell _shell_67…' not to contain 'Save job requirements for review'
+
+- Expected
++ Received
+
+- Save job requirements for review
++ <div class="workspace-shell _shell_6777b6"><header class="site-navigation workspace-floating-header _bar_a67a5d"><a aria-label="Resumide home" class="workspace-brand _brand_a67a5d" href="/" data-discover="true"><span class="brand-lockup is-compact"><span class="brand-wordmark">Resumide<svg class="brand-leaf" viewBox="0 0 28 34" aria-hidden="true" focusable="false"><path d="M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"></path><path d="M5.4 29.8C10.1 22.1 15 15.7 22 8.9"></path></svg></span><span class="brand-descriptor">Evidence desk</span></span></a><nav class="_primary_a67a5d" aria-label="Main navigation"><a class="_link_a67a5d" href="/" data-discover="true">Home</a><a class="_link_a67a5d" href="/analyses" data-discover="true">Analyses</a><a class="_link_a67a5d" href="/upload" data-discover="true">New analysis</a><a class="_link_a67a5d" href="/build" data-discover="true">Build</a></nav><details class="_menu_a67a5d"><summary aria-label="Open site menu">Menu <span aria-hidden="true">☰</span></summary><nav aria-label="Site menu"><div class="_mobileLinks_a67a5d"><a class="_link_a67a5d" href="/" data-discover="true">Home</a><a class="_link_a67a5d" href="/analyses" data-discover="true">Analyses</a><a class="_link_a67a5d" href="/upload" data-discover="true">New analysis</a><a class="_link_a67a5d" href="/build" data-discover="true">Build</a></div><a class="_link_a67a5d" href="/privacy" data-discover="true">Privacy</a><a class="_link_a67a5d" href="/account" data-discover="true">Account</a><div class="_theme_a67a5d"><label class="theme-control" title="Choose color theme"><span aria-hidden="true" class="theme-control-icon">◐</span><span class="sr-only">Color theme</span><select aria-label="Color theme"><option value="light">Light</option><option value="dark">Dark</option><option value="system" selected="">System</option></select></label></div><a class="_link_a67a5d" href="/auth" data-discover="true">Sign in</a></nav></details></header><main class="workspace-stage _stage_6777b6"><div class="workspace-page-header"><div class="workspace-page-heading"><p class="workspace-eyebrow">Job intelligence</p><h1>Review the job requirements</h1><p class="workspace-page-description">Inspect the exact job description behind each proposed requirement.</p></div></div><div class="workspace-main"><p role="status">These requirements need review. Inferred importance is labeled separately. Job alignment scoring is unavailable.</p><a href="/analysis/10000000-0000-4000-8000-000000000001" data-discover="true">Back to analysis</a><form data-discover="true" action="/analysis/10000000-0000-4000-8000-000000000001/requirements?version=63c3c465-3332-45c5-9245-a9ce9307fa59" method="post"><input type="hidden" name="expectedVersionId" value="10000000-0000-4000-8000-000000000003"/><input type="hidden" name="idempotencyKey" value="6a176510-b1f6-4a43-8b03-f4a77cf7474e"/><button class="back-button" type="submit">Save job requirements for review</button></form><h2>JD version <!-- -->1</h2><p>State: <!-- -->review required</p><ol><li><h3>skill<!-- -->: <!-- -->SQL</h3><p>Importance: <!-- -->required<!-- --> (<!-- -->explicit<!-- -->);<!-- --> <!-- -->unconfirmed</p><blockquote>SQL required</blockquote><p>Importance evidence: “<!-- -->SQL required<!-- -->” (JD characters <!-- -->13<!-- -->–<!-- -->25<!-- -->)</p><p>JD characters <!-- -->13<!-- -->–<!-- -->25</p></li></ol><h2>JD history</h2><ul><li><a href="/analysis/10000000-0000-4000-8000-000000000001/requirements?version=63c3c465-3332-45c5-9245-a9ce9307fa59" data-discover="true">View JD version <!-- -->1</a></li><li><a href="/analysis/10000000-0000-4000-8000-000000000001/requirements?version=10000000-0000-4000-8000-000000000003" data-discover="true">View JD version <!-- -->2</a></li></ul><section aria-labelledby="jd-source"><h2 id="jd-source">Original job description</h2><pre style="white-space:pre-wrap;overflow-wrap:anywhere">Requirements
++ SQL required
++ &lt;em&gt;Saved synthetic snapshot&lt;/em&gt;</pre></section></div></main></div>
+
+ ❯ tests/unit/job-requirement-route.test.ts:221:22
+    219|     const { html, context } = await renderHistory(model);
+    220|     expect(context.statusCode).toBe(200);
+    221|     expect(html).not.toContain("Save job requirements for review");
+       |                      ^
+    222|     expect(html).not.toMatch(/<form\b/u);
+    223|     expect(html).toContain("Historical JD version 1");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed | 9 skipped (12)
+   Start at  00:34:51
+   Duration  329ms (transform 151ms, setup 0ms, import 224ms, tests 49ms, environment 0ms)
+

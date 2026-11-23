@@ -1,0 +1,300 @@
+
+> verify
+> npm run format:check && npm run format:check:native-layout && npm run check:ocr:pilot-source && npm run check:aa1:source && npm run check:aa2:source && npm run check:aa3:source && npm run check:aa4:source && npm run check:aa5:source && npm run check:aa6:source && npm run check:aa8:source && npm run check:aa9:source && npm run lint && npm run test && npm run typecheck && npm run build && npm run build:worker
+
+
+> format:check
+> prettier --check eslint.config.js vitest.config.ts playwright.config.ts e2e tests app/routes/healthz.ts app/routes/readyz.ts app/routes/upload.tsx app/routes/resume.tsx app/routes/api.analyze.ts app/routes/api.telemetry.ts app/routes/api.privacy-export.ts app/routes/metrics.ts app/routes.ts app/root.tsx app/lib/server app/components/FileUploader.tsx app/components/TelemetryReporter.tsx scripts/validate-config.ts scripts/selfcheck-config.ts scripts/selfcheck-errors.ts scripts/selfcheck-upload.mjs scripts/server.mjs scripts/load-test.ts scripts/verify-restore.ts scripts/run-privacy-worker.ts scripts/run-retention.ts scripts/validate-alerts.mjs scripts/check-container.mjs docs/operations/ALERTS.json scripts/verify-local-ocr.ts vite.worker.config.ts scripts/check-container.mjs
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> format:check:native-layout
+> prettier --check app/lib/native-layout-schema.ts app/lib/native-layout-structure.ts app/components/NativeLayoutEvidence.tsx app/components/NativeStructureEvidence.tsx app/components/ParseView.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:ocr:pilot-source
+> prettier --check scripts/verify-ocr-pilot.ts && eslint scripts/verify-ocr-pilot.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa1:source
+> prettier --check scripts/verify-ocr-adverse.ts scripts/verify-ocr-fields.ts scripts/benchmark-extraction-v2.ts scripts/extraction-benchmark-engineering.ts scripts/verify-document-worker.ts app/routes/analysis.evidence.tsx && eslint scripts/verify-ocr-adverse.ts scripts/verify-ocr-fields.ts scripts/benchmark-extraction-v2.ts scripts/extraction-benchmark-engineering.ts scripts/verify-document-worker.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa2:source
+> prettier --check scripts/canonical-test-fixture.ts scripts/verify-canonical-resume.ts scripts/verify-canonical-restore.ts app/routes/analysis.canonical.tsx && eslint scripts/canonical-test-fixture.ts scripts/verify-canonical-resume.ts scripts/verify-canonical-restore.ts app/routes/analysis.canonical.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa3:source
+> prettier --check scripts/job-requirement-test-fixture.ts scripts/verify-job-requirements.ts scripts/benchmark-job-intelligence.ts app/routes/analysis.requirements.tsx && eslint scripts/job-requirement-test-fixture.ts scripts/verify-job-requirements.ts scripts/benchmark-job-intelligence.ts app/routes/analysis.requirements.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa4:source
+> prettier --check scripts/benchmark-scoring-validity.ts scripts/scoring-validity-engineering.ts scripts/score-v2-test-fixture.ts scripts/verify-score-v2.ts scripts/verify-score-v2-legacy.ts app/routes/analysis.score.tsx && eslint scripts/benchmark-scoring-validity.ts scripts/scoring-validity-engineering.ts scripts/score-v2-test-fixture.ts scripts/verify-score-v2.ts scripts/verify-score-v2-legacy.ts app/routes/analysis.score.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa5:source
+> prettier --check app/lib/authoring-ui.ts app/lib/writing-quality.ts app/routes/analysis.author.tsx app/components/AuthoringWorkspace.tsx scripts/verify-authoring.ts scripts/benchmark-writer-grounding.ts scripts/writer-grounding-engineering.ts && eslint app/lib/authoring-ui.ts app/lib/writing-quality.ts app/routes/analysis.author.tsx app/components/AuthoringWorkspace.tsx scripts/verify-authoring.ts scripts/benchmark-writer-grounding.ts scripts/writer-grounding-engineering.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa6:source
+> prettier --check app/lib/server/artifact-contract.ts app/lib/server/artifact-renderer.ts app/lib/server/artifact-worker.mjs app/lib/server/artifact-repository.ts app/lib/server/artifact-route-helpers.ts app/routes/analysis.export.tsx app/routes/analysis.artifact.ts scripts/verify-artifact-export.ts scripts/benchmark-render-parity.ts && eslint app/lib/server/artifact-contract.ts app/lib/server/artifact-renderer.ts app/lib/server/artifact-repository.ts app/lib/server/artifact-route-helpers.ts app/routes/analysis.export.tsx app/routes/analysis.artifact.ts scripts/verify-artifact-export.ts scripts/benchmark-render-parity.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa8:source
+> prettier --check app/lib/server/evaluation-corpus.ts app/lib/server/evaluation-annotation.ts app/lib/server/evaluation-partitions.ts app/lib/server/evaluation-calibration.ts app/lib/server/evaluation-corpus-drill.ts app/lib/server/evaluation-statistics.ts app/lib/server/evaluation-runner.ts app/lib/server/evaluation-claims.ts tests/unit/evaluation-corpus.test.ts tests/unit/evaluation-annotation.test.ts tests/unit/evaluation-partitions.test.ts tests/unit/evaluation-calibration.test.ts tests/unit/evaluation-corpus-drill.test.ts tests/unit/evaluation-statistics.test.ts tests/unit/evaluation-runner.test.ts tests/unit/evaluation-claims.test.ts tests/fixtures/evaluation-corpus.ts tests/fixtures/evaluation-workflow.ts tests/integration/evaluation-workflow.test.ts scripts/verify-evaluation-corpus.ts scripts/verify-evaluation-storage.ts scripts/verify-evaluation-workflow.ts && eslint app/lib/server/evaluation-corpus.ts app/lib/server/evaluation-annotation.ts app/lib/server/evaluation-partitions.ts app/lib/server/evaluation-calibration.ts app/lib/server/evaluation-corpus-drill.ts app/lib/server/evaluation-statistics.ts app/lib/server/evaluation-runner.ts app/lib/server/evaluation-claims.ts tests/unit/evaluation-corpus.test.ts tests/unit/evaluation-annotation.test.ts tests/unit/evaluation-partitions.test.ts tests/unit/evaluation-calibration.test.ts tests/unit/evaluation-corpus-drill.test.ts tests/unit/evaluation-statistics.test.ts tests/unit/evaluation-runner.test.ts tests/unit/evaluation-claims.test.ts tests/fixtures/evaluation-corpus.ts tests/fixtures/evaluation-workflow.ts tests/integration/evaluation-workflow.test.ts scripts/verify-evaluation-corpus.ts scripts/verify-evaluation-storage.ts scripts/verify-evaluation-workflow.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa9:source
+> prettier --check app/lib/server/pilot-evidence.ts app/lib/server/pilot-workflow.ts tests/unit/pilot-evidence.test.ts tests/unit/pilot-workflow.test.ts && eslint app/lib/server/pilot-evidence.ts app/lib/server/pilot-workflow.ts tests/unit/pilot-evidence.test.ts tests/unit/pilot-workflow.test.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> lint
+> eslint app/routes app/lib/server app/lib/native-layout-schema.ts app/lib/native-layout-structure.ts tests e2e app/components scripts/verify-local-ocr.ts vite.worker.config.ts scripts/check-container.mjs
+
+
+> test
+> vitest run
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats[39m
+
+[90mstderr[2m | tests/components/WorkspaceRepairs.test.tsx[2m > [22m[2mrebinds writing selection and clears clarification text and confirmation when focus changes
+[22m[39mNo `HydrateFallback` element provided to render during initial hydration
+
+ [32m✓[39m tests/unit/extraction-benchmark.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 1399[2mms[22m[39m
+     [33m[2m✓[22m[39m returns nonzero from the release CLI while engineering output remains reviewable [33m 1368[2mms[22m[39m
+ [32m✓[39m tests/unit/private-verification.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1455[2mms[22m[39m
+   [33m[2m✓[22m[39m seals real Vite env loading and rejects unsafe private browser configuration [33m 977[2mms[22m[39m
+   [33m[2m✓[22m[39m inventories Git-aware source changes and aborts the actual owned process group [33m 477[2mms[22m[39m
+ [32m✓[39m tests/unit/scoring-validity.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 1760[2mms[22m[39m
+   [33m[2m✓[22m[39m AA046 checks deterministic traces and invariance while failing closed on unreviewed release metrics [33m 676[2mms[22m[39m
+   [33m[2m✓[22m[39m release CLI produces a blocked receipt and a nonzero exit [33m 1083[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/runtime-memory.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 980[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/text-fusion.test.ts [2m([22m[2m17 tests[22m[2m)[22m[33m 1190[2mms[22m[39m
+ [32m✓[39m tests/components/WorkspaceRepairs.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1702[2mms[22m[39m
+   [33m[2m✓[22m[39m rebinds writing selection and clears clarification text and confirmation when focus changes [33m 1626[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-corruption.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 2936[2mms[22m[39m
+   [33m[2m✓[22m[39m real pdf bytes with changed critical content or missing structure lose verified state [33m 1524[2mms[22m[39m
+   [33m[2m✓[22m[39m real docx bytes with changed critical content or missing structure lose verified state [33m 1411[2mms[22m[39m
+ [32m✓[39m tests/unit/document-worker-cli.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 1145[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe configuration before client imports or network activity {"SUPABASE_URL":"https://hosted.example.test","EVIDENCE_REVIEW_ENABLED":"true"} [33m 316[2mms[22m[39m
+ [32m✓[39m tests/unit/writer-grounding-engineering.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 918[2mms[22m[39m
+   [33m[2m✓[22m[39m release mode emits a blocked receipt and exits nonzero [33m 748[2mms[22m[39m
+ [32m✓[39m tests/unit/worker-runner.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 600[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps a standalone idle worker alive until shutdown [33m 536[2mms[22m[39m
+ [32m✓[39m tests/components/LatexPdfPreview.test.tsx [2m([22m[2m15 tests[22m[2m)[22m[33m 528[2mms[22m[39m
+ [32m✓[39m tests/unit/evaluation-claims.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 1358[2mms[22m[39m
+ [32m✓[39m tests/integration/evaluation-workflow.test.ts [2m([22m[2m3 tests[22m[2m)[22m[33m 1381[2mms[22m[39m
+ [32m✓[39m tests/unit/repository-read-scheduling.test.ts [2m([22m[2m21 tests[22m[2m)[22m[33m 569[2mms[22m[39m
+ [32m✓[39m tests/unit/score-v2-engine.test.ts [2m([22m[2m19 tests[22m[2m)[22m[32m 257[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-synthetic.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 505[2mms[22m[39m
+ [32m✓[39m tests/unit/typescript-eslint-glob.test.ts [2m([22m[2m2 tests[22m[2m)[22m[33m 521[2mms[22m[39m
+   [33m[2m✓[22m[39m allows only the declared hidden-file glob through real project services [33m 514[2mms[22m[39m
+ [32m✓[39m tests/unit/evaluation-runner.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 1019[2mms[22m[39m
+     [33m[2m✓[22m[39m requires separate sample authority for representative claims and never grants release [33m 337[2mms[22m[39m
+[90mstderr[2m | tests/components/WorkspaceShell.test.tsx[2m > [22m[2mincludes the workspace heading, description, action and content in one main landmark
+[22m[39mNo `HydrateFallback` element provided to render during initial hydration
+
+ [32m✓[39m tests/components/WorkspaceShell.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 248[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-pilot.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 258[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-print-pilot.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 5558[2mms[22m[39m
+     [33m[2m✓[22m[39m renders deterministic image-only clean source with eight preauthored fields [33m 476[2mms[22m[39m
+     [33m[2m✓[22m[39m actually applies declared 150 DPI challenge transformations [33m 508[2mms[22m[39m
+     [33m[2m✓[22m[39m retains exact native middle-page text without a hidden scanned text layer [33m 313[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps every source family in one partition and counts controls honestly [33m 4249[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-source-links.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 177[2mms[22m[39m
+ [32m✓[39m tests/components/FileUploader.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 218[2mms[22m[39m
+[90mstderr[2m | tests/components/PrivacyRepairs.test.tsx[2m > [22m[2muses stable UTC dates and lets the browser handle the export attachment link
+[22m[39mNo `HydrateFallback` element provided to render during initial hydration
+
+ [32m✓[39m tests/components/ResultTabs.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 172[2mms[22m[39m
+ [32m✓[39m tests/components/PrivacyRepairs.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 241[2mms[22m[39m
+ [32m✓[39m tests/components/BuildAiAssistant.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 175[2mms[22m[39m
+ [32m✓[39m tests/components/Phase6Accessibility.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 199[2mms[22m[39m
+ [32m✓[39m tests/components/EvidenceScene3D.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 137[2mms[22m[39m
+ [32m✓[39m tests/components/CitedWritingSuggestions.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 219[2mms[22m[39m
+ [32m✓[39m tests/unit/evaluation-statistics.test.ts [2m([22m[2m14 tests[22m[2m)[22m[33m 401[2mms[22m[39m
+ [32m✓[39m tests/components/ResumeWriter.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 134[2mms[22m[39m
+ [32m✓[39m tests/unit/authoring-contract.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 101[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-repository.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 122[2mms[22m[39m
+ [32m✓[39m tests/components/ThemeControl.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 174[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-contract.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 104[2mms[22m[39m
+ [32m✓[39m tests/unit/authoring-proposals.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 111[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-adverse.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 111[2mms[22m[39m
+ [32m✓[39m tests/unit/job-requirements.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 106[2mms[22m[39m
+ [32m✓[39m tests/integration/native-reading-order.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 82[2mms[22m[39m
+ [32m✓[39m tests/integration/native-evidence.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 99[2mms[22m[39m
+ [32m✓[39m tests/unit/build-assist-service.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 96[2mms[22m[39m
+[90mstderr[2m | tests/integration/paddle-api.test.ts[2m > [22m[2mnative PDF to hosted OCR contract integration (no live provider)[2m > [22m[2mrejects malformed before API disclosure
+[22m[39mWarning: Indexing all PDF objects
+
+ [32m✓[39m tests/integration/paddle-api.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 98[2mms[22m[39m
+ [32m✓[39m tests/unit/scoring-stage.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 75[2mms[22m[39m
+ [32m✓[39m tests/unit/score-semantics.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 91[2mms[22m[39m
+ [32m✓[39m tests/unit/canonical-content.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 99[2mms[22m[39m
+ [32m✓[39m tests/unit/score-inflation.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 80[2mms[22m[39m
+ [32m✓[39m tests/unit/rewrite-service.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 70[2mms[22m[39m
+ [32m✓[39m tests/unit/job-intelligence-benchmark.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 97[2mms[22m[39m
+ [32m✓[39m tests/unit/analysis.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 76[2mms[22m[39m
+ [32m✓[39m tests/unit/jd-matching.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 69[2mms[22m[39m
+ [32m✓[39m tests/components/SavedScoreContext.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m tests/components/Heatmap.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 101[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-evaluation.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m tests/unit/extraction-repair-development.test.ts [2m([22m[2m91 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m tests/unit/job-requirement-proposals.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 56[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/paddle.test.ts [2m([22m[2m52 tests[22m[2m)[22m[32m 51[2mms[22m[39m
+ [32m✓[39m tests/unit/writer-worker-transport.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 62[2mms[22m[39m
+ [32m✓[39m tests/components/UncalibratedScores.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-review.test.ts [2m([22m[2m21 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m tests/unit/canonical-route.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m tests/unit/native-evidence-v2.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m tests/unit/rewrite-ai.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m tests/unit/writer-grounding.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-fields.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m tests/unit/job-requirement-route.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/latex-service.test.ts [2m([22m[2m30 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-field-version.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-route.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/selective.test.ts [2m([22m[2m58 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m tests/unit/writer-regeneration.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m tests/unit/pilot-evidence.test.ts [2m([22m[2m26 tests[22m[2m)[22m[32m 64[2mms[22m[39m
+ [32m✓[39m tests/unit/document-extraction.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+ [32m✓[39m tests/unit/document-evidence.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m tests/integration/error-matrix.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m tests/unit/authoring-forms.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m tests/unit/evaluation-annotation.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+ [32m✓[39m tests/unit/evaluation-partitions.test.ts [2m([22m[2m27 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-review-route.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m tests/unit/evaluation-calibration.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+ [32m✓[39m tests/unit/qualitative-stage-outage.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m tests/unit/native-evidence-schema.test.ts [2m([22m[2m22 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m tests/integration/api-analyze.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m tests/unit/request-context.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/authoring-route.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/openai-model-transport.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/adapter.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m tests/unit/errors.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/api-not-found.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m tests/unit/extraction-stage.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/artifact-renderer.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 9599[2mms[22m[39m
+   [33m[2m✓[22m[39m renders and independently parses pdf for A4 and Letter [33m 1241[2mms[22m[39m
+   [33m[2m✓[22m[39m renders and independently parses docx for A4 and Letter [33m 1127[2mms[22m[39m
+   [33m[2m✓[22m[39m blocks unsupported glyphs, overflow, stale input and cancelled work [33m 410[2mms[22m[39m
+   [33m[2m✓[22m[39m reproduces identical pdf bytes for identical version and options [33m 790[2mms[22m[39m
+   [33m[2m✓[22m[39m reproduces identical docx bytes for identical version and options [33m 1769[2mms[22m[39m
+   [33m[2m✓[22m[39m bounds simultaneous jobs and cancels active workers [33m 840[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves mixed text and mathematical symbols in pdf without substitution [33m 841[2mms[22m[39m
+   [33m[2m✓[22m[39m preserves mixed text and mathematical symbols in docx without substitution [33m 2578[2mms[22m[39m
+ [32m✓[39m tests/unit/pilot-workflow.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32m✓[39m tests/unit/latex-source.test.ts [2m([22m[2m47 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m tests/unit/build-assist.test.ts [2m([22m[2m44 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m tests/unit/response-security.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/native-evidence-worker.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/local-container.test.ts [2m([22m[2m32 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/score-v2-route.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m tests/unit/auth-logout.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m tests/unit/privacy-operations.test.ts [2m([22m[2m11 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m tests/unit/extraction-benchmark-engineering.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 9802[2mms[22m[39m
+     [33m[2m✓[22m[39m keeps existing locked families separate and requires their pre-execution receipt [33m 2877[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses release before recognition and binds explicit immutable CI images [33m 3516[2mms[22m[39m
+     [33m[2m✓[22m[39m freezes every development source and label before running recognition [33m 1741[2mms[22m[39m
+     [33m[2m✓[22m[39m extracts all fields through real PDF parsing and reconciliation without truth input [33m 1665[2mms[22m[39m
+ [32m✓[39m tests/unit/metrics-route.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m tests/unit/canonical-resume-schema.test.ts [2m([22m[2m16 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/parse-sim-benchmark.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/unit/build-assist-provider.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m tests/unit/security.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/unit/home-routing.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/latex-routes.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m tests/unit/analyze-request.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m tests/unit/observability.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/unit/job-domain.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/unit/latex-sandbox.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/unit/score-v2-contract.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/evaluation-corpus-drill.test.ts [2m([22m[2m17 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/paddle-admission.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/qualitative-prose.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/canonical-sql-contract.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m tests/unit/qualitative-ai.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/native-layout-schema.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/source-route.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/unit/latex-config.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/dates.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/contact.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/unit/build-assist-config.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/evaluation-corpus.test.ts [2m([22m[2m44 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/extraction-router.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/unit/storage.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-scoring-guard.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/native-layout-limits.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/score-v2-validity-metrics.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/unit/qualitative-stage.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/score-snapshot-binding.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/browser-test-target.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/unit/iso-datetime.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/unit/worker-readiness.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/native-layout-structure.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/database.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-field-evaluation.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/parse-pages.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/sections.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/upload-validation.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/bullets.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/analysis-state.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/layout-read-model.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/config.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/native-layout.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/extraction-transitions.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/unit/parsing/layout.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/operations-readiness.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/result-cache.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/react-router-config.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/writing-quality.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/job-policy.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+ [32m✓[39m tests/unit/phase5-thresholds.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/privacy.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/authorization.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+ [32m✓[39m tests/unit/evidence-field-sql-version.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/auth.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/theme.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/result-feedback.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/ocr/ocr-pilot-cli.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 11464[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe flags before execution: ["--psm=7"] [33m 539[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe flags before execution: ["--dpi=150","--dpi=300"] [33m 573[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe flags before execution: ["--print-pilot"] [33m 598[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe flags before execution: ["--print-pilot","--partition=locked"] [33m 609[2mms[22m[39m
+     [33m[2m✓[22m[39m refuses unsafe flags before execution: ["--lock-receipt=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"] [33m 548[2mms[22m[39m
+     [33m[2m✓[22m[39m rejects a mismatched frozen receipt without reaching Docker [33m 4640[2mms[22m[39m
+     [33m[2m✓[22m[39m can freeze held-out sources without Docker or recognition [33m 3954[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m160 passed[39m[22m[90m (160)[39m
+[2m      Tests [22m [1m[32m1438 passed[39m[22m[90m (1438)[39m
+[2m   Start at [22m 17:01:21
+[2m   Duration [22m 11.62s[2m (transform 3.78s, setup 0ms, import 14.95s, tests 63.28s, environment 7.38s)[22m
+
+
+> typecheck
+> react-router typegen && tsc
+
+tests/unit/evaluation-corpus-drill.test.ts(42,21): error TS7006: Parameter 'key' implicitly has an 'any' type.

@@ -1,0 +1,119 @@
+{
+  "recordedAt": "2026-11-06T10:10:32.321471+00:00",
+  "status": "worker_functional_matrix_pass_full_ci_pending",
+  "candidateImage": "sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc",
+  "scope": "Exact3829 worker only; UI/repository repairs are separate and full65+6 browser verification remains pending",
+  "commands": [
+    {
+      "name": "RUNTIME",
+      "args": [
+        "run",
+        "verify:latex",
+        "--",
+        "sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc"
+      ],
+      "code": 0,
+      "signal": null,
+      "groupCleanupConfirmed": true,
+      "logSha256": "0e8df322a4c3af7986a8f53dea8a9af63e5ee4e5f23c2c5f93d068d11e21aee3"
+    },
+    {
+      "name": "BENCHMARK",
+      "args": [
+        "run",
+        "benchmark:latex",
+        "--",
+        "sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc"
+      ],
+      "code": 0,
+      "signal": null,
+      "groupCleanupConfirmed": true,
+      "logSha256": "a7d2316252a7dae9ab0208f892431a11bdd64d3230ae8482e2eb795a3b5edc6d"
+    },
+    {
+      "name": "ROLLBACK",
+      "args": [
+        "run",
+        "verify:latex:rollback",
+        "--",
+        "sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc"
+      ],
+      "code": 0,
+      "signal": null,
+      "groupCleanupConfirmed": true,
+      "logSha256": "e9bbca584a837b97da393da469c6ff8d5b9c59c8e6fcfeb4dcb902ae73754f72"
+    },
+    {
+      "name": "RENDER",
+      "args": [
+        "run",
+        "verify:latex:render",
+        "--",
+        "sha256:19d2a00a2a830173bf1fae07dddfcac7d54be3047e58b276af031d3cbd1018ac",
+        "sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc"
+      ],
+      "code": 0,
+      "signal": null,
+      "groupCleanupConfirmed": true,
+      "logSha256": "59e0d9bf30036130668fa3d59d4d32dc945e54031bfecb1c38545df89883e1a9"
+    }
+  ],
+  "runtimeGroups": 22,
+  "pdfPolicyCases": 20,
+  "profilePaperCases": 6,
+  "exampleP95Ms": 745,
+  "latencyTargetApproved": false,
+  "sourceHashes": {
+    "app/lib/server/latex-source.ts": "10e3975858dbd91a7de04724d2cf452d358364ce11cf840aaa0bbd9b3496116f",
+    "app/lib/server/latex-sandbox.ts": "e7b0b41aee2d83553c29437264524cf71f4fbb9a6bf8b1f760e4041d5eea2477",
+    "scripts/latex-runtime/Dockerfile": "c9458ec4334f8002b9f17cc07ef6034ba16f631e70ba4cc9552c288324d3e734",
+    "scripts/latex-runtime/landlock.c": "8f4f7caa93f2a875db2038e17fa4558cd5577c59f883d07cd313c06d2993ea7e",
+    "scripts/latex-runtime/supervisor.py": "31f37b52a65b46ebce0625026ae4faaa3ea4b35e62b440635af621eb33b26e7c",
+    "scripts/latex-runtime/inspect_pdf.py": "abebf24292b7c591758c818994ddee65db475f7fa1fba6ab81cd9d2ca906e152",
+    "scripts/latex-runtime/build-closure.py": "dd25c526769167236927eb4fee308894e6d7e2883e3affb71990794044df187f",
+    "scripts/latex-runtime/build-fontconfig.py": "005e348a5342057ec43901e0be1e5b5ac254165f79930be26f0ee1f077d90b3e",
+    "scripts/latex-runtime/native-expat/pins.json": "1b67434115d44f1f3f37692683059b9ea6a8a7601143c2892a7e5bc341d7eb6a",
+    "scripts/latex-runtime/native-expat/prepare.py": "1f0e50caf5b1cb91b891a2d484feae3187746f0d5e45484f62255356747fa59a",
+    "scripts/latex-runtime/native-expat/build.py": "5e9d68b2fa15053fbf28ff579e01f57db74d529ed37a2d1f50a51f7e172eda70",
+    "scripts/latex-runtime/native-expat/apt-transport.py": "8b831a59cd8f2f89925b755973c1ef764daa2722207bfd24742114c67d31ded8",
+    "scripts/latex-runtime/native-expat/abi-smoke.c": "ba66c40a6b264c068f8fab1731a61dd074605c6bc208985b5fd3519bca9e5d76",
+    "scripts/latex-runtime/native-expat/native-utf16-tests.patch": "63e11268ce40526c1b71cf0851e0f00a1bb2c5ced3a49648f0f70ad2faf82bb6",
+    "scripts/latex-runtime/native-expat/utf16-adapter-check.c": "6d7eb0b7a6ac565a5b1e07a07439b24a38411ed667abbcef0134950c406dc8f7",
+    "scripts/latex-runtime/native-expat/provenance/trixie-security.InRelease": "d0dbede32d80c3e9462e037ede87b138bdd5e44be10145acf46c9f643388836d",
+    "scripts/latex-runtime/native-expat/provenance/sid.InRelease": "1c071f93406d63d72960a3d5257603839f7aafc59feba4244c9e372110c29d6d",
+    "scripts/latex-runtime/texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa",
+    "scripts/latex-runtime/requirements.lock": "6c3793776e6b3c3d9a955e11b1eb2de1f192aa0990305fef4bb065f70b402261"
+  },
+  "runtimeSourceStability": "Runtime and benchmark19-field snapshots agree and match current ROOT; coordinator froze these bindings across all four commands",
+  "harnessHashes": {
+    "scripts/verify-latex-sandbox.ts": "6c4e70a1132ead85dc4884afb43ffe4bcb1cc3ce7a2407a37fd1709e0d2ecc29",
+    "scripts/latex-test-fixtures.ts": "4c829f42bfb596b001fa9f47408fc6a25f1e05c7923cadc6b72c6c9273709075",
+    "scripts/benchmark-latex.ts": "1835490a56d05e61bac5d47a4438cfa73e169f6625e35bb80e271a17caa9ec41",
+    "scripts/verify-latex-rollback.ts": "a94dc26f65100913249bf8416a3e39f4ab008aaeb7197a70ed6f72580bc73a82",
+    "scripts/verify-latex-render-parity.ts": "b994288a4c6f050590b58940f8b980a5ad78662c899514e627500b1276032311"
+  },
+  "receiptHashes": {
+    "docs/evaluation/AA7_FINAL_NATIVE_RUNTIME_20261106.json": "328484d82c99d77e4156024502e27d38e6b23d4021d657ad82979e72a1077048",
+    "docs/evaluation/AA7_FINAL_NATIVE_BENCHMARK_20261106.json": "26f9e636ed96202dcf67209ad806251c7afac26fbde821b6c06ccf7265b6bc49",
+    "docs/evaluation/AA7_FINAL_NATIVE_ROLLBACK_20261106.json": "5c204053db41af5bedebbe2d46f8cf2b52edf613354713de5009017195239d60",
+    "docs/evaluation/AA7_FINAL_NATIVE_RENDER_20261106.json": "0c7edab0fbdf07dad7a1e03bc2540af2cbf1679e2956af66f0bb0fad682ac1f5"
+  },
+  "terminalReceiptSha256": "65bb568b140993967ba07cbb139bcd3adf3a48b32cda5913c7e22d49a273c933",
+  "nativeProof": "Installed2.10 bytes/maps/fresh Python consumer,5328 narrow+5328 wide checks provenance, exact6 purge, original20 runtime groups retained",
+  "fontconfigProof": "Sealed XML hashes/read permissions and40 native matches preserved; effective user-canary control changes unsealed matching while sealed matching/config/font/cache state stays unchanged",
+  "rollbackScope": "Flag-off stage is unit HTTP; admission/quarantine/resource removal/fresh process compile are real worker checks",
+  "renderReview": {
+    "status": "pass",
+    "reviewer": "coordinator AI visual inspection",
+    "scope": "All4 neutral PNGs preserve headings/lists/math/link/geometry/page break without clipping; pairwise PNG hashes observed equal",
+    "limits": "Two-page synthetic evidence; no tagged-PDF/PDF-UA/real AT acceptance"
+  },
+  "renderArtifactsRemovedAfterReview": true,
+  "ownedConverterContainersRemainingAtCompletion": 0,
+  "limits": [
+    "Full private CI attempt1 failed65/71 browser; failure receipt preserved and fixes require fresh full65+6 execution",
+    "No full vulnerability clearance, formal GateAA7 or release acceptance from these functional checks",
+    "Two neutral pages and Axe/plain text UI checks do not establish tagged-PDF/PDF-UA or real AT acceptance",
+    "No provider/DB/reset/deployment action in this worker matrix"
+  ]
+}

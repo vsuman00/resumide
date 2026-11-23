@@ -1,0 +1,35 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/mandatory-ai-budget-sql.test.ts (8 tests | 1 failed) 6ms
+     ✓ refuses SQL/JSON null A12 budget immediately after no-dispatch replay 1ms
+     ✓ refuses absent stored A13 technical policy or SQL/JSON null budget after replay 0ms
+     ✓ changes exactly two claim bodies and seven checker bodies with guarded pre/postimages 1ms
+     ✓ preserves every predecessor byte except its mandatory guard: public.claim_canonical_rewrite_dispatch 0ms
+     ✓ preserves every predecessor byte except its mandatory guard: public.claim_initial_feedback_dispatch 0ms
+     ✓ renews checker digests only, preserving all other bytes/ACL/catalogue checks 0ms
+     ✓ leaves table seals, permissions, prices and policy schemas unchanged 0ms
+     × binds every current profile digest to actual composed terminal function bodies 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/mandatory-ai-budget-sql.test.ts > exact forward mandatory-budget closure, Source evidence only > binds every current profile digest to actual composed terminal function bodies
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/unit/mandatory-ai-budget-sql.test.ts:75:133
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 7 passed (8)
+   Start at  18:29:13
+   Duration  98ms (transform 28ms, setup 0ms, import 37ms, tests 6ms, environment 0ms)
+

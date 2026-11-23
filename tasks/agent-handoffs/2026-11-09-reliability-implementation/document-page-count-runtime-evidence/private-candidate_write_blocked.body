@@ -1,0 +1,4 @@
+
+  select p_owner_id is null or exists(select 1 from private.owned_ai_deletion_dispositions p where p.owner_id=p_owner_id) or exists(select 1 from public.data_requests d
+    where d.user_id=p_owner_id and d.kind='deletion'
+      and d.status is distinct from 'failed' and d.status is distinct from 'cancelled');

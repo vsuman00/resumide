@@ -1,0 +1,22 @@
+--- before/tests/components/JdRecommendations.test.tsx
++++ after/tests/components/JdRecommendations.test.tsx
+@@ -99,7 +99,9 @@
+   ).toBeNull();
+   expect(screen.queryByText("Built services using PostgreSQL")).toBeNull();
+ });
+-it.each([
++it.each<
++  [string, Parameters<typeof createRequirementContextFixture>[0], RegExp]
++>([
+   [
+     "listed_skill_only",
+     { clauses: ["Built internal services"], skill: "Python" },
+@@ -110,7 +112,7 @@
+     { jdText: "Requirements\nRAG required" },
+     /Missing evidence does not mean you are unqualified/u,
+   ],
+-] as const)(
++])(
+   "shows %s without inventing a contribution link or a question",
+   async (observation, options, explanation) => {
+     const f = await fixture(options);

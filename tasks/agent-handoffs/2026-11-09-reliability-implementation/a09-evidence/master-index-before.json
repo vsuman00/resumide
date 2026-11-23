@@ -1,0 +1,1892 @@
+{
+  "schemaVersion": "consumer-reliability-plan/1",
+  "status": "IMPLEMENTATION_ACTIVE",
+  "date": "2026-11-09",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "baselineSourceInputs": 615,
+  "implementationAuthorized": true,
+  "pricing": "DEFERRED_ALL_SERVICES_FREE",
+  "deployment": "HOLD",
+  "tasks": [
+    {
+      "id": "CR-C00",
+      "title": "Freeze supported capabilities, truth contracts and closure matrix",
+      "stage": 0,
+      "owner": "Coordinator + all three agents",
+      "dependencies": [],
+      "blueprintAliases": [],
+      "kind": "contract",
+      "status": "VERIFIED",
+      "integrationNote": "Three files maximum: this plan, the product contract and capability design. Do not change claim floors or supported scope silently.",
+      "evidenceTier": "contract_review",
+      "evidence": "agent-handoffs/2026-11-09-reliability-implementation/batch-01.json"
+    },
+    {
+      "id": "CR-C01",
+      "title": "Preserve and assign every failing regression and coverage omission",
+      "stage": 0,
+      "owner": "Verification",
+      "dependencies": ["CR-C00"],
+      "blueprintAliases": [],
+      "kind": "contract",
+      "status": "VERIFIED",
+      "integrationNote": "Curate neutral known-truth vectors and a typed receipt inventory; per-feature tasks add their focused red tests. Maximum three files. The audit cases are now development regressions, never unseen holdout evidence.",
+      "evidenceTier": "metadata_regression_inventory",
+      "evidence": "agent-handoffs/2026-11-09-reliability-implementation/batch-01.json"
+    },
+    {
+      "id": "CR-A01",
+      "title": "Diagnose native page completeness and extraction failure states",
+      "stage": 2,
+      "owner": "Backend",
+      "dependencies": ["CR-C01"],
+      "blueprintAliases": ["ats:A1"],
+      "kind": "investigate_then_repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-A01-S01",
+          "title": "Reject inconsistent/sparse page vectors and preserve one-page fallback",
+          "status": "VERIFIED",
+          "files": [
+            "app/lib/server/ocr/pdf-detection.ts",
+            "app/lib/server/document-extraction.ts",
+            "tests/unit/ocr/extraction-router.test.ts",
+            "tests/unit/document-extraction.test.ts"
+          ],
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/backend.md",
+          "evidenceTier": "pure_unit_and_mocked_extraction_integration",
+          "focusedTestsPassed": 33,
+          "affectedTestsPassed": 105
+        },
+        {
+          "id": "CR-A01-S02",
+          "title": "Distinguish availability from sparse/garbled/duplicate page diagnostics",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "CR-A02",
+      "title": "Group evidence by entity and stable field target",
+      "stage": 2,
+      "owner": "Backend",
+      "dependencies": ["CR-A01"],
+      "blueprintAliases": ["ats:A2"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-A02-S01",
+          "title": "Owned immutable derived observation/target read contract",
+          "status": "VERIFIED",
+          "evidenceTier": "focused_unit_source_review",
+          "affectedTestsPassed": 78,
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a02-targets-integration.json"
+        },
+        {
+          "id": "CR-A02-S02",
+          "title": "Complete target-aware grouping/import and correction integration without altering historical evidence",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "CR-A03",
+      "title": "Define correction projection, targets and candidate provenance",
+      "stage": 2,
+      "owner": "Coordinator + backend + frontend",
+      "dependencies": ["CR-A02"],
+      "blueprintAliases": ["ats:A3", "frontend:UI-A"],
+      "kind": "contract",
+      "status": "PARTIAL",
+      "integrationNote": "Reviewed pure read contract enables independent C02 storage preparation; full entity/import and persisted correction acceptance remain open. No projection output authorizes a write.",
+      "slices": [
+        {
+          "id": "CR-A03-S01",
+          "title": "Owned source/canonical correction projection with per-target history and separate candidate provenance",
+          "status": "VERIFIED",
+          "evidenceTier": "pure_unit_and_independent_source_review",
+          "affectedTestsPassed": 123,
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a03-projection-integration.json"
+        },
+        {
+          "id": "CR-A03-S02",
+          "title": "Durable target/provenance and complete current-history admission contract with C02/A04",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "CR-C02",
+      "title": "Verify evidence/canonical storage compatibility before new writes",
+      "stage": 2,
+      "owner": "Coordinator + backend",
+      "dependencies": ["CR-A03"],
+      "blueprintAliases": [],
+      "kind": "contract",
+      "status": "PARTIAL",
+      "integrationNote": "Maximum five files. Prefer a derived projection without rewriting stored evidence; if producer/schema changes, prepare a forward migration, exact replay/admission checks and dual historical readers before activation. Migration application is separately scoped.",
+      "preparationNote": "Inspect existing stronger SQL/import/edit/citation/privacy/restore contracts against verified A03-S01. No new stored shape, producer, migration application or writes authorized by this preparation.",
+      "preparationEvidence": "agent-handoffs/2026-11-09-reliability-implementation/c02-storage-contract.md",
+      "preparationSha256": "8777cce5de501844a5053ce00d1756e6c4e97cce8eaf594b5dd1617327bdc45d",
+      "rootReview": "PASS proposal-level interface review after enqueue-barrier clarification; exact DDL/serialization/RPC/direct-DML and actual admission/replay remain open",
+      "preparationReviewEvidence": "agent-handoffs/2026-11-09-reliability-implementation/c02-storage-review.json",
+      "slices": [
+        {
+          "id": "CR-C02-S01",
+          "title": "Review source-backed transactional ledger and privacy compatibility proposal",
+          "status": "VERIFIED",
+          "evidenceTier": "proposal_interface_review_only",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/c02-storage-review.json"
+        },
+        {
+          "id": "CR-C02-S02",
+          "title": "Reproduce capped prefix and implement bounded complete high-water review reads",
+          "status": "VERIFIED",
+          "evidenceTier": "source_review_and_synthetic_bounded_high_water_reader",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/c02-prefix-read-integration.json",
+          "affectedTestsPassed": 185,
+          "remaining": "Actual managed row-cap observation and full write/admission compatibility remain open"
+        },
+        {
+          "id": "CR-C02-S03",
+          "title": "Exact forward ledger/serialization/RPC/add/historical/privacy admission packet and actual managed compatibility",
+          "status": "SOURCE_IMPLEMENTED_NATIVE_UNEXECUTED",
+          "proposal": "agent-handoffs/2026-11-09-reliability-implementation/c02-ledger-admission.md",
+          "proposalSha256": "00ffd802d57accdaeac029c01e1f32322e352948dbb58f889055184b8ea7b04b",
+          "currentReview": "agent-handoffs/2026-11-09-reliability-implementation/c02-current-protocol-review.json",
+          "currentReviewNote": "Frozen proposal preserves superseded cancelled-deletion semantics and older writer bodies; current source-contract amendment is required before A04 cutover.",
+          "noDdlOrSchemaApplied": true,
+          "remaining": "Separately admitted isolated managed native parsing, transactions/races, old-caller/reader and effective-privilege cutover; all SQL/operator source is unexecuted. The operator is mutating and rollback-only, not a read-only catalog verifier.",
+          "currentAmendment": "agent-handoffs/2026-11-09-reliability-implementation/c02-ledger-current-admission.md",
+          "currentSourceReview": "agent-handoffs/2026-11-09-reliability-implementation/a04-root-sql-current-review.json",
+          "migration": "supabase/migrations/20261110113245_canonical_correction_materialization.sql",
+          "migrationSha256": "eb981cd4949a71a68f8f42fa765f47f8ee033435fde37528c6d6a500a0029e93",
+          "criticalRoutines": 37,
+          "applicationEvidence": "agent-handoffs/2026-11-09-reliability-implementation/a04-integrated-completion.json"
+        }
+      ],
+      "foundationDraft": {
+        "status": "SOURCE_INTEGRATED_SQL_UNEXECUTED",
+        "migration": "supabase/migrations/20261109164851_correction_ledger_foundation.sql",
+        "allocation": "tasks/agent-handoffs/2026-11-09-reliability-implementation/c02-foundation-allocation.json",
+        "scope": "Five empty revoked/RLS collections, additive parent composite keys, private owner/codec helpers; no old writer/caller/grant cutover",
+        "applied": false,
+        "actualSqlTest": "NOT_RUN_PENDING_ISOLATED_MANAGED_TARGET_ADMISSION",
+        "sourceEvidence": "agent-handoffs/2026-11-09-reliability-implementation/backend-correction-foundation.md",
+        "independentReview": "agent-handoffs/2026-11-09-reliability-implementation/runtime-correction-foundation-review.md",
+        "codecTestsPassed": 22,
+        "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/integrated-verify-08-completion.json"
+      },
+      "currentImplementation": {
+        "status": "PARTIAL",
+        "flag": "CANONICAL_CORRECTIONS_ENABLED",
+        "default": false,
+        "prerequisites": [
+          "CANONICAL_AUTHORING_ENABLED",
+          "EVIDENCE_REVIEW_ENABLED"
+        ],
+        "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a04-integrated-completion.json",
+        "historicalReaders": [
+          "canonical-engine/1.0.0",
+          "canonical-engine/1.0.1"
+        ],
+        "newReader": "canonical-engine/1.0.2",
+        "grantsCutoverApplied": false
+      }
+    },
+    {
+      "id": "CR-A04",
+      "title": "Persist corrected canonical children atomically with replay and CAS",
+      "stage": 2,
+      "owner": "Backend",
+      "dependencies": ["CR-A03", "CR-C02"],
+      "blueprintAliases": ["ats:A4"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "Default-off complete corrected-value source flow integrated: explicit assignment/apply/add/reapply, atomic SQL source, original-import wrapper and snapshot lineage. Application/mock/static/build checks passed; native transaction/role/race/consumer gates remain open.",
+      "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a04-integrated-completion.json",
+      "slices": [
+        {
+          "id": "CR-A04-S01",
+          "title": "Implement and verify correction command orchestration and reviewed SQL source",
+          "status": "VERIFIED",
+          "evidenceTier": "application_mock_static_build_and_unexecuted_sql_source_review",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a04-integrated-completion.json",
+          "nativeSql": "NOT_PARSED_NOT_APPLIED_NOT_RUN"
+        },
+        {
+          "id": "CR-A04-S02",
+          "title": "Verify source-correlated canonical choices with unchanged historical projection",
+          "status": "VERIFIED",
+          "evidenceTier": "source_bound_synthetic_projection_and_real_repository_mock_boundary",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/backend-a04-source-correlation.md",
+          "projectionTestsPassed": 82,
+          "originalProjectionVersion": "canonical-corrections/1.0.1"
+        },
+        {
+          "id": "CR-A04-S03",
+          "title": "Repair confirmed-original import and legacy result typing with reviewed transaction source",
+          "status": "VERIFIED",
+          "evidenceTier": "actual_repository_mock_regressions_and_sql_source_review_not_native_execution",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a04-integrated-completion.json",
+          "contract": "agent-handoffs/2026-11-09-reliability-implementation/a04-original-import-contract.json",
+          "repositoryTestsPassed": 41,
+          "behaviorTestsRepeatedAfterTypeOnlyFix": false
+        }
+      ]
+    },
+    {
+      "id": "CR-A05",
+      "title": "Repair OCR quality using declared development scan segments",
+      "stage": 5,
+      "owner": "Runtime + backend",
+      "dependencies": ["CR-A01", "CR-C00"],
+      "blueprintAliases": ["ats:A5", "runtime:RT17"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "Fresh synthetic development source registration is verified; no new OCR recognition/quality repair or support-envelope adoption occurred. Original failures/thresholds remain; Docker daemon was unavailable.",
+      "slices": [
+        {
+          "id": "CR-A05-S01",
+          "title": "Preregister fresh development fixtures with raw labels and lineage before future recognition",
+          "status": "VERIFIED_SYNTHETIC_FIXTURE_INTEGRITY_ONLY",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/writing-layout-ocr-closeout.md",
+          "protocol": "../docs/evaluation/OCR_RELIABILITY_PROTOCOL.md",
+          "fixtureTestsPassed": 3,
+          "newFamilies": 2,
+          "newDevelopmentDocuments": 6,
+          "ocrRecognitionCalls": 0,
+          "qualityStatus": "NOT_EVALUATED",
+          "existingProfilesAndCorporaChanged": false,
+          "remaining": "Actual development repair/comparison, preregistered untouched evaluation, runtime admission and consumer integration remain open. Different family IDs do not prove template independence."
+        }
+      ]
+    },
+    {
+      "id": "CR-A06",
+      "title": "Integrate approved OCR into the actual owned upload/worker path",
+      "stage": 5,
+      "owner": "Backend + runtime",
+      "dependencies": ["CR-A05", "CR-R15", "CR-R10", "CR-R24"],
+      "blueprintAliases": ["ats:A6", "runtime:RT16"],
+      "kind": "repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-A07",
+      "title": "Version JD aliases while preserving literal quotation",
+      "stage": 3,
+      "owner": "Backend",
+      "dependencies": ["CR-C01"],
+      "blueprintAliases": ["ats:A7"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-A07-S01",
+          "title": "Pure two-term alias lexicon and opt-in local nonpersistable JD discovery",
+          "status": "VERIFIED",
+          "authorAffectedTestsPassed": 115,
+          "remaining": "Local-only model verified; actual persisted alias adoption/CV06/A08/A09 remain open",
+          "rootFocusedBatchEvidence": "agent-handoffs/2026-11-09-reliability-implementation/batch-05-focused-root.json",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/integrated-verify-05.json",
+          "evidenceTier": "source_review_and_synthetic_local_read_model"
+        },
+        {
+          "id": "CR-A07-S02",
+          "title": "Persist/reload/adopt admitted aliases without changing frozen readers",
+          "status": "PLANNED",
+          "remaining": "Depends on A08/A09 versioned storage/RPC policy and actual managed validation"
+        }
+      ]
+    },
+    {
+      "id": "CR-A08",
+      "title": "Define typed alternatives, bounds and unmapped requirements",
+      "stage": 3,
+      "owner": "Backend",
+      "dependencies": ["CR-A07"],
+      "blueprintAliases": ["ats:A8"],
+      "kind": "contract",
+      "status": "PARTIAL",
+      "integrationNote": "Keep unfamiliar explicit clauses as source-spanned review items; OR/range meaning must be reviewable, never replaced with independent mandatory keywords.",
+      "slices": [
+        {
+          "id": "CR-A08-S01",
+          "title": "Bounded opt-in local flat OR/AND and explicit literal year bounds",
+          "status": "VERIFIED_SOURCE_AND_FOCUSED_LOCAL_MODEL",
+          "authorAffectedTestsPassed": 165,
+          "rootFinding": "Unbounded ambiguity array/entries on forged local input; existing10/100 shape bounds and missing-slot checks now enforced before interpretation",
+          "remaining": "Next integrated check, A09 storage/RPC/adoption, A10 dated fact support and numerical validity gates remain open",
+          "rootFocusedTestsPassed": 114,
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a08-focused-root.json",
+          "peerReview": "agent-handoffs/2026-11-09-reliability-implementation/frontend-relations-review.md"
+        }
+      ]
+    },
+    {
+      "id": "CR-A09",
+      "title": "Admit versioned JD relations through real storage and RPC replay",
+      "stage": 3,
+      "owner": "Coordinator + backend",
+      "dependencies": ["CR-A08"],
+      "blueprintAliases": ["ats:A8b"],
+      "kind": "repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-A10",
+      "title": "Evaluate requirement coverage from related dated facts",
+      "stage": 3,
+      "owner": "Backend",
+      "dependencies": ["CR-A09", "CR-A04"],
+      "blueprintAliases": ["ats:A9"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "Acknowledge exact declarations without granting source/proficiency or numeric admission. Full dependency, pair-binding, coverage and native consumer acceptance remain open.",
+      "evidenceTier": "actual_domain_edit_confirm_parse_diagnostics_with_synthetic_inputs",
+      "evidence": "agent-handoffs/2026-11-09-reliability-implementation/jd-review-completion.json",
+      "slices": [
+        {
+          "id": "CR-A10-S01",
+          "title": "Acknowledge exact declarations without granting source/proficiency or numeric admission",
+          "status": "VERIFIED",
+          "evidenceTier": "actual_domain_edit_confirm_parse_diagnostics_with_synthetic_inputs",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/jd-review-completion.json",
+          "nativeBrowser": "NOT_RUN"
+        }
+      ]
+    },
+    {
+      "id": "CR-A11",
+      "title": "Enforce bounded factual and relationship support for AI proposals",
+      "stage": 4,
+      "owner": "Backend",
+      "dependencies": ["CR-A10", "CR-A04"],
+      "blueprintAliases": ["ats:A10"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-A11-S01",
+          "title": "Anchored source-preserving legacy writing-support core",
+          "status": "VERIFIED_SCOPED_SAFETY_WITH_OPEN_USEFULNESS_REGRESSIONS",
+          "fullTaskStillRequires": "Canonical correction/provenance and JD fact coverage integration plus all AI surfaces.",
+          "focusedPipelineTestsPassed": 64,
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a11-legacy-safety.json"
+        },
+        {
+          "id": "CR-A11-S02",
+          "title": "General bounded prose typography equivalence and square-bullet source selection",
+          "status": "VERIFIED_SCOPED_HELPER_AND_MOCKED_CONSUMERS",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/writing-layout-ocr-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/writing-layout-ocr-integrated.json",
+          "actualBaselineFailures": 5,
+          "baselinePassingControls": 15,
+          "newMatrixTestsPassed": 20,
+          "combinedBatchTestsPassed": 378,
+          "combinedBatchTestFilesPassed": 12,
+          "sourceInputsBound": 692,
+          "policyVersion": "legacy-source-transforms/1.0.4",
+          "schemaVersion": "writing-support/1.1.0",
+          "rawSourceAndOriginalLookupPreserved": true,
+          "remaining": "Live AI usefulness, full relationship support, persistent policy lineage and all remaining A11 acceptance are not supplied by these synthetic cases."
+        }
+      ],
+      "openUsefulnessRegressions": [
+        "One local owner-PDF follow-up still has 0 supported / 14 clarification identity controls; all three recognized contributions retain qualifiers",
+        "Actual positive writing usefulness remains unproved after concise-fixture no-edit generation outcomes",
+        "Canonical fact/provenance integration and complete context coverage remain open"
+      ],
+      "usefulnessRemainder": {
+        "status": "VERIFIED_SOURCE_AND_FOCUSED_USEFULNESS",
+        "originalSyntheticReproduction": "7 supported-positive failures / 13 controls pass",
+        "allOriginalSevenPositiveExpectationsNowPass": true,
+        "rootTestsPassed": 99,
+        "rootFilesPassed": 3,
+        "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a11-usefulness-focused-root.json",
+        "sourceEvidence": "agent-handoffs/2026-11-09-reliability-implementation/a11-usefulness-source-integration.json",
+        "peerReview": "agent-handoffs/2026-11-09-reliability-implementation/backend-writing-review.md",
+        "noAssertionsSkippedDeletedOrRelabelled": true,
+        "scope": "Whole contact metadata and finite derived project/employer layout for source transformations; no verified entity facts or role inference",
+        "remaining": "Source-bound segmentation/context coverage, actual provider usefulness, all AI output surfaces, canonical provenance/adoption and representative validity remain open",
+        "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/integrated-verify-07.json"
+      },
+      "localConsumerDiagnostic": {
+        "status": "OBSERVED_ELIGIBILITY_AND_SEGMENTATION_GAP",
+        "scope": "One authorized owner PDF, local-only count metadata; no text copy/provider/DB/render",
+        "selectedRewriteSources": 14,
+        "supportedIdentityControls": 0,
+        "clarificationIdentityControls": 7,
+        "missingSourceAnchorControls": 7,
+        "recognizedContributions": 3,
+        "qualifiedRecognizedContributions": 3,
+        "evidence": "agent-handoffs/2026-11-09-reliability-implementation/frontend-owner-pdf-diagnostic.md",
+        "notModelQualityOrRepresentativeValidity": true,
+        "historical": true,
+        "supersededForCurrentCountsBy": "agent-handoffs/2026-11-09-reliability-implementation/frontend-owner-pdf-after-alignment.md"
+      },
+      "sourceAlignmentReproduction": {
+        "status": "PRESERVED_ORIGINAL_RED_REPAIRED_BY_SOURCE_ALIGNMENT_SLICE",
+        "evidence": "agent-handoffs/2026-11-09-reliability-implementation/frontend-writing-alignment.md",
+        "testSha256": "981e5f0f886c1a4e2a022854cd61d24e66c83ad1a724a8963b67aafd1e0a1e0e",
+        "inRootIntegratedSuite": true,
+        "scope": "Original isolated red evidence is preserved; the exact 14-case test is now integrated and passes under the reviewed bounded source-alignment and qualifier contract",
+        "repairEvidence": "agent-handoffs/2026-11-09-reliability-implementation/frontend-writing-alignment-repair.md"
+      },
+      "sourceAlignmentRepair": {
+        "status": "VERIFIED_SOURCE_AND_ROOT_AFFECTED_TESTS",
+        "policy": "legacy-source-transforms/1.0.3",
+        "schema": "writing-support/1.1.0 unchanged",
+        "rootTestsPassed": 159,
+        "rootFilesPassed": 6,
+        "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a11-alignment-focused-root.json",
+        "sourceIntegration": "agent-handoffs/2026-11-09-reliability-implementation/a11-alignment-source-integration.json",
+        "original14CaseBytesPreserved": true,
+        "rightEdgeScopeAndExplicitRoleCopyCovered": true,
+        "localConsumerEvidence": "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-owner-pdf-after-alignment.md",
+        "localConsumerBeforeAfter": {
+          "selectedSources": 14,
+          "missingSupportAnchorsBefore": 7,
+          "missingSupportAnchorsAfter": 0,
+          "supportedIdentityControlsAfter": 0,
+          "clarificationIdentityControlsAfter": 14
+        },
+        "remaining": "Full fact/provenance integration, local consumer context coverage, all AI surfaces and live useful writing remain open",
+        "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/integrated-verify-08-completion.json"
+      }
+    },
+    {
+      "id": "CR-A12",
+      "title": "Apply support, source/version binding and budget to explicit rewrites",
+      "stage": 4,
+      "owner": "Backend",
+      "dependencies": ["CR-A11", "CR-R05"],
+      "blueprintAliases": ["ats:A11"],
+      "kind": "repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-A13",
+      "title": "Apply the same truth contract to initial qualitative feedback",
+      "stage": 4,
+      "owner": "Backend",
+      "dependencies": ["CR-A11", "CR-R04"],
+      "blueprintAliases": ["ats:A12"],
+      "kind": "repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-A14",
+      "title": "Generate useful source-backed JD improvements and honest deltas",
+      "stage": 4,
+      "owner": "Backend + frontend",
+      "dependencies": ["CR-A12", "CR-A13", "CR-A15"],
+      "blueprintAliases": ["ats:A13"],
+      "kind": "repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-A15",
+      "title": "Complete deterministic score admission and explainable withholding",
+      "stage": 3,
+      "owner": "Backend",
+      "dependencies": ["CR-A10", "CR-C00"],
+      "blueprintAliases": ["ats:A14"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": "This closes engineering consistency, not empirical score validity. Authoritative policy activation still requires G02 evidence and explicit approved adoption."
+    },
+    {
+      "id": "CR-U01",
+      "title": "Preview corrected imports with target and provenance",
+      "stage": 2,
+      "owner": "Frontend",
+      "dependencies": ["CR-A03", "CR-A04"],
+      "blueprintAliases": ["frontend:UI-B"],
+      "kind": "verify_then_repair",
+      "status": "PARTIAL",
+      "integrationNote": "Integrated actual parser/Router/synthetic-model correction UI with readiness/history/busy denial. Native browser, storage, concurrency, restore and full consumer acceptance remain open.",
+      "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a04-integrated-completion.json",
+      "slices": [
+        {
+          "id": "CR-U01-S01",
+          "title": "Verify target and provenance preview without correction-value retyping",
+          "status": "VERIFIED",
+          "evidenceTier": "actual_router_parser_and_component_with_mocked_service_boundary",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/frontend-a04-materialization.md",
+          "routeAndComponentTestsPassed": 31,
+          "nativeBrowser": "NOT_RUN"
+        }
+      ]
+    },
+    {
+      "id": "CR-U02",
+      "title": "Reconcile corrections into existing versions without clobbering edits",
+      "stage": 2,
+      "owner": "Frontend",
+      "dependencies": ["CR-U01", "CR-A04"],
+      "blueprintAliases": ["frontend:UI-C"],
+      "kind": "verify_then_repair",
+      "status": "PARTIAL",
+      "integrationNote": "Integrated actual parser/Router/synthetic-model correction UI with readiness/history/busy denial. Native browser, storage, concurrency, restore and full consumer acceptance remain open.",
+      "evidence": "agent-handoffs/2026-11-09-reliability-implementation/a04-integrated-completion.json",
+      "slices": [
+        {
+          "id": "CR-U02-S01",
+          "title": "Verify explicit reassignment/reapply and immutable correction-history disclosure",
+          "status": "VERIFIED",
+          "evidenceTier": "actual_router_parser_and_component_with_mocked_service_boundary",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/frontend-a04-materialization.md",
+          "routeAndComponentTestsPassed": 31,
+          "nativeBrowser": "NOT_RUN"
+        }
+      ]
+    },
+    {
+      "id": "CR-U03",
+      "title": "Bind confirmation and uncertainty to the exact displayed value",
+      "stage": 2,
+      "owner": "Frontend",
+      "dependencies": ["CR-U02"],
+      "blueprintAliases": ["frontend:UI-D"],
+      "kind": "verify_then_repair",
+      "status": "PARTIAL",
+      "integrationNote": "Exact complete-value native clarification preview and proof, context/history acknowledgement resets, per-target rejected-draft retention and matching successful resolution are source-integrated. Native/browser/storage/concurrency/export and full consumer acceptance remain open.",
+      "evidenceTier": "source_application_synthetic_mock_static_build",
+      "evidence": "agent-handoffs/2026-11-09-reliability-implementation/u03-integrated-completion.json",
+      "slices": [
+        {
+          "id": "CR-U03-S01",
+          "title": "Reset exact-value acknowledgements across content, source, target, version and history context",
+          "status": "VERIFIED",
+          "evidenceTier": "actual_component_synthetic_review_flow",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/u03-integrated-completion.json"
+        },
+        {
+          "id": "CR-U03-S02",
+          "title": "Preview the complete derived clarification before an explicitly bound native confirmation",
+          "status": "VERIFIED",
+          "evidenceTier": "actual_parser_repository_route_with_mocked_service_boundary",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/u03-integrated-completion.json",
+          "nativeBrowser": "NOT_RUN"
+        },
+        {
+          "id": "CR-U03-S03",
+          "title": "Retain rejected canonical changes by target through unrelated actions and distinguish exact retry from reviewed current attempt",
+          "status": "VERIFIED",
+          "evidenceTier": "actual_router_ssr_and_component_with_mocked_service_boundary",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/u03-integrated-completion.json",
+          "canonicalCasesPassed": 47,
+          "nativeBrowser": "NOT_RUN"
+        }
+      ]
+    },
+    {
+      "id": "CR-U04",
+      "title": "Keep JD, canonical, preview and diagnostics versions consistent",
+      "stage": 3,
+      "owner": "Frontend",
+      "dependencies": ["CR-U03", "CR-A09", "CR-A15"],
+      "blueprintAliases": ["frontend:UI-E"],
+      "kind": "verify_then_repair",
+      "status": "PARTIAL",
+      "integrationNote": "Make explicitly selected historical JD views readonly while preserving current native transport. Full dependency, pair-binding, coverage and native consumer acceptance remain open.",
+      "evidenceTier": "actual_router_ssr_with_mocked_owned_loader_boundary",
+      "evidence": "agent-handoffs/2026-11-09-reliability-implementation/jd-review-completion.json",
+      "slices": [
+        {
+          "id": "CR-U04-S01",
+          "title": "Make explicitly selected historical JD views readonly while preserving current native transport",
+          "status": "VERIFIED",
+          "evidenceTier": "actual_router_ssr_with_mocked_owned_loader_boundary",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/jd-review-completion.json",
+          "nativeBrowser": "NOT_RUN"
+        }
+      ]
+    },
+    {
+      "id": "CR-U05",
+      "title": "Make legacy writing output truthful, source-bound and usable",
+      "stage": 4,
+      "owner": "Frontend",
+      "dependencies": ["CR-A12", "CR-A13"],
+      "blueprintAliases": ["frontend:UI-F"],
+      "kind": "verify_then_repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-U05-S01",
+          "title": "Truthful legacy draft/Copy versus saved-authoring UI",
+          "status": "VERIFIED",
+          "evidenceTier": "focused_component_ui",
+          "fullTaskStillRequires": "Backend validated support and source-bound actual generation/render evidence.",
+          "focusedTestsPassed": 15,
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/frontend.md"
+        }
+      ]
+    },
+    {
+      "id": "CR-U06",
+      "title": "Complete reviewed authoring, questions, accept/reject and undo",
+      "stage": 4,
+      "owner": "Frontend",
+      "dependencies": ["CR-U04", "CR-A14"],
+      "blueprintAliases": ["frontend:UI-G"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-U07",
+      "title": "Protect facts and consent in every Build mode",
+      "stage": 4,
+      "owner": "Frontend",
+      "dependencies": ["CR-A11", "CR-R06"],
+      "blueprintAliases": ["frontend:UI-H"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-U08",
+      "title": "Verify Build apply/undo, source versions and real PDF lifecycle",
+      "stage": 6,
+      "owner": "Frontend",
+      "dependencies": ["CR-U07", "CR-R14"],
+      "blueprintAliases": ["frontend:UI-I"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-U09",
+      "title": "Show accurate worker/OCR progress, recovery and guidance",
+      "stage": 5,
+      "owner": "Frontend",
+      "dependencies": ["CR-A06", "CR-R10"],
+      "blueprintAliases": ["frontend:UI-J"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-U10",
+      "title": "Separate session, provider-auth and transient AI failures",
+      "stage": 4,
+      "owner": "Frontend",
+      "dependencies": ["CR-R01", "CR-R02"],
+      "blueprintAliases": ["frontend:UI-K"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-U11",
+      "title": "Explain compiler absence and safe restart/recovery",
+      "stage": 6,
+      "owner": "Frontend",
+      "dependencies": ["CR-R13"],
+      "blueprintAliases": ["frontend:UI-L"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-U12",
+      "title": "Verify actual email sign-in and session recovery",
+      "stage": 7,
+      "owner": "Frontend",
+      "dependencies": ["CR-R19", "CR-R16"],
+      "blueprintAliases": ["frontend:UI-M"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-U13",
+      "title": "Resolve advertised OAuth and account-linking contracts",
+      "stage": 7,
+      "owner": "Coordinator + backend + frontend",
+      "dependencies": ["CR-C00"],
+      "blueprintAliases": ["frontend:UI-N"],
+      "kind": "contract",
+      "status": "PLANNED",
+      "integrationNote": "For each selected advertised provider, allocate explicit bounded backend route/config/session/identity/linking delivery leaves in this index and todo before implementation; make U14/U15 depend on those leaves. A separately selected external AI connection needs its own consent/token lifecycle leaf. Each leaf stays at most five files. A feasibility document or frontend buttons cannot close actual OAuth."
+    },
+    {
+      "id": "CR-U14",
+      "title": "Complete Google identity when in the approved capability matrix",
+      "stage": 7,
+      "owner": "Frontend",
+      "dependencies": ["CR-U13", "CR-U12", "CR-R19"],
+      "blueprintAliases": ["frontend:UI-O"],
+      "kind": "conditional_advertised",
+      "status": "PLANNED",
+      "integrationNote": "Conditional: after U13 selects a supported mechanism, add its explicit backend delivery prerequisites to the canonical graph before implementation. Completion requires actual configured server/session/linking plus UI success/failure tests, or an explicit owner deferral and truthful advertising."
+    },
+    {
+      "id": "CR-U15",
+      "title": "Complete ChatGPT identity only on a documented approved mechanism",
+      "stage": 7,
+      "owner": "Frontend",
+      "dependencies": ["CR-U13", "CR-U12", "CR-R19"],
+      "blueprintAliases": ["frontend:UI-P"],
+      "kind": "conditional_advertised",
+      "status": "PLANNED",
+      "integrationNote": "Conditional: after U13 selects a supported mechanism, add its explicit backend delivery prerequisites to the canonical graph before implementation. Completion requires actual configured server/session/linking plus UI success/failure tests, or an explicit owner deferral and truthful advertising."
+    },
+    {
+      "id": "CR-U16",
+      "title": "Preserve history, tenant isolation and private source access",
+      "stage": 2,
+      "owner": "Frontend",
+      "dependencies": ["CR-A04", "CR-A09", "CR-R19"],
+      "blueprintAliases": ["frontend:UI-Q"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-U17",
+      "title": "Verify consumer export/delete/session privacy journeys",
+      "stage": 7,
+      "owner": "Frontend",
+      "dependencies": ["CR-R17", "CR-R19"],
+      "blueprintAliases": ["frontend:UI-R"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-U18",
+      "title": "Export the exact corrected and confirmed version",
+      "stage": 7,
+      "owner": "Frontend",
+      "dependencies": ["CR-U03", "CR-A04"],
+      "blueprintAliases": ["frontend:UI-S"],
+      "kind": "verify_then_repair",
+      "status": "PARTIAL",
+      "integrationNote": "Source-integrated exact confirmed-link replacement through owned immutable lineage, with real synthetic PDF/DOCX repository render/parseback checks. Native browser/storage/concurrency/restore and full consumer acceptance remain open.",
+      "evidenceTier": "actual_local_source_pdf_and_renderer_with_mocked_owned_storage_database_boundaries",
+      "evidence": "agent-handoffs/2026-11-09-reliability-implementation/u18-integrated-completion.json",
+      "slices": [
+        {
+          "id": "CR-U18-S01",
+          "title": "Prove confirmed stable-fact source-link replacement while preserving unsafe and unexplained-link denial",
+          "status": "VERIFIED",
+          "evidenceTier": "actual_pdf_annotation_guard_and_owned_repository_with_mocked_storage_reads",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/u18-integrated-completion.json"
+        },
+        {
+          "id": "CR-U18-S02",
+          "title": "Render and independently parse corrected confirmed PDF and DOCX through the owned repository",
+          "status": "VERIFIED",
+          "evidenceTier": "real_local_renderer_workers_and_pdf_docx_byte_parses_with_mocked_database_storage",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/u18-integrated-completion.json",
+          "nativeBrowser": "NOT_RUN"
+        }
+      ]
+    },
+    {
+      "id": "CR-U19",
+      "title": "Complete mobile, keyboard and accessibility acceptance",
+      "stage": 7,
+      "owner": "Frontend",
+      "dependencies": [
+        "CR-U08",
+        "CR-U09",
+        "CR-U10",
+        "CR-U11",
+        "CR-U12",
+        "CR-U16",
+        "CR-U17",
+        "CR-U18",
+        "CR-U05",
+        "CR-U06"
+      ],
+      "blueprintAliases": ["frontend:UI-T"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-R01",
+      "title": "Provide safe offline AI doctor and bounded real readiness check",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-C00"],
+      "blueprintAliases": ["runtime:RT01"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-R01-S01",
+          "title": "Offline safe effective-config diagnostic",
+          "status": "VERIFIED",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/runtime.md",
+          "focusedTestsPassed": 31,
+          "authentication": "NOT_TESTED",
+          "documentation": "../docs/operations/RUNBOOKS.md#offline-ai-configuration-doctor"
+        },
+        {
+          "id": "CR-R01-S02",
+          "title": "Allocation-bound opt-in live readiness transport and actual auth proof",
+          "status": "VERIFIED_SCOPED_LIVE_SERVICE_TRANSPORT",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r01-live-validation.md",
+          "remaining": "Unify the explicit doctor --live allocation interface and finish useful writing/all-mode consumer acceptance; do not repeat the model-access check."
+        }
+      ],
+      "liveReadiness": {
+        "status": "PASS_ACCESS_AND_RESPONSES_PARTIAL_USEFULNESS",
+        "ownerReadyConfirmed": true,
+        "model": "gpt-6-luna",
+        "modelAccessRequests": 1,
+        "generationRequests": 5,
+        "http200GenerationResponses": 5,
+        "usefulEdits": ["build_fix"],
+        "noRetainedWritingEdits": [
+          "qualitative",
+          "rewrite",
+          "build_rewrite",
+          "build_resume"
+        ],
+        "knownInputTokens": 1823,
+        "knownOutputTokens": 246,
+        "retries": 0,
+        "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r01-live-validation.md",
+        "next": "No credential checks or further provider requests allocated. Bounded proposed-versus-retained diagnostics and actual-root synthetic fixture readiness now pass; useful live writing remains unproved."
+      },
+      "stageDiagnostics": {
+        "status": "VERIFIED_SOURCE_AND_SYNTHETIC_READINESS",
+        "evidence": "agent-handoffs/2026-11-09-reliability-implementation/runtime-ai-stage-diagnostics.md",
+        "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/integrated-verify-08.json",
+        "testsPassed": 37,
+        "newProviderRequests": 0,
+        "remaining": "Actual new live usefulness allocation and consumer acceptance are not supplied by synthetic readiness"
+      }
+    },
+    {
+      "id": "CR-R02",
+      "title": "Bound SDK attempts, cancellation and actual/unknown usage",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-C00", "CR-R01"],
+      "blueprintAliases": ["runtime:RT02"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-R02-S01",
+          "title": "Default HTTPS port admission for approved provider endpoint",
+          "status": "VERIFIED",
+          "files": [
+            "app/lib/server/egress-policy.ts",
+            "tests/unit/egress-policy.test.ts"
+          ],
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/runtime.md",
+          "affectedTestsPassed": 131
+        },
+        {
+          "id": "CR-R02-S02",
+          "title": "Installed SDK single-attempt/no-log/no-redirect transport consistency",
+          "status": "VERIFIED",
+          "evidenceTier": "actual_installed_sdk_fetch_stub_not_live_http",
+          "affectedTestsPassed": 61,
+          "rootFocusedCombinedTestsPassed": 41,
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r02-transport-integration.json"
+        },
+        {
+          "id": "CR-R02-S03",
+          "title": "Propagate caller/deadline abort and preserve known or unknown usage through rejected output",
+          "status": "VERIFIED_SCOPED_TRANSPORT_AND_MOCKED_HTTP",
+          "evidenceTier": "installed_sdk_fake_fetch_and_unit_service_integration",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r02-attempt-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r02-attempt-integrated.json",
+          "independentReview": "agent-handoffs/2026-11-09-reliability-implementation/runtime-provider-attempt-review.md",
+          "rootTestsPassed": 145,
+          "rootFilesPassed": 11,
+          "newProviderRequests": 0,
+          "remaining": "Durable shared attempt accounting/reservations (R03), worker lease cancellation (R09), and the unserved legacy analyzeResume client remain open. Unknown usage currently fails safely instead of returning successful output to count-only SQL callers."
+        }
+      ],
+      "indexCorrection": {
+        "reason": "An empty planned placeholder duplicated CR-R02-S02. Its remaining cancellation/usage work is now represented by CR-R02-S03; the verified transport consistency record and all original receipts are preserved.",
+        "canonicalTaskIdsOrDependenciesChanged": false
+      }
+    },
+    {
+      "id": "CR-R03",
+      "title": "Reserve and reconcile shared technical AI budgets atomically",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R02"],
+      "blueprintAliases": ["runtime:RT03"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-R03-S01",
+          "title": "Persistent shared pool, attempt, policy and reconciliation source with strict RPC client",
+          "status": "SOURCE_INTEGRATED_SQL_UNEXECUTED",
+          "evidenceTier": "source_review_plus_real_client_with_mocked_rpc",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r03-budget-closeout.md",
+          "integration": "agent-handoffs/2026-11-09-reliability-implementation/r03-budget-source-integration.json",
+          "migration": "../supabase/migrations/20261110062548_technical_ai_budget.sql",
+          "sqlParsed": false,
+          "sqlApplied": false,
+          "sqlExecuted": false,
+          "policyOrOpeningSeeded": false,
+          "providerCallersAdopted": false
+        },
+        {
+          "id": "CR-R03-S02",
+          "title": "Validate client arithmetic, immutable binding, safe receipts and lifecycle delegation",
+          "status": "VERIFIED_SCOPED_CLIENT_UNIT",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r03-budget-integrated.json",
+          "testsPassed": 29,
+          "sourceInputsBound": 661,
+          "sqlAtomicityProved": false
+        },
+        {
+          "id": "CR-R03-S03",
+          "title": "Admit isolated direct Supabase SQL, execute ledger and actual concurrent transactions, cutover and retention checks",
+          "status": "PLANNED",
+          "operatorDraft": "../scripts/verify-technical-ai-budget.sql",
+          "runbook": "../docs/operations/AI_BUDGETS.md",
+          "remaining": "Connected native SQL access verified read-only; target isolation/write admission, migration/runtime tests, multi-session races, prior spend/opening evidence and retention/delete compatibility remain open. No Docker database or implicit activation."
+        },
+        {
+          "id": "CR-R03-S04",
+          "title": "Allocate provider ordinals on the server and coordinate first claim and usage settlement",
+          "status": "VERIFIED_SCOPED_SOURCE_AND_MOCKED_RPC",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r04-r06-entrypoints-closeout.md",
+          "migrationSha256": "b9868c41b41a073f1cd066bdebfd3575d17f0487a698cf5e4692620cb8a57db0",
+          "sqlExecuted": false,
+          "sourceCallersPrepared": true,
+          "budgetActivated": false
+        }
+      ]
+    },
+    {
+      "id": "CR-R04",
+      "title": "Bind qualitative provider calls to the technical attempt ledger",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R03"],
+      "blueprintAliases": ["runtime:RT04"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-R04-S01",
+          "title": "Default-off shared budget admission, first dispatch claim and known/unknown usage handling",
+          "status": "VERIFIED_SCOPED_SOURCE_AND_MOCKED_RPC_PROVIDER",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r04-r06-entrypoints-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r04-r06-entrypoints-integrated.json",
+          "testsPassedAcrossCombinedBatch": 169,
+          "testFilesAcrossCombinedBatch": 10,
+          "sqlExecuted": false,
+          "budgetActivated": false,
+          "remaining": "Real ledger SQL and concurrency, legacy cutover, opening accounting and privacy compatibility are not verified. Worker fencing and consumer acceptance remain separate."
+        }
+      ]
+    },
+    {
+      "id": "CR-R05",
+      "title": "Bind explicit rewrites to the technical attempt ledger",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R03"],
+      "blueprintAliases": ["runtime:RT05"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-R05-S01",
+          "title": "Default-off shared budget admission, first dispatch claim and known/unknown usage handling",
+          "status": "VERIFIED_SCOPED_SOURCE_AND_MOCKED_RPC_PROVIDER",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r04-r06-entrypoints-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r04-r06-entrypoints-integrated.json",
+          "testsPassedAcrossCombinedBatch": 169,
+          "testFilesAcrossCombinedBatch": 10,
+          "sqlExecuted": false,
+          "budgetActivated": false,
+          "remaining": "Real ledger SQL and concurrency, legacy cutover, opening accounting and privacy compatibility are not verified. Worker fencing and consumer acceptance remain separate."
+        }
+      ]
+    },
+    {
+      "id": "CR-R06",
+      "title": "Bind Build requests to both technical budgets and all-mode support",
+      "stage": 4,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R03", "CR-A11"],
+      "blueprintAliases": ["runtime:RT06"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "This task also binds the shared fact validator into app/lib/server/build-assist.ts and its service. It cannot be only a budget wrapper. Keep at most five files by reusing/splitting tests; frontend owns component changes in U07.",
+      "slices": [
+        {
+          "id": "CR-R06-S01",
+          "title": "Finite factual and technical support guard for Fix, Rewrite and Resume modes",
+          "status": "VERIFIED_SCOPED_SOURCE_AND_SYNTHETIC_TESTS",
+          "evidenceTier": "source_review_and_mocked_provider_and_pure_unit",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/frontend-build-factual-support.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/integrated-verify-08-completion.json",
+          "consentPolicy": "build-ai-selected-context-v2",
+          "focusedTestsPassed": 280,
+          "remaining": "Default-off shared budget branch is now source-integrated in S02; actual SQL, live useful writing, browser acceptance and general TeX semantics remain open. Unsupported syntax receives advice."
+        },
+        {
+          "id": "CR-R06-S02",
+          "title": "Default-off shared budget admission, first dispatch claim and known/unknown usage handling",
+          "status": "VERIFIED_SCOPED_SOURCE_AND_MOCKED_RPC_PROVIDER",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r04-r06-entrypoints-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r04-r06-entrypoints-integrated.json",
+          "testsPassedAcrossCombinedBatch": 169,
+          "testFilesAcrossCombinedBatch": 10,
+          "sqlExecuted": false,
+          "budgetActivated": false,
+          "remaining": "Real ledger SQL and concurrency, legacy cutover, opening accounting and privacy compatibility are not verified. Worker fencing and consumer acceptance remain separate."
+        }
+      ]
+    },
+    {
+      "id": "CR-R07",
+      "title": "Bind durable analysis admission to payload and operation identity",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-C01", "CR-R03"],
+      "blueprintAliases": ["runtime:RT07"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-R07-S01",
+          "title": "Payload-bound admission, durable pre-upload intent and exact compensation",
+          "status": "VERIFIED_SCOPED_SOURCE_AND_MOCKED_INTEGRATION",
+          "evidenceTier": "Source plus actual ingestion/route code using mocked storage and RPC",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r07-r10-admission-worker-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r07-r10-admission-worker-integrated.json",
+          "testsAcrossCombinedBatch": 123,
+          "testFilesAcrossCombinedBatch": 14,
+          "sourceInputsBound": 674,
+          "sqlParsed": false,
+          "sqlApplied": false,
+          "sqlExecuted": false,
+          "activated": false,
+          "remaining": "Admitted native SQL, actual transactions/concurrency, legacy producer cutover, recovery, privacy serialization/retention/deletion and consumer acceptance remain open."
+        }
+      ]
+    },
+    {
+      "id": "CR-R08",
+      "title": "Fence leases and define a genuinely isolated verification scope",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R07"],
+      "blueprintAliases": ["runtime:RT08"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-R08-S01",
+          "title": "Per-attempt queue tokens, legacy exclusions, serialized heartbeats and bounded runner waits",
+          "status": "VERIFIED_SCOPED_SOURCE_AND_MOCKED_INTEGRATION",
+          "evidenceTier": "Source plus actual queue/runner code using mocked RPC",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r07-r10-admission-worker-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r07-r10-admission-worker-integrated.json",
+          "testsAcrossCombinedBatch": 123,
+          "testFilesAcrossCombinedBatch": 14,
+          "sourceInputsBound": 674,
+          "sqlParsed": false,
+          "sqlApplied": false,
+          "sqlExecuted": false,
+          "activated": false,
+          "remaining": "Admitted native SQL, actual transactions/concurrency, legacy producer cutover, recovery, privacy serialization/retention/deletion and consumer acceptance remain open."
+        }
+      ]
+    },
+    {
+      "id": "CR-R09",
+      "title": "Propagate cancellation and stage deadlines to provider requests",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R02", "CR-R03", "CR-R08"],
+      "blueprintAliases": ["runtime:RT09"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-R09-S01",
+          "title": "Worker signal reaches qualitative attempts and cancelled rewrite cannot pass final CAS guard",
+          "status": "VERIFIED_SCOPED_SOURCE_AND_MOCKED_INTEGRATION",
+          "evidenceTier": "Source plus controlled transport/cancellation/persistence regressions",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r07-r10-admission-worker-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r07-r10-admission-worker-integrated.json",
+          "testsAcrossCombinedBatch": 123,
+          "testFilesAcrossCombinedBatch": 14,
+          "sourceInputsBound": 674,
+          "sqlParsed": false,
+          "sqlApplied": false,
+          "sqlExecuted": false,
+          "activated": false,
+          "remaining": "Admitted native SQL, actual transactions/concurrency, legacy producer cutover, recovery, privacy serialization/retention/deletion and consumer acceptance remain open."
+        }
+      ]
+    },
+    {
+      "id": "CR-R10",
+      "title": "Fence stage writes and worker shutdown against stale owners",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R08", "CR-R09"],
+      "blueprintAliases": ["runtime:RT10"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-R10-S01",
+          "title": "Stage context propagation and typed atomic fenced mutation wrapper",
+          "status": "VERIFIED_SCOPED_SOURCE_AND_MOCKED_INTEGRATION",
+          "evidenceTier": "Source plus actual stage code with mocked RPC; wrapper SQL unexecuted",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r07-r10-admission-worker-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r07-r10-admission-worker-integrated.json",
+          "testsAcrossCombinedBatch": 123,
+          "testFilesAcrossCombinedBatch": 14,
+          "sourceInputsBound": 674,
+          "sqlParsed": false,
+          "sqlApplied": false,
+          "sqlExecuted": false,
+          "activated": false,
+          "remaining": "Admitted native SQL, actual transactions/concurrency, legacy producer cutover, recovery, privacy serialization/retention/deletion and consumer acceptance remain open."
+        }
+      ]
+    },
+    {
+      "id": "CR-R11",
+      "title": "Verify the real leased lifecycle in an approved safe target",
+      "stage": 8,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R10", "CR-R17"],
+      "blueprintAliases": ["runtime:RT11"],
+      "kind": "verify_then_repair",
+      "status": "PARTIAL",
+      "integrationNote": "Implement/test recovery of terminal results committed before abort with remaining queue rows; preserve immutable results and avoid duplicate publication. Real global queue drills still require confirmed isolated direct Supabase routing, not an empty shared-project snapshot.",
+      "slices": [
+        {
+          "id": "CR-R11-S01",
+          "title": "Conservative terminal metadata recovery source before v2 claim",
+          "status": "SOURCE_INTEGRATED_SQL_UNEXECUTED",
+          "evidenceTier": "source_review_and_static_predecessor_hash_verification_only",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r11-r19-privacy-recovery-closeout.md",
+          "migration": "../supabase/migrations/20261110085513_terminal_job_recovery.sql",
+          "migrationSha256": "df3b6c28ad1f9e63b4816fccc573705cd74e926e4cbb0ce859511bbf5ee78b3c",
+          "sqlParsed": false,
+          "sqlApplied": false,
+          "sqlExecuted": false,
+          "globalQueueRun": false,
+          "remaining": "Actual isolated queue lifecycle/concurrency/recovery and native role/routing checks remain open. Local opt-in readiness is covered by S02/S03; no live or uncertain lease cleanup is authorized by source review."
+        },
+        {
+          "id": "CR-R11-S02",
+          "title": "Bounded selected-capability readiness before queue construction",
+          "status": "VERIFIED_SCOPED_APPLICATION_WITH_MOCKED_DATABASE",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/frontend-readiness-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r11-readiness-integrated.json",
+          "rootObservation": "agent-handoffs/2026-11-09-reliability-implementation/r11-readiness-root-observation.json",
+          "testsPassed": 19,
+          "testFilesPassed": 2,
+          "sourceInputsBoundAtGate": 686,
+          "typecheck": "PASS",
+          "lint": "PASS",
+          "webBuild": "PASS",
+          "workerBuild": "PASS",
+          "remaining": "Actual selected RPC and configured credential behavior remain unverified. Do not reopen this unchanged application gate."
+        },
+        {
+          "id": "CR-R11-S03",
+          "title": "Service-only selected schema readiness with critical revision and privacy volatility guards",
+          "status": "SOURCE_INTEGRATED_SQL_UNEXECUTED",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r11-readiness-final-sql-amendment.json",
+          "migration": "../supabase/migrations/20261110094229_worker_schema_readiness.sql",
+          "migrationSha256": "806497cd20758b4cfcceead0a901040b32d4cbe19c25d379c4cac21866e71341",
+          "postGateAmendment": "Four privacy helpers require VOLATILE; exact source delta independently reviewed, no application changes or test rerun.",
+          "sqlParsed": false,
+          "sqlApplied": false,
+          "sqlExecuted": false
+        },
+        {
+          "id": "CR-R11-S04",
+          "title": "Read-only configured Supabase catalog compatibility preflight",
+          "status": "VERIFIED_NATIVE_CATALOG_ONLY",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r11-native-schema-preflight.json",
+          "nextRepair": "agent-handoffs/2026-11-09-reliability-implementation/r11-native-compatibility-prerequisites.md",
+          "successfulCatalogSelects": 3,
+          "migrationInventoryReads": 1,
+          "failedSelectsRetained": 1,
+          "nativeWrites": 0,
+          "isolationProved": false,
+          "remaining": "Missing cancellation and older transition require forward-only compatibility repair; taxonomy effects already present prevent blanket replay. Review rewrite attempt identity before any global input index. Native action packet is not ready for write approval."
+        },
+        {
+          "id": "CR-R11-S05",
+          "title": "Cancellation route rejects infrastructure and unknown outcomes without false success",
+          "status": "VERIFIED_SCOPED_APPLICATION_WITH_MOCKED_DATABASE",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/legacy-compatibility-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/legacy-compatibility-integrated.json",
+          "actualBaselineFailures": 8,
+          "baselinePassingControls": 5,
+          "testsPassed": 13,
+          "testFilesPassed": 1,
+          "sourceInputsBoundAtGate": 689,
+          "remaining": "Native cancellation behavior and consumer journeys are not proved by mocked route cases."
+        },
+        {
+          "id": "CR-R11-S06",
+          "title": "Forward legacy transition, release and cancellation compatibility with run identity preserved",
+          "status": "SOURCE_INTEGRATED_NATIVE_APPROVAL_PENDING",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/legacy-worker-hosted-action.md",
+          "migration": "../supabase/migrations/20261110101800_legacy_worker_compatibility_bridge.sql",
+          "migrationSha256": "a54196112e51a5109ccc143ac20887568bec2e7021dd98328312ba615d69d418",
+          "sourcePeerReview": "ACK",
+          "sqlParsed": false,
+          "sqlApplied": false,
+          "sqlExecuted": false,
+          "remaining": "Owner decision on exact hosted action, then native metadata and behavior/race acceptance; do not apply other migrations or activate workers from this tier."
+        }
+      ]
+    },
+    {
+      "id": "CR-R12",
+      "title": "Build the compiler from verified reproducible dependency artifacts",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-C00"],
+      "blueprintAliases": ["runtime:RT12"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-R12-S01",
+          "title": "Pinned public dependency staging with exact hash/size and pure tests",
+          "status": "VERIFIED",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/runtime-assets.md",
+          "pureTestsPassed": 22,
+          "actualPublicInputProof": "agent-handoffs/2026-11-09-reliability-implementation/r12-public-asset.json",
+          "reviewFinding": "FIFO/blocking-open race and offline deadline regressions reproduced and fixed; descriptor check retained.",
+          "correctionEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r12-prefetch-correction.json"
+        },
+        {
+          "id": "CR-R12-S02",
+          "title": "Reviewed content-addressed build input and bounded launcher integration",
+          "status": "VERIFIED_SOURCE_AND_ACTUAL_BUILD_TRANSPORT",
+          "focusedTestsPassed": 71,
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r12-build-wrapper-integration.json",
+          "peerSourceReview": "PASS including original HOME/private config correction",
+          "rootPrepareEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r12-root-prepare.json",
+          "localOciMaterializationEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r12-oci-materialization.json",
+          "actualCancellationProbe": "First failure preserved; corrected timed RUN cancellation independently verified",
+          "actualCompilerBuild": "PASS_LOCAL_IMMUTABLE_IMAGE_NOT_RUNTIME_OR_RELEASE_ACCEPTANCE",
+          "cancellationEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r12-cancellation-actual.json",
+          "terminalEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r12-cancellation-terminal.json",
+          "correctedCancellationEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r12-cancellation-v2-root-review.json",
+          "actualBuildEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r12-heavy-build-actual.json"
+        },
+        {
+          "id": "CR-R12-S03",
+          "title": "Current allocated immutable compiler build and provenance admission",
+          "status": "PARTIAL",
+          "actualBuild": "PASS",
+          "image": "sha256:5e5c2436bcac0a97c4616d7392d1089ecf7ef7d6d5df9063c02e4498d1e0d431",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r12-built-image-inventory.json",
+          "remaining": "Current image functional/PDF/confinement/cleanup/browser and complete advisory/provenance disposition; no activation"
+        },
+        {
+          "id": "CR-R12-S04",
+          "title": "Correct observed OCI alias, Buildx default target and exact CLI history ID contracts",
+          "status": "VERIFIED",
+          "preservedFailedAttempt": "9d1d02f4feaee25f000d9bf2f8b1234cfcae1d06e518578835694b54dff38edf",
+          "noRetryAllocated": false,
+          "correctedProbe": "25ebd72371111ce8b29173f373914207dee9424401361d9d5992ebf45bf95da9",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r12-cancellation-v2-root-review.json",
+          "actualCompilerAllocation": "4a278cc6b1e5f5e4db2ceddbd1d499534bbbbbcb9a9fde7a5b136e6f079f355e; consumed once and completed"
+        }
+      ]
+    },
+    {
+      "id": "CR-R13",
+      "title": "Distinguish known missing images from ambiguous cleanup",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R12"],
+      "blueprintAliases": ["runtime:RT13"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "",
+      "slices": [
+        {
+          "id": "CR-R13-S01",
+          "title": "Known missing immutable image preflight without create/quarantine",
+          "status": "VERIFIED",
+          "evidenceTier": "source_review_mocked_adapter",
+          "affectedTestsPassed": 117,
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r13-missing-image-integration.json"
+        },
+        {
+          "id": "CR-R13-S02",
+          "title": "Actual absent/install/recovery and preserved late-create cleanup behavior",
+          "status": "PLANNED"
+        }
+      ]
+    },
+    {
+      "id": "CR-R14",
+      "title": "Verify actual compiler output, confinement and cleanup",
+      "stage": 6,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R12", "CR-R13"],
+      "blueprintAliases": ["runtime:RT14"],
+      "kind": "verify_then_repair",
+      "status": "PARTIAL",
+      "integrationNote": "Before any runtime test, inspect the exact image inventory, known findings and isolated local-test suitability. Full R18 advisory remediation/disposition runs alongside functional tests, not as a prerequisite that prevents verifying a repair; G01/G03 retain their applicable security gates.",
+      "slices": [
+        {
+          "id": "CR-R14-S01",
+          "title": "Review exact-image local synthetic runtime operation and durable recovery wrapper",
+          "status": "VERIFIED",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/frontend-build-review.md",
+          "rootCorrectionTestsPassed": 5,
+          "actualAllocation": "agent-handoffs/2026-11-09-reliability-implementation/r14-functional-allocation.json"
+        },
+        {
+          "id": "CR-R14-S02",
+          "title": "Actual current image compiler/confinement/profiles/rollback and license collection",
+          "status": "VERIFIED_LOCAL_SYNTHETIC_RUNTIME_ONLY",
+          "runtimeGroups": 28,
+          "profileRenders": 6,
+          "ownedContainersObservedAbsent": 37,
+          "evidence": [
+            "agent-handoffs/2026-11-09-reliability-implementation/r14-functional-actual.json",
+            "agent-handoffs/2026-11-09-reliability-implementation/r14-license-only-actual.json"
+          ],
+          "preservedFailure": "Original five-stage run remains FAILED_OR_QUARANTINED because Vite denied outside-root license helper; only causal license stage reran successfully",
+          "remaining": "Actual authenticated browser apply/undo/preview/download and accessibility; R18 OS-security/unknown licenses and release acceptance separate"
+        },
+        {
+          "id": "CR-R14-S03",
+          "title": "Current-candidate semantic and visual render check without substituting for missing paired baseline",
+          "status": "VERIFIED_LOCAL_SYNTHETIC_CURRENT_RENDER_AND_AI_VISUAL_REVIEW",
+          "owner": "Runtime",
+          "remaining": "Actual authenticated browser apply/undo/preview/download and accessibility/representative/security/release gates remain open",
+          "rootFocusedTestsPassed": 17,
+          "evidence": [
+            "agent-handoffs/2026-11-09-reliability-implementation/r14-current-render-actual.json",
+            "agent-handoffs/2026-11-09-reliability-implementation/r14-current-render-visual.json"
+          ],
+          "actualRenderMs": 3702,
+          "pages": 2,
+          "fontsEmbedded": 8,
+          "taggedPages": 0,
+          "allOwnedContainersObservedAbsent": 39,
+          "baselineComparisonExecuted": false
+        },
+        {
+          "id": "CR-R14-S04",
+          "title": "Real authenticated Build compile/apply/undo/preview/download and accessibility",
+          "status": "PLANNED",
+          "remaining": "Depends on exact managed fixture/recovery admission plus frontend flow repairs"
+        }
+      ]
+    },
+    {
+      "id": "CR-R15",
+      "title": "Approve bounded OCR activation, data and privacy contracts",
+      "stage": 5,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-C00"],
+      "blueprintAliases": ["runtime:RT15"],
+      "kind": "repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-R16",
+      "title": "Replace Docker-database CI with guarded direct-Supabase testing",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-C00"],
+      "blueprintAliases": ["runtime:RT18"],
+      "kind": "repair",
+      "status": "PARTIAL",
+      "integrationNote": "Reuse a single SSR build, build web before worker, and check both final artifacts after tests; no hidden browser rebuild may erase the worker. Untrusted fork jobs never receive privileged Supabase/provider credentials.",
+      "slices": [
+        {
+          "id": "CR-R16-S01",
+          "title": "Compose direct-Supabase owned-fixture target and private ledgers with existing guards",
+          "status": "VERIFIED",
+          "evidenceTier": "configuration_and_local_ledger_only",
+          "authorTestsPassed": 98,
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r16-managed-guard-integration.json",
+          "remaining": "Actual managed auth/cleanup/isolation and protected CI/runner/build integration; global/native/restore still refused",
+          "rootFocusedBatchEvidence": "agent-handoffs/2026-11-09-reliability-implementation/batch-05-focused-root.json",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/integrated-verify-05.json"
+        }
+      ],
+      "fixtureRepair": {
+        "status": "VERIFIED_TEST_FIX_ONLY",
+        "evidence": "agent-handoffs/2026-11-09-reliability-implementation/runtime-ledger-permissions-fixture.md",
+        "testSha256": "c5cc309c9eaca9fd30507c8bd284bf33d11bdce63f8049463e02a1e7401f18cc",
+        "authorFullGuardTestsPassedUnderEachUmask": 75,
+        "umasks": ["077", "022"],
+        "productionGuardUnchanged": true,
+        "rootIntegratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/integrated-verify-07.json",
+        "originalFailurePreserved": "agent-handoffs/2026-11-09-reliability-implementation/integrated-verify-06-observation.json",
+        "notManagedDbVerification": true
+      }
+    },
+    {
+      "id": "CR-R17",
+      "title": "Verify exact fixture cleanup and deletion recovery",
+      "stage": 7,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R16", "CR-R19"],
+      "blueprintAliases": ["runtime:RT19"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-R18",
+      "title": "Resolve npm and worker-image advisories without filtering",
+      "stage": 6,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R12", "CR-C00"],
+      "blueprintAliases": ["runtime:RT20"],
+      "kind": "verify_then_repair",
+      "status": "PARTIAL",
+      "integrationNote": "Separate the early image inventory/local-test admission checkpoint from final complete unfiltered advisory disposition. Do not suppress findings or block the isolated tests needed to validate repairs by treating final release disposition as their prerequisite.",
+      "slices": [
+        {
+          "id": "CR-R18-S01",
+          "title": "Inventory current image and admit isolated neutral synthetic repair tests",
+          "status": "VERIFIED_INVENTORY_ONLY",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r12-built-image-inventory.json",
+          "remaining": "Current advisory set UNKNOWN; no public untrusted, production or release approval"
+        },
+        {
+          "id": "CR-R18-S02",
+          "title": "Recover pinned scanner and authenticated current trust/database inputs without credential fallback",
+          "status": "PREPARATION_ONLY",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r18-release-verification.json",
+          "remaining": "Historical scanner/cache absent; one anonymous gh method returned auth-required; installed Sigstore source reviewed but current TUF trust not admitted; no downloads or scanner execution"
+        },
+        {
+          "id": "CR-R18-S03",
+          "title": "Current complete npm registry audit on exact application lockfile",
+          "status": "VERIFIED_KNOWN_ADVISORY_COLLECTION_ONLY",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r18-npm-all-severity-actual.json",
+          "dependencies": 554,
+          "knownAdvisories": 0,
+          "installOrScripts": false,
+          "remaining": "Registry signatures, native main/OCR/LaTeX images, complete license/applicability/reachability disposition remain open"
+        },
+        {
+          "id": "CR-R18-S04",
+          "title": "Fixed bounded untrusted public-metadata staging helper",
+          "status": "VERIFIED_SOURCE_AND_OFFLINE_ONLY",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/backend-trivy-metadata.md",
+          "independentReview": "agent-handoffs/2026-11-09-reliability-implementation/runtime-trivy-metadata-review.md",
+          "rootReviewAndIntegration": "agent-handoffs/2026-11-09-reliability-implementation/batch-06-source-integration.json",
+          "offlineTestsPassed": 61,
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/integrated-verify-07.json",
+          "actualPublicFetchExecuted": false,
+          "signatureOrScannerAccepted": false,
+          "remaining": "One separately bound metadata-only fetch plus current authenticated trust/verifier/catalog admission and actual native-image advisory collection remain open"
+        }
+      ]
+    },
+    {
+      "id": "CR-R19",
+      "title": "Restore the real privacy map and verify tenant/auth/security policy",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-C00"],
+      "blueprintAliases": ["runtime:RT21"],
+      "kind": "verify_then_repair",
+      "status": "PARTIAL",
+      "integrationNote": "Source-backed map/archive remain intact. Application guards/UI now treat successfully cancelled and failed requests as inactive, strict errors/malformed data as unavailable, and contention as safe503. Owner write-barrier and exact legacy function/RLS patches are source-integrated only; actual SQL, global lifecycle, Auth/session deletion, retention/erasure/export/orphan handling and restrictive ledger FKs remain open.",
+      "slices": [
+        {
+          "id": "CR-R19-S01",
+          "title": "Preserve displaced dirty content and restore source-backed privacy map",
+          "status": "VERIFIED",
+          "owner": "Frontend with coordinator review",
+          "evidenceTier": "documentation_source_contract_only",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r19-map-integration.json"
+        },
+        {
+          "id": "CR-R19-S02",
+          "title": "Completed privacy export revocation under existing deletion policy",
+          "status": "VERIFIED",
+          "evidenceTier": "source_review_synthetic_route_policy",
+          "affectedTestsPassed": 34,
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r19-export-guard-integration.json",
+          "supersededBy": "CR-R19-S05",
+          "evidenceStatus": "HISTORICAL_POLICY_SUPERSEDED",
+          "supersessionNote": "Successfully withdrawn cancelled deletions are inactive. Their former denial cases moved to allow coverage under the reviewed cancellation correction; original receipts remain historical."
+        },
+        {
+          "id": "CR-R19-S03",
+          "title": "Actual tenant/auth/security, atomic enqueue and complete erasure/export/retention coverage",
+          "status": "PLANNED",
+          "knownSourceGaps": [
+            "Old manifest lifecycle",
+            "Auth/session/org/audit/request disposition",
+            "Export collection completeness",
+            "Shared enqueue/writer serialization",
+            "Actual grants/RLS/storage/cache tests"
+          ]
+        },
+        {
+          "id": "CR-R19-S04",
+          "title": "Hide unavailable completed exports for visible nonfailed owned deletion requests",
+          "status": "VERIFIED",
+          "evidenceTier": "source_review_and_synthetic_component",
+          "componentTestsPassed": 9,
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/frontend-privacy-ui.md",
+          "remaining": "Not atomic enqueue/response, exhaustive deletion history or full erasure proof",
+          "supersededBy": "CR-R19-S05",
+          "evidenceStatus": "HISTORICAL_POLICY_SUPERSEDED",
+          "supersessionNote": "Successfully withdrawn cancelled deletions are inactive. Their former denial cases moved to allow coverage under the reviewed cancellation correction; original receipts remain historical."
+        },
+        {
+          "id": "CR-R19-S05",
+          "title": "Withdrawn deletion access, strict query outcomes and real SSR contention responses",
+          "status": "VERIFIED_SCOPED_APPLICATION_WITH_MOCKED_DATABASE",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r11-r19-privacy-recovery-closeout.md",
+          "integratedEvidence": "agent-handoffs/2026-11-09-reliability-implementation/r11-r19-privacy-recovery-integrated.json",
+          "testsAcrossCombinedBatch": 117,
+          "testFilesAcrossCombinedBatch": 12,
+          "sourceInputsBound": 683,
+          "remaining": "Actual hosted tenant/session/role behavior, whole export/erasure/retention and native SQL acceptance remain open."
+        },
+        {
+          "id": "CR-R19-S06",
+          "title": "Owner transaction barrier, bounded intake contention and guarded function/RLS compatibility source",
+          "status": "SOURCE_INTEGRATED_SQL_UNEXECUTED",
+          "evidence": "agent-handoffs/2026-11-09-reliability-implementation/r11-r19-privacy-recovery-closeout.md",
+          "sourceObservation": "agent-handoffs/2026-11-09-reliability-implementation/r19-privacy-sql-source-observation.json",
+          "migration": "../supabase/migrations/20261110085512_privacy_write_barrier.sql",
+          "migrationSha256": "ef62285882a13d9c4e8813161fd55f80333faedda45e7f4f3fb52b22997a0417",
+          "sqlParsed": false,
+          "sqlApplied": false,
+          "sqlExecuted": false,
+          "nativeConcurrencyVerified": false,
+          "remaining": "Actual catalog/policy compatibility, RC visibility/two-session contention, producer cutover and full privacy lifecycle remain unverified."
+        }
+      ]
+    },
+    {
+      "id": "CR-R20",
+      "title": "Verify safe operational metrics, alerts and actual delivery",
+      "stage": 7,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R10", "CR-R02"],
+      "blueprintAliases": ["runtime:RT22"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-R21",
+      "title": "Measure real HTTP/database/queue capacity and recovery",
+      "stage": 8,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R11", "CR-R20", "CR-R14", "CR-A06"],
+      "blueprintAliases": ["runtime:RT23"],
+      "kind": "later_operational",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-R22",
+      "title": "Perform actual isolated managed restore and compatibility checks",
+      "stage": 8,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R17", "CR-R03", "CR-A04", "CR-A09", "CR-R08"],
+      "blueprintAliases": ["runtime:RT24"],
+      "kind": "later_operational",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-R23",
+      "title": "Rehearse kill switches, rollback and operator recovery",
+      "stage": 8,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-R22", "CR-R21", "CR-R20"],
+      "blueprintAliases": ["runtime:RT25"],
+      "kind": "later_operational",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-R24",
+      "title": "Verify upload malware and parser-host admission controls",
+      "stage": 1,
+      "owner": "Runtime/verification + coordinator for contracts",
+      "dependencies": ["CR-C00", "CR-A01"],
+      "blueprintAliases": ["runtime:RT27"],
+      "kind": "verify_then_repair",
+      "status": "PLANNED",
+      "integrationNote": ""
+    },
+    {
+      "id": "CR-G01",
+      "title": "Pass the complete local consumer reliability gate",
+      "stage": 8,
+      "owner": "Coordinator + all three agents",
+      "dependencies": [
+        "CR-C00",
+        "CR-C01",
+        "CR-A01",
+        "CR-A02",
+        "CR-A03",
+        "CR-C02",
+        "CR-A04",
+        "CR-A05",
+        "CR-A06",
+        "CR-A07",
+        "CR-A08",
+        "CR-A09",
+        "CR-A10",
+        "CR-A11",
+        "CR-A12",
+        "CR-A13",
+        "CR-A14",
+        "CR-A15",
+        "CR-U01",
+        "CR-U02",
+        "CR-U03",
+        "CR-U04",
+        "CR-U05",
+        "CR-U06",
+        "CR-U07",
+        "CR-U08",
+        "CR-U09",
+        "CR-U10",
+        "CR-U11",
+        "CR-U12",
+        "CR-U13",
+        "CR-U16",
+        "CR-U17",
+        "CR-U18",
+        "CR-U19",
+        "CR-R01",
+        "CR-R02",
+        "CR-R03",
+        "CR-R04",
+        "CR-R05",
+        "CR-R06",
+        "CR-R07",
+        "CR-R08",
+        "CR-R09",
+        "CR-R10",
+        "CR-R11",
+        "CR-R12",
+        "CR-R13",
+        "CR-R14",
+        "CR-R15",
+        "CR-R16",
+        "CR-R17",
+        "CR-R18",
+        "CR-R19",
+        "CR-R20",
+        "CR-R24"
+      ],
+      "blueprintAliases": ["runtime:RT26"],
+      "kind": "gate",
+      "status": "PLANNED",
+      "integrationNote": "Require actual successful core AI/compiler/OCR/renderer journeys and the real unscoped leased lifecycle in an approved isolated managed target. Scoped RPC evidence cannot close global-worker acceptance. Numeric computation/replay is tested on source-known engineering fixtures, and production withholding is tested for unadopted policies; this gate does not activate or validate authoritative population scores. Conditional advertised auth also needs its explicit backend delivery prerequisites."
+    },
+    {
+      "id": "CR-G02",
+      "title": "Run owner-authorized opt-in feedback and per-segment validity evaluation",
+      "stage": 9,
+      "owner": "Owner + coordinator + technical reviewers",
+      "dependencies": ["CR-G01"],
+      "blueprintAliases": ["runtime:RT26"],
+      "kind": "later_feedback",
+      "status": "PLANNED",
+      "integrationNote": "Functional preview feedback may precede authoritative score activation. Do not require a reviewer team during local repairs. Later rights/retention, frozen rubric and original independent-label/calibration requirements govern stronger numerical/domain claims; customer feedback is not automatic validity evidence."
+    },
+    {
+      "id": "CR-G03",
+      "title": "Complete operations acceptance and explicit later launch decision",
+      "stage": 9,
+      "owner": "Owner + coordinator",
+      "dependencies": ["CR-G02", "CR-R21", "CR-R22", "CR-R23"],
+      "blueprintAliases": ["runtime:RT26"],
+      "kind": "later_release",
+      "status": "PLANNED",
+      "integrationNote": "No deployment or publication is authorized by this plan. Pricing stays deferred until the owner separately resumes it after testing/feedback. Enabled/advertised OAuth and claim levels must be explicitly resolved before their launch claim."
+    }
+  ],
+  "topologicalOrder": [
+    "CR-C00",
+    "CR-C01",
+    "CR-U13",
+    "CR-R01",
+    "CR-R12",
+    "CR-R15",
+    "CR-R16",
+    "CR-R19",
+    "CR-A01",
+    "CR-A07",
+    "CR-U12",
+    "CR-R02",
+    "CR-R13",
+    "CR-R17",
+    "CR-R18",
+    "CR-A02",
+    "CR-A05",
+    "CR-A08",
+    "CR-U10",
+    "CR-U11",
+    "CR-U14",
+    "CR-U15",
+    "CR-U17",
+    "CR-R03",
+    "CR-R14",
+    "CR-R24",
+    "CR-A03",
+    "CR-A09",
+    "CR-R04",
+    "CR-R05",
+    "CR-R07",
+    "CR-C02",
+    "CR-R08",
+    "CR-A04",
+    "CR-R09",
+    "CR-A10",
+    "CR-U01",
+    "CR-U16",
+    "CR-R10",
+    "CR-R22",
+    "CR-A06",
+    "CR-A11",
+    "CR-A15",
+    "CR-U02",
+    "CR-R11",
+    "CR-R20",
+    "CR-A12",
+    "CR-A13",
+    "CR-U03",
+    "CR-U09",
+    "CR-R06",
+    "CR-R21",
+    "CR-A14",
+    "CR-U04",
+    "CR-U05",
+    "CR-U07",
+    "CR-U18",
+    "CR-R23",
+    "CR-U06",
+    "CR-U08",
+    "CR-U19",
+    "CR-G01",
+    "CR-G02",
+    "CR-G03"
+  ],
+  "proposalCoverage": {
+    "sourceProposals": 62,
+    "mappedProposals": 62,
+    "unmapped": []
+  },
+  "blueprints": {
+    "ats": "agent-handoffs/2026-11-09-reliability-plan-ats.md",
+    "frontend": "agent-handoffs/2026-11-09-reliability-plan-frontend.md",
+    "runtime": "agent-handoffs/2026-11-09-reliability-plan-runtime.md"
+  },
+  "gapCoverage": {
+    "CV01": ["CR-R01", "CR-R02", "CR-U10", "CR-G01"],
+    "CV02": ["CR-R12", "CR-R14", "CR-R18", "CR-U08", "CR-U11", "CR-G01"],
+    "CV03": ["CR-A11", "CR-A12", "CR-A13", "CR-A14", "CR-U05", "CR-U06"],
+    "CV04": [
+      "CR-A02",
+      "CR-A03",
+      "CR-C02",
+      "CR-A04",
+      "CR-U01",
+      "CR-U02",
+      "CR-U03",
+      "CR-U18"
+    ],
+    "CV05": ["CR-A01", "CR-A05", "CR-A06", "CR-R15", "CR-R24", "CR-U09"],
+    "CV06": ["CR-A07", "CR-A08", "CR-A09", "CR-A10", "CR-U04"],
+    "CV07": ["CR-A11", "CR-R06", "CR-U07", "CR-U08"],
+    "CV08": ["CR-R12", "CR-R13", "CR-R14", "CR-U11"],
+    "native_entity_review": ["CR-A01", "CR-A02", "CR-A03", "CR-A15"],
+    "numerical_validity": ["CR-A10", "CR-A14", "CR-A15", "CR-G02", "CR-G03"],
+    "background_lifecycle": ["CR-R07", "CR-R08", "CR-R09", "CR-R10", "CR-R11"],
+    "technical_cost_admission": [
+      "CR-R02",
+      "CR-R03",
+      "CR-R04",
+      "CR-R05",
+      "CR-R06"
+    ],
+    "auth_history_privacy_accessibility": [
+      "CR-U12",
+      "CR-U13",
+      "CR-U14",
+      "CR-U15",
+      "CR-U16",
+      "CR-U17",
+      "CR-U18",
+      "CR-U19",
+      "CR-R17",
+      "CR-R19",
+      "CR-R24"
+    ],
+    "security_operations": [
+      "CR-R16",
+      "CR-R17",
+      "CR-R18",
+      "CR-R19",
+      "CR-R20",
+      "CR-R21",
+      "CR-R22",
+      "CR-R23",
+      "CR-R24",
+      "CR-G01",
+      "CR-G03"
+    ],
+    "misplaced_privacy_map": ["CR-R19", "CR-U17", "CR-R17"]
+  },
+  "implementationAuthorization": "Owner instruction 2026-11-09: go for it and complete the plan with proper valudation. No deployment/pricing activation or gate waiver."
+}

@@ -187,18 +187,24 @@ async function main() {
 
     stage = "run_qualitative_stage";
     const qualitativeCategory = {
-      score: 80,
       tips: [
-        { type: "good" as const, tip: "Clear", explanation: "Clear evidence." },
+        {
+          type: "good" as const,
+          tip: "Clear",
+          explanation: "Clear evidence.",
+          quote: "synthetic",
+        },
         {
           type: "improve" as const,
           tip: "Detail",
           explanation: "Add context.",
+          quote: "synthetic",
         },
         {
           type: "good" as const,
           tip: "Relevant",
           explanation: "Relevant content.",
+          quote: "synthetic",
         },
       ],
     };

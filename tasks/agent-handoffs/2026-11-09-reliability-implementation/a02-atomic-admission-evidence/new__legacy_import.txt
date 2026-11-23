@@ -1,0 +1,60 @@
+
+declare scope jsonb; key text; prior public.canonical_resume_versions%rowtype; result jsonb;
+begin
+  if private.evidence_keys(p_binding,array['ownerId','organizationId','resumeId','analysisId','sourceId','attemptId','inputSha256',
+      'evidenceSchemaVersion','fieldExtractorVersion','targetModelVersion','projectionModelVersion','admissionPolicyVersion',
+      'reviewRevision','assignmentRevision','canonicalHeadId']) is not true
+    or private.evidence_keys(p_command,array['operation','expectedVersionId','idempotencyKey','factId','value','targetVersionId']) is not true
+    or p_command->>'operation' is distinct from 'import' or p_command->'expectedVersionId' is distinct from 'null'::jsonb
+    or p_command->'factId' is distinct from 'null'::jsonb or p_command->'value' is distinct from 'null'::jsonb
+    or p_command->'targetVersionId' is distinct from 'null'::jsonb
+    or jsonb_typeof(p_command->'idempotencyKey') is distinct from 'string'
+    or private.correction_uuid(to_jsonb(lower(p_command->>'idempotencyKey'))) is not true
+    or private.evidence_integer(p_binding->'reviewRevision',0,2147483647) is not true
+    or private.evidence_integer(p_binding->'assignmentRevision',0,2147483647) is not true
+    or private.correction_uuid(p_binding->'canonicalHeadId',true) is not true
+    or p_request_id is null or char_length(p_request_id) not between 1 and 100
+    or private.canonical_shape_valid(p_body) is not true or octet_length(p_body::text)>1048576
+    or p_body->>'producerVersion' not in ('canonical-engine/1.0.0','canonical-engine/1.0.1')
+    or p_body->'parentVersionId' is distinct from 'null'::jsonb then perform private.correction_fail('invalid'); end if;
+  scope:=private.correction_scope(p_user_id,p_analysis_id);
+  if not private.canonical_correction_write_ready() then perform private.correction_fail('unavailable'); end if;
+  foreach key in array array['ownerId','organizationId','resumeId','analysisId','sourceId','attemptId','inputSha256',
+    'evidenceSchemaVersion','fieldExtractorVersion','targetModelVersion','projectionModelVersion','admissionPolicyVersion'] loop
+    if p_binding->key is distinct from scope->key then perform private.correction_fail('conflict'); end if;
+  end loop;
+  if (p_body->>'ownerId',p_body->>'organizationId',p_body->>'resumeId',p_body->>'analysisId',p_body->>'sourceEvidenceVersionId',p_body->>'inputSha256')
+    is distinct from (scope->>'ownerId',scope->>'organizationId',scope->>'resumeId',scope->>'analysisId',scope->>'attemptId',scope->>'inputSha256') then
+    perform private.correction_fail('conflict'); end if;
+  -- Current authority/source/attempt precede replay. Captured revisions/head are
+  -- fresh admission preconditions, not new semantic replay identity. Generated
+  -- body IDs are deliberately ignored, matching the existing legacy command.
+  select * into prior from public.canonical_resume_versions where resume_id=(scope->>'resumeId')::uuid
+    and idempotency_key=(p_command->>'idempotencyKey')::uuid;
+  if found then
+    if prior.command is distinct from p_command or prior.parent_version_id is not null
+      or (prior.owner_id,prior.organization_id,prior.source_resume_version_id,prior.source_evidence_version_id)
+        is distinct from ((scope->>'ownerId')::uuid,(scope->>'organizationId')::uuid,(scope->>'sourceId')::uuid,(scope->>'attemptId')::uuid)
+      or prior.content->>'analysisId' is distinct from scope->>'analysisId'
+      or prior.content->>'inputSha256' is distinct from scope->>'inputSha256'
+      or prior.content->>'producerVersion' not in ('canonical-engine/1.0.0','canonical-engine/1.0.1')
+      or private.canonical_shape_valid(prior.content) is not true then perform private.correction_fail('conflict'); end if;
+    return jsonb_build_object('status','applied','versionId',prior.id,'revision',prior.revision,'idempotent',true);
+  end if;
+  if scope->'headId' is distinct from 'null'::jsonb or p_binding->'canonicalHeadId' is distinct from scope->'headId'
+    or p_binding->'reviewRevision' is distinct from scope->'reviewRevision'
+    or p_binding->'assignmentRevision' is distinct from scope->'assignmentRevision' then perform private.correction_fail('conflict'); end if;
+  if private.correction_original_import_allowed(scope) is not true then perform private.correction_fail('conflict'); end if;
+  result:=public.save_canonical_version(p_user_id,(scope->>'sourceId')::uuid,p_body,p_command,p_request_id);
+  if result->>'status' in ('not_found','conflict') then perform private.correction_fail(result->>'status'); end if;
+  if private.evidence_keys(result,array['status','versionId','revision','idempotent']) is not true
+    or result->>'status' is distinct from 'applied' or result->>'versionId' is distinct from p_body->>'versionId'
+    or result->'revision' is distinct from '1'::jsonb or result->'idempotent' is distinct from 'false'::jsonb then
+    perform private.correction_fail('unavailable'); end if;
+  return result;
+exception
+  when insufficient_privilege then return jsonb_build_object('status','not_found');
+  when sqlstate 'P0C01' or unique_violation then return jsonb_build_object('status','conflict');
+  when invalid_parameter_value or invalid_text_representation or numeric_value_out_of_range then return jsonb_build_object('status','invalid');
+  when others then return jsonb_build_object('status','unavailable');
+end;

@@ -1,0 +1,161 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/initial-feedback-publication-repository.test.ts (24 tests | 1 failed) 160ms
+     ✓ reads actual strict available current without inventing currentness 47ms
+     ✓ reads actual strict available historical without inventing currentness 17ms
+     ✓ retains explicit legacy_unbound and pending, not an empty assessed publication 3ms
+     ✓ refuses staged reader capability and malformed/missing full metadata before data RPC 13ms
+     ✓ correlates publication owner/org/analysis, including self-consistent foreign receipt 4ms
+     ✓ finishes exact deterministic-only and unchanged producer numbers using actual native parameter names 7ms
+     ✓ finishes an actual useful compiled plan without changing content-only support authority 16ms
+     ✓ refuses another completion or receipt binding rather than accepting nonempty saved prose 2ms
+     ✓ refuses invalid audit/foreign operation before any mutation 2ms
+     ✓ exports complete strict owner rows without current-org/analysis filtering or JSONB digest emulation 9ms
+     ✓ keeps empty owner export versioned and refuses missing/denied results instead of fallback 1ms
+     ✓ refuses whole export on foreign owner, incomplete member rows or duplicate publication 2ms
+     ✓ fails oversized export whole without returning a prefix 3ms
+     ✓ bounds stalled read without an ignored-abort follow-on data call 2ms
+     ✓ reads an owned publication with lease-free owner/org/analysis scope 1ms
+     ✓ exports the complete account using owner identity only, no invented lease/analysis/org 2ms
+   ✓ keeps readonly facades narrow and refuses insufficient read/finish scopes before IO 1ms
+   ✓ refuses partial mixed and feature-flag scopes without inventing identities 1ms
+   ✓ owner-only exports fail closed on missing denied or foreign data and staged capability 5ms
+   ✓ paired owner export includes genuine retirement metadata after content cascade 3ms
+   ✓ paired mode is mandatory even for empty exports and returns all proof records 1ms
+   ✓ without paired profile the historical strict missing-publication refusal stays 4ms
+   × paired mode rejects missing, foreign, mismatched or conflicting retirement authority 11ms
+   ✓ paired terminal unknown proof retains late-known usage and refuses a bare listed attempt 2ms
+ ✓ tests/unit/owned-ai-retirement-export.test.ts (24 tests) 34ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-publication-repository.test.ts > paired mode rejects missing, foreign, mismatched or conflicting retirement authority
+AssertionError: promise resolved "{ …(5) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attempts": [
++     {
++       "analysis_id": "00000000-0000-4000-8000-000000000001",
++       "attempt_id": "00000000-0000-4000-8000-000000000008",
++       "budget_attempt_id": null,
++       "claim_lease": null,
++       "claimed_at": null,
++       "created_at": "2026-11-15T00:00:00.123456Z",
++       "error_code": null,
++       "operation_id": "00000000-0000-4000-8000-000000000007",
++       "ordinal": 1,
++       "organization_id": "00000000-0000-4000-8000-000000000003",
++       "owner_id": "00000000-0000-4000-8000-000000000002",
++       "state": "cancelled_before_dispatch",
++       "usage": null,
++     },
++   ],
++   "operations": [
++     {
++       "analysis_id": "00000000-0000-4000-8000-000000000001",
++       "attempt_limit": 3,
++       "binding": {
++         "analysisId": "00000000-0000-4000-8000-000000000001",
++         "deterministicContentSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
++         "jobId": "00000000-0000-4000-8000-000000000006",
++         "jobSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
++         "organizationId": "00000000-0000-4000-8000-000000000003",
++         "ownerId": "00000000-0000-4000-8000-000000000002",
++         "policy": {
++           "attemptLimit": 3,
++           "budgetPolicyVersion": null,
++           "maxOutputTokens": 1200,
++           "model": "unit-model",
++           "planProfile": {
++             "checkerSha256": "c5d8c0e8e5ac52c8b06a4fad5ea78f6fe6e42297bbbfd51cd2779243c8418b36",
++             "metadataSha256": "3c133694d11334e9430821945c94782b562ab1efb3f26bb8d4e7a9f2699369c5",
++             "policySha256": "972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48",
++             "policyVersion": "initial-feedback-plan-policy/1.0.0",
++             "profileVersion": "initial-feedback-plan-profile/1.0.0",
++             "rendererSha256": "c8bc131aacc7f9ddd8e30dcca8f5f429e78ee84180e5dd4542254883001cedc6",
++             "schemaVersion": "initial-feedback-plan-readiness/1.0.0",
++           },
++           "planSha256": "972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48",
++           "planVersion": "initial-feedback-plan-policy/1.0.0",
++           "promptVersion": "qualitative-cited-prose/3.0.0",
++           "provider": "openai",
++           "scoringInputProfile": {
++             "checkerSha256": "56a92f65d533a2f1b053078dbb372b1271728224e5df1c74b201b4cffb21a8d3",
++             "contextSha256": "d64ba9ac11ba732c983cd195cd7d83fba878e67f4ae0bffc8b6e166a600a8bd9",
++             "exportSha256": "e4c17997fdbec81d931e4838b3522c6c7d3c861b0bfa07b6fb3ab5ece160f0a2",
++             "finishSha256": "5db61206ed04f32af7052fce2d64e2ccf414d6fea13645f58eecf67f616b61a2",
++             "metadataSha256": "f18e6abfd698c4dbf4f7f6040fb577b2e49e78e4125bfd9d31e8166d0e678da8",
++             "profileVersion": "legacy-scoring-profile/1.0.0",
++             "readerSha256": "2ea3c5071d8d56e421a37053127dea08fe8eb08ce91e4de9f5c3b4c4b1172ccf",
++             "schemaVersion": "legacy-scoring-readiness/1.0.0",
++           },
++           "sha256": "de8feaf142e0b96ba301217d0084378134afec2eebab388584e963d4e621791f",
++           "supportSha256": "230f22333dd468f3bf78395b118330ec1ff78de18be9da5349356e84d0f6bd13",
++           "supportVersion": "qualitative-content-support/1.0.0",
++           "version": "initial-feedback-publication/1.0.0",
++           "writingSupportPolicyVersion": "legacy-source-transforms/1.0.4",
++         },
++         "resultChecksum": "67e06c9ce910ba58e133e747f92bb0699056c6e7a434bfd1c8dbc996411a44a3",
++         "resumeId": "00000000-0000-4000-8000-000000000004",
++         "resumeVersionId": "00000000-0000-4000-8000-000000000005",
++         "schemaVersion": "initial-feedback-binding/1.0.0",
++         "scoringInputSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
++         "sourceTextSha256": "cea9a6a55b06ed97ed4063c21fea3a5c544c72f54062787eb7238b7081100cd3",
++       },
++       "binding_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
++       "created_at": "2026-11-15T00:00:00.123456Z",
++       "operation_id": "00000000-0000-4000-8000-000000000007",
++       "organization_id": "00000000-0000-4000-8000-000000000003",
++       "owner_id": "00000000-0000-4000-8000-000000000002",
++       "policy_sha256": "de8feaf142e0b96ba301217d0084378134afec2eebab388584e963d4e621791f",
++       "policy_version": "initial-feedback-publication/1.0.0",
++       "publication_id": "00000000-0000-4000-8000-000000000090",
++       "resume_id": "00000000-0000-4000-8000-000000000004",
++       "resume_version_id": "00000000-0000-4000-8000-000000000005",
++       "state": "published",
++     },
++   ],
++   "publications": [],
++   "retirements": [
++     {
++       "analysis_id": "00000000-0000-4000-8000-000000000001",
++       "attempt_id": null,
++       "binding_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
++       "deletion_request_id": "00000000-0000-4000-8000-000000000777",
++       "operation_id": "00000000-0000-4000-8000-000000000007",
++       "organization_id": "00000000-0000-4000-8000-000000000003",
++       "owner_id": "00000000-0000-4000-8000-000000000002",
++       "publication_id": "00000000-0000-4000-8000-000000000090",
++       "publication_state": "deterministic_only",
++       "resume_id": "00000000-0000-4000-8000-000000000004",
++       "resume_version_id": "00000000-0000-4000-8000-000000000005",
++       "retention_item_id": null,
++       "retired_at": "2026-11-15T00:00:00.123456Z",
++       "run_id": null,
++     },
++   ],
++   "schemaVersion": "initial-feedback-export/1.0.0",
+  }
+
+ ❯ tests/unit/initial-feedback-publication-repository.test.ts:974:40
+    972|         : actual(name, args),
+    973|     );
+    974|     await expect(h.paired.exportOwned()).rejects.toMatchObject({
+       |                                        ^
+    975|       code: "unavailable",
+    976|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 47 passed (48)
+   Start at  15:57:29
+   Duration  719ms (transform 210ms, setup 0ms, import 368ms, tests 194ms, environment 0ms)
+

@@ -1,0 +1,11 @@
+--- before/scripts/jd-clause-order-test-fixture.ts
++++ after/scripts/jd-clause-order-test-fixture.ts
+@@ -448,7 +448,7 @@
+           Cookie: [...cookies]
+             .map(
+               ([name, value]) =>
+-                serializeCookieHeader(name, value).split(";")[0],
++                serializeCookieHeader(name, value, {}).split(";")[0],
+             )
+             .join("; "),
+           "X-Request-Id": uploadKey,

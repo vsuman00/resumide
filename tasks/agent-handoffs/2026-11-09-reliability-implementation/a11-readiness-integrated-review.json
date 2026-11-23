@@ -1,0 +1,56 @@
+{
+  "status": "PASS_INTEGRATED_SOURCE_SYNTHETIC_ONLY",
+  "receipt": "a11-readiness-integrated-ff3eefd3-2317-42f7-a813-0ffc79e06483.json",
+  "summary": {
+    "testFilesPassed": 9,
+    "testsPassed": 137
+  },
+  "sourceInputs": 806,
+  "stableDuringRun": true,
+  "changedPriorInputs": [
+    "app/lib/server/typed-authoring-repository.ts",
+    "tests/unit/typed-authoring-http-route.test.ts",
+    "tests/unit/typed-authoring-http.test.ts",
+    "tests/unit/typed-authoring-repository.test.ts"
+  ],
+  "unchangedCommonInputs": 793,
+  "newInputs": [
+    "app/lib/server/typed-authoring-readiness-profile.ts",
+    "app/lib/server/typed-authoring-readiness.ts",
+    "scripts/verify-typed-authoring-readiness.sql",
+    "supabase/migrations/20261114170229_typed_authoring_readiness.sql",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a11-readiness-coordinator.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a11-readiness-integrated-controller.mjs",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a11-readiness-scaffold.json",
+    "tests/unit/typed-authoring-readiness-route.test.ts",
+    "tests/unit/typed-authoring-readiness.test.ts"
+  ],
+  "removedInputs": [
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a11-http-integrated-controller.mjs"
+  ],
+  "logAndArtifactsRehashed": true,
+  "controllerAbsent": true,
+  "ownedGroupsAbsent": [
+    28342,
+    28405,
+    28511,
+    28551,
+    28706
+  ],
+  "checks": [
+    "npm test -- tests/unit/typed-authoring-readiness.test.ts tests/unit/typed-authoring-readiness-route.test.ts tests/unit/typed-authoring-repository.test.ts tests/unit/typed-authoring-http-route.test.ts tests/unit/typed-authoring-http.test.ts tests/unit/typed-authoring-contract.test.ts tests/unit/typed-authoring-score-route.test.ts tests/unit/authoring-route.test.ts tests/unit/authoring-contract.test.ts",
+    "npm run typecheck",
+    "npm run lint",
+    "npm run build",
+    "npm run build:worker"
+  ],
+  "limits": [
+    "SQL parsing/execution and actual catalog/ACL/transactions NOT_RUN",
+    "No providers, browser, services, database or Docker operations",
+    "Writer denied; flags unchanged; no publication/deployment",
+    "Full reliability goal and native/representative/consumer acceptance remain open"
+  ],
+  "previousControllerStillPresent": true,
+  "postDocumentationSourceBindingsUnchanged": true,
+  "documentationChecks": "Closeout links; canonical JSON/task identity/counts; new closeout/controller/context formatting; scoped diff whitespace; prose hygiene"
+}

@@ -1,0 +1,55 @@
+{
+  "task": "CR-R17-S07",
+  "checkedDate": "2026-11-21",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "checkout": "dirty integration worktree",
+  "inputSha256": {
+    "supabase/migrations/20261121211200_analysis_admission_cleanup_receipts.sql": "d6a472d13bd041af2850f33de911dc2fbd3c070c0bebac19dca769e724f0ae73",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-cleanup-receipts-native-fixture.py.txt": "78a2a51a889ca05c699c9b41a214ecd35627a5943d70a6a28dd8928c687e900b",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-cleanup-recovery-native-fixture.py.txt": "646c561c65735786eff003f9036388a0616ba2799e67e29de99cda9fa89ac7ec",
+    "app/lib/server/privacy-worker.ts": "111c8986037fdcfe9b16161aeb141eac343457f5aed7ab49567d9144485984ae",
+    "app/lib/server/storage.ts": "d653c9e92d0e77449309a7da41c1b2b468a36e3748c249114ef5e32eaf89b6bc"
+  },
+  "before": {
+    "detected": "Prior SQL accepted an unissued completion for a historical cleaned upload.",
+    "logSha256": "c36df91a51f3a5c9a2a20613328cc613f5a3ad4f08685edb9ea54c25b5f93ecc"
+  },
+  "intermediateFailure": {
+    "reason": "Fixture query used an ambiguous reference to upload_id. The fixture alias was corrected and the migration was unchanged.",
+    "logSha256": "c7423baee34c598fd92cf1dbdf7a0ff7bdd6ede635ed352f3b92ae96221cb768"
+  },
+  "native": {
+    "result": "PASS: historical recheck, live-claim issuance, exact result, stable replay, reference refusal, and owner receipt export.",
+    "recordedReceipts": 2,
+    "excludedControls": 4,
+    "scope": "Actual receipt migration and inherited transaction functions on synthetic relations. Managed Storage and catalogue not run.",
+    "logSha256": "505495ed37e4a7aaa7b103aa03dfc28182f34fa30fec966883520d6b39531062"
+  },
+  "after": {
+    "unit": [
+      {
+        "passed": 6789,
+        "files": 322,
+        "sha256": "cead2b89eac82a42822c6ec5e839309ff11ab38da6c19577a1fc9b0967c7ffbe"
+      },
+      {
+        "passed": 3,
+        "files": 1,
+        "sha256": "fc90d39dd793cb0727a32fd71ad2afa2d62f5c4d8e6eb8f68a99889184d391e1"
+      }
+    ]
+  },
+  "statics": {
+    "commands": ["format:check", "typecheck", "lint", "build", "build:worker"],
+    "exitCode": 0,
+    "lintWarnings": 4,
+    "logSha256": "2ab51a00e45dca82c1d6e9c25a14c4fcfe9afe22d3517d74ef0e5e896f02dbc6"
+  },
+  "migrationInventory": "managed-schema-inventory-87.json",
+  "notRun": [
+    "managed migration replay",
+    "live Storage cleanup",
+    "account-wide admission retirement",
+    "deployment"
+  ]
+}

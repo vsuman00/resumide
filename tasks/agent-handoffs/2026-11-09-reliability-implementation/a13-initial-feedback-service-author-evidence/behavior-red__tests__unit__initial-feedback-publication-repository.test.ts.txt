@@ -1,0 +1,547 @@
+import { createHash } from "node:crypto";
+import { describe, expect, it, vi } from "vitest";
+import { scoreExtractedResume } from "../../app/lib/server/scoring-stage";
+import { createInitialFeedbackPublicationPolicy } from "../../app/lib/server/initial-feedback-publication-policy";
+
+import {
+  InitialFeedbackPrepareSchema,
+  InitialFeedbackPublicationSchema,
+  initialFeedbackPartialFeedback,
+  type InitialFeedbackCompletion,
+} from "../../app/lib/server/initial-feedback-operation-contract";
+import {
+  renderInitialFeedbackPlan,
+  compileInitialFeedbackPlan,
+} from "../../app/lib/server/initial-feedback-plan";
+import {
+  BASELINE_SEMANTICS,
+  legacyCategoryFromProse,
+} from "../../app/lib/server/qualitative-prose";
+const uuid = (n: number) =>
+  `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const sha = (s: string) => createHash("sha256").update(s).digest("hex");
+// Explicit test-only opaque expected pins. Not an installed Native/source profile.
+const SYNTHETIC_RPC_PROFILE = {
+  schemaVersion: "initial-feedback-readiness/1.0.0", profileVersion: "initial-feedback-readiness-profile/1.0.0",
+  checkerSha256: "0".repeat(64), readerSha256: "1".repeat(64), prepareSha256: "2".repeat(64), claimSha256: "3".repeat(64),
+  settleSha256: "4".repeat(64), finishSha256: "5".repeat(64), usageSha256: "6".repeat(64), exportSha256: "7".repeat(64), metadataSha256: "8".repeat(64),
+} as const;
+const ready = () => ({
+  ...SYNTHETIC_RPC_PROFILE,
+  schemaReady: true,
+  readerExecutable: true,
+  prepareExecutable: true,
+  claimExecutable: true,
+  settleExecutable: true,
+  finishExecutable: true,
+  usageExecutable: true,
+  exportExecutable: true,
+});
+function fixture(budgetOn = false) {
+  const text = "Built services using Python";
+  const policy = createInitialFeedbackPublicationPolicy({
+    model: "unit-model",
+    maxOutputTokens: 1200,
+    attemptLimit: 3,
+    budgetPolicyVersion: budgetOn ? "unit-budget/1" : null,
+  });
+  // Real scorer/checksum and strict context validation. UUIDs and Native JSONB
+  // digests are synthetic opaque RPC metadata, never JS emulation/native proof.
+  const result = scoreExtractedResume({
+    text,
+    pageCount: 1,
+    pageTexts: [text],
+    textChecksum: sha(text),
+    jobDescription: "Python required",
+  });
+  const context = {
+    scoringContext: {
+      schemaVersion: "legacy-scoring-input/1.0.0",
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      requestId: null,
+      source: {
+        resumeId: uuid(4),
+        resumeVersionId: uuid(5),
+        fileChecksum: "a".repeat(64),
+        bytes: 1000,
+        mediaType: "application/pdf",
+      },
+      extraction: {
+        text,
+        pageCount: 1,
+        pageTexts: [text],
+        textChecksum: sha(text),
+        extractorVersion: "unpdf-v1",
+        contentSha256: "b".repeat(64),
+      },
+      job: {
+        kind: "owned_job",
+        id: uuid(6),
+        title: "Unit role",
+        description: "Python required",
+        companyName: "",
+        contentSha256: "c".repeat(64),
+      },
+      producer: {
+        parserVersion: "parse-sim-v1",
+        rulesetVersion: "ats-rules-v4",
+        normalizerVersion: "normalizer-v1",
+        taxonomyVersion: "skills-taxonomy-v1",
+      },
+      binding: {
+        schemaVersion: "legacy-scoring-binding/1.0.0",
+        analysisId: uuid(1),
+        ownerId: uuid(2),
+        organizationId: uuid(3),
+        resumeId: uuid(4),
+        resumeVersionId: uuid(5),
+        fileChecksum: "a".repeat(64),
+        textChecksum: sha(text),
+        extractionSha256: "b".repeat(64),
+        jobId: uuid(6),
+        jobSha256: "c".repeat(64),
+        inputBindingSha256: "d".repeat(64),
+      },
+    },
+    deterministicResult: result,
+    currentness: "current",
+    generationEligibility: "eligible",
+  };
+  const attempt = {
+    attemptId: uuid(8),
+    ordinal: 1,
+    state: "reserved",
+    claimedAt: null,
+    usage: null,
+    errorCode: null,
+    budgetAttemptId: null,
+  };
+  const operation = {
+    schemaVersion: "initial-feedback-operation/1.0.0",
+    operationId: uuid(7),
+    analysisId: uuid(1),
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    binding: {
+      schemaVersion: "initial-feedback-binding/1.0.0",
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      resumeId: uuid(4),
+      resumeVersionId: uuid(5),
+      scoringInputSha256: "d".repeat(64),
+      deterministicContentSha256: "e".repeat(64),
+      resultChecksum: result.resultChecksum,
+      sourceTextSha256: sha(text),
+      jobId: uuid(6),
+      jobSha256: "c".repeat(64),
+      policy,
+    },
+    bindingSha256: "f".repeat(64),
+    state: "open",
+    attemptLimit: 3,
+    attempts: [attempt],
+    publicationId: null,
+  };
+  const prepared = InitialFeedbackPrepareSchema.parse({
+    schemaVersion: "initial-feedback-prepare/1.0.0",
+    status: "prepared",
+    operation,
+    attempt,
+    context,
+    dispatchAllowed: false,
+    replayed: false,
+  });
+  const scope = {
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    analysisId: uuid(1),
+    lease: { workerId: "unit-worker", attempt: 2, leaseFence: uuid(10) },
+    policy,
+  };
+  return { prepared, scope };
+}
+
+function producePublication(
+  f: ReturnType<typeof fixture>,
+  completion: InitialFeedbackCompletion,
+  attemptId: string | null,
+) {
+  // Synthetic RPC metadata only. Real compiler/render/scorer own all content,
+  // support, original-index mappings and deterministic checksums. Not Native proof.
+  const d = f.prepared.context!.deterministicResult,
+    b = f.prepared.operation.binding;
+  const render =
+    completion.kind === "assessed"
+      ? renderInitialFeedbackPlan(
+          f.prepared.context!.scoringContext.extraction.text,
+          completion.plan,
+        )
+      : null;
+  return InitialFeedbackPublicationSchema.parse({
+    schemaVersion: "initial-feedback-publication/1.0.0",
+    publicationId: uuid(90),
+    state: completion.kind === "assessed" ? "assessed" : "deterministic_only",
+    reason: completion.kind === "assessed" ? null : completion.reason,
+    binding: b,
+    plan: completion.plan,
+    recordedObservation: completion.observation,
+    generationFailure: completion.generationFailure,
+    ownedSupport: render
+      ? {
+          schemaVersion: "initial-feedback-native-support/1.0.0",
+          scope: "retained_output_only",
+          bindingSha256: f.prepared.operation.bindingSha256,
+          planSha256: "1".repeat(64),
+          parts: render.parts,
+          mapping: render.mapping,
+        }
+      : null,
+    prose: render?.prose ?? null,
+    compatibility: {
+      deterministicResult: d,
+      feedback: render
+        ? {
+            scoreSemantics: BASELINE_SEMANTICS,
+            overallScore: d.score,
+            ATS: {
+              score: d.score,
+              tips: d.ruleTrace
+                .slice(0, 4)
+                .map((r) => ({
+                  type: r.passed ? "good" : "improve",
+                  tip: r.detail,
+                })),
+            },
+            toneAndStyle: legacyCategoryFromProse(render.prose.toneAndStyle),
+            content: legacyCategoryFromProse(render.prose.content),
+            structure: legacyCategoryFromProse(render.prose.structure),
+            skills: legacyCategoryFromProse(render.prose.skills),
+          }
+        : initialFeedbackPartialFeedback(d),
+      writer: render?.prose.writer ?? null,
+    },
+    receipt: {
+      schemaVersion: "initial-feedback-receipt/1.0.0",
+      operationId: f.prepared.operation.operationId,
+      attemptId,
+      publicationId: uuid(90),
+      analysisId: b.analysisId,
+      ownerId: b.ownerId,
+      bindingSha256: f.prepared.operation.bindingSha256,
+      publicationSha256: "2".repeat(64),
+      resultSha256: "3".repeat(64),
+      writerSha256: render ? "4".repeat(64) : null,
+      runId: render ? uuid(91) : null,
+      createdAt: "2026-11-15T00:00:00.123456Z",
+      replayed: false,
+    },
+  });
+}
+const noAi: InitialFeedbackCompletion = {
+  kind: "deterministic_only",
+  reason: "ai_disabled",
+  plan: null,
+  observation: null,
+  generationFailure: null,
+};
+import { createInitialFeedbackPublicationRepository } from "../../app/lib/server/initial-feedback-publication-repository";
+import type { InitialFeedbackOperationClient } from "../../app/lib/server/initial-feedback-operation-repository";
+const audit = { processId: "unit-process", requestId: "unit-request" };
+function harness() {
+  const f = fixture();
+  const publication = producePublication(f, noAi, null);
+  const state: {
+    read: unknown;
+    finish: unknown;
+    exported: unknown;
+    metadata: unknown;
+  } = {
+    read: {
+      schemaVersion: "initial-feedback-read/1.0.0",
+      status: "legacy_unbound",
+      analysisId: f.scope.analysisId,
+      reason: "original_input_or_publication_missing",
+    },
+    finish: {
+      schemaVersion: "initial-feedback-finish/1.0.0",
+      status: "published",
+      publication,
+    },
+    exported: {
+      schemaVersion: "initial-feedback-export/1.0.0",
+      operations: [],
+      attempts: [],
+      publications: [],
+    },
+    metadata: ready(),
+  };
+  const rpc = vi.fn<InitialFeedbackOperationClient["rpc"]>(async (name) => ({
+    data: structuredClone(
+      name === "read_initial_feedback_readiness"
+        ? state.metadata
+        : name === "read_initial_feedback"
+          ? state.read
+          : name === "finish_initial_feedback"
+            ? state.finish
+            : state.exported,
+    ),
+    error: null,
+  }));
+  const repository = createInitialFeedbackPublicationRepository(
+    { rpc },
+    {ownerId:f.scope.ownerId,organizationId:f.scope.organizationId,analysisId:f.scope.analysisId,lease:f.scope.lease},
+    SYNTHETIC_RPC_PROFILE,
+  );
+  return { f, publication, state, rpc, repository };
+}
+function exported(h: ReturnType<typeof harness>) {
+  const op = h.f.prepared.operation,
+    p = h.publication,
+    { receipt, ...core } = p,
+    a = op.attempts[0];
+  return {
+    schemaVersion: "initial-feedback-export/1.0.0",
+    operations: [
+      {
+        operation_id: op.operationId,
+        analysis_id: op.analysisId,
+        owner_id: op.ownerId,
+        organization_id: op.organizationId,
+        resume_id: op.binding.resumeId,
+        resume_version_id: op.binding.resumeVersionId,
+        policy_version: op.binding.policy.version,
+        policy_sha256: op.binding.policy.sha256,
+        binding: op.binding,
+        binding_sha256: op.bindingSha256,
+        attempt_limit: op.attemptLimit,
+        state: "published",
+        publication_id: p.publicationId,
+        created_at: "2026-11-15T00:00:00.123456Z",
+      },
+    ],
+    attempts: [
+      {
+        attempt_id: a.attemptId,
+        operation_id: op.operationId,
+        ordinal: a.ordinal,
+        state: "cancelled_before_dispatch",
+        claim_lease: null,
+        claimed_at: null,
+        usage: null,
+        error_code: null,
+        budget_attempt_id: null,
+        created_at: "2026-11-15T00:00:00.123456Z",
+        owner_id: op.ownerId,
+        organization_id: op.organizationId,
+        analysis_id: op.analysisId,
+      },
+    ],
+    publications: [
+      {
+        id: p.publicationId,
+        operation_id: op.operationId,
+        attempt_id: null,
+        analysis_id: op.analysisId,
+        owner_id: op.ownerId,
+        organization_id: op.organizationId,
+        resume_id: op.binding.resumeId,
+        resume_version_id: op.binding.resumeVersionId,
+        run_id: null,
+        state: p.state,
+        reason: p.reason,
+        binding_sha256: op.bindingSha256,
+        completion: noAi,
+        completion_sha256: "5".repeat(64),
+        publication_core: core,
+        publication_sha256: receipt.publicationSha256,
+        receipt,
+        render: null,
+        plan_sha256: null,
+        render_sha256: null,
+        support_sha256: null,
+        capture_sha256: null,
+        result_content_sha256: receipt.resultSha256,
+        writer_content_sha256: "6".repeat(64),
+        run_content_sha256: null,
+        finish_lease: h.f.scope.lease,
+        process_id: audit.processId,
+        request_id: audit.requestId,
+        created_at: receipt.createdAt,
+      },
+    ],
+  };
+}
+describe("initial-feedback publication RPC boundary (synthetic catalog/rows only)", () => {
+  it.each(["current", "historical"] as const)(
+    "reads actual strict available %s without inventing currentness",
+    async (currentness) => {
+      const h = harness();
+      h.state.read = {
+        schemaVersion: "initial-feedback-read/1.0.0",
+        status: "available",
+        currentness,
+        publication: h.publication,
+      };
+      expect(await h.repository.read()).toEqual(h.state.read);
+      expect(h.rpc.mock.calls).toEqual([
+        ["read_initial_feedback_readiness", {}],
+        [
+          "read_initial_feedback",
+          { p_user_id: h.f.scope.ownerId, p_analysis_id: h.f.scope.analysisId },
+        ],
+      ]);
+    },
+  );
+  it("retains explicit legacy_unbound and pending, not an empty assessed publication", async () => {
+    const h = harness();
+    expect((await h.repository.read()).status).toBe("legacy_unbound");
+    h.state.read = {
+      schemaVersion: "initial-feedback-read/1.0.0",
+      status: "pending",
+      operation: h.f.prepared.operation,
+      attempt: h.f.prepared.operation.attempts[0],
+    };
+    expect((await h.repository.read()).status).toBe("pending");
+  });
+  it("refuses staged reader capability and malformed/missing full metadata before data RPC", async () => {
+    for (const metadata of [
+      null,
+      { ...ready(), readerExecutable: false },
+      { ...ready(), usageSha256: "0".repeat(64) },
+      { ...ready(), oldReady: true },
+    ]) {
+      const h = harness();
+      h.state.metadata = metadata;
+      await expect(h.repository.read()).rejects.toMatchObject({
+        code: "unavailable",
+      });
+      expect(h.rpc).toHaveBeenCalledTimes(1);
+    }
+  });
+  it("correlates publication owner/org/analysis, including self-consistent foreign receipt", async () => {
+    const h = harness(),
+      p = structuredClone(h.publication);
+    p.binding.ownerId = uuid(99);
+    p.receipt.ownerId = uuid(99);
+    h.state.read = {
+      schemaVersion: "initial-feedback-read/1.0.0",
+      status: "available",
+      currentness: "historical",
+      publication: p,
+    };
+    await expect(h.repository.read()).rejects.toMatchObject({
+      code: "unavailable",
+    });
+  });
+  it("finishes exact deterministic-only and unchanged producer numbers using actual native parameter names", async () => {
+    const h = harness();
+    const p = await h.repository.finish(
+      h.f.prepared.operation,
+      null,
+      noAi,
+      audit,
+    );
+    expect(p.compatibility.deterministicResult).toEqual(
+      h.f.prepared.context!.deterministicResult,
+    );
+    expect(h.rpc.mock.calls.at(-1)).toEqual([
+      "finish_initial_feedback",
+      {
+        p_analysis_id: h.f.scope.analysisId,
+        p_lease: h.f.scope.lease,
+        p_operation_id: h.f.prepared.operation.operationId,
+        p_attempt_id: null,
+        p_binding_sha256: h.f.prepared.operation.bindingSha256,
+        p_completion: noAi,
+        p_process_id: audit.processId,
+        p_request_id: audit.requestId,
+      },
+    ]);
+  });
+  it("refuses another completion or receipt binding rather than accepting nonempty saved prose", async () => {
+    const h = harness();
+    const pub = structuredClone(h.publication);
+    pub.receipt.bindingSha256 = "0".repeat(64);
+    h.state.finish = {
+      schemaVersion: "initial-feedback-finish/1.0.0",
+      status: "published",
+      publication: pub,
+    };
+    await expect(
+      h.repository.finish(h.f.prepared.operation, null, noAi, audit),
+    ).rejects.toMatchObject({ code: "unavailable", mutationStatus: "unknown" });
+  });
+  it("refuses invalid audit/foreign operation before any mutation", async () => {
+    const h = harness();
+    await expect(
+      h.repository.finish(h.f.prepared.operation, null, noAi, {
+        ...audit,
+        requestId: "bad\nrequest",
+      }),
+    ).rejects.toMatchObject({ code: "invalid" });
+    expect(h.rpc).not.toHaveBeenCalled();
+  });
+  it("exports complete strict owner rows without current-org/analysis filtering or JSONB digest emulation", async () => {
+    const h = harness();
+    h.state.exported = exported(h);
+    expect(await h.repository.exportOwned()).toEqual(h.state.exported);
+    expect(h.rpc.mock.calls.at(-1)).toEqual([
+      "export_initial_feedback_records",
+      { p_user_id: h.f.scope.ownerId },
+    ]);
+  });
+  it("keeps empty owner export versioned and refuses missing/denied results instead of fallback", async () => {
+    const h = harness();
+    expect(await h.repository.exportOwned()).toEqual(h.state.exported);
+    h.state.exported = null;
+    await expect(h.repository.exportOwned()).rejects.toMatchObject({
+      code: "unavailable",
+    });
+  });
+  it("refuses whole export on foreign owner, incomplete member rows or duplicate publication", async () => {
+    const h = harness(),
+      good = exported(h);
+    for (const bad of [
+      { ...good, operations: [{ ...good.operations[0], owner_id: uuid(99) }] },
+      { ...good, attempts: [] },
+      { ...good, publications: [...good.publications, ...good.publications] },
+    ]) {
+      h.state.exported = bad;
+      await expect(h.repository.exportOwned()).rejects.toMatchObject({
+        code: "unavailable",
+      });
+    }
+  });
+  it("fails oversized export whole without returning a prefix", async () => {
+    const h = harness(),
+      good = exported(h);
+    h.state.exported = {
+      ...good,
+      operations: Array.from({ length: 4097 }, () => good.operations[0]),
+    };
+    await expect(h.repository.exportOwned()).rejects.toMatchObject({
+      code: "unavailable",
+    });
+  });
+  it("bounds stalled read without an ignored-abort follow-on data call", async () => {
+    vi.useFakeTimers();
+    const h = harness();
+    h.rpc.mockImplementationOnce(() => new Promise(() => {}));
+    const repository = createInitialFeedbackPublicationRepository(
+      { rpc: h.rpc },
+      {ownerId:h.f.scope.ownerId,organizationId:h.f.scope.organizationId,analysisId:h.f.scope.analysisId,lease:h.f.scope.lease},
+      SYNTHETIC_RPC_PROFILE,
+      { timeoutMs: 20 },
+    );
+    const check = expect(repository.read()).rejects.toMatchObject({
+      code: "unavailable",
+    });
+    await vi.advanceTimersByTimeAsync(20);
+    await check;
+    vi.useRealTimers();
+    expect(h.rpc).toHaveBeenCalledTimes(1);
+  });
+});

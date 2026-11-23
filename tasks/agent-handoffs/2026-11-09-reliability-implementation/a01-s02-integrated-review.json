@@ -1,0 +1,71 @@
+{
+  "status": "PASS_LOCAL_SOURCE_GATE",
+  "at": "2026-11-13T09:47:56.415596+00:00",
+  "priorBehavior": {
+    "receipt": "a01-s02-integrated-32eadecd-ee67-45d2-b014-e87a5b07d826.json",
+    "sha256": "b90aac885fa3b2667e050b6942a8a9350665ca30887ea1f8d954c55a39a397cd",
+    "tests": 182,
+    "files": 7,
+    "firstFullTypecheck": "FAILED_MISSING_REQUIRED_FIELD_IN_TEST_FIXTURE_ONLY"
+  },
+  "followup": {
+    "receipt": "a01-s02-checks-followup-904c5932-73b9-4fd8-b6a1-15b8c11ebf81.json",
+    "sha256": "1894daa3a6ac2273a91b682a162073fa859cce051fb63468b21338376d8d8eca",
+    "tests": 82,
+    "files": 1,
+    "fullTypesLintWebWorker": "PASS"
+  },
+  "uniqueTestsAcrossTwoReceipts": 264,
+  "fresh264SuiteClaim": false,
+  "currentInputsRehashed": 720,
+  "onlyPriorInputChanged": [
+    "tests/unit/canonical-corrections.test.ts"
+  ],
+  "logs": [
+    {
+      "file": "a01-s02-integrated-32eadecd-ee67-45d2-b014-e87a5b07d826.log",
+      "sha256": "4c32f25dff7bf17e968ea1c97767725cac0af57620e964acaba61b888ec5c57c"
+    },
+    {
+      "file": "a01-s02-checks-followup-904c5932-73b9-4fd8-b6a1-15b8c11ebf81.log",
+      "sha256": "ec387f00e1736f44c5c762c4fbd6644723c15d4d8b3b0cae4980618137762e82"
+    }
+  ],
+  "ownedGroupsConfirmedAbsent": [
+    88057,
+    88082,
+    88665,
+    88684,
+    88707,
+    88724,
+    88751
+  ],
+  "artifactsRehashed": {
+    "build/server/index.js": {
+      "bytes": 996129,
+      "sha256": "40d5768e9a7e352a5982d482f6b8d1096761eb0ca6b3069c41e8e1a5b89eac72"
+    },
+    "build/worker/analysis.mjs": {
+      "bytes": 168501,
+      "sha256": "40cd5faf8baa5d4baff4fa128f4072685c8f807bc7643d138cdaac56fbf81e71"
+    }
+  },
+  "fiveFrozenProducerSourcesUnchanged": {
+    "app/lib/server/parseSim.ts": "5de46cf5a72efc03c7916c1feed8027d92a361d6c9da3757dd0830636534ea07",
+    "app/lib/server/scoring-stage.ts": "fd7d8fa7f9677f03756bf884f80e7470e35ce0b38a5c4f6c1d53dc7984ca86d5",
+    "app/lib/server/atsRules.ts": "3f9e14bdc8c5c3ff13ea591f35dd5d847da5953e2e70a45fa389c090a6ca6947",
+    "app/lib/server/document-evidence.ts": "f4d16c019146924f2390fa764131e3c6b9f69c65531d90315f0a64645a244e67",
+    "app/lib/server/native-evidence-schema.ts": "fa26cede5a7a7f4f4910bd6099b44b1bada463eafbdfeb6fd48e164ecea21e39"
+  },
+  "evidenceTier": "sealed_synthetic_unit_dom_ssr_mocked_owned_storage_static_build",
+  "nativeBrowserDatabaseProvider": "NOT_RUN",
+  "fullCI": "NOT_RUN",
+  "fullA01AndReleaseAcceptance": "OPEN",
+  "independentAgentReview": {
+    "reviewer": "a01_page_review",
+    "status": "ACK_NO_REMAINING_REQUIRED_FINDINGS",
+    "scope": "Exact terminal Root source/receipt review; fixture delta and fallback exception inspected; no tests or service work by reviewer",
+    "fiveFrozenProducersUnchanged": true,
+    "allocation": "RELEASED"
+  }
+}

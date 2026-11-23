@@ -1,0 +1,42 @@
+# AA8/AA9 release evidence and launch checklist
+
+Status: owner-deferred to demo/RC/pre-launch under [ADR-0018](../docs/decisions/0018-solo-prerelease-aa8-aa9-verification.md). This is the separate future research, claim and launch backlog. All ten current AA8/AA9 prerelease engineering tasks and both engineering gates are complete; see [completion tracking](../plan.plan.md), [operator tutorial](../tutorial.md) and [verified closeout](../docs/evaluation/AA8_AA9_ENGINEERING_CLOSEOUT_20261107.md).
+
+These entries are not completed experiments and do not block continued local development. The owner is the sole accountable approver and will conduct launch review; AI subagents supply current technical review. No unavailable reviewer team is required now. Future evidence that supports human/domain/customer claims must retain its actual provenance. This document does not authorize data collection, external contact, providers, publication, migrations, rollout or deployment.
+
+## Traceable deferred requirements
+
+The original task IDs remain the engineering ledger in [todo.md](todo.md). The release IDs below preserve their deferred evidence requirements without presenting them as unfinished software work.
+
+| Release ID | Origin | Evidence required before the corresponding real-world claim or release                                                                                                                                                                                                                                                                                                                      |
+| ---------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R-AA080    | AA080  | Acquire the approved representative planning sample across native/scanned/mixed, layout, experience and locale segments, with documented rights, purpose, retention, exclusions and coverage gaps. Audit provenance, access and deletion for those actual sources. The completed synthetic storage drill does not grant corpus permission.                                                  |
+| R-AA081    | AA081  | For an independent-human annotation claim, obtain two trained independent labels for critical fields, requirements, evidence and expert rubric; adjudicate blind to system output. Agreement must meet the approved floor per family, or revise handbook/data before continuing. AI-known-truth labels do not establish human agreement.                                                    |
+| R-AA082    | AA082  | Freeze the actual permitted representative development/calibration/locked partitions; verify source/hash membership, restricted audited access and person/employer/template/source-family/near-duplicate separation. Current synthetic locks establish software behavior only.                                                                                                              |
+| R-AA083    | AA083  | Fit/revise representative thresholds and weights only on development/calibration data, with rationale, uncertainty, sensitivity, rejected alternatives and rollback version. Adopt no production policy without the required authority. Locked labels must remain inaccessible to calibration.                                                                                              |
+| R-AA084    | AA084  | Evaluate extraction, job intelligence, all scoring dimensions, writer grounding, artifact parity, accessibility, fairness/error, safe failure, latency and cost per released representative segment. Report confidence intervals, sample/cluster justification and failure dispositions; a failed required segment fails the gate regardless of aggregate.                                  |
+| R-AA085    | AA085  | Before public higher-claim copy, record actual versions, intended/prohibited use, composition, metrics, uncertainty, failures, monitoring, rollback and expiry/retest conditions. Review every claim against the locked evidence, covering technical, domain, privacy, fairness and product responsibilities. Current sole-owner accountability does not supply missing empirical evidence. |
+| R-AA086    | AA086  | Release only passed domain/locale/formats after owner launch review. Activate real regression, evidence-quality, complaint/correction, latency, cost and fairness monitoring with drift/stop thresholds and rollback. Keep unsupported segments labeled and stop on missing signals.                                                                                                        |
+| R-AA090    | AA090  | Approve the actual external pilot protocol, employer rubric, visible criteria, notice, override/rationale, correction/appeal, retention, audit, stop conditions and human-decision boundary. Record legal, fairness, security, privacy, domain and product responsibilities; the owner may hold multiple roles.                                                                             |
+| R-AA091    | AA091  | Execute one authorized named-vendor/version/configuration comparison on permitted documents. Retain repeatable ingestion observations, dates, environment/configuration, raw evidence, limitations and errors. Do not infer proprietary scores or general vendor equivalence from a local simulated adapter.                                                                                |
+| R-AA092    | AA092  | Run the authorized allowlisted career-center/recruiter/customer pilot and measure rubric agreement, corrections, comprehension, workflow usefulness, fairness/error, safety, latency and cost. Review scoped findings with human oversight and appeals. No automatic rejection, hidden score or selection-probability claim is permitted.                                                   |
+
+[CONSTRAINTS.md](../CONSTRAINTS.md), the [scoring/authoring specification](../docs/ATS_SCORING_AND_AUTHORING_SPEC.md) and [accepted evaluation design](../docs/decisions/0009-aa0-truth-contract-and-evaluation-design.md) retain the numerical thresholds, sample-size/statistical rules and authority requirements. None were lowered by moving these items. Keep every failed receipt, insufficient segment and unknown measurement.
+
+## Deferred claim gates
+
+These are the original outstanding claim-gate criteria, transferred from the completed phase sections. Checking a software task does not satisfy them.
+
+- [ ] **R-GATE-AA8:** Every required segment meets the approved lower confidence bound and independent reviewers approve construct validity and exact claim language.
+- [ ] **R-GATE-AA9:** Pilot evidence supports only the named domain, locale, vendor/configuration, and workflow; ongoing monitoring, appeals, human oversight, and rollback are operational.
+
+The continuing AA8 copy restriction is unchanged: only after its representative claim gate may copy use the approved scoped domain-level claim; “all industries” remains unsupported until each claimed segment passes. The claim ladder currently permits only the exact reviewed synthetic `Regression-tested` meaning, with activation false. Corpus/domain/vendor/outcome claims remain unachieved.
+
+## Before launch or a new experiment
+
+- [ ] Record the owner's launch review and authorize the exact scope, permissions/retention, target and current version of any customer/vendor run.
+- [ ] Replace unknown or insufficient measurements with actual authorized evidence where required; do not substitute zero, drop documents or relabel synthetic observations.
+- [ ] Reassess expired or changed corpus/labels, code, runtime, model/provider, policy, locale, document class, vendor configuration, monitor thresholds and claim text. Freeze a new version and retain earlier failures.
+- [ ] Obtain explicit deployment/production-activation authorization before changing the deployment hold or promoting flags, policies or claims.
+
+No item here authorizes resuming a deployment. Vercel previews and automatic Git deployments remain disabled; the ignored-build command skips builds. Use Supabase directly for authorized database/storage tests, never a Docker database. Do not run a destructive `test:db` reset as part of this checklist.

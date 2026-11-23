@@ -1,0 +1,143 @@
+{
+  "status": "BASELINE_FAILURE_REPRODUCED_CANDIDATE_NOT_ACCEPTED",
+  "imageID": "sha256:e50b667aec22d78d0316582a136f6253dcf870d84208b7655587f120074c5f12",
+  "buildExitCode": 0,
+  "actualClassExitCode": 1,
+  "classSeconds": 0.101,
+  "totalSeconds": 15.591,
+  "functions": [
+    "initTestCase",
+    "testSignatureCount",
+    "testSignatureSizes",
+    "testSignerInfo",
+    "testSignedRanges",
+    "testPgp",
+    "cleanupTestCase"
+  ],
+  "backendRows": [
+    "gpg",
+    "nss"
+  ],
+  "nonPassIncidents": [
+    {
+      "function": "testPgp",
+      "attributes": {
+        "type": "fail",
+        "file": "./qt6/tests/check_signature_basics.cpp",
+        "line": "311"
+      },
+      "description": "Compared values are not the same\n   Actual   (siginfo0->getSignerName())     : \"\"\n   Expected (std::string { \"Sune Vuorela\" }): \"Sune Vuorela\"",
+      "dataTags": [
+        "gpg"
+      ]
+    }
+  ],
+  "incidentCounts": {
+    "pass": 11,
+    "fail": 1,
+    "skip": 0
+  },
+  "sdkUsage": [
+    {
+      "original": "../src/libpoppler-qt6.so.3.10.0",
+      "installed": "/usr/lib/aarch64-linux-gnu/libpoppler-qt6.so.3.10.0",
+      "sha256": "d8ea8a26e232cc5b1c73d0b8a24759e147dac85a944691aec1167889b6ccd707",
+      "usage": "unused-by-original-as-needed",
+      "loaded": false
+    },
+    {
+      "original": "../../libpoppler.so.147.0.0",
+      "installed": "/usr/lib/aarch64-linux-gnu/libpoppler.so.147.0.0",
+      "sha256": "1f0501fa504e2afc71bf2416459eb9a436a86e0be1431147fffb61d7262a2b8b",
+      "usage": "loaded-and-hash-bound",
+      "loaded": true
+    }
+  ],
+  "neededLibraries": [
+    "libQt6Test.so.6",
+    "libpoppler.so.147",
+    "libgpgmepp.so.6",
+    "libQt6Core.so.6",
+    "libstdc++.so.6",
+    "libc.so.6",
+    "ld-linux-aarch64.so.1"
+  ],
+  "totalReportBytes": 119902,
+  "reportRecords": [
+    {
+      "name": "diagnostic-outcome.json",
+      "bytes": 41216,
+      "sha256": "42463c8cdc06cc234fcd84edda4c36101bab32ad6e0acb17ad2f96ef3404d402",
+      "tarSha256": "3153157d47369609f6179916cf9b46adab4b3ed5dd0d5b6dfc2c00bd5a94da7a"
+    },
+    {
+      "name": "original-configure-only.log",
+      "bytes": 12065,
+      "sha256": "4b8ee29b51d1968ac36a3cd71986051ce7f2bec77fb943c73253695d1cf6547b",
+      "tarSha256": "d05ea9d21691032a76f301d578eb8ce9473cd8d1f5b93dd980ece6d4e2ef6e91"
+    },
+    {
+      "name": "original-moc-only.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tarSha256": "e3c3de6b08348341b041f2c4ba311893c6b11cb1d84feec61879e69c05013eb3"
+    },
+    {
+      "name": "original-object-0.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tarSha256": "07c042267939351c94a26579ea7ec4aa01b86de108ba909332344becfcc190d4"
+    },
+    {
+      "name": "original-object-1.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tarSha256": "71a64a08c5386875b8bdb1540bbe8bd6b9843c9285c3ffb66f966fa6a622f6f6"
+    },
+    {
+      "name": "original-link-baseline-sdk.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tarSha256": "7c531a6198b2e62a9086de3a2c06ad158177d0d967679008733bb651d7a3bc0e"
+    },
+    {
+      "name": "baseline-ldd.log",
+      "bytes": 5963,
+      "sha256": "bfd654fd709644c5c6a3bf59272f1214c6f91804cb0a713f7d1790ca4f2d43e4",
+      "tarSha256": "4bbcc3a576a1c7c99b5c09a7b9eda1e47e6f9e82c643b4f6a42835d072756a3a"
+    },
+    {
+      "name": "baseline-dynamic-metadata.log",
+      "bytes": 2120,
+      "sha256": "c2cccdb2dcf1d76a0adc8682a4173df8a536a2e8cb580ded0b89a3e3a3d953c6",
+      "tarSha256": "2c36c8dffd0f0eaeae35810d50e5b042faf2f107e92d00c67fd129c856051224"
+    },
+    {
+      "name": "full-baseline-signature-class.log",
+      "bytes": 21382,
+      "sha256": "3c7380f805d6a543b5933a3f83368c8dcf8dd16fbe4e55881ec696ee2ce1783e",
+      "tarSha256": "3b2d509f55df3cdd05c9fe1559af970af624370a10990ff764830a653c074bec"
+    },
+    {
+      "name": "sdk-install.json",
+      "bytes": 5632,
+      "sha256": "40346073d486506cc603032ef7118156e65a5d7a8c595bcc6c6e1b2da18b610d",
+      "tarSha256": "e9e41029af06f8f5c880b210027a6419dd43df5e4de561cc50e0239797e6c827"
+    },
+    {
+      "name": "baseline-signature.xml",
+      "bytes": 31524,
+      "sha256": "05705b77c4aeafb8f60d3fbf9354258eedb05805b930332ca2c69f88e656b120",
+      "tarSha256": "f8f7f8f12856ca8a358f8239908d9c10b425449bcf376369de7364ed911693a1"
+    }
+  ],
+  "all16InputsUnchanged": true,
+  "dependencyPrefixActuallyCached": true,
+  "new511Transfer": false,
+  "actualContainerAbsent": true,
+  "freeBytesAfter": 9944694784,
+  "sourceOrAssertionsChanged": false,
+  "candidateAccepted": false,
+  "retryStarted": false,
+  "scannerStillForbiddenUntilRestoration": true
+}

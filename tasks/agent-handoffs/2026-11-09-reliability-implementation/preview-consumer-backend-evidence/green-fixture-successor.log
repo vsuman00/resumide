@@ -1,0 +1,45 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/jd-clause-order-repository.test.ts (23 tests | 1 failed) 8177ms
+   ✓ releases a real clause-order draft from the actual owned typed reader when server enabled 88ms
+   ✓ does no preview work and releases no new data when omitted 15ms
+   ✓ does no preview work and releases no new data when false 15ms
+   ✓ cannot enable the trusted server option through raw read/query options 3ms
+   ✓ returns exact kernel output and preserves old diagnostics/priorities without extra RPC 31ms
+   ✓ explicitly withholds historical selections without substituting a fresh head 12ms
+   ✓ returns no-admitted state for real unsupported target grammar while retaining diagnostics 13ms
+   × returns unsupported state for complete-context limits without removing diagnostics or priorities 7673ms
+   ✓ keeps diagnostics when source page coverage null is unsupported for preview 13ms
+   ✓ keeps diagnostics when source page coverage 2 is unsupported for preview 12ms
+   ✓ counts exactly50 inspected pairs and truthful exhaustion for 49 earlier rejects 90ms
+   ✓ counts exactly50 inspected pairs and truthful exhaustion for 50 earlier rejects 89ms
+   ✓ does not claim completeness when five visible drafts leave unexamined saved pairs: 5 16ms
+   ✓ does not claim completeness when five visible drafts leave unexamined saved pairs: 6 16ms
+   ✓ strictly validates owned context once for a50pair scan and keeps deterministic identity 23ms
+   ✓ does not release preview after final source changes 11ms
+   ✓ does not release preview after final privacy changes 9ms
+   ✓ does not release preview after final head changes 9ms
+   ✓ does not release preview after final canonical-hash changes 9ms
+   ✓ does not release preview after final requirement-hash changes 10ms
+   ✓ does not release preview after final pair changes 9ms
+   ✓ does not release preview after final page-count changes 9ms
+   ✓ rejects wrong-owner initial source instead of hiding it as unsupported preview 2ms
+ ✓ tests/unit/typed-jd-clause-order.test.ts (42 tests) 210ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/jd-clause-order-repository.test.ts > returns unsupported state for complete-context limits without removing diagnostics or priorities
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/unit/jd-clause-order-repository.test.ts:55:1
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 64 passed (65)
+   Start at  11:10:19
+   Duration  8.93s (transform 241ms, setup 0ms, import 417ms, tests 8.39s, environment 0ms)
+

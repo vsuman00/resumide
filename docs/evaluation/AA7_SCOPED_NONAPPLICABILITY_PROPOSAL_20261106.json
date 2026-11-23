@@ -1,0 +1,890 @@
+{
+  "schemaVersion": "aa7-scoped-applicability-proposal/1",
+  "observedAt": "2026-11-06T11:18:36.486392+00:00",
+  "status": "REVIEW_PROPOSAL_NO_FINDING_ACCEPTED",
+  "image": "sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc",
+  "policyVersion": "latex-source/1.0.0",
+  "scope": "Only documented single-file LaTeX compiler worker entrypoint in exact image; not Docker host, generic image users, future plugins or candidate desktop",
+  "rawScannerReceipt": {
+    "path": "docs/evaluation/AA7_SEALED_NATIVE_SECURITY_20261106_COMPARE.json",
+    "sha256": "8d288b04038d3189f8ade41274481d554e1e6a011724c7324f6b6abda582232c",
+    "rawMatches": 947,
+    "rawHigh": 80,
+    "rawMatchesAreNotExploitCount": true
+  },
+  "exactMetadataReceipt": {
+    "path": "docs/evaluation/AA7_EXACT_COMPONENT_METADATA_ATTEMPT2_20261106.json",
+    "sha256": "bdc9a1c40f9c9692df276329e4c71b877018dfb5a7e8f365390194f9c7c3a47f",
+    "exitCode": 0,
+    "ownedContainerAbsent": true
+  },
+  "preservedMetadataFailure": {
+    "path": "docs/evaluation/AA7_EXACT_COMPONENT_METADATA_20261106.json",
+    "sha256": "64e72278766172dff1b69902d9e522805342233c73e24025866074b09856a343",
+    "failure": "Diagnostic16MiB binary-read cap; fixed only diagnostic hashing to bounded streams"
+  },
+  "productionSourceHashes": {
+    "app/lib/server/latex-sandbox.ts": "e7b0b41aee2d83553c29437264524cf71f4fbb9a6bf8b1f760e4041d5eea2477",
+    "scripts/latex-runtime/supervisor.py": "31f37b52a65b46ebce0625026ae4faaa3ea4b35e62b440635af621eb33b26e7c",
+    "scripts/latex-runtime/inspect_pdf.py": "abebf24292b7c591758c818994ddee65db475f7fa1fba6ab81cd9d2ca906e152",
+    "scripts/latex-runtime/landlock.c": "8f4f7caa93f2a875db2038e17fa4558cd5577c59f883d07cd313c06d2993ea7e",
+    "scripts/latex-runtime/texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa"
+  },
+  "productionConfiguration": {
+    "user": "65532:65532",
+    "network": "none",
+    "memory": 536870912,
+    "memorySwap": 536870912,
+    "cpus": 2000000000,
+    "pids": 64,
+    "readOnly": true,
+    "mounts": [],
+    "security": [
+      "no-new-privileges"
+    ],
+    "logDriver": "none"
+  },
+  "productionCapabilityPolicy": "buildDockerArgs uses --cap-drop ALL/no-new-privileges; metadata auditor separately measured CapEff0/NNP1, not relabelled as new production probe",
+  "runtime22Receipt": {
+    "path": "docs/evaluation/AA7_FINAL_NATIVE_RUNTIME_20261106.json",
+    "sha256": "328484d82c99d77e4156024502e27d38e6b23d4021d657ad82979e72a1077048",
+    "unchangedMatrixNotRerun": true
+  },
+  "entrypoints": {
+    "trustedPython": "/opt/latex/supervisor.py; inspect_pdf uses pypdf and fixed URI parsing",
+    "trustedSubprocesses": [
+      "/opt/latex/confine /usr/bin/xetex <fixed arguments>",
+      "/opt/latex/confine /usr/bin/xdvipdfmx <fixed arguments>",
+      "/usr/bin/pdftotext -bbox /scratch/main.pdf /scratch/text.xml"
+    ],
+    "compilerExecAllowlist": [
+      "/usr/bin/xetex",
+      "/usr/bin/xdvipdfmx",
+      "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1"
+    ],
+    "descriptorBoundary": "Supervisor close_fds=True; launcher closes3..63 before exec with64descriptor limit"
+  },
+  "proposals": [
+    {
+      "id": "CVE-2026-76642",
+      "source": "util-linux",
+      "status": "PROPOSED_NOT_ACCEPTED",
+      "proposedDisposition": "NOT_AFFECTED_FOR_EXACT_DOCUMENTED_COMPILER_ENTRYPOINT",
+      "rawFindingsRetained": true,
+      "rawHighPackageMatchCount": 8,
+      "installedPackages": {
+        "bsdutils": "1:2.41.5-0+deb13u1",
+        "libblkid1": "2.41.5-0+deb13u1",
+        "liblastlog2-2": "2.41.5-0+deb13u1",
+        "libmount1": "2.41.5-0+deb13u1",
+        "libsmartcols1": "2.41.5-0+deb13u1",
+        "libuuid1": "2.41.5-0+deb13u1",
+        "login": "1:4.16.0-2+really2.41.5-0+deb13u1",
+        "util-linux": "2.41.5-0+deb13u1"
+      },
+      "capturedVendorUrl": "https://security-tracker.debian.org/tracker/CVE-2026-76642",
+      "capturedVendorRecordSha256": "afe9397fc7de2db1e8574eded63130ada515ac1e6509967897e456417adaec5b",
+      "vulnerableDescription": "util-linux versions through 2.41.5 and 2.42.2 fail to check mount helper exit status before running post-mount hooks, allowing unprivileged users to execute privileged operations on pre-existing filesystems. Attackers can exploit X-mount.idmap or X-mount.owner hooks to clone filesystems with inherited suid bits or modify target inode permissions after a helper fails, achieving privilege escalation.",
+      "invalidationConditions": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "boundaryEvidenceRefs": [
+        "productionSourceHashes",
+        "productionConfiguration",
+        "exactMetadataReceipt",
+        "runtime22Receipt"
+      ],
+      "ownerAcceptance": false,
+      "primaryAdvisory": {
+        "url": "https://github.com/util-linux/util-linux/security/advisories/GHSA-m25x-3hj9-m26f",
+        "retainedPath": "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-licenses/resume_ats/scripts/latex-runtime/native-util-linux/provenance/GHSA-m25x-3hj9-m26f.json",
+        "sha256": "fb040006758657abaab3d5049a6b33e4ea38180afc75bc0f42af30aba371cbed"
+      },
+      "authenticatedBaselineSource": [
+        {
+          "path": "libmount/src/context_mount.c",
+          "sha256": "5c3a1f0cbc1772545f7a912475071b6c8b6b6ecb247f04cdcd98fe0bb1b453ab",
+          "reviewedMarkers": [
+            {
+              "marker": "exec_helper",
+              "lines": [
+                379,
+                527
+              ]
+            },
+            {
+              "marker": "mnt_context_do_mount",
+              "lines": [
+                834,
+                844,
+                856,
+                901,
+                952,
+                998,
+                1060
+              ]
+            }
+          ],
+          "provenance": "Stock2.41.5 with original Debian quilt; not native candidate fixed-source hashes"
+        },
+        {
+          "path": "libmount/src/hook_idmap.c",
+          "sha256": "4034dcd5e4ddb688cb85273bcef4b6161fc487573f58d5dabb1fdd77cf659a38",
+          "reviewedMarkers": [
+            {
+              "marker": "hook_mount_post",
+              "lines": [
+                294,
+                502
+              ]
+            },
+            {
+              "marker": "mount_setattr",
+              "lines": [
+                280,
+                341,
+                345
+              ]
+            }
+          ],
+          "provenance": "Stock2.41.5 with original Debian quilt; not native candidate fixed-source hashes"
+        },
+        {
+          "path": "libmount/src/hook_owner.c",
+          "sha256": "433332c0d37005892f8beec8bc34dccef3f0948ed28467e54611a694446a463d",
+          "reviewedMarkers": [
+            {
+              "marker": "hook_post",
+              "lines": [
+                45,
+                170
+              ]
+            },
+            {
+              "marker": "fchownat",
+              "lines": [
+                74,
+                75
+              ]
+            },
+            {
+              "marker": "chmod",
+              "lines": [
+                64,
+                83,
+                84
+              ]
+            }
+          ],
+          "provenance": "Stock2.41.5 with original Debian quilt; not native candidate fixed-source hashes"
+        }
+      ],
+      "disqualifyingPreconditions": [
+        "Affected mount/nsenter operation is never invoked by fixed supervisor argv",
+        "/usr/bin/mount absent; nsenter is0755 and denied compiler read/exec",
+        "libmount is denied compiler read and absent from all four fixed production-program ldd graphs",
+        "No root/CAP_SYS_ADMIN/privileged host mount input; no caller-controlled privileged descriptors"
+      ],
+      "specificPrecondition": "A privileged mount/libmount path processes fstab/restricted-user X-mount inputs and performs the named mount/helper/post-hook operation; this route is absent from the documented compiler workflow.",
+      "reviewCaveat": "libmount remains installed; source-package absence is not claimed. Fixed ldd graphs are corroboration, not a complete proof against arbitrary future dlopen or a different caller."
+    },
+    {
+      "id": "CVE-2026-78408",
+      "source": "util-linux",
+      "status": "PROPOSED_NOT_ACCEPTED",
+      "proposedDisposition": "NOT_AFFECTED_FOR_EXACT_DOCUMENTED_COMPILER_ENTRYPOINT",
+      "rawFindingsRetained": true,
+      "rawHighPackageMatchCount": 8,
+      "installedPackages": {
+        "bsdutils": "1:2.41.5-0+deb13u1",
+        "libblkid1": "2.41.5-0+deb13u1",
+        "liblastlog2-2": "2.41.5-0+deb13u1",
+        "libmount1": "2.41.5-0+deb13u1",
+        "libsmartcols1": "2.41.5-0+deb13u1",
+        "libuuid1": "2.41.5-0+deb13u1",
+        "login": "1:4.16.0-2+really2.41.5-0+deb13u1",
+        "util-linux": "2.41.5-0+deb13u1"
+      },
+      "capturedVendorUrl": "https://security-tracker.debian.org/tracker/CVE-2026-78408",
+      "capturedVendorRecordSha256": "5ead8dc7a090c927e67152471a501e653f992aabd9e0eb1933519da2b10fa764",
+      "vulnerableDescription": "The nsenter --join-cgroup option opens the target cgroup.procs file as root and leaves that file descriptor open across later namespace and credential changes and across execve(). Because the kernel checks later cgroup migrations using the credentials from the original open, a program run in an attacker-controlled target can inherit root's ability to move host processes between cgroups. After a privileged operator uses --join-cgroup against that target, an unprivileged user can migrate and terminate unrelated root processes.",
+      "invalidationConditions": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "boundaryEvidenceRefs": [
+        "productionSourceHashes",
+        "productionConfiguration",
+        "exactMetadataReceipt",
+        "runtime22Receipt"
+      ],
+      "ownerAcceptance": false,
+      "primaryAdvisory": {
+        "url": "https://github.com/util-linux/util-linux/security/advisories/GHSA-55fx-f4gg-cfhj",
+        "retainedPath": "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-licenses/resume_ats/scripts/latex-runtime/native-util-linux/provenance/GHSA-55fx-f4gg-cfhj.json",
+        "sha256": "f6c921fb4ee704d967a4390d2c27620f425f3159d7a5e3e07b18bef748f77c41"
+      },
+      "authenticatedBaselineSource": [
+        {
+          "path": "sys-utils/nsenter.c",
+          "sha256": "f4a8e083b556c90ce1f9b2b5f4678b6036558b12d0bd62a6fcd194ed9c6b647b",
+          "reviewedMarkers": [
+            {
+              "marker": "open_target_fd",
+              "lines": [
+                157,
+                182,
+                247,
+                314,
+                385,
+                620,
+                628,
+                706,
+                708,
+                710,
+                712
+              ]
+            },
+            {
+              "marker": "join_cgroup",
+              "lines": [
+                539,
+                616,
+                713
+              ]
+            }
+          ],
+          "provenance": "Stock2.41.5 with original Debian quilt; not native candidate fixed-source hashes"
+        }
+      ],
+      "disqualifyingPreconditions": [
+        "Affected mount/nsenter operation is never invoked by fixed supervisor argv",
+        "/usr/bin/mount absent; nsenter is0755 and denied compiler read/exec",
+        "libmount is denied compiler read and absent from all four fixed production-program ldd graphs",
+        "No root/CAP_SYS_ADMIN/privileged host mount input; no caller-controlled privileged descriptors"
+      ],
+      "specificPrecondition": "nsenter --join-cgroup must open cgroup.procs as root then leak that privileged descriptor across namespace/credential changes; fixed subprocesses never execute nsenter and close_fds/launcher descriptor closure are retained.",
+      "reviewCaveat": "libmount remains installed; source-package absence is not claimed. Fixed ldd graphs are corroboration, not a complete proof against arbitrary future dlopen or a different caller."
+    },
+    {
+      "id": "CVE-2026-78409",
+      "source": "util-linux",
+      "status": "PROPOSED_NOT_ACCEPTED",
+      "proposedDisposition": "NOT_AFFECTED_FOR_EXACT_DOCUMENTED_COMPILER_ENTRYPOINT",
+      "rawFindingsRetained": true,
+      "rawHighPackageMatchCount": 8,
+      "installedPackages": {
+        "bsdutils": "1:2.41.5-0+deb13u1",
+        "libblkid1": "2.41.5-0+deb13u1",
+        "liblastlog2-2": "2.41.5-0+deb13u1",
+        "libmount1": "2.41.5-0+deb13u1",
+        "libsmartcols1": "2.41.5-0+deb13u1",
+        "libuuid1": "2.41.5-0+deb13u1",
+        "login": "1:4.16.0-2+really2.41.5-0+deb13u1",
+        "util-linux": "2.41.5-0+deb13u1"
+      },
+      "capturedVendorUrl": "https://security-tracker.debian.org/tracker/CVE-2026-78409",
+      "capturedVendorRecordSha256": "710364099aedcaa75b94ccf7bd8c3097db4d98e16d3624e6ae5d62547e9c492a",
+      "vulnerableDescription": "The X-mount.subdir option uses a detached-tree fast path on Linux 6.15 and later and passes the configured subdirectory to open_tree() with AT_SYMLINK_NOFOLLOW. That flag does not stop intermediate symlink traversal or keep resolution inside the newly mounted filesystem. A local unprivileged user with an fstab-authorized X-mount.subdir entry can attach a host path at the intended mountpoint.",
+      "invalidationConditions": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "boundaryEvidenceRefs": [
+        "productionSourceHashes",
+        "productionConfiguration",
+        "exactMetadataReceipt",
+        "runtime22Receipt"
+      ],
+      "ownerAcceptance": false,
+      "primaryAdvisory": {
+        "url": "https://github.com/util-linux/util-linux/security/advisories/GHSA-8f2p-47x3-43mv",
+        "retainedPath": "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-licenses/resume_ats/scripts/latex-runtime/native-util-linux/provenance/GHSA-8f2p-47x3-43mv.json",
+        "sha256": "c030334a5b2c66209b73ce2521425c1b7d565bbea865be3ec3c3ab9cb6f35d18"
+      },
+      "authenticatedBaselineSource": [
+        {
+          "path": "libmount/src/hook_subdir.c",
+          "sha256": "5a832d08ed196100f1f53f4badb2b9c09fe79f371c9b1bcf5ee273d852c302bc",
+          "reviewedMarkers": [
+            {
+              "marker": "open_tree",
+              "lines": [
+                179,
+                201,
+                203
+              ]
+            },
+            {
+              "marker": "subdir",
+              "lines": [
+                13,
+                24,
+                44,
+                162,
+                164,
+                170,
+                193,
+                200,
+                201,
+                231,
+                235,
+                266,
+                269,
+                270,
+                293,
+                317,
+                333,
+                339,
+                350,
+                354,
+                355,
+                369,
+                379,
+                385,
+                388,
+                390,
+                400,
+                402
+              ]
+            }
+          ],
+          "provenance": "Stock2.41.5 with original Debian quilt; not native candidate fixed-source hashes"
+        }
+      ],
+      "disqualifyingPreconditions": [
+        "Affected mount/nsenter operation is never invoked by fixed supervisor argv",
+        "/usr/bin/mount absent; nsenter is0755 and denied compiler read/exec",
+        "libmount is denied compiler read and absent from all four fixed production-program ldd graphs",
+        "No root/CAP_SYS_ADMIN/privileged host mount input; no caller-controlled privileged descriptors"
+      ],
+      "specificPrecondition": "A privileged mount/libmount path processes fstab/restricted-user X-mount inputs and performs the named mount/helper/post-hook operation; this route is absent from the documented compiler workflow.",
+      "reviewCaveat": "libmount remains installed; source-package absence is not claimed. Fixed ldd graphs are corroboration, not a complete proof against arbitrary future dlopen or a different caller."
+    },
+    {
+      "id": "CVE-2026-78410",
+      "source": "util-linux",
+      "status": "PROPOSED_NOT_ACCEPTED",
+      "proposedDisposition": "NOT_AFFECTED_FOR_EXACT_DOCUMENTED_COMPILER_ENTRYPOINT",
+      "rawFindingsRetained": true,
+      "rawHighPackageMatchCount": 8,
+      "installedPackages": {
+        "bsdutils": "1:2.41.5-0+deb13u1",
+        "libblkid1": "2.41.5-0+deb13u1",
+        "liblastlog2-2": "2.41.5-0+deb13u1",
+        "libmount1": "2.41.5-0+deb13u1",
+        "libsmartcols1": "2.41.5-0+deb13u1",
+        "libuuid1": "2.41.5-0+deb13u1",
+        "login": "1:4.16.0-2+really2.41.5-0+deb13u1",
+        "util-linux": "2.41.5-0+deb13u1"
+      },
+      "capturedVendorUrl": "https://security-tracker.debian.org/tracker/CVE-2026-78410",
+      "capturedVendorRecordSha256": "51f59233a3efc7d44e4bfa22598bf0f718765911601d0f1ffe571b79147a662d",
+      "vulnerableDescription": "A flaw was found in util-linux. Restricted bind mounts take the source path from fstab but do not pin that source before the privileged mount. A local unprivileged user who can replace the authorized source or a writable ancestor can redirect SUID mount(8) to bind another host directory. If the fstab entry also sets X-mount.owner, X-mount.group, or X-mount.mode, root then changes ownership or mode on that redirected inode.",
+      "invalidationConditions": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "boundaryEvidenceRefs": [
+        "productionSourceHashes",
+        "productionConfiguration",
+        "exactMetadataReceipt",
+        "runtime22Receipt"
+      ],
+      "ownerAcceptance": false,
+      "primaryAdvisory": {
+        "url": "https://github.com/util-linux/util-linux/security/advisories/GHSA-rh77-686x-2f2m",
+        "retainedPath": "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-licenses/resume_ats/scripts/latex-runtime/native-util-linux/provenance/GHSA-rh77-686x-2f2m.json",
+        "sha256": "72bff2ae319b07e4574f62cad71e3ca41b6eb0a625d03e1caca86e8f01b41629"
+      },
+      "authenticatedBaselineSource": [
+        {
+          "path": "libmount/src/context.c",
+          "sha256": "b9b8b9e041e5eb46f08c491f88d9bbcadf732775f0026a4aa7339b5ebd458f1a",
+          "reviewedMarkers": [
+            {
+              "marker": "mnt_context_prepare_srcpath",
+              "lines": [
+                1947
+              ]
+            }
+          ],
+          "provenance": "Stock2.41.5 with original Debian quilt; not native candidate fixed-source hashes"
+        },
+        {
+          "path": "libmount/src/hook_owner.c",
+          "sha256": "433332c0d37005892f8beec8bc34dccef3f0948ed28467e54611a694446a463d",
+          "reviewedMarkers": [
+            {
+              "marker": "hook_post",
+              "lines": [
+                45,
+                170
+              ]
+            },
+            {
+              "marker": "fchownat",
+              "lines": [
+                74,
+                75
+              ]
+            },
+            {
+              "marker": "chmod",
+              "lines": [
+                64,
+                83,
+                84
+              ]
+            }
+          ],
+          "provenance": "Stock2.41.5 with original Debian quilt; not native candidate fixed-source hashes"
+        }
+      ],
+      "disqualifyingPreconditions": [
+        "Affected mount/nsenter operation is never invoked by fixed supervisor argv",
+        "/usr/bin/mount absent; nsenter is0755 and denied compiler read/exec",
+        "libmount is denied compiler read and absent from all four fixed production-program ldd graphs",
+        "No root/CAP_SYS_ADMIN/privileged host mount input; no caller-controlled privileged descriptors"
+      ],
+      "specificPrecondition": "A privileged mount/libmount path processes fstab/restricted-user X-mount inputs and performs the named mount/helper/post-hook operation; this route is absent from the documented compiler workflow.",
+      "reviewCaveat": "libmount remains installed; source-package absence is not claimed. Fixed ldd graphs are corroboration, not a complete proof against arbitrary future dlopen or a different caller."
+    },
+    {
+      "id": "CVE-2025-69720",
+      "source": "ncurses",
+      "status": "PROPOSED_NOT_ACCEPTED",
+      "proposedDisposition": "NOT_AFFECTED_FOR_EXACT_DOCUMENTED_COMPILER_ENTRYPOINT",
+      "rawFindingsRetained": true,
+      "rawHighPackageMatchCount": 4,
+      "installedPackages": {
+        "libncursesw6": "6.5+20250216-2",
+        "libtinfo6": "6.5+20250216-2",
+        "ncurses-base": "6.5+20250216-2",
+        "ncurses-bin": "6.5+20250216-2"
+      },
+      "capturedVendorUrl": "https://security-tracker.debian.org/tracker/CVE-2025-69720",
+      "capturedVendorRecordSha256": "8519e53c0a05d30fb472d4fd69948ea77e59f1549061df8ae86b98eb77a6902e",
+      "vulnerableDescription": "The infocmp command-line tool in ncurses before 6.5-20251213 has a stack-based buffer overflow in analyze_string in progs/infocmp.c.",
+      "invalidationConditions": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "boundaryEvidenceRefs": [
+        "productionSourceHashes",
+        "productionConfiguration",
+        "exactMetadataReceipt",
+        "runtime22Receipt"
+      ],
+      "ownerAcceptance": false,
+      "vulnerableFunction": "progs/infocmp.c:analyze_string in infocmp program",
+      "installedComponent": {
+        "bytes": 67832,
+        "compilerExecGranted": false,
+        "compilerReadGranted": false,
+        "compilerResolvedReadGranted": false,
+        "exists": true,
+        "mode": "0o755",
+        "packageOwners": [
+          "ncurses-bin"
+        ],
+        "path": "/usr/bin/infocmp",
+        "resolvedPath": "/usr/bin/infocmp",
+        "sha256": "67e9b35318117a7ddef4de04fd552e8ca5039cada906f74b1ecb7637153a02e6"
+      },
+      "disqualifyingPreconditions": [
+        "Supervisor never invokes infocmp",
+        "Compiler cannot read/execute infocmp",
+        "No ncurses/tinfo library appears in fixed four-program ldd graphs or metadata Python loaded-file graph"
+      ],
+      "reviewCaveat": "No authenticated ncurses C source archive was fetched in this task; function location comes from retained vendor record. No whole-ncurses non-applicability claim."
+    },
+    {
+      "id": "CVE-2026-9538",
+      "source": "perl",
+      "status": "PROPOSED_NOT_ACCEPTED",
+      "proposedDisposition": "NOT_AFFECTED_FOR_EXACT_DOCUMENTED_COMPILER_ENTRYPOINT",
+      "rawFindingsRetained": true,
+      "rawHighPackageMatchCount": 4,
+      "installedPackages": {
+        "libperl5.40": "5.40.1-6+deb13u1",
+        "perl": "5.40.1-6+deb13u1",
+        "perl-base": "5.40.1-6+deb13u1",
+        "perl-modules-5.40": "5.40.1-6+deb13u1"
+      },
+      "capturedVendorUrl": "https://security-tracker.debian.org/tracker/CVE-2026-9538",
+      "capturedVendorRecordSha256": "44ab4ca3d632f89864b6eda6e6c9c60524ac878e27fc474a1348586cf70e5602",
+      "vulnerableDescription": "Archive::Tar versions before 3.10 for Perl allow memory exhaustion via attacker controlled entry size field in tar header.  _read_tar() reads each entry's payload with $handle->read($$data, $block), where $block is derived from the entry's 12-byte size field in the tar header with no upper bound on that value.  A crafted header declaring a multi-gigabyte size causes Perl to allocate a scalar of that size.",
+      "invalidationConditions": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "boundaryEvidenceRefs": [
+        "productionSourceHashes",
+        "productionConfiguration",
+        "exactMetadataReceipt",
+        "runtime22Receipt"
+      ],
+      "ownerAcceptance": false,
+      "vulnerableFunction": "Archive::Tar::_read_tar",
+      "installedComponent": [
+        {
+          "bytes": 3813416,
+          "compilerExecGranted": false,
+          "compilerReadGranted": false,
+          "compilerResolvedReadGranted": false,
+          "exists": true,
+          "mode": "0o755",
+          "packageOwners": [
+            "perl-base"
+          ],
+          "path": "/usr/bin/perl",
+          "resolvedPath": "/usr/bin/perl",
+          "sha256": "b37d5994e1790b1901d23e3939278de303de0eec57b181da0d1ff3f5ca54f3bb"
+        },
+        {
+          "bytes": 78919,
+          "compilerExecGranted": false,
+          "compilerReadGranted": false,
+          "compilerResolvedReadGranted": false,
+          "exists": true,
+          "mode": "0o644",
+          "packageOwners": [
+            "perl-modules-5.40"
+          ],
+          "path": "/usr/share/perl/5.40.1/Archive/Tar.pm",
+          "resolvedPath": "/usr/share/perl/5.40.1/Archive/Tar.pm",
+          "sha256": "b46ebbba5898fa4d050d610aaf79e6a90e90b4f8d44689c3d9e361145d14a704",
+          "sourceMarkers": [
+            {
+              "line": 342,
+              "marker": "sub _read_tar",
+              "sha256": "c80159ea582b1285e73fdad2b2b20431ebc8a68f3ae4a62c396d3a26a7dfd0de"
+            }
+          ]
+        }
+      ],
+      "disqualifyingPreconditions": [
+        "No Perl subprocess or Archive::Tar invocation exists in supervisor/inspector",
+        "Perl interpreter and actual Tar.pm are denied compiler read/exec",
+        "No libperl in fixed-program ldd or metadata Python loaded-file graphs"
+      ],
+      "reviewCaveat": "Archive::Tar remains installed and its affected function is present; only this documented non-Perl execution path is proposed out of scope."
+    },
+    {
+      "id": "CVE-2022-4055",
+      "source": "xdg-utils",
+      "status": "PROPOSED_NOT_ACCEPTED",
+      "proposedDisposition": "NOT_AFFECTED_FOR_EXACT_DOCUMENTED_COMPILER_ENTRYPOINT",
+      "rawFindingsRetained": true,
+      "rawHighPackageMatchCount": 1,
+      "installedPackages": {
+        "xdg-utils": "1.2.1-2"
+      },
+      "capturedVendorUrl": "https://security-tracker.debian.org/tracker/CVE-2022-4055",
+      "capturedVendorRecordSha256": "38f7d0969ac3ddc05d03ddcc4ef8ca36ec720e709c4332b3d5a946c83be532d1",
+      "vulnerableDescription": "When xdg-mail is configured to use thunderbird for mailto URLs, improper parsing of the URL can lead to additional headers being passed to thunderbird that should not be included per RFC 2368. An attacker can use this method to create a mailto URL that looks safe to users, but will actually attach files when clicked.",
+      "invalidationConditions": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "boundaryEvidenceRefs": [
+        "productionSourceHashes",
+        "productionConfiguration",
+        "exactMetadataReceipt",
+        "runtime22Receipt"
+      ],
+      "ownerAcceptance": false,
+      "vulnerableFunction": "xdg-email Thunderbird mailto argument/header handling",
+      "installedComponent": [
+        {
+          "bytes": 28919,
+          "compilerExecGranted": false,
+          "compilerReadGranted": false,
+          "compilerResolvedReadGranted": false,
+          "exists": true,
+          "mode": "0o755",
+          "packageOwners": [
+            "xdg-utils"
+          ],
+          "path": "/usr/bin/xdg-email",
+          "resolvedPath": "/usr/bin/xdg-email",
+          "sha256": "8353dd7dc496ffb7c44bab1e25f8409aba5e96d5225dfb845b8c28b2e83e2592",
+          "sourceMarkers": [
+            {
+              "line": 625,
+              "marker": "thunderbird",
+              "sha256": "fe5ba5110cee905f501093e0e7536cd455f9266903ef5a30ac7429d0b1ac0cda"
+            },
+            {
+              "line": 698,
+              "marker": "thunderbird",
+              "sha256": "314dced199b5085d9caa9eb14681085bacdeec4fd471ba5283f9634532aaaa16"
+            },
+            {
+              "line": 699,
+              "marker": "thunderbird",
+              "sha256": "18d569a8eb1d5a738f54d4f5e558da3a7cb3a4f0f5d5ae9af0fd480da2880f0d"
+            },
+            {
+              "line": 738,
+              "marker": "thunderbird",
+              "sha256": "7bf8f6bbb865adb2cabbb0b961c59313a50f9a4f54f84bd4b24ca65aaa744492"
+            },
+            {
+              "line": 739,
+              "marker": "thunderbird",
+              "sha256": "ab74bf22bdff09cc46eba44ab098018dabc7d25fdd755769cffbe4d7c6421665"
+            },
+            {
+              "line": 764,
+              "marker": "thunderbird",
+              "sha256": "7bf8f6bbb865adb2cabbb0b961c59313a50f9a4f54f84bd4b24ca65aaa744492"
+            },
+            {
+              "line": 765,
+              "marker": "thunderbird",
+              "sha256": "ab74bf22bdff09cc46eba44ab098018dabc7d25fdd755769cffbe4d7c6421665"
+            },
+            {
+              "line": 793,
+              "marker": "thunderbird",
+              "sha256": "3dcfb87b895af31cc0929107d338f84f5a87112ed4503414358f1a0ab92d5c3a"
+            },
+            {
+              "line": 795,
+              "marker": "thunderbird",
+              "sha256": "ab74bf22bdff09cc46eba44ab098018dabc7d25fdd755769cffbe4d7c6421665"
+            },
+            {
+              "line": 862,
+              "marker": "thunderbird",
+              "sha256": "7bf8f6bbb865adb2cabbb0b961c59313a50f9a4f54f84bd4b24ca65aaa744492"
+            },
+            {
+              "line": 863,
+              "marker": "thunderbird",
+              "sha256": "ab74bf22bdff09cc46eba44ab098018dabc7d25fdd755769cffbe4d7c6421665"
+            }
+          ]
+        },
+        {
+          "bytes": 32285,
+          "compilerExecGranted": false,
+          "compilerReadGranted": false,
+          "compilerResolvedReadGranted": false,
+          "exists": true,
+          "mode": "0o755",
+          "packageOwners": [
+            "xdg-utils"
+          ],
+          "path": "/usr/bin/xdg-open",
+          "resolvedPath": "/usr/bin/xdg-open",
+          "sha256": "5afda3f0bda010c98ed4f5d84e305348e1b1e7fd624bca2bf0737b3348de62f9"
+        },
+        {
+          "compilerExecGranted": false,
+          "compilerReadGranted": false,
+          "exists": false,
+          "path": "/usr/bin/thunderbird"
+        }
+      ],
+      "disqualifyingPreconditions": [
+        "Fixed supervisor/inspector never invokes an external URL/email opener",
+        "xdg-email/xdg-open cannot be read/executed by compiler",
+        "Thunderbird executable and package are absent",
+        "PDF URI inspection uses urllib.parse; PDF annotations are not executed by worker"
+      ],
+      "reviewCaveat": "Does not assess software on the candidate machine when an exported link is opened; worker non-applicability is not universal mailto safety."
+    },
+    {
+      "id": "CVE-2026-24882",
+      "source": "gnupg2",
+      "status": "PROPOSED_NOT_ACCEPTED",
+      "proposedDisposition": "NOT_AFFECTED_FOR_EXACT_DOCUMENTED_COMPILER_ENTRYPOINT",
+      "rawFindingsRetained": true,
+      "rawHighPackageMatchCount": 2,
+      "installedPackages": {
+        "gpg": "2.4.7-21+deb13u1+b5",
+        "gpgconf": "2.4.7-21+deb13u1+b5"
+      },
+      "capturedVendorUrl": "https://security-tracker.debian.org/tracker/CVE-2026-24882",
+      "capturedVendorRecordSha256": "a7c3a5e07d5effe420fa4d5213868e3d263b86a73d1f7c71c99bd53168ffb435",
+      "vulnerableDescription": "In GnuPG before 2.5.17, a stack-based buffer overflow exists in tpm2daemon during handling of the PKDECRYPT command for TPM-backed RSA and ECC keys.",
+      "invalidationConditions": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "boundaryEvidenceRefs": [
+        "productionSourceHashes",
+        "productionConfiguration",
+        "exactMetadataReceipt",
+        "runtime22Receipt"
+      ],
+      "ownerAcceptance": false,
+      "primaryAdvisory": {
+        "url": "https://dev.gnupg.org/T8045.html",
+        "binaryPackageUrl": "https://packages.debian.org/trixie/tpm2daemon",
+        "sourceFunctionMapping": {
+          "Makefile.am": {
+            "url": "https://raw.githubusercontent.com/gpg/gnupg/gnupg-2.4.7/tpm2d/Makefile.am",
+            "sha256": "b44149d6ed259c60a4d0a891961012a26be18d7035a52dd1bf6c58819262820a",
+            "bytes": 1295,
+            "interestingLines": [
+              {
+                "line": 24,
+                "text": "libexec_PROGRAMS = tpm2daemon"
+              },
+              {
+                "line": 29,
+                "text": "tpm2daemon_SOURCES = \\"
+              }
+            ]
+          },
+          "tpm2.c": {
+            "url": "https://raw.githubusercontent.com/gpg/gnupg/gnupg-2.4.7/tpm2d/tpm2.c",
+            "sha256": "c7e1d867dc6e286f7c690a89800b8ccdc27e6813772046a2d0910ae1f7a57a4b",
+            "bytes": 27082,
+            "interestingLines": [
+              {
+                "line": 907,
+                "text": "tpm2_ecc_decrypt (ctrl_t ctrl, TSS_CONTEXT *tssc, TPM_HANDLE key,"
+              },
+              {
+                "line": 966,
+                "text": "tpm2_rsa_decrypt (ctrl_t ctrl, TSS_CONTEXT *tssc, TPM_HANDLE key,"
+              }
+            ]
+          },
+          "command.c": {
+            "url": "https://raw.githubusercontent.com/gpg/gnupg/gnupg-2.4.7/tpm2d/command.c",
+            "sha256": "ec06b093aa49b0140a89c6474e386272a381653c45038ac78c7fa3a5fdd349a8",
+            "bytes": 12556,
+            "interestingLines": [
+              {
+                "line": 283,
+                "text": "  \"PKDECRYPT\\n\""
+              },
+              {
+                "line": 291,
+                "text": "cmd_pkdecrypt (assuan_context_t ctx, char *line)"
+              },
+              {
+                "line": 328,
+                "text": "    rc = tpm2_rsa_decrypt (ctrl, tssc, key, pin_cb, crypto,"
+              },
+              {
+                "line": 331,
+                "text": "    rc = tpm2_ecc_decrypt (ctrl, tssc, key, pin_cb, crypto,"
+              },
+              {
+                "line": 383,
+                "text": "    { \"PKDECRYPT\",    cmd_pkdecrypt,  hlp_pkdecrypt },"
+              }
+            ]
+          }
+        }
+      },
+      "vulnerableFunction": "standalone tpm2daemon PKDECRYPT -> tpm2_rsa_decrypt/tpm2_ecc_decrypt",
+      "installedComponent": [
+        {
+          "compilerExecGranted": false,
+          "compilerReadGranted": false,
+          "exists": false,
+          "path": "/usr/lib/gnupg/tpm2daemon"
+        },
+        {
+          "compilerExecGranted": false,
+          "compilerReadGranted": false,
+          "exists": false,
+          "path": "/usr/libexec/tpm2daemon"
+        }
+      ],
+      "disqualifyingPreconditions": [
+        "Affected TPM daemon and TPM/TSS packages are absent in exact216-package metadata",
+        "Primary Makefile builds tpm2daemon as a separate program; affected handlers are mapped to its source",
+        "Neither compiler allowed execution nor trusted supervisor argv includes GnuPG/TPM entrypoints"
+      ],
+      "reviewCaveat": "Raw gpg/gpgconf matches remain; broader GnuPG findings and hypothetical newly installed daemon are not dismissed."
+    }
+  ],
+  "proposalCount": 8,
+  "rawPackageMatchCountWithinProposalScope": 43,
+  "acceptedOrSuppressedFindings": 0,
+  "materialExcludedIssue": {
+    "id": "CVE-2026-7210",
+    "reason": "Production supervisor ET.fromstring consumes Poppler XML; Python-side entropy fix remains separate from Expat2.10 source repair"
+  },
+  "limits": [
+    "No exploit executed and no vulnerability scanner rerun.",
+    "Function/entrypoint non-applicability is a specific review conclusion, not broad unreachable=>safe or risk acceptance.",
+    "Existing ldd/maps and module inventories do not establish a universal dynamic-import closure; trusted source/entrypoint constraints must be reviewed together.",
+    "No native util package adopted; failed native test/build receipts remain.",
+    "Lexical source screening is not the security boundary; macro indirection can create native decoder inputs and scratch assets. No PDF/image/font decoder CVE is dismissed by unsupported syntax.",
+    "These utility conclusions do not claim arbitrary native APIs are unreachable or post-compromise safety after a distinct successful vulnerability."
+  ],
+  "authenticatedUtilBaselineBinding": {
+    "manifestPath": "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-licenses/resume_ats/scripts/latex-runtime/native-util-linux/pins.json",
+    "manifestSha256": "a3394ae25fda21a58b38e45d98ffa0b49122eab0e1e0be885bb9492aa0e014eb",
+    "baselineSourceIndex": {
+      "suite": "trixie-security",
+      "release": "trixie-security.InRelease",
+      "releaseSha256": "d0dbede32d80c3e9462e037ede87b138bdd5e44be10145acf46c9f643388836d",
+      "name": "trixie-security-Sources.xz",
+      "sha256": "62af0f5a1b39263679a788880b48449332ac684c543506a1f35254b8e042b5a4",
+      "size": 261140,
+      "url": "https://deb.debian.org/debian-security/dists/trixie-security/main/source/by-hash/SHA256/62af0f5a1b39263679a788880b48449332ac684c543506a1f35254b8e042b5a4",
+      "sourceVersion": "2.41.5-0+deb13u1"
+    },
+    "baselineArchives": [
+      {
+        "name": "util-linux_2.41.5-0+deb13u1.dsc",
+        "url": "https://deb.debian.org/debian-security/pool/updates/main/u/util-linux/util-linux_2.41.5-0+deb13u1.dsc",
+        "size": 4988,
+        "sha256": "43e9b2cbebd10fdc598c4ad10217c8202c28de53af6eafc892c8e9b5cbf3a3a5"
+      },
+      {
+        "name": "util-linux_2.41.5.orig.tar.xz",
+        "url": "https://deb.debian.org/debian-security/pool/updates/main/u/util-linux/util-linux_2.41.5.orig.tar.xz",
+        "size": 9474992,
+        "sha256": "f586e35d320ff537aab3ffeca37e9ecd482ccbe013590db4429a414d8aa6a728"
+      },
+      {
+        "name": "util-linux_2.41.5-0+deb13u1.debian.tar.xz",
+        "url": "https://deb.debian.org/debian-security/pool/updates/main/u/util-linux/util-linux_2.41.5-0+deb13u1.debian.tar.xz",
+        "size": 107604,
+        "sha256": "5b327ccd22f0f4ed28a389870aa51d04ecedb8693e52a1d122850f2b3188cbf6"
+      }
+    ],
+    "originalQuiltReceipt": {
+      "path": "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-licenses/resume_ats/scripts/latex-runtime/native-util-linux/provenance/patched-source-applicability.json",
+      "sha256": "22a8fc7f00aee5480812f8e9ff6c54c99527b3cf2e6a4e2eb36083bf9465597e"
+    },
+    "candidateFixedSourceDoesNotProveInstalledRepair": true
+  }
+}

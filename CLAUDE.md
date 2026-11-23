@@ -1,63 +1,58 @@
-# Resumide agent guide
+# Resumide project guide for Claude Code
 
-Resumide is a React Router SSR application that combines deterministic ATS compatibility checks with schema-validated qualitative feedback. The current product uses Supabase for authentication, private storage, and durable job state, plus leased workers for analysis and privacy operations.
+@AGENTS.md
 
-## Read first
+Resumide (`ResumeATS`) is a candidate-first resume analysis and authoring app. It compares a resume with a job description (JD), shows the evidence behind compatibility and alignment, and helps the candidate make grounded edits. Build is a separate LaTeX-to-PDF workspace with optional AI suggestions.
 
-Before changing implementation, read these files in order:
+## Start here
 
-1. [`CONSTRAINTS.md`](CONSTRAINTS.md) for the quality floor and proposed Accuracy-v2 gates. Do not weaken it to make a change pass.
-2. [`ARCHITECTURE.md`](ARCHITECTURE.md) for system boundaries and invariants.
-3. [`tasks/plan.md`](tasks/plan.md) for the gated implementation sequence.
-4. [`tasks/todo.md`](tasks/todo.md) for executable task status and evidence.
-5. [`docs/README.md`](docs/README.md) for the documentation map and verification sources.
-6. The relevant ADR in [`docs/decisions/`](docs/decisions/).
-7. Applicable design documents in [`docs/design/`](docs/design/), including the blueprint and feature contract for the surface being changed.
+1. Read [CONTEXT.md](CONTEXT.md) for the current handoff. Check `git status --short`, `git branch --show-current`, `git rev-parse HEAD`, and the relevant diffs. The working tree may contain newer changes than `HEAD`. Preserve existing work.
+2. Find the requested task in [tasks/todo.md](tasks/todo.md). Read its acceptance criteria, dependencies, and evidence in the [reliability plan](tasks/reliability-remediation-plan.md) and [task graph](tasks/reliability-remediation-plan.json). Use the [main plan](tasks/plan.md) for the original roadmap and the [Accuracy-v2 plan](tasks/accuracy-authoring-plan.md) for `AA` tasks. Reliability stages and Accuracy-v2 phases use separate gates.
+3. Read sections 1 and 6 of [CONSTRAINTS.md](CONSTRAINTS.md), then the relevant sections of [ARCHITECTURE.md](ARCHITECTURE.md), the feature design, and the applicable decision record. The shared rules live in the imported [AGENTS.md](AGENTS.md). Load detailed plans and evidence only for the task in scope.
+4. Confirm that the current user request authorizes the work. Take one bounded slice, verify the affected path, and record evidence in the task tracker. Refresh `CONTEXT.md` when handing off implementation. Use the [coordination workflow](docs/AGENT_WORKFLOW.md) for authorized parallel work.
 
-Standing workspace-owner instruction (2026-10-04): before building anything, follow the applicable plan, todo, architecture, constraints, design and decision documents. Identify the active task and verify its dependencies/approval gates before editing implementation. Resolve contradictions or missing decisions with the owner; do not silently substitute your own sequence, scope or architecture. A request to continue is not permission to skip a documented prerequisite. Update status with implementation, verification and approval evidence kept distinct.
+## Handoff checkpoint
 
-Preserve the status vocabulary used by the project: `IMPLEMENTED`, `VERIFIED`, `PARTIAL`, `TARGET`, `DEFERRED`, and `BLOCKED`. Documentation is not evidence by itself. Do not mark a phase or gate complete without its named automated evidence and required human approval. Hosted deployment, restore, notification sink, rollback, policy, and deployment-owned security controls remain separate external gates where noted.
+At the November 22, 2026 handoff, the reliability goal was **paused** on a working tree with changes based on `main` at `a0b2392`. A new session should report or inspect as requested and resume implementation only when the owner asks. Use the current tracker if the checkout has moved on. [Remaining work by stage](tasks/agent-handoffs/2026-11-09-reliability-implementation/remaining-goal-work.md)
 
-### Accuracy-v2 sequencing guard
+- **First parent task to close after resumption is `CR-A01`.** Local extraction and lease checks are recorded. Managed acceptance still needs an approved empty Supabase project, the exact approved schema packet, and a synthetic upload through the real worker. Verify saved evidence, lease recovery, and exact fixture cleanup. [Managed validation action](tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-a01-managed-validation-action.md)
+- **Build has real local compiler and Chrome evidence.** Source editing, PDF preview and byte-matched downloads were exercised locally. Managed Build browser execution, live Build AI acceptance, and release-candidate image qualification remain open. The earlier AA7 owner acceptance applies to the worker and scope recorded in its ADR. [Build runbook](docs/operations/LATEX_CONVERTER.md) · [AA7 decision](docs/decisions/0017-aa7-owner-acceptance-and-aa8-start.md)
+- **Public launch is on hold.** `CR-G01` covers the integrated consumer journey, `CR-G02` covers opt-in feedback and representative validity, and `CR-G03` covers operations acceptance and the owner's launch decision. The owner handles prelaunch review. Keep services free until the owner resumes billing after testing and feedback. [Launch gates](tasks/todo.md#stage-19-progress) · [Solo review decision](docs/decisions/0018-solo-prerelease-aa8-aa9-verification.md) · [Billing deferral](docs/decisions/0019-phase8-billing-prerequisites.md)
 
-Gate AA0 passed on 2026-10-04 through explicit workspace-owner approval of ADR-0009 candidate 1 at `e629a2882b3cc14a63771ae400f4f67a7e4f3f62`. AA000–AA005 logical design contracts are frozen. AA010/AA011 scoped native conformity is accepted. AA012–AA015 engineering is closed and owner-accepted under ADR-0011, but the frozen held-out synthetic field gate fails. Preserve its locked labels and result; AA1 accuracy, calibration and production Gate A4 remain open. Independent reviewers remain deferred. The owner then approved AA2 engineering under ADR-0012/E-003 after the AA1 engineering wrap-up. The 2026-10-12 instruction is to complete AA020–AA024 and feature-test on localhost before final deployment planning. AA2 engineering is implemented; see `docs/evaluation/AA2_ENGINEERING_CLOSEOUT.md` for its final local verification and formal gate status. E-003 does not authorize formal Gate AA2 acceptance or release while AA1 dependencies are unresolved. Uncertain evidence stays unconfirmed and unscored. Real-data access, external providers, AA2 hosted migration and deployment remain unauthorized. Never infer gate sign-off from green CI. Preserve existing implementation/migrations; do not reset history or roll back schema without a scoped recovery decision.
+## System map
 
-Current owner direction (2026-10-12): proceed to Phase AA3 after AA2 local engineering. The JD review/persistence/parser and bounded model/taxonomy/market contracts are now implemented for local review. Read `docs/evaluation/AA3_ENGINEERING_STATUS.md` and the first-domain review candidate before extending them. Formal Gate AA3 is not passed: domain review, adopted taxonomy/mapping validation, representative corpus/annotation and calibration remain open. Keep both AA2 and AA3 review paths unscored, flags default-off, and hosted deployment deferred until final project wrap-up. Synthetic regression and adapter checks are not real provider or domain validity evidence.
+- Node.js 22, npm, TypeScript, React Router SSR, Vite, and a modular monolith with leased background workers. [Runtime dependencies](package.json) · [Architecture](ARCHITECTURE.md)
+- [Route registry](app/routes.ts) maps the UI and resource routes. `app/routes/` owns route handlers, `app/components/` owns UI, and `app/lib/server/` owns server-only logic. `~/*` resolves to `app/*`. Generate route types through the existing tooling.
+- The analysis path starts with `/upload` and `POST /api/analyze`. The worker claims queued analyses, extracts document evidence, and publishes guarded stage results. The `/analysis/:id` workspace has evidence, canonical resume, JD requirements, scoring, authoring, and export routes. [Analysis worker](scripts/run-worker.ts) · [Route registry](app/routes.ts)
+- Supabase provides PostgreSQL, Auth, and private Storage. Schema evolution is forward-only under [supabase/migrations/](supabase/migrations/). Keep owner, consent, version, lease, and retry checks on the server. Verify privacy changes through the actual export, deletion, and recovery paths. [Privacy worker](scripts/run-privacy-worker.ts) · [Privacy data map](docs/security/PRIVACY_DATA_MAP.md)
+- `/build` edits LaTeX and previews a downloadable PDF. `/build/compile` uses the isolated compiler and `/build/suggest` is the separate consent-gated AI entry point. Users can manually upload the downloaded PDF into the checker. Build compilation works independently of analysis and AI. [Build design](docs/design/LATEX_CONVERTER.md) · [Compiler runbook](docs/operations/LATEX_CONVERTER.md)
 
-Current AA4 owner authorization (2026-10-12): “Then go for the AA4 phase, complete it's tasks fully, with full verification.” ADR-0013/E-004 explicitly permits local AA040–AA046 engineering despite the upstream formal gates. Local engineering is complete and verified (653 tests, 49 browser checks, 43 AA4 DB assertions, upstream regressions, populated restore and cleanup); read `docs/evaluation/AA4_ENGINEERING_CLOSEOUT.md` and `docs/design/SCORING_V2_REVIEW.md` for final verification/status. The default-off diagnostics read model writes no scores, binds selected immutable source/canonical/JD versions, rejects stale/unauthorized/deleted inputs and preserves null authoritative dimensions. New model output is cited prose only; compatibility placeholders are hidden and historical numeric values retain legacy labels. E-004 does not permit activation of weights/calibration, real providers/corpora, hosting, release or Git publication. Formal Gate AA4 remains open. Do not require an unavailable independent reviewer to complete the authorized local engineering work, and do not infer formal reviewer acceptance.
+## Feature contracts and verification records
 
-Current AA5 owner instruction: “Okay, so go for the next phase AA5,” after disclosure of open Gate AA4. ADR-0014/E-005 authorizes local AA050–AA057 engineering and necessary additive local storage. The owner accepted the AA5 engineering closeout on 2026-10-14 with “I approved.” Local engineering is complete and verified (675 tests, 51 browser checks, 40 authoring DB assertions, upstream regressions, fresh schema lint, populated restore and cleanup). Read `docs/evaluation/AA5_ENGINEERING_CLOSEOUT.md` and `docs/design/CANDIDATE_AUTHORING_WORKSPACE.md`. Authoring is default-off, on the private analysis workspace; actions use source/ownership/CAS/idempotency guards and an immutable ledger with privacy export/deletion/restore. Candidate clarification does not establish source accuracy. Generated patches are limited to strict known-fact reconstructions; no provider/model is adopted. Numeric projections/deltas stay null. Formal AA5 acceptance and upstream gates remain open; hosted deployment/publication remains deferred.
+| Work area                               | Read for the active task                                                                                                                                                                                                                                                                                                                              |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Extraction, OCR, and corrections        | [Evidence review](docs/design/DOCUMENT_EVIDENCE_REVIEW.md), [canonical resume](docs/design/CANONICAL_RESUME_WORKSPACE.md), [OCR protocol](docs/evaluation/OCR_RELIABILITY_PROTOCOL.md), [OCR worker](docs/operations/OCR_WORKER.md)                                                                                                                   |
+| JD analysis, ATS scoring, and authoring | [Product scoring and authoring spec](docs/ATS_SCORING_AND_AUTHORING_SPEC.md), [JD review](docs/design/JOB_INTELLIGENCE_REVIEW.md), [scoring review](docs/design/SCORING_V2_REVIEW.md), [authoring workspace](docs/design/CANDIDATE_AUTHORING_WORKSPACE.md)                                                                                            |
+| PDF and DOCX exports                    | [Verified core artifacts](docs/design/VERIFIED_CORE_ARTIFACTS.md), [canonical version and rendering decision](docs/decisions/0007-canonical-resume-and-verified-rendering.md)                                                                                                                                                                         |
+| UI and accessibility                    | [Design index](docs/design/README.md), [product design blueprint](docs/design/PRODUCT_DESIGN_BLUEPRINT.md), and the relevant feature design                                                                                                                                                                                                           |
+| Identity, security, and operations      | [Auth provider contract](docs/decisions/0022-auth-provider-contract.md), [threat model](docs/security/THREAT_MODEL.md), [egress rules](docs/security/EGRESS.md), [managed testing](docs/operations/MANAGED_TESTING.md), [backup and restore](docs/operations/BACKUP_RESTORE.md), [dependency dispositions](docs/evaluation/DEPENDENCY_DISPOSITION.md) |
 
-## Stack and layout
+Versioned deterministic rules own numbers. Keep document compatibility and JD alignment distinct, preserve historical score semantics, and withhold authoritative scores when evidence or calibration is insufficient. AI provides validated prose or reviewable proposals grounded in resume evidence and confirmed facts. Preserve provenance, source versions, frozen benchmarks, and failed receipts. Report what was implemented, what was verified and where, and what still needs owner or release approval.
 
-- Node.js 22, React 19, React Router 7 framework/SSR mode, TypeScript 5, Vite 6, and Tailwind CSS 4.
-- Supabase PostgreSQL, Auth, and private Storage.
-- OpenAI Structured Outputs with Zod for qualitative feedback.
-- Application code lives in `app/`; server workers and scripts live in `scripts/`; SQL migrations live in `supabase/migrations/`.
-- `~/*` resolves to `./app/*`. Generated route types must not be edited by hand.
+## Run and verify
 
-## Common commands
+Use [package scripts](package.json) and [CI](.github/workflows/ci.yml) for exact commands. `npm run dev` reads local environment configuration and can start the analysis worker alongside the web server. Confirm it points at the intended test environment before starting it.
 
-```bash
-npm ci
-npm run dev
-npm run verify:ci
-npm run test:db
-npm run test:e2e
-npm run test:hosted:phase4
-npm run test:hosted:rls
-```
+| Purpose                        | Command                                                                                          |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| Install from the lockfile      | `npm ci`                                                                                         |
+| Local UI and worker            | `npm run dev`                                                                                    |
+| Focused regression             | `npm test -- tests/unit/evidence-review.test.ts` (replace the test path with the affected suite) |
+| Type and lint checks           | `npm run typecheck`, `npm run lint`                                                              |
+| Build web, then worker         | `npm run build`, then `npm run build:worker`                                                     |
+| Build and Build AI unit checks | `npm run test:latex`, `npm run test:build-ai`                                                    |
+| Integrated checks              | `npm run verify:ci` when the required dependencies and authorized test targets are available     |
 
-Use the focused command that matches the change, then run `npm run verify:ci` before handoff when the environment permits it. Keep `.env` and all secret values local; never commit credentials or place server secrets in browser code.
+Use synthetic fixtures by default. Use direct Supabase for approved database and Auth tests, and reserve Docker for worker runtimes. The legacy `npm run test:db` resets a local Docker-backed Supabase database and falls outside the current testing scope. Follow the managed runbook for target approval, schema verification, fixture cleanup, and protected credentials. For browser work, use Chrome or Chrome DevTools. Keep macOS settings and VoiceOver untouched.
 
-## Engineering rules
-
-- Keep migrations forward-only and pair schema changes with recovery notes.
-- Enforce tenant ownership, consent, private storage, same-origin checks, and bounded inputs at the server boundary.
-- Keep resume text, prompts, tokens, and other PII out of logs, metrics, and client telemetry.
-- Treat deterministic scoring and parse evidence as the source of truth; AI feedback is bounded and schema-validated.
-- Preserve unrelated dirty work. Use `apply_patch` for focused edits and do not reset or clean user-owned files.
-- Update the appropriate plan, task, ADR, or runbook when behavior or an operational decision changes.
-- Review links and status claims whenever documentation moves.
-
-Current AA6 owner instruction (2026-10-14): “Go to next phase AA6, start implementation completly.” ADR-0015/E-006 authorizes local synthetic AA060–AA065 engineering. Read `docs/evaluation/AA6_ENGINEERING_CLOSEOUT.md` and `tasks/aa6-local-engineering-plan.md`. The default-off private preview/PDF/DOCX path uses one canonical plan and independent parse-back, with current-owner/version checks before download. Local parity tests do not establish approved-viewer, assistive-technology, representative-corpus or formal Gate AA6 acceptance. No hosted migration, deployment or publication is authorized.
+Treat any real resume/JD, hosted write, live provider call, Git publication, or deployment as a separately authorized action. Keep secrets, candidate data, and prompts out of commits, logs, screenshots, and handoffs. For documentation-only changes, verify formatting and links and run `git diff --check`.

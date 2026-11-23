@@ -1,0 +1,77 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/privacy-operations.test.ts (35 tests | 1 failed | 34 skipped) 7ms
+     ↓ exports immutable evidence and corrections only through the request owner's filters
+     ↓ fails export closed when document_evidence_attempts cannot be read
+     ↓ fails export closed when evidence_corrections cannot be read
+     ↓ fails export closed when canonical export RPC cannot be read
+     ↓ fails export closed when the canonical snapshot is incomplete
+     ↓ fails export closed when JD requirements cannot be exported
+     ↓ builds a versioned export manifest without raw resume text
+     ↓ calculates a UTC retention cutoff
+     ↓ completes an export request and is safe to replay
+     ↓ deletes every object before completing deletion
+     ↓ keeps a retention item retryable when object deletion fails
+     ↓ keeps all ten nonempty metadata collections from the actual workspace RPC consumer
+     ↓ fails closed when required candidateCorrectionOperations is absent
+     ↓ fails closed when required candidateCorrectionAssignments is absent
+     ↓ fails closed when required candidateCorrectionApplications is absent
+     ↓ fails closed when required canonicalCorrectionSnapshots is absent
+     ↓ fails closed when required canonicalCorrectionSnapshotFacts is absent
+     ↓ fails closed when required candidateEntryAssociationBatches is absent
+     ↓ fails closed when required candidateEntryAssociationGroups is absent
+     ↓ fails closed when required candidateEntryAssociationMembers is absent
+     ↓ fails closed when required canonicalEntryAssociationSnapshots is absent
+     ↓ fails closed when required canonicalEntryAssociationLinks is absent
+     ↓ fails closed on malformed or foreign candidateCorrectionOperations without exposing row data
+     ↓ fails closed on malformed or foreign candidateCorrectionAssignments without exposing row data
+     ↓ fails closed on malformed or foreign candidateCorrectionApplications without exposing row data
+     ↓ fails closed on malformed or foreign canonicalCorrectionSnapshots without exposing row data
+     ↓ fails closed on malformed or foreign canonicalCorrectionSnapshotFacts without exposing row data
+     ↓ fails closed on malformed or foreign candidateEntryAssociationBatches without exposing row data
+     ↓ fails closed on malformed or foreign candidateEntryAssociationGroups without exposing row data
+     ↓ fails closed on malformed or foreign candidateEntryAssociationMembers without exposing row data
+     ↓ fails closed on malformed or foreign canonicalEntryAssociationSnapshots without exposing row data
+     ↓ fails closed on malformed or foreign canonicalEntryAssociationLinks without exposing row data
+     ↓ declares five private stores, inherited privacy guards and a guarded stable complete export
+     ↓ pins neutral reference data and finite deferred lifecycle controls without a SQL runner
+     × preserves all five nonempty regroup arrays and the old ten through the actual RPC consumer 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/privacy-operations.test.ts > complete owned regroup metadata export > preserves all five nonempty regroup arrays and the old ten through the actual RPC consumer
+AssertionError: expected undefined to deeply equal [ { …(5) } ]
+
+- Expected:
+[
+  {
+    "base_revision": 1,
+    "command": {
+      "operation": "synthetic-whole-entry-regroup",
+    },
+    "id": "synthetic-regroup-batch",
+    "owner_id": "regroup-owner",
+    "result_revision": 2,
+  },
+]
+
++ Received:
+undefined
+
+ ❯ tests/unit/privacy-operations.test.ts:686:37
+    684|       ...regroupMetadataCollections,
+    685|     ])
+    686|       expect(manifest.records[key]).toEqual(records[key]);
+       |                                     ^
+    687|     expect(manifest.records.canonicalResumeVersions).toEqual(
+    688|       records.canonicalResumeVersions,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 34 skipped (35)
+   Start at  21:35:16
+   Duration  182ms (transform 65ms, setup 0ms, import 108ms, tests 7ms, environment 0ms)
+

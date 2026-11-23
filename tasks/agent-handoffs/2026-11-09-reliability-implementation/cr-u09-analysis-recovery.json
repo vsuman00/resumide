@@ -1,0 +1,33 @@
+{
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "worktree": "dirty",
+  "nodeVersion": "22.23.4",
+  "tier": "local_browser_with_simulated_status_and_owner_dto_with_simulated_postgrest",
+  "observedBaselineFailures": 11,
+  "focusedTestsPassed": 38,
+  "chromiumTestsPassed": 41,
+  "newChromiumTestsPassed": 7,
+  "managedStatusVerified": false,
+  "workerReadinessVerified": false,
+  "actualUploadOcrVerified": false,
+  "testedSources": {
+    "app/routes/api.analysis-status.ts": "e5d03080487127d78335ae76057b0b38a3eaf61149d189850e597e1613a28861",
+    "app/routes/analysis.tsx": "16ef1eaf8e91b77daf37e6a6a6e2bb073bf2800f5331c712e61d2143e8291f77",
+    "app/components/StageTimeline.tsx": "2bec73315ce1cbfea42caadcf16a73225dedb2d0975d6320d9c0a04b439ff2a2",
+    "tests/unit/analysis-status.test.ts": "f8a40b67f15cc43ac3f554dbd971ab25b6c0a3a75e788a1c6b066cb872291e1f",
+    "e2e/smoke.spec.ts": "c6272a6d42011aefb1cf171721793d20e4a96e87875f4e094a9587bdfe89f7dc"
+  },
+  "commands": [
+    "npm run typecheck",
+    "npm run lint",
+    "npm run build",
+    "npm run build:worker",
+    "npm test -- tests/unit/analysis-status.test.ts tests/unit/analysis-state.test.ts tests/unit/analysis-cancel.test.ts tests/components/WorkspaceRepairs.test.tsx",
+    "playwright test --config=playwright.public.config.ts e2e/smoke.spec.ts e2e/phase6.spec.ts --workers=2"
+  ],
+  "logs": {
+    "red": "d18728f153e07aca17f9735a580c89937beac3e34bf8c2ef113a56607878e11e",
+    "focused": "67d36ec98dd9b770a466c2fe5dddf6f05a8c1f66032435362f8b9d03259e598e",
+    "chromium": "1708b74e3959383ebe5c678e71d6f630f67b258b490f594e756e93466a5d9cbe"
+  }
+}

@@ -1,0 +1,58 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+stderr | tests/components/CanonicalEntryRegroupReview.test.tsx > saved whole-entry regroup consumer > current canonical route lacks the saved-entry regroup review
+No `HydrateFallback` element provided to render during initial hydration
+
+ ❯ tests/components/CanonicalEntryRegroupReview.test.tsx (18 tests | 1 failed) 4648ms
+     ✓ current canonical route lacks the saved-entry regroup review 153ms
+     ✓ uses explicit actual fact choices and full Core diff while denied saving stays unavailable 243ms
+     ✓ retains before transport and manually resumes the same original after reload and head movement  632ms
+     ✓ irreversibly invalidates previews on edit/revert, loader refresh and persisted history  412ms
+     ✓ rejects invalid retained metadata expired without automatic actions 50ms
+     ✓ rejects invalid retained metadata foreign without automatic actions 49ms
+     ✓ rejects invalid retained metadata oversized without automatic actions 48ms
+     ✓ rejects invalid retained metadata checkbox without automatic actions 48ms
+     × keeps the original TTL on an ambiguous retry 230ms
+     ✓ retains metadata and withholds success when an actual SDK receipt fails correlation 252ms
+     ✓ preserves the exact pending request without offering apply when historical diff is unavailable 109ms
+     ✓ reports storage failure and retains an honest in-memory retry 233ms
+     ✓ keeps busy guards and discards cancelled A with a newer B=false 211ms
+     ✓ keeps busy guards and discards cancelled A with a newer B=true 289ms
+     ✓ offers recovery after a definite conflict without automatically clearing the original request  379ms
+     ✓ discards only on explicit click without a request and requires a new preview and unchecked acknowledgement  582ms
+     ✓ keeps pending and historical details when local storage removal fails  388ms
+     ✓ disables discard during a real in-flight resume and retains the request  338ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/CanonicalEntryRegroupReview.test.tsx > saved whole-entry regroup consumer > keeps the original TTL on an ambiguous retry
+AssertionError: expected <input required …(4)></input> to be null
+
+- Expected:
+null
+
++ Received:
+<input
+  name="wholeEntryAcknowledgement"
+  required=""
+  type="checkbox"
+  value="accepted"
+/>
+
+ ❯ tests/components/CanonicalEntryRegroupReview.test.tsx:654:7
+    652|         name: /I reviewed the whole affected entries/,
+    653|       }),
+    654|     ).toBeNull();
+       |       ^
+    655|     fireEvent.click(
+    656|       screen.getByRole("button", { name: "Review retained request" }),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 17 passed (18)
+   Start at  13:52:21
+   Duration  5.33s (transform 236ms, setup 0ms, import 370ms, tests 4.65s, environment 253ms)
+

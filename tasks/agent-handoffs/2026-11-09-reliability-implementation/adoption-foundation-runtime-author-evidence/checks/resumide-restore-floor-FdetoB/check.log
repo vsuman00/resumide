@@ -1,0 +1,59 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ✓ tests/unit/restore-floor.test.ts (30 tests) 874ms
+ ❯ tests/unit/restore-admission.test.ts (30 tests | 1 failed) 2194ms
+     ✓ orders durable quarantine, actual fence, durable floor, one transition, commit proof and ready before reopening 97ms
+     ✓ requires all trusted adapters without a default allow implementation 23ms
+     ✓ refuses malformed or stale fence evidence 0 before any transition 51ms
+     ✓ refuses malformed or stale fence evidence 1 before any transition 54ms
+     ✓ refuses malformed or stale fence evidence 2 before any transition 51ms
+     ✓ refuses malformed or stale fence evidence 3 before any transition 42ms
+     ✓ does not advance or transition after a fence adapter fails 37ms
+     ✓ does not transition if durable floor acknowledgement fails 42ms
+     ✓ never infers commit from counts or retries an uncertain native transition 75ms
+     ✓ requires exact committed instance and guards instead of Boolean/echo/count success 0 71ms
+     ✓ requires exact committed instance and guards instead of Boolean/echo/count success 1 68ms
+     ✓ requires exact committed instance and guards instead of Boolean/echo/count success 2 39ms
+     ✓ reconciles an acknowledged commit at the exact generation without another transition 96ms
+     ✓ unknown recovery permits neither retry nor ready and cannot manufacture a recovery grant 87ms
+     ✓ proven noncommit permits only a new fenced higher generation, with a one-use unforgeable grant 132ms
+     ✓ refuses a commit witness whose generation differs from the prospective floor 53ms
+     ✓ cancellation while fencing leaves quarantine and prevents a late destructive call 70ms
+     ✓ shared deadline returns before an ignored native call completes and never publishes late ready 144ms
+     ✓ a delayed older controller cannot publish ready after a successor acquires authority 67ms
+     × failed ready durability or reopening never returns admission success 74ms
+     ✓ binds the intended ready CAS token before an uncertain publication acknowledgement 96ms
+     ✓ an ignored delayed reopen cannot outlive cancellation or reopen under a stale token 99ms
+     ✓ rejects authentic older candidate despite valid manifest checksums 87ms
+     ✓ rejects authentic missing-guard candidate despite valid manifest checksums 86ms
+     ✓ rejects forged candidate epoch/timestamp rather than treating them as authority 81ms
+     ✓ accepts only authentic current checkpoint provenance, without re-running the transition 101ms
+     ✓ rejects a pre-clock snapshot after the first account preparation cutover boundary 88ms
+     ✓ rejects a pre-clock snapshot after the first root retirement capture cutover boundary 81ms
+     ✓ rejects a pre-clock snapshot after the final expiry fold cutover boundary 81ms
+     ✓ rejects missing state and invalid/cancelled caller bounds without adapter calls 17ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/restore-admission.test.ts > restore quarantine and admission > failed ready durability or reopening never returns admission success
+RestoreFloorError: Independent restore authority is unavailable.
+ ❯ unavailable app/lib/server/restore-floor.ts:24:27
+     22|   }
+     23| }
+     24| const unavailable = () => new RestoreFloorError();
+       |                           ^
+     25| export function floorNumber(value: unknown): string {
+     26|   if (typeof value !== "string" || !/^(0|[1-9][0-9]{0,18})$/u.test(val…
+ ❯ RestoreFloorStore.bounded app/lib/server/restore-floor.ts:60:18
+ ❯ tests/unit/restore-admission.test.ts:69:218
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 59 passed (60)
+   Start at  13:37:27
+   Duration  2.34s (transform 77ms, setup 0ms, import 128ms, tests 3.07s, environment 0ms)
+
+JSON report written to /tmp/resumide-restore-floor-FdetoB/tests.json

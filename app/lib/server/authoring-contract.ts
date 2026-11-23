@@ -9,6 +9,20 @@ import {
   ScoreDiagnosticsSchema,
   type ScoreDiagnostics,
 } from "./score-v2-engine";
+import type { TypedScoreDiagnostics } from "./typed-score-diagnostics";
+export const TYPED_AUTHORING_PAUSED_MESSAGE =
+  "Typed requirement coverage is available for review. Coverage-driven proposals remain paused; use the canonical review page for independent corrections.";
+export class TypedAuthoringPausedError extends Error {
+  constructor() {
+    super(TYPED_AUTHORING_PAUSED_MESSAGE);
+  }
+}
+export function assertAuthoringDiagnosticsAllowed(
+  diagnostics: ScoreDiagnostics | TypedScoreDiagnostics,
+): asserts diagnostics is ScoreDiagnostics {
+  if (diagnostics.score.producerVersion.startsWith("score-v2/typed-"))
+    throw new TypedAuthoringPausedError();
+}
 export const ClarificationKind = z.enum([
   "result",
   "measurement",
@@ -126,8 +140,9 @@ export function buildSuggestion(
   raw: unknown,
   factId: string,
   pattern: z.infer<typeof BulletPattern>,
-  diagnostics: ScoreDiagnostics,
+  diagnostics: ScoreDiagnostics | TypedScoreDiagnostics,
 ): SuggestionPatch {
+  assertAuthoringDiagnosticsAllowed(diagnostics);
   const doc = CanonicalResumeDraftSchema.parse(raw),
     score = ScoreDiagnosticsSchema.parse(diagnostics);
   if (score.score.canonicalVersionId !== doc.versionId)
@@ -176,8 +191,9 @@ export function buildSuggestion(
 export function validateSuggestion(
   raw: unknown,
   doc: CanonicalResumeDraft,
-  diagnostics: ScoreDiagnostics,
+  diagnostics: ScoreDiagnostics | TypedScoreDiagnostics,
 ) {
+  assertAuthoringDiagnosticsAllowed(diagnostics);
   const patch = SuggestionPatchSchema.parse(raw);
   const expected = buildSuggestion(
     doc,
@@ -200,8 +216,9 @@ export function validateSuggestion(
 }
 export function buildFindings(
   doc: CanonicalResumeDraft,
-  diagnostics: ScoreDiagnostics,
+  diagnostics: ScoreDiagnostics | TypedScoreDiagnostics,
 ) {
+  assertAuthoringDiagnosticsAllowed(diagnostics);
   if (diagnostics.score.canonicalVersionId !== doc.versionId)
     throw Error("STALE_DIAGNOSTICS");
   const first = (types: string[]) =>

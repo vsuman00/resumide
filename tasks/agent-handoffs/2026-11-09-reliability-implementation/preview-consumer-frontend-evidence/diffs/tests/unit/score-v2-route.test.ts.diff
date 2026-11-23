@@ -1,0 +1,22 @@
+--- before/tests/unit/score-v2-route.test.ts
++++ after/tests/unit/score-v2-route.test.ts
+@@ -65,9 +65,16 @@
+ });
+ it("uses the session owner and preserves no-store and cookies", async () => {
+   const r = await loader(args("?canonical=version"));
+-  expect(mocks.load).toHaveBeenCalledWith(undefined, "test", "owner", {
+-    canonical: "version",
+-  });
++  expect(mocks.load).toHaveBeenCalledWith(
++    undefined,
++    "test",
++    "owner",
++    {
++      canonical: "version",
++    },
++    undefined,
++    { clauseOrderPreview: mocks.authoringEnabled },
++  );
+   expect(new Headers(r.init?.headers).get("Cache-Control")).toContain(
+     "no-store",
+   );

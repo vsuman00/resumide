@@ -1,0 +1,284 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/ai-budget-source-sql.test.ts (21 tests | 3 failed) 11ms
+     ✓ guards actual fresh generic operation insertion with a live registered source 1ms
+     ✓ extends the actual retirement producer to registered legacy rewrite selectors 0ms
+     ✓ refuses ambiguous retained OP1 retries and rolls fresh registration back on denied reserve 0ms
+     ✓ pins every new actual function and all three terminal pre/postimages 1ms
+     ✓ preserves generic budget bodies and strict old binding/receipt/policy dependencies 0ms
+     ✓ requires real owner/analysis/version/root and nonblocking admission before any reserve 0ms
+     ✓ guards all generic new operations/attempts/dispatch, but leaves release/settlement paths alone 0ms
+     ✓ rolls fresh source registration back on every denied or malformed old reservation 0ms
+     ✓ uses exact registered selectors before legacy/account inference and never makes a clock from registration 0ms
+     ✓ exports the complete owner set with exact binding/source proof after retirement 0ms
+     ✓ seals fresh schema/constraints/indexes/guards once and rejects writable catalogue/data access 0ms
+     ✓ exposes exactly independent frozen metadata capabilities 0ms
+     ✓ preserves Root OP2 byte vector 1 0ms
+     ✓ preserves Root OP2 byte vector 2 0ms
+     ✓ preserves Root OP2 byte vector 3 0ms
+     ✓ preserves Root OP2 byte vector 4 0ms
+     ✓ preserves Root OP2 byte vector 5 0ms
+     ✓ binds the actual Native source to the exact OP2 header/framing/masks 0ms
+     × admits real typed and account sources instead of the current rewrite-only guard 3ms
+     × closes public generic technical claim bypass for typed Native once gates 1ms
+     × keeps Build capture account-only with literal null parent selectors 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/ai-budget-source-sql.test.ts > all-caller actual producer regressions, SQL unparsed/unexecuted > admits real typed and account sources instead of the current rewrite-only guard
+AssertionError: expected '\n select coalesce(s.kind=\'legacy_re…' to contain 'build_account'
+
+- Expected
++ Received
+
+- build_account
++
++  select coalesce(s.kind='legacy_rewrite' and s.request_nonce collate "C" ~ '^[ -~]{1,128}$'
++   and (s.operation_id,s.owner_id,s.organization_id)=(o.id,o.user_id,o.organization_id)
++   and s.operation_id=private.ai_budget_source_operation_id(s.owner_id,s.organization_id,s.analysis_id,s.resume_version_id,s.request_nonce)
++   and s.binding_sha256=o.binding_sha256 and o.surface='rewrite' and isfinite(s.registered_at)
++   and o.binding_sha256=private.ai_budget_binding_sha256(o.user_id,o.organization_id,jsonb_build_object(
++     'operationId',o.id,'surface',o.surface,'payloadSha256',o.payload_sha256,'model',o.model,'promptPolicyVersion',o.prompt_policy_version,
++     'policyVersion',o.policy_version,'reservedInputTokens',trunc(o.reserved_input_tokens)::text,'reservedOutputTokens',trunc(o.reserved_output_tokens)::text)),false);
++
+
+ ❯ tests/unit/ai-budget-source-sql.test.ts:414:18
+    412|  it("admits real typed and account sources instead of the current rewr…
+    413|   const actual=callersDraft||body("private.ai_budget_source_valid");
+    414|   expect(actual).toContain("build_account");expect(actual).toContain("…
+       |                  ^
+    415|  });
+    416|  it("closes public generic technical claim bypass for typed Native onc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/unit/ai-budget-source-sql.test.ts > all-caller actual producer regressions, SQL unparsed/unexecuted > closes public generic technical claim bypass for typed Native once gates
+AssertionError: expected 'create function public.ai_budget_clai…' to contain 'ai_budget_operation_sources'
+
+- Expected
++ Received
+
+- ai_budget_operation_sources
++ create function public.ai_budget_claim_dispatch(p_user_id uuid,p_organization_id uuid,p_request jsonb)
++ returns jsonb language sql security definer set search_path = '' as $$ select private.ai_budget_transition(p_user_id,p_organization_id,p_request,'claim_dispatch'); $$;
++
+
+ ❯ tests/unit/ai-budget-source-sql.test.ts:418:18
+    416|  it("closes public generic technical claim bypass for typed Native onc…
+    417|   const actual=callersDraft||base.slice(base.indexOf("create function …
+    418|   expect(actual).toContain("ai_budget_operation_sources");
+       |                  ^
+    419|  });
+    420|  it("keeps Build capture account-only with literal null parent selecto…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/unit/ai-budget-source-sql.test.ts > all-caller actual producer regressions, SQL unparsed/unexecuted > keeps Build capture account-only with literal null parent selectors
+AssertionError: expected '\ndeclare registration private.ai_bud…' to contain 'registration.kind=\'build_account\''
+
+- Expected
++ Received
+
+- registration.kind='build_account'
++
++ declare registration private.ai_budget_operation_sources%rowtype;x record;source_row record;root_clock record;account_row private.owned_ai_deletion_dispositions%rowtype;
++  capture_at timestamptz;cause text;cause_request uuid;cause_item uuid;root_id uuid;version_id uuid;scope text;analysis uuid;n integer:=0;expected integer;locked integer;
++ begin
++  if private.owned_ai_disposition_ready() is not true or private.ai_budget_source_ready() is not true or p_owner is null
++   or (p_request is not null)::integer+(p_item is not null)::integer<>1
++   or current_setting('transaction_isolation') not in ('read committed','read uncommitted') then raise exception 'OWNED_AI_DISPOSITION_UNAVAILABLE' using errcode='23514';end if;
++  -- Callers may already hold request/item/source rows. Never wait in reverse order.
++  if not private.try_lock_candidate_owners(array[p_owner]) then raise exception 'PRIVACY_OWNER_BUSY' using errcode='55P03';end if;
++  if p_request is not null then
++   if p_resume is not null then raise exception 'OWNED_AI_DISPOSITION_SCOPE' using errcode='23514';end if;
++   perform 1 from public.data_requests d join private.privacy_deletion_plans p on p.request_id=d.id
++    where d.id=p_request and d.user_id=p_owner and d.kind='deletion' and d.status='processing'
++      and d.lease_owner is not null and d.lease_expires_at>clock_timestamp() for update of d skip locked;
++   if not found then raise exception 'OWNED_AI_DISPOSITION_AUTHORITY' using errcode='23514';end if;
++   select * into account_row from private.owned_ai_deletion_dispositions where owner_id=p_owner;
++   if not found then raise exception 'OWNED_AI_DISPOSITION_AUTHORITY' using errcode='23514';end if;
++  else
++   perform 1 from private.retention_items t join public.resumes r on r.id=t.resume_id and r.owner_id=t.owner_id
++    where t.id=p_item and t.owner_id=p_owner and t.resume_id=p_resume and t.status='queued'
++     and r.status in ('active','deleted') for update of t skip locked;
++   if not found then raise exception 'OWNED_AI_DISPOSITION_AUTHORITY' using errcode='23514';end if;
++   select count(*) into expected from public.resume_versions where resume_id=p_resume and owner_id=p_owner;
++   select count(*) into locked from (select v.id from public.resumes r join public.resume_versions v on v.resume_id=r.id
++    where r.id=p_resume and r.owner_id=p_owner and v.owner_id=p_owner for share of r,v skip locked) q;
++   if expected=0 or locked<>expected then raise exception 'OWNED_AI_DISPOSITION_BUSY' using errcode='55P03';end if;
++  end if;
++  -- All states, including reserved/unpublished, before any candidate parent deletion.
++  for x in
++   select 'a12'::text kind,o.owner_id,o.organization_id,o.operation_id,o.analysis_id,null::uuid resume_id,o.source_id source_id
++    from private.canonical_rewrite_operations o where o.owner_id=p_owner and (p_resume is null or exists(
++     select 1 from public.resume_versions v where v.id=o.source_id and v.resume_id=p_resume and v.owner_id=p_owner and v.organization_id=o.organization_id))
++   union all
++   select 'a13',o.owner_id,o.organization_id,o.operation_id,o.analysis_id,o.resume_id,o.resume_version_id
++    from private.initial_feedback_operations o where o.owner_id=p_owner and (p_resume is null or o.resume_id=p_resume)
++   order by analysis_id,kind,operation_id loop
++   n:=n+1;if n>4096 then raise exception 'OWNED_AI_DISPOSITION_LIMIT' using errcode='23514';end if;
++   root_id:=x.resume_id;version_id:=x.source_id;scope:='resume_root';
++   select v.resume_id into root_id from public.resume_versions v where v.id=version_id and v.owner_id=p_owner and v.organization_id=x.organization_id;
++   if not found then
++    if exists(select 1 from public.resume_versions where id=version_id) then raise exception 'OWNED_AI_DISPOSITION_SCOPE' using errcode='23514';end if;
++    root_id:=x.resume_id;
++   end if;
++   if root_id is not null then
++    perform 1 from public.resumes r join public.resume_versions v on v.resume_id=r.id
++     where r.id=root_id and r.owner_id=p_owner and v.id=version_id and v.owner_id=p_owner and v.organization_id=x.organization_id
++     for share of r,v skip locked;
++    if not found and exists(select 1 from public.resume_versions where id=version_id) then raise exception 'OWNED_AI_DISPOSITION_BUSY' using errcode='55P03';end if;
++   end if;
++   select t.id,t.created_at into root_clock from private.retention_items t where t.owner_id=p_owner and t.resume_id=root_id order by t.created_at,t.id limit 1;
++   if p_request is not null then
++    capture_at:=account_row.prepared_at;cause:='account_preparation';cause_request:=account_row.first_request_id;cause_item:=null;
++    if root_clock.id is not null and root_clock.created_at<capture_at then capture_at:=root_clock.created_at;cause:='resume_retirement';cause_request:=null;cause_item:=root_clock.id;end if;
++   else
++    if root_clock.id is null then raise exception 'OWNED_AI_DISPOSITION_AUTHORITY' using errcode='23514';end if;
++    capture_at:=root_clock.created_at;cause:='resume_retirement';cause_request:=null;cause_item:=root_clock.id;
++   end if;
++   if root_id is null or (not exists(select 1 from public.resume_versions where id=version_id and owner_id=p_owner and resume_id=root_id)
++       and root_clock.id is null) then
++    scope:='historical_unresolved';capture_at:=null;cause:=null;cause_request:=null;cause_item:=null;
++   end if;
++   if x.kind='a12' then
++    perform 1 from private.canonical_rewrite_operations o where (o.owner_id,o.analysis_id,o.operation_id)=(p_owner,x.analysis_id,x.operation_id) for update skip locked;
++   else
++    perform 1 from private.initial_feedback_operations o where o.operation_id=x.operation_id and o.owner_id=p_owner for update skip locked;
++   end if;
++   if not found then raise exception 'OWNED_AI_DISPOSITION_BUSY' using errcode='55P03';end if;
++   perform private.capture_owned_ai_disposition_row(x.kind,p_owner,x.organization_id,x.operation_id,x.analysis_id,root_id,version_id,scope,cause,cause_request,cause_item,capture_at);
++  end loop;
++  -- Account deletion owns every R03 operation across organizations, regardless of flags.
++  -- Root retirement may select ONLY the exact producer relations below.
++  for x in select o.* from private.ai_budget_operations o where o.user_id=p_owner and (p_resume is null or exists(select 1 from private.ai_budget_operation_sources s where s.operation_id=o.id and s.owner_id=p_owner and s.resume_id=p_resume) or exists(
++    select 1 from private.canonical_rewrite_operations c join public.resume_versions v on v.id=c.source_id
++     where c.owner_id=p_owner and c.organization_id=o.organization_id and c.operation_id=o.id and v.owner_id=p_owner and v.organization_id=o.organization_id
++       and v.resume_id=p_resume and o.surface='rewrite' and o.payload_sha256=c.binding_sha256
++       and o.model=c.policy->>'model' and o.prompt_policy_version=c.policy->>'promptVersion'
++    union all
++    select 1 from private.initial_feedback_operations f join private.initial_feedback_attempts a on a.operation_id=f.operation_id
++     join private.ai_budget_attempts b on b.operation_id=o.id and b.id=coalesce(a.budget_attempt_id,a.attempt_id) and private.owned_ai_feedback_budget_link(o,f,a,b)
++     where f.owner_id=p_owner and f.organization_id=o.organization_id and f.resume_id=p_resume and f.operation_id=o.id
++       and o.surface='qualitative' and o.payload_sha256=f.binding_sha256 and o.model=f.binding->'policy'->>'model'
++       and o.prompt_policy_version=f.binding->'policy'->>'promptVersion' and o.policy_version=f.binding->'policy'->>'budgetPolicyVersion'
++    union all
++    select 1 from public.analyses a join public.resume_versions v on v.id=a.resume_version_id
++     where a.id=o.id and a.owner_id=p_owner and a.organization_id=o.organization_id and v.owner_id=p_owner and v.organization_id=o.organization_id
++       and v.resume_id=p_resume and o.surface='qualitative')) order by o.id loop
++   n:=n+1;if n>4096 then raise exception 'OWNED_AI_DISPOSITION_LIMIT' using errcode='23514';end if;
++   -- Registered OP2 source wins before legacy/account-only inference, in ALL states.
++   if exists(select 1 from private.ai_budget_operation_sources where operation_id=x.id) then
++    select * into registration from private.ai_budget_operation_sources where operation_id=x.id for share skip locked;
++    if not found then raise exception 'OWNED_AI_DISPOSITION_BUSY' using errcode='55P03';end if;
++    if private.ai_budget_source_valid(registration,x) is not true or registration.owner_id<>p_owner
++      or (p_resume is not null and registration.resume_id<>p_resume) then raise exception 'OWNED_AI_DISPOSITION_SCOPE' using errcode='23514';end if;
++    analysis:=registration.analysis_id;root_id:=registration.resume_id;version_id:=registration.resume_version_id;scope:='resume_root';
++    select * into source_row from private.owned_ai_operation_dispositions d where d.kind='r03' and d.owner_id=p_owner and d.operation_id=x.id for share skip locked;
++    if found then
++     if (source_row.organization_id,source_row.analysis_id,source_row.resume_id,source_row.resume_version_id)
++       is distinct from (registration.organization_id,analysis,root_id,version_id) then raise exception 'OWNED_AI_DISPOSITION_SCOPE' using errcode='23514';end if;
++     capture_at:=source_row.prepared_at;cause:=source_row.first_cause;cause_request:=source_row.deletion_request_id;cause_item:=source_row.retention_item_id;scope:=source_row.source_scope;
++    else
++     if exists(select 1 from private.owned_ai_operation_dispositions d where d.kind='r03' and d.owner_id=p_owner and d.operation_id=x.id)
++       then raise exception 'OWNED_AI_DISPOSITION_BUSY' using errcode='55P03';end if;
++     perform 1 from public.resumes r join public.resume_versions v on v.resume_id=r.id
++       where (r.id,r.owner_id,r.organization_id,v.id,v.owner_id,v.organization_id)=(root_id,p_owner,x.organization_id,version_id,p_owner,x.organization_id) for share of r,v skip locked;
++     if not found then
++      scope:='historical_unresolved';capture_at:=null;cause:=null;cause_request:=null;cause_item:=null;
++     else
++      select t.id,t.created_at into root_clock from private.retention_items t where t.owner_id=p_owner and t.resume_id=root_id order by t.created_at,t.id limit 1;
++      if p_request is not null then
++       capture_at:=account_row.prepared_at;cause:='account_preparation';cause_request:=account_row.first_request_id;cause_item:=null;
++       if root_clock.id is not null and root_clock.created_at<capture_at then capture_at:=root_clock.created_at;cause:='resume_retirement';cause_request:=null;cause_item:=root_clock.id;end if;
++       if root_clock.id is null and exists(select 1 from public.resumes where id=root_id and status='deleted') then
++        scope:='historical_unresolved';capture_at:=null;cause:=null;cause_request:=null;cause_item:=null;
++       end if;
++      else
++       capture_at:=root_clock.created_at;cause:='resume_retirement';cause_request:=null;cause_item:=root_clock.id;
++      end if;
++     end if;
++    end if;
++    perform 1 from private.ai_budget_operations o where o.id=x.id and o.user_id=p_owner for update skip locked;
++    if not found then raise exception 'OWNED_AI_DISPOSITION_BUSY' using errcode='55P03';end if;
++    perform private.capture_owned_ai_disposition_row('r03',p_owner,x.organization_id,x.id,analysis,root_id,version_id,scope,cause,cause_request,cause_item,capture_at);
++    continue;
++   end if;
++   if p_resume is null then
++    -- Account capture cannot restart an already proved root-retirement deadline.
++    -- Match the REAL producer binding before using any typed clock or selector.
++    select d.* into source_row from private.owned_ai_operation_dispositions d
++     where d.owner_id=p_owner and d.organization_id=x.organization_id and d.operation_id=x.id and (
++      (d.kind='a12' and x.surface='rewrite' and exists(select 1 from private.canonical_rewrite_operations c
++        where (c.owner_id,c.analysis_id,c.operation_id)=(p_owner,d.analysis_id,x.id) and c.binding_sha256=x.payload_sha256
++         and c.policy->>'model'=x.model and c.policy->>'promptVersion'=x.prompt_policy_version))
++      or (d.kind='a13' and x.surface='qualitative' and exists(select 1 from private.initial_feedback_operations f
++        join private.initial_feedback_attempts a on a.operation_id=f.operation_id join private.ai_budget_attempts z on z.operation_id=x.id and z.id=coalesce(a.budget_attempt_id,a.attempt_id) and private.owned_ai_feedback_budget_link(x,f,a,z)
++        where f.operation_id=x.id and f.owner_id=p_owner and f.binding_sha256=x.payload_sha256 and z.operation_id=x.id)))
++     order by d.prepared_at nulls first,d.kind,d.analysis_id limit 1;
++    if found then
++     analysis:=source_row.analysis_id;root_id:=source_row.resume_id;version_id:=source_row.resume_version_id;
++     scope:=source_row.source_scope;capture_at:=source_row.prepared_at;cause:=source_row.first_cause;
++     cause_request:=source_row.deletion_request_id;cause_item:=source_row.retention_item_id;
++    else
++     select a.id analysis_id,v.resume_id,v.id resume_version_id into source_row from public.analyses a join public.resume_versions v on v.id=a.resume_version_id
++      where a.id=x.id and a.owner_id=p_owner and a.organization_id=x.organization_id and v.owner_id=p_owner and v.organization_id=x.organization_id and x.surface='qualitative';
++     if found then
++      analysis:=source_row.analysis_id;root_id:=source_row.resume_id;version_id:=source_row.resume_version_id;scope:='resume_root';
++      select t.id,t.created_at into root_clock from private.retention_items t where t.owner_id=p_owner and t.resume_id=root_id order by t.created_at,t.id limit 1;
++      capture_at:=account_row.prepared_at;cause:='account_preparation';cause_request:=account_row.first_request_id;cause_item:=null;
++      if root_clock.id is not null and root_clock.created_at<capture_at then capture_at:=root_clock.created_at;cause:='resume_retirement';cause_request:=null;cause_item:=root_clock.id;end if;
++     elsif x.surface='build' then
++      -- Standalone Build has no resume root to infer. Its first account cause is exact.
++      analysis:=null;root_id:=null;version_id:=null;scope:='account_only';capture_at:=account_row.prepared_at;
++      cause:='account_preparation';cause_request:=account_row.first_request_id;cause_item:=null;
++     else
++      -- Unbound historical qualitative/rewrite identity supplies no first source clock.
++      analysis:=null;root_id:=null;version_id:=null;scope:='historical_unresolved';capture_at:=null;cause:=null;cause_request:=null;cause_item:=null;
++     end if;
++    end if;
++   else
++    -- Exact previously captured typed selector, or legacy qualitative analysis identity.
++    select d.analysis_id,d.resume_id,d.resume_version_id into source_row from private.owned_ai_operation_dispositions d
++     where d.owner_id=p_owner and d.organization_id=x.organization_id and d.operation_id=x.id and d.kind in ('a12','a13')
++      and d.resume_id=p_resume and d.phase='prepared' and (
++       (d.kind='a12' and x.surface='rewrite' and exists(select 1 from private.canonical_rewrite_operations c
++         where (c.owner_id,c.analysis_id,c.operation_id)=(p_owner,d.analysis_id,x.id) and c.binding_sha256=x.payload_sha256
++           and c.policy->>'model'=x.model and c.policy->>'promptVersion'=x.prompt_policy_version))
++       or (d.kind='a13' and x.surface='qualitative' and exists(select 1 from private.initial_feedback_operations f
++         join private.initial_feedback_attempts a on a.operation_id=f.operation_id join private.ai_budget_attempts z on z.operation_id=x.id and z.id=coalesce(a.budget_attempt_id,a.attempt_id) and private.owned_ai_feedback_budget_link(x,f,a,z)
++         where f.operation_id=x.id and f.owner_id=p_owner and f.binding_sha256=x.payload_sha256 and z.operation_id=x.id)))
++     order by d.kind,d.analysis_id limit 1;
++    if not found then
++     select a.id analysis_id,v.resume_id,v.id resume_version_id into source_row from public.analyses a join public.resume_versions v on v.id=a.resume_version_id
++      where a.id=x.id and a.owner_id=p_owner and a.organization_id=x.organization_id and v.owner_id=p_owner and v.organization_id=x.organization_id and v.resume_id=p_resume;
++    end if;
++    if not found then raise exception 'OWNED_AI_DISPOSITION_UNAVAILABLE' using errcode='23514';end if;
++    analysis:=source_row.analysis_id;root_id:=source_row.resume_id;version_id:=source_row.resume_version_id;scope:='resume_root';
++    select t.id,t.created_at into root_clock from private.retention_items t where t.owner_id=p_owner and t.resume_id=p_resume order by t.created_at,t.id limit 1;
++    capture_at:=root_clock.created_at;cause:='resume_retirement';cause_request:=null;cause_item:=root_clock.id;
++   end if;
++   perform 1 from private.ai_budget_operations o where o.id=x.id and o.user_id=p_owner for update skip locked;
++   if not found then raise exception 'OWNED_AI_DISPOSITION_BUSY' using errcode='55P03';end if;
++   perform private.capture_owned_ai_disposition_row('r03',p_owner,x.organization_id,x.id,analysis,root_id,version_id,scope,cause,cause_request,cause_item,capture_at);
++  end loop;
++ end;
++
+
+ ❯ tests/unit/ai-budget-source-sql.test.ts:421:105
+    419|  });
+    420|  it("keeps Build capture account-only with literal null parent selecto…
+    421|   expect(callersDraft||current("private.capture_owned_ai_operation_dis…
+       |                                                                                                         ^
+    422|  });
+    423| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 18 passed (21)
+   Start at  16:24:15
+   Duration  99ms (transform 23ms, setup 0ms, import 30ms, tests 11ms, environment 0ms)
+

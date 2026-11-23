@@ -1,0 +1,10 @@
+--- before/app/routes/analysis.canonical.tsx
++++ after/app/routes/analysis.canonical.tsx
+@@ -1074,6 +1074,7 @@
+               {model.writingComparison && (
+                 <WritingDiagnosticComparison
+                   comparison={model.writingComparison}
++                  factChanges={model.comparison}
+                 />
+               )}
+               {model.comparison.length ? (

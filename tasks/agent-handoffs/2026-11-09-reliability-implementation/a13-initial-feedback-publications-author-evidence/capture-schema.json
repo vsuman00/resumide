@@ -1,0 +1,729 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "qualitative-support/1.0.0"
+    },
+    "authority": {
+      "type": "string",
+      "const": "source_content_only"
+    },
+    "ownedVersionProof": {
+      "type": "string",
+      "const": "not_provided"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "assessed",
+        "unavailable"
+      ]
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "type": "string",
+          "enum": [
+            "source_transformation",
+            "editorial_template",
+            "clarification_template",
+            "question_only",
+            "unsupported_assertion",
+            "quote_missing",
+            "quote_ambiguous",
+            "binding_mismatch",
+            "invalid_input",
+            "source_resource_limit",
+            "qualified_source",
+            "missing_source_anchor"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "binding": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "sourceSha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            "policyVersion": {
+              "type": "string",
+              "const": "qualitative-content-support/1.0.0"
+            },
+            "policySha256": {
+              "type": "string",
+              "const": "230f22333dd468f3bf78395b118330ec1ff78de18be9da5349356e84d0f6bd13"
+            },
+            "writingSupportPolicyVersion": {
+              "type": "string",
+              "const": "legacy-source-transforms/1.0.4"
+            }
+          },
+          "required": [
+            "sourceSha256",
+            "policyVersion",
+            "policySha256",
+            "writingSupportPolicyVersion"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "items": {
+      "maxItems": 16,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "toneAndStyle",
+              "content",
+              "structure",
+              "skills"
+            ]
+          },
+          "index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "source_claim",
+              "editorial_observation",
+              "clarification_question"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "supported",
+              "clarification_required",
+              "rejected"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "source_transformation",
+              "editorial_template",
+              "clarification_template",
+              "question_only",
+              "unsupported_assertion",
+              "quote_missing",
+              "quote_ambiguous",
+              "binding_mismatch",
+              "invalid_input",
+              "source_resource_limit",
+              "qualified_source",
+              "missing_source_anchor"
+            ]
+          },
+          "retained": {
+            "type": "boolean"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "good",
+              "improve"
+            ]
+          },
+          "citation": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "quoteSha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "offsetUnit": {
+                    "type": "string",
+                    "const": "unicode_code_point"
+                  },
+                  "start": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100000
+                  },
+                  "end": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 100000
+                  },
+                  "anchorIds": {
+                    "minItems": 1,
+                    "maxItems": 16,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  }
+                },
+                "required": [
+                  "quoteSha256",
+                  "offsetUnit",
+                  "start",
+                  "end",
+                  "anchorIds"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "type": "object",
+            "properties": {
+              "textSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "source_claim",
+                  "editorial_observation",
+                  "clarification_question"
+                ]
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "supported",
+                  "clarification_required",
+                  "rejected"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "source_transformation",
+                  "editorial_template",
+                  "clarification_template",
+                  "question_only",
+                  "unsupported_assertion",
+                  "quote_missing",
+                  "quote_ambiguous",
+                  "binding_mismatch",
+                  "invalid_input",
+                  "source_resource_limit",
+                  "qualified_source",
+                  "missing_source_anchor"
+                ]
+              },
+              "anchorIds": {
+                "maxItems": 16,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "operations": {
+                "maxItems": 34,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "copy_source",
+                        "normalize_layout",
+                        "replace_equivalent_action",
+                        "reorder_independent_clauses",
+                        "compose_explicit_role_contribution",
+                        "editorial_explanation"
+                      ]
+                    },
+                    "anchorId": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "anchorId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "textSha256",
+              "kind",
+              "state",
+              "reason",
+              "anchorIds",
+              "operations"
+            ],
+            "additionalProperties": false
+          },
+          "explanation": {
+            "type": "object",
+            "properties": {
+              "textSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "source_claim",
+                  "editorial_observation",
+                  "clarification_question"
+                ]
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "supported",
+                  "clarification_required",
+                  "rejected"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "source_transformation",
+                  "editorial_template",
+                  "clarification_template",
+                  "question_only",
+                  "unsupported_assertion",
+                  "quote_missing",
+                  "quote_ambiguous",
+                  "binding_mismatch",
+                  "invalid_input",
+                  "source_resource_limit",
+                  "qualified_source",
+                  "missing_source_anchor"
+                ]
+              },
+              "anchorIds": {
+                "maxItems": 16,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              },
+              "operations": {
+                "maxItems": 34,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "copy_source",
+                        "normalize_layout",
+                        "replace_equivalent_action",
+                        "reorder_independent_clauses",
+                        "compose_explicit_role_contribution",
+                        "editorial_explanation"
+                      ]
+                    },
+                    "anchorId": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "anchorId"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "textSha256",
+              "kind",
+              "state",
+              "reason",
+              "anchorIds",
+              "operations"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "category",
+          "index",
+          "kind",
+          "state",
+          "reason",
+          "retained",
+          "type",
+          "citation",
+          "title",
+          "explanation"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "writer": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "textSha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "source_claim",
+                    "editorial_observation",
+                    "clarification_question"
+                  ]
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "supported",
+                    "clarification_required",
+                    "rejected"
+                  ]
+                },
+                "reason": {
+                  "type": "string",
+                  "enum": [
+                    "source_transformation",
+                    "editorial_template",
+                    "clarification_template",
+                    "question_only",
+                    "unsupported_assertion",
+                    "quote_missing",
+                    "quote_ambiguous",
+                    "binding_mismatch",
+                    "invalid_input",
+                    "source_resource_limit",
+                    "qualified_source",
+                    "missing_source_anchor"
+                  ]
+                },
+                "anchorIds": {
+                  "maxItems": 16,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                },
+                "operations": {
+                  "maxItems": 34,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "copy_source",
+                          "normalize_layout",
+                          "replace_equivalent_action",
+                          "reorder_independent_clauses",
+                          "compose_explicit_role_contribution",
+                          "editorial_explanation"
+                        ]
+                      },
+                      "anchorId": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "anchorId"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "textSha256",
+                "kind",
+                "state",
+                "reason",
+                "anchorIds",
+                "operations"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "bullets": {
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "retained": {
+                "type": "boolean"
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "supported",
+                  "clarification_required",
+                  "rejected"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "source_transformation",
+                  "editorial_template",
+                  "clarification_template",
+                  "question_only",
+                  "unsupported_assertion",
+                  "quote_missing",
+                  "quote_ambiguous",
+                  "binding_mismatch",
+                  "invalid_input",
+                  "source_resource_limit",
+                  "qualified_source",
+                  "missing_source_anchor"
+                ]
+              },
+              "rewrite": {
+                "type": "object",
+                "properties": {
+                  "textSha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "source_claim",
+                      "editorial_observation",
+                      "clarification_question"
+                    ]
+                  },
+                  "state": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "clarification_required",
+                      "rejected"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "enum": [
+                      "source_transformation",
+                      "editorial_template",
+                      "clarification_template",
+                      "question_only",
+                      "unsupported_assertion",
+                      "quote_missing",
+                      "quote_ambiguous",
+                      "binding_mismatch",
+                      "invalid_input",
+                      "source_resource_limit",
+                      "qualified_source",
+                      "missing_source_anchor"
+                    ]
+                  },
+                  "anchorIds": {
+                    "maxItems": 16,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "operations": {
+                    "maxItems": 34,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "copy_source",
+                            "normalize_layout",
+                            "replace_equivalent_action",
+                            "reorder_independent_clauses",
+                            "compose_explicit_role_contribution",
+                            "editorial_explanation"
+                          ]
+                        },
+                        "anchorId": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "anchorId"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "textSha256",
+                  "kind",
+                  "state",
+                  "reason",
+                  "anchorIds",
+                  "operations"
+                ],
+                "additionalProperties": false
+              },
+              "reasoning": {
+                "type": "object",
+                "properties": {
+                  "textSha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  },
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "source_claim",
+                      "editorial_observation",
+                      "clarification_question"
+                    ]
+                  },
+                  "state": {
+                    "type": "string",
+                    "enum": [
+                      "supported",
+                      "clarification_required",
+                      "rejected"
+                    ]
+                  },
+                  "reason": {
+                    "type": "string",
+                    "enum": [
+                      "source_transformation",
+                      "editorial_template",
+                      "clarification_template",
+                      "question_only",
+                      "unsupported_assertion",
+                      "quote_missing",
+                      "quote_ambiguous",
+                      "binding_mismatch",
+                      "invalid_input",
+                      "source_resource_limit",
+                      "qualified_source",
+                      "missing_source_anchor"
+                    ]
+                  },
+                  "anchorIds": {
+                    "maxItems": 16,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  },
+                  "operations": {
+                    "maxItems": 34,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "copy_source",
+                            "normalize_layout",
+                            "replace_equivalent_action",
+                            "reorder_independent_clauses",
+                            "compose_explicit_role_contribution",
+                            "editorial_explanation"
+                          ]
+                        },
+                        "anchorId": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "anchorId"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "textSha256",
+                  "kind",
+                  "state",
+                  "reason",
+                  "anchorIds",
+                  "operations"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "index",
+              "retained",
+              "state",
+              "reason",
+              "rewrite",
+              "reasoning"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "summary",
+        "bullets"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "authority",
+    "ownedVersionProof",
+    "status",
+    "reason",
+    "binding",
+    "items",
+    "writer"
+  ],
+  "additionalProperties": false
+}

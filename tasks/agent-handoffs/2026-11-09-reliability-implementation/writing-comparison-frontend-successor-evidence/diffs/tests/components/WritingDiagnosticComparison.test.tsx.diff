@@ -1,0 +1,97 @@
+--- before/tests/components/WritingDiagnosticComparison.test.tsx
++++ after/tests/components/WritingDiagnosticComparison.test.tsx
+@@ -6,6 +6,7 @@
+   WritingComparison,
+   SavedWritingComparison,
+ } from "../../app/lib/writing-comparison";
++import type { compareCanonical } from "../../app/lib/server/canonical-content";
+ 
+ afterEach(cleanup);
+ const before = "40000000-0000-4000-8000-000000000001",
+@@ -289,3 +290,86 @@
+     /JD coverage (?:gain|increase)|ATS score (?:gain|increase)|\d+%/iu,
+   );
+ });
++
++it("associates saved wording by fact ID even when comparison rows are ordered differently", () => {
++  type FactChange = ReturnType<typeof compareCanonical>[number];
++  const secondId = "40000000-0000-4000-8000-000000000004";
++  const claim = (
++    id: string,
++    value: string,
++  ): NonNullable<FactChange["before"]> => ({
++    id,
++    value,
++    type: "contribution",
++    state: "unconfirmed",
++    sources: [],
++    confirmation: null,
++  });
++  const factChanges: readonly FactChange[] = [
++    {
++      id: secondId,
++      before: null,
++      after: claim(secondId, "Second saved wording after"),
++    },
++    {
++      id: factId,
++      before: claim(factId, "First saved wording before"),
++      after: claim(factId, "First saved wording after"),
++    },
++  ];
++  const comparison = saved({
++    items: [
++      fact(),
++      fact({
++        factId: secondId,
++        changeKind: "added",
++        beforeWordCount: null,
++        wordCountDelta: null,
++        beforeState: null,
++        beforeSourceReferenceCount: null,
++        beforeConfirmationRecorded: null,
++      }),
++    ],
++    total: 2,
++  });
++  const { rerender } = render(
++    <WritingDiagnosticComparison
++      comparison={comparison}
++      factChanges={factChanges}
++    />,
++  );
++  const first = within(
++    screen.getByRole("heading", { name: `Fact ${factId}` }).closest("article")!,
++  );
++  const second = within(
++    screen
++      .getByRole("heading", { name: `Fact ${secondId}` })
++      .closest("article")!,
++  );
++  expect(
++    first.getByRole("blockquote", { name: "Saved wording before" }).textContent,
++  ).toBe("First saved wording before");
++  expect(
++    first.getByRole("blockquote", { name: "Saved wording after" }).textContent,
++  ).toBe("First saved wording after");
++  expect(
++    second.getByRole("blockquote", { name: "Saved wording before" })
++      .textContent,
++  ).toBe("Absent");
++  expect(
++    second.getByRole("blockquote", { name: "Saved wording after" }).textContent,
++  ).toBe("Second saved wording after");
++  rerender(<WritingDiagnosticComparison comparison={comparison} />);
++  const unavailable = within(
++    screen.getByRole("heading", { name: `Fact ${factId}` }).closest("article")!,
++  );
++  expect(
++    unavailable.getByRole("blockquote", { name: "Saved wording before" })
++      .textContent,
++  ).toBe("Unavailable");
++  expect(
++    unavailable.getByText(
++      "Saved wording is unavailable because its comparison row is missing.",
++    ),
++  ).toBeTruthy();
++});

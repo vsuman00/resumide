@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "evidenceTier": "synthetic_engineering_and_mock_authority_contracts",
+  "tests": {
+    "command": "node22 node_modules/vitest/vitest.mjs run tests/unit/evaluation-statistics.test.ts tests/unit/evaluation-runner.test.ts",
+    "exitCode": 0,
+    "files": 2,
+    "passed": 24,
+    "statistics": 14,
+    "runner": 10,
+    "durationMs": 653
+  },
+  "retainedFailedAttempts": [
+    {
+      "stage": "initial-statistics-test-collection",
+      "failure": "test syntax typo; result not captured in retained output",
+      "state": "corrected before actual targeted tests"
+    },
+    {
+      "stage": "representative-runner-fixture",
+      "exitCode": 1,
+      "passed": 8,
+      "failed": 1,
+      "failure": "fixture omitted calibration authority; fixed fixture argument only"
+    }
+  ],
+  "checkReceipt": "final-checks.json",
+  "noOperations": [
+    "Docker",
+    "database",
+    "provider",
+    "browser",
+    "deployment",
+    "AA7 revalidation"
+  ],
+  "prose": {
+    "densityTier": "low",
+    "stylometryScore": 0.1225,
+    "unicodeRemoved": 0,
+    "unicodeReplaced": 0
+  }
+}

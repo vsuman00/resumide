@@ -10,13 +10,16 @@ import { atsRules } from "./atsRules";
 import { extractResumeText, ResumeExtractionError } from "./extract";
 import { PublicApiError } from "./errors";
 import {
-  ProseAnalysisSchema,
+  ProseGenerationSchema,
   PROSE_INSTRUCTIONS,
   groundQualitativeProse,
   legacyCategoryFromProse,
   BASELINE_SEMANTICS,
 } from "./qualitative-prose";
 import { getAnalysisConfig } from "./config";
+import { buildRewriteSources } from "./rewrite-sources";
+import { resolveWriterProposals } from "./writer-proposals";
+import { proseModelOptions } from "./openai-model";
 
 function getClient(): OpenAI {
   const config = getAnalysisConfig();
@@ -88,6 +91,7 @@ async function runAnalysis(
   const instructions = PROSE_INSTRUCTIONS;
   const userMessage = JSON.stringify({
     resumeText: text,
+    sources: buildRewriteSources(text),
     jobTitle: args.jobTitle,
     jobDescription: args.jobDescription,
   });
@@ -102,24 +106,29 @@ async function runAnalysis(
     parseView,
   });
 
-  // ponytail: gpt-5.6 reasoning family rejects non-default temperature
-  // ("Only the default (1) value is supported"), which surfaced as the 500
-  // on /api/analyze. Omit it so the SDK uses the model's default.
   const completion = await getClient().chat.completions.parse({
-    model: getModel(),
+    ...proseModelOptions(getModel()),
     max_completion_tokens: config.OPENAI_MAX_OUTPUT_TOKENS,
     messages: [
       { role: "system", content: instructions },
       { role: "user", content: userMessage },
     ],
     response_format: zodResponseFormat(
-      ProseAnalysisSchema,
+      ProseGenerationSchema,
       "qualitative_analysis",
     ),
   });
 
   const raw = completion.choices[0]?.message?.parsed;
-  const qualitative = raw ? groundQualitativeProse(raw, text) : null;
+  const qualitative = raw
+    ? groundQualitativeProse(
+        {
+          ...raw,
+          writer: resolveWriterProposals(raw.writer, buildRewriteSources(text)),
+        },
+        text,
+      )
+    : null;
   if (!qualitative) {
     throw new Error("OpenAI returned no parsed qualitative feedback.");
   }

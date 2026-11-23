@@ -1,0 +1,106 @@
+{
+  "task": "CR-A01-S06",
+  "status": "VERIFIED_LOCAL_ONLY",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "packetHash": "468a3256d0e342df6c540b086c134fac8ecef046b9b5c071e36fbc5aaf660e7b",
+  "operationsExecuted": 91,
+  "targetRole": "disposable socket-only PostgreSQL 17 UTF-8",
+  "originalInventoryHashVerified": true,
+  "sourceHashes": {
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/managed-schema-clean-successor-91.json": "1a136abb977ac80b31b227807efbf981647a4fd6a497415144a001458d4c8484",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/managed-schema-inventory-91.json": "09fa04d3f64c02c930982df3e9259d7898bf5b83e58ea1bd8d1862788d413e2a",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-a01-cold-replay-evidence.json": "ea16b07dffafd68464380ca0fd695f25bbd452ca65b063c29c7a70fe06879b2d",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-a01-clean-successor-native-fixture.py.txt": "38ca9eeec7a17d19c3ea734191689b437ce31d9ba999a6a0e246efc99aca5247",
+    "scripts/materialize-managed-schema-successor.py": "3c8e8e5fbac66e47a3114b76497cde89b08ef8962bb986118e3cc350df8de008",
+    "app/lib/server/document-page-count-readiness-profile.ts": "b2d453e2c9bae1f73471ee3328a73d7cbc8a09b50eb1f7a776de13253fc4aff9"
+  },
+  "localOutcome": {
+    "exitCode": 0,
+    "correctionReadiness": true,
+    "jdLiteralLimitsPreserved": true,
+    "rewriteBindingFiltersVerified": true,
+    "cataloguesVerified": [
+      "document page count",
+      "privacy generation",
+      "JD clause order",
+      "owned AI budget export"
+    ],
+    "serviceRoleAndPublicAclAssertionsPassed": true,
+    "workerPageCountMetadata": {
+      "schemaReady": true,
+      "writerSha256": "ed3c838c81a29bd131ebf543aad7cbc140ffb3ced09de76b18ba77a850dc4a54",
+      "checkerSha256": "df95369c54acc48f5165f8f23c4d233fa2547fa34074b87ea5d665f709369cb2",
+      "schemaVersion": "document-page-count-readiness/1.0.0",
+      "metadataSha256": "88bc5d232d91e29000241223fabb32f1badcbcff71ad01d99deeb92ffeb6773b",
+      "profileVersion": "document-page-count-native/1.0.0",
+      "writerExecutable": true,
+      "fencedWriterExecutable": true
+    },
+    "materializerChecks": [
+      "All 91 SQL file bytes match the replay inputs",
+      "Previously occupied output directory refused",
+      "Changed frozen source refused before any output"
+    ],
+    "logSha256": {
+      "correction-ready.log": "fe8edeeb98cc6d3b93cf2d57000254b84bd9eba34b4df7ce4b87db8b937b7703",
+      "literal-limits.log": "99106cea847dc25e8b4757667b1e8c4a995e77230b83a3034dded585b4f46071",
+      "rewrite-binding.log": "fdd4b544299dba81edff633e9de44603933bbf1cebc9ab85589a1086e426cdc5",
+      "postflight.log": "619919b91d6d32ea355fb46321d4ba32c1fe02cadb601cd569dbcd6eab4bdfc5",
+      "run.log": "2ff7b9d9b98b24db83547c91a6abe99434ce964a4c6f0c4a3de553a8d8fca34d"
+    }
+  },
+  "precedingFailures": [
+    {
+      "operation": 60,
+      "finding": "Ambiguous JSONB field subtraction",
+      "logSha256": "be39455da48f423b3ac6442d8732e8d28c292670f39af23cad8000dbe500a137"
+    },
+    {
+      "operation": 61,
+      "finding": "Unparenthesized CASE in the rewrite compatibility check",
+      "logSha256": "528c3f967b8af2fb0744373a8376cea00f3d0bd40e59d6cb1343b7e0547df2d8"
+    },
+    {
+      "operation": 67,
+      "finding": "Diagnostic database inherited SQL_ASCII. Later runs initialized UTF-8.",
+      "logSha256": "9863bfeaf8e2f013e71fb491018773b710e229de188bc5a0bda1747b73193211"
+    },
+    {
+      "operation": 71,
+      "finding": "Budget export catalogue omitted six existing columns.",
+      "logSha256": "7ac38e0347f2233e1f2ddb860be92e4b0aae19b55d870fbb01f9577bb18df494"
+    },
+    {
+      "operation": 75,
+      "finding": "Unparenthesized CASE in the caller source check",
+      "logSha256": "646429a9f346c6fd2e741d837bb8fc77ebb2899fdcc4d9383ed16940433a1c15"
+    },
+    {
+      "operation": 78,
+      "finding": "Bare month aliases in expiry aggregation",
+      "logSha256": "7b5ad7fc3cfc27d091b296448313e07bdcec36545974973ba073be2e0277fb6e"
+    },
+    {
+      "operation": 78,
+      "finding": "Missing trusted owner lookup in the expiry patch block",
+      "logSha256": "cf87409087adf7a997b65b457839626f06927460f6f3cdc82fe68ab293c87536"
+    },
+    {
+      "operation": 78,
+      "finding": "Exact overlapping preimage still held the old budget columns after replacing its hash",
+      "logSha256": "06ef0489713cb29a6ed638b94bd139553adab74ca44558f1df21132ce72a4e09"
+    },
+    {
+      "operation": 80,
+      "finding": "Unparenthesized CASE in JD clause boundaries",
+      "logSha256": "cfebea91c64ef69d309d7584355fdf068daa9f60caeee2df42198e0a747f3bf3"
+    }
+  ],
+  "fixtureCorrection": "First packaged run reached migration 91 and passed catalogue assertions. Its TypeScript field matcher omitted digits in SHA field names. Corrected matcher verified all five fields in the final run.",
+  "environmentBoundaries": [
+    "Synthetic Auth, Storage and role setup",
+    "Original pg_jsonschema installation replaced in the fixture only by a fail-closed stand-in",
+    "Managed Supabase, worker consumer recovery and cleanup not executed",
+    "Dependent runtime and verifier digest profiles need review before their respective features are enabled"
+  ]
+}

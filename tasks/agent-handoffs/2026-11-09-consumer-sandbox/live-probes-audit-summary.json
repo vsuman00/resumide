@@ -1,0 +1,58 @@
+{
+  "status": "blocked_current_authentication_401",
+  "authorizationChange": "After the owner explicitly confirmed updating the existing configured key, the coordinator renewed a serial five-call/4704 requested-output-token allocation. The initial failed allocation remains historical and preserved.",
+  "initialAllocation": {
+    "originalMaxCalls": 5,
+    "originalMaxRequestedOutputTokens": 4704,
+    "actualCallsBeforeStop": 1,
+    "actualRequestedOutputTokenCeiling": 1200,
+    "unusedAllocationRevokedOnStop": true
+  },
+  "renewedAllocation": {
+    "maxCalls": 5,
+    "maxRequestedOutputTokens": 4704
+  },
+  "overallAuditCeiling": {
+    "maxCalls": 6,
+    "maxRequestedOutputTokens": 5904
+  },
+  "actualOverall": {
+    "calls": 2,
+    "requestedOutputTokenCeiling": 2400,
+    "actualInputTokens": null,
+    "actualOutputTokens": null,
+    "usageAvailability": "unavailable_for_401_responses"
+  },
+  "attempts": [
+    {
+      "phase": "initial",
+      "calls": 1,
+      "maxOutputTokens": 1200,
+      "httpStatus": 401,
+      "durationMs": 713,
+      "receipt": "live-probes-initial-401.json"
+    },
+    {
+      "phase": "after_explicit_key_update",
+      "calls": 1,
+      "maxOutputTokens": 1200,
+      "httpStatus": 401,
+      "durationMs": 650,
+      "receipt": "live-probes-after-key-update.json"
+    }
+  ],
+  "model": "gpt-6-luna",
+  "maxRetries": 0,
+  "configuredFileFreshlyRead": true,
+  "configuredFileKeyDefinitions": 1,
+  "credentialsChangedByAgent": false,
+  "databaseWrites": 0,
+  "noAutomaticRetry": true,
+  "remainingProbesUnrun": [
+    "source-bound-resume-rewrite",
+    "build-fix",
+    "build-rewrite",
+    "build-resume"
+  ],
+  "credentialSourceDiagnostic": "credential-source-diagnostic.json"
+}

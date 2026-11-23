@@ -1,0 +1,29 @@
+{
+  "task": "CR-U10",
+  "leaf": "Rewrite generation safe error-code consumer",
+  "status": "ALLOCATED_ACTUAL_DOM_RED_FIRST",
+  "at": "2026-11-13T12:32:20.455419+00:00",
+  "owner": "a01_page_frontend",
+  "worktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "files": {
+    "app/components/RewriteGenerator.tsx": "8ce7ac0affd281c489811a0fbf84a99cad2f56de40f274b0efdc357f23b27a7d",
+    "tests/components/RewriteGenerator.test.tsx": "21ca68e55d7b8ba6ec9565795aaa4a7bed883cc9db27287c4538b96cfb944ce9",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-u10-rewrite-errors.md": null
+  },
+  "maximumFiles": 3,
+  "validatedServerContract": {
+    "app/lib/server/rewrite-service.ts": "05b3c9dc81e314e95d952c79429fd5a4d2d580cca47e03b87f606fdfb494bdea",
+    "app/lib/server/qualitative-ai.ts": "8d1d052042085620d94ca5f32abff23619ee0fd10bbc7f62fce0fb42f28c1b98",
+    "app/lib/server/ai-budget.ts": "497168d5bc6775b1092582e7f0e1775ee82f2eaa629b2968e2e35063eb62681a"
+  },
+  "problem": "Real published code+error DTO is consumed as error string only. AI_REFUSED,AI_RATE_LIMITED,AI_CANCELLED currently show identical generic text. This is source-predicted until actual DOM test runs.",
+  "red": "Existing actual component/fetcher mock with exact published generic error and three distinct actual code fields; expect distinct truthful outcomes. Capture actual selected failures BEFORE product edit; retain original tests/assertions. No missing-import or speculative provider401 failure.",
+  "implementation": "Add optional safe code to fetcher response type and fixed known-code presentation. Keep unknown/legacy safe server error fallback. Handle only actual published classifications: unauthenticated,AI_PROVIDER_UNAVAILABLE,AI_DISABLED,AI_REFUSED,AI_RATE_LIMITED,AI_TIMEOUT,AI_CANCELLED,AI_OUTPUT_INVALID and actual AI_BUDGET_* groups as needed. Use prototype-safe known-code matching. No raw provider status/cause inference or echo of provider messages.",
+  "copy": "Session code asks sign-in; provider unavailable does not blame candidate login/key/subscription/credits. Refusal,unusable response,timeout,rate/service-budget and cancellation are distinct without invented countdown/retryability/authentication cause. Do not claim no save on ambiguous generic storage failures. Preserve safe legacy fallback. No pricing/upgrades/paywall text; services remain free.",
+  "invariants": "No change to request/form/action/source/version/consent generation, submit method/URL, busy controls, automatic effects/retries, server/runtime paths or success copy. Existing parent draft/edit state stays untouched. Error feedback remains accessible rolealert. Current component cannot distinguish provider auth vs other provider unavailable; do not invent that or close full U10.",
+  "tests": "Actual DOM RED/GREEN known DTO cases plus unknown/legacy fallback, busy state and consent/form/analysis target/no autosubmit preservation. Preserve all original expectations; new tests meaningful consumer behavior, not code-map internals. If original unrelated behavior is questionable report separately, do not rewrite it.",
+  "checks": "Sealed Node22 fakeenv/no dotenv focused component and directly affected existing writer tests, scopedtypes/lint/format and prose hygiene. Root combined integrated checks later; no broad builds/old native/provider campaign.",
+  "runtime": "/Users/vaibhavsuman/.codex/tools/resumide-node22/v22.23.4-darwin-arm64/node",
+  "boundaries": "Only three owned files; no services/browser/provider/key/realenv/PII/DB/SQL/Docker/Git/dependency/deploy. Backend source-validator worktree independent; no overlaps. Root owns all plans/contracts/context."
+}

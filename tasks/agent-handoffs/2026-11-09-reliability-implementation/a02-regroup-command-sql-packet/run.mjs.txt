@@ -1,0 +1,33 @@
+import {runCommand} from "file:///Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats/scripts/verify-private-aa7.mjs";
+import {openSync,closeSync,readFileSync,writeFileSync,statSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {dirname,join} from 'node:path';
+import {execFileSync} from 'node:child_process';
+import {isUtf8} from 'node:buffer';
+const root="/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats",packet="/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-regroup-command-sql-rb17k1bc";
+
+function sourceHashes(root,env){
+ const names=execFileSync('/Users/vaibhavsuman/.codex/packages/app-server-daemon/releases/0.169.0-aarch64-apple-darwin/codex-path/rg',['--files','--hidden','-g','!.git','-g','!node_modules','-g','!build','-g','!.react-router'],{cwd:root,env,encoding:'utf8',maxBuffer:16*1024*1024}).trim().split('\n');
+ const hashes={};
+ for(const name of [...new Set(names)].sort()){
+  if(/(^|\/)(\.env[^/]*|\.npmrc|\.netrc|\.pypirc|private|\.private|secrets|\.secrets|credentials|(?:secrets?|credentials|private)\.json)(\/|$)/i.test(name))continue;
+  if(!(/^(app|tests|scripts|e2e|types|public|supabase|benchmarks|assets|\.github\/workflows)\//.test(name)||/^[^/]+\.(json|jsonc|js|mjs|cjs|ts|mts|cts|toml|ya?ml)$/.test(name)||/^(Dockerfile(\.[a-z0-9_-]+)?|\.dockerignore|\.gitignore|\.prettierignore)$/.test(name)||name==='docs/operations/ALERTS.json'))continue;
+  if(!(/\.(ts|tsx|mts|cts|js|jsx|mjs|cjs|json|jsonc|css|scss|html|sql|py|c|h|sh|toml|ya?ml|cnf|lock)$/.test(name)||/(^|\/)(Dockerfile(\.[a-z0-9_-]+)?|\.dockerignore|\.gitignore|\.prettierignore)$/.test(name)))continue;
+  const data=readFileSync(join(root,name)); if(data.includes(0)||!isUtf8(data))continue;
+  hashes[name]=createHash('sha256').update(data).digest('hex');
+ }
+ return hashes;
+}
+
+if(process.version!=='v22.23.4')throw Error('PINNED_NODE_REQUIRED');
+const [label,...args]=process.argv.slice(2);if(!label||!args.length)throw Error('ARGS_REQUIRED');
+const env={HOME:process.env.HOME,PATH:dirname(process.execPath)+':/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin',LANG:'en_US.UTF-8',TZ:'Asia/Kolkata',NO_COLOR:'1',RESUMIDE_PRIVATE_VERIFY:'aa7-owned-synthetic',AI_ENABLED:'false',OPENAI_API_KEY:'offline-no-live-key',OPENAI_BASE_URL:'https://api.openai.com/v1',SUPABASE_URL:'https://fixture.supabase.co',SUPABASE_PUBLISHABLE_KEY:'offline-publishable',SUPABASE_SECRET_KEY:'offline-secret',SUPABASE_RESUME_BUCKET:'resumes',APP_ORIGIN:'http://127.0.0.1:3110',NPM_CONFIG_USERCONFIG:join(packet,'npmrc'),NPM_CONFIG_GLOBALCONFIG:join(packet,'global-npmrc')};
+const log=join(packet,label+'.log'),file=join(packet,label+'.json');const fd=openSync(log,'wx',0o600);
+const before=sourceHashes(root,env),receipt={status:'RUNNING',node:process.version,args,sourceHashes:before,sourceInputs:Object.keys(before).length,startedAt:new Date().toISOString(),environment:'SEALED_NO_DOTENV_NO_LIVE_CREDENTIALS',providerRequests:0,databaseOperations:0,dockerOperations:0,log};
+const save=()=>writeFileSync(file,JSON.stringify(receipt,null,2)+'\n',{mode:0o600});save();
+const timer=setTimeout(()=>{receipt.timedOut=true;process.kill(process.pid,'SIGTERM')},60000);
+const monitor=setInterval(()=>{if(statSync(log).size>2*1024*1024){receipt.overLimit=true;process.kill(process.pid,'SIGTERM')}},100);
+receipt.result=await runCommand(process.execPath,args,{cwd:root,env,logFd:fd,onStart:(identity)=>{receipt.process=identity;save()}});
+clearTimeout(timer);clearInterval(monitor);closeSync(fd);
+const after=sourceHashes(root,env);receipt.changedSourceInputs=[...new Set([...Object.keys(before),...Object.keys(after)])].filter(k=>before[k]!==after[k]);receipt.finishedAt=new Date().toISOString();receipt.logSha256=createHash('sha256').update(readFileSync(log)).digest('hex');
+receipt.status=receipt.result.code===0&&!receipt.timedOut&&!receipt.overLimit&&!receipt.changedSourceInputs.length&&receipt.result.groupCleanupConfirmed?'PASS':'FAIL';if(label.includes('format')&&label.endsWith('write')&&receipt.result.code===0&&receipt.result.groupCleanupConfirmed&&receipt.changedSourceInputs.every(p=>['tests/unit/entry-regroup-command-sql.test.ts'].includes(p))){receipt.status='CONTROLLED_FORMAT';receipt.allowedSourceWrites=receipt.changedSourceInputs;}save();process.stdout.write(JSON.stringify({receipt:file,status:receipt.status,result:receipt.result,changedSourceInputs:receipt.changedSourceInputs})+'\n');

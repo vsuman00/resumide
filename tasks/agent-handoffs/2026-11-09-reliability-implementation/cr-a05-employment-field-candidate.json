@@ -1,0 +1,753 @@
+{
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "local_synthetic_development_only",
+  "nodeVersion": "22.23.4",
+  "applicationProfileAdopted": false,
+  "lockedRecognitionExecuted": false,
+  "calibrationRegistrationSha256": "ddb42ea678d2dc34a90ad1ecb524c1cf496cfc61106f110355a5fd7e5bd4e22c",
+  "previousCalibrationFailureSha256": "a48fe209b38061dacb577c75ca3fa62e5036982c3b565caf64545e96f0f448b2",
+  "receipt": {
+    "status": "structured_field_receipt_pre_execution",
+    "receiptSha256": "81aa997ffcddc87203186590815334582b3ed026f7c0f9a510bd82618534c95b",
+    "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+    "config": {
+      "psm": 3,
+      "maxDpi": 150
+    },
+    "partition": "development",
+    "fieldProfile": "mixed-ocr-review/1.0.1",
+    "parserSources": [
+      {
+        "path": "app/lib/server/evidence-fields.ts",
+        "sha256": "74b37891db64367098b6a38a58e7aea58c6d2de6024166efc19a2d20a368f863"
+      },
+      {
+        "path": "app/lib/server/parsing/contact.ts",
+        "sha256": "41c7c81b820b64a1dde2fb59bceaa9b080e4399f2aa10f6a3179ee04fdccd34e"
+      },
+      {
+        "path": "app/lib/server/parsing/dates.ts",
+        "sha256": "eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72"
+      },
+      {
+        "path": "app/lib/server/parsing/sections.ts",
+        "sha256": "e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1"
+      }
+    ],
+    "sources": [
+      {
+        "id": "print-reliability-dev-paperbridge-employment-clean-v1",
+        "sourceSha256": "4c8a3e7c37a26c5016a7a5e818e34d00cf2c51bdbd681736c30a8bbb8d6c195c",
+        "family": "reliability-dev-paperbridge-employment",
+        "segment": "clean",
+        "labelsSha256": "0a9c1682b7175536acb5f9f92e3735b15795b634c660fd899720d4419271d424"
+      },
+      {
+        "id": "print-reliability-dev-paperbridge-employment-challenging-v1",
+        "sourceSha256": "989e61402a05df9c538c7de7983340fa34dacfec90473e0e3a6a3c7d68ec984a",
+        "family": "reliability-dev-paperbridge-employment",
+        "segment": "challenging",
+        "labelsSha256": "0a9c1682b7175536acb5f9f92e3735b15795b634c660fd899720d4419271d424"
+      },
+      {
+        "id": "print-reliability-dev-paperbridge-employment-mixed-v1",
+        "sourceSha256": "274951e4eb1108ebdbe41b6cccb6494b97177c10c69ece41e73e9d5151210ae7",
+        "family": "reliability-dev-paperbridge-employment",
+        "segment": "mixed",
+        "labelsSha256": "0dcc8805b6aaff958fe74b987cb2dabd9b18614f4114a667a04eab5788d2311d"
+      },
+      {
+        "id": "print-reliability-dev-driftwood-employment-clean-v1",
+        "sourceSha256": "048d40c83d6f603a2e569c3430325e2c698d2d7aa804afcf873b1486bd73c4a8",
+        "family": "reliability-dev-driftwood-employment",
+        "segment": "clean",
+        "labelsSha256": "37abde2b9cfc3bb15d8b20ee8c122c21b9b035e75bf83463b376e2ae14570895"
+      },
+      {
+        "id": "print-reliability-dev-driftwood-employment-challenging-v1",
+        "sourceSha256": "dfad9898b992d91c596e899481f3c8e301b15009e141a49e9a8285daf309ebb6",
+        "family": "reliability-dev-driftwood-employment",
+        "segment": "challenging",
+        "labelsSha256": "37abde2b9cfc3bb15d8b20ee8c122c21b9b035e75bf83463b376e2ae14570895"
+      },
+      {
+        "id": "print-reliability-dev-driftwood-employment-mixed-v1",
+        "sourceSha256": "ff4860e4a225d309af9f6650d4fb8d13c20f14a92f0be3b8013d5fa00f3c36fe",
+        "family": "reliability-dev-driftwood-employment",
+        "segment": "mixed",
+        "labelsSha256": "97c3c05ef8cd704b7315965c42538cb320825d3e49c38a174a17a917b3c0ea6b"
+      }
+    ]
+  },
+  "testedSources": {
+    "scripts/verify-ocr-fields.ts": "2df2e62bee8d7599b51838a79b5315ab2d13525a2624a46f01d7d637ee8199c0",
+    "app/lib/server/evidence-fields.ts": "74b37891db64367098b6a38a58e7aea58c6d2de6024166efc19a2d20a368f863",
+    "tests/fixtures/ocr-employment-development.ts": "b190cbb8d420f43a764fa47935fe172e5e91e304980a41748e3e915367d0b83e",
+    "tests/fixtures/ocr-field-evaluation.ts": "4a3c36350c6820a130e9cc356e378fde7109db8742c2668c0410a7031edcf455",
+    "app/lib/server/ocr/selective.ts": "2d647df8cd51d36fd1fbd489cc7464d8ef3b8f098fc674743b871ea8a7f04325",
+    "app/lib/server/ocr/local-container.ts": "45234904a4dad16ccc5b998c679ce6ae1850f72650edcc2920824bec27fc1f65",
+    "app/lib/server/ocr/pdf-detection.ts": "941b751c990bc4b0c1455b9017122b9e419f59db451f87ae3a5c66af9b9ae142"
+  },
+  "runs": {
+    "expanded-dev-red": {
+      "receipt": {
+        "status": "structured_field_receipt_pre_execution",
+        "receiptSha256": "2e61ada6d374589c50eec098e7e614ab85a859eebb13591a25b7efbd6cfd2eff",
+        "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+        "config": {
+          "psm": 3,
+          "maxDpi": 150
+        },
+        "partition": "development",
+        "fieldProfile": "mixed-ocr-review/1.0.0",
+        "parserSources": [
+          {
+            "path": "app/lib/server/evidence-fields.ts",
+            "sha256": "fc421410c473b85db9697c9d66fef686e8cb10cab4bba1b6bf63b738784da286"
+          },
+          {
+            "path": "app/lib/server/parsing/contact.ts",
+            "sha256": "41c7c81b820b64a1dde2fb59bceaa9b080e4399f2aa10f6a3179ee04fdccd34e"
+          },
+          {
+            "path": "app/lib/server/parsing/dates.ts",
+            "sha256": "eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72"
+          },
+          {
+            "path": "app/lib/server/parsing/sections.ts",
+            "sha256": "e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1"
+          }
+        ],
+        "sources": [
+          {
+            "id": "print-reliability-dev-paperbridge-employment-clean-v1",
+            "sourceSha256": "4c8a3e7c37a26c5016a7a5e818e34d00cf2c51bdbd681736c30a8bbb8d6c195c",
+            "family": "reliability-dev-paperbridge-employment",
+            "segment": "clean",
+            "labelsSha256": "0a9c1682b7175536acb5f9f92e3735b15795b634c660fd899720d4419271d424"
+          },
+          {
+            "id": "print-reliability-dev-paperbridge-employment-challenging-v1",
+            "sourceSha256": "989e61402a05df9c538c7de7983340fa34dacfec90473e0e3a6a3c7d68ec984a",
+            "family": "reliability-dev-paperbridge-employment",
+            "segment": "challenging",
+            "labelsSha256": "0a9c1682b7175536acb5f9f92e3735b15795b634c660fd899720d4419271d424"
+          },
+          {
+            "id": "print-reliability-dev-paperbridge-employment-mixed-v1",
+            "sourceSha256": "274951e4eb1108ebdbe41b6cccb6494b97177c10c69ece41e73e9d5151210ae7",
+            "family": "reliability-dev-paperbridge-employment",
+            "segment": "mixed",
+            "labelsSha256": "0dcc8805b6aaff958fe74b987cb2dabd9b18614f4114a667a04eab5788d2311d"
+          },
+          {
+            "id": "print-reliability-dev-driftwood-employment-clean-v1",
+            "sourceSha256": "048d40c83d6f603a2e569c3430325e2c698d2d7aa804afcf873b1486bd73c4a8",
+            "family": "reliability-dev-driftwood-employment",
+            "segment": "clean",
+            "labelsSha256": "37abde2b9cfc3bb15d8b20ee8c122c21b9b035e75bf83463b376e2ae14570895"
+          },
+          {
+            "id": "print-reliability-dev-driftwood-employment-challenging-v1",
+            "sourceSha256": "dfad9898b992d91c596e899481f3c8e301b15009e141a49e9a8285daf309ebb6",
+            "family": "reliability-dev-driftwood-employment",
+            "segment": "challenging",
+            "labelsSha256": "37abde2b9cfc3bb15d8b20ee8c122c21b9b035e75bf83463b376e2ae14570895"
+          },
+          {
+            "id": "print-reliability-dev-driftwood-employment-mixed-v1",
+            "sourceSha256": "ff4860e4a225d309af9f6650d4fb8d13c20f14a92f0be3b8013d5fa00f3c36fe",
+            "family": "reliability-dev-driftwood-employment",
+            "segment": "mixed",
+            "labelsSha256": "97c3c05ef8cd704b7315965c42538cb320825d3e49c38a174a17a917b3c0ea6b"
+          }
+        ]
+      },
+      "reportSha256": "12029027a247145ce02a09ef4285b94417fed3f95d06c199c2850c452dc44883",
+      "aggregate": {
+        "truePositive": 36,
+        "falsePositive": 3,
+        "falseNegative": 12,
+        "ungroundedPredictions": 0,
+        "precision": 0.9230769230769231,
+        "recall": 0.75
+      },
+      "results": [
+        {
+          "id": "print-reliability-dev-paperbridge-employment-clean-v1",
+          "sourceSha256": "4c8a3e7c37a26c5016a7a5e818e34d00cf2c51bdbd681736c30a8bbb8d6c195c",
+          "family": "reliability-dev-paperbridge-employment",
+          "segment": "clean",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 6,
+          "falsePositive": 0,
+          "falseNegative": 2,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 384,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          }
+        },
+        {
+          "id": "print-reliability-dev-paperbridge-employment-challenging-v1",
+          "sourceSha256": "989e61402a05df9c538c7de7983340fa34dacfec90473e0e3a6a3c7d68ec984a",
+          "family": "reliability-dev-paperbridge-employment",
+          "segment": "challenging",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 6,
+          "falsePositive": 0,
+          "falseNegative": 2,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 384,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          }
+        },
+        {
+          "id": "print-reliability-dev-paperbridge-employment-mixed-v1",
+          "sourceSha256": "274951e4eb1108ebdbe41b6cccb6494b97177c10c69ece41e73e9d5151210ae7",
+          "family": "reliability-dev-paperbridge-employment",
+          "segment": "mixed",
+          "status": "review_required",
+          "selectedPages": [1, 3],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 6,
+          "falsePositive": 0,
+          "falseNegative": 2,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 471,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 17,
+            "exactPositionLines": 17,
+            "positionLineDenominator": 17,
+            "exactPositionLineAgreement": 1
+          }
+        },
+        {
+          "id": "print-reliability-dev-driftwood-employment-clean-v1",
+          "sourceSha256": "048d40c83d6f603a2e569c3430325e2c698d2d7aa804afcf873b1486bd73c4a8",
+          "family": "reliability-dev-driftwood-employment",
+          "segment": "clean",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 6,
+          "falsePositive": 1,
+          "falseNegative": 2,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 383,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 12,
+            "exactPositionLines": 12,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 1
+          }
+        },
+        {
+          "id": "print-reliability-dev-driftwood-employment-challenging-v1",
+          "sourceSha256": "dfad9898b992d91c596e899481f3c8e301b15009e141a49e9a8285daf309ebb6",
+          "family": "reliability-dev-driftwood-employment",
+          "segment": "challenging",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 6,
+          "falsePositive": 1,
+          "falseNegative": 2,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 383,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 12,
+            "exactPositionLines": 12,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 1
+          }
+        },
+        {
+          "id": "print-reliability-dev-driftwood-employment-mixed-v1",
+          "sourceSha256": "ff4860e4a225d309af9f6650d4fb8d13c20f14a92f0be3b8013d5fa00f3c36fe",
+          "family": "reliability-dev-driftwood-employment",
+          "segment": "mixed",
+          "status": "review_required",
+          "selectedPages": [1, 3],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 6,
+          "falsePositive": 1,
+          "falseNegative": 2,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 470,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 15,
+            "exactPositionLines": 15,
+            "positionLineDenominator": 15,
+            "exactPositionLineAgreement": 1
+          }
+        }
+      ]
+    },
+    "expanded-dev-green": {
+      "receipt": {
+        "status": "structured_field_receipt_pre_execution",
+        "receiptSha256": "81aa997ffcddc87203186590815334582b3ed026f7c0f9a510bd82618534c95b",
+        "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+        "config": {
+          "psm": 3,
+          "maxDpi": 150
+        },
+        "partition": "development",
+        "fieldProfile": "mixed-ocr-review/1.0.1",
+        "parserSources": [
+          {
+            "path": "app/lib/server/evidence-fields.ts",
+            "sha256": "74b37891db64367098b6a38a58e7aea58c6d2de6024166efc19a2d20a368f863"
+          },
+          {
+            "path": "app/lib/server/parsing/contact.ts",
+            "sha256": "41c7c81b820b64a1dde2fb59bceaa9b080e4399f2aa10f6a3179ee04fdccd34e"
+          },
+          {
+            "path": "app/lib/server/parsing/dates.ts",
+            "sha256": "eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72"
+          },
+          {
+            "path": "app/lib/server/parsing/sections.ts",
+            "sha256": "e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1"
+          }
+        ],
+        "sources": [
+          {
+            "id": "print-reliability-dev-paperbridge-employment-clean-v1",
+            "sourceSha256": "4c8a3e7c37a26c5016a7a5e818e34d00cf2c51bdbd681736c30a8bbb8d6c195c",
+            "family": "reliability-dev-paperbridge-employment",
+            "segment": "clean",
+            "labelsSha256": "0a9c1682b7175536acb5f9f92e3735b15795b634c660fd899720d4419271d424"
+          },
+          {
+            "id": "print-reliability-dev-paperbridge-employment-challenging-v1",
+            "sourceSha256": "989e61402a05df9c538c7de7983340fa34dacfec90473e0e3a6a3c7d68ec984a",
+            "family": "reliability-dev-paperbridge-employment",
+            "segment": "challenging",
+            "labelsSha256": "0a9c1682b7175536acb5f9f92e3735b15795b634c660fd899720d4419271d424"
+          },
+          {
+            "id": "print-reliability-dev-paperbridge-employment-mixed-v1",
+            "sourceSha256": "274951e4eb1108ebdbe41b6cccb6494b97177c10c69ece41e73e9d5151210ae7",
+            "family": "reliability-dev-paperbridge-employment",
+            "segment": "mixed",
+            "labelsSha256": "0dcc8805b6aaff958fe74b987cb2dabd9b18614f4114a667a04eab5788d2311d"
+          },
+          {
+            "id": "print-reliability-dev-driftwood-employment-clean-v1",
+            "sourceSha256": "048d40c83d6f603a2e569c3430325e2c698d2d7aa804afcf873b1486bd73c4a8",
+            "family": "reliability-dev-driftwood-employment",
+            "segment": "clean",
+            "labelsSha256": "37abde2b9cfc3bb15d8b20ee8c122c21b9b035e75bf83463b376e2ae14570895"
+          },
+          {
+            "id": "print-reliability-dev-driftwood-employment-challenging-v1",
+            "sourceSha256": "dfad9898b992d91c596e899481f3c8e301b15009e141a49e9a8285daf309ebb6",
+            "family": "reliability-dev-driftwood-employment",
+            "segment": "challenging",
+            "labelsSha256": "37abde2b9cfc3bb15d8b20ee8c122c21b9b035e75bf83463b376e2ae14570895"
+          },
+          {
+            "id": "print-reliability-dev-driftwood-employment-mixed-v1",
+            "sourceSha256": "ff4860e4a225d309af9f6650d4fb8d13c20f14a92f0be3b8013d5fa00f3c36fe",
+            "family": "reliability-dev-driftwood-employment",
+            "segment": "mixed",
+            "labelsSha256": "97c3c05ef8cd704b7315965c42538cb320825d3e49c38a174a17a917b3c0ea6b"
+          }
+        ]
+      },
+      "reportSha256": "5508ca55fad9d22fa2e6324dafe66609c4977b932a84e5a036433f8cf40e6bf4",
+      "aggregate": {
+        "truePositive": 48,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "ungroundedPredictions": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      "results": [
+        {
+          "id": "print-reliability-dev-paperbridge-employment-clean-v1",
+          "sourceSha256": "4c8a3e7c37a26c5016a7a5e818e34d00cf2c51bdbd681736c30a8bbb8d6c195c",
+          "family": "reliability-dev-paperbridge-employment",
+          "segment": "clean",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 384,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          }
+        },
+        {
+          "id": "print-reliability-dev-paperbridge-employment-challenging-v1",
+          "sourceSha256": "989e61402a05df9c538c7de7983340fa34dacfec90473e0e3a6a3c7d68ec984a",
+          "family": "reliability-dev-paperbridge-employment",
+          "segment": "challenging",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 384,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 14,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 14,
+            "exactPositionLineAgreement": 1
+          }
+        },
+        {
+          "id": "print-reliability-dev-paperbridge-employment-mixed-v1",
+          "sourceSha256": "274951e4eb1108ebdbe41b6cccb6494b97177c10c69ece41e73e9d5151210ae7",
+          "family": "reliability-dev-paperbridge-employment",
+          "segment": "mixed",
+          "status": "review_required",
+          "selectedPages": [1, 3],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 471,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 17,
+            "exactPositionLines": 17,
+            "positionLineDenominator": 17,
+            "exactPositionLineAgreement": 1
+          }
+        },
+        {
+          "id": "print-reliability-dev-driftwood-employment-clean-v1",
+          "sourceSha256": "048d40c83d6f603a2e569c3430325e2c698d2d7aa804afcf873b1486bd73c4a8",
+          "family": "reliability-dev-driftwood-employment",
+          "segment": "clean",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 383,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 12,
+            "exactPositionLines": 12,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 1
+          }
+        },
+        {
+          "id": "print-reliability-dev-driftwood-employment-challenging-v1",
+          "sourceSha256": "dfad9898b992d91c596e899481f3c8e301b15009e141a49e9a8285daf309ebb6",
+          "family": "reliability-dev-driftwood-employment",
+          "segment": "challenging",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 383,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 12,
+            "exactPositionLines": 12,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 1
+          }
+        },
+        {
+          "id": "print-reliability-dev-driftwood-employment-mixed-v1",
+          "sourceSha256": "ff4860e4a225d309af9f6650d4fb8d13c20f14a92f0be3b8013d5fa00f3c36fe",
+          "family": "reliability-dev-driftwood-employment",
+          "segment": "mixed",
+          "status": "review_required",
+          "selectedPages": [1, 3],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 470,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 15,
+            "exactPositionLines": 15,
+            "positionLineDenominator": 15,
+            "exactPositionLineAgreement": 1
+          }
+        }
+      ]
+    },
+    "original-dev-v2": {
+      "receipt": {
+        "status": "structured_field_receipt_pre_execution",
+        "receiptSha256": "396cf003130299a2d821c83eda44a925a8b47a6fd984b86fa19e056d6ff7ec5b",
+        "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+        "config": {
+          "psm": 3,
+          "maxDpi": 150
+        },
+        "partition": "development",
+        "fieldProfile": "mixed-ocr-review/1.0.1",
+        "parserSources": [
+          {
+            "path": "app/lib/server/evidence-fields.ts",
+            "sha256": "74b37891db64367098b6a38a58e7aea58c6d2de6024166efc19a2d20a368f863"
+          },
+          {
+            "path": "app/lib/server/parsing/contact.ts",
+            "sha256": "41c7c81b820b64a1dde2fb59bceaa9b080e4399f2aa10f6a3179ee04fdccd34e"
+          },
+          {
+            "path": "app/lib/server/parsing/dates.ts",
+            "sha256": "eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72"
+          },
+          {
+            "path": "app/lib/server/parsing/sections.ts",
+            "sha256": "e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1"
+          }
+        ],
+        "sources": [
+          {
+            "id": "print-reliability-dev-saffron-data-20261110-clean-v1",
+            "sourceSha256": "0833ae1bcdef1d739864a197218bb562a55b38bcda72ec65c87b237b087d5b0a",
+            "family": "reliability-dev-saffron-data-20261110",
+            "segment": "clean",
+            "labelsSha256": "53411851a6e49e2b14839ab8e95c0ae1b7daeb493c86d6df2c7afcfbba0cb457"
+          },
+          {
+            "id": "print-reliability-dev-saffron-data-20261110-challenging-v1",
+            "sourceSha256": "6ae3fd7b9c5e174e9f3853e8c2fa2284f9555646ec7d99f4611bc7e92d5b1e85",
+            "family": "reliability-dev-saffron-data-20261110",
+            "segment": "challenging",
+            "labelsSha256": "53411851a6e49e2b14839ab8e95c0ae1b7daeb493c86d6df2c7afcfbba0cb457"
+          },
+          {
+            "id": "print-reliability-dev-saffron-data-20261110-mixed-v1",
+            "sourceSha256": "6d967a2ea6d1990d95fa16fa5eeff11feb58485187b876c24b37c04069d07d22",
+            "family": "reliability-dev-saffron-data-20261110",
+            "segment": "mixed",
+            "labelsSha256": "c7279a4e2093407ab265236ad5b7d97744abc75e50794c747ba004e6a25a5163"
+          },
+          {
+            "id": "print-reliability-dev-mistral-security-20261110-clean-v1",
+            "sourceSha256": "1074aef3bcae7d2b229cc191d59858cd58d15dffd20beb2a85473baa7ece6ca9",
+            "family": "reliability-dev-mistral-security-20261110",
+            "segment": "clean",
+            "labelsSha256": "2a6852816738712cb7306a63f0ebf749bebe1c56db0f6bd34ef4579ed02838d3"
+          },
+          {
+            "id": "print-reliability-dev-mistral-security-20261110-challenging-v1",
+            "sourceSha256": "5f1318594036b2fb7a3c327aac1465eb03afb9ae8c4a43c7cfb10e6d739e4f66",
+            "family": "reliability-dev-mistral-security-20261110",
+            "segment": "challenging",
+            "labelsSha256": "2a6852816738712cb7306a63f0ebf749bebe1c56db0f6bd34ef4579ed02838d3"
+          },
+          {
+            "id": "print-reliability-dev-mistral-security-20261110-mixed-v1",
+            "sourceSha256": "f4aba8e5dc66f3688ab14744f5a2f809da8045a551c1f50c62539bbf20897ee8",
+            "family": "reliability-dev-mistral-security-20261110",
+            "segment": "mixed",
+            "labelsSha256": "79c295774e1380ca1d31117b5f8aa02a02673a6dd1f525510dd17e15448362f0"
+          }
+        ]
+      },
+      "reportSha256": "cd1226dbff14f9642183f1b94de93de40f4cd952d602d6dd4db047384b0fc1ce",
+      "aggregate": {
+        "truePositive": 48,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "ungroundedPredictions": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      "results": [
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-clean-v1",
+          "sourceSha256": "0833ae1bcdef1d739864a197218bb562a55b38bcda72ec65c87b237b087d5b0a",
+          "family": "reliability-dev-saffron-data-20261110",
+          "segment": "clean",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0
+        },
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-challenging-v1",
+          "sourceSha256": "6ae3fd7b9c5e174e9f3853e8c2fa2284f9555646ec7d99f4611bc7e92d5b1e85",
+          "family": "reliability-dev-saffron-data-20261110",
+          "segment": "challenging",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0
+        },
+        {
+          "id": "print-reliability-dev-saffron-data-20261110-mixed-v1",
+          "sourceSha256": "6d967a2ea6d1990d95fa16fa5eeff11feb58485187b876c24b37c04069d07d22",
+          "family": "reliability-dev-saffron-data-20261110",
+          "segment": "mixed",
+          "status": "review_required",
+          "selectedPages": [1, 3],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-clean-v1",
+          "sourceSha256": "1074aef3bcae7d2b229cc191d59858cd58d15dffd20beb2a85473baa7ece6ca9",
+          "family": "reliability-dev-mistral-security-20261110",
+          "segment": "clean",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-challenging-v1",
+          "sourceSha256": "5f1318594036b2fb7a3c327aac1465eb03afb9ae8c4a43c7cfb10e6d739e4f66",
+          "family": "reliability-dev-mistral-security-20261110",
+          "segment": "challenging",
+          "status": "review_required",
+          "selectedPages": [1],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0
+        },
+        {
+          "id": "print-reliability-dev-mistral-security-20261110-mixed-v1",
+          "sourceSha256": "f4aba8e5dc66f3688ab14744f5a2f809da8045a551c1f50c62539bbf20897ee8",
+          "family": "reliability-dev-mistral-security-20261110",
+          "segment": "mixed",
+          "status": "review_required",
+          "selectedPages": [1, 3],
+          "cleanup": "verified",
+          "nativePreservation": "verified",
+          "scoringEligible": false,
+          "truePositive": 8,
+          "falsePositive": 0,
+          "falseNegative": 0,
+          "ungroundedPredictions": 0
+        }
+      ]
+    }
+  }
+}

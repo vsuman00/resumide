@@ -1,0 +1,26 @@
+{
+  "green": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/canonical-corrections.test.ts",
+      "--no-cache"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "tests/unit/canonical-corrections.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "tests/unit/canonical-corrections.test.ts"
+    ],
+    "expectedExit": 0
+  }
+}

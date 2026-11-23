@@ -1,0 +1,38 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/grouped-import-source-sql.test.ts (6 tests | 1 failed) 19ms
+     ✓ replays actual source and structural normalization for 'two_jobs_overlap' 5ms
+     ✓ replays actual source and structural normalization for 'dates_before_role' 1ms
+     ✓ matches the real constructors and retains original data for 'two_jobs_overlap' 8ms
+     ✓ matches the real constructors and retains original data for 'dates_before_role' 2ms
+     × contains only revoked immutable invoker helpers and no stored authority 3ms
+     ✓ keeps independent source order, structural whitespace and local output validation explicit 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/grouped-import-source-sql.test.ts > private SQL source contract, unparsed and unexecuted > contains only revoked immutable invoker helpers and no stored authority
+AssertionError: expected [ 'grouped_import_invalid', …(10) ] to have a length of 12 but got 11
+
+- Expected
++ Received
+
+- 12
++ 11
+
+ ❯ tests/unit/grouped-import-source-sql.test.ts:104:19
+    102|   it("contains only revoked immutable invoker helpers and no stored au…
+    103|     const names = [...migration.matchAll(/create function private\.(gr…
+    104|     expect(names).toHaveLength(12);
+       |                   ^
+    105|     expect(new Set(names).size).toBe(names.length);
+    106|     expect(migration.match(/immutable(?: strict)? security invoker set…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 5 passed (6)
+   Start at  18:04:55
+   Duration  247ms (transform 90ms, setup 0ms, import 158ms, tests 19ms, environment 0ms)
+

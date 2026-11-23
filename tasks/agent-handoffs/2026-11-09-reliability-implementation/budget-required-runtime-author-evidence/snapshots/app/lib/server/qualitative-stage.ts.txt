@@ -1,0 +1,334 @@
+import { createSourceBoundAiBudgetClient } from "./ai-budget-source";
+import { AI_BUDGET_SOURCE_PROFILE } from "./ai-budget-source-profile";
+import { processInitialFeedbackStage } from "./initial-feedback-stage";
+import { hasUncalibratedEvidence } from "./evidence-scoring-guard";
+import { createHash, randomUUID } from "node:crypto";
+import { getAnalysisConfig } from "./config";
+import {
+  OpenAIQualitativeTransport,
+  QualitativeAiFailure,
+  runQualitativeAi,
+  type QualitativeAiTransport,
+} from "./qualitative-ai";
+import type { FeedbackZod } from "./schema";
+import { createSupabaseAdminClient } from "./supabase";
+import { recordProviderUsage } from "./observability";
+import { AiBudgetError } from "./ai-budget";
+import {
+  createAiBudgetAttemptId,
+  reserveAiBudgetTokens,
+  runBudgetedAiAttempt,
+} from "./ai-budget-attempt";
+import { AI_CONSENT_POLICY_VERSION } from "./privacy";
+import { buildRewriteSources } from "./rewrite-sources";
+import { PROSE_INSTRUCTIONS, ProseGenerationSchema } from "./qualitative-prose";
+import { zodResponseFormat } from "openai/helpers/zod";
+import {
+  AnalysisStageFenceError,
+  assertAnalysisStageActive,
+  assertAnalysisStageLease,
+  persistAnalysisStage,
+  type AnalysisStageOptions,
+} from "./analysis-stage-fence";
+
+import { BASELINE_SEMANTICS } from "./qualitative-prose";
+export const PROMPT_VERSION = "qualitative-cited-prose/3.0.0";
+
+export function buildPartialFeedback(args: {
+  score: number;
+  ruleTrace: Array<{ passed: boolean; detail: string }>;
+}): FeedbackZod {
+  const unavailable = {
+    score: 0,
+    tips: Array.from({ length: 3 }, () => ({
+      type: "improve" as const,
+      tip: "Qualitative feedback is currently unavailable.",
+      explanation:
+        "Your saved deterministic checks remain available. Writing feedback was not completed.",
+    })),
+  };
+  return {
+    scoreSemantics: BASELINE_SEMANTICS,
+    overallScore: args.score,
+    ATS: {
+      score: args.score,
+      tips: args.ruleTrace.slice(0, 4).map((rule) => ({
+        type: rule.passed ? "good" : "improve",
+        tip: rule.detail,
+      })),
+    },
+    toneAndStyle: unavailable,
+    content: unavailable,
+    structure: unavailable,
+    skills: unavailable,
+  };
+}
+
+export async function processQualitativeStage(
+  analysisId: string,
+  attempt: number,
+  providedTransport?: QualitativeAiTransport,
+  options?: AnalysisStageOptions,
+): Promise<boolean> {
+  assertAnalysisStageActive(options);
+  if (options?.lease && options.lease.attempt !== attempt)
+    throw new AnalysisStageFenceError("ANALYSIS_LEASE_LOST");
+  if (getAnalysisConfig().INITIAL_FEEDBACK_ENABLED === true)
+    return processInitialFeedbackStage(analysisId, attempt, options);
+  const admin = createSupabaseAdminClient();
+  await assertAnalysisStageLease(admin, analysisId, options);
+  const { data, error } = await admin
+    .from("analyses")
+    .select(
+      "status, request_id, owner_id, organization_id, resume_version_id, jobs(title, description), analysis_extractions(extracted_text), analysis_deterministic_results(score, rule_trace)",
+    )
+    .eq("id", analysisId)
+    .single();
+  if (error || !data) throw new Error("Qualitative input is unavailable.");
+  if (data.status !== "qualitative_review") return false;
+  if (await hasUncalibratedEvidence(admin, analysisId)) return false;
+
+  const extraction = Array.isArray(data.analysis_extractions)
+    ? data.analysis_extractions[0]
+    : data.analysis_extractions;
+  const deterministic = Array.isArray(data.analysis_deterministic_results)
+    ? data.analysis_deterministic_results[0]
+    : data.analysis_deterministic_results;
+  const job = Array.isArray(data.jobs) ? data.jobs[0] : data.jobs;
+  if (!extraction || !deterministic) {
+    throw new Error("Qualitative prerequisites are unavailable.");
+  }
+
+  const config = getAnalysisConfig();
+  const remainingTokenBudget = config.OPENAI_MAX_OUTPUT_TOKENS;
+  let inputHash = createHash("sha256")
+    .update(
+      JSON.stringify({
+        resumeText: extraction.extracted_text,
+        jobTitle: job?.title ?? "",
+        jobDescription: job?.description ?? "",
+        promptVersion: PROMPT_VERSION,
+      }),
+    )
+    .digest("hex");
+  let ai;
+  const admittedAttempt: { ordinal?: number; limit?: number } = {};
+  try {
+    if (
+      config.AI_BUDGET_ENABLED !== true ||
+      typeof config.AI_BUDGET_POLICY_VERSION !== "string" ||
+      !config.AI_BUDGET_POLICY_VERSION.trim()
+    )
+      throw new QualitativeAiFailure("AI_DISABLED");
+    const aiArgs = {
+      enabled: config.AI_ENABLED,
+      remainingTokenBudget,
+      model: config.OPENAI_MODEL,
+      maxOutputTokens: config.OPENAI_MAX_OUTPUT_TOKENS,
+      timeoutMs: config.OPENAI_TIMEOUT_MS,
+      idempotencyKey: `qualitative-${analysisId}-${inputHash}`,
+      resumeText: extraction.extracted_text,
+      jobTitle: job?.title ?? "",
+      jobDescription: job?.description ?? "",
+      signal: options?.signal,
+    };
+    {
+      if (!config.AI_ENABLED) throw new QualitativeAiFailure("AI_DISABLED");
+      if (!config.AI_BUDGET_POLICY_VERSION)
+        throw new AiBudgetError("AI_BUDGET_DISABLED");
+      if (!data.owner_id || !Number.isSafeInteger(attempt) || attempt < 1)
+        throw new AiBudgetError("AI_BUDGET_INVALID");
+      const { data: consent, error: consentError } = await admin
+        .from("consents")
+        .select("id")
+        .eq("user_id", data.owner_id)
+        .eq("organization_id", data.organization_id)
+        .eq("purpose", "qualitative_ai")
+        .eq("policy_version", AI_CONSENT_POLICY_VERSION)
+        .limit(1)
+        .maybeSingle();
+      if (consentError) throw new AiBudgetError("AI_BUDGET_UNAVAILABLE");
+      if (!consent) throw new AiBudgetError("AI_BUDGET_DENIED");
+      const user = JSON.stringify({
+        resumeText: aiArgs.resumeText,
+        sources: buildRewriteSources(aiArgs.resumeText),
+        jobTitle: aiArgs.jobTitle,
+        jobDescription: aiArgs.jobDescription,
+      });
+      const schema = zodResponseFormat(
+        ProseGenerationSchema,
+        "qualitative_analysis",
+      );
+      const reservation = reserveAiBudgetTokens({
+        system: PROSE_INSTRUCTIONS,
+        user,
+        schema,
+        maxOutputTokens: config.OPENAI_MAX_OUTPUT_TOKENS,
+      });
+      inputHash = createHash("sha256")
+        .update(
+          JSON.stringify({
+            system: PROSE_INSTRUCTIONS,
+            user,
+            schema,
+            model: config.OPENAI_MODEL,
+            promptVersion: PROMPT_VERSION,
+            budgetPolicyVersion: config.AI_BUDGET_POLICY_VERSION,
+          }),
+        )
+        .digest("hex");
+      ai = await runBudgetedAiAttempt({
+        client: createSourceBoundAiBudgetClient(
+          admin,
+          {
+            userId: data.owner_id,
+            organizationId: data.organization_id,
+            source: {
+              schemaVersion: "ai-budget-source/2.0.0",
+              kind: "legacy_qualitative",
+              analysisId,
+              resumeVersionId: data.resume_version_id,
+            },
+          },
+          AI_BUDGET_SOURCE_PROFILE,
+          { signal: options?.signal },
+        ),
+        signal: options?.signal,
+        binding: {
+          userId: data.owner_id,
+          organizationId: data.organization_id,
+          operationId: analysisId,
+          attemptId: createAiBudgetAttemptId({
+            operationId: analysisId,
+            attemptNonce: `job-attempt/${attempt}`,
+          }),
+          surface: "qualitative",
+          payloadSha256: inputHash,
+          model: config.OPENAI_MODEL,
+          promptPolicyVersion: PROMPT_VERSION,
+          policyVersion: config.AI_BUDGET_POLICY_VERSION,
+          ...reservation,
+        },
+        onAdmitted: (receipt) => {
+          admittedAttempt.ordinal = receipt.attemptOrdinal;
+          admittedAttempt.limit = receipt.attemptLimit;
+        },
+        execute: async (recordUsage, receipt) => {
+          await assertAnalysisStageLease(admin, analysisId, options);
+          const transport =
+            providedTransport ??
+            new OpenAIQualitativeTransport(
+              config.OPENAI_API_KEY,
+              config.OPENAI_TIMEOUT_MS,
+              config.OPENAI_BASE_URL,
+            );
+          const value = await runQualitativeAi(
+            { ...aiArgs, idempotencyKey: receipt.attemptId },
+            {
+              execute: async (request) => {
+                const response = await transport.execute(request);
+                recordUsage(response.usage);
+                return response;
+              },
+            },
+          );
+          return { value, usage: value.usage };
+        },
+      });
+    }
+  } catch (error) {
+    assertAnalysisStageActive(options);
+    if (
+      error instanceof AnalysisStageFenceError ||
+      (error instanceof QualitativeAiFailure && error.code === "AI_CANCELLED")
+    )
+      throw error;
+    const failure =
+      error instanceof AiBudgetError &&
+      (error.code === "AI_BUDGET_EXHAUSTED" ||
+        error.code === "AI_BUDGET_BLOCKED")
+        ? new QualitativeAiFailure("AI_BUDGET_EXHAUSTED")
+        : error;
+    if (!(failure instanceof QualitativeAiFailure)) throw failure;
+    const ordinal = config.AI_BUDGET_ENABLED
+      ? admittedAttempt.ordinal
+      : attempt;
+    const limit = config.AI_BUDGET_ENABLED
+      ? Math.min(admittedAttempt.limit ?? 1, config.QUALITATIVE_MAX_ATTEMPTS)
+      : config.QUALITATIVE_MAX_ATTEMPTS;
+    if (failure.retryable && ordinal !== undefined && ordinal < limit) {
+      throw failure;
+    }
+    const { data: transitioned, error: transitionError } =
+      await persistAnalysisStage(
+        admin,
+        analysisId,
+        "persist_partial_analysis",
+        {
+          p_analysis_id: analysisId,
+          p_feedback: buildPartialFeedback({
+            score: deterministic.score,
+            ruleTrace: deterministic.rule_trace,
+          }),
+          p_process_id: `qualitative-${randomUUID()}`,
+          p_request_id: data.request_id || `worker-${randomUUID()}`,
+        },
+        options,
+      );
+    if (transitionError || transitioned !== true) {
+      throw new Error("Partial-result transition failed.");
+    }
+    return false;
+  }
+
+  const atsTips = deterministic.rule_trace
+    .slice(0, 4)
+    .map((rule: { passed: boolean; detail: string }) => ({
+      type: rule.passed ? "good" : "improve",
+      tip: rule.detail,
+    }));
+  const feedback = {
+    scoreSemantics: BASELINE_SEMANTICS,
+    overallScore: deterministic.score,
+    ATS: { score: deterministic.score, tips: atsTips },
+    toneAndStyle: ai.output.toneAndStyle,
+    content: ai.output.content,
+    structure: ai.output.structure,
+    skills: ai.output.skills,
+  };
+  recordProviderUsage({
+    provider: "openai",
+    model: config.OPENAI_MODEL,
+    inputTokens: ai.usage.inputTokens,
+    outputTokens: ai.usage.outputTokens,
+    inputCostPer1kUsd: config.AI_INPUT_COST_PER_1K_USD,
+    outputCostPer1kUsd: config.AI_OUTPUT_COST_PER_1K_USD,
+  });
+  const processId = `qualitative-${randomUUID()}`;
+  const requestId = data.request_id || `worker-${randomUUID()}`;
+  const { data: persisted, error: persistError } = await persistAnalysisStage(
+    admin,
+    analysisId,
+    "persist_qualitative_analysis",
+    {
+      p_analysis_id: analysisId,
+      p_feedback: feedback,
+      p_input_hash: inputHash,
+      p_input_tokens: ai.usage.inputTokens,
+      p_model_id: config.OPENAI_MODEL,
+      p_output: ai.prose,
+      p_output_tokens: ai.usage.outputTokens,
+      p_process_id: processId,
+      p_prompt_version: PROMPT_VERSION,
+      p_provider: "openai",
+      p_request_id: requestId,
+      p_run_id: randomUUID(),
+      p_writer: ai.output.writer,
+    },
+    options,
+  );
+  if (persistError || persisted !== true) {
+    throw new Error("Qualitative result persistence failed.");
+  }
+  return true;
+}

@@ -1,0 +1,578 @@
+{
+  "status": "READ_ONLY_NATIVE_CATALOG_VERIFIED",
+  "configuredProjectMatched": true,
+  "configurationSource": "local_dotenv",
+  "projectIdentifierOmitted": true,
+  "metadata": {
+    "tables": [
+      {
+        "table": "ai_budget_attempts",
+        "schema": "private",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "ai_budget_events",
+        "schema": "private",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "ai_budget_operations",
+        "schema": "private",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "ai_budget_period_openings",
+        "schema": "private",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "ai_budget_policies",
+        "schema": "private",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "ai_budget_pools",
+        "schema": "private",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "ai_budget_reconciliation_operators",
+        "schema": "private",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "analysis_admission_operations",
+        "schema": "private",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "analysis_admission_uploads",
+        "schema": "private",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "candidate_correction_applications",
+        "schema": "public",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "candidate_correction_assignments",
+        "schema": "public",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "candidate_correction_operations",
+        "schema": "public",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "canonical_correction_snapshot_facts",
+        "schema": "public",
+        "present": false,
+        "rlsEnabled": false
+      },
+      {
+        "table": "canonical_correction_snapshots",
+        "schema": "public",
+        "present": false,
+        "rlsEnabled": false
+      }
+    ],
+    "functions": [
+      {
+        "present": false,
+        "signature": "private.ai_budget_transition(uuid,uuid,jsonb,text)",
+        "serviceExecute": false,
+        "emptySearchPath": false,
+        "securityDefiner": null,
+        "anonymousExecute": false,
+        "actualSourceSha256": null,
+        "authenticatedExecute": false,
+        "sourceMatchesExpected": false
+      },
+      {
+        "present": false,
+        "signature": "private.analysis_admission_authorized(uuid,uuid)",
+        "serviceExecute": false,
+        "emptySearchPath": false,
+        "securityDefiner": null,
+        "anonymousExecute": false,
+        "actualSourceSha256": null,
+        "authenticatedExecute": false,
+        "sourceMatchesExpected": false
+      },
+      {
+        "present": false,
+        "signature": "private.analysis_job_v2_owner_eligible(uuid)",
+        "serviceExecute": false,
+        "emptySearchPath": false,
+        "securityDefiner": null,
+        "anonymousExecute": false,
+        "actualSourceSha256": null,
+        "authenticatedExecute": false,
+        "sourceMatchesExpected": false
+      },
+      {
+        "present": false,
+        "signature": "private.lock_analysis_stage_lease(uuid,text,integer,uuid)",
+        "serviceExecute": false,
+        "emptySearchPath": false,
+        "securityDefiner": null,
+        "anonymousExecute": false,
+        "actualSourceSha256": null,
+        "authenticatedExecute": false,
+        "sourceMatchesExpected": false
+      },
+      {
+        "present": false,
+        "signature": "public.ai_budget_reserve_next(uuid,uuid,jsonb)",
+        "serviceExecute": false,
+        "emptySearchPath": false,
+        "securityDefiner": null,
+        "anonymousExecute": false,
+        "actualSourceSha256": null,
+        "authenticatedExecute": false,
+        "sourceMatchesExpected": false
+      },
+      {
+        "present": true,
+        "signature": "public.apply_authoring_action(uuid,uuid,jsonb,jsonb,jsonb,text)",
+        "serviceExecute": true,
+        "emptySearchPath": true,
+        "securityDefiner": true,
+        "anonymousExecute": false,
+        "actualSourceSha256": "07a6dbe31d28b3689456beb3c7b4a9fc7394018e37824fdd79e2417c8c7772a6",
+        "authenticatedExecute": false,
+        "sourceMatchesExpected": true
+      },
+      {
+        "present": false,
+        "signature": "public.claim_analysis_job_v2(text,integer)",
+        "serviceExecute": false,
+        "emptySearchPath": false,
+        "securityDefiner": null,
+        "anonymousExecute": false,
+        "actualSourceSha256": null,
+        "authenticatedExecute": false,
+        "sourceMatchesExpected": false
+      },
+      {
+        "present": true,
+        "signature": "public.claim_analysis_job(text,integer)",
+        "serviceExecute": true,
+        "emptySearchPath": true,
+        "securityDefiner": true,
+        "anonymousExecute": false,
+        "actualSourceSha256": "0f931fef34cf6905b56804c6cf9fa7a5e39d7c99596ae921e2b1c3731e981a3e",
+        "authenticatedExecute": false,
+        "sourceMatchesExpected": false
+      },
+      {
+        "present": true,
+        "signature": "public.save_canonical_version(uuid,uuid,jsonb,jsonb,text)",
+        "serviceExecute": true,
+        "emptySearchPath": true,
+        "securityDefiner": true,
+        "anonymousExecute": false,
+        "actualSourceSha256": "da099d547bb99588c665775b84bb1cd9af30d0dac779cf3b42802b25e5418542",
+        "authenticatedExecute": false,
+        "sourceMatchesExpected": true
+      },
+      {
+        "present": true,
+        "signature": "public.save_job_requirements(uuid,uuid,jsonb,uuid,uuid,text)",
+        "serviceExecute": true,
+        "emptySearchPath": true,
+        "securityDefiner": true,
+        "anonymousExecute": false,
+        "actualSourceSha256": "b24bd48963c35bc07768f1beda3eda12de32ced7fc7556c11d2f6ed4462534b8",
+        "authenticatedExecute": false,
+        "sourceMatchesExpected": true
+      }
+    ],
+    "databaseRole": "postgres",
+    "serverVersionNum": "170011",
+    "transactionIsolation": "read committed",
+    "migrationCatalogAvailable": true,
+    "defaultTransactionIsolation": "read committed"
+  },
+  "legacyCore": {
+    "columns": [
+      {
+        "type": "text",
+        "table": "analysis_deterministic_results",
+        "column": "taxonomy_version",
+        "notNull": true,
+        "present": true
+      },
+      {
+        "type": "text",
+        "table": "analysis_results",
+        "column": "taxonomy_version",
+        "notNull": true,
+        "present": true
+      }
+    ],
+    "routines": [
+      {
+        "name": "cancel_queued_analysis",
+        "sourceSha256": "2066046780291555b78f953d4786e79d4b7b8b2f0c6aa199405862d66b3785ae",
+        "serviceExecute": true,
+        "identityArguments": "p_analysis_id uuid, p_user_id uuid, p_request_id text"
+      },
+      {
+        "name": "persist_deterministic_analysis",
+        "sourceSha256": "8ccb108f8e38b4634cfe6b9e6e8c3e946272637cca6f0872c6e8213d313c631a",
+        "serviceExecute": true,
+        "identityArguments": "p_analysis_id uuid, p_input_text_checksum text, p_keyword_coverage jsonb, p_normalizer_version text, p_parse_view jsonb, p_parser_version text, p_process_id text, p_request_id text, p_result_checksum text, p_rule_trace jsonb, p_ruleset_version text, p_score integer, p_taxonomy_version text"
+      },
+      {
+        "name": "persist_partial_analysis",
+        "sourceSha256": "dd10ab4f0e37a30e886ce74f4e7c42c8f0dcd3ec01b618deb0381af2238c3a9b",
+        "serviceExecute": true,
+        "identityArguments": "p_analysis_id uuid, p_feedback jsonb, p_process_id text, p_request_id text"
+      },
+      {
+        "name": "persist_qualitative_analysis",
+        "sourceSha256": "2ba7d1464e2c870f9cd714b4a3d683004f00d13439e3af8f4968a22432188778",
+        "serviceExecute": true,
+        "identityArguments": "p_analysis_id uuid, p_feedback jsonb, p_input_hash text, p_input_tokens integer, p_model_id text, p_output jsonb, p_output_tokens integer, p_process_id text, p_prompt_version text, p_provider text, p_request_id text, p_run_id uuid, p_writer jsonb"
+      },
+      {
+        "name": "release_analysis_job",
+        "sourceSha256": "5c7348eaf680d4fb49f9f07e77e13246129654e847971bb552591d3d0edcd015",
+        "serviceExecute": true,
+        "identityArguments": "p_analysis_id uuid, p_worker_id text, p_retry_delay_seconds integer, p_error_code text"
+      },
+      {
+        "name": "transition_analysis",
+        "sourceSha256": "71c8cdcbfc1c7ae9e91390c65b83648ecb0fe58a46df4d60cc508c20be595c2f",
+        "serviceExecute": true,
+        "identityArguments": "p_analysis_id uuid, p_expected_status text, p_next_status text, p_actor_id uuid, p_process_id text, p_request_id text"
+      }
+    ],
+    "uniqueInputIndexPresent": false
+  },
+  "policyAndIndex": {
+    "policies": [
+      {
+        "table": "public.canonical_resume_versions",
+        "policy": "owners read active canonical versions",
+        "command": "r",
+        "present": true,
+        "permissive": true,
+        "qualSha256": "889c6402136f44725047f840246bd49483ea933e786f812f30f002708f365552",
+        "authenticatedOnly": true
+      },
+      {
+        "table": "public.job_requirement_versions",
+        "policy": "owners read active job requirement versions",
+        "command": "r",
+        "present": true,
+        "permissive": true,
+        "qualSha256": "3bed630da3fa59b37da466bd63ef73d4f54f06d49e5ae70c4ea87d365a7cdbb9",
+        "authenticatedOnly": true
+      },
+      {
+        "table": "public.authoring_events",
+        "policy": "owners read active authoring decisions",
+        "command": "r",
+        "present": true,
+        "permissive": true,
+        "qualSha256": "6aea57c7dd783f0f7232bf858c3f3e26eb45c3a9aa8e0d0f0a1f101d2ac30386",
+        "authenticatedOnly": true
+      }
+    ],
+    "aiRunIndexes": [
+      {
+        "name": "analysis_ai_runs_pkey",
+        "plain": true,
+        "valid": true,
+        "unique": true,
+        "keyColumns": [
+          "id"
+        ]
+      },
+      {
+        "name": "analysis_ai_runs_analysis_id_idx",
+        "plain": true,
+        "valid": true,
+        "unique": false,
+        "keyColumns": [
+          "analysis_id",
+          "created_at"
+        ]
+      },
+      {
+        "name": "analysis_ai_runs_organization_created_idx",
+        "plain": true,
+        "valid": true,
+        "unique": false,
+        "keyColumns": [
+          "organization_id",
+          "created_at"
+        ]
+      },
+      {
+        "name": "analysis_ai_runs_owner_id_idx",
+        "plain": true,
+        "valid": true,
+        "unique": false,
+        "keyColumns": [
+          "owner_id"
+        ]
+      }
+    ],
+    "probePolicyCollision": false
+  },
+  "migrationInventory": [
+    {
+      "version": "20260909080809",
+      "name": "candidate_resume_analysis"
+    },
+    {
+      "version": "20260909080923",
+      "name": "add_foreign_key_indexes"
+    },
+    {
+      "version": "20260909084128",
+      "name": "analysis_rate_limit"
+    },
+    {
+      "version": "20260909110255",
+      "name": "bootstrap_personal_workspaces"
+    },
+    {
+      "version": "20260909110337",
+      "name": "membership_authorization"
+    },
+    {
+      "version": "20260909110358",
+      "name": "persist_completed_analysis"
+    },
+    {
+      "version": "20260909110426",
+      "name": "privacy_requests"
+    },
+    {
+      "version": "20260909110513",
+      "name": "add_privacy_foreign_key_indexes"
+    },
+    {
+      "version": "20260909133537",
+      "name": "analysis_state_transitions"
+    },
+    {
+      "version": "20260909133625",
+      "name": "leased_analysis_jobs"
+    },
+    {
+      "version": "20260909133803",
+      "name": "fix_expired_job_dead_letter_reason"
+    },
+    {
+      "version": "20260909134207",
+      "name": "explicitly_deny_client_job_access"
+    },
+    {
+      "version": "20260910093950",
+      "name": "analysis_ingestion_and_extraction"
+    },
+    {
+      "version": "20260910094041",
+      "name": "align_job_claim_contract"
+    },
+    {
+      "version": "20260910095319",
+      "name": "deterministic_scoring_stage"
+    },
+    {
+      "version": "20260910100206",
+      "name": "qualitative_ai_stage"
+    },
+    {
+      "version": "20260910100615",
+      "name": "cancel_queued_analyses"
+    },
+    {
+      "version": "20260911074651",
+      "name": "phase6_page_evidence"
+    },
+    {
+      "version": "20260911074656",
+      "name": "phase7_security_privacy_operations"
+    },
+    {
+      "version": "20260911074701",
+      "name": "phase7_queue_age_metric"
+    },
+    {
+      "version": "20260911074706",
+      "name": "durable_privacy_deletion_plan"
+    },
+    {
+      "version": "20260911075036",
+      "name": "harden_phase7_advisor_findings"
+    },
+    {
+      "version": "20261003143648",
+      "name": "native_evidence_graph"
+    },
+    {
+      "version": "20261003183757",
+      "name": "native_layout_evidence"
+    },
+    {
+      "version": "20261011151855",
+      "name": "document_evidence_review"
+    },
+    {
+      "version": "20261030182138",
+      "name": "canonical_resume_draft_storage"
+    },
+    {
+      "version": "20261030182139",
+      "name": "canonical_resume_transactions"
+    },
+    {
+      "version": "20261030182141",
+      "name": "job_requirement_versions"
+    },
+    {
+      "version": "20261030182143",
+      "name": "candidate_authoring_transactions"
+    },
+    {
+      "version": "20261030182144",
+      "name": "job_requirement_parser_compatibility"
+    },
+    {
+      "version": "20261030182146",
+      "name": "canonical_producer_compatibility"
+    },
+    {
+      "version": "20261030182147",
+      "name": "evidence_field_parser_version"
+    },
+    {
+      "version": "20261030182150",
+      "name": "ocr_fusion_resource_profile"
+    }
+  ],
+  "localMigrationNamesAbsentFromHistory": [
+    {
+      "version": "20260910100000",
+      "name": "complete_phase4_recovery_and_partial_results",
+      "file": "supabase/migrations/20260910100000_complete_phase4_recovery_and_partial_results.sql"
+    },
+    {
+      "version": "20260910110000",
+      "name": "version_skill_taxonomy",
+      "file": "supabase/migrations/20260910110000_version_skill_taxonomy.sql"
+    },
+    {
+      "version": "20261029130000",
+      "name": "paddle_ocr_admission",
+      "file": "supabase/migrations/20261029130000_paddle_ocr_admission.sql"
+    },
+    {
+      "version": "20261109164851",
+      "name": "correction_ledger_foundation",
+      "file": "supabase/migrations/20261109164851_correction_ledger_foundation.sql"
+    },
+    {
+      "version": "20261110062548",
+      "name": "technical_ai_budget",
+      "file": "supabase/migrations/20261110062548_technical_ai_budget.sql"
+    },
+    {
+      "version": "20261110080809",
+      "name": "analysis_admission_binding",
+      "file": "supabase/migrations/20261110080809_analysis_admission_binding.sql"
+    },
+    {
+      "version": "20261110080810",
+      "name": "lease_fencing_and_verification_scope",
+      "file": "supabase/migrations/20261110080810_lease_fencing_and_verification_scope.sql"
+    },
+    {
+      "version": "20261110082455",
+      "name": "analysis_stage_write_fencing",
+      "file": "supabase/migrations/20261110082455_analysis_stage_write_fencing.sql"
+    },
+    {
+      "version": "20261110085512",
+      "name": "privacy_write_barrier",
+      "file": "supabase/migrations/20261110085512_privacy_write_barrier.sql"
+    },
+    {
+      "version": "20261110085513",
+      "name": "terminal_job_recovery",
+      "file": "supabase/migrations/20261110085513_terminal_job_recovery.sql"
+    },
+    {
+      "version": "20261110094229",
+      "name": "worker_schema_readiness",
+      "file": "supabase/migrations/20261110094229_worker_schema_readiness.sql"
+    }
+  ],
+  "knownLegacyMatches": [
+    {
+      "routine": "public.claim_analysis_job(text,integer)",
+      "source": "20260911120000_phase7_queue_age_metric.sql",
+      "bodySha256": "0f931fef34cf6905b56804c6cf9fa7a5e39d7c99596ae921e2b1c3731e981a3e"
+    },
+    {
+      "routine": "public.transition_analysis(uuid,text,text,uuid,text,text)",
+      "source": "20260909150000_analysis_state_transitions.sql",
+      "bodySha256": "71c8cdcbfc1c7ae9e91390c65b83648ecb0fe58a46df4d60cc508c20be595c2f"
+    },
+    {
+      "routine": "public.release_analysis_job(uuid,text,integer,text)",
+      "source": "20260909160000_leased_analysis_jobs.sql",
+      "bodySha256": "5c7348eaf680d4fb49f9f07e77e13246129654e847971bb552591d3d0edcd015"
+    }
+  ],
+  "findings": {
+    "newTablesPresent": 0,
+    "newTablesChecked": 14,
+    "predecessorFunctionsPresent": 4,
+    "exactPostPrerequisiteFunctionMatches": 3,
+    "cancellationRpcPresent": false,
+    "taxonomyColumnsPresent": true,
+    "equivalentPlainUniqueAiInputIndex": false,
+    "migrationNamesAreNotAuthoritativeForAppliedSemantics": true,
+    "blindHistoricalReplayUnsafe": true,
+    "requiredTransitionRevision": "eefd6814879dabe72de6dc15f355edcc57fd37c1271e0a162621479754b59ffd",
+    "uniqueIndexRewriteCompatibility": "REVIEW_REQUIRED_BEFORE_ANY_INDEX_CREATION"
+  },
+  "operations": {
+    "successfulCatalogSelects": 3,
+    "failedCatalogSelects": 1,
+    "failedSelectSqlstate": "42601",
+    "failedSelectReason": "Corrected one aggregate-parenthesis syntax error before catalog access",
+    "migrationInventoryReads": 1,
+    "localResponseExtractionFailures": 2,
+    "rowsWritten": 0,
+    "migrationsApplied": 0,
+    "workerClaims": 0,
+    "providerRequests": 0,
+    "candidateDataScans": 0
+  },
+  "isolation": "NOT_PROVED",
+  "nativeWriteAdmission": "NOT_GRANTED",
+  "newMigrationSqlParsed": false,
+  "newMigrationSqlExecuted": false
+}

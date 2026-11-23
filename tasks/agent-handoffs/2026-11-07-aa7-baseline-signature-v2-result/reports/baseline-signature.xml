@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestCase name="TestSignatureBasics">
+  <Environment>
+    <QtVersion>6.8.2</QtVersion>
+    <QtBuild>Qt 6.8.2 (arm64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 14.2.0)</QtBuild>
+    <QTestVersion>6.8.2</QTestVersion>
+  </Environment>
+  <TestFunction name="initTestCase">
+    <Incident type="pass" file="" line="0" />
+    <Duration msecs="11.3886"/>
+  </TestFunction>
+  <TestFunction name="testSignatureCount">
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="142">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(CryptoSign::Factory::getActive(), backend)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="147">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="148">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc->isOk())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="182">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="184">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields.size(), 4)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="186">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(!signatureFields[0]->getSignature().empty())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="187">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(!signatureFields[1]->getSignature().empty())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="188">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(signatureFields[2]->getSignature().empty())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="189">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(signatureFields[3]->getSignature().empty())]]></Description>
+  </Message>
+    <Incident type="pass" file="" line="0">
+      <DataTag><![CDATA[nss]]></DataTag>
+    </Incident>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="142">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(CryptoSign::Factory::getActive(), backend)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="147">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="148">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc->isOk())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="182">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="184">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields.size(), 4)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="186">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(!signatureFields[0]->getSignature().empty())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="187">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(!signatureFields[1]->getSignature().empty())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="188">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(signatureFields[2]->getSignature().empty())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="189">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(signatureFields[3]->getSignature().empty())]]></Description>
+  </Message>
+    <Incident type="pass" file="" line="0">
+      <DataTag><![CDATA[gpg]]></DataTag>
+    </Incident>
+    <Duration msecs="2.23867"/>
+  </TestFunction>
+  <TestFunction name="testSignatureSizes">
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="142">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(CryptoSign::Factory::getActive(), backend)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="147">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="148">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc->isOk())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="200">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[0]->getSignature().size(), 10230)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="201">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[1]->getSignature().size(), 10196)]]></Description>
+  </Message>
+    <Incident type="pass" file="" line="0">
+      <DataTag><![CDATA[nss]]></DataTag>
+    </Incident>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="142">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(CryptoSign::Factory::getActive(), backend)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="147">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="148">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc->isOk())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="200">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[0]->getSignature().size(), 10230)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="201">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[1]->getSignature().size(), 10196)]]></Description>
+  </Message>
+    <Incident type="pass" file="" line="0">
+      <DataTag><![CDATA[gpg]]></DataTag>
+    </Incident>
+    <Duration msecs="1.55612"/>
+  </TestFunction>
+  <TestFunction name="testSignerInfo">
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="142">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(CryptoSign::Factory::getActive(), backend)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="147">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="148">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc->isOk())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="207">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[0]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature0_B_" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="208">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[0]->getSignatureType(), CryptoSign::SignatureType::ETSI_CAdES_detached)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="212">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getSignerName(), std::string { "Koch, Werner" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="213">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getHashAlgorithm(), HashAlgorithm::Sha256)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="214">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getCertificateInfo()->getPublicKeyInfo().publicKeyStrength, 2048 / 8)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="219">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getSigningTime(), time_t(1677570911))]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="221">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[1]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature1_B_" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="222">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[1]->getSignatureType(), CryptoSign::SignatureType::ETSI_CAdES_detached)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="226">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo1->getSignerName(), std::string { "Koch, Werner" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="227">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo1->getHashAlgorithm(), HashAlgorithm::Sha256)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="233">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo1->getCertificateInfo()->getPublicKeyInfo().publicKeyStrength, 0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="239">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo1->getSigningTime(), time_t(1677840601))]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="241">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[2]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature2_B_" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="242">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[2]->getSignatureType(), CryptoSign::SignatureType::unsigned_signature_field)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="243">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[3]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature3_B_" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="244">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[3]->getSignatureType(), CryptoSign::SignatureType::unsigned_signature_field)]]></Description>
+  </Message>
+    <Incident type="pass" file="" line="0">
+      <DataTag><![CDATA[nss]]></DataTag>
+    </Incident>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="142">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(CryptoSign::Factory::getActive(), backend)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="147">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="148">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc->isOk())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="207">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[0]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature0_B_" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="208">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[0]->getSignatureType(), CryptoSign::SignatureType::ETSI_CAdES_detached)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="212">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getSignerName(), std::string { "Koch, Werner" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="213">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getHashAlgorithm(), HashAlgorithm::Sha256)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="214">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getCertificateInfo()->getPublicKeyInfo().publicKeyStrength, 2048 / 8)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="219">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getSigningTime(), time_t(1677570911))]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="221">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[1]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature1_B_" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="222">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[1]->getSignatureType(), CryptoSign::SignatureType::ETSI_CAdES_detached)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="226">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo1->getSignerName(), std::string { "Koch, Werner" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="227">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo1->getHashAlgorithm(), HashAlgorithm::Sha256)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="230">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo1->getCertificateInfo()->getPublicKeyInfo().publicKeyStrength, 2048 / 8)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="239">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo1->getSigningTime(), time_t(1677840601))]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="241">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[2]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature2_B_" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="242">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[2]->getSignatureType(), CryptoSign::SignatureType::unsigned_signature_field)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="243">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[3]->getCreateWidget()->getField()->getFullyQualifiedName()->toStr(), std::string { "P2.AnA_Signature3_B_" })]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="244">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[3]->getSignatureType(), CryptoSign::SignatureType::unsigned_signature_field)]]></Description>
+  </Message>
+    <Incident type="pass" file="" line="0">
+      <DataTag><![CDATA[gpg]]></DataTag>
+    </Incident>
+    <Duration msecs="55.3903"/>
+  </TestFunction>
+  <TestFunction name="testSignedRanges">
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="142">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(CryptoSign::Factory::getActive(), backend)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="147">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="148">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc->isOk())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="253">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(sig0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="255">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0.size(), 4)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="256">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[0], 0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="257">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[1], 24890)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="258">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[2], 45352)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="259">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[3], 58529)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="260">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(ranges0[3] != size0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="264">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(sig1)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="266">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1.size(), 4)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="267">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1[0], 0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="268">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1[1], 59257)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="269">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1[2], 79651)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="270">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1[3], 92773)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="271">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1[3], size1)]]></Description>
+  </Message>
+    <Incident type="pass" file="" line="0">
+      <DataTag><![CDATA[nss]]></DataTag>
+    </Incident>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="142">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(CryptoSign::Factory::getActive(), backend)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="147">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="148">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc->isOk())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="253">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(sig0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="255">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0.size(), 4)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="256">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[0], 0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="257">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[1], 24890)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="258">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[2], 45352)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="259">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[3], 58529)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="260">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(ranges0[3] != size0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="264">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(sig1)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="266">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1.size(), 4)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="267">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1[0], 0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="268">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1[1], 59257)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="269">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1[2], 79651)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="270">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1[3], 92773)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="271">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges1[3], size1)]]></Description>
+  </Message>
+    <Incident type="pass" file="" line="0">
+      <DataTag><![CDATA[gpg]]></DataTag>
+    </Incident>
+    <Duration msecs="2.252"/>
+  </TestFunction>
+  <TestFunction name="testPgp">
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="142">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(CryptoSign::Factory::getActive(), backend)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="147">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="148">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc->isOk())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="295">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields.size(), 1)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="296">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[0]->getSignatureType(), CryptoSign::SignatureType::g10c_pgp_signature_detached)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="297">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(!signatureFields[0]->getSignature().empty())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="300">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QVERIFY(sig0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="302">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0.size(), 4)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="303">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[0], 0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="304">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[1], 82991)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="305">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[2], 102993)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="306">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[3], 103534)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="317">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getSignerName(), std::string {})]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="318">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getHashAlgorithm(), HashAlgorithm::Unknown)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="319">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getCertificateInfo(), nullptr)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="320">
+    <DataTag><![CDATA[nss]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getSignatureValStatus(), SignatureValidationStatus::SIGNATURE_NOT_VERIFIED)]]></Description>
+  </Message>
+    <Incident type="pass" file="" line="0">
+      <DataTag><![CDATA[nss]]></DataTag>
+    </Incident>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="142">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(CryptoSign::Factory::getActive(), backend)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="147">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="148">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(doc->isOk())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="290">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(result.numImported(), 1)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="295">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields.size(), 1)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="296">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(signatureFields[0]->getSignatureType(), CryptoSign::SignatureType::g10c_pgp_signature_detached)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="297">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(!signatureFields[0]->getSignature().empty())]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="300">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QVERIFY(sig0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="302">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0.size(), 4)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="303">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[0], 0)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="304">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[1], 82991)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="305">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[2], 102993)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="306">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(ranges0[3], 103534)]]></Description>
+  </Message>
+  <Message type="info" file="./qt6/tests/check_signature_basics.cpp" line="311">
+    <DataTag><![CDATA[gpg]]></DataTag>
+    <Description><![CDATA[QCOMPARE(siginfo0->getSignerName(), std::string { "Sune Vuorela" })]]></Description>
+  </Message>
+    <Incident type="fail" file="./qt6/tests/check_signature_basics.cpp" line="311">
+      <DataTag><![CDATA[gpg]]></DataTag>
+      <Description><![CDATA[Compared values are not the same
+   Actual   (siginfo0->getSignerName())     : ""
+   Expected (std::string { "Sune Vuorela" }): "Sune Vuorela"]]></Description>
+    </Incident>
+    <Duration msecs="12.9584"/>
+  </TestFunction>
+  <TestFunction name="cleanupTestCase">
+    <Incident type="pass" file="" line="0" />
+    <Duration msecs="0.455458"/>
+  </TestFunction>
+  <Duration msecs="86.9827"/>
+</TestCase>

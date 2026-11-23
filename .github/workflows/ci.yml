@@ -3,6 +3,15 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
+    inputs:
+      verification_scope:
+        description: Managed verification suite
+        type: choice
+        options:
+          - database-and-browser
+          - document-worker
+        default: database-and-browser
 
 jobs:
   quality:
@@ -37,81 +46,262 @@ jobs:
       - run: npm run build
       - run: npm audit --omit=dev --audit-level=high
 
-  browser:
+  public-browser:
     runs-on: ubuntu-latest
     needs: quality
+    timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npx supabase start
-      - name: Configure browser Supabase fixture
-        shell: bash
-        run: |
-          status="$(npx supabase status -o env)"
-          value() {
-            printf '%s\n' "$status" | awk -F= -v key="$1" '$1 == key { sub(/^"/, "", $2); sub(/"$/, "", $2); print $2; exit }'
-          }
-          {
-            echo "SUPABASE_URL=$(value API_URL)"
-            echo "SUPABASE_PUBLISHABLE_KEY=$(value PUBLISHABLE_KEY)"
-            echo "SUPABASE_SECRET_KEY=$(value SECRET_KEY)"
-            echo "SUPABASE_RESUME_BUCKET=resumes"
-            echo "OPENAI_API_KEY=ci-openai-key"
-          } >> "$GITHUB_ENV"
-      - run: npx supabase db reset --local
-      - name: Verify canonical transactions, privacy and concurrency locally
-        run: npm run test:aa2:local
-      - name: Verify job requirement transactions and privacy locally
-        run: npm run test:aa3:local
-      - name: Verify score diagnostics, ownership and history locally
-        run: npm run test:aa4:local && npm run test:aa4:legacy
+      - run: npm run build
       - run: npm run benchmark:job-intelligence
-      - name: Verify candidate-controlled authoring locally
-        run: npm run test:aa5:local
-      - name: Verify owned, parsed-back PDF and DOCX exports locally
-        run: npm run test:aa6:local
-      - name: Verify populated canonical database restore locally
-        run: npm run test:aa2:restore
-        env:
-          AA2_TEST_DB_CONTAINER: supabase_db_resume_ats
-      - name: Verify opt-in document worker on synthetic local sources
-        run: npm run test:aa1:worker
-        env:
-          EVIDENCE_REVIEW_ENABLED: "true"
-      - run: npm run test:e2e
-      - name: Upload browser failure artifacts
+      - run: npx playwright test --config playwright.public.config.ts
+      - name: Upload public browser failure artifacts
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-failure-artifacts
-          path: test-results/
+          name: playwright-public-failure-artifacts
+          path: test-results/public/
           if-no-files-found: ignore
           retention-days: 14
 
+  browser:
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    needs: [quality, public-browser, managed-browser]
+    permissions: {}
+    steps:
+      - name: Report full browser gate
+        env:
+          PUBLIC_BROWSER_RESULT: ${{ needs.public-browser.result }}
+          MANAGED_BROWSER_RESULT: ${{ needs.managed-browser.result }}
+        shell: bash
+        run: |
+          if [[ "$PUBLIC_BROWSER_RESULT" != 'success' ]]; then
+            echo 'Public browser checks did not complete. See the public browser job.'
+            exit 1
+          fi
+          case "$MANAGED_BROWSER_RESULT" in
+            success) echo 'Public and managed authenticated browser checks passed. The full gate awaits remaining managed coverage.' ;;
+            skipped) echo 'Managed authenticated browser checks are unavailable. See the protected job.' ;;
+            *) echo 'Managed authenticated browser checks failed. See the protected job.'; exit 1 ;;
+          esac
+          exit 2
+
   database:
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    needs: [quality, managed-database]
+    permissions: {}
+    steps:
+      - name: Report managed database gate
+        env:
+          MANAGED_DATABASE_RESULT: ${{ needs.managed-database.result }}
+        shell: bash
+        run: |
+          case "$MANAGED_DATABASE_RESULT" in
+            success) echo 'Managed database gate completed.' ;;
+            skipped) echo 'Managed database gate unavailable. Run CI manually from a reviewed branch.'; exit 2 ;;
+            *) echo 'Managed database gate failed. See the managed database job.'; exit 1 ;;
+          esac
+
+  managed-database:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.verification_scope != 'document-worker' && github.ref_type == 'branch' && (github.ref_protected || github.ref_name == github.event.repository.default_branch) }}
     runs-on: ubuntu-latest
     needs: quality
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    environment: managed-supabase-database
+    concurrency:
+      group: resumide-managed-supabase-database
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npx supabase start
-      - run: npm run test:db
-      - name: Verify historical and versioned field evidence contracts
-        run: npx supabase db query --local --file scripts/verify-evidence-field-version.sql
-      - name: Verify versioned OCR resource contracts
-        run: npx supabase db query --local --file scripts/verify-ocr-fusion-version.sql
-      - run: npm run test:aa014:concurrency
+      - name: Prepare private database fixture location
+        env:
+          MANAGED_DB_CA_PEM: ${{ vars.MANAGED_DB_CA_PEM }}
+        shell: bash
+        run: |
+          if ! command -v psql >/dev/null || [[ -z "$MANAGED_DB_CA_PEM" ]]; then
+            echo 'Managed database gate unavailable. PostgreSQL client or TLS certificate is missing.'
+            exit 2
+          fi
+          umask 077
+          ca_file="$RUNNER_TEMP/resumide-managed-db-ca.pem"
+          printf '%s\n' "$MANAGED_DB_CA_PEM" > "$ca_file"
+          run_id="$(node --input-type=module -e '
+            import { createHash } from "node:crypto";
+            const { GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT } = process.env;
+            const ref = [GITHUB_REPOSITORY, GITHUB_RUN_ID, GITHUB_RUN_ATTEMPT].join("/");
+            const hex = createHash("sha256").update("resumide-managed-database/1/" + ref).digest("hex");
+            console.log([hex.slice(0,8),hex.slice(8,12),"8"+hex.slice(13,16),"8"+hex.slice(17,20),hex.slice(20,32)].join("-"));
+          ')"
+          fixture_dir="/tmp/resumide-managed-$run_id"
+          mkdir -m 700 "$fixture_dir"
+          ledger="$fixture_dir/correction-fixture.jsonl"
+          touch "$ledger"
+          {
+            printf 'MANAGED_DB_CA_FILE=%s\n' "$ca_file"
+            printf 'MANAGED_DB_RUN_ID=%s\n' "$run_id"
+            printf 'MANAGED_DB_FIXTURE_LEDGER=%s\n' "$ledger"
+          } >> "$GITHUB_ENV"
+      - name: Run managed SQL and schema lint
+        env:
+          MANAGED_DB_APPROVAL: ${{ vars.MANAGED_DB_APPROVAL }}
+          MANAGED_DB_PASSWORD: ${{ secrets.MANAGED_DB_PASSWORD }}
+        run: |
+          npm run test:managed:db
+          npm run test:managed:db:lint
+      - name: Verify managed two-session correction and cleanup
+        env:
+          MANAGED_DB_APPROVAL: ${{ vars.MANAGED_DB_APPROVAL }}
+          MANAGED_DB_PASSWORD: ${{ secrets.MANAGED_DB_PASSWORD }}
+          MANAGED_DB_CONCURRENCY_AUTHORIZATION: ${{ vars.MANAGED_DB_CONCURRENCY_AUTHORIZATION }}
+        run: npm run test:managed:db:concurrency
+
+  managed-browser:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref_type == 'branch' && github.ref_protected }}
+    runs-on: ubuntu-latest
+    needs: [quality, managed-database]
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    environment: managed-supabase-browser
+    concurrency:
+      group: resumide-managed-supabase-database
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Run authenticated browser checks and audit cleanup
+        id: core
+        env:
+          MANAGED_BROWSER_AUTHORIZATION: ${{ vars.MANAGED_BROWSER_AUTHORIZATION }}
+          MANAGED_DB_APPROVAL: ${{ vars.MANAGED_DB_APPROVAL }}
+          MANAGED_DB_CA_PEM: ${{ vars.MANAGED_DB_CA_PEM }}
+          MANAGED_DB_PASSWORD: ${{ secrets.MANAGED_DB_PASSWORD }}
+          MANAGED_BROWSER_LEDGER_KEY: ${{ secrets.MANAGED_BROWSER_LEDGER_KEY }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        shell: bash
+        run: |
+          if ! command -v psql >/dev/null || [[ -z "$MANAGED_DB_CA_PEM" ]]; then
+            echo 'Managed browser gate unavailable. PostgreSQL client or TLS certificate is missing.'
+            exit 2
+          fi
+          umask 077
+          export MANAGED_DB_CA_FILE="$RUNNER_TEMP/resumide-browser-ca.pem"
+          export MANAGED_BROWSER_OUTPUT_DIR="$RUNNER_TEMP/resumide-managed-browser"
+          printf '%s\n' "$MANAGED_DB_CA_PEM" > "$MANAGED_DB_CA_FILE"
+          node --experimental-strip-types scripts/verify-managed-browser.ts
+      - name: Retain encrypted recovery ledgers
+        if: failure() && steps.core.outcome == 'failure'
+        uses: actions/upload-artifact@v4
+        with:
+          name: managed-browser-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/resumide-managed-browser/fixture-ledgers.enc
+          if-no-files-found: ignore
+          retention-days: 7
+
+  managed-document-worker:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.verification_scope == 'document-worker' && github.ref_type == 'branch' && github.ref_protected }}
+    runs-on: ubuntu-latest
+    needs: quality
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    environment: managed-supabase-document-worker
+    concurrency:
+      group: resumide-managed-supabase-database
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          RESUMIDE_PRIVATE_VERIFY: aa7-owned-synthetic
+      - name: Prepare worker verification
+        env:
+          MANAGED_DB_CA_PEM: ${{ vars.MANAGED_DB_CA_PEM }}
+          MANAGED_WORKER_LEDGER_KEY: ${{ secrets.MANAGED_WORKER_LEDGER_KEY }}
+        shell: bash
+        run: |
+          if ! command -v psql >/dev/null || [[ -z "$MANAGED_DB_CA_PEM" ]]; then
+            echo 'Managed document worker gate unavailable. PostgreSQL client or TLS certificate is missing.'
+            exit 2
+          fi
+          node --experimental-strip-types scripts/manage-document-worker-archive.ts --check-key
+          umask 077
+          ca_file="$RUNNER_TEMP/resumide-document-worker-ca.pem"
+          printf '%s\n' "$MANAGED_DB_CA_PEM" > "$ca_file"
+          run_id="$(node -p 'require("node:crypto").randomUUID()')"
+          {
+            printf 'MANAGED_DB_CA_FILE=%s\n' "$ca_file"
+            printf 'MANAGED_WORKER_RUN_ID=%s\n' "$run_id"
+          } >> "$GITHUB_ENV"
+      - name: Run the document worker lifecycle and cleanup audit
+        id: core
+        env:
+          APP_ORIGIN: http://127.0.0.1:3110
+          MANAGED_DB_APPROVAL: ${{ vars.MANAGED_DB_APPROVAL }}
+          MANAGED_DB_PASSWORD: ${{ secrets.MANAGED_DB_PASSWORD }}
+          MANAGED_WORKER_AUTHORIZATION: ${{ vars.MANAGED_WORKER_AUTHORIZATION }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        shell: bash
+        run: timeout --kill-after=10s 8m node --experimental-strip-types scripts/run-managed-document-worker-verification.ts
+      - name: Seal the private recovery files
+        id: archive
+        if: (failure() || cancelled()) && (steps.core.outcome == 'failure' || steps.core.outcome == 'cancelled')
+        env:
+          MANAGED_WORKER_LEDGER_KEY: ${{ secrets.MANAGED_WORKER_LEDGER_KEY }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+        shell: bash
+        run: node --experimental-strip-types scripts/manage-document-worker-archive.ts --seal "$RUNNER_TEMP/document-worker-ledger.enc"
+      - name: Retain the encrypted recovery archive
+        if: (failure() || cancelled()) && steps.archive.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: document-worker-recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/document-worker-ledger.enc
+          if-no-files-found: ignore
+          retention-days: 7
 
   local-ocr:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     needs: quality
     timeout-minutes: 10
@@ -199,18 +389,98 @@ jobs:
           retention-days: 14
 
   container:
+    if: ${{ github.event_name != 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     needs: quality
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      IMAGE_SCANNER_VERSION: "0.70.0"
     steps:
       - uses: actions/checkout@v4
-      - name: Build production image
-        run: docker build --tag resumide:${{ github.sha }} .
-      - name: Scan production image
-        uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: resumide:${{ github.sha }}
-          format: table
-          exit-code: "1"
-          ignore-unfixed: true
+          persist-credentials: false
+      - name: Build production image
+        id: image
+        shell: bash
+        run: |
+          tag="resumide:$GITHUB_SHA"
+          docker build --tag "$tag" .
+          image_id="$(docker image inspect --format '{{.Id}}' "$tag")"
+          [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]
+          evidence_dir="$(mktemp -d "$RUNNER_TEMP/resumide-main-image-evidence.XXXXXXXX")"
+          printf '{}\n' > "$evidence_dir/scanner.yaml"
+          printf 'id=%s\nevidence_dir=%s\n' "$image_id" "$evidence_dir" >> "$GITHUB_OUTPUT"
+      - name: Collect all production-image package advisories
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ steps.image.outputs.id }}
+          version: v${{ env.IMAGE_SCANNER_VERSION }}
+          format: json
+          output: ${{ steps.image.outputs.evidence_dir }}/scanner-output.json
+          exit-code: "0"
+          ignore-unfixed: "false"
+          list-all-pkgs: "true"
           vuln-type: os,library
-          severity: CRITICAL,HIGH
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          scanners: vuln
+          trivy-config: ${{ steps.image.outputs.evidence_dir }}/scanner.yaml
+          cache: "false"
+          timeout: 5m
+        env:
+          TRIVY_IMAGE_SRC: docker
+          TRIVY_IGNOREFILE: /dev/null
+          TRIVY_CACHE_BACKEND: memory
+      - name: Prepare exact-image evidence
+        id: evidence
+        shell: bash
+        env:
+          IMAGE_ID: ${{ steps.image.outputs.id }}
+          IMAGE_EVIDENCE: ${{ steps.image.outputs.evidence_dir }}
+        run: |
+          raw_report="$IMAGE_EVIDENCE/scanner-output.json"
+          report="$IMAGE_EVIDENCE/advisories.json"
+          sbom="$IMAGE_EVIDENCE/sbom.cdx.json"
+          trap 'rm -f -- "$raw_report"' EXIT
+          # Retain every advisory record while excluding environment and build history.
+          jq '.Metadata.ImageConfig |= (. // {} | {architecture, os})' "$raw_report" > "$report"
+          jq -e 'any(.Results[]; .Class == "lang-pkgs" and any(.Packages[]?; .Name == "react-router"))' "$report" >/dev/null
+          trivy --config "$IMAGE_EVIDENCE/scanner.yaml" convert --format cyclonedx --output "$sbom" "$report"
+          node scripts/check-image-advisories.mjs "$IMAGE_ID" "$IMAGE_SCANNER_VERSION" "$report" "$sbom" > "$IMAGE_EVIDENCE/summary.json"
+      - name: Retain production-image evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-image-advisories-${{ github.sha }}
+          path: |
+            ${{ steps.image.outputs.evidence_dir }}/advisories.json
+            ${{ steps.image.outputs.evidence_dir }}/sbom.cdx.json
+            ${{ steps.image.outputs.evidence_dir }}/summary.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Enforce high and critical package findings
+        shell: bash
+        env:
+          IMAGE_EVIDENCE: ${{ steps.image.outputs.evidence_dir }}
+        run: |
+          summary="$IMAGE_EVIDENCE/summary.json"
+          jq -c '{findings, blocking, unfixedBlocking}' "$summary"
+          jq -e '.blocking == 0' "$summary" >/dev/null
+      - name: Enforce high and critical secret findings
+        if: ${{ !cancelled() && steps.evidence.outcome == 'success' }}
+        shell: bash
+        env:
+          IMAGE_ID: ${{ steps.image.outputs.id }}
+          IMAGE_EVIDENCE: ${{ steps.image.outputs.evidence_dir }}
+        run: |
+          # Keep the secret scan's status without retaining matched material.
+          trivy --config "$IMAGE_EVIDENCE/scanner.yaml" image --image-src docker \
+            --scanners secret --image-config-scanners secret --cache-backend memory \
+            --secret-config "$IMAGE_EVIDENCE/scanner.yaml" --severity HIGH,CRITICAL --ignorefile /dev/null \
+            --format json --output /dev/null --exit-code 1 "$IMAGE_ID"
+      - name: Discard transient scanner output
+        if: ${{ always() && steps.image.outcome == 'success' }}
+        shell: bash
+        env:
+          IMAGE_EVIDENCE: ${{ steps.image.outputs.evidence_dir }}
+        run: rm -f -- "$IMAGE_EVIDENCE/scanner-output.json"

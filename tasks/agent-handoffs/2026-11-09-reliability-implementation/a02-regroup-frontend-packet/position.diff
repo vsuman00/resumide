@@ -1,0 +1,12 @@
+--- position-red/component
++++ corrected/component
+@@ -310,7 +310,8 @@
+           {preparation.groups.map((group) => (
+             <li key={group.groupId}>
+               Retained employer entry: <code>{group.anchorEntryId}</code>;
+-              proposed position {group.insertionIndex + 1}.
++              proposed placement:{" "}
++              {entryLabel(after, group.sectionId, group.anchorEntryId)}.
+             </li>
+           ))}
+         </ul>

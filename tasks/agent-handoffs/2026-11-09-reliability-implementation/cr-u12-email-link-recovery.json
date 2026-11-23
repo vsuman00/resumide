@@ -1,0 +1,49 @@
+{
+  "id": "CR-U12-S01",
+  "status": "VERIFIED_LOCAL_EMAIL_LINK_RECOVERY_WITH_SIMULATED_AUTH",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated checkout with synthetic fixtures",
+  "sources": {
+    "app/lib/server/auth.ts": "48f40dde12fb0fd0b5bd496d0b216de42bf30a450e3367e3e6d16a786631abf6",
+    "app/lib/server/response-security.ts": "5db5b13ca424f451e41f1ebd633752c4ab004f1d891457cecd8aa2af932e1b8a",
+    "app/routes/auth.tsx": "c582c5e9bbcfeb08acb9080aa896afd1590839db2f2f40512341b7f476940ede",
+    "app/routes/auth.callback.ts": "4be850254cc722029ddd87c5024da6579119c5e3fe66496bff8dcd87a96c5458",
+    "app/routes/auth.logout.ts": "381c18b9625a012dda0f188497b7371d68c42e12820728cec9d67b1f41200f5c",
+    "tests/unit/auth.test.ts": "4e43653f2268340cde4f8f062695a0bfc7c1806532f305c0b295cd0e47b13f84",
+    "tests/unit/auth-recovery.test.ts": "cc22e542b878916eebfc7b6dc21f5229213775db4cdc80a979c4065e18a0f164",
+    "tests/unit/response-security.test.ts": "63b38c6437becf13aec58bd06b51009dd8f5eff16a29adff29e92b22a8ef8ede",
+    "scripts/verify-local-auth-recovery.ts": "99ae8d0df323b2ddaff3cef330b6ba0ccb19912d3c26707b44ff105886ce20b7",
+    "scripts/local-fixture-browser.ts": "372fa419ba68e5c15b742dbb4acd267a0359b67c1b8eb8b9ea5319a5c36e22f4"
+  },
+  "baselineRegressions": 8,
+  "baselineLogs": {
+    "authSha256": "99e21bd89fd6aabc61b96f782c5e656b835cb1aa088ce6bcac45c01a756e7f15",
+    "middlewareSha256": "a2822d7b0ec8bf9d832f0d7684802f0b52ff3baf2fcadc0a8b75e6502dba3f9c"
+  },
+  "focusedTestCommand": "npm test -- tests/unit/auth.test.ts tests/unit/auth-recovery.test.ts tests/unit/auth-logout.test.ts tests/unit/authorization.test.ts tests/unit/latex-routes.test.ts tests/unit/analysis-history-route.test.ts tests/unit/request-context.test.ts tests/unit/security.test.ts tests/unit/resume-access-route.test.ts tests/unit/response-security.test.ts tests/unit/source-route.test.ts",
+  "focusedTestsPassed": 60,
+  "typecheckExitCode": 0,
+  "lintExitCode": 0,
+  "preexistingLintWarnings": 4,
+  "webBuildExitCode": 0,
+  "webBuildLogSha256": "d1cbd810d9fb8f6a4323a93170d45faa77c8e8b3883b7ba6190c47a2e84c717e",
+  "workerBuildExitCode": 0,
+  "browser": {
+    "application": "Built SSR on loopback",
+    "auth": "Installed Supabase SDK with an in-process OTP, PKCE and sign-out transport fixture",
+    "reportSha256": "ff997b0d42e0e1fa72a34095231d6a3fceaadfed102bf9e65e3c8a848285beda",
+    "result": {
+      "browser": "Chromium",
+      "otpCalls": 3,
+      "exchangeCalls": 2,
+      "logoutCalls": 1,
+      "invalidLinkKeptDestination": true,
+      "failedResendKeptDestination": true,
+      "sameBrowserPKCE": true,
+      "replayDeclined": true,
+      "hostedDelivery": false
+    }
+  },
+  "approvedInboxDeliveryVerified": false,
+  "managedSessionRefreshVerified": false
+}

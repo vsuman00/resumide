@@ -1,0 +1,23 @@
+from pathlib import Path
+import sys,subprocess,os,signal,time,json,hashlib,selectors
+node=Path('/Users/vaibhavsuman/.codex/tools/resumide-node22/v22.23.4-darwin-arm64/node')
+assert hashlib.sha256(node.read_bytes()).hexdigest()=='2cc28a1880d0774616959f2210ee739bffa6ac695c887e8988a496a21271f6c0'
+root=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats')
+out=Path(__file__).parent; label=sys.argv[1];args=sys.argv[2:]
+env={'HOME':str(Path.home()),'PATH':str(node.parent)+':/usr/bin:/bin','TMPDIR':str(out),'RESUMIDE_PRIVATE_VERIFY':'aa7-owned-synthetic','AI_ENABLED':'false','JOB_RELATIONS_ENABLED':'false','JOB_INTELLIGENCE_ENABLED':'false','NO_COLOR':'1'}
+start=time.monotonic();p=subprocess.Popen([str(node),*args],cwd=root,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,start_new_session=True)
+sel=selectors.DefaultSelector();sel.register(p.stdout,selectors.EVENT_READ);captured=bytearray();reason=None
+while sel.get_map():
+ if time.monotonic()-start>60:reason='deadline'
+ for k,_ in sel.select(.1):
+  chunk=os.read(k.fd,32768)
+  if not chunk:sel.unregister(k.fileobj)
+  else:captured.extend(chunk)
+ if len(captured)>200000:reason='log-cap'
+ if reason:
+  os.killpg(p.pid,signal.SIGKILL);break
+p.wait(timeout=5)
+try:os.killpg(p.pid,0);exited=False
+except ProcessLookupError:exited=True
+log=out/(label+'.log');log.write_bytes(captured[:200000]);r={'label':label,'nodeSha256':hashlib.sha256(node.read_bytes()).hexdigest(),'args':args,'pid':p.pid,'pgid':p.pid,'exitCode':p.returncode,'durationSeconds':time.monotonic()-start,'bytes':len(captured),'limitReason':reason,'processGroupExited':exited,'log':str(log),'logSha256':hashlib.sha256(log.read_bytes()).hexdigest(),'environment':'sealed; envDir disabled; no real env file','evidenceTier':'pure source and synthetic TS only; no native SQL'}
+(out/(label+'.json')).write_text(json.dumps(r,indent=2)+'\n');print(json.dumps(r));print(captured.decode(errors='replace')[-18000:]);sys.exit(1 if reason else p.returncode)

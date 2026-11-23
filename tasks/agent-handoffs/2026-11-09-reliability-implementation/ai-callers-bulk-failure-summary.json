@@ -1,0 +1,69 @@
+{
+  "status": "FAILED_RECEIPT_PRESERVED",
+  "receipt": "tasks/agent-handoffs/2026-11-09-reliability-implementation/ai-callers-integrated-bcbb73e2-209a-44e0-a91c-a5ceec86b77d.json",
+  "groupsAbsent": [
+    52134
+  ],
+  "sourceStable": true,
+  "failed": [
+    {
+      "file": "tests/unit/canonical-rewrite-service.test.ts",
+      "failures": [
+        {
+          "name": "actual action closed budget recovery preserves AI_BUDGET_EXHAUSTED without provider dispatch",
+          "message": "AssertionError: expected 503 to be 429 // Object.is equality\n    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/unit/canonical-rewrite-service.test.ts:521:31\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        },
+        {
+          "name": "actual action closed budget recovery preserves AI_BUDGET_BLOCKED without provider dispatch",
+          "message": "AssertionError: expected 503 to be 429 // Object.is equality\n    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/unit/canonical-rewrite-service.test.ts:521:31\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        },
+        {
+          "name": "actual action closed budget recovery preserves AI_BUDGET_DENIED without provider dispatch",
+          "message": "AssertionError: expected { kind: 'error', \u2026(2) } to match object { kind: 'error', \u2026(2) }\n    at Proxy.<anonymous> (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1737:25)\n    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/unit/canonical-rewrite-service.test.ts:522:37\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        },
+        {
+          "name": "actual action closed budget recovery preserves AI_BUDGET_DISABLED without provider dispatch",
+          "message": "AssertionError: expected { kind: 'error', \u2026(2) } to match object { kind: 'error', \u2026(2) }\n    at Proxy.<anonymous> (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/expect/dist/index.js:1283:10)\n    at Proxy.<anonymous> (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/expect/dist/index.js:1156:15)\n    at Proxy.methodWrapper (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1737:25)\n    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/unit/canonical-rewrite-service.test.ts:522:37\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        }
+      ]
+    },
+    {
+      "file": "tests/unit/initial-feedback-stage.test.ts",
+      "failures": [
+        {
+          "name": "selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch uses the exact budget-on selected policy and both accounting paths",
+          "message": "AssertionError: expected \"vi.fn()\" to be called 1 times, but got 0 times\n    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/unit/initial-feedback-stage.test.ts:846:21\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        }
+      ]
+    },
+    {
+      "file": "tests/unit/qualitative-stage-outage.test.ts",
+      "failures": [
+        {
+          "name": "shared qualitative budget admission never falls back to the legacy pool or dispatches when the enabled ledger denies",
+          "message": "Error: expected AiBudgetError: AI budget admission is una\u2026 { code: '\u2026' } to match object { code: 'AI_BUDGET_UNAVAILABLE' }\n(1 matching property omitted from actual)\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1607:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1696:22)\n    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/unit/qualitative-stage-outage.test.ts:226:7\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)"
+        },
+        {
+          "name": "shared qualitative budget admission persists deterministic partial feedback on definitive AI_BUDGET_EXHAUSTED without provider dispatch",
+          "message": "Error: promise rejected \"AiBudgetError: AI budget admission is una\u2026 { code: '\u2026' }\" instead of resolving\n    at _Assertion.__VITEST_RESOLVES__ (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/expect/dist/index.js:1710:17)\n    at _Assertion.propertyGetter (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1607:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1696:22)\n    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/unit/qualitative-stage-outage.test.ts:256:7\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)"
+        },
+        {
+          "name": "shared qualitative budget admission persists deterministic partial feedback on definitive AI_BUDGET_BLOCKED without provider dispatch",
+          "message": "Error: promise rejected \"AiBudgetError: AI budget admission is una\u2026 { code: '\u2026' }\" instead of resolving\n    at _Assertion.__VITEST_RESOLVES__ (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/expect/dist/index.js:1710:17)\n    at _Assertion.propertyGetter (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1607:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1696:22)\n    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/unit/qualitative-stage-outage.test.ts:256:7\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2027:60\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)"
+        },
+        {
+          "name": "shared qualitative budget admission settles before product persistence and retains the charge when persistence fails",
+          "message": "Error: expected [Function] to throw error including 'Qualitative result persistence failed' but got 'AI budget admission is unavailable.'\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1607:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1696:22)\n    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/unit/qualitative-stage-outage.test.ts:286:5\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)"
+        },
+        {
+          "name": "shared qualitative budget admission charges rejected known output but holds unknown provider usage before partial persistence",
+          "message": "AiBudgetError: AI budget admission is unavailable.\n    at createSourceBoundAiBudgetClient (/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/ai-budget-source.ts:269:30)\n    at Module.processQualitativeStage (/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/qualitative-stage.ts:201:17)\n    at processTicksAndRejections (node:internal/process/task_queues:103:5)\n    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/unit/qualitative-stage-outage.test.ts:309:14\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20"
+        },
+        {
+          "name": "shared qualitative budget admission uses admitted logical ordinal and policy cap rather than the global job retry count",
+          "message": "Error: expected AiBudgetError: AI budget admission is una\u2026 { code: '\u2026' } to be QualitativeAiFailure: Qualitative analysi\u2026 { \u2026(3) } // Object.is equality\n    at _Assertion.__VITEST_REJECTS__ (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/expect/dist/index.js:1747:17)\n    at _Assertion.propertyGetter (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1607:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1696:22)\n    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/unit/qualitative-stage-outage.test.ts:342:46\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26\n    at file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10)"
+        }
+      ]
+    }
+  ]
+}

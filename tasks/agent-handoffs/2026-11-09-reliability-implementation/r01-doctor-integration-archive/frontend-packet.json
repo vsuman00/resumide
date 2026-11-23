@@ -1,0 +1,71 @@
+{
+  "status": "RELEASED",
+  "evidenceTier": "Source and synthetic actual-installed-SDK fake transport only",
+  "contractSha256": "8e2cff0111cd626c1e8b57dad3874bfc77a53906e502ca04ecad866e558233e7",
+  "head": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "owned": {
+    "tests/unit/ai-readiness.test.ts": "0aba1a5a2d214c95b69bfb1f5ff3ad9ac9249bdccee7ec89c666d065974ed819",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-r01-doctor-allocation-tests.md": "6b23eedae479575b8f35bf7422cbf2df5e608826234533c7f8d847c73020266b"
+  },
+  "rootSyncedDependencies": {
+    "app/lib/server/ai-readiness.ts": "4a78fa139eb59ed1dee143662d0426048617db8514220ca98158cb55cd3bac9d",
+    "scripts/doctor-ai.ts": "a1b00636e541b5136c309f6c5d50e9b68d99e2cd7422bfd6e122ce4528d30526",
+    "scripts/verify-live-openai-model.ts": "17eb0e6465e56d76c6b74682b88051afcb914b2b9ec96f83b6bf1b36ef3bc08f"
+  },
+  "genuineRed": [
+    "red-actual.json",
+    "red-sdk-colon.json",
+    "red-deadline-isolated.json"
+  ],
+  "shadowedProbe": {
+    "receipt": "red-post-response-deadline.json",
+    "interpretation": "Colon transport refusal before dispatch; not clock-defect evidence"
+  },
+  "green": {
+    "receipt": "focused.json",
+    "tests": 75,
+    "files": 1,
+    "originalOfflineCases": 31,
+    "newCases": 44
+  },
+  "scopedStatic": {
+    "typesRoots": 3,
+    "typesSources": 8,
+    "typeDiagnostics": 0,
+    "lint": "PASS",
+    "format": "PASS"
+  },
+  "preservation": {
+    "receipt": "preservation.json",
+    "originalTestCallNodes": 24,
+    "originalAssertionCallNodes": 156,
+    "bareLiveRejectionRetained": true
+  },
+  "physicalProviderRequests": 0,
+  "realEnvironmentAccess": false,
+  "noAdditionalApplicationCampaign": true,
+  "rootGateReported": {
+    "source": "Root coordinator message",
+    "status": "PASS",
+    "tests": 75,
+    "files": 1,
+    "fullTypes": true,
+    "lint": true,
+    "webBuild": true,
+    "workerBuild": true,
+    "stableInputs": 755
+  },
+  "archiveManifest": {
+    "path": "archive-manifest.json",
+    "sha256": "b74aa7b60378027ca76092aee0c17cdf2376b179dfcf2d44f25f3db469c62767"
+  },
+  "custody": {
+    "path": "cleanup-final.json",
+    "sha256": "4c7ec96ee83f6e80e9e4c829cf83746fb07863921670fc338f3a92280da904ec"
+  },
+  "limits": [
+    "No real credential or provider access evidence",
+    "No new usefulness or release acceptance",
+    "Allocation is declared operator scope, not a signature or global single-use ledger"
+  ]
+}

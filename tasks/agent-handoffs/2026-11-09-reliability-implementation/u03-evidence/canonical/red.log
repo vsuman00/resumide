@@ -1,0 +1,334 @@
+
+> test
+> vitest run tests/unit/canonical-route.test.ts tests/components/CanonicalCorrections.test.tsx -t U03 draft
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/canonical-route.test.ts (25 tests | 3 failed | 21 skipped) 20ms
+     ↓ loads the owned correction workspace when correction review is enabled
+     ↓ submits a strictly bound assign command with authenticated identity and precise success copy
+     ↓ submits a strictly bound apply command with authenticated identity and precise success copy
+     ↓ submits a strictly bound add command with authenticated identity and precise success copy
+     ↓ submits a strictly bound reapply command with authenticated identity and precise success copy
+     ↓ rejects authoritative ownerId inside a correction command
+     ↓ rejects authoritative value inside a correction command
+     ↓ does not admit correction writes while the feature is disabled
+     ↓ preserves a correction conflict and private response without claiming success
+     ↓ rejects cross-origin writes before authentication or privileged clients
+     ↓ requires sign-in before privileged calls
+     ↓ keeps authoring disabled by default and rejects unsupported methods
+     ↓ rejects supplied ownerId
+     ↓ rejects supplied organizationId
+     ↓ rejects supplied confirmation
+     ↓ rejects supplied __proto__
+     ↓ rejects duplicate and oversized streamed forms
+     ↓ passes authenticated identity and preserves conflict status
+     × U03 draft retains a parsed authenticated edit after status 409 17ms
+     × U03 draft retains a parsed authenticated edit after status 422 1ms
+     × U03 draft retains a parsed authenticated rename_section after status 409 1ms
+     ✓ U03 draft never reflects unauthenticated, unparsed or successful submissions 1ms
+     ↓ rejects invalid read pagination before repository access
+     ↓ does not accept JSON or silently normalize a supplied correction
+     ↓ preserves private SSR headers and refreshed cookies
+stderr | tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery
+No `HydrateFallback` element provided to render during initial hydration
+
+ ❯ tests/components/CanonicalCorrections.test.tsx (15 tests | 5 failed | 10 skipped) 1182ms
+     × U03 draft retains a validated edit in a native server-rendered rejected response 68ms
+     × U03 draft retains a validated rename_section in a native server-rendered rejected response 13ms
+     × U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery 1068ms
+     × U03 draft retains text without permitting a historical recovery or inferred replacement target 21ms
+     × U03 draft retains text without permitting a missing_target recovery or inferred replacement target 11ms
+     ↓ imports a saved correction through the reviewed path and leaves its fact unconfirmed
+     ↓ shows the exact diff and provenance, applies without retyping, and retains the operation key after a retryable failure
+     ↓ requires an explicit employer target and acknowledgement before assignment
+     ↓ reviews an absent-field placement before assigning and then adding an unconfirmed fact
+     ↓ shows undo provenance and requires fresh assignment before explicit reapply
+     ↓ keeps previews available and mutations unavailable when authoritative write readiness is false
+     ↓ keeps original import unavailable until correction write readiness returns
+     ↓ does not apply into a historical selected version or expose technical identifiers as labels
+     ↓ disables correction controls while a submission is pending
+     ↓ preserves the legacy workspace when correction review data is absent
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 draft retains a validated edit in a native server-rendered rejected response
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 draft retains a validated rename_section in a native server-rendered rejected response
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 draft retains text without permitting a historical recovery or inferred replacement target
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 draft retains text without permitting a missing_target recovery or inferred replacement target
+TypeError: root.getElementById is not a function
+ ❯ getElementById ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/dom-accessibility-api/sources/util.ts:99:21
+ ❯ map ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/dom-accessibility-api/sources/util.ts:99:4
+ ❯ current ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/dom-accessibility-api/sources/accessible-name-and-description.ts:584:18
+ ❯ computeTextAlternative ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/dom-accessibility-api/sources/accessible-name-and-description.ts:721:2
+ ❯ root ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/dom-accessibility-api/sources/accessible-name.ts:40:31
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/queries/role.js:173:82
+ ❯ queryAllByRole ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/queries/role.js:168:6
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:74:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery
+AssertionError: expected 1 to be 2 // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html[39m
+  [33mdata-theme[39m=[32m"light"[39m
+  [33mdata-theme-preference[39m=[32m"system"[39m
+  [33mstyle[39m=[32m"color-scheme: light;"[39m
+[36m>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33maria-label[39m=[32m"Resumide home"[39m
+            [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-lockup is-compact"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"brand-wordmark"[39m
+              [36m>[39m
+                [0mResumide[0m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"brand-leaf"[39m
+                  [33mfocusable[39m=[32m"false"[39m
+                  [33mviewBox[39m=[32m"0 0 28 34"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"brand-descriptor"[39m
+              [36m>[39m
+                [0mEvidence desk[0m
+              [36m</span>[39m
+            [36m</span>[39m
+          [36m</a>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Main navigation"[39m
+            [33mclass[39m=[32m"_primary_a67a5d"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/"[39m
+            [36m>[39m
+              [0mHome[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/analyses"[39m
+            [36m>[39m
+              [0mAnalyses[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/upload"[39m
+            [36m>[39m
+              [0mNew analysis[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/build"[39m
+            [36m>[39m
+              [0mBuild[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+          [36m<details[39m
+            [33mclass[39m=[32m"_menu_a67a5d"[39m
+          [36m>[39m
+            [36m<summary[39m
+              [33maria-label[39m=[32m"Open site menu"[39m
+            [36m>[39m
+              [0mMenu [0m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+              [36m>[39m
+                [0m☰[0m
+              [36m</span>[39m
+            [36m</summary>[39m
+            [36m<nav[39m
+              [33maria-label[39m=[32m"Site menu"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+              [36m>[39m
+                [36m<a[39m
+                  [33mclass[39m=[32m"_link_a67a5d"[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/"[39m
+                [36m>[39m
+                  [0mHome[0m
+                [36m</a>[39m
+                [36m<a[39m
+                  [33mclass[39m=[32m"_link_a67a5d"[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/analyses"[39m
+                [36m>[39m
+                  [0mAnalyses[0m
+                [36m</a>[39m
+                [36m<a[39m
+                  [33mclass[39m=[32m"_link_a67a5d"[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/upload"[39m
+                [36m>[39m
+                  [0mNew analysis[0m
+                [36m</a>[39m
+                [36m<a[39m
+                  [33mclass[39m=[32m"_link_a67a5d"[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/build"[39m
+                [36m>[39m
+                  [0mBuild[0m
+                [36m</a>[39m
+              [36m</div>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/privacy"[39m
+              [36m>[39m
+                [0mPrivacy[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/account"[39m
+              [36m>[39m
+                [0mAccount[0m
+              [36m</a>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"_theme_a67a5d"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"theme-control"[39m
+                  [33mtitle[39m=[32m"Choose color theme"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"theme-control-icon"[39m
+                  [36m>[39m
+                    [0m◐[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"sr-only"[39m
+                  [36m>[39m
+                    [0mColor theme[0m
+                  [36m</span>[39m
+                  [36m<select[39m
+                    [33maria-label[39m=[32m"Color theme"[39m
+                  [36m>[39m
+                    [36m<option[39m
+                      [33mvalue[39m=[32m"light"[39m
+                    [36m>[39m
+                      [0mLight[0m
+                    [36m</option>[39m
+                    [36m<option[39m
+                      [33mvalue[39m=[32m"dark"[39m
+                    [36m>[39m
+                      [0mDark[0m
+                    [36m</option>[39m
+                    [36m<option[39m
+                      [33mvalue[39m=[32m"sy...
+
+- Expected
++ Received
+
+- 2
++ 1
+
+ ❯ tests/components/CanonicalCorrections.test.tsx:454:39
+    452|     fireEvent.submit(input.closest("form")!);
+    453|     await screen.findByRole("alert");
+    454|     await waitFor(() => expect(loads).toBe(2));
+       |                                       ^
+    455|     expect(requests[0].search).toBe("");
+    456|     const region = screen.getByRole("region", { name: "Retained correc…
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tests/unit/canonical-route.test.ts > canonical authorization and bounded forms > U03 draft retains a parsed authenticated edit after status 409
+ FAIL  tests/unit/canonical-route.test.ts > canonical authorization and bounded forms > U03 draft retains a parsed authenticated edit after status 422
+AssertionError: expected { …(2) } to match object { submitted: { …(5) }, success: null }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "submitted": {
+-     "expectedVersionId": "10000000-0000-4000-8000-000000000002",
+-     "factId": "10000000-0000-4000-8000-000000000004",
+-     "idempotencyKey": "10000000-0000-4000-8000-000000000003",
+-     "operation": "edit",
+-     "value": "Retained candidate draft",
+-   },
+    "success": null,
+  }
+
+ ❯ tests/unit/canonical-route.test.ts:295:29
+    293|       const response = await action(args(new URLSearchParams(submitted…
+    294|       expect(response.init?.status).toBe(status);
+    295|       expect(response.data).toMatchObject({ submitted, success: null }…
+       |                             ^
+    296|       expect(new Headers(response.init?.headers).get("Cache-Control"))…
+    297|         "private, no-store",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tests/unit/canonical-route.test.ts > canonical authorization and bounded forms > U03 draft retains a parsed authenticated rename_section after status 409
+AssertionError: expected { …(2) } to match object { submitted: { …(5) }, success: null }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "submitted": {
+-     "expectedVersionId": "10000000-0000-4000-8000-000000000002",
+-     "idempotencyKey": "10000000-0000-4000-8000-000000000003",
+-     "operation": "rename_section",
+-     "sectionId": "10000000-0000-4000-8000-000000000004",
+-     "value": "Retained candidate draft",
+-   },
+    "success": null,
+  }
+
+ ❯ tests/unit/canonical-route.test.ts:295:29
+    293|       const response = await action(args(new URLSearchParams(submitted…
+    294|       expect(response.init?.status).toBe(status);
+    295|       expect(response.data).toMatchObject({ submitted, success: null }…
+       |                             ^
+    296|       expect(new Headers(response.init?.headers).get("Cache-Control"))…
+    297|         "private, no-store",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  8 failed | 1 passed | 31 skipped (40)
+   Start at  23:39:36
+   Duration  1.96s (transform 269ms, setup 0ms, import 472ms, tests 1.20s, environment 497ms)
+

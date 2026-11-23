@@ -1,0 +1,84 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/aa7-20261030-sandbox/resume_ats
+
+ ❯ tests/unit/evaluation-corpus-drill.test.ts (16 tests | 1 failed | 15 skipped) 7ms
+     × withholds an in-flight read when rights are revoked during download 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/evaluation-corpus-drill.test.ts > run-owned synthetic corpus storage drill > withholds an in-flight read when rights are revoked during download
+AssertionError: expected Uint8Array[ 37, 80, 68, 70, 45, …(2) ] to be undefined
+
+- Expected:
+undefined
+
++ Received:
+Uint8Array [
+  37,
+  80,
+  68,
+  70,
+  45,
+  49,
+  46,
+  55,
+  10,
+  83,
+  121,
+  110,
+  116,
+  104,
+  101,
+  116,
+  105,
+  99,
+  32,
+  115,
+  116,
+  111,
+  114,
+  97,
+  103,
+  101,
+  32,
+  100,
+  114,
+  105,
+  108,
+  108,
+  32,
+  98,
+  121,
+  116,
+  101,
+  115,
+  32,
+  111,
+  110,
+  108,
+  121,
+  46,
+  10,
+  37,
+  37,
+  69,
+  79,
+  70,
+]
+
+ ❯ tests/unit/evaluation-corpus-drill.test.ts:395:26
+    393|     release();
+    394|     const result = await reading;
+    395|     expect(result.bytes).toBeUndefined();
+       |                          ^
+    396|     expect(result).toMatchObject({ ok: false, code: "RECORD_REVOKED" }…
+    397|     expect(await drill.cleanup(asOf)).toMatchObject({ deletionVerified…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 skipped (16)
+   Start at  16:27:32
+   Duration  147ms (transform 40ms, setup 0ms, import 75ms, tests 7ms, environment 0ms)
+

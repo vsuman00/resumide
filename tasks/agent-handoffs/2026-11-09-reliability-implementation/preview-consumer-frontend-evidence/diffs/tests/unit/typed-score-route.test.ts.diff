@@ -1,0 +1,11 @@
+--- before/tests/unit/typed-score-route.test.ts
++++ after/tests/unit/typed-score-route.test.ts
+@@ -153,6 +153,8 @@
+         expectedCanonical: actual.canonical.headId,
+         expectedRequirements: actual.requirements?.headId,
+       },
++      undefined,
++      { clauseOrderPreview: mocks.authoringEnabled },
+     );
+     expect(mocks.authoring).not.toHaveBeenCalled();
+   });

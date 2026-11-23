@@ -1,0 +1,305 @@
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { describe, expect, it } from "vitest";
+import {
+  INITIAL_FEEDBACK_PROFILE as currentFull,
+  OWNED_AI_RETIREMENT_PROFILE as currentRetirement,
+} from "../../app/lib/server/initial-feedback-profile";
+
+// Frozen100607 profiles keep every historical source assertion/golden intact.
+const full = Object.freeze({
+  schemaVersion: "initial-feedback-readiness/1.0.0",
+  profileVersion: "initial-feedback-readiness-profile/1.0.0",
+  checkerSha256:
+    "1a04acf95f9daa172cf1874269e6ee0988e0433d5085407f8d9cb6cfd5ff557c",
+  readerSha256:
+    "57701a307d3087720642d9b4057eac87b770465e81726c000c5238708bcfc47b",
+  prepareSha256:
+    "93b7af8445710cd105e2da67eb27f7d9b8d9c52cd7ec924a6ab6f6aa69548f92",
+  claimSha256:
+    "335cef3a4e4f948b4c3b3c17ea9a3159368cab5df6e5a7a1389bc0f46759766a",
+  settleSha256:
+    "739919dedaa5080c4bb8f3c556a9f9b1528fb88747edef9764588bd9038d4148",
+  finishSha256:
+    "966cdb270ca5a4c1ab8fe6a6dd9097b5d46ebb2b2218f8047b794646cca315a8",
+  usageSha256:
+    "9564c709cea106d8999c61e4db14ce45c40c41eacd23ce54f7fa1ea5c234c223",
+  exportSha256:
+    "eefd5842be1eb38fe1e0f17ea148f1708eae634c2a8fe42ab94467c9839fe0cd",
+  metadataSha256:
+    "2bafa1e30a02308604ad0114ab114189aef6e8323379e443ab7a96a64b2196d6",
+});
+const retirement = Object.freeze({
+  schemaVersion: "owned-ai-retirement-readiness/1.0.0",
+  profileVersion: "owned-ai-retirement-profile/1.0.0",
+  checkerSha256:
+    "d5742f5ece8d96a2c7dd5628c9faebd479ad2dbbfc470d0ab96755d75f4008b7",
+  captureSha256:
+    "d066dfb3459d527b551ab81a564f85e896220e8b8f88749d21e378bd2b84cce0",
+  exportSha256:
+    "dc09528d888b8089e5e87d2d1edf32a8796267683021b2085dac2d0e80f3db27",
+  metadataSha256:
+    "55a9f1dd2000b1a4cd1e258e68b0e56d36872422f7a76ced5c08585fe31d70b7",
+});
+
+const read = (path: string) =>
+  readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+const candidate = read(
+  "supabase/migrations/20261115100607_owned_ai_retirement.sql",
+);
+const source =
+  candidate || read("supabase/migrations/20261115082125_owned_ai_usage.sql");
+const hash = (value: string) =>
+  createHash("sha256").update(value, "utf8").digest("hex");
+const body = (text: string, name: string) => {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const match = new RegExp(
+    `create(?: or replace)? function ${escaped}\\([\\s\\S]*?\\)\\s*returns [\\s\\S]*?\\bas\\s+(\\$[A-Za-z0-9_]*\\$)([\\s\\S]*?)\\1;`,
+    "u",
+  ).exec(text);
+  if (!match) throw new Error(`Missing actual source ${name}`);
+  return match[2];
+};
+
+describe("owned AI retirement source contract; SQL unparsed/unexecuted", () => {
+  it("requires actual retirement authority before accepting a missing publication", () => {
+    // This is an SQL source-admission regression, not a Native behavior test.
+    expect(source).toContain("retirement_scope as materialized");
+    expect(source).toContain(
+      "not exists(select 1 from private.initial_feedback_publications",
+    );
+    expect(source).toContain("s.publication_id=o.publication_id");
+    expect(source).toContain("s.binding_sha256=o.binding_sha256");
+  });
+  it("captures within the two real producer transactions before parent erasure", () => {
+    const prepare = body(source, "public.prepare_deletion_request");
+    const original = body(
+      read(
+        "supabase/migrations/20260911130000_durable_privacy_deletion_plan.sql",
+      ),
+      "public.prepare_deletion_request",
+    );
+    expect(
+      prepare.replace(
+        "  perform private.retire_initial_feedback_publications(request_row.user_id,null,request_row.id,null);\n",
+        "",
+      ),
+    ).toBe(original);
+    expect(
+      prepare.indexOf("insert into private.privacy_deletion_plans"),
+    ).toBeLessThan(
+      prepare.indexOf("perform private.retire_initial_feedback_publications"),
+    );
+    expect(
+      prepare.indexOf("perform private.retire_initial_feedback_publications"),
+    ).toBeLessThan(prepare.indexOf("delete from public.analyses"));
+    const complete = body(source, "public.complete_retention_item");
+    expect(
+      complete.indexOf("perform private.retire_initial_feedback_publications"),
+    ).toBeLessThan(complete.indexOf("delete from public.resumes"));
+    expect(complete).toContain(
+      "r.owner_id=item_row.owner_id and r.status='deleted'",
+    );
+    expect(complete).toContain("ri.status<>'deleted'");
+  });
+  it("requires live durable authority and actual immutable source/publication/run rows", () => {
+    const capture = body(
+      source,
+      "private.retire_initial_feedback_publications",
+    );
+    for (const text of [
+      "private.try_lock_candidate_owners(array[p_owner_id])",
+      "private.privacy_deletion_plans",
+      "d.lease_expires_at>clock_timestamp()",
+      "for update of t skip locked",
+      "for share of r,v skip locked",
+      "for update of a skip locked",
+      "for update skip locked",
+      "run.input_hash<>op.binding_sha256",
+      "private.ifo_sha(private.ifpub_run_json(run)::text)<>pub.run_content_sha256",
+    ])
+      expect(capture).toContain(text);
+    expect(capture).not.toContain("on conflict");
+    expect(capture).not.toMatch(/set_config|p_supported|p_grounded|p_proof/gu);
+    const guard = body(source, "private.owned_ai_retirement_guard");
+    expect(guard).toContain("if tg_op<>'INSERT'");
+    expect(guard).toContain(
+      "(new.attempt_id,new.run_id,new.publication_state) is distinct from (pub.attempt_id,pub.run_id,pub.state)",
+    );
+    expect(guard).toContain("new.retention_item_id");
+  });
+  it("keeps link validation in one snapshot across all months and validates retained attempts without runs", () => {
+    const usage = body(source, "public.read_initial_feedback_usage");
+    const prefix = usage.slice(
+      usage.indexOf("with canonical_scope"),
+      usage.indexOf("), legacy as"),
+    );
+    expect(prefix).not.toMatch(/period_start|period_end/gu);
+    expect(prefix).toContain(
+      "s.publication_id is distinct from o.publication_id",
+    );
+    expect(prefix).toContain("t.state='published' and t.error_code is null");
+    expect(prefix).toContain("isfinite(t.claimed_at)");
+    expect(prefix).toContain(
+      "r.id is not null or not exists(select 1 from retirement_scope",
+    );
+    expect(prefix).toContain("from links group by run_id having count(*)>1");
+    expect(prefix).toContain("r.input_tokens::text=t.usage->>'inputTokens'");
+    expect(usage).toContain("legacy_tokens+canonical_tokens+feedback_tokens");
+    expect(usage.match(/x.claimed_at>=period_start/gu)).toHaveLength(2);
+  });
+  it("pins real composed source bodies without a self-hash cycle", () => {
+    expect(Object.keys(full)).toHaveLength(11);
+    expect(Object.keys(retirement)).toHaveLength(6);
+    for (const [name, value] of [
+      ["private.initial_feedback_ready", full.checkerSha256],
+      ["public.read_initial_feedback_usage", full.usageSha256],
+      ["private.owned_ai_retirement_ready", retirement.checkerSha256],
+      [
+        "private.retire_initial_feedback_publications",
+        retirement.captureSha256,
+      ],
+      ["public.export_owned_ai_retirement_records", retirement.exportSha256],
+      ["public.read_owned_ai_retirement_readiness", retirement.metadataSha256],
+    ])
+      expect(hash(body(source, name))).toBe(value);
+    for (const [name, tag, self, count] of [
+      [
+        "private.initial_feedback_ready",
+        "shared_usage_catalog",
+        full.checkerSha256,
+        14,
+      ],
+      [
+        "private.owned_ai_retirement_ready",
+        "retirement_catalog",
+        retirement.checkerSha256,
+        7,
+      ],
+    ] as const) {
+      const manifest = JSON.parse(
+        body(source, name).split(`$${tag}$`)[1],
+      ) as Array<{ signature: string; sha256: string }>;
+      expect(manifest).toHaveLength(count);
+      expect(manifest.some((x) => x.sha256 === self)).toBe(false);
+      for (const item of manifest) {
+        if (source.includes(`function ${item.signature.split("(")[0]}(`))
+          expect(hash(body(source, item.signature.split("(")[0]))).toBe(
+            item.sha256,
+          );
+      }
+    }
+  });
+  it("guards the exact table identities, attributes, ACLs and producer predecessors", () => {
+    const checker = body(source, "private.owned_ai_retirement_ready");
+    for (const text of [
+      "<>14",
+      "<>2",
+      "not atthasdef",
+      "attidentity=''",
+      "has_any_column_privilege",
+      "c.confdeltype='r'",
+      "tgtype=31",
+      "item->>'acl' in ('metadata','service')",
+      "CHECK predicates and Native lock/rollback/erasure",
+    ])
+      expect(checker).toContain(text);
+    expect(source).toContain("OWNED_AI_RETIREMENT_PREIMAGE_DRIFT");
+    expect(source).toContain("OWNED_AI_RETIREMENT_PRODUCER_DRIFT");
+    expect(source).toContain("not p.prosecdef");
+    expect(source).toContain(
+      "p.proconfig is distinct from array['search_path=\"\"']",
+    );
+    expect(source).toContain(
+      "raise exception 'PRIVACY_OWNER_BUSY' using errcode='55P03'",
+    );
+  });
+  it("exports whole owner scope with separate staged capability and no false existing-export authority", () => {
+    const exported = body(source, "public.export_owned_ai_retirement_records");
+    expect(exported).toContain("where s.owner_id=p_user_id");
+    expect(exported).not.toContain("memberships");
+    expect(exported).not.toContain("p_organization_id");
+    expect(exported).toContain("limit 4097");
+    expect(exported).toContain("n>4096 or bytes>33554432");
+    expect(exported.indexOf("bytes>33554432")).toBeLessThan(
+      exported.indexOf("array_append"),
+    );
+    expect(exported).toContain("'retirements',to_jsonb(rows)");
+    const metadata = body(source, "public.read_owned_ai_retirement_readiness");
+    expect([
+      ...metadata.matchAll(/(?:\(|,)\s*'([A-Za-z][A-Za-z0-9]*)'\s*,/gu),
+    ]).toHaveLength(8);
+    expect(source.match(/grant execute on function/gu)).toHaveLength(1);
+    expect(source).toContain(
+      "grant execute on function public.read_owned_ai_retirement_readiness() to service_role",
+    );
+    expect(source).toContain(
+      "public.export_owned_ai_retirement_records(uuid),public.read_owned_ai_retirement_readiness()",
+    );
+  });
+  it("preserves frozen accounting and publication sources", () => {
+    for (const [file, expected] of [
+      [
+        "supabase/migrations/20261115082125_owned_ai_usage.sql",
+        "63ddc8a43deba5e794feef0f6c0fefe73be524d6c75a60b70e67087ae82b44b1",
+      ],
+      [
+        "supabase/migrations/20261115081345_initial_feedback_publications.sql",
+        "6bc869e81b7d9a81447f3228496ba44bffdc3c783922063a6ddfe1b01130c62e",
+      ],
+      [
+        "supabase/migrations/20261115095258_initial_feedback_late_settlement.sql",
+        "6563a195f69de2bd92675da850b7b893e7e6df16cd6223a2e85ef3c3739286cf",
+      ],
+    ])
+      expect(hash(read(file))).toBe(expected);
+  });
+  it("keeps Native deletion, corruption and export proof deferred", () => {
+    const draft = read("scripts/verify-owned-ai-retirement.sql");
+    for (const text of [
+      "UNPARSED/UNEXECUTED",
+      "public.prepare_deletion_request",
+      "public.complete_retention_item",
+      "same_org_surviving_probe",
+      "no_publication_without_exact_proof",
+      "full_legacy_run_corruption_refused",
+      "published_unknown_late_fill_after_content_delete",
+      "separate_export_not_existing_exportExecutable",
+      "set constraints all immediate;\nrollback;",
+      "exportOwned43aff",
+    ])
+      expect(draft).toContain(text);
+    expect(draft).not.toMatch(/grant execute|disable trigger/gu);
+  });
+});
+
+it("adopts exact current retirement/full checker successors while retaining every historical100607 body", () => {
+  const text = read(
+    "supabase/migrations/20261115131621_owned_ai_disposition_clocks.sql",
+  );
+  const rows = JSON.parse(text.split("$disposition_patches$")[1]) as Array<{
+    signature: string;
+    before: string;
+    after: string;
+    old: string;
+    new: string;
+  }>;
+  for (const [name, pin, oldPin] of [
+    [
+      "private.initial_feedback_ready",
+      currentFull.checkerSha256,
+      full.checkerSha256,
+    ],
+    [
+      "private.owned_ai_retirement_ready",
+      currentRetirement.checkerSha256,
+      retirement.checkerSha256,
+    ],
+  ]) {
+    const p = rows.find((x) => x.signature === name + "()")!;
+    expect(p.old).toBe(body(source, name));
+    expect(p.before).toBe(oldPin);
+    expect(hash(p.new)).toBe(pin);
+    expect(p.after).toBe(pin);
+  }
+});

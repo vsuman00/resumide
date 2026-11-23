@@ -24,8 +24,6 @@ const stages = [
 const activeStageByStatus: Record<string, number> = {
   created: 0,
   uploading: 0,
-  quarantined: 0,
-  queued: 0,
   extracting: 1,
   scoring: 2,
   qualitative_review: 3,
@@ -46,13 +44,26 @@ function formatUpdatedAt(updatedAt: string) {
 export function StageTimeline({
   status,
   updatedAt,
+  recovery,
 }: {
   status: string;
   updatedAt: string;
+  recovery?: AnalysisRecovery;
 }) {
   const isCompleted = status === "completed";
   const isPartial = status === "partial";
   const needsReview = status === "needs_ocr";
+  const waiting = status === "quarantined" || status === "queued";
+  const reviewLabel =
+    recovery === "ocr_unavailable"
+      ? "OCR unavailable"
+      : recovery === "text_pdf_required"
+        ? "Text-based PDF needed"
+        : recovery === "ocr_failed"
+          ? "OCR stopped"
+          : recovery === "ocr_incomplete"
+            ? "Incomplete OCR"
+            : "Needs review";
   const isStopped = ["failed", "cancelled", "rejected"].includes(status);
   const activeStage = activeStageByStatus[status];
 
@@ -68,9 +79,10 @@ export function StageTimeline({
               : activeStage !== undefined && index < activeStage;
         const isPartialStage = isPartial && index === 3;
         const isReviewStage = needsReview && index === 1;
+        const isWaitingStage = waiting && index === 0;
         const state = isCurrent
           ? "is-current"
-          : isPartialStage || isReviewStage
+          : isPartialStage || isReviewStage || isWaitingStage
             ? "is-partial"
             : isComplete
               ? "is-complete"
@@ -86,11 +98,12 @@ export function StageTimeline({
             <div>
               <div className="stage-timeline-title-row">
                 <strong>{stage.title}</strong>
-                {isCurrent ? (
+                {isCurrent || isWaitingStage || isReviewStage ? (
                   <time dateTime={updatedAt}>{formatUpdatedAt(updatedAt)}</time>
                 ) : null}
                 {isPartialStage ? <span>Unavailable</span> : null}
-                {isReviewStage ? <span>Needs review</span> : null}
+                {isReviewStage ? <span>{reviewLabel}</span> : null}
+                {isWaitingStage ? <span>Waiting</span> : null}
               </div>
               <p>{stage.description}</p>
               <span className="sr-only">
@@ -99,14 +112,16 @@ export function StageTimeline({
                   : isPartialStage
                     ? "Unavailable"
                     : isReviewStage
-                      ? "Needs review"
-                      : isComplete
-                        ? "Complete"
-                        : needsReview
-                          ? "Blocked pending evidence review"
-                          : isStopped
-                            ? "Not completed"
-                            : "Pending"}
+                      ? reviewLabel
+                      : isWaitingStage
+                        ? "Waiting for a worker"
+                        : isComplete
+                          ? "Complete"
+                          : needsReview
+                            ? "Blocked pending evidence review"
+                            : isStopped
+                              ? "Not completed"
+                              : "Pending"}
               </span>
             </div>
           </li>
@@ -115,3 +130,4 @@ export function StageTimeline({
     </ol>
   );
 }
+import type { AnalysisRecovery } from "~/routes/api.analysis-status";

@@ -62,6 +62,7 @@ const sha256 = (bytes: Uint8Array | string) =>
   createHash("sha256").update(bytes).digest("hex");
 const codePaths = [
   "app/lib/server/extraction-benchmark.ts",
+  "app/lib/server/extract.ts",
   "app/lib/server/evidence-fields.ts",
   "app/lib/server/parsing/contact.ts",
   "app/lib/server/parsing/dates.ts",

@@ -1,0 +1,445 @@
+begin;
+
+-- Immutable metadata foundation only. No public grouped writer or activation.
+create table public.candidate_entry_association_batches (
+  id uuid primary key,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  organization_id uuid not null references public.organizations(id) on delete cascade,
+  resume_id uuid not null,
+  analysis_id uuid not null,
+  source_resume_version_id uuid not null,
+  evidence_attempt_id uuid not null,
+  input_sha256 text not null check(input_sha256 collate "C" ~ '^[a-f0-9]{64}$'),
+  association_revision integer not null check(association_revision between 1 and 1000),
+  previous_batch_id uuid,
+  idempotency_key uuid not null,
+  command jsonb not null check(jsonb_typeof(command)='object' and octet_length(command::text)<=262144),
+  command_bytes bytea not null check(octet_length(command_bytes) between 7 and 131072 and substring(command_bytes from 1 for 7)=decode('4130324f50310a','hex')),
+  command_sha256 text not null check(command_sha256=encode(extensions.digest(command_bytes,'sha256'),'hex')),
+  codec_version text not null check(codec_version='a02-command-bytes/1.0.0'),
+  result_version_id uuid not null,
+  result_revision integer not null check(result_revision=1),
+  storage_key uuid not null,
+  result_content_sha256 text not null check(result_content_sha256 collate "C" ~ '^[a-f0-9]{64}$'),
+  created_at timestamptz not null default now(),
+  unique(resume_id,idempotency_key), unique(analysis_id,association_revision), unique(result_version_id), unique(storage_key),
+  unique(id,owner_id,organization_id,resume_id,analysis_id,source_resume_version_id),
+  unique(id,owner_id,organization_id,resume_id,source_resume_version_id,result_version_id),
+  unique(id,owner_id,organization_id,resume_id,source_resume_version_id),
+  check((association_revision=1)=(previous_batch_id is null)), check(previous_batch_id is distinct from id),
+  foreign key(resume_id,owner_id,organization_id) references public.resumes(id,owner_id,organization_id) on delete cascade,
+  foreign key(source_resume_version_id,resume_id,owner_id,organization_id) references public.resume_versions(id,resume_id,owner_id,organization_id) on delete cascade,
+  foreign key(analysis_id,source_resume_version_id,owner_id,organization_id) references public.analyses(id,resume_version_id,owner_id,organization_id) on delete cascade,
+  foreign key(evidence_attempt_id,analysis_id,source_resume_version_id,owner_id,organization_id,input_sha256)
+    references public.document_evidence_attempts(id,analysis_id,resume_version_id,owner_id,organization_id,input_sha256) on delete cascade,
+  foreign key(previous_batch_id,owner_id,organization_id,resume_id,analysis_id,source_resume_version_id)
+    references public.candidate_entry_association_batches(id,owner_id,organization_id,resume_id,analysis_id,source_resume_version_id) on delete cascade,
+  foreign key(result_version_id,resume_id,source_resume_version_id,owner_id,organization_id)
+    references public.canonical_resume_versions(id,resume_id,source_resume_version_id,owner_id,organization_id) on delete cascade deferrable initially deferred
+);
+create table public.candidate_entry_association_groups (
+  id uuid primary key, batch_id uuid not null, owner_id uuid not null, organization_id uuid not null,
+  resume_id uuid not null, source_resume_version_id uuid not null, result_version_id uuid not null,
+  group_order integer not null check(group_order between 1 and 32),
+  page_id text not null check(char_length(page_id) between 1 and 100),
+  method text not null check(method in ('native_text','local_ocr')),
+  section_id uuid not null, entry_id uuid not null,
+  source_selection jsonb not null check(jsonb_typeof(source_selection)='object' and octet_length(source_selection::text)<=131072),
+  unique(batch_id,group_order), unique(batch_id,section_id,entry_id),
+  unique(id,batch_id,owner_id,organization_id,resume_id,source_resume_version_id,result_version_id),
+  unique(id,batch_id,owner_id,organization_id,resume_id,source_resume_version_id),
+  foreign key(batch_id,owner_id,organization_id,resume_id,source_resume_version_id,result_version_id)
+    references public.candidate_entry_association_batches(id,owner_id,organization_id,resume_id,source_resume_version_id,result_version_id) on delete cascade,
+  foreign key(result_version_id,resume_id,source_resume_version_id,owner_id,organization_id)
+    references public.canonical_resume_versions(id,resume_id,source_resume_version_id,owner_id,organization_id) on delete cascade deferrable initially deferred
+);
+create table public.candidate_entry_association_members (
+  id uuid primary key, group_id uuid not null, batch_id uuid not null, owner_id uuid not null, organization_id uuid not null,
+  resume_id uuid not null, source_resume_version_id uuid not null, result_version_id uuid not null,
+  source_order integer not null check(source_order between 1 and 3), entry_order integer not null check(entry_order between 1 and 3),
+  assertion_id text not null check(char_length(assertion_id) between 1 and 100),
+  field text not null check(field in ('employer','role','dates')), fact_id uuid not null, original_entry_id uuid not null,
+  citations jsonb not null check(jsonb_typeof(citations)='array' and jsonb_array_length(citations)=1 and octet_length(citations::text)<=2048),
+  unique(group_id,source_order), unique(group_id,entry_order), unique(batch_id,fact_id), unique(batch_id,assertion_id),
+  unique(batch_id,original_entry_id),
+  foreign key(group_id,batch_id,owner_id,organization_id,resume_id,source_resume_version_id,result_version_id)
+    references public.candidate_entry_association_groups(id,batch_id,owner_id,organization_id,resume_id,source_resume_version_id,result_version_id) on delete cascade,
+  foreign key(batch_id,owner_id,organization_id,resume_id,source_resume_version_id,result_version_id)
+    references public.candidate_entry_association_batches(id,owner_id,organization_id,resume_id,source_resume_version_id,result_version_id) on delete cascade,
+  foreign key(result_version_id,fact_id,owner_id,organization_id)
+    references public.resume_facts(canonical_version_id,id,owner_id,organization_id) on delete cascade deferrable initially deferred
+  -- original_entry_id describes the trusted removed raw-base entry; there is no persisted raw parent.
+);
+create table public.canonical_entry_association_snapshots (
+  canonical_version_id uuid primary key, owner_id uuid not null, organization_id uuid not null,
+  resume_id uuid not null, source_resume_version_id uuid not null,
+  evidence_attempt_id uuid not null references public.document_evidence_attempts(id) on delete cascade,
+  origin_batch_id uuid, origin_kind text not null check(origin_kind in ('grouped_import','inherited','restore','legacy_empty')),
+  inherited_from_version_id uuid, restored_from_version_id uuid,
+  unique(canonical_version_id,origin_batch_id,owner_id,organization_id,resume_id,source_resume_version_id),
+  check(inherited_from_version_id is distinct from canonical_version_id), check(restored_from_version_id is distinct from canonical_version_id),
+  check((origin_kind='grouped_import' and origin_batch_id is not null and inherited_from_version_id is null and restored_from_version_id is null)
+    or (origin_kind='inherited' and inherited_from_version_id is not null and restored_from_version_id is null)
+    or (origin_kind='restore' and restored_from_version_id is not null and inherited_from_version_id is null)
+    or (origin_kind='legacy_empty' and origin_batch_id is null and not(inherited_from_version_id is not null and restored_from_version_id is not null))),
+  foreign key(canonical_version_id,resume_id,source_resume_version_id,owner_id,organization_id)
+    references public.canonical_resume_versions(id,resume_id,source_resume_version_id,owner_id,organization_id) on delete cascade,
+  foreign key(origin_batch_id,owner_id,organization_id,resume_id,source_resume_version_id)
+    references public.candidate_entry_association_batches(id,owner_id,organization_id,resume_id,source_resume_version_id) on delete cascade,
+  foreign key(inherited_from_version_id,resume_id,source_resume_version_id,owner_id,organization_id)
+    references public.canonical_resume_versions(id,resume_id,source_resume_version_id,owner_id,organization_id) on delete cascade,
+  foreign key(restored_from_version_id,resume_id,source_resume_version_id,owner_id,organization_id)
+    references public.canonical_resume_versions(id,resume_id,source_resume_version_id,owner_id,organization_id) on delete cascade
+  -- Attempt/analysis/hash consistency is explicitly checked by validate_head, beyond this single-column attempt FK.
+);
+create table public.canonical_entry_association_links (
+  canonical_version_id uuid not null, group_id uuid not null, owner_id uuid not null, organization_id uuid not null,
+  resume_id uuid not null, source_resume_version_id uuid not null, origin_batch_id uuid not null,
+  primary key(canonical_version_id,group_id),
+  foreign key(canonical_version_id,origin_batch_id,owner_id,organization_id,resume_id,source_resume_version_id)
+    references public.canonical_entry_association_snapshots(canonical_version_id,origin_batch_id,owner_id,organization_id,resume_id,source_resume_version_id) on delete cascade,
+  foreign key(group_id,origin_batch_id,owner_id,organization_id,resume_id,source_resume_version_id)
+    references public.candidate_entry_association_groups(id,batch_id,owner_id,organization_id,resume_id,source_resume_version_id) on delete cascade,
+  foreign key(origin_batch_id,owner_id,organization_id,resume_id,source_resume_version_id)
+    references public.candidate_entry_association_batches(id,owner_id,organization_id,resume_id,source_resume_version_id) on delete cascade
+);
+
+alter table public.candidate_entry_association_batches enable row level security;
+alter table public.candidate_entry_association_groups enable row level security;
+alter table public.candidate_entry_association_members enable row level security;
+alter table public.canonical_entry_association_snapshots enable row level security;
+alter table public.canonical_entry_association_links enable row level security;
+revoke all on public.candidate_entry_association_batches,public.candidate_entry_association_groups,public.candidate_entry_association_members,
+  public.canonical_entry_association_snapshots,public.canonical_entry_association_links from public,anon,authenticated,service_role;
+create trigger entry_batches_immutable before update on public.candidate_entry_association_batches for each row execute function private.reject_correction_ledger_update();
+create trigger entry_groups_immutable before update on public.candidate_entry_association_groups for each row execute function private.reject_correction_ledger_update();
+create trigger entry_members_immutable before update on public.candidate_entry_association_members for each row execute function private.reject_correction_ledger_update();
+create trigger entry_snapshots_immutable before update on public.canonical_entry_association_snapshots for each row execute function private.reject_correction_ledger_update();
+create trigger entry_links_immutable before update on public.canonical_entry_association_links for each row execute function private.reject_correction_ledger_update();
+create trigger zz_candidate_privacy_write before insert or update on public.candidate_entry_association_batches for each row execute function private.guard_candidate_privacy_write('owner_id');
+create trigger zz_candidate_privacy_write before insert or update on public.candidate_entry_association_groups for each row execute function private.guard_candidate_privacy_write('owner_id');
+create trigger zz_candidate_privacy_write before insert or update on public.candidate_entry_association_members for each row execute function private.guard_candidate_privacy_write('owner_id');
+create trigger zz_candidate_privacy_write before insert or update on public.canonical_entry_association_snapshots for each row execute function private.guard_candidate_privacy_write('owner_id');
+create trigger zz_candidate_privacy_write before insert or update on public.canonical_entry_association_links for each row execute function private.guard_candidate_privacy_write('owner_id');
+create index entry_batch_owner_idx on public.candidate_entry_association_batches(owner_id);
+create index entry_batch_org_idx on public.candidate_entry_association_batches(organization_id);
+create index entry_batch_source_idx on public.candidate_entry_association_batches(source_resume_version_id);
+create index entry_batch_attempt_idx on public.candidate_entry_association_batches(evidence_attempt_id);
+create index entry_batch_previous_idx on public.candidate_entry_association_batches(previous_batch_id);
+create index entry_group_result_idx on public.candidate_entry_association_groups(result_version_id);
+create index entry_member_fact_idx on public.candidate_entry_association_members(result_version_id,fact_id);
+create index entry_snapshot_origin_idx on public.canonical_entry_association_snapshots(origin_batch_id);
+create index entry_snapshot_source_idx on public.canonical_entry_association_snapshots(source_resume_version_id);
+create index entry_snapshot_attempt_idx on public.canonical_entry_association_snapshots(evidence_attempt_id);
+create index entry_snapshot_parent_idx on public.canonical_entry_association_snapshots(inherited_from_version_id);
+create index entry_snapshot_restore_idx on public.canonical_entry_association_snapshots(restored_from_version_id);
+create index entry_link_group_idx on public.canonical_entry_association_links(group_id);
+create index entry_link_origin_idx on public.canonical_entry_association_links(origin_batch_id);
+
+create function private.entry_association_group_active(p_version_id uuid,p_group_id uuid) returns boolean
+language plpgsql volatile security invoker set search_path='' as $$
+declare g public.candidate_entry_association_groups%rowtype; v public.canonical_resume_versions%rowtype; origin public.canonical_resume_versions%rowtype;
+  m public.candidate_entry_association_members%rowtype; old_fact public.resume_facts%rowtype; current_fact public.resume_facts%rowtype;
+  old_section jsonb; old_entry jsonb; current_section jsonb; current_entry jsonb; matches bigint; member_ids jsonb;
+begin
+  select * into g from public.candidate_entry_association_groups where id=p_group_id;
+  if not found then perform private.correction_fail('unavailable'); end if;
+  select * into origin from public.canonical_resume_versions where id=g.result_version_id;
+  if not found or (origin.owner_id,origin.organization_id,origin.resume_id,origin.source_resume_version_id)
+    is distinct from (g.owner_id,g.organization_id,g.resume_id,g.source_resume_version_id) then perform private.correction_fail('unavailable'); end if;
+  select * into v from public.canonical_resume_versions where id=p_version_id;
+  if not found or (v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id,v.source_evidence_version_id)
+    is distinct from (origin.owner_id,origin.organization_id,origin.resume_id,origin.source_resume_version_id,origin.source_evidence_version_id) then
+    perform private.correction_fail('unavailable'); end if;
+  select count(*),jsonb_agg(s.value)->0 into matches,old_section from jsonb_array_elements(origin.content->'sections') s where s.value->>'id'=g.section_id::text;
+  if matches<>1 then perform private.correction_fail('unavailable'); end if;
+  select count(*),jsonb_agg(e.value)->0 into matches,old_entry from jsonb_array_elements(old_section->'entries') e where e.value->>'id'=g.entry_id::text;
+  if matches<>1 or old_section->>'type'<>'experience' or old_entry->'bullets'<>'[]'::jsonb then perform private.correction_fail('unavailable'); end if;
+  select count(*),jsonb_agg(to_jsonb(m.fact_id) order by m.entry_order) into matches,member_ids
+    from public.candidate_entry_association_members m where m.group_id=g.id;
+  if matches not between 2 and 3 or member_ids is distinct from old_entry->'factIds' then perform private.correction_fail('unavailable'); end if;
+  select count(*),jsonb_agg(s.value)->0 into matches,current_section from jsonb_array_elements(v.content->'sections') s where s.value->>'id'=g.section_id::text;
+  if matches<>1 or current_section->'type' is distinct from old_section->'type' then return false; end if;
+  select count(*),jsonb_agg(e.value)->0 into matches,current_entry from jsonb_array_elements(current_section->'entries') e where e.value->>'id'=g.entry_id::text;
+  if matches<>1 or current_entry->'factIds' is distinct from old_entry->'factIds' or current_entry->'bullets' is distinct from old_entry->'bullets' then return false; end if;
+  for m in select * from public.candidate_entry_association_members where group_id=g.id order by entry_order loop
+    select * into old_fact from public.resume_facts where canonical_version_id=origin.id and id=m.fact_id;
+    if not found or (old_fact.owner_id,old_fact.organization_id,old_fact.type) is distinct from (g.owner_id,g.organization_id,m.field) then
+      perform private.correction_fail('unavailable'); end if;
+    select * into current_fact from public.resume_facts where canonical_version_id=v.id and id=m.fact_id;
+    if not found then return false; end if;
+    if (current_fact.owner_id,current_fact.organization_id,current_fact.type,current_fact.value,current_fact.sources)
+      is distinct from (old_fact.owner_id,old_fact.organization_id,old_fact.type,old_fact.value,old_fact.sources) then return false; end if;
+    if private.correction_location(v.content,m.fact_id) is distinct from jsonb_build_array(jsonb_build_object('kind','entry','sectionId',g.section_id,
+      'entryId',g.entry_id,'bulletId',null)) then return false; end if;
+  end loop;
+  return true;
+end;
+$$;
+
+create function private.entry_association_validate_head(p_version_id uuid) returns void
+language plpgsql volatile security invoker set search_path='' as $$
+declare v public.canonical_resume_versions%rowtype; origin public.canonical_resume_versions%rowtype; evidence public.document_evidence_attempts%rowtype;
+  s public.canonical_entry_association_snapshots%rowtype; inherited public.canonical_entry_association_snapshots%rowtype;
+  b public.candidate_entry_association_batches%rowtype; g public.candidate_entry_association_groups%rowtype; m public.candidate_entry_association_members%rowtype;
+  normal jsonb; binding jsonb; captured jsonb; selected jsonb; reprojected jsonb; canonical_selections jsonb; member jsonb;
+  assertion jsonb; expected_sources jsonb; f public.resume_facts%rowtype; ids jsonb; entry_ids jsonb; atoms text[]; k text; n integer; count_value bigint; stream_head uuid;
+begin
+  select * into v from public.canonical_resume_versions where id=p_version_id;
+  if not found then perform private.correction_fail('unavailable'); end if;
+  if v.content->>'producerVersion' not in ('canonical-engine/1.0.0','canonical-engine/1.0.1','canonical-engine/1.0.2','canonical-engine/1.0.3')
+    or private.canonical_shape_valid(case when v.content->>'producerVersion'='canonical-engine/1.0.3' then jsonb_set(v.content,'{producerVersion}','"canonical-engine/1.0.1"'::jsonb) else v.content end) is not true
+    or (v.content->>'ownerId',v.content->>'organizationId',v.content->>'resumeId',v.content->>'versionId',v.content->>'sourceEvidenceVersionId')
+      is distinct from (v.owner_id::text,v.organization_id::text,v.resume_id::text,v.id::text,v.source_evidence_version_id::text) then perform private.correction_fail('unavailable'); end if;
+  select * into evidence from public.document_evidence_attempts where id=v.source_evidence_version_id;
+  if not found or (evidence.owner_id,evidence.organization_id,evidence.resume_version_id,evidence.analysis_id::text,evidence.input_sha256)
+    is distinct from (v.owner_id,v.organization_id,v.source_resume_version_id,v.content->>'analysisId',v.content->>'inputSha256') then
+    perform private.correction_fail('unavailable'); end if;
+  select * into s from public.canonical_entry_association_snapshots where canonical_version_id=v.id;
+  if not found then
+    if v.content->>'producerVersion'='canonical-engine/1.0.3' or exists(
+      select 1 from public.canonical_entry_association_snapshots where canonical_version_id=v.parent_version_id and origin_batch_id is not null)
+      or exists(select 1 from public.canonical_resume_versions where id=v.parent_version_id and content->>'producerVersion'='canonical-engine/1.0.3') then
+      perform private.correction_fail('unavailable'); end if;
+    return;
+  end if;
+  if (s.owner_id,s.organization_id,s.resume_id,s.source_resume_version_id,s.evidence_attempt_id)
+    is distinct from (v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id,v.source_evidence_version_id) then perform private.correction_fail('unavailable'); end if;
+  if (v.parent_version_id is null and (s.inherited_from_version_id is not null or s.restored_from_version_id is not null))
+    or (v.parent_version_id is not null and v.command->>'operation'='rollback' and s.restored_from_version_id is distinct from (v.command->>'targetVersionId')::uuid)
+    or (v.parent_version_id is not null and v.command->>'operation'<>'rollback' and s.inherited_from_version_id is distinct from v.parent_version_id) then
+    perform private.correction_fail('unavailable'); end if;
+  if s.inherited_from_version_id is not null then
+    if s.inherited_from_version_id is distinct from v.parent_version_id then perform private.correction_fail('unavailable'); end if;
+    select * into inherited from public.canonical_entry_association_snapshots where canonical_version_id=s.inherited_from_version_id;
+    if found and inherited.origin_batch_id is distinct from s.origin_batch_id then perform private.correction_fail('unavailable'); end if;
+    if not found and s.origin_batch_id is not null then perform private.correction_fail('unavailable'); end if;
+    if exists((select group_id from public.canonical_entry_association_links where canonical_version_id=v.id)
+      except (select group_id from public.canonical_entry_association_links where canonical_version_id=s.inherited_from_version_id and private.entry_association_group_active(v.id,group_id)))
+      or exists((select group_id from public.canonical_entry_association_links where canonical_version_id=s.inherited_from_version_id and private.entry_association_group_active(v.id,group_id))
+      except (select group_id from public.canonical_entry_association_links where canonical_version_id=v.id)) then perform private.correction_fail('unavailable'); end if;
+  end if;
+  if s.restored_from_version_id is not null then
+    if v.command->>'operation' is distinct from 'rollback' or v.command->>'targetVersionId' is distinct from s.restored_from_version_id::text then
+      perform private.correction_fail('unavailable'); end if;
+    select * into inherited from public.canonical_entry_association_snapshots where canonical_version_id=s.restored_from_version_id;
+    if found and inherited.origin_batch_id is distinct from s.origin_batch_id then perform private.correction_fail('unavailable'); end if;
+    if not found and s.origin_batch_id is not null then perform private.correction_fail('unavailable'); end if;
+    if exists((select group_id from public.canonical_entry_association_links where canonical_version_id=v.id)
+      except (select group_id from public.canonical_entry_association_links where canonical_version_id=s.restored_from_version_id))
+      or exists((select group_id from public.canonical_entry_association_links where canonical_version_id=s.restored_from_version_id)
+      except (select group_id from public.canonical_entry_association_links where canonical_version_id=v.id)) then perform private.correction_fail('unavailable'); end if;
+  end if;
+  if s.origin_batch_id is null then
+    if v.content->>'producerVersion'='canonical-engine/1.0.3' or exists(select 1 from public.canonical_entry_association_links where canonical_version_id=v.id) then
+      perform private.correction_fail('unavailable'); end if;
+    return;
+  end if;
+  select * into b from public.candidate_entry_association_batches where id=s.origin_batch_id;
+  if not found or (b.owner_id,b.organization_id,b.resume_id,b.source_resume_version_id,b.evidence_attempt_id,b.input_sha256,b.analysis_id)
+    is distinct from (v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id,v.source_evidence_version_id,evidence.input_sha256,evidence.analysis_id) then
+    perform private.correction_fail('unavailable'); end if;
+  select * into origin from public.canonical_resume_versions where id=b.result_version_id;
+  if not found or (origin.owner_id,origin.organization_id,origin.resume_id,origin.source_resume_version_id,origin.source_evidence_version_id,origin.revision)
+    is distinct from (b.owner_id,b.organization_id,b.resume_id,b.source_resume_version_id,b.evidence_attempt_id,b.result_revision)
+    or origin.parent_version_id is not null or origin.content->>'producerVersion' is distinct from 'canonical-engine/1.0.3'
+    or origin.idempotency_key is distinct from b.storage_key
+    or origin.command is distinct from jsonb_build_object('schemaVersion','grouped-original-storage/1.0.0','operation','grouped_original_import',
+      'batchId',b.id,'semanticSha256',b.command_sha256,'idempotencyKey',b.storage_key)
+    or encode(extensions.digest(convert_to(origin.content::text,'UTF8'),'sha256'),'hex') is distinct from b.result_content_sha256 then
+    perform private.correction_fail('unavailable'); end if;
+  if s.origin_kind='grouped_import' and v.id is distinct from origin.id then perform private.correction_fail('unavailable'); end if;
+  if private.grouped_import_keys(b.command,array['normalForm','previewHash','idempotencyKey']) is not true then perform private.correction_fail('unavailable'); end if;
+  normal:=b.command->'normalForm'; binding:=normal->'binding'; captured:=normal->'expected'; selected:=normal->'selections';
+  if private.grouped_import_keys(normal,array['schemaVersion','operation','binding','expected','acknowledgementPolicy','acknowledgement','unselectedDisposition','selections']) is not true
+    or normal->>'schemaVersion' is distinct from 'grouped-original-command/1.0.0' or normal->>'operation' is distinct from 'approve_and_import_grouped_original'
+    or normal->>'acknowledgementPolicy' is distinct from 'relationship_only_not_fact_confirmation' or normal->'acknowledgement' is distinct from 'true'::jsonb
+    or normal->>'unselectedDisposition' is distinct from 'retain_original' or jsonb_typeof(selected) is distinct from 'array'
+    or b.command->>'idempotencyKey' is distinct from b.idempotency_key::text or b.command->>'previewHash' is distinct from b.command_sha256 then
+    perform private.correction_fail('unavailable'); end if;
+  if jsonb_array_length(selected) not between 1 and 32 or private.grouped_import_keys(captured,array['reviewRevision','reviewHeadId','assignmentRevision','assignmentHeadId',
+    'associationRevision','associationHeadId','canonicalHeadId']) is not true or captured->'canonicalHeadId' is distinct from 'null'::jsonb then
+    perform private.correction_fail('unavailable'); end if;
+  foreach k in array array['review','assignment','association'] loop
+    if private.evidence_integer(captured->(k||'Revision'),0,2147483647) is not true then perform private.correction_fail('unavailable'); end if;
+    if ((captured->>(k||'Revision'))::numeric::integer=0) is distinct from (captured->(k||'HeadId')='null'::jsonb)
+      or (captured->(k||'HeadId')<>'null'::jsonb and private.grouped_import_uuid(captured->(k||'HeadId')) is not true) then perform private.correction_fail('unavailable'); end if;
+  end loop;
+  if (captured->>'associationRevision')::numeric::integer<>b.association_revision-1
+    or captured->'associationHeadId' is distinct from coalesce(to_jsonb(b.previous_batch_id),'null'::jsonb) then perform private.correction_fail('unavailable'); end if;
+  if (binding->>'ownerId',binding->>'organizationId',binding->>'resumeId',binding->>'analysisId',binding->>'sourceId',binding->>'attemptId',binding->>'inputSha256',binding->>'effectiveLocale')
+    is distinct from (b.owner_id::text,b.organization_id::text,b.resume_id::text,b.analysis_id::text,b.source_resume_version_id::text,b.evidence_attempt_id::text,b.input_sha256,origin.locale) then
+    perform private.correction_fail('unavailable'); end if;
+  reprojected:=private.grouped_import_project_candidates(evidence.envelope,binding);
+  select coalesce(jsonb_agg(value order by ordinality),'[]'::jsonb) into canonical_selections from jsonb_array_elements(reprojected) with ordinality
+    where value in (select value from jsonb_array_elements(selected));
+  if canonical_selections is distinct from selected then perform private.correction_fail('unavailable'); end if;
+  atoms:=array[normal->>'schemaVersion',normal->>'operation'];
+  foreach k in array array['ownerId','organizationId','resumeId','analysisId','sourceId','attemptId','inputSha256','evidenceSchemaVersion','fieldExtractorVersion',
+    'targetModelVersion','associationModelVersion','producerVersion','admissionPolicyVersion','structuralTextProfileVersion','correctionProjectionModelVersion',
+    'correctionAdmissionPolicyVersion','effectiveLocale'] loop atoms:=array_append(atoms,binding->>k); end loop;
+  foreach k in array array['reviewRevision','reviewHeadId','assignmentRevision','assignmentHeadId','associationRevision','associationHeadId','canonicalHeadId'] loop
+    atoms:=array_append(atoms,case when k like '%Revision' then ((captured->>k)::numeric::integer)::text else captured->>k end);
+  end loop;
+  atoms:=atoms||array['relationship_only_not_fact_confirmation','1','retain_original',jsonb_array_length(selected)::text];
+  for member in select value from jsonb_array_elements(selected) loop
+    atoms:=atoms||array[member->>'pageId',member->>'method',jsonb_array_length(member->'members')::text];
+    for assertion in select value from jsonb_array_elements(member->'members') loop
+      atoms:=atoms||array[assertion->>'assertionId',assertion->>'field','1'];
+      foreach k in array array['attemptId','spanId','pageId','method','start','end','pageStart','pageEnd'] loop
+        atoms:=array_append(atoms,case when k in ('start','end','pageStart','pageEnd') then ((assertion->'citations'->0->>k)::numeric::integer)::text else assertion->'citations'->0->>k end);
+      end loop;
+    end loop;
+  end loop;
+  if private.grouped_import_command_bytes(atoms) is distinct from b.command_bytes
+    or private.grouped_import_command_sha256(atoms) is distinct from b.command_sha256 then perform private.correction_fail('unavailable'); end if;
+  select count(*) into count_value from public.candidate_entry_association_groups where batch_id=b.id;
+  if count_value<>jsonb_array_length(selected) then perform private.correction_fail('unavailable'); end if;
+  n:=0;
+  for g in select * from public.candidate_entry_association_groups where batch_id=b.id order by group_order loop
+    n:=n+1;
+    if g.group_order<>n or g.source_selection is distinct from selected->(n-1) or g.page_id is distinct from g.source_selection->>'pageId'
+      or g.method is distinct from g.source_selection->>'method' then perform private.correction_fail('unavailable'); end if;
+    select count(*),jsonb_agg(to_jsonb(fact_id) order by entry_order),jsonb_agg(to_jsonb(original_entry_id) order by entry_order)
+      into count_value,ids,entry_ids from public.candidate_entry_association_members where group_id=g.id;
+    if count_value not between 2 and 3 or count_value<>jsonb_array_length(g.source_selection->'members') then perform private.correction_fail('unavailable'); end if;
+    if (select min(source_order)<>1 or max(source_order)<>count_value or min(entry_order)<>1 or max(entry_order)<>count_value
+      from public.candidate_entry_association_members where group_id=g.id) then perform private.correction_fail('unavailable'); end if;
+    for m in select * from public.candidate_entry_association_members where group_id=g.id order by source_order loop
+      member:=g.source_selection->'members'->(m.source_order-1);
+      if (m.assertion_id,m.field) is distinct from (member->>'assertionId',member->>'field') or m.citations is distinct from member->'citations'
+        or (m.entry_order=1 and (m.field<>'employer' or m.original_entry_id<>g.entry_id)) then perform private.correction_fail('unavailable'); end if;
+      select value into assertion from jsonb_array_elements(evidence.envelope->'assertions') where value->>'id'=m.assertion_id;
+      select jsonb_agg(jsonb_build_object('attemptId',b.evidence_attempt_id,'spanId',value->'spanId','start',value->'start','end',value->'end') order by ordinality)
+        into expected_sources from jsonb_array_elements(assertion->'evidence') with ordinality;
+      select * into f from public.resume_facts where canonical_version_id=origin.id and id=m.fact_id;
+      if not found or (f.type,f.value,f.sources) is distinct from (assertion->>'field',assertion->>'value',expected_sources)
+        or f.state<>'unconfirmed' or f.confirmation is not null then perform private.correction_fail('unavailable'); end if;
+    end loop;
+    if (select e.value->'factIds' from jsonb_array_elements(origin.content->'sections') sec cross join lateral jsonb_array_elements(sec.value->'entries') e
+      where sec.value->>'id'=g.section_id::text and e.value->>'id'=g.entry_id::text) is distinct from ids
+      or private.entry_association_group_active(origin.id,g.id) is not true then perform private.correction_fail('unavailable'); end if;
+  end loop;
+  for stream_head in select group_id from public.canonical_entry_association_links where canonical_version_id=v.id loop
+    if private.entry_association_group_active(v.id,stream_head) is not true then perform private.correction_fail('unavailable'); end if;
+  end loop;
+  if v.id=origin.id and (select count(*) from public.canonical_entry_association_links where canonical_version_id=v.id)<>n then
+    perform private.correction_fail('unavailable'); end if;
+end;
+$$;
+
+create function private.entry_association_prefix(p_scope jsonb) returns jsonb
+language plpgsql volatile security invoker set search_path='' as $$
+declare b public.candidate_entry_association_batches%rowtype; revision_value integer:=0; head_id uuid; k text;
+begin
+  if jsonb_typeof(p_scope) is distinct from 'object' then perform private.correction_fail('unavailable'); end if;
+  foreach k in array array['ownerId','organizationId','resumeId','analysisId','sourceId','attemptId'] loop
+    if private.grouped_import_uuid(p_scope->k) is not true then perform private.correction_fail('unavailable'); end if;
+  end loop;
+  if jsonb_typeof(p_scope->'inputSha256') is distinct from 'string' or (p_scope->>'inputSha256') collate "C" !~ '^[a-f0-9]{64}$' then
+    perform private.correction_fail('unavailable'); end if;
+  for b in select * from public.candidate_entry_association_batches where analysis_id=(p_scope->>'analysisId')::uuid order by association_revision loop
+    revision_value:=revision_value+1;
+    if revision_value>1000 or b.association_revision<>revision_value or b.previous_batch_id is distinct from head_id
+      or (b.owner_id::text,b.organization_id::text,b.resume_id::text,b.analysis_id::text,b.source_resume_version_id::text,b.input_sha256)
+        is distinct from (p_scope->>'ownerId',p_scope->>'organizationId',p_scope->>'resumeId',p_scope->>'analysisId',p_scope->>'sourceId',p_scope->>'inputSha256') then
+      perform private.correction_fail('unavailable'); end if;
+    perform private.entry_association_validate_head(b.result_version_id);
+    head_id:=b.id;
+  end loop;
+  return jsonb_build_object('associationRevision',revision_value,'associationHeadId',head_id);
+end;
+$$;
+
+create function private.entry_association_write_snapshot(p_version_id uuid,p_command jsonb) returns void
+language plpgsql volatile security invoker set search_path='' as $$
+declare v public.canonical_resume_versions%rowtype; old public.canonical_entry_association_snapshots%rowtype;
+  b public.candidate_entry_association_batches%rowtype; origin_id uuid; inherited_id uuid; restored_id uuid; kind text;
+  group_ids uuid[]:='{}'; group_id uuid;
+begin
+  select * into v from public.canonical_resume_versions where id=p_version_id;
+  if not found or v.command is distinct from p_command or exists(select 1 from public.canonical_entry_association_snapshots where canonical_version_id=v.id) then
+    perform private.correction_fail('unavailable'); end if;
+  if v.parent_version_id is null then
+    select * into b from public.candidate_entry_association_batches where result_version_id=v.id;
+    if found then
+      origin_id:=b.id; kind:='grouped_import';
+      for group_id in select id from public.candidate_entry_association_groups where batch_id=b.id order by group_order loop
+        if private.entry_association_group_active(v.id,group_id) is not true then perform private.correction_fail('unavailable'); end if;
+        group_ids:=array_append(group_ids,group_id);
+      end loop;
+    else kind:='legacy_empty'; end if;
+  elsif p_command->>'operation'='rollback' then
+    restored_id:=(p_command->>'targetVersionId')::uuid;
+    perform private.entry_association_validate_head(restored_id);
+    select * into old from public.canonical_entry_association_snapshots where canonical_version_id=restored_id;
+    if found then origin_id:=old.origin_batch_id; kind:='restore'; else kind:='legacy_empty'; end if;
+    for group_id in select l.group_id from public.canonical_entry_association_links l where l.canonical_version_id=restored_id order by l.group_id loop
+      if private.entry_association_group_active(v.id,group_id) is not true then perform private.correction_fail('unavailable'); end if;
+      group_ids:=array_append(group_ids,group_id);
+    end loop;
+  else
+    inherited_id:=v.parent_version_id;
+    perform private.entry_association_validate_head(inherited_id);
+    select * into old from public.canonical_entry_association_snapshots where canonical_version_id=inherited_id;
+    if found then origin_id:=old.origin_batch_id; kind:='inherited'; else kind:='legacy_empty'; end if;
+    for group_id in select l.group_id from public.canonical_entry_association_links l where l.canonical_version_id=inherited_id order by l.group_id loop
+      if private.entry_association_group_active(v.id,group_id) then group_ids:=array_append(group_ids,group_id); end if;
+    end loop;
+  end if;
+  if v.content->>'producerVersion'='canonical-engine/1.0.3' and origin_id is null then perform private.correction_fail('unavailable'); end if;
+  insert into public.canonical_entry_association_snapshots(canonical_version_id,owner_id,organization_id,resume_id,source_resume_version_id,evidence_attempt_id,
+    origin_batch_id,origin_kind,inherited_from_version_id,restored_from_version_id)
+    values(v.id,v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id,v.source_evidence_version_id,origin_id,kind,inherited_id,restored_id);
+  foreach group_id in array group_ids loop
+    insert into public.canonical_entry_association_links(canonical_version_id,group_id,owner_id,organization_id,resume_id,source_resume_version_id,origin_batch_id)
+      values(v.id,group_id,v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id,origin_id);
+  end loop;
+  perform private.entry_association_validate_head(v.id);
+end;
+$$;
+
+create function private.entry_association_export_records(p_user_id uuid) returns jsonb
+language sql stable security invoker set search_path='' as $$
+  select jsonb_build_object(
+    'candidateCorrectionOperations',coalesce((select jsonb_agg(to_jsonb(t) order by t.created_at,t.id) from public.candidate_correction_operations t where t.owner_id=p_user_id),'[]'::jsonb),
+    'candidateCorrectionAssignments',coalesce((select jsonb_agg(to_jsonb(t) order by t.analysis_id,t.assignment_revision) from public.candidate_correction_assignments t where t.owner_id=p_user_id),'[]'::jsonb),
+    'candidateCorrectionApplications',coalesce((select jsonb_agg(to_jsonb(t) order by t.created_at,t.id) from public.candidate_correction_applications t where t.owner_id=p_user_id),'[]'::jsonb),
+    'canonicalCorrectionSnapshots',coalesce((select jsonb_agg(to_jsonb(t) order by t.canonical_version_id) from public.canonical_correction_snapshots t where t.owner_id=p_user_id),'[]'::jsonb),
+    'canonicalCorrectionSnapshotFacts',coalesce((select jsonb_agg(to_jsonb(t) order by t.canonical_version_id,t.fact_id) from public.canonical_correction_snapshot_facts t where t.owner_id=p_user_id),'[]'::jsonb),
+    'candidateEntryAssociationBatches',coalesce((select jsonb_agg(to_jsonb(t) order by t.analysis_id,t.association_revision) from public.candidate_entry_association_batches t where t.owner_id=p_user_id),'[]'::jsonb),
+    'candidateEntryAssociationGroups',coalesce((select jsonb_agg(to_jsonb(t) order by t.batch_id,t.group_order) from public.candidate_entry_association_groups t where t.owner_id=p_user_id),'[]'::jsonb),
+    'candidateEntryAssociationMembers',coalesce((select jsonb_agg(to_jsonb(t) order by t.batch_id,t.group_id,t.source_order) from public.candidate_entry_association_members t where t.owner_id=p_user_id),'[]'::jsonb),
+    'canonicalEntryAssociationSnapshots',coalesce((select jsonb_agg(to_jsonb(t) order by t.canonical_version_id) from public.canonical_entry_association_snapshots t where t.owner_id=p_user_id),'[]'::jsonb),
+    'canonicalEntryAssociationLinks',coalesce((select jsonb_agg(to_jsonb(t) order by t.canonical_version_id,t.group_id) from public.canonical_entry_association_links t where t.owner_id=p_user_id),'[]'::jsonb));
+$$;
+revoke all on function private.entry_association_prefix(jsonb),private.entry_association_validate_head(uuid),
+  private.entry_association_write_snapshot(uuid,jsonb),private.entry_association_group_active(uuid,uuid),
+  private.entry_association_export_records(uuid) from public,anon,authenticated,service_role;
+
+-- Exact predecessor only; historical export fields and ACL remain unchanged.
+do $export_guard$
+declare routine pg_catalog.pg_proc%rowtype;
+begin
+  select * into routine from pg_catalog.pg_proc where oid=to_regprocedure('public.export_resume_workspace_records(uuid)');
+  if not found or routine.prokind<>'f' or routine.proretset or routine.prorettype<>'jsonb'::regtype or not routine.prosecdef or routine.provolatile<>'s'
+    or cardinality(routine.proconfig) is distinct from 1 or not exists(select 1 from pg_options_to_table(routine.proconfig) where option_name='search_path' and option_value in ('','""'))
+    or not has_function_privilege('service_role',routine.oid,'EXECUTE') or has_function_privilege('anon',routine.oid,'EXECUTE')
+    or has_function_privilege('authenticated',routine.oid,'EXECUTE')
+    or encode(extensions.digest(convert_to(routine.prosrc,'UTF8'),'sha256'),'hex')<>'9b0c182dc6c9703174f6f6ca5e0f05bb19d0b17a3318030dfe8091661f3420e9' then
+    raise exception 'ENTRY_ASSOCIATION_EXPORT_DRIFT' using errcode='23514'; end if;
+end;
+$export_guard$;
+create or replace function public.export_resume_workspace_records(p_user_id uuid) returns jsonb
+language plpgsql stable security definer set search_path='' as $$
+declare snapshot jsonb;
+begin
+  snapshot:=public.export_canonical_records(p_user_id)||public.export_job_requirement_records(p_user_id)||public.export_authoring_records(p_user_id)
+    ||private.entry_association_export_records(p_user_id);
+  if octet_length(snapshot::text)>33554432 then raise exception 'Workspace export exceeds manifest limit' using errcode='22023'; end if;
+  return snapshot;
+end;
+$$;
+revoke all on function public.export_resume_workspace_records(uuid) from public,anon,authenticated;
+grant execute on function public.export_resume_workspace_records(uuid) to service_role;
+commit;

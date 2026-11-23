@@ -1,0 +1,129 @@
+from pathlib import Path
+import re,json,hashlib
+r=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats');t=Path('/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-decisions-original-backend-2culevnm')
+sha=lambda s:hashlib.sha256(s.encode()).hexdigest()
+# Text-only function/body inventory and frozen JSON patch replay. Never SQL parsing/execution.
+functions={};patches=0
+pat=re.compile(r'create\s+(?:or\s+replace\s+)?function\s+([a-z_0-9]+\.[a-z_0-9]+)\((.*?)\)\s+returns\s+(.*?)\s+as\s+(\$[A-Za-z_0-9]*\$)(.*?)\4\s*;',re.S|re.I)
+def definitions(source):
+ out=[]
+ for m in pat.finditer(source):
+  name,args,attrs,tag,body=m.groups();types=[]
+  for arg in args.split(','):
+   arg=arg.strip()
+   if arg:types.append(re.split(r'\s+(?:default|=)\s+',arg,flags=re.I)[0].split(' ',1)[1].strip())
+  sig=name+'('+','.join(types)+')';low=attrs.lower();result=low.split('language')[0].strip()
+  out.append({'signature':sig,'name':name,'body':body,'sql':m.group(0),'language':re.search(r'language\s+(\w+)',low)[1],'strict':bool(re.search(r'\bstrict\b',low)),'definer':'security definer' in low,'volatility':'i' if 'immutable' in low else 's' if 'stable' in low else 'v','result':result,'acl':'private'})
+ return out
+for path in sorted((r/'supabase/migrations').glob('*.sql')):
+ if path.name>='20261116192537_jd_clause_order_decisions.sql':continue
+ source=path.read_text()
+ for f in definitions(source):
+  f['provenance']=[{'source':str(path),'kind':'direct CREATE function body','sha256':sha(f['body'])}];functions[f['signature']]=f
+ for dm in re.finditer(r'(\$[A-Za-z_0-9]+\$)(?=\s*[\[{])',source):
+  end=source.find(dm[1],dm.end())
+  try:val=json.loads(source[dm.end():end])
+  except:continue
+  if not isinstance(val,list):continue
+  for item in val:
+   if not isinstance(item,dict) or 'signature' not in item:continue
+   if all(k in item for k in ['before','after','old','new']):
+    f=functions.get(item['signature'])
+    if f:
+     assert sha(item['old'])==item['before'] and sha(item['new'])==item['after'];f['provenance'].append({'source':str(path),'kind':'guarded full old/new body literal','before':item['before'],'after':item['after'],'precedingSupportedResolverMatchesOld':f['body']==item['old']});f['body']=item['new'];patches+=1
+    continue
+   if 'patches' not in item:continue
+   f=functions.get(item['signature'])
+   if not f or sha(f['body'])!=item.get('sha256'):continue
+   body=f['body']
+   for change in item['patches']:
+    if body.count(change['old'])<1:raise Exception(('patchcount',path.name,item['signature']))
+    body=body.replace(change['old'],change['new'])
+   if item.get('newSha256') and sha(body)!=item.get('newSha256'):raise Exception(('patchhash',path.name,item['signature']))
+   f['provenance'].append({'source':str(path),'kind':'matching-preimage textual patch list','before':item['sha256'],'after':sha(body)});f['body']=body;patches+=1
+
+new=json.loads(Path('/private/tmp/resumide-decisions-native-functions.json').read_text())
+writer=definitions((t/'writer.sql.txt').read_text())[0];writer['acl']='optional_service'
+metadata_body='''
+declare checker_oid oid:=to_regprocedure('private.jd_clause_schema_ready()');writer_oid oid:=to_regprocedure('public.apply_jd_clause_order_action(uuid,uuid,jsonb,text)');metadata_oid oid:=to_regprocedure('public.read_jd_clause_order_readiness()');ready boolean;
+begin
+ ready:=private.jd_clause_schema_ready();
+ return jsonb_build_object('schemaVersion','jd-clause-order-readiness/2.0.0','profileVersion','jd-clause-order-native/2.0.0',
+  'checkerSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=checker_oid),
+  'writerSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=writer_oid),
+  'metadataSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=metadata_oid),
+  'schemaReady',coalesce(ready,false),'writerExecutable',coalesce(has_function_privilege('service_role',writer_oid,'EXECUTE'),false));
+end;
+'''
+metadata={'signature':'public.read_jd_clause_order_readiness()','name':'public.read_jd_clause_order_readiness','body':metadata_body,'language':'plpgsql','strict':False,'definer':True,'volatility':'s','result':'jsonb','acl':'metadata'}
+oldsignatures=['private.typed_authoring_write_ready()','private.canonical_correction_write_ready()','private.typed_authoring_child(jsonb,uuid,text,boolean,text,uuid,uuid)','private.typed_authoring_sha256(text)','private.typed_authoring_uuid(jsonb)','private.evidence_keys(jsonb,text[])','private.evidence_integer(jsonb,bigint,bigint)','private.jd_relation_trim(text)','private.jd_relation_pattern(text)','private.jd_relation_test(text,text,boolean)','private.jd_relation_mapping(jsonb,integer)','private.jd_relation_in_ranges(jsonb,integer)','private.jd_relation_fold(text)','private.jd_relation_lower(text)','private.jd_relation_alias(text)','private.grouped_import_utf16_length(text)','private.correction_location(jsonb,uuid)','private.correction_fail(text)','private.lock_candidate_owners(uuid[])','private.try_candidate_privacy_write(uuid)','public.read_requirement_relationship_context(uuid,uuid,jsonb)','public.save_canonical_version(uuid,uuid,jsonb,jsonb,text)']
+old=[]
+for signature in oldsignatures:
+ if signature not in functions:raise Exception(('missingdependency',signature,[s for s in functions if 'typed_authoring_sha256' in s]))
+ f=dict(functions[signature]);f['acl']='optional_service' if signature.startswith('public.') else 'private';old.append(f)
+assert sha(functions['private.typed_authoring_write_ready()']['body'])=='322683b240b609bdedb204e4a27ea43a3c0544912760f19e2eda6b48f822206f'
+assert sha(functions['private.canonical_correction_write_ready()']['body'])=='04ca51c95e50a05af227197b25e455a001428a1d360b3f3a1add793f84339d53'
+(t/'old-dependency-provenance.json').write_text(json.dumps({'scope':'Textual terminal source provenance, not complete replay of all historical dynamic rewrite forms or Native proof','dependencies':[{'signature':f['signature'],'sha256':sha(f['body']),'provenance':f['provenance'],'body':f['body']} for f in old]},indent=2)+'\n')
+manifest=[]
+for f in new+old+[writer,metadata]:
+ manifest.append({k:f[k] for k in ['signature','language','strict','definer','volatility','result','acl']}|{'sha256':sha(f['body'])})
+manifest_text=json.dumps(manifest,separators=(',',':'))
+checker_body='''
+declare owner_oid oid;item jsonb;routine pg_catalog.pg_proc%rowtype;role_name text;service_allowed boolean;service_granted boolean;
+ manifest jsonb:=$jd_clause_manifest$'''+manifest_text+'''$jd_clause_manifest$::jsonb;
+begin
+ select p.proowner into owner_oid from pg_catalog.pg_proc p where p.oid=to_regprocedure('private.canonical_correction_write_ready()');
+ if owner_oid is null or owner_oid in(select oid from pg_catalog.pg_roles where rolname in('anon','authenticated','service_role')) then return false;end if;
+ for item in select m.value from jsonb_array_elements(manifest) m(value) loop
+  select * into routine from pg_catalog.pg_proc where oid=to_regprocedure(item->>'signature');
+  if not found or routine.prokind<>'f' or routine.proretset or routine.proowner<>owner_oid
+   or routine.prorettype<>to_regtype(item->>'result') or routine.provolatile<>item->>'volatility'
+   or routine.prosecdef is distinct from (item->>'definer')::boolean or routine.proisstrict is distinct from (item->>'strict')::boolean
+   or routine.prolang<>(select oid from pg_catalog.pg_language where lanname=item->>'language')
+   or routine.proconfig is distinct from array['search_path=""']
+   or encode(extensions.digest(convert_to(routine.prosrc,'UTF8'),'sha256'),'hex') is distinct from item->>'sha256' then return false;end if;
+  service_allowed:=item->>'acl' in('optional_service','metadata');
+  if exists(select 1 from aclexplode(coalesce(routine.proacl,acldefault('f',routine.proowner))) a
+   where a.grantee<>routine.proowner and (not service_allowed or a.grantee<>(select oid from pg_catalog.pg_roles where rolname='service_role')
+     or a.privilege_type<>'EXECUTE' or a.is_grantable)) then return false;end if;
+  foreach role_name in array array['anon','authenticated','service_role'] loop
+   if has_function_privilege(role_name,routine.oid,'EXECUTE') and (role_name<>'service_role' or not service_allowed) then return false;end if;
+  end loop;
+  service_granted:=exists(select 1 from aclexplode(coalesce(routine.proacl,acldefault('f',routine.proowner))) a
+    where a.grantee=(select oid from pg_catalog.pg_roles where rolname='service_role') and a.privilege_type='EXECUTE' and not a.is_grantable);
+  if has_function_privilege('service_role',routine.oid,'EXECUTE') is distinct from (service_allowed and service_granted) then return false;end if;
+  if item->>'acl'='metadata' and not service_granted then return false;end if;
+ end loop;
+ -- The externally pinned checker has no recursive self-hash, and stays owner-only.
+ select * into routine from pg_catalog.pg_proc where oid=to_regprocedure('private.jd_clause_schema_ready()');
+ if not found or routine.proowner<>owner_oid or routine.prokind<>'f' or routine.proretset or routine.proisstrict or routine.prosecdef
+  or routine.provolatile<>'s' or routine.prorettype<>'boolean'::regtype
+  or routine.prolang<>(select oid from pg_catalog.pg_language where lanname='plpgsql')
+  or routine.proconfig is distinct from array['search_path=""']
+  or exists(select 1 from aclexplode(coalesce(routine.proacl,acldefault('f',routine.proowner))) a where a.grantee<>routine.proowner) then return false;end if;
+ foreach role_name in array array['anon','authenticated','service_role'] loop
+  if has_function_privilege(role_name,routine.oid,'EXECUTE') then return false;end if;
+ end loop;
+ -- Full current frozen predecessor catalogue/schema/trigger closure remains authoritative.
+ if private.typed_authoring_write_ready() is not true then return false;end if;
+ return true;
+exception when others then return false;
+end;
+'''
+checker_sql="create function private.jd_clause_schema_ready() returns boolean\nlanguage plpgsql stable security invoker set search_path='' as $jd_clause_checker$"+checker_body+'$jd_clause_checker$;\n'
+metadata_sql="create function public.read_jd_clause_order_readiness() returns jsonb\nlanguage plpgsql stable security definer set search_path='' as $jd_clause_metadata$"+metadata_body+'$jd_clause_metadata$;\n'
+allnew=new+[writer,{'signature':'private.jd_clause_schema_ready()'},metadata]
+acl='\n'.join('revoke all on function '+f['signature']+' from public,anon,authenticated,service_role;' for f in allnew)+'\ngrant execute on function public.read_jd_clause_order_readiness() to service_role;\n'
+final='''
+do $jd_clause_final$
+begin
+ if private.jd_clause_schema_ready() is not true then raise exception 'JD_CLAUSE_ORDER_SCHEMA_DRIFT' using errcode='23514';end if;
+ if has_function_privilege('service_role','public.apply_jd_clause_order_action(uuid,uuid,jsonb,text)','EXECUTE') then raise exception 'JD_CLAUSE_ORDER_WRITER_UNEXPECTEDLY_EXECUTABLE' using errcode='42501';end if;
+end;
+$jd_clause_final$;
+commit;
+'''
+tail=(t/'writer.sql.txt').read_text()+checker_sql+metadata_sql+acl+final
+(t/'native-tail.sql.txt').write_text(tail)
+(t/'tail-manifest.json').write_text(json.dumps({'manifest':manifest,'checkerSha256':sha(checker_body),'writerSha256':sha(writer['body']),'metadataSha256':sha(metadata_body),'tailSha256':sha(tail),'oldTextPatchCount':patches},indent=2)+'\n')
+print(json.dumps({'path':str(t/'native-tail.sql.txt'),'bytes':len(tail.encode()),'sha256':sha(tail),'manifestCount':len(manifest),'checkerSha256':sha(checker_body),'writerSha256':sha(writer['body']),'metadataSha256':sha(metadata_body),'oldTextPatchCount':patches},indent=2))

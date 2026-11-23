@@ -1,0 +1,139 @@
+from pathlib import Path
+import json,re,hashlib
+root=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats');packet=Path(__file__).parent
+sha=lambda s:hashlib.sha256(s.encode()).hexdigest()
+S=['owner_id','organization_id','resume_id','analysis_id','source_resume_version_id','evidence_attempt_id','input_sha256']
+OS=['owner_id','organization_id','resume_id','source_resume_version_id']
+V=['resume_id','source_resume_version_id','owner_id','organization_id']
+B='candidate_entry_regroup_batches';G='candidate_entry_regroup_groups';M='candidate_entry_regroup_members';H='canonical_entry_regroup_snapshots';L='canonical_entry_regroup_links';tables=[B,G,M,H,L]
+columns=[];fks=[];triggers=[];chunks=[]
+def col(table,name,typ,nullable=False,tail=''):
+ columns.append({'table':'public.'+table,'name':name,'type':typ,'notNull':not nullable})
+ return name+' '+typ+('' if nullable else ' not null')+(' '+tail if tail else '')
+def scope(t):return [col(t,k,'text' if k=='input_sha256' else 'uuid',tail="check(input_sha256 collate \"C\" ~ '^[a-f0-9]{64}$')" if k=='input_sha256' else '')for k in S]
+def fk(t,name,cols,other,refs,deferred=False):
+ assert len(name)<=63
+ fks.append({'table':'public.'+t,'columns':cols,'foreignTable':other,'foreignColumns':refs,'deferred':deferred})
+ return 'constraint '+name+' foreign key('+','.join(cols)+') references '+other+'('+','.join(refs)+') on delete cascade'+(' deferrable initially deferred'if deferred else '')
+def common(t,prefix):return [fk(t,prefix+'_owner_fk',['owner_id'],'auth.users',['id']),fk(t,prefix+'_org_fk',['organization_id'],'public.organizations',['id']),fk(t,prefix+'_root_fk',['resume_id','owner_id','organization_id'],'public.resumes',['id','owner_id','organization_id']),fk(t,prefix+'_source_fk',['source_resume_version_id','resume_id','owner_id','organization_id'],'public.resume_versions',['id','resume_id','owner_id','organization_id']),fk(t,prefix+'_analysis_fk',['analysis_id','source_resume_version_id','owner_id','organization_id'],'public.analyses',['id','resume_version_id','owner_id','organization_id']),fk(t,prefix+'_attempt_fk',['evidence_attempt_id','analysis_id','source_resume_version_id','owner_id','organization_id','input_sha256'],'public.document_evidence_attempts',['id','analysis_id','resume_version_id','owner_id','organization_id','input_sha256'])]
+def canon(t,prefix,name,deferred=False):return fk(t,prefix+'_'+name+'_fk',[name]+V,'public.canonical_resume_versions',['id']+V,deferred)
+def unique(cols):return 'unique('+','.join(cols)+')'
+def table(t,defs):chunks.append('create table public.'+t+' (\n  '+',\n  '.join(defs)+'\n);\n')
+d=[col(B,'id','uuid',tail='primary key'),*scope(B),col(B,'regroup_revision','integer',tail='check(regroup_revision between 1 and 1000)'),col(B,'previous_batch_id','uuid',True),col(B,'idempotency_key','uuid'),col(B,'command','jsonb',tail="check((jsonb_typeof(command)='object' and octet_length(command::text)<=262144) is true)"),col(B,'command_bytes','bytea',tail="check(octet_length(command_bytes) between 7 and 131072 and substring(command_bytes from 1 for 7)=decode('4130324f50310a','hex'))"),col(B,'command_sha256','text',tail="check(command_sha256=encode(extensions.digest(command_bytes,'sha256'),'hex'))"),col(B,'codec_version','text',tail="check(codec_version='a02-command-bytes/1.0.0')"),col(B,'base_version_id','uuid'),col(B,'base_revision','integer',tail='check(base_revision between 1 and 2147483646)'),col(B,'base_content_sha256','text',tail="check(base_content_sha256 collate \"C\" ~ '^[a-f0-9]{64}$')"),col(B,'result_version_id','uuid'),col(B,'result_revision','integer',tail='check(result_revision>=2 and result_revision::bigint=base_revision::bigint+1)'),col(B,'result_content_sha256','text',tail="check(result_content_sha256 collate \"C\" ~ '^[a-f0-9]{64}$')"),col(B,'storage_key','uuid'),col(B,'created_at','timestamptz',tail='default now()'),
+ unique(['resume_id','idempotency_key']),unique(['analysis_id','regroup_revision']),unique(['result_version_id']),unique(['storage_key']),unique(['id']+S),unique(['id']+S+['base_version_id','result_version_id']),unique(['id']+S+['result_version_id']),unique(['id']+OS+['result_version_id']),
+ 'check(base_version_id<>result_version_id and storage_key<>idempotency_key)', 'check((regroup_revision=1)=(previous_batch_id is null))','check(previous_batch_id is distinct from id)',*common(B,'erg_b'),fk(B,'erg_b_previous_fk',['previous_batch_id']+S,'public.'+B,['id']+S),canon(B,'erg_b','base_version_id'),canon(B,'erg_b','result_version_id',True)]
+table(B,d)
+d=[col(G,'id','uuid',tail='primary key'),col(G,'batch_id','uuid'),*scope(G),col(G,'base_version_id','uuid'),col(G,'result_version_id','uuid'),col(G,'group_order','integer',tail='check(group_order between 1 and 32)'),col(G,'page_id','text',tail='check(char_length(page_id) between 1 and 100)'),col(G,'method','text',tail="check(method in ('native_text','local_ocr'))"),col(G,'section_id','uuid'),col(G,'anchor_entry_id','uuid'),col(G,'insertion_index','integer',tail='check(insertion_index between 0 and 99)'),col(G,'affected_entry_ids','uuid[]'),col(G,'source_selection','jsonb',tail="check((private.grouped_import_keys(source_selection,array['pageId','method','members']) and octet_length(source_selection::text)<=131072 and jsonb_typeof(source_selection->'pageId')='string' and char_length(source_selection->>'pageId') between 1 and 100 and source_selection->>'method' in ('native_text','local_ocr') and jsonb_typeof(source_selection->'members')='array' and jsonb_array_length(source_selection->'members') between 2 and 3 and not jsonb_path_exists(source_selection,'strict $.** ? (@.type() == \"object\").keyvalue() ? (@.key == \"value\" || @.key == \"sourceValue\" || @.key == \"currentValue\")')) is true)"),
+ 'check(array_ndims(affected_entry_ids)=1 and array_lower(affected_entry_ids,1)=1 and cardinality(affected_entry_ids) between 1 and 3 and array_position(affected_entry_ids,null) is null and anchor_entry_id=any(affected_entry_ids))',
+ 'check((cardinality(affected_entry_ids)<2 or affected_entry_ids[1]<>affected_entry_ids[2]) and (cardinality(affected_entry_ids)<3 or (affected_entry_ids[1]<>affected_entry_ids[3] and affected_entry_ids[2]<>affected_entry_ids[3])))',
+ unique(['batch_id','group_order']),unique(['batch_id','section_id','anchor_entry_id']),unique(['id','batch_id']+S+['base_version_id','result_version_id']),unique(['id','batch_id']+OS+['result_version_id']),
+ *common(G,'erg_g'),fk(G,'erg_g_batch_fk',['batch_id']+S+['base_version_id','result_version_id'],'public.'+B,['id']+S+['base_version_id','result_version_id']),canon(G,'erg_g','base_version_id'),canon(G,'erg_g','result_version_id',True)]
+table(G,d)
+d=[col(M,'id','uuid',tail='primary key'),col(M,'group_id','uuid'),col(M,'batch_id','uuid'),*scope(M),col(M,'base_version_id','uuid'),col(M,'result_version_id','uuid'),col(M,'source_order','integer',tail='check(source_order between 1 and 3)'),col(M,'assertion_id','text',tail='check(char_length(assertion_id) between 1 and 100)'),col(M,'field','text',tail="check(field in ('employer','role','dates'))"),col(M,'fact_id','uuid'),col(M,'citations','jsonb',tail="check((jsonb_typeof(citations)='array' and jsonb_array_length(citations)=1 and octet_length(citations::text)<=2048 and not jsonb_path_exists(citations,'strict $.** ? (@.type() == \"object\").keyvalue() ? (@.key == \"value\" || @.key == \"sourceValue\" || @.key == \"currentValue\")')) is true)"),col(M,'original_entry_id','uuid'),col(M,'location_kind','text',tail="check(location_kind in ('entry','bullet'))"),col(M,'original_bullet_id','uuid',True),col(M,'mapped_through','text',tail="check(mapped_through in ('current_citations','owned_ancestor_chain'))"),col(M,'origin_version_id','uuid',True),col(M,'origin_fact_id','uuid',True),
+ "check((location_kind='bullet')=(original_bullet_id is not null))", "check((mapped_through='owned_ancestor_chain')=(origin_version_id is not null) and (origin_version_id is null)=(origin_fact_id is null) and (origin_fact_id is null or origin_fact_id=fact_id))",
+ unique(['group_id','source_order']),unique(['batch_id','assertion_id']),unique(['batch_id','fact_id']),*common(M,'erg_m'),fk(M,'erg_m_group_fk',['group_id','batch_id']+S+['base_version_id','result_version_id'],'public.'+G,['id','batch_id']+S+['base_version_id','result_version_id']),fk(M,'erg_m_batch_fk',['batch_id']+S+['base_version_id','result_version_id'],'public.'+B,['id']+S+['base_version_id','result_version_id']),canon(M,'erg_m','base_version_id'),canon(M,'erg_m','result_version_id',True),canon(M,'erg_m','origin_version_id'),fk(M,'erg_m_base_fact_fk',['base_version_id','fact_id','owner_id','organization_id'],'public.resume_facts',['canonical_version_id','id','owner_id','organization_id']),fk(M,'erg_m_result_fact_fk',['result_version_id','fact_id','owner_id','organization_id'],'public.resume_facts',['canonical_version_id','id','owner_id','organization_id'],True),fk(M,'erg_m_origin_fact_fk',['origin_version_id','origin_fact_id','owner_id','organization_id'],'public.resume_facts',['canonical_version_id','id','owner_id','organization_id'])]
+table(M,d)
+d=[col(H,'canonical_version_id','uuid',tail='primary key'),*scope(H),col(H,'composition_version','text',tail="check(composition_version='entry-regroup-composition/1.0.0')"),col(H,'creation_kind','text',tail="check(creation_kind in ('regroup','inherited','restore','legacy_bridge'))"),col(H,'creating_regroup_batch_id','uuid',True),col(H,'inherited_from_version_id','uuid',True),col(H,'restored_from_version_id','uuid',True),
+ "check((creation_kind='regroup' and creating_regroup_batch_id is not null and inherited_from_version_id is null and restored_from_version_id is null) or (creation_kind='inherited' and creating_regroup_batch_id is null and inherited_from_version_id is not null and restored_from_version_id is null) or (creation_kind='restore' and creating_regroup_batch_id is null and inherited_from_version_id is null and restored_from_version_id is not null) or (creation_kind='legacy_bridge' and creating_regroup_batch_id is null and inherited_from_version_id is null and restored_from_version_id is null))",
+ 'check(inherited_from_version_id is distinct from canonical_version_id and restored_from_version_id is distinct from canonical_version_id)',unique(['canonical_version_id']+S),*common(H,'erg_s'),canon(H,'erg_s','canonical_version_id'),canon(H,'erg_s','inherited_from_version_id'),canon(H,'erg_s','restored_from_version_id'),fk(H,'erg_s_batch_fk',['creating_regroup_batch_id']+S+['canonical_version_id'],'public.'+B,['id']+S+['result_version_id'])]
+table(H,d)
+d=[col(L,'canonical_version_id','uuid'),*scope(L),col(L,'composition_order','integer',tail='check(composition_order between 1 and 1000)'),col(L,'section_id','uuid'),col(L,'entry_id','uuid'),col(L,'origin_family','text',tail="check(origin_family in ('association','regroup'))"),col(L,'association_group_id','uuid',True),col(L,'association_batch_id','uuid',True),col(L,'regroup_group_id','uuid',True),col(L,'regroup_batch_id','uuid',True),col(L,'original_approval_version_id','uuid'),
+ 'primary key(canonical_version_id,composition_order)',unique(['canonical_version_id','section_id','entry_id']),unique(['canonical_version_id','association_group_id']),unique(['canonical_version_id','regroup_group_id']),
+ "check((origin_family='association' and association_group_id is not null and association_batch_id is not null and regroup_group_id is null and regroup_batch_id is null) or (origin_family='regroup' and association_group_id is null and association_batch_id is null and regroup_group_id is not null and regroup_batch_id is not null))",
+ *common(L,'erg_l'),fk(L,'erg_l_snapshot_fk',['canonical_version_id']+S,'public.'+H,['canonical_version_id']+S),canon(L,'erg_l','canonical_version_id'),canon(L,'erg_l','original_approval_version_id'),
+ fk(L,'erg_l_association_group_fk',['association_group_id','association_batch_id']+OS+['original_approval_version_id'],'public.candidate_entry_association_groups',['id','batch_id']+OS+['result_version_id']),fk(L,'erg_l_association_batch_fk',['association_batch_id']+OS+['original_approval_version_id'],'public.candidate_entry_association_batches',['id']+OS+['result_version_id']),
+ fk(L,'erg_l_regroup_group_fk',['regroup_group_id','regroup_batch_id']+OS+['original_approval_version_id'],'public.'+G,['id','batch_id']+OS+['result_version_id']),fk(L,'erg_l_regroup_batch_fk',['regroup_batch_id']+OS+['original_approval_version_id'],'public.'+B,['id']+OS+['result_version_id'])]
+table(L,d)
+# Explicit table/trigger/index source, independent of future semantic writers.
+for t,prefix in zip(tables,['erg_b','erg_g','erg_m','erg_s','erg_l']):
+ chunks.append('alter table public.'+t+' enable row level security;\nrevoke all on public.'+t+' from public,anon,authenticated,service_role;\n')
+ for name,fn,typ,args in [(prefix+'_immutable','private.reject_correction_ledger_update',19,''),('zz_candidate_privacy_write','private.guard_candidate_privacy_write',23,"'owner_id'")]:
+  chunks.append('create trigger '+name+' before '+('update'if typ==19 else 'insert or update')+' on public.'+t+' for each row execute function '+fn+'('+args+');\n')
+  triggers.append({'table':'public.'+t,'name':name,'function':fn+'()','type':typ,'argsHex':'6f776e65725f696400'if args else '','argumentCount':1 if args else 0})
+ indexes=[('owner',['owner_id']),('source',['source_resume_version_id']),('attempt',['evidence_attempt_id'])]
+ if t==B:indexes += [('previous',['previous_batch_id']),('base',['base_version_id'])]
+ if t in [G,M]:indexes += [('result',['result_version_id']),('base',['base_version_id'])]
+ if t==M:indexes += [('origin',['origin_version_id','origin_fact_id'])]
+ if t==H:indexes += [('batch',['creating_regroup_batch_id']),('parent',['inherited_from_version_id']),('restore',['restored_from_version_id'])]
+ if t==L:indexes += [('assoc',['association_group_id','association_batch_id']),('regroup',['regroup_group_id','regroup_batch_id']),('origin',['original_approval_version_id'])]
+ for suffix,cols in indexes:chunks.append('create index '+prefix+'_'+suffix+'_idx on public.'+t+'('+','.join(cols)+');\n')
+keys=['candidateEntryRegroupBatches','candidateEntryRegroupGroups','candidateEntryRegroupMembers','canonicalEntryRegroupSnapshots','canonicalEntryRegroupLinks']
+orders=['t.analysis_id,t.regroup_revision','t.batch_id,t.group_order','t.batch_id,t.group_id,t.source_order','t.canonical_version_id','t.canonical_version_id,t.composition_order']
+helper="\n  select jsonb_build_object(\n    "+',\n    '.join("'"+key+"',coalesce((select jsonb_agg(to_jsonb(t) order by "+order+") from public."+t+" t where t.owner_id=p_user_id),'[]'::jsonb)"for key,t,order in zip(keys,tables,orders))+');\n'
+chunks.append("create function private.entry_regroup_export_records(p_user_id uuid) returns jsonb\nlanguage sql stable security invoker set search_path='' as $regroup_export$"+helper+"$regroup_export$;\nrevoke all on function private.entry_regroup_export_records(uuid) from public,anon,authenticated,service_role;\n")
+foundation=(root/'supabase/migrations/20261113130533_grouped_original_atomic_import.sql').read_text()
+oldexport=re.search(r'create or replace function public.export_resume_workspace_records\(p_user_id uuid\) returns jsonb\nlanguage plpgsql stable security definer set search_path=\'\' as \$\$(.*?)\$\$;',foundation,re.S).group(1)
+assert sha(oldexport)=='7e84db73e326a2d372fd3cbbd8315e0c53a24d52f3a5ced9dd25900d5b9d56cd'
+newexport=oldexport.replace('||private.entry_association_export_records(p_user_id);','||private.entry_association_export_records(p_user_id)||private.entry_regroup_export_records(p_user_id);')
+chunks.append("""do $regroup_export_guard$
+declare routine pg_catalog.pg_proc%rowtype;
+begin
+  select * into strict routine from pg_catalog.pg_proc where oid=to_regprocedure('public.export_resume_workspace_records(uuid)');
+  if routine.prokind<>'f' or routine.proretset or routine.prorettype<>'jsonb'::regtype or not routine.prosecdef or routine.provolatile<>'s' or routine.proisstrict
+    or routine.prolang<>(select oid from pg_catalog.pg_language where lanname='plpgsql') or routine.proconfig is distinct from array['search_path=""']
+    or not has_function_privilege('service_role',routine.oid,'EXECUTE') or has_function_privilege('anon',routine.oid,'EXECUTE')
+    or has_function_privilege('authenticated',routine.oid,'EXECUTE')
+    or exists(select 1 from aclexplode(coalesce(routine.proacl,acldefault('f',routine.proowner))) where grantee=0 and privilege_type='EXECUTE')
+    or encode(extensions.digest(convert_to(routine.prosrc,'UTF8'),'sha256'),'hex')<>'"""+sha(oldexport)+"""' then
+    raise exception 'ENTRY_REGROUP_EXPORT_PREDECESSOR_DRIFT' using errcode='23514'; end if;
+end;
+$regroup_export_guard$;
+create or replace function public.export_resume_workspace_records(p_user_id uuid) returns jsonb
+language plpgsql stable security definer set search_path='' as $regroup_workspace$"""+newexport+"$regroup_workspace$;\nrevoke all on function public.export_resume_workspace_records(uuid) from public,anon,authenticated;\ngrant execute on function public.export_resume_workspace_records(uuid) to service_role;\n")
+# Reconstruct actual ready69 from its literal guarded source transition; never parse/execute SQL.
+admission=(root/'supabase/migrations/20261113131538_grouped_original_admission.sql').read_text();read=(root/'supabase/migrations/20261113142537_grouped_original_workspace_read.sql').read_text()
+body=re.search(r'as \$a02_ready\$(.*?)\$a02_ready\$;',admission,re.S).group(1)
+oldread=re.search(r'\$a02_old_manifest\$(.*?)\$a02_old_manifest\$',read,re.S).group(1);newread=re.search(r'\$a02_new_manifest\$(.*?)\$a02_new_manifest\$',read,re.S).group(1)
+body=body.replace(oldread,newread);assert sha(body)=='c2098f91ee32e4035ff30dd5db71c4d7e95944cef24e4b137c8c489841edd5db'
+oldbody=body;patches=[]
+def replace_once(old,new):
+ global body
+ assert body.count(old)==1,(old[:80],body.count(old));patches.append({'old':old,'new':new});body=body.replace(old,new)
+def extend(tag,extra):
+ old=re.search(r'\$'+tag+r'\$(.*?)\$'+tag+r'\$',body,re.S).group(1);next=json.loads(old)+extra;replace_once(old,json.dumps(next,indent=2))
+oldmanifest=re.search(r'\$catalog_manifest\$(.*?)\$catalog_manifest\$',body,re.S).group(1);manifest=json.loads(oldmanifest);assert len(manifest)==69
+for item in manifest:
+ if item['signature']=='public.export_resume_workspace_records(uuid)':assert item['sha256']==sha(oldexport);item['sha256']=sha(newexport)
+manifest.append({'signature':'private.entry_regroup_export_records(uuid)','sha256':sha(helper),'definer':False,'volatility':'s','resultType':'jsonb','strict':False,'language':'sql','serviceExecute':False})
+replace_once(oldmanifest,json.dumps(manifest,indent=2));extend('trigger_manifest',triggers);extend('column_manifest',columns);extend('foreign_key_manifest',fks)
+# Preserve old role loop byte-for-byte, append new fully denied stores immediately before its end.
+end="  end loop;\n  for target in select value from jsonb_array_elements(triggers) loop"
+rolechecks=''
+for t in tables:
+ rolechecks+="    relation_oid:=to_regclass('public."+t+"');\n    if not exists(select 1 from pg_catalog.pg_class where oid=relation_oid and relrowsecurity)\n      or has_table_privilege(role_name,relation_oid,'INSERT,UPDATE,DELETE,TRUNCATE')\n      or has_any_column_privilege(role_name,relation_oid,'INSERT,UPDATE')\n      or has_table_privilege(role_name,relation_oid,'SELECT') or has_any_column_privilege(role_name,relation_oid,'SELECT')\n      or exists(select 1 from pg_catalog.pg_policy where polrelid=relation_oid)\n      or exists(select 1 from aclexplode(coalesce((select relacl from pg_catalog.pg_class where oid=relation_oid),acldefault('r',(select relowner from pg_catalog.pg_class where oid=relation_oid)))) where grantee=0) then return false; end if;\n"
+replace_once(end,rolechecks+end)
+patchjson=json.dumps(patches,indent=2)
+chunks.append("""-- Guarded ready69 -> ready70. Existing checks remain; only the export fingerprint changes.
+do $regroup_profile_guard$
+declare routine pg_catalog.pg_proc%rowtype; source text; next_source text; definition text; patch jsonb;
+  predecessor text:='"""+sha(oldbody)+"""'; postimage text:='"""+sha(body)+"""';
+  patches jsonb:=$regroup_profile_patches$"""+patchjson+"""$regroup_profile_patches$::jsonb;
+begin
+  select * into strict routine from pg_catalog.pg_proc where oid=to_regprocedure('private.canonical_correction_write_ready()');
+  if routine.prokind<>'f' or routine.proretset or routine.prorettype<>'boolean'::regtype or routine.prosecdef or routine.provolatile<>'s' or routine.proisstrict
+    or routine.prolang<>(select oid from pg_catalog.pg_language where lanname='plpgsql') or routine.proconfig is distinct from array['search_path=""']
+    or has_function_privilege('service_role',routine.oid,'EXECUTE') or has_function_privilege('anon',routine.oid,'EXECUTE') or has_function_privilege('authenticated',routine.oid,'EXECUTE')
+    or exists(select 1 from aclexplode(coalesce(routine.proacl,acldefault('f',routine.proowner))) where grantee=0 and privilege_type='EXECUTE')
+    or encode(extensions.digest(convert_to(routine.prosrc,'UTF8'),'sha256'),'hex') is distinct from predecessor then
+    raise exception 'ENTRY_REGROUP_PROFILE_PREDECESSOR_DRIFT' using errcode='23514'; end if;
+  source:=routine.prosrc; next_source:=source;
+  for patch in select value from jsonb_array_elements(patches) loop
+    if length(patch->>'old')=0 or (length(next_source)-length(replace(next_source,patch->>'old','')))/length(patch->>'old')<>1 then
+      raise exception 'ENTRY_REGROUP_PROFILE_CONTEXT_DRIFT' using errcode='23514'; end if;
+    next_source:=replace(next_source,patch->>'old',patch->>'new');
+  end loop;
+  if encode(extensions.digest(convert_to(next_source,'UTF8'),'sha256'),'hex') is distinct from postimage then
+    raise exception 'ENTRY_REGROUP_PROFILE_POSTIMAGE_DRIFT' using errcode='23514'; end if;
+  definition:=pg_get_functiondef(routine.oid);
+  if (length(definition)-length(replace(definition,source,'')))/length(source)<>1 then
+    raise exception 'ENTRY_REGROUP_PROFILE_DEFINITION_DRIFT' using errcode='23514'; end if;
+  execute replace(definition,source,next_source);
+end;
+$regroup_profile_guard$;
+""")
+sql='-- SOURCE FOUNDATION ONLY. No regroup writer, semantic validator, prefix or producer admission.\nbegin;\n'+ '\n'.join(chunks)+'commit;\n'
+(root/'supabase/migrations/20261113155247_entry_regroup_ledger_foundation.sql').write_text(sql)
+for name,data in [('columns',columns),('foreign-keys',fks),('triggers',triggers),('routines',manifest),('patches',patches)]: (packet/('catalog-'+name+'.json')).write_text(json.dumps(data,indent=2)+'\n')
+(packet/'ready69-prosrc.sql.txt').write_text(oldbody);(packet/'ready70-prosrc.sql.txt').write_text(body)
+info={'migrationSha256':sha(sql),'exportHelperSha256':sha(helper),'workspaceExportSha256':sha(newexport),'readinessSha256':sha(body),'newTables':5,'newColumns':len(columns),'newForeignKeys':len(fks),'newTriggers':len(triggers),'routines':len(manifest)}
+(packet/'coherent-fingerprints.json').write_text(json.dumps(info,indent=2)+'\n');print(json.dumps(info))

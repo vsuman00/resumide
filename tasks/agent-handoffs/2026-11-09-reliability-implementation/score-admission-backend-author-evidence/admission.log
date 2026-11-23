@@ -1,0 +1,100 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/scoring-release-admission.test.ts (46 tests | 3 failed) 301ms
+     ✓ full source and candidate confirmation retain observed recovery/diagnostics without numeric authority 47ms
+     ✓ preserves withholding for incomplete after confirmation 6ms
+     ✓ preserves withholding for missing-JD after confirmation 5ms
+     ✓ preserves withholding for wrong-domain after confirmation 5ms
+     ✓ preserves withholding for wrong-locale after confirmation 4ms
+     × preserves withholding for unsupported after confirmation 5ms
+     × preserves withholding for failed after confirmation 5ms
+     × successful bounded fake provider work and real OCR normalization do not calibrate recovered pages 6ms
+     ✓ actual verified artifact evidence supplies no scoring adoption surface 5ms
+     ✓ actual export_verification_failed artifact evidence supplies no scoring adoption surface 6ms
+     ✓ rejects tampered owner binding instead of producing an authoritative score 3ms
+     ✓ rejects tampered organization binding instead of producing an authoritative score 4ms
+     ✓ rejects tampered analysis binding instead of producing an authoritative score 4ms
+     ✓ rejects tampered source-version binding instead of producing an authoritative score 3ms
+     ✓ rejects tampered source-digest binding instead of producing an authoritative score 3ms
+     ✓ rejects tampered citation binding instead of producing an authoritative score 4ms
+     ✓ rejects an unauthorized calibration-receipt in the numerical contract 3ms
+     ✓ rejects an unauthorized weight in the numerical contract 5ms
+     ✓ rejects an unauthorized coverage in the numerical contract 5ms
+     ✓ rejects an unauthorized dimension in the numerical contract 3ms
+     ✓ rejects an unauthorized state in the numerical contract 3ms
+     ✓ typed confirmed coverage keeps scores withheld at declared page count null 32ms
+     ✓ typed confirmed coverage keeps scores withheld at declared page count 1 12ms
+     ✓ typed confirmed coverage keeps scores withheld at declared page count 3 10ms
+     ✓ rejects a forged typed owner claim 4ms
+     ✓ rejects a forged typed source claim 4ms
+     ✓ rejects a forged typed attempt claim 4ms
+     ✓ rejects a forged typed binding-hash claim 4ms
+     ✓ rejects a forged typed eligibility claim 3ms
+     ✓ owned read performs final source/head recheck while returning only withheld diagnostics 5ms
+     ✓ owned read refuses read-error without number fallback 3ms
+     ✓ owned read refuses source-version without number fallback 3ms
+     ✓ owned read refuses source-hash without number fallback 3ms
+     ✓ owned read refuses unknown-receipt without number fallback 2ms
+     ✓ successful synthetic calibration/evaluation/technical claim never adopts a numerical policy 24ms
+     ✓ rejects locked-test calibration provenance without production adoption 7ms
+     ✓ rejects tampered-lock calibration provenance without production adoption 5ms
+     ✓ rejects wrong-source calibration provenance without production adoption 8ms
+     ✓ rejects wrong-source-hash calibration provenance without production adoption 8ms
+     ✓ withholds numerical release for expired claim evidence 3ms
+     ✓ withholds numerical release for wrong-domain claim evidence 3ms
+     ✓ withholds numerical release for wrong-locale claim evidence 3ms
+     ✓ withholds numerical release for wrong-source claim evidence 4ms
+     ✓ withholds numerical release for tampered-report claim evidence 3ms
+     ✓ withholds numerical release for missing-authority claim evidence 4ms
+     ✓ withholds numerical release for higher-claim claim evidence 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/scoring-release-admission.test.ts > current release admission across actual score entrypoints > preserves withholding for unsupported after confirmation
+ FAIL  tests/unit/scoring-release-admission.test.ts > current release admission across actual score entrypoints > preserves withholding for failed after confirmation
+ZodError: [
+  {
+    "code": "unrecognized_keys",
+    "keys": [
+      "schemaVersion",
+      "fieldExtractorVersion",
+      "nativeSource",
+      "ocrSource",
+      "ocrFailure",
+      "status",
+      "scoringEligible",
+      "confidence",
+      "spans",
+      "assertions",
+      "fields",
+      "blockers"
+    ],
+    "path": [],
+    "message": "Unrecognized keys: \"schemaVersion\", \"fieldExtractorVersion\", \"nativeSource\", \"ocrSource\", \"ocrFailure\", \"status\", \"scoringEligible\", \"confidence\", \"spans\", \"assertions\", \"fields\", \"blockers\""
+  }
+]
+ ❯ Module.reconcileDocumentEvidence app/lib/server/document-evidence.ts:263:21
+    261|   return DocumentEvidenceSchema.parse(
+    262|     project(
+    263|       ContextSchema.parse(context),
+       |                     ^
+    264|       NativeEvidenceSchema.parse(nativeSource),
+    265|       ocrSource === null ? null : OcrEvidenceSchema.parse(ocrSource),
+ ❯ tests/unit/scoring-release-admission.test.ts:45:59
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/unit/scoring-release-admission.test.ts > current release admission across actual score entrypoints > successful bounded fake provider work and real OCR normalization do not calibrate recovered pages
+TypeError: Cannot read properties of undefined (reading 'scoringEligible')
+ ❯ tests/unit/scoring-release-admission.test.ts:54:27
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 43 passed (46)
+   Start at  08:47:30
+   Duration  684ms (transform 226ms, setup 0ms, import 318ms, tests 301ms, environment 0ms)
+

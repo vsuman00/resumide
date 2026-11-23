@@ -1,0 +1,36 @@
+{
+  "task": "CR-A09-S05",
+  "status": "ALLOCATED_SQL_SOURCE_ONLY",
+  "at": "2026-11-10T23:46:45.025387+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "owner": "a04_runtime",
+  "worktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats",
+  "files": {
+    "supabase/migrations/20261111010000_job_requirement_relations.sql": null,
+    "scripts/verify-job-requirement-relations-source.ts": null,
+    "scripts/verify-job-requirement-relations.sql": null,
+    "tests/unit/job-requirement-relations-sql-contract.test.ts": null
+  },
+  "newHandoff": "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a09-sql.md",
+  "maximumFiles": 5,
+  "wireSha256": "181ed171444fdb114e00c45e771dcb4419cba9ac70f25daba62de7e6c50f9d3b",
+  "productionSource": {
+    "admission": "ba4d80e6240a280a3ef49e068b79c855ca26a4433c84eba7bbd00120c8d5da84",
+    "repository": "f8d85e09f506eb972f0b7a09561d7b9d1c31fa4660d7bbafc38ed76cd4ef4637",
+    "unicodeModule": "a04123ca90d4db15e8840492378e0a5cd9948a253dfecb917fe1789df2f41354",
+    "unicodeProfile": "f3f8335d9a957bc16e33d61321f28ed7a12c8c81ff8912f0c17c041d86d95571",
+    "admissionProfile": "e82d68b1e58cf220d3584a8d510128d4428441a2b02815711e7f198adaeaacb8",
+    "structuralSchema": "973fc280196206826f9d41703e2e5bb9a192e7fe6f9365c5f73649ea57715d1c"
+  },
+  "profiles": "a09-evidence/backend-source/{structural-schema,admission-profile}.json in Root; exact file hashes in a09-backend-production-adoption.json",
+  "migrationOrder": "After R19 barrier and A04 source chain; do not edit existing migration/oldRPC/legacyshape/critical37/C02 or readiness bodies",
+  "acceptance": [
+    "Use generated strict v2 structure and independent bounded semantic validation; embed exact pinned Unicode/policy/codec data, not PG locale approximations",
+    "DualstoredCHECK exactv1 ORv2; legacy shape/RPC unchanged, independent no-v1-child-of-v2 trigger",
+    "Service-only RPC same6args, revoke default/public/anon/authenticated; use existing R19owner mutex before rowlocks, active owned analysis/job/source and deletion/membership gates",
+    "Full body/policy/ref/source/OR-AND/bounds/importance validation before replay, typed namespaced codec and expected parent bind command; exactprior beforefreshheadCAS, no headrewind; atomic version/item/audit",
+    "Nativeverifier source explicitly MUTATING rollback-only, exactneutralfixtures tamper/replay/roles/CAS/cleanup; do not run",
+    "Pure source verifier and meaningful mutation controls. No fake SQL parser/native success claim; if any semantic parity missing report concrete gap, never returntrue/stub/downgrade rules to pass."
+  ],
+  "authorization": "UNPARSED/UNAPPLIED/UNEXECUTED SQL only; no DB/hosted/provider/key/Docker/ownerdata/Git/deployment; no unchangedclosedgate repeats"
+}

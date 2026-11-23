@@ -1,0 +1,138 @@
+"""Run cleanup handoff through the actual queue claimant on PostgreSQL 17."""
+import ast
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+from tempfile import TemporaryDirectory
+
+migrations = Path("supabase/migrations")
+fixtures = Path(__file__).parent
+
+def source(prefix):
+    file, = migrations.glob(prefix + "_*.sql")
+    return file.read_text()
+
+def section(text, start, end):
+    start_at = text.index(start)
+    return text[start_at:text.index(end, start_at)]
+
+def literal(file, name):
+    return next(
+        ast.literal_eval(node.value)
+        for node in ast.parse((fixtures / file).read_text()).body
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in node.targets)
+    )
+
+scaffold = literal("admission-cleanup-recovery-native-fixture.py.txt", "scaffold")
+scaffold += """
+set timezone='UTC';
+alter table public.data_requests add column next_attempt_at timestamptz not null default clock_timestamp(),
+  add column last_error_code text, add column created_at timestamptz not null default clock_timestamp(),
+  add column organization_id uuid;
+alter table public.analyses add column status text not null default 'completed';
+alter table public.resumes add column status text not null default 'active';
+create table public.privacy_request_steps(request_id uuid, status text, attempt_count integer, last_error_code text);
+create table public.document_evidence_attempts(id uuid primary key, analysis_id uuid, owner_id uuid,
+  organization_id uuid,resume_version_id uuid,input_sha256 text,attempt_number integer,envelope jsonb);
+-- Synthetic generation catalogue; the queue must stamp this value on each new claim.
+create function private.privacy_generation_current() returns bigint language sql as 'select 4::bigint';
+"""
+
+export_generation = source("20261116075250")
+manifest = export_generation.split("$privacy_generation_patches$", 2)[1]
+legacy_profile = next(x for x in json.loads(manifest) if x["signature"] == "public.claim_privacy_request(text,integer)")
+assert hashlib.sha256(legacy_profile["new"].encode()).hexdigest() == legacy_profile["after"]
+legacy = """
+create function public.claim_privacy_request(p_worker_id text,p_lease_seconds integer) returns jsonb
+language plpgsql security definer set search_path='' as $legacy$
+""" + legacy_profile["new"] + "$legacy$;"
+
+baseline = "--baseline" in sys.argv
+claim = "public.claim_privacy_request('worker',300)" if baseline else "public.claim_privacy_request_with_cleanup_credits('worker',300,3)"
+checks = literal("admission-cleanup-progress-native-fixture.py.txt", "checks")
+checks = checks.replace(
+    "values(claim_id,owner_id,'deletion','processing','worker',clock_timestamp()+interval '2 minutes',1,1);",
+    "values(claim_id,owner_id,'deletion','queued',null,null,0,null);"
+)
+checks = checks.replace(
+    "  assert public.fail_analysis_admission_cleanup(claim_id,'worker',1,'FIXTURE_FAILED',3) is null;",
+    "  update public.data_requests set organization_id=org where id=claim_id;"
+)
+simulated = """    update public.data_requests set status='processing',lease_owner='worker',
+      lease_expires_at=clock_timestamp()+interval '2 minutes',attempt_count=attempt
+      where id=claim_id;"""
+assert checks.count(simulated) == 2
+checks = checks.replace(simulated, f"""    update public.data_requests set next_attempt_at=transaction_timestamp()-interval '1 day' where id=claim_id;
+    plan:={claim};
+    assert plan->>'id'=claim_id::text and (plan->>'attempt')::integer=attempt
+      and plan->>'organizationId'=org::text,
+      'Queue claimant skipped effective attempt '||attempt;
+    assert (select privacy_generation=4 from public.data_requests where id=claim_id);
+    assert {claim} is null, 'A live lease was claimed twice';""")
+checks = checks.replace(
+    "    -- Simulate the unchanged queue claim transition, keeping its attempt fence.\n",
+    ""
+)
+checks = checks.replace("  assert (select count(*)=6 from private.analysis_admission_operations);",
+    f"  assert {claim} is null;\n  assert (select count(*)=6 from private.analysis_admission_operations);")
+
+ordinary_checks = """
+do $$
+declare
+  oldest uuid:=gen_random_uuid();
+  newer uuid:=gen_random_uuid();
+  capped uuid:=gen_random_uuid();
+  claim jsonb;
+begin
+  assert has_function_privilege('service_role','public.claim_privacy_request_with_cleanup_credits(text,integer,integer)','execute');
+  assert not has_function_privilege('anon','public.claim_privacy_request_with_cleanup_credits(text,integer,integer)','execute');
+  assert not has_function_privilege('authenticated','public.claim_privacy_request_with_cleanup_credits(text,integer,integer)','execute');
+  insert into public.data_requests(id,user_id,kind,status,attempt_count,created_at,next_attempt_at)
+  values
+    (capped,gen_random_uuid(),'export','queued',3,clock_timestamp()-interval '3 days',clock_timestamp()-interval '1 minute'),
+    (oldest,gen_random_uuid(),'export','queued',0,clock_timestamp()-interval '2 days',clock_timestamp()-interval '1 minute'),
+    (newer,gen_random_uuid(),'export','queued',0,clock_timestamp()-interval '1 day',clock_timestamp()+interval '1 minute');
+
+  claim:=public.claim_privacy_request_with_cleanup_credits('worker',300,1);
+  assert claim->>'id'=oldest::text and claim->>'attempt'='1';
+  assert public.claim_privacy_request_with_cleanup_credits('worker',300,3) is null;
+  update public.data_requests set lease_expires_at=clock_timestamp()-interval '1 second' where id=oldest;
+  claim:=public.claim_privacy_request_with_cleanup_credits('reclaimer',300,1);
+  assert claim->>'id'=oldest::text and claim->>'attempt'='2';
+  assert (select attempt_count=3 and status='queued' from public.data_requests where id=capped);
+end;
+$$;
+"""
+
+versions = ["20261121130718","20261121132235","20261121203700","20261121205500","20261121211200","20261121212400"]
+sql = "\n".join([
+    scaffold,
+    section(source("20261110080809"),"create table private.analysis_admission_operations","create function private.analysis_admission_denied"),
+    section(source("20261109164851"),"create function private.candidate_owner_lock_keys","-- A false try-lock"),
+    section(export_generation,"create function private.privacy_generation_claim","create function public.complete_privacy_request"),
+    section(source("20261110080810"),"create function private.analysis_job_v2_review_handoff","create function public.claim_analysis_job_v2"),
+    legacy, *(source(version) for version in versions),
+    "" if baseline else source("20261121213600"), checks,
+    "" if baseline else ordinary_checks,
+])
+
+with TemporaryDirectory(prefix="resumide-credit-claim-") as tmp:
+    env = {"HOME": tmp, "PATH": "/opt/homebrew/bin:/usr/bin:/bin", "LC_ALL": "C"}
+    data = str(Path(tmp) / "data")
+
+    def run(argv, **options):
+        return subprocess.run(argv, env=env, timeout=25, text=True, check=True, **options)
+
+    assert run(["postgres","--version"],capture_output=True).stdout.startswith("postgres (PostgreSQL) 17.")
+    run(["initdb","-D",data,"--no-sync","--auth=trust","-U","fixture_owner"],stdout=subprocess.DEVNULL)
+    try:
+        run(["pg_ctl","-w","-D",data,"-l",str(Path(tmp)/"postgres.log"),
+             "-o",f"-c listen_addresses='' -c unix_socket_directories={tmp} -c unix_socket_permissions=0700","start"],
+            stdout=subprocess.DEVNULL)
+        run(["psql","-X","-v","ON_ERROR_STOP=1","-h",tmp,"-U","fixture_owner","-d","postgres","-Atq"],input=sql)
+        print("PASS: actual claims beyond attempt three, four handoffs, three counted failures, due time, live and expired leases, legacy cap, and role checks.")
+    finally:
+        if (Path(data)/"postmaster.pid").exists():
+            run(["pg_ctl","-w","-D",data,"-m","immediate","stop"],stdout=subprocess.DEVNULL)

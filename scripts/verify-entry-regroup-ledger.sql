@@ -1,0 +1,660 @@
+-- SOURCE ONLY / UNPARSED / UNAPPLIED / UNEXECUTED.
+-- PRIVILEGED METADATA FIXTURE ONLY: not a valid regroup, original approval or admission proof.
+-- Requires a separately reviewed isolated managed target/action packet. Never an automatic runner.
+-- This script supplies no semantic validation, real concurrency, restore or writer activation proof.
+begin isolation level read committed;
+set local statement_timeout='20s'; set local lock_timeout='2s'; set local idle_in_transaction_session_timeout='30s';
+do $admit$
+begin
+  if current_setting('resumide.a02_test_admission',true) is distinct from 'isolated-managed-regroup-metadata/1'
+    or current_setting('resumide.a02_test_owner_id',true) is distinct from '10000000-0000-4000-8000-000000000002'
+    or coalesce(current_setting('resumide.a02_test_run_id',true),'') collate "C" !~ '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+    or exists(select 1 from auth.users where id='10000000-0000-4000-8000-000000000002')
+    or exists(select 1 from public.resumes where id='10000000-0000-4000-8000-000000000005') then
+    raise exception 'REGROUP_METADATA_FIXTURE_NOT_ADMITTED' using errcode='42501'; end if;
+  if private.canonical_correction_write_ready() is not true
+    or (select encode(extensions.digest(convert_to(prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc where oid=to_regprocedure('private.canonical_correction_write_ready()'))
+      is distinct from 'c09803937360d27e8b9cd5d8cbe20177100560c6cea82c60891d43281f4e2f86'
+    or has_function_privilege('service_role','private.entry_regroup_export_records(uuid)','EXECUTE')
+    or has_function_privilege('service_role','public.import_canonical_grouped_original(uuid,uuid,jsonb,jsonb,text)','EXECUTE') then
+    raise exception 'REGROUP_METADATA_PROFILE_NOT_ADMITTED' using errcode='42501'; end if;
+end;
+$admit$;
+create function pg_temp.erg_assert(p_ok boolean,p_case text) returns void language plpgsql set search_path='' as $$
+begin if p_ok is not true then raise exception 'REGROUP_METADATA_CASE_%',p_case using errcode='23514'; end if; end;
+$$;
+create function pg_temp.erg_insert(p_table text,p_row jsonb) returns void language plpgsql set search_path='' as $$
+begin
+  if p_table<>all(array['candidate_entry_regroup_batches','candidate_entry_regroup_groups','candidate_entry_regroup_members','canonical_entry_regroup_snapshots','canonical_entry_regroup_links']) then
+    raise exception 'REGROUP_METADATA_TABLE_SCOPE' using errcode='42501'; end if;
+  execute format('insert into public.%I select * from jsonb_populate_record(null::public.%I,$1)',p_table,p_table) using p_row;
+end;
+$$;
+create function pg_temp.erg_refuse(p_table text,p_row jsonb,p_state text,p_case text) returns void language plpgsql set search_path='' as $$
+declare rejected boolean:=false;
+begin
+  begin perform pg_temp.erg_insert(p_table,p_row);
+  exception when others then if sqlstate=p_state then rejected:=true; else raise; end if; end;
+  perform pg_temp.erg_assert(rejected,p_case);
+end;
+$$;
+do $metadata$
+#variable_conflict use_variable
+<<fixture_scope>>
+declare fixture jsonb:=$fixture${
+  "envelope": {
+    "id": "10000000-0000-4000-8000-000000000001",
+    "ownerId": "10000000-0000-4000-8000-000000000002",
+    "analysisId": "10000000-0000-4000-8000-000000000003",
+    "sourceId": "10000000-0000-4000-8000-000000000004",
+    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "createdAt": "2026-11-13T00:00:00.000Z",
+    "retentionPolicyId": "synthetic/1.0.0",
+    "schemaVersion": "evidence/2.0.0",
+    "fieldExtractorVersion": "evidence-fields/1.0.1",
+    "nativeSource": {
+      "schemaVersion": "native-evidence-v1",
+      "extractorVersion": "unpdf-v1",
+      "offsetUnit": "unicode_code_point",
+      "pages": [
+        {
+          "id": "page-1",
+          "pageNumber": 1,
+          "text": "Experience\nEmployer: Synthetic Alpha Labs\nRole: Platform Engineer\nDates: 2020 - 2022\nEmployer: Synthetic Beta Labs\nRole: Data Engineer\nDates: 2021 - 2023",
+          "method": "native_text",
+          "confidence": "uncalibrated"
+        }
+      ],
+      "spans": [
+        {
+          "id": "page-1-line-1",
+          "pageId": "page-1",
+          "start": 0,
+          "end": 10,
+          "text": "Experience"
+        },
+        {
+          "id": "page-1-line-2",
+          "pageId": "page-1",
+          "start": 11,
+          "end": 41,
+          "text": "Employer: Synthetic Alpha Labs"
+        },
+        {
+          "id": "page-1-line-3",
+          "pageId": "page-1",
+          "start": 42,
+          "end": 65,
+          "text": "Role: Platform Engineer"
+        },
+        {
+          "id": "page-1-line-4",
+          "pageId": "page-1",
+          "start": 66,
+          "end": 84,
+          "text": "Dates: 2020 - 2022"
+        },
+        {
+          "id": "page-1-line-5",
+          "pageId": "page-1",
+          "start": 85,
+          "end": 114,
+          "text": "Employer: Synthetic Beta Labs"
+        },
+        {
+          "id": "page-1-line-6",
+          "pageId": "page-1",
+          "start": 115,
+          "end": 134,
+          "text": "Role: Data Engineer"
+        },
+        {
+          "id": "page-1-line-7",
+          "pageId": "page-1",
+          "start": 135,
+          "end": 153,
+          "text": "Dates: 2021 - 2023"
+        }
+      ],
+      "assertions": [
+        {
+          "field": "name",
+          "value": null,
+          "state": "not_evaluated",
+          "confidence": "uncalibrated",
+          "evidence": null
+        },
+        {
+          "field": "email",
+          "value": null,
+          "state": "not_evaluated",
+          "confidence": "uncalibrated",
+          "evidence": null
+        },
+        {
+          "field": "phone",
+          "value": null,
+          "state": "not_evaluated",
+          "confidence": "uncalibrated",
+          "evidence": null
+        }
+      ]
+    },
+    "ocrSource": null,
+    "ocrFailure": null,
+    "status": "review_required",
+    "scoringEligible": false,
+    "confidence": {
+      "kind": "uncalibrated",
+      "reason": "calibration_not_approved"
+    },
+    "spans": [
+      {
+        "id": "native-page-1-line-1",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Experience",
+        "start": 0,
+        "end": 10,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-2",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Employer: Synthetic Alpha Labs",
+        "start": 11,
+        "end": 41,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-3",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Role: Platform Engineer",
+        "start": 42,
+        "end": 65,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-4",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Dates: 2020 - 2022",
+        "start": 66,
+        "end": 84,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-5",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Employer: Synthetic Beta Labs",
+        "start": 85,
+        "end": 114,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-6",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Role: Data Engineer",
+        "start": 115,
+        "end": 134,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-7",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Dates: 2021 - 2023",
+        "start": 135,
+        "end": 153,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      }
+    ],
+    "assertions": [
+      {
+        "id": "assertion-1",
+        "field": "employer",
+        "value": "Synthetic Alpha Labs",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-2",
+            "start": 10,
+            "end": 30
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "assertion-2",
+        "field": "role",
+        "value": "Platform Engineer",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-3",
+            "start": 6,
+            "end": 23
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "assertion-3",
+        "field": "dates",
+        "value": "2020 - 2022",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-4",
+            "start": 7,
+            "end": 18
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "assertion-4",
+        "field": "employer",
+        "value": "Synthetic Beta Labs",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-5",
+            "start": 10,
+            "end": 29
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "assertion-5",
+        "field": "role",
+        "value": "Data Engineer",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-6",
+            "start": 6,
+            "end": 19
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "assertion-6",
+        "field": "dates",
+        "value": "2021 - 2023",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-7",
+            "start": 7,
+            "end": 18
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      }
+    ],
+    "fields": [
+      {
+        "field": "name",
+        "state": "not_evaluated"
+      },
+      {
+        "field": "email",
+        "state": "not_evaluated"
+      },
+      {
+        "field": "phone",
+        "state": "not_evaluated"
+      },
+      {
+        "field": "employer",
+        "state": "conflict"
+      },
+      {
+        "field": "role",
+        "state": "conflict"
+      },
+      {
+        "field": "dates",
+        "state": "conflict"
+      },
+      {
+        "field": "education",
+        "state": "not_evaluated"
+      },
+      {
+        "field": "certification",
+        "state": "not_evaluated"
+      }
+    ],
+    "blockers": [
+      "uncalibrated_confidence",
+      "missing_critical_fields",
+      "conflicting_critical_fields"
+    ]
+  },
+  "original": {
+    "schemaVersion": "canonical-resume/1.0.0",
+    "producerVersion": "canonical-engine/1.0.1",
+    "analysisId": "10000000-0000-4000-8000-000000000003",
+    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "retentionPolicyId": "synthetic/1.0.0",
+    "resumeId": "10000000-0000-4000-8000-000000000005",
+    "versionId": "40000000-0000-4000-8000-000000000001",
+    "parentVersionId": null,
+    "ownerId": "10000000-0000-4000-8000-000000000002",
+    "organizationId": "10000000-0000-4000-8000-000000000006",
+    "locale": "en-IN",
+    "createdAt": "2026-11-13T00:00:00.000Z",
+    "state": "review_required",
+    "sourceEvidenceVersionId": "10000000-0000-4000-8000-000000000001",
+    "contactFactIds": [],
+    "facts": [
+      {
+        "id": "40000000-0000-4000-8000-000000000002",
+        "type": "employer",
+        "value": "Synthetic Alpha Labs",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-2",
+            "start": 10,
+            "end": 30
+          }
+        ],
+        "confirmation": null
+      },
+      {
+        "id": "40000000-0000-4000-8000-000000000003",
+        "type": "role",
+        "value": "Platform Engineer",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-3",
+            "start": 6,
+            "end": 23
+          }
+        ],
+        "confirmation": null
+      },
+      {
+        "id": "40000000-0000-4000-8000-000000000004",
+        "type": "dates",
+        "value": "2020 - 2022",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-4",
+            "start": 7,
+            "end": 18
+          }
+        ],
+        "confirmation": null
+      },
+      {
+        "id": "40000000-0000-4000-8000-000000000005",
+        "type": "employer",
+        "value": "Synthetic Beta Labs",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-5",
+            "start": 10,
+            "end": 29
+          }
+        ],
+        "confirmation": null
+      },
+      {
+        "id": "40000000-0000-4000-8000-000000000006",
+        "type": "role",
+        "value": "Data Engineer",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-6",
+            "start": 6,
+            "end": 19
+          }
+        ],
+        "confirmation": null
+      },
+      {
+        "id": "40000000-0000-4000-8000-000000000007",
+        "type": "dates",
+        "value": "2021 - 2023",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-7",
+            "start": 7,
+            "end": 18
+          }
+        ],
+        "confirmation": null
+      }
+    ],
+    "sections": [
+      {
+        "id": "40000000-0000-4000-8000-000000000008",
+        "type": "experience",
+        "title": "Experience",
+        "factIds": [],
+        "entries": [
+          {
+            "id": "40000000-0000-4000-8000-000000000009",
+            "factIds": [
+              "40000000-0000-4000-8000-000000000002"
+            ],
+            "bullets": []
+          },
+          {
+            "id": "40000000-0000-4000-8000-00000000000a",
+            "factIds": [
+              "40000000-0000-4000-8000-000000000003"
+            ],
+            "bullets": []
+          },
+          {
+            "id": "40000000-0000-4000-8000-00000000000b",
+            "factIds": [
+              "40000000-0000-4000-8000-000000000004"
+            ],
+            "bullets": []
+          },
+          {
+            "id": "40000000-0000-4000-8000-00000000000c",
+            "factIds": [
+              "40000000-0000-4000-8000-000000000005"
+            ],
+            "bullets": []
+          },
+          {
+            "id": "40000000-0000-4000-8000-00000000000d",
+            "factIds": [
+              "40000000-0000-4000-8000-000000000006"
+            ],
+            "bullets": []
+          },
+          {
+            "id": "40000000-0000-4000-8000-00000000000e",
+            "factIds": [
+              "40000000-0000-4000-8000-000000000007"
+            ],
+            "bullets": []
+          }
+        ]
+      }
+    ],
+    "changes": [
+      {
+        "id": "40000000-0000-4000-8000-00000000000f",
+        "actorId": "10000000-0000-4000-8000-000000000002",
+        "action": "import",
+        "targetId": "40000000-0000-4000-8000-000000000001",
+        "priorValue": null,
+        "createdAt": "2026-11-13T00:00:00.000Z"
+      }
+    ]
+  }
+}$fixture$::jsonb;
+  owner_id uuid:='10000000-0000-4000-8000-000000000002'; root_id uuid:='10000000-0000-4000-8000-000000000005';
+  source_id uuid:='10000000-0000-4000-8000-000000000004'; analysis_id uuid:='10000000-0000-4000-8000-000000000003';
+  attempt_id uuid:='10000000-0000-4000-8000-000000000001'; org_id uuid; base_id uuid; result_id uuid:='40000000-0000-4000-8000-000000000002';
+  batch_id uuid:='70000000-0000-4000-8000-000000000001'; group_id uuid:='70000000-0000-4000-8000-000000000002';
+  old_batch uuid:='70000000-0000-4000-8000-000000000003'; old_group uuid:='70000000-0000-4000-8000-000000000004';
+  envelope jsonb:=fixture->'envelope'; base jsonb:=fixture->'original'; result jsonb; scope jsonb; batch_row jsonb; group_row jsonb; member_row jsonb; header jsonb; old_link jsonb; new_link jsonb;
+  command_bytes bytea:=private.grouped_import_command_bytes(array['privileged-metadata-only']); digest text;
+  assertion jsonb; fact_id uuid; selected_fact uuid; entry_id uuid; section_id uuid; row_id uuid; exported jsonb; table_name text; item jsonb; expected jsonb; key text; message text; rejected boolean;
+begin
+  insert into auth.users(id,aud,role,email,raw_app_meta_data,raw_user_meta_data)
+    values(owner_id,'authenticated','authenticated','regroup-metadata-'||owner_id||'@example.test','{"provider":"email","providers":["email"]}','{}');
+  select id into strict org_id from public.organizations o where o.owner_id=fixture_scope.owner_id;
+  base:=jsonb_set(base,'{organizationId}',to_jsonb(org_id)); base_id:=(base->>'versionId')::uuid;
+  result:=base||jsonb_build_object('versionId',result_id,'parentVersionId',base_id,'changes','[]'::jsonb);
+  insert into public.resumes(id,organization_id,owner_id,display_name) values(root_id,org_id,owner_id,'Synthetic regroup metadata');
+  insert into public.resume_versions(id,resume_id,organization_id,owner_id,storage_key,checksum,bytes,media_type)
+    values(source_id,root_id,org_id,owner_id,'regroup-metadata/'||source_id,repeat('a',64),1024,'application/pdf');
+  insert into public.analyses(id,resume_version_id,organization_id,owner_id,status,idempotency_key) values(analysis_id,source_id,org_id,owner_id,'needs_ocr',gen_random_uuid());
+  delete from public.analysis_jobs j where j.analysis_id=fixture_scope.analysis_id;
+  insert into public.document_evidence_attempts(id,analysis_id,organization_id,owner_id,resume_version_id,input_sha256,attempt_number,envelope)
+    values(attempt_id,analysis_id,org_id,owner_id,source_id,repeat('a',64),1,envelope);
+  for item in select value from jsonb_array_elements(jsonb_build_array(base,result)) loop
+    insert into public.canonical_resume_versions(id,resume_id,source_resume_version_id,organization_id,owner_id,locale,state,content,created_at,parent_version_id,source_evidence_version_id,revision,idempotency_key,command,request_id)
+      values((item->>'versionId')::uuid,root_id,source_id,org_id,owner_id,item->>'locale',item->>'state',item,(item->>'createdAt')::timestamptz,
+        (item->>'parentVersionId')::uuid,attempt_id,case when item->>'versionId'=base_id::text then 1 else 2 end,gen_random_uuid(),'{"operation":"privileged_metadata_fixture"}','regroup-metadata-only');
+    insert into public.resume_facts(canonical_version_id,id,organization_id,owner_id,type,value,state,sources,confirmation)
+      select (item->>'versionId')::uuid,(value->>'id')::uuid,org_id,owner_id,value->>'type',value->>'value',value->>'state',value->'sources',nullif(value->'confirmation','null'::jsonb) from jsonb_array_elements(item->'facts');
+  end loop;
+  scope:=jsonb_build_object('owner_id',owner_id,'organization_id',org_id,'resume_id',root_id,'analysis_id',analysis_id,'source_resume_version_id',source_id,'evidence_attempt_id',attempt_id,'input_sha256',repeat('a',64));
+  digest:=encode(extensions.digest(command_bytes,'sha256'),'hex');
+  batch_row:=scope||jsonb_build_object('id',batch_id,'regroup_revision',1,'previous_batch_id',null,'idempotency_key',gen_random_uuid(),
+    'command','{"schemaVersion":"privileged-metadata-only"}'::jsonb,'command_bytes','\x'||encode(command_bytes,'hex'),'command_sha256',digest,'codec_version','a02-command-bytes/1.0.0',
+    'base_version_id',base_id,'base_revision',1,'base_content_sha256',encode(extensions.digest(convert_to(base::text,'UTF8'),'sha256'),'hex'),
+    'result_version_id',result_id,'result_revision',2,'result_content_sha256',encode(extensions.digest(convert_to(result::text,'UTF8'),'sha256'),'hex'),'storage_key',gen_random_uuid(),'created_at',now());
+  perform pg_temp.erg_insert('candidate_entry_regroup_batches',batch_row);
+  section_id:=(base->'sections'->0->>'id')::uuid; entry_id:=(base->'sections'->0->'entries'->0->>'id')::uuid;
+  group_row:=scope||jsonb_build_object('id',group_id,'batch_id',batch_id,'base_version_id',base_id,'result_version_id',result_id,'group_order',1,
+    'page_id','page-1','method','native_text','section_id',section_id,'anchor_entry_id',entry_id,'insertion_index',0,'affected_entry_ids',jsonb_build_array(entry_id),
+    'source_selection',jsonb_build_object('pageId','page-1','method','native_text','members',jsonb_build_array(jsonb_build_object('assertionId','assertion-1','field','employer','citations','[]'::jsonb),jsonb_build_object('assertionId','assertion-2','field','role','citations','[]'::jsonb))));
+  perform pg_temp.erg_insert('candidate_entry_regroup_groups',group_row);
+  perform pg_temp.erg_assert(not jsonb_path_exists('{"scalar":"page-1","nested":[0,null,{"id":"assertion-1"}]}',
+    'strict $.** ? (@.type() == "object").keyvalue() ? (@.key == "value" || @.key == "sourceValue" || @.key == "currentValue")'),'scalar_and_nested_metadata_path_positive');
+  perform pg_temp.erg_assert(jsonb_path_exists('{"nested":[0,{"value":"forbidden"}]}',
+    'strict $.** ? (@.type() == "object").keyvalue() ? (@.key == "value" || @.key == "sourceValue" || @.key == "currentValue")'),'nested_candidate_key_path_detected');
+  perform pg_temp.erg_refuse('candidate_entry_regroup_groups',jsonb_set(group_row||jsonb_build_object('id',gen_random_uuid(),'group_order',2,'section_id',gen_random_uuid()),
+    '{source_selection,members,0,value}','"forbidden"'::jsonb),'23514','nested_candidate_key_table_denied');
+
+  -- Two member rows deliberately share one original entry. This is permitted metadata, not a placement assertion.
+  for item in select value from jsonb_array_elements(envelope->'assertions') with ordinality where ordinality<=2 loop
+    select (value->>'id')::uuid into strict fact_id from jsonb_array_elements(base->'facts') where value->>'type'=item->>'field' and value->>'value'=item->>'value';
+    member_row:=scope||jsonb_build_object('id',gen_random_uuid(),'group_id',group_id,'batch_id',batch_id,'base_version_id',base_id,'result_version_id',result_id,
+      'source_order',case when item->>'field'='employer' then 1 else 2 end,'assertion_id',item->>'id','field',item->>'field','fact_id',fact_id,
+      'citations',jsonb_build_array(jsonb_build_object('attemptId',attempt_id,'spanId',item->'evidence'->0->>'spanId','start',item->'evidence'->0->'start','end',item->'evidence'->0->'end')),
+      'original_entry_id',entry_id,'location_kind','entry','original_bullet_id',null,'mapped_through','current_citations','origin_version_id',null,'origin_fact_id',null);
+    perform pg_temp.erg_insert('candidate_entry_regroup_members',member_row);
+  end loop;
+  perform pg_temp.erg_assert((select count(*) from public.candidate_entry_regroup_members where batch_id=fixture_scope.batch_id and original_entry_id=fixture_scope.entry_id)=2,'shared_original_entry_metadata_allowed');
+  -- A separate OLD-family metadata origin. No old validator or grouped writer is invoked.
+  insert into public.candidate_entry_association_batches(id,owner_id,organization_id,resume_id,analysis_id,source_resume_version_id,evidence_attempt_id,input_sha256,association_revision,idempotency_key,command,command_bytes,command_sha256,codec_version,result_version_id,result_revision,storage_key,result_content_sha256)
+    values(old_batch,owner_id,org_id,root_id,analysis_id,source_id,attempt_id,repeat('a',64),1,gen_random_uuid(),'{"operation":"privileged_metadata_fixture"}',command_bytes,digest,'a02-command-bytes/1.0.0',base_id,1,gen_random_uuid(),repeat('b',64));
+  insert into public.candidate_entry_association_groups(id,batch_id,owner_id,organization_id,resume_id,source_resume_version_id,result_version_id,group_order,page_id,method,section_id,entry_id,source_selection)
+    values(old_group,old_batch,owner_id,org_id,root_id,source_id,base_id,1,'page-1','native_text',section_id,(base->'sections'->0->'entries'->1->>'id')::uuid,'{}');
+  header:=scope||jsonb_build_object('canonical_version_id',result_id,'composition_version','entry-regroup-composition/1.0.0','creation_kind','regroup','creating_regroup_batch_id',batch_id,'inherited_from_version_id',null,'restored_from_version_id',null);
+  perform pg_temp.erg_insert('canonical_entry_regroup_snapshots',header);
+  old_link:=scope||jsonb_build_object('canonical_version_id',result_id,'composition_order',1,'section_id',section_id,'entry_id',(base->'sections'->0->'entries'->1->>'id')::uuid,
+    'origin_family','association','association_group_id',old_group,'association_batch_id',old_batch,'regroup_group_id',null,'regroup_batch_id',null,'original_approval_version_id',base_id);
+  new_link:=scope||jsonb_build_object('canonical_version_id',result_id,'composition_order',2,'section_id',section_id,'entry_id',entry_id,
+    'origin_family','regroup','association_group_id',null,'association_batch_id',null,'regroup_group_id',group_id,'regroup_batch_id',batch_id,'original_approval_version_id',result_id);
+  perform pg_temp.erg_insert('canonical_entry_regroup_links',old_link);perform pg_temp.erg_insert('canonical_entry_regroup_links',new_link);
+  set constraints all immediate;
+  perform pg_temp.erg_assert((select count(*) from public.canonical_entry_regroup_links where canonical_version_id=result_id)=2,'typed_two_origin_composition_metadata');
+  exported:=public.export_resume_workspace_records(owner_id);
+  perform pg_temp.erg_assert(exported->'canonicalEntryRegroupLinks'=private.entry_regroup_export_records(owner_id)->'canonicalEntryRegroupLinks','complete_ordered_new_export');
+  perform pg_temp.erg_assert(exported->'candidateEntryAssociationBatches'=private.entry_association_export_records(owner_id)->'candidateEntryAssociationBatches','old_export_preserved');
+  perform pg_temp.erg_assert(exported->'canonicalEntryRegroupLinks'->0->'regroup_group_id'='null'::jsonb and exported->'canonicalEntryRegroupLinks'->1->'association_group_id'='null'::jsonb,'nullable_xor_fields_preserved');
+  perform pg_temp.erg_assert(private.entry_regroup_export_records('ffffffff-ffff-ffff-ffff-ffffffffffff')->'candidateEntryRegroupBatches'='[]'::jsonb,'foreign_owner_export_empty');
+  perform pg_temp.erg_refuse('candidate_entry_regroup_batches',batch_row||jsonb_build_object('id',gen_random_uuid(),'idempotency_key',gen_random_uuid(),'storage_key',gen_random_uuid(),'result_revision',1),'23514','result_revision_metadata_check');
+  perform pg_temp.erg_refuse('candidate_entry_regroup_groups',group_row||jsonb_build_object('id',gen_random_uuid(),'group_order',2,'section_id',gen_random_uuid(),'affected_entry_ids',jsonb_build_array(entry_id,entry_id)),'23514','duplicate_affected_entries_denied');
+  perform pg_temp.erg_refuse('candidate_entry_regroup_groups',group_row||jsonb_build_object('id',gen_random_uuid(),'group_order',2,'section_id',gen_random_uuid(),'input_sha256',repeat('c',64)),'23503','source_tuple_fk_denied');
+  perform pg_temp.erg_refuse('canonical_entry_regroup_links',new_link||jsonb_build_object('composition_order',3,'entry_id',gen_random_uuid(),'association_group_id',old_group,'association_batch_id',old_batch),'23514','both_origin_families_denied');
+  perform pg_temp.erg_refuse('canonical_entry_regroup_links',old_link||jsonb_build_object('composition_order',3,'entry_id',gen_random_uuid(),'original_approval_version_id',result_id),'23503','typed_origin_result_mismatch_denied');
+  foreach table_name in array array['candidate_entry_regroup_batches','candidate_entry_regroup_groups','candidate_entry_regroup_members','canonical_entry_regroup_snapshots','canonical_entry_regroup_links'] loop
+    rejected:=false;
+    begin execute format('update public.%I set owner_id=owner_id where owner_id=$1',table_name) using owner_id;
+    exception when sqlstate '22023' then get stacked diagnostics message=message_text;rejected:=message='Correction ledger is immutable';end;
+    perform pg_temp.erg_assert(rejected,'immutable_'||table_name);
+  end loop;
+  begin
+    delete from public.resume_versions where id=source_id;
+    foreach table_name in array array['candidate_entry_regroup_batches','candidate_entry_regroup_groups','candidate_entry_regroup_members','canonical_entry_regroup_snapshots','canonical_entry_regroup_links'] loop
+      execute format('select not exists(select 1 from public.%I where owner_id=$1)',table_name) into rejected using owner_id;
+      perform pg_temp.erg_assert(rejected,'source_cascade_'||table_name);
+    end loop;
+    raise exception 'REGROUP_METADATA_SUBFIXTURE_ROLLBACK' using errcode='P0R99';
+  exception when sqlstate 'P0R99' then perform pg_temp.erg_assert(true,'cascade_subfixture_restored');end;
+  insert into public.data_requests(organization_id,user_id,kind) values(org_id,owner_id,'deletion');
+  perform pg_temp.erg_refuse('candidate_entry_regroup_batches',batch_row||jsonb_build_object('id',gen_random_uuid()),'42501','privacy_insert_guard_denied');
+  raise notice 'REGROUP_PRIVILEGED_METADATA_ONLY_COMPLETE_ROLLBACK_REQUIRED';
+end;
+$metadata$;
+rollback;

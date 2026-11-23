@@ -1,0 +1,1152 @@
+import { createHash } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
+import { z } from "zod";
+import {
+  LegacyScoringInputContextSchema,
+  LegacyScoringResultSchema,
+  validateLegacyScoringInputContext,
+  validateLegacyScoringResult,
+} from "./legacy-scoring-input";
+import {
+  InitialFeedbackPlanSchema,
+  InitialFeedbackNativeSupportSchema,
+} from "./initial-feedback-contract";
+import {
+  QualitativeSourceProseSchema,
+  QualitativeSupportSchema,
+} from "./qualitative-support";
+import {
+  BASELINE_SEMANTICS,
+  legacyCategoryFromProse,
+} from "./qualitative-prose";
+import { FeedbackSchema, ResumeWriterSchema } from "./schema";
+import { InitialFeedbackPublicationPolicySchema } from "./initial-feedback-publication-policy";
+import { hashAiBudgetBinding } from "./ai-budget";
+
+export const INITIAL_FEEDBACK_OPERATION_LIMITS = Object.freeze({
+  // Two independently bounded 4MiB scoring objects plus bounded sidecars/metadata.
+  envelopeBytes: 12 * 1024 * 1024,
+  visits: 500000,
+  depth: 32,
+});
+export class InitialFeedbackContractError extends Error {
+  constructor(
+    readonly code:
+      | "invalid"
+      | "not_found"
+      | "stale"
+      | "unavailable"
+      | "cancelled" = "invalid",
+  ) {
+    super("Initial feedback is unavailable.");
+    this.name = "InitialFeedbackContractError";
+  }
+}
+const utf8 = (v: string) => !v.includes("\0") && !/[\uD800-\uDFFF]/u.test(v);
+const text = (max: number) => z.string().min(1).max(max).refine(utf8);
+const id = z.uuid().regex(/^[a-f0-9-]+$/u);
+const sha = z.string().regex(/^[a-f0-9]{64}$/u);
+const decimalPattern = /^(0|[1-9][0-9]{0,127})$/u;
+const decimal = z.string().regex(decimalPattern);
+const tokens = z
+  .string()
+  .regex(decimalPattern)
+  .refine(
+    (v) =>
+      decimalPattern.test(v) && BigInt(v) <= BigInt(Number.MAX_SAFE_INTEGER),
+  );
+const timestamp = z.iso
+  .datetime()
+  .regex(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,6})?Z$/u)
+  .refine((v) => !v.startsWith("0000-"));
+const period = z.iso.date().regex(/^(?!0000)\d{4}-(0[1-9]|1[0-2])-01$/u);
+const bad = () => new InitialFeedbackContractError();
+const hash = (v: string) =>
+  createHash("sha256").update(v, "utf8").digest("hex");
+const issue = (ctx: z.RefinementCtx, invalid: boolean) => {
+  if (invalid)
+    ctx.addIssue({ code: "custom", message: "Wire correlation is invalid." });
+};
+function bounded(raw: unknown) {
+  const stack = [{ value: raw, depth: 0 }];
+  let visits = 0,
+    bytes = 0;
+  while (stack.length) {
+    const { value, depth } = stack.pop()!;
+    if (
+      ++visits > INITIAL_FEEDBACK_OPERATION_LIMITS.visits ||
+      depth > INITIAL_FEEDBACK_OPERATION_LIMITS.depth
+    )
+      throw bad();
+    if (typeof value === "string") {
+      if (
+        !utf8(value) ||
+        value.length > INITIAL_FEEDBACK_OPERATION_LIMITS.envelopeBytes
+      )
+        throw bad();
+      bytes += Buffer.byteLength(JSON.stringify(value), "utf8");
+    } else if (
+      value === null ||
+      typeof value === "boolean" ||
+      typeof value === "number"
+    ) {
+      if (typeof value === "number" && !Number.isFinite(value)) throw bad();
+      bytes += 24;
+    } else if (Array.isArray(value)) {
+      if (value.length > INITIAL_FEEDBACK_OPERATION_LIMITS.visits) throw bad();
+      bytes += value.length + 2;
+      for (const v of value) stack.push({ value: v, depth: depth + 1 });
+    } else if (typeof value === "object" && value !== null) {
+      const proto = Object.getPrototypeOf(value);
+      if (proto !== Object.prototype && proto !== null) throw bad();
+      const entries = Object.entries(Object.getOwnPropertyDescriptors(value));
+      if (
+        Reflect.ownKeys(value).length !== entries.length ||
+        entries.length > INITIAL_FEEDBACK_OPERATION_LIMITS.visits
+      )
+        throw bad();
+      for (const [key, d] of entries) {
+        if (!d.enumerable || d.get || d.set || !utf8(key)) throw bad();
+        bytes += Buffer.byteLength(JSON.stringify(key), "utf8") + 2;
+        stack.push({ value: d.value, depth: depth + 1 });
+      }
+    } else if (value !== undefined) throw bad();
+    if (bytes > INITIAL_FEEDBACK_OPERATION_LIMITS.envelopeBytes) throw bad();
+  }
+}
+function wire<T extends z.ZodType>(schema: T) {
+  return z.preprocess((raw, ctx) => {
+    try {
+      bounded(raw);
+      return raw;
+    } catch {
+      ctx.addIssue({ code: "custom", message: "Wire resource or text limit." });
+      return z.NEVER;
+    }
+  }, schema);
+}
+function decoded<T>(schema: z.ZodType<T>, raw: unknown): T {
+  try {
+    const v = schema.safeParse(raw);
+    if (!v.success) throw bad();
+    return v.data;
+  } catch {
+    throw bad();
+  }
+}
+
+export const InitialFeedbackUsageSchema = wire(
+  z.strictObject({ inputTokens: tokens, outputTokens: tokens }),
+);
+const usage = z.strictObject({ inputTokens: tokens, outputTokens: tokens });
+const errorCode = z.enum([
+  "provider_failed",
+  "timeout",
+  "cancelled",
+  "invalid_output",
+  "unsupported_output",
+  "storage_failed",
+  "unknown",
+]);
+const attempt = z
+  .strictObject({
+    attemptId: id,
+    ordinal: z.number().int().min(1).max(3),
+    state: z.enum([
+      "reserved",
+      "dispatched",
+      "known",
+      "held_unknown",
+      "failed",
+      "cancelled_before_dispatch",
+      "published",
+    ]),
+    claimedAt: timestamp.nullable(),
+    usage: usage.nullable(),
+    errorCode: errorCode.nullable(),
+    budgetAttemptId: id.nullable(),
+  })
+  .superRefine((a, ctx) => {
+    const before =
+      a.state === "reserved" || a.state === "cancelled_before_dispatch";
+    issue(
+      ctx,
+      before ? a.claimedAt !== null || a.usage !== null : a.claimedAt === null,
+    );
+    issue(ctx, a.state === "reserved" && a.errorCode !== null);
+    issue(
+      ctx,
+      a.state === "dispatched" && (a.usage !== null || a.errorCode !== null),
+    );
+    issue(
+      ctx,
+      (a.state === "known" || a.state === "published") &&
+        (a.usage === null || a.errorCode !== null),
+    );
+    issue(ctx, a.state === "held_unknown" && a.usage !== null);
+    issue(ctx, a.state === "failed" && a.errorCode === null);
+  });
+export const InitialFeedbackAttemptSchema = wire(attempt);
+export type InitialFeedbackAttempt = z.infer<
+  typeof InitialFeedbackAttemptSchema
+>;
+const binding = z
+  .strictObject({
+    schemaVersion: z.literal("initial-feedback-binding/1.0.0"),
+    analysisId: id,
+    ownerId: id,
+    organizationId: id,
+    resumeId: id,
+    resumeVersionId: id,
+    scoringInputSha256: sha,
+    deterministicContentSha256: sha,
+    resultChecksum: sha,
+    sourceTextSha256: sha,
+    jobId: id.nullable(),
+    jobSha256: sha.nullable(),
+    policy: InitialFeedbackPublicationPolicySchema,
+  })
+  .superRefine((b, ctx) =>
+    issue(ctx, (b.jobId === null) !== (b.jobSha256 === null)),
+  );
+export const InitialFeedbackBindingSchema = wire(binding);
+export type InitialFeedbackBinding = z.infer<
+  typeof InitialFeedbackBindingSchema
+>;
+const operation = z
+  .strictObject({
+    schemaVersion: z.literal("initial-feedback-operation/1.0.0"),
+    operationId: id,
+    analysisId: id,
+    ownerId: id,
+    organizationId: id,
+    binding,
+    bindingSha256: sha,
+    state: z.enum(["open", "published"]),
+    attemptLimit: z.number().int().min(1).max(3),
+    attempts: z.array(attempt).min(1).max(3),
+    publicationId: id.nullable(),
+  })
+  .superRefine((op, ctx) => {
+    issue(
+      ctx,
+      op.analysisId !== op.binding.analysisId ||
+        op.ownerId !== op.binding.ownerId ||
+        op.organizationId !== op.binding.organizationId,
+    );
+    issue(
+      ctx,
+      (op.state === "published") !== (op.publicationId !== null) ||
+        op.attemptLimit !== op.binding.policy.attemptLimit ||
+        op.attempts.length > op.attemptLimit,
+    );
+    issue(
+      ctx,
+      new Set(op.attempts.map((a) => a.attemptId)).size !== op.attempts.length,
+    );
+    op.attempts.forEach((a, i) => {
+      issue(
+        ctx,
+        a.ordinal !== i + 1 ||
+          (op.binding.policy.budgetPolicyVersion === null &&
+            a.budgetAttemptId !== null),
+      );
+      if (i < op.attempts.length - 1)
+        issue(
+          ctx,
+          a.state !== "failed" || a.usage === null || a.errorCode === null,
+        );
+      if (op.state === "published")
+        issue(
+          ctx,
+          ["reserved", "dispatched", "known"].includes(a.state) ||
+            (a.state === "held_unknown" && a.errorCode === null),
+        );
+    });
+  });
+export const InitialFeedbackOperationSchema = wire(operation);
+export type InitialFeedbackOperation = z.infer<
+  typeof InitialFeedbackOperationSchema
+>;
+const context = z
+  .strictObject({
+    scoringContext: LegacyScoringInputContextSchema,
+    deterministicResult: LegacyScoringResultSchema,
+    currentness: z.enum(["current", "historical"]),
+    generationEligibility: z.enum([
+      "eligible",
+      "historical_inputs",
+      "source_resource_limit",
+    ]),
+  })
+  .superRefine((v, ctx) => {
+    try {
+      validateLegacyScoringInputContext(
+        v.scoringContext,
+        v.scoringContext.analysisId,
+        v.scoringContext.ownerId,
+      );
+      validateLegacyScoringResult(
+        v.deterministicResult,
+        v.scoringContext.extraction.textChecksum,
+      );
+    } catch {
+      issue(ctx, true);
+    }
+    issue(
+      ctx,
+      (v.generationEligibility === "eligible" &&
+        (v.currentness !== "current" ||
+          v.scoringContext.extraction.text.length > 100000)) ||
+        (v.generationEligibility === "historical_inputs" &&
+          v.currentness !== "historical"),
+    );
+  });
+export const InitialFeedbackContextSchema = wire(context);
+export type InitialFeedbackContext = z.infer<
+  typeof InitialFeedbackContextSchema
+>;
+export const validateInitialFeedbackContext = (raw: unknown) =>
+  decoded(InitialFeedbackContextSchema, raw);
+function matchesContext(b: InitialFeedbackBinding, c: InitialFeedbackContext) {
+  const s = c.scoringContext,
+    x = s.binding;
+  return (
+    b.analysisId === s.analysisId &&
+    b.ownerId === s.ownerId &&
+    b.organizationId === s.organizationId &&
+    b.resumeId === s.source.resumeId &&
+    b.resumeVersionId === s.source.resumeVersionId &&
+    b.scoringInputSha256 === x.inputBindingSha256 &&
+    b.resultChecksum === c.deterministicResult.resultChecksum &&
+    b.sourceTextSha256 === s.extraction.textChecksum &&
+    b.jobId === x.jobId &&
+    b.jobSha256 === x.jobSha256
+  );
+}
+const generationFailure = z.strictObject({
+  schemaVersion: z.literal("initial-feedback-generation-failure/1.0.0"),
+  reason: z.enum([
+    "refused",
+    "truncated",
+    "malformed_json",
+    "schema_invalid",
+    "source_reference_invalid",
+  ]),
+  rawResponseSha256: sha.nullable(),
+});
+export const InitialFeedbackGenerationFailureSchema = wire(generationFailure);
+export type InitialFeedbackGenerationFailure = z.infer<
+  typeof InitialFeedbackGenerationFailureSchema
+>;
+const noDispatchReason = z.enum([
+  "ai_disabled",
+  "historical_inputs",
+  "source_resource_limit",
+  "pre_dispatch_unavailable",
+]);
+const terminalReason = z.enum([
+  "provider_unavailable",
+  "invalid_output",
+  "unsupported_output",
+  "attempts_exhausted",
+]);
+const completion = z
+  .union([
+    z.strictObject({
+      kind: z.literal("assessed"),
+      plan: InitialFeedbackPlanSchema,
+      observation: QualitativeSupportSchema,
+      generationFailure: z.null(),
+    }),
+    z.strictObject({
+      kind: z.literal("deterministic_only"),
+      reason: noDispatchReason,
+      plan: z.null(),
+      observation: z.null(),
+      generationFailure: z.null(),
+    }),
+    z.strictObject({
+      kind: z.literal("deterministic_only"),
+      reason: terminalReason,
+      plan: z.null(),
+      observation: QualitativeSupportSchema.nullable(),
+      generationFailure: generationFailure.nullable(),
+    }),
+  ])
+  .superRefine((c, ctx) => {
+    issue(ctx, c.observation !== null && c.generationFailure !== null);
+    if (c.kind === "assessed") {
+      issue(
+        ctx,
+        c.observation.status !== "assessed" ||
+          c.observation.binding?.sourceSha256 !== c.plan.sourceTextSha256,
+      );
+      for (const category of [
+        "toneAndStyle",
+        "content",
+        "structure",
+        "skills",
+      ] as const)
+        issue(
+          ctx,
+          !isDeepStrictEqual(
+            c.plan[category].map((x) => x.originalIndex),
+            c.observation.items
+              .filter((x) => x.category === category && x.retained)
+              .map((x) => x.index),
+          ),
+        );
+      issue(
+        ctx,
+        !isDeepStrictEqual(
+          c.plan.writer.bullets.map((x) => x.originalIndex),
+          c.observation.writer.bullets
+            .filter((x) => x.retained)
+            .map((x) => x.index),
+        ),
+      );
+      issue(
+        ctx,
+        (c.plan.writer.summary !== null) !==
+          (c.observation.writer.summary?.state === "supported"),
+      );
+    }
+  });
+export const InitialFeedbackCompletionSchema = wire(completion);
+export type InitialFeedbackCompletion = z.infer<
+  typeof InitialFeedbackCompletionSchema
+>;
+
+const fs = FeedbackSchema.shape;
+const strictFeedback = z.strictObject({
+  ...fs,
+  scoreSemantics: z.literal(BASELINE_SEMANTICS),
+  ATS: fs.ATS.strict().extend({
+    tips: z.array(fs.ATS.shape.tips.element.strict()).min(3).max(4),
+  }),
+  toneAndStyle: fs.toneAndStyle
+    .strict()
+    .extend({
+      tips: z.array(fs.toneAndStyle.shape.tips.element.strict()).min(3).max(4),
+    }),
+  content: fs.content
+    .strict()
+    .extend({
+      tips: z.array(fs.content.shape.tips.element.strict()).min(3).max(4),
+    }),
+  structure: fs.structure
+    .strict()
+    .extend({
+      tips: z.array(fs.structure.shape.tips.element.strict()).min(3).max(4),
+    }),
+  skills: fs.skills
+    .strict()
+    .extend({
+      tips: z.array(fs.skills.shape.tips.element.strict()).min(3).max(4),
+    }),
+});
+const compatibility = z
+  .strictObject({
+    deterministicResult: LegacyScoringResultSchema,
+    feedback: strictFeedback,
+    writer: ResumeWriterSchema.nullable(),
+  })
+  .superRefine((c, ctx) => {
+    try {
+      validateLegacyScoringResult(
+        c.deterministicResult,
+        c.deterministicResult.inputTextChecksum,
+      );
+    } catch {
+      issue(ctx, true);
+    }
+    issue(
+      ctx,
+      c.feedback.overallScore !== c.deterministicResult.score ||
+        c.feedback.ATS.score !== c.deterministicResult.score,
+    );
+    issue(
+      ctx,
+      !isDeepStrictEqual(
+        c.feedback.ATS.tips,
+        c.deterministicResult.ruleTrace
+          .slice(0, 4)
+          .map((r) => ({ type: r.passed ? "good" : "improve", tip: r.detail })),
+      ),
+    );
+    for (const key of [
+      "toneAndStyle",
+      "content",
+      "structure",
+      "skills",
+    ] as const)
+      issue(ctx, c.feedback[key].score !== 0);
+  });
+export const InitialFeedbackCompatibilitySchema = wire(compatibility);
+export type InitialFeedbackCompatibility = z.infer<
+  typeof InitialFeedbackCompatibilitySchema
+>;
+/** Exact existing partial semantics; equality to the original builder is tested. */
+export function initialFeedbackPartialFeedback(
+  d: z.infer<typeof LegacyScoringResultSchema>,
+) {
+  const unavailable = {
+    score: 0,
+    tips: Array.from({ length: 3 }, () => ({
+      type: "improve" as const,
+      tip: "Qualitative feedback is currently unavailable.",
+      explanation:
+        "Your saved deterministic checks remain available. Writing feedback was not completed.",
+    })),
+  };
+  return {
+    scoreSemantics: BASELINE_SEMANTICS,
+    overallScore: d.score,
+    ATS: {
+      score: d.score,
+      tips: d.ruleTrace
+        .slice(0, 4)
+        .map((r) => ({
+          type: r.passed ? ("good" as const) : ("improve" as const),
+          tip: r.detail,
+        })),
+    },
+    toneAndStyle: unavailable,
+    content: unavailable,
+    structure: unavailable,
+    skills: unavailable,
+  };
+}
+const receipt = z.strictObject({
+  schemaVersion: z.literal("initial-feedback-receipt/1.0.0"),
+  operationId: id,
+  attemptId: id.nullable(),
+  publicationId: id,
+  analysisId: id,
+  ownerId: id,
+  bindingSha256: sha,
+  publicationSha256: sha,
+  resultSha256: sha,
+  writerSha256: sha.nullable(),
+  runId: id.nullable(),
+  createdAt: timestamp,
+  replayed: z.boolean(),
+});
+export const InitialFeedbackReceiptSchema = wire(receipt);
+export type InitialFeedbackReceipt = z.infer<
+  typeof InitialFeedbackReceiptSchema
+>;
+const publication = z
+  .strictObject({
+    schemaVersion: z.literal("initial-feedback-publication/1.0.0"),
+    publicationId: id,
+    state: z.enum(["assessed", "deterministic_only"]),
+    reason: z.union([noDispatchReason, terminalReason]).nullable(),
+    binding,
+    plan: InitialFeedbackPlanSchema.nullable(),
+    recordedObservation: QualitativeSupportSchema.nullable(),
+    generationFailure: generationFailure.nullable(),
+    ownedSupport: InitialFeedbackNativeSupportSchema.nullable(),
+    prose: QualitativeSourceProseSchema.nullable(),
+    compatibility,
+    receipt,
+  })
+  .superRefine((p, ctx) => {
+    const r = p.receipt,
+      d = p.compatibility.deterministicResult;
+    issue(
+      ctx,
+      r.publicationId !== p.publicationId ||
+        r.analysisId !== p.binding.analysisId ||
+        r.ownerId !== p.binding.ownerId ||
+        d.resultChecksum !== p.binding.resultChecksum ||
+        d.inputTextChecksum !== p.binding.sourceTextSha256,
+    );
+    issue(ctx, p.recordedObservation !== null && p.generationFailure !== null);
+    issue(ctx, (p.compatibility.writer === null) !== (r.writerSha256 === null));
+    if (p.state === "assessed") {
+      issue(
+        ctx,
+        p.reason !== null ||
+          p.plan === null ||
+          p.recordedObservation === null ||
+          p.ownedSupport === null ||
+          p.prose === null ||
+          p.compatibility.writer === null ||
+          r.attemptId === null ||
+          r.runId === null ||
+          p.generationFailure !== null,
+      );
+      if (p.plan && p.recordedObservation && p.ownedSupport && p.prose) {
+        issue(
+          ctx,
+          !completion.safeParse({
+            kind: "assessed",
+            plan: p.plan,
+            observation: p.recordedObservation,
+            generationFailure: null,
+          }).success,
+        );
+        issue(
+          ctx,
+          p.plan.sourceTextSha256 !== p.binding.sourceTextSha256 ||
+            p.ownedSupport.bindingSha256 !== r.bindingSha256,
+        );
+        issue(ctx, !isDeepStrictEqual(p.compatibility.writer, p.prose.writer));
+        for (const key of [
+          "toneAndStyle",
+          "content",
+          "structure",
+          "skills",
+        ] as const)
+          issue(
+            ctx,
+            !isDeepStrictEqual(
+              p.compatibility.feedback[key],
+              legacyCategoryFromProse(p.prose[key]),
+            ),
+          );
+        const parts = p.ownedSupport.parts;
+        issue(
+          ctx,
+          parts.tips.length !==
+            p.recordedObservation.items.filter((x) => x.retained).length ||
+            parts.writer.bullets.length !== p.prose.writer.bullets.length,
+        );
+        for (const part of parts.tips) {
+          const row = p.prose[part.category].tips[part.retainedIndex],
+            obs = p.recordedObservation.items.find(
+              (x) =>
+                x.category === part.category &&
+                x.index === part.originalIndex &&
+                x.retained,
+            );
+          issue(
+            ctx,
+            !row ||
+              !obs ||
+              part.type !== row.type ||
+              part.title.textSha256 !== hash(row?.tip ?? "") ||
+              part.explanation.textSha256 !== hash(row?.explanation ?? "") ||
+              part.title.textSha256 !== obs?.title.textSha256 ||
+              part.explanation.textSha256 !== obs?.explanation.textSha256,
+          );
+        }
+        for (const part of parts.writer.bullets) {
+          const row = p.prose.writer.bullets[part.retainedIndex],
+            obs = p.recordedObservation.writer.bullets.find(
+              (x) => x.index === part.originalIndex && x.retained,
+            );
+          issue(
+            ctx,
+            !row ||
+              !obs ||
+              part.rewrite.textSha256 !== hash(row?.rewrite ?? "") ||
+              part.reasoning.textSha256 !== hash(row?.reasoning ?? "") ||
+              part.rewrite.textSha256 !== obs?.rewrite.textSha256 ||
+              part.reasoning.textSha256 !== obs?.reasoning.textSha256,
+          );
+        }
+      }
+    } else {
+      issue(
+        ctx,
+        p.reason === null ||
+          p.plan !== null ||
+          p.ownedSupport !== null ||
+          p.prose !== null ||
+          p.compatibility.writer !== null ||
+          r.runId !== null,
+      );
+      issue(
+        ctx,
+        !isDeepStrictEqual(
+          p.compatibility.feedback,
+          initialFeedbackPartialFeedback(d),
+        ),
+      );
+      if (p.reason !== null && noDispatchReason.safeParse(p.reason).success)
+        issue(
+          ctx,
+          r.attemptId !== null ||
+            p.recordedObservation !== null ||
+            p.generationFailure !== null,
+        );
+      else issue(ctx, r.attemptId === null);
+    }
+  });
+export const InitialFeedbackPublicationSchema = wire(publication);
+export type InitialFeedbackPublication = z.infer<
+  typeof InitialFeedbackPublicationSchema
+>;
+function correlatedPublication(
+  op: InitialFeedbackOperation,
+  p: InitialFeedbackPublication,
+) {
+  return (
+    op.state === "published" &&
+    op.publicationId === p.publicationId &&
+    op.operationId === p.receipt.operationId &&
+    op.bindingSha256 === p.receipt.bindingSha256 &&
+    isDeepStrictEqual(op.binding, p.binding) &&
+    (p.receipt.attemptId === null
+      ? op.attempts.every((a) => a.claimedAt === null)
+      : op.attempts.some((a) => a.attemptId === p.receipt.attemptId))
+  );
+}
+const prepare = z
+  .discriminatedUnion("status", [
+    z.strictObject({
+      schemaVersion: z.literal("initial-feedback-prepare/1.0.0"),
+      status: z.literal("prepared"),
+      operation,
+      attempt,
+      context,
+      dispatchAllowed: z.literal(false),
+      replayed: z.literal(false),
+    }),
+    z.strictObject({
+      schemaVersion: z.literal("initial-feedback-prepare/1.0.0"),
+      status: z.literal("pending"),
+      operation,
+      attempt: attempt.nullable(),
+      context: z.null(),
+      dispatchAllowed: z.literal(false),
+      replayed: z.literal(true),
+    }),
+    z.strictObject({
+      schemaVersion: z.literal("initial-feedback-prepare/1.0.0"),
+      status: z.literal("published"),
+      operation,
+      publication,
+      context: z.null(),
+      dispatchAllowed: z.literal(false),
+      replayed: z.literal(true),
+    }),
+  ])
+  .superRefine((v, ctx) => {
+    if (v.status === "published")
+      issue(ctx, !correlatedPublication(v.operation, v.publication));
+    else {
+      issue(ctx, v.operation.state !== "open");
+      if (v.attempt)
+        issue(
+          ctx,
+          !v.operation.attempts.some((a) => isDeepStrictEqual(a, v.attempt)),
+        );
+      if (v.status === "prepared")
+        issue(
+          ctx,
+          v.attempt.state !== "reserved" ||
+            !matchesContext(v.operation.binding, v.context),
+        );
+    }
+  });
+export const InitialFeedbackPrepareSchema = wire(prepare);
+export type InitialFeedbackPrepare = z.infer<
+  typeof InitialFeedbackPrepareSchema
+>;
+// Exact existing R03 wire, independently correlated to the operation. Its client
+// still owns reservation/claim/settlement validation; this does not debit a pool.
+const technicalVersion = z
+  .string()
+  .regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$/u);
+const rate = decimal.refine(
+  (v) =>
+    decimalPattern.test(v) &&
+    BigInt(v) > 0n &&
+    BigInt(v) <= 9223372036854775807n,
+);
+const budgetReceipt = z
+  .strictObject({
+    schemaVersion: z.literal("ai-budget/1.0.0"),
+    userId: id,
+    organizationId: id,
+    operationId: id,
+    attemptId: id,
+    attemptOrdinal: z.number().int().min(1).max(3),
+    attemptLimit: z.number().int().min(1).max(3),
+    surface: z.enum(["qualitative", "rewrite", "build"]),
+    payloadSha256: sha,
+    model: technicalVersion,
+    promptPolicyVersion: technicalVersion,
+    policyVersion: technicalVersion,
+    poolPolicyVersion: technicalVersion,
+    bindingSha256: sha,
+    period,
+    state: z.enum([
+      "reserved",
+      "dispatched",
+      "held_unknown",
+      "settled",
+      "released",
+    ]),
+    reservedInputTokens: tokens,
+    reservedOutputTokens: tokens,
+    reservedCostMicrousd: decimal,
+    inputMicrousdPerMillion: rate,
+    outputMicrousdPerMillion: rate,
+    actualInputTokens: tokens.nullable(),
+    actualOutputTokens: tokens.nullable(),
+    actualCostMicrousd: decimal.nullable(),
+    replayed: z.boolean(),
+    dispatchAllowed: z.boolean(),
+    poolBlocked: z.boolean(),
+  })
+  .superRefine((r, ctx) => {
+    if (
+      ![
+        r.reservedInputTokens,
+        r.reservedOutputTokens,
+        r.reservedCostMicrousd,
+        r.inputMicrousdPerMillion,
+        r.outputMicrousdPerMillion,
+      ].every((x) => decimalPattern.test(x))
+    )
+      return;
+    issue(
+      ctx,
+      r.attemptOrdinal > r.attemptLimit ||
+        BigInt(r.reservedInputTokens) === 0n ||
+        BigInt(r.reservedOutputTokens) === 0n,
+    );
+    if (
+      BigInt(r.reservedInputTokens) > BigInt(Number.MAX_SAFE_INTEGER) ||
+      BigInt(r.reservedOutputTokens) > BigInt(Number.MAX_SAFE_INTEGER)
+    )
+      return;
+    const b = {
+      userId: r.userId,
+      organizationId: r.organizationId,
+      operationId: r.operationId,
+      attemptId: r.attemptId,
+      attemptOrdinal: r.attemptOrdinal,
+      surface: r.surface,
+      payloadSha256: r.payloadSha256,
+      model: r.model,
+      promptPolicyVersion: r.promptPolicyVersion,
+      policyVersion: r.policyVersion,
+      reservedInputTokens: Number(r.reservedInputTokens),
+      reservedOutputTokens: Number(r.reservedOutputTokens),
+    };
+    try {
+      issue(ctx, hashAiBudgetBinding(b) !== r.bindingSha256);
+    } catch {
+      issue(ctx, true);
+    }
+    const cost = (i: string, o: string) =>
+      (
+        (BigInt(i) * BigInt(r.inputMicrousdPerMillion) +
+          BigInt(o) * BigInt(r.outputMicrousdPerMillion) +
+          999999n) /
+        1000000n
+      ).toString();
+    issue(
+      ctx,
+      cost(r.reservedInputTokens, r.reservedOutputTokens) !==
+        r.reservedCostMicrousd,
+    );
+    if (r.state === "settled")
+      issue(
+        ctx,
+        r.actualInputTokens === null ||
+          r.actualOutputTokens === null ||
+          r.actualCostMicrousd === null,
+      );
+    else
+      issue(
+        ctx,
+        r.actualInputTokens !== null ||
+          r.actualOutputTokens !== null ||
+          r.actualCostMicrousd !== null,
+      );
+    if (
+      r.actualInputTokens !== null &&
+      r.actualOutputTokens !== null &&
+      decimalPattern.test(r.actualInputTokens) &&
+      decimalPattern.test(r.actualOutputTokens)
+    )
+      issue(
+        ctx,
+        cost(r.actualInputTokens, r.actualOutputTokens) !==
+          r.actualCostMicrousd,
+      );
+    issue(
+      ctx,
+      r.dispatchAllowed &&
+        (r.state !== "dispatched" || r.replayed || r.poolBlocked),
+    );
+  });
+const budgetEnvelope = z.discriminatedUnion("status", [
+  z.strictObject({
+    schemaVersion: z.literal("ai-budget/1.0.0"),
+    status: z.literal("ok"),
+    receipt: budgetReceipt,
+  }),
+  z.strictObject({
+    schemaVersion: z.literal("ai-budget/1.0.0"),
+    status: z.literal("denied"),
+    code: z.enum([
+      "AI_BUDGET_INVALID",
+      "AI_BUDGET_UNAVAILABLE",
+      "AI_BUDGET_DISABLED",
+      "AI_BUDGET_DENIED",
+      "AI_BUDGET_EXHAUSTED",
+      "AI_BUDGET_CONFLICT",
+      "AI_BUDGET_STATE",
+      "AI_BUDGET_BLOCKED",
+    ]),
+  }),
+]);
+const claim = z
+  .strictObject({
+    schemaVersion: z.literal("initial-feedback-claim/1.0.0"),
+    operation,
+    attempt,
+    dispatchAllowed: z.boolean(),
+    replayed: z.boolean(),
+    budget: budgetEnvelope.nullable(),
+  })
+  .superRefine((v, ctx) => {
+    issue(
+      ctx,
+      !v.operation.attempts.some((a) => isDeepStrictEqual(a, v.attempt)),
+    );
+    const p = v.operation.binding.policy;
+    if (p.budgetPolicyVersion === null) issue(ctx, v.budget !== null);
+    else if (v.dispatchAllowed)
+      issue(ctx, v.budget === null || v.budget.status !== "ok");
+    if (v.dispatchAllowed)
+      issue(
+        ctx,
+        v.replayed ||
+          v.operation.state !== "open" ||
+          v.operation.publicationId !== null ||
+          v.attempt.state !== "dispatched",
+      );
+    if (v.budget?.status === "denied") issue(ctx, v.dispatchAllowed);
+    if (v.budget?.status === "ok") {
+      const r = v.budget.receipt;
+      issue(
+        ctx,
+        r.userId !== v.operation.ownerId ||
+          r.organizationId !== v.operation.organizationId ||
+          r.operationId !== v.operation.operationId ||
+          r.attemptId !== v.attempt.budgetAttemptId ||
+          r.surface !== "qualitative" ||
+          r.payloadSha256 !== v.operation.bindingSha256 ||
+          r.model !== p.model ||
+          r.promptPolicyVersion !== p.promptVersion ||
+          r.policyVersion !== p.budgetPolicyVersion ||
+          r.dispatchAllowed !== v.dispatchAllowed,
+      );
+    }
+  });
+export const InitialFeedbackClaimSchema = wire(claim);
+export type InitialFeedbackClaim = z.infer<typeof InitialFeedbackClaimSchema>;
+const settlement = z
+  .strictObject({
+    schemaVersion: z.literal("initial-feedback-settlement/1.0.0"),
+    operationId: id,
+    attemptId: id,
+    bindingSha256: sha,
+    state: z.enum(["known", "held_unknown", "failed"]),
+    usage: usage.nullable(),
+    errorCode: errorCode.nullable(),
+    replayed: z.boolean(),
+  })
+  .superRefine((v, ctx) =>
+    issue(
+      ctx,
+      (v.state === "known" && (v.usage === null || v.errorCode !== null)) ||
+        (v.state === "held_unknown" && v.usage !== null) ||
+        (v.state === "failed" && v.errorCode === null),
+    ),
+  );
+export const InitialFeedbackSettlementSchema = wire(settlement);
+export type InitialFeedbackSettlement = z.infer<
+  typeof InitialFeedbackSettlementSchema
+>;
+export const InitialFeedbackFinishSchema = wire(
+  z.strictObject({
+    schemaVersion: z.literal("initial-feedback-finish/1.0.0"),
+    status: z.literal("published"),
+    publication,
+  }),
+);
+export const InitialFeedbackReadSchema = wire(
+  z
+    .discriminatedUnion("status", [
+      z.strictObject({
+        schemaVersion: z.literal("initial-feedback-read/1.0.0"),
+        status: z.literal("available"),
+        currentness: z.enum(["current", "historical"]),
+        publication,
+      }),
+      z.strictObject({
+        schemaVersion: z.literal("initial-feedback-read/1.0.0"),
+        status: z.literal("legacy_unbound"),
+        analysisId: id,
+        reason: z.literal("original_input_or_publication_missing"),
+      }),
+      z.strictObject({
+        schemaVersion: z.literal("initial-feedback-read/1.0.0"),
+        status: z.literal("pending"),
+        operation,
+        attempt: attempt.nullable(),
+      }),
+    ])
+    .superRefine((v, ctx) => {
+      if (v.status === "pending")
+        issue(
+          ctx,
+          v.operation.state !== "open" ||
+            (v.attempt !== null &&
+              !v.operation.attempts.some((a) =>
+                isDeepStrictEqual(a, v.attempt),
+              )),
+        );
+    }),
+);
+
+const profile = z.strictObject({
+  schemaVersion: z.literal("initial-feedback-readiness/1.0.0"),
+  profileVersion: z.literal("initial-feedback-readiness-profile/1.0.0"),
+  checkerSha256: sha,
+  readerSha256: sha,
+  prepareSha256: sha,
+  claimSha256: sha,
+  settleSha256: sha,
+  finishSha256: sha,
+  usageSha256: sha,
+  exportSha256: sha,
+  metadataSha256: sha,
+});
+export const InitialFeedbackProfileSchema = wire(profile);
+export type InitialFeedbackProfile = z.infer<
+  typeof InitialFeedbackProfileSchema
+>;
+export const INITIAL_FEEDBACK_CAPABILITIES = [
+  "readerExecutable",
+  "prepareExecutable",
+  "claimExecutable",
+  "settleExecutable",
+  "finishExecutable",
+  "usageExecutable",
+  "exportExecutable",
+] as const;
+const readiness = profile.extend({
+  schemaReady: z.boolean(),
+  readerExecutable: z.boolean(),
+  prepareExecutable: z.boolean(),
+  claimExecutable: z.boolean(),
+  settleExecutable: z.boolean(),
+  finishExecutable: z.boolean(),
+  usageExecutable: z.boolean(),
+  exportExecutable: z.boolean(),
+});
+export const InitialFeedbackReadinessSchema = wire(readiness);
+export type InitialFeedbackReadiness = z.infer<
+  typeof InitialFeedbackReadinessSchema
+>;
+export function validateInitialFeedbackReadiness(
+  raw: unknown,
+  expected: InitialFeedbackProfile,
+  capabilities: ReadonlyArray<(typeof INITIAL_FEEDBACK_CAPABILITIES)[number]>,
+) {
+  const pin = decoded(InitialFeedbackProfileSchema, expected),
+    value = decoded(InitialFeedbackReadinessSchema, raw);
+  if (
+    !value.schemaReady ||
+    Object.keys(pin).some(
+      (k) => pin[k as keyof typeof pin] !== value[k as keyof typeof pin],
+    ) ||
+    !z
+      .array(z.enum(INITIAL_FEEDBACK_CAPABILITIES))
+      .max(7)
+      .safeParse(capabilities).success ||
+    capabilities.some((k) => !value[k])
+  )
+    throw bad();
+  return value;
+}
+const usageReply = z
+  .strictObject({
+    schemaVersion: z.literal("initial-feedback-usage/1.0.0"),
+    profileVersion: z.literal("initial-feedback-readiness-profile/1.0.0"),
+    usageSha256: sha,
+    ownerId: id,
+    organizationId: id,
+    analysisId: id,
+    periodStart: period,
+    periodEnd: period,
+    legacyUnlinkedTokens: decimal,
+    canonicalTokens: decimal,
+    initialFeedbackTokens: decimal,
+    totalTokens: decimal,
+    unknownClaims: decimal,
+  })
+  .superRefine((v, ctx) => {
+    if (
+      [
+        v.legacyUnlinkedTokens,
+        v.canonicalTokens,
+        v.initialFeedbackTokens,
+        v.totalTokens,
+      ].every((x) => decimalPattern.test(x))
+    )
+      issue(
+        ctx,
+        BigInt(v.legacyUnlinkedTokens) +
+          BigInt(v.canonicalTokens) +
+          BigInt(v.initialFeedbackTokens) !==
+          BigInt(v.totalTokens),
+      );
+    const y = Number(v.periodStart.slice(0, 4)),
+      m = Number(v.periodStart.slice(5, 7));
+    issue(
+      ctx,
+      v.periodEnd !==
+        `${String(y + (m === 12 ? 1 : 0)).padStart(4, "0")}-${String(m === 12 ? 1 : m + 1).padStart(2, "0")}-01`,
+    );
+  });
+export const InitialFeedbackUsageReplySchema = wire(usageReply);
+export type InitialFeedbackUsageReply = z.infer<
+  typeof InitialFeedbackUsageReplySchema
+>;
+export function validateInitialFeedbackUsage(
+  raw: unknown,
+  expected: {
+    ownerId: string;
+    organizationId: string;
+    analysisId: string;
+    usageSha256: string;
+  },
+  at: number,
+) {
+  const value = decoded(InitialFeedbackUsageReplySchema, raw),
+    b = decoded(
+      z.strictObject({
+        ownerId: id,
+        organizationId: id,
+        analysisId: id,
+        usageSha256: sha,
+      }),
+      expected,
+    ),
+    date = new Date(at);
+  if (
+    !Number.isFinite(at) ||
+    !Number.isFinite(date.getTime()) ||
+    value.ownerId !== b.ownerId ||
+    value.organizationId !== b.organizationId ||
+    value.analysisId !== b.analysisId ||
+    value.usageSha256 !== b.usageSha256 ||
+    value.periodStart !==
+      `${String(date.getUTCFullYear()).padStart(4, "0")}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-01` ||
+    value.unknownClaims !== "0"
+  )
+    throw bad();
+  return value;
+}

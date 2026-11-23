@@ -1,0 +1,329 @@
+import { useId } from "react";
+import type { CanonicalEntryRegroupPreparation } from "~/lib/server/canonical-entry-regroup";
+
+type Prepared = Extract<
+  CanonicalEntryRegroupPreparation,
+  { state: "prepared" }
+>;
+type Fact = Prepared["facts"][number];
+type Section = Prepared["beforeSections"][number];
+const fieldLabels = { employer: "Employer", role: "Role", dates: "Dates" };
+const stateLabels = {
+  unconfirmed: "Unconfirmed",
+  candidate_confirmed: "Candidate confirmed",
+  source_supported: "Recorded as source supported",
+};
+
+function CurrentFact({ fact }: { fact: Fact }) {
+  return (
+    <div style={{ overflowWrap: "anywhere" }}>
+      <p>
+        <strong>{fact.type.replaceAll("_", " ")}</strong>: {fact.value}
+      </p>
+      <p>Current fact state: {stateLabels[fact.state]}</p>
+      {fact.confirmation && (
+        <p>
+          Recorded candidate confirmation:{" "}
+          <time dateTime={fact.confirmation.confirmedAt}>
+            {fact.confirmation.confirmedAt}
+          </time>
+        </p>
+      )}
+      <details>
+        <summary>Current fact provenance</summary>
+        <p>
+          Fact identifier: <code>{fact.id}</code>
+        </p>
+        {fact.sources.length ? (
+          <ul>
+            {fact.sources.map((source, index) => (
+              <li key={`${source.spanId}:${index}`}>
+                Current recorded citation: <code>{source.spanId}</code>,
+                characters {source.start} to {source.end}; attempt{" "}
+                <code>{source.attemptId}</code>.
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No current source citations are recorded for this fact.</p>
+        )}
+      </details>
+    </div>
+  );
+}
+function FactReference({
+  id,
+  facts,
+}: {
+  id: string;
+  facts: Map<string, Fact>;
+}) {
+  const fact = facts.get(id);
+  return fact ? (
+    <CurrentFact fact={fact} />
+  ) : (
+    <p role="alert">A current fact reference is unavailable.</p>
+  );
+}
+function Sections({
+  sections,
+  facts,
+  label,
+}: {
+  sections: Section[];
+  facts: Map<string, Fact>;
+  label: string;
+}) {
+  const heading = useId();
+  return (
+    <section aria-labelledby={heading} className="account-card">
+      <h3 id={heading}>{label}</h3>
+      {sections.map((section) => (
+        <section key={section.id} aria-label={`${section.title} section`}>
+          <h4>{section.title}</h4>
+          {section.factIds.length > 0 && (
+            <>
+              <h5>Section facts</h5>
+              <ul aria-label="Section facts">
+                {section.factIds.map((id, index) => (
+                  <li key={`${id}:${index}`}>
+                    <FactReference id={id} facts={facts} />
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+          <ol aria-label={`${section.title} entries`}>
+            {section.entries.map((entry, index) => (
+              <li key={entry.id}>
+                <h5>Entry {index + 1}</h5>
+                <ul aria-label={`Entry ${index + 1} heading facts`}>
+                  {entry.factIds.map((id, position) => (
+                    <li key={`${id}:${position}`}>
+                      <FactReference id={id} facts={facts} />
+                    </li>
+                  ))}
+                </ul>
+                <ol aria-label={`Entry ${index + 1} bullets`}>
+                  {entry.bullets.map((bullet) => (
+                    <li key={bullet.id}>
+                      <p
+                        style={{
+                          whiteSpace: "pre-wrap",
+                          overflowWrap: "anywhere",
+                        }}
+                      >
+                        {bullet.text}
+                      </p>
+                      <ul aria-label="Facts referenced by this bullet">
+                        {bullet.factIds.map((id, position) => (
+                          <li key={`${id}:${position}`}>
+                            <FactReference id={id} facts={facts} />
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  ))}
+                </ol>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))}
+    </section>
+  );
+}
+function entryLabel(sections: Section[], sectionId: string, entryId: string) {
+  const section = sections.find((item) => item.id === sectionId);
+  const index =
+    section?.entries.findIndex((entry) => entry.id === entryId) ?? -1;
+  return section && index >= 0
+    ? `${section.title}, entry ${index + 1}`
+    : "Entry placement unavailable";
+}
+
+export default function CanonicalEntryRegroupDiff({
+  preparation,
+}: {
+  preparation: Prepared;
+}) {
+  const heading = useId();
+  const affected = new Set(preparation.groups.map((group) => group.sectionId));
+  const before = preparation.beforeSections.filter((section) =>
+    affected.has(section.id),
+  );
+  const after = preparation.afterSections.filter((section) =>
+    affected.has(section.id),
+  );
+  const facts = new Map(preparation.facts.map((fact) => [fact.id, fact]));
+  return (
+    <section aria-labelledby={heading}>
+      <h2 id={heading}>Whole-entry regroup preview</h2>
+      <p role="status">Preview only. Nothing has been saved or approved.</p>
+      <p>
+        This combines entire affected entries, including every heading fact and
+        bullet. The employer entry identifier is retained at the earliest
+        affected position; the other affected entries are retired from the
+        proposed arrangement.
+      </p>
+      <p>
+        Moved content can cross untouched entries. Heading facts are collected
+        before bullets, so their displayed order can change. Compare the
+        complete affected sections below.
+      </p>
+      <p>
+        Current fact values, recorded states and existing confirmations are
+        preserved. This preview does not verify facts or add relationship
+        approval.
+      </p>
+      <dl>
+        <dt>Base revision</dt>
+        <dd>{preparation.baseRevision}</dd>
+        <dt>Base locale</dt>
+        <dd>{preparation.locale}</dd>
+      </dl>
+      {!preparation.changed && (
+        <p role="status">
+          No placement changes in this preview. This is not approval and no new
+          version has been saved.
+        </p>
+      )}
+      <Sections sections={before} facts={facts} label="Before regrouping" />
+      <Sections sections={after} facts={facts} label="Proposed arrangement" />
+      <section aria-label="Retired entry destinations">
+        <h3>Entries retired from the proposed arrangement</h3>
+        {preparation.mappings.length ? (
+          <table>
+            <caption>
+              All carried content goes to the listed destination
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Before: entry to retire</th>
+                <th scope="col">After: destination entry</th>
+              </tr>
+            </thead>
+            <tbody>
+              {preparation.mappings.map((mapping) => (
+                <tr key={`${mapping.groupId}:${mapping.retiredEntryId}`}>
+                  <td>
+                    {entryLabel(
+                      before,
+                      mapping.sectionId,
+                      mapping.retiredEntryId,
+                    )}
+                  </td>
+                  <td>
+                    {entryLabel(
+                      after,
+                      mapping.sectionId,
+                      mapping.anchorEntryId,
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>No entry identifiers would be retired.</p>
+        )}
+      </section>
+      <section aria-label="Source observations and current wording">
+        <h3>Source observations and current wording</h3>
+        <p>
+          Original source observations identify earlier extracted wording. Their
+          citations do not verify edited current wording. Current fact states
+          and confirmations are shown separately above.
+        </p>
+        {preparation.groups.map((group, index) => (
+          <article key={group.groupId} className="account-card">
+            <h4>Selected source group {index + 1}</h4>
+            <p>
+              {group.method === "local_ocr"
+                ? "Recorded local OCR observations"
+                : "Recorded native text observations"}
+            </p>
+            {group.members.map((member) => (
+              <div
+                key={member.assertionId}
+                style={{ overflowWrap: "anywhere" }}
+              >
+                <h5>{fieldLabels[member.field]}</h5>
+                <dl>
+                  <dt>Original source observation</dt>
+                  <dd>{member.sourceValue}</dd>
+                  <dt>Current fact wording</dt>
+                  <dd>{member.currentValue}</dd>
+                  <dt>Mapping basis</dt>
+                  <dd>
+                    {member.mappedThrough === "owned_ancestor_chain"
+                      ? "Owned version history"
+                      : "Current recorded citations"}
+                  </dd>
+                </dl>
+                {member.sourceValue !== member.currentValue && (
+                  <p>
+                    The current wording differs from the source observation.
+                  </p>
+                )}
+                <details>
+                  <summary>Source observation references</summary>
+                  <ul>
+                    {member.sourceCitations.map((citation, n) => (
+                      <li key={`${citation.spanId}:${n}`}>
+                        <code>{citation.spanId}</code>, characters{" "}
+                        {citation.start} to {citation.end}; page{" "}
+                        <code>{citation.pageId}</code>,{" "}
+                        {citation.method === "local_ocr"
+                          ? "local OCR"
+                          : "native text"}
+                        .
+                      </li>
+                    ))}
+                  </ul>
+                  {member.originVersionId && (
+                    <p>
+                      Owned origin version:{" "}
+                      <code>{member.originVersionId}</code>; fact:{" "}
+                      <code>{member.originFactId}</code>.
+                    </p>
+                  )}
+                </details>
+              </div>
+            ))}
+          </article>
+        ))}
+      </section>
+      <details>
+        <summary>Version and entry identifiers</summary>
+        <dl>
+          <dt>Base version</dt>
+          <dd>
+            <code>{preparation.baseVersionId}</code>
+          </dd>
+          <dt>Preview identity</dt>
+          <dd>
+            <code>{preparation.previewHash}</code>
+          </dd>
+        </dl>
+        <ul>
+          {preparation.groups.map((group) => (
+            <li key={group.groupId}>
+              Retained employer entry: <code>{group.anchorEntryId}</code>;
+              proposed placement:{" "}
+              {entryLabel(after, group.sectionId, group.anchorEntryId)}.
+            </li>
+          ))}
+        </ul>
+        <ul>
+          {preparation.mappings.map((mapping) => (
+            <li key={mapping.retiredEntryId}>
+              Retired entry <code>{mapping.retiredEntryId}</code> → retained
+              entry <code>{mapping.anchorEntryId}</code>.
+            </li>
+          ))}
+        </ul>
+      </details>
+    </section>
+  );
+}

@@ -1,0 +1,65 @@
+--- before/app/components/JdClauseOrderReview.tsx
++++ after/app/components/JdClauseOrderReview.tsx
+@@ -1,6 +1,9 @@
+ import { useId } from "react";
+ import { Link } from "react-router";
+-import type { JdClauseOrderDraft } from "~/lib/server/jd-clause-order-drafting";
++import type {
++  JdClauseOrderDraft,
++  JdClauseOrderPlan,
++} from "~/lib/server/jd-clause-order-drafting";
+ 
+ /** Projected review only; admission and reconstruction belong to the owned server. */
+ export default function JdClauseOrderReview({
+@@ -168,3 +171,51 @@
+     </section>
+   );
+ }
++
++export function JdClauseOrderPlanReview({ plan }: { plan: JdClauseOrderPlan }) {
++  const heading = useId();
++  return (
++    <section aria-labelledby={heading}>
++      <h2 id={heading}>JD-focused wording previews</h2>
++      <p>
++        These are bounded source-supported previews, not a complete improvement
++        assessment. No wording has been saved by this preview.
++      </p>
++      <p>
++        Candidate fact/requirement pairs inspected: {plan.inspectedPairCount}.
++      </p>
++      <p>Projected previews shown: {plan.drafts.length}.</p>
++      {plan.reason === "historical_inputs" && (
++        <p role="status">
++          Fresh clause-order previews are unavailable for these historical input
++          versions. Their saved wording and diagnostic view remain unchanged.
++        </p>
++      )}
++      {plan.reason === "unsupported_context" && (
++        <p role="status">
++          The selected context is outside this preview's admitted source scope.
++          Your diagnostics and JD priorities remain available for review.
++        </p>
++      )}
++      {plan.reason === "no_admitted_pairs" && (
++        <p role="status">
++          No clause-order draft was admitted among the candidate pairs examined.
++          This bounded preview does not assess every way to improve the resume.
++        </p>
++      )}
++      {plan.truncated && (
++        <p role="status">
++          The scan reached its inspection or preview limit. Some candidate pairs
++          were not examined.
++        </p>
++      )}
++      {plan.drafts.map((draft) => (
++        <JdClauseOrderReview key={draft.id} draft={draft} />
++      ))}
++      <p>
++        Numeric score and score change: unavailable. Qualification credit: not
++        assessed. These previews cannot save or undo changes.
++      </p>
++    </section>
++  );
++}

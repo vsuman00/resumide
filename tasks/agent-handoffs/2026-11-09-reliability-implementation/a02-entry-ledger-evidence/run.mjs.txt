@@ -1,0 +1,17 @@
+import {sourceHashes,runCommand} from "file:///Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats/scripts/verify-private-aa7.mjs";
+import {openSync,closeSync,readFileSync,writeFileSync,statSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {dirname,join} from 'node:path';
+const root="/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats",packet="/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-ledger-foundation-1kt8neqw";
+if(process.version!=='v22.23.4')throw Error('PINNED_NODE_REQUIRED');
+const [label,...args]=process.argv.slice(2);if(!label||!args.length)throw Error('ARGS_REQUIRED');
+const env={HOME:process.env.HOME,PATH:dirname(process.execPath)+':/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin',LANG:'en_US.UTF-8',TZ:'Asia/Kolkata',NO_COLOR:'1',RESUMIDE_PRIVATE_VERIFY:'aa7-owned-synthetic',AI_ENABLED:'false',OPENAI_API_KEY:'offline-no-live-key',OPENAI_BASE_URL:'https://api.openai.com/v1',SUPABASE_URL:'https://fixture.supabase.co',SUPABASE_PUBLISHABLE_KEY:'offline-publishable',SUPABASE_SECRET_KEY:'offline-secret',SUPABASE_RESUME_BUCKET:'resumes',APP_ORIGIN:'http://127.0.0.1:3110',NPM_CONFIG_USERCONFIG:join(packet,'npmrc'),NPM_CONFIG_GLOBALCONFIG:join(packet,'global-npmrc')};
+const log=join(packet,label+'.log'),file=join(packet,label+'.json');const fd=openSync(log,'wx',0o600);
+const before=sourceHashes(root,env),receipt={status:'RUNNING',node:process.version,args,sourceHashes:before,sourceInputs:Object.keys(before).length,startedAt:new Date().toISOString(),environment:'SEALED_NO_DOTENV_NO_LIVE_CREDENTIALS',providerRequests:0,databaseOperations:0,dockerOperations:0,log};
+const save=()=>writeFileSync(file,JSON.stringify(receipt,null,2)+'\n',{mode:0o600});save();
+const timer=setTimeout(()=>{receipt.timedOut=true;process.kill(process.pid,'SIGTERM')},60000);
+const monitor=setInterval(()=>{if(statSync(log).size>2*1024*1024){receipt.overLimit=true;process.kill(process.pid,'SIGTERM')}},100);
+receipt.result=await runCommand(process.execPath,args,{cwd:root,env,logFd:fd,onStart:(identity)=>{receipt.process=identity;save()}});
+clearTimeout(timer);clearInterval(monitor);closeSync(fd);
+const after=sourceHashes(root,env);receipt.changedSourceInputs=[...new Set([...Object.keys(before),...Object.keys(after)])].filter(k=>before[k]!==after[k]);receipt.finishedAt=new Date().toISOString();receipt.logSha256=createHash('sha256').update(readFileSync(log)).digest('hex');
+receipt.status=receipt.result.code===0&&!receipt.timedOut&&!receipt.overLimit&&!receipt.changedSourceInputs.length&&receipt.result.groupCleanupConfirmed?'PASS':'FAIL';save();process.stdout.write(JSON.stringify({receipt:file,status:receipt.status,result:receipt.result,changedSourceInputs:receipt.changedSourceInputs})+'\n');

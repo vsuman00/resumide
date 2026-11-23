@@ -1,0 +1,94 @@
+/** @vitest-environment jsdom */
+import type { ComponentProps } from "react";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+const fetcher = vi.hoisted(() => ({
+  state: "idle" as "idle" | "submitting" | "loading",
+  data: undefined as
+    { ok?: boolean; error?: string; bulletCount?: number } | undefined,
+}));
+vi.mock("react-router", () => ({
+  useFetcher: () => ({
+    ...fetcher,
+    Form: (props: ComponentProps<"form">) => <form {...props} />,
+  }),
+}));
+import RewriteGenerator from "../../app/components/RewriteGenerator";
+afterEach(() => {
+  cleanup();
+  fetcher.state = "idle";
+  fetcher.data = undefined;
+});
+it("offers draft generation without guaranteeing factual grounding", () => {
+  render(<RewriteGenerator analysisId="synthetic-analysis" />);
+  expect(
+    screen.getByRole("heading", { name: "Generate writing drafts" }),
+  ).toBeTruthy();
+  expect(screen.queryByText(/generate grounded suggestions/i)).toBeNull();
+  const consent = screen.getByRole("checkbox") as HTMLInputElement;
+  expect(consent.required).toBe(true);
+  expect(consent.checked).toBe(false);
+  expect(consent.value).toBe("accepted");
+  const form = consent.closest("form")!;
+  expect(form.getAttribute("method")).toBe("post");
+  expect(form.getAttribute("action")).toBe(
+    "/resume/synthetic-analysis/rewrite",
+  );
+  expect(
+    (
+      screen.getByRole("button", {
+        name: "Generate suggestions",
+      }) as HTMLButtonElement
+    ).disabled,
+  ).toBe(false);
+});
+it.each(["submitting", "loading"] as const)(
+  "announces %s as pending drafts and disables duplicate requests",
+  (state) => {
+    fetcher.state = state;
+    fetcher.data = { error: "Earlier error" };
+    render(<RewriteGenerator analysisId="synthetic-analysis" />);
+    expect(screen.getByRole("status").textContent).toMatch(
+      /generating writing drafts/i,
+    );
+    expect((screen.getByRole("button") as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+    expect((screen.getByRole("checkbox") as HTMLInputElement).disabled).toBe(
+      true,
+    );
+    expect(
+      screen.getByRole("button").closest("form")!.getAttribute("aria-busy"),
+    ).toBe("true");
+    expect(screen.queryByRole("alert")).toBeNull();
+  },
+);
+it("distinguishes saved drafts from accepted or saved resume changes", () => {
+  fetcher.data = { ok: true, bulletCount: 0 };
+  render(<RewriteGenerator analysisId="synthetic-analysis" />);
+  const status = screen.getByRole("status");
+  expect(status.textContent).toMatch(/writing drafts saved for review/i);
+  expect(status.textContent).toMatch(
+    /review and save resume edits in the resume workspace/i,
+  );
+  expect(
+    screen.queryByText(
+      /resume changes saved|export (?:saved|verified)|score (?:improved|increased)/i,
+    ),
+  ).toBeNull();
+});
+it("shows a failed request without claiming a save or hiding the retry action", () => {
+  fetcher.data = { error: "Writing is temporarily unavailable." };
+  render(<RewriteGenerator analysisId="synthetic-analysis" />);
+  expect(screen.getByRole("alert").textContent).toBe(
+    "Writing is temporarily unavailable.",
+  );
+  expect(screen.getByRole("status").textContent).toBe("");
+  expect(
+    (
+      screen.getByRole("button", {
+        name: "Generate suggestions",
+      }) as HTMLButtonElement
+    ).disabled,
+  ).toBe(false);
+});

@@ -1,0 +1,21 @@
+{
+  "status": "CORRECTED_SOURCE_AND_FOCUSED_CHECKS_VERIFIED_PEER_FINAL_REVIEW_PENDING",
+  "files": {
+    "scripts/latex-runtime/prefetch-inputs.py": "94846c89cf8f2a25742002d0c18049a09810cdef3a45ff855234cc2bdc231e06",
+    "tests/unit/latex-build-inputs.test.ts": "8765ca7d79a4fdce5feb9c96838fc70724a0e3de62fd2dc962ac5fb0d16f4ee9",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-assets.md": "457b7e176737081acb5cac378cef14e4c0f7acfe24ac02d3e3cea7a163ba67f8"
+  },
+  "findings": [
+    "FIFO can block os.open before fstat",
+    "Regular-to-FIFO race bypasses pre-open lstat alone",
+    "Offline cache verification needed an overall deadline"
+  ],
+  "redFailures": 3,
+  "finalPureTestsPassed": 22,
+  "noNetworkOrDocker": true,
+  "fix": "lstat regular admission, O_NONBLOCK plus fstat, bounded offline verification; no assertions removed",
+  "rootIntegration": "Exact prior-root/current-worker hashes matched before copying",
+  "actualBrowserSelectorUpdate": "Only intentional U05 heading locator changed; actual browser not yet run",
+  "integratedVerification": "PASS integrated-verify-02.json: 1599 tests/165 files; type/lint/web/worker;625 stable source inputs",
+  "peerTerminalReview": "PASS pricing_frontend at exact corrected helper/test hashes; see frontend-build-review.md"
+}

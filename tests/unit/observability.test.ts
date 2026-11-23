@@ -67,6 +67,32 @@ describe("observability", () => {
     );
   });
 
+  it("retains cumulative Prometheus counts after the summary window fills", () => {
+    const registry = new MetricsRegistry();
+    registry.observe("http_request_duration_ms", {}, 25);
+    for (let sample = 0; sample < 2_000; sample += 1) {
+      registry.observe("http_request_duration_ms", {}, 100);
+    }
+
+    expect(
+      registry.snapshot().histograms["http_request_duration_ms|"],
+    ).toMatchObject({ count: 2_000, sum: 200_000 });
+    expect(registry.toPrometheus()).toContain(
+      'http_request_duration_ms_bucket{le="50"} 1\n',
+    );
+    expect(registry.toPrometheus()).toContain(
+      'http_request_duration_ms_bucket{le="+Inf"} 2001\n',
+    );
+    expect(registry.toPrometheus()).toContain(
+      "http_request_duration_ms_count 2001\n",
+    );
+    expect(registry.toPrometheus()).toContain(
+      "http_request_duration_ms_sum 200025\n",
+    );
+    registry.reset();
+    expect(registry.toPrometheus()).not.toContain("http_request_duration_ms");
+  });
+
   it("keeps structured log fields serializable and safe", () => {
     const write = vi
       .spyOn(process.stdout, "write")
@@ -88,5 +114,19 @@ describe("observability", () => {
     expect(metrics.snapshot().histograms["analysis_queue_age_ms|"]).toEqual(
       expect.objectContaining({ count: 1, p50: 250 }),
     );
+  });
+
+  it("exports queue-age buckets on both sides of the five-minute alert", () => {
+    recordJobEvent({ event: "claimed", queueAgeMs: 240_000 });
+    recordJobEvent({ event: "claimed", queueAgeMs: 540_000 });
+
+    const exposition = metrics.toPrometheus();
+    expect(exposition).toContain(
+      'analysis_queue_age_ms_bucket{le="300000"} 1\n',
+    );
+    expect(exposition).toContain(
+      'analysis_queue_age_ms_bucket{le="600000"} 2\n',
+    );
+    expect(exposition).toContain('analysis_queue_age_ms_bucket{le="+Inf"} 2\n');
   });
 });

@@ -1,0 +1,221 @@
+{
+  "recordedAt": "2026-11-06T12:11:46.100Z",
+  "status": "PASS-local-worker-matrix",
+  "image": "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203",
+  "baselineImage": "sha256:19d2a00a2a830173bf1fae07dddfcac7d54be3047e58b276af031d3cbd1018ac",
+  "node": "22.23.4",
+  "runtimeGroups": 23,
+  "pdfPolicyCases": 20,
+  "profilePaperCases": 6,
+  "exampleP95Ms": 742,
+  "latencyTargetApproved": false,
+  "sourceHashes": {
+    "app/lib/server/latex-source.ts": "10e3975858dbd91a7de04724d2cf452d358364ce11cf840aaa0bbd9b3496116f",
+    "app/lib/server/latex-sandbox.ts": "e7b0b41aee2d83553c29437264524cf71f4fbb9a6bf8b1f760e4041d5eea2477",
+    "scripts/latex-runtime/Dockerfile": "c9458ec4334f8002b9f17cc07ef6034ba16f631e70ba4cc9552c288324d3e734",
+    "scripts/latex-runtime/landlock.c": "8f4f7caa93f2a875db2038e17fa4558cd5577c59f883d07cd313c06d2993ea7e",
+    "scripts/latex-runtime/supervisor.py": "31f37b52a65b46ebce0625026ae4faaa3ea4b35e62b440635af621eb33b26e7c",
+    "scripts/latex-runtime/inspect_pdf.py": "07b6a1bb20579a8fbb25d98aa6c303180b62eb563034bf7733800e7375b89bb2",
+    "scripts/latex-runtime/verify-jbig2.py": "a66f573877dd919d7788bd8ccfa0a955f1c520245fac8ec0c7cb76d595539ef7",
+    "scripts/latex-runtime/build-closure.py": "dd25c526769167236927eb4fee308894e6d7e2883e3affb71990794044df187f",
+    "scripts/latex-runtime/build-fontconfig.py": "005e348a5342057ec43901e0be1e5b5ac254165f79930be26f0ee1f077d90b3e",
+    "scripts/latex-runtime/native-expat/pins.json": "1b67434115d44f1f3f37692683059b9ea6a8a7601143c2892a7e5bc341d7eb6a",
+    "scripts/latex-runtime/native-expat/prepare.py": "1f0e50caf5b1cb91b891a2d484feae3187746f0d5e45484f62255356747fa59a",
+    "scripts/latex-runtime/native-expat/build.py": "5e9d68b2fa15053fbf28ff579e01f57db74d529ed37a2d1f50a51f7e172eda70",
+    "scripts/latex-runtime/native-expat/apt-transport.py": "8b831a59cd8f2f89925b755973c1ef764daa2722207bfd24742114c67d31ded8",
+    "scripts/latex-runtime/native-expat/abi-smoke.c": "ba66c40a6b264c068f8fab1731a61dd074605c6bc208985b5fd3519bca9e5d76",
+    "scripts/latex-runtime/native-expat/native-utf16-tests.patch": "63e11268ce40526c1b71cf0851e0f00a1bb2c5ced3a49648f0f70ad2faf82bb6",
+    "scripts/latex-runtime/native-expat/utf16-adapter-check.c": "6d7eb0b7a6ac565a5b1e07a07439b24a38411ed667abbcef0134950c406dc8f7",
+    "scripts/latex-runtime/native-expat/provenance/trixie-security.InRelease": "d0dbede32d80c3e9462e037ede87b138bdd5e44be10145acf46c9f643388836d",
+    "scripts/latex-runtime/native-expat/provenance/sid.InRelease": "1c071f93406d63d72960a3d5257603839f7aafc59feba4244c9e372110c29d6d",
+    "scripts/latex-runtime/texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa",
+    "scripts/latex-runtime/requirements.lock": "6c3793776e6b3c3d9a955e11b1eb2de1f192aa0990305fef4bb065f70b402261"
+  },
+  "sourceInputCount": 558,
+  "allSourceInputsStable": true,
+  "runtimeSourceHashCount": 20,
+  "runtimeSourceHashesMatchCurrent": true,
+  "runtimeBenchmarkSourceHashesEqual": true,
+  "commands": [
+    {
+      "name": "RUNTIME",
+      "args": [
+        "run",
+        "verify:latex",
+        "--",
+        "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203"
+      ],
+      "startedAt": "2026-11-06T12:06:22.387Z",
+      "finishedAt": "2026-11-06T12:07:22.447Z",
+      "terminal": {
+        "code": 0,
+        "signal": null
+      },
+      "groupCleanupConfirmed": true
+    },
+    {
+      "name": "BENCHMARK",
+      "args": [
+        "run",
+        "benchmark:latex",
+        "--",
+        "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203"
+      ],
+      "startedAt": "2026-11-06T12:07:22.457Z",
+      "finishedAt": "2026-11-06T12:07:27.567Z",
+      "terminal": {
+        "code": 0,
+        "signal": null
+      },
+      "groupCleanupConfirmed": true
+    },
+    {
+      "name": "ROLLBACK",
+      "args": [
+        "run",
+        "verify:latex:rollback",
+        "--",
+        "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203"
+      ],
+      "startedAt": "2026-11-06T12:07:27.577Z",
+      "finishedAt": "2026-11-06T12:07:29.594Z",
+      "terminal": {
+        "code": 0,
+        "signal": null
+      },
+      "groupCleanupConfirmed": true
+    },
+    {
+      "name": "RENDER",
+      "args": [
+        "run",
+        "verify:latex:render",
+        "--",
+        "sha256:19d2a00a2a830173bf1fae07dddfcac7d54be3047e58b276af031d3cbd1018ac",
+        "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203"
+      ],
+      "startedAt": "2026-11-06T12:09:53.975Z",
+      "finishedAt": "2026-11-06T12:09:57.108Z",
+      "terminal": {
+        "code": 0,
+        "signal": null
+      },
+      "groupCleanupConfirmed": true
+    }
+  ],
+  "receipts": {
+    "RUNTIME": {
+      "path": "docs/evaluation/AA7_DECODER_GUARD_RUNTIME_20261106.json",
+      "sha256": "c0c4a9ec3bf918c16062efabc586b02232cff74969f8ee95b522aafe86373a3d"
+    },
+    "BENCHMARK": {
+      "path": "docs/evaluation/AA7_DECODER_GUARD_BENCHMARK_20261106.json",
+      "sha256": "8338e6daaf2a78aa23cedadf4e5f31bd700225884e98fc3676def4e05d373aaa"
+    },
+    "ROLLBACK": {
+      "path": "docs/evaluation/AA7_DECODER_GUARD_ROLLBACK_20261106.json",
+      "sha256": "ffde385f4a33c43519a2844ab50d84c3e84f0a67ec324cff3e86f81f1fe8c51b"
+    },
+    "RENDER": {
+      "path": "docs/evaluation/AA7_DECODER_GUARD_RENDER_20261106.json",
+      "sha256": "dd0d3b5daf6ec5229ffb506efea3a19299cda663c341fc930e66d7105b9875cc"
+    },
+    "LAUNCHER_FAILURE": {
+      "path": "docs/evaluation/AA7_DECODER_GUARD_LAUNCHER_FAILURE_20261106.json",
+      "sha256": "a61a0020aa888aff83b81370fe948d54195edffa63d85c0c9b92c905d1647eb0"
+    },
+    "RENDER_FAILED": {
+      "path": "docs/evaluation/AA7_DECODER_GUARD_RENDER_FAILED_20261106.json",
+      "sha256": "73eebe1c2e031079fc502e110a4fbe96723f372991b9ff4aa16508f8dcf2eb6d"
+    },
+    "TERMINAL_ATTEMPTS": {
+      "path": "docs/evaluation/AA7_DECODER_GUARD_TERMINAL_ATTEMPTS_20261106.json",
+      "sha256": "03cb256e8df17b53ecbbafec949cc087722f372fea3b43b44bbb16fa2cd143b1"
+    }
+  },
+  "preservedFailedAttempts": [
+    {
+      "stage": "Launcher PATH",
+      "exitCode": 1,
+      "runtimeProbesExecuted": 0
+    },
+    {
+      "stage": "Unsupported3829 baseline argument",
+      "exitCode": 1,
+      "renderContainersStarted": 0,
+      "pngCreated": 0
+    }
+  ],
+  "renderReview": {
+    "semanticParity": "pass",
+    "replacementGlyphs": 0,
+    "allFontsEmbedded": true,
+    "artifacts": [
+      {
+        "label": "baseline",
+        "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-render-Tu7ddI/baseline-page-1.png",
+        "page": 1,
+        "bytes": 20677,
+        "width": 794,
+        "height": 1123,
+        "sha256": "1922c4347b9ecdaf208a9256326a280612404762383dc4a187f9ca4bc37a1224"
+      },
+      {
+        "label": "baseline",
+        "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-render-Tu7ddI/baseline-page-2.png",
+        "page": 2,
+        "bytes": 10334,
+        "width": 794,
+        "height": 1123,
+        "sha256": "f8ede6d49802240a9df9169c1197d9917528a72c8bbd4abb24611e8f828ec824"
+      },
+      {
+        "label": "candidate",
+        "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-render-Tu7ddI/candidate-page-1.png",
+        "page": 1,
+        "bytes": 20677,
+        "width": 794,
+        "height": 1123,
+        "sha256": "1922c4347b9ecdaf208a9256326a280612404762383dc4a187f9ca4bc37a1224"
+      },
+      {
+        "label": "candidate",
+        "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-render-Tu7ddI/candidate-page-2.png",
+        "page": 2,
+        "bytes": 10334,
+        "width": 794,
+        "height": 1123,
+        "sha256": "f8ede6d49802240a9df9169c1197d9917528a72c8bbd4abb24611e8f828ec824"
+      }
+    ],
+    "coordinatorVisualReview": {
+      "reviewer": "root coordinator",
+      "result": "PASS",
+      "scope": "Two synthetic pages at96dpi; no taggedPDF or assistive-technology certification",
+      "recordedAt": "2026-11-06T12:14:20.823Z"
+    },
+    "artifactsRemoved": true,
+    "renderDirectoryAbsent": true
+  },
+  "cleanup": {
+    "allCommandGroupsAbsent": true,
+    "ownedConverterContainersRemaining": 0,
+    "privateTerminalDirectoriesRemoved": true,
+    "originalTerminalHashes": {
+      "launcher": "f088b281143e5b2fd2d5eac82ffb49c95d1a3cf991e625731eeb0be731d6a321",
+      "matrix": "962da8e25202b6e848d60bf02e60e593cee7e2c6bfd4e60ad4ad0f96653e02b4",
+      "pinnedRender": "71561c62163ef14dd6f006f4b494bfe4f1a9d1449166efffdd31886cbbae239f"
+    },
+    "privateTerminalDirectories": [
+      "/tmp/resumide-aa7-decoder-runtime-df6cffb7-a564-418d-9add-46c4f56af482",
+      "/tmp/resumide-aa7-decoder-runtime-31cb8a0d-37b1-4614-ba1c-f35e4dd021ea"
+    ]
+  },
+  "limits": [
+    "Worker-only synthetic evidence; no database/provider/browser or envpromotion.",
+    "Two pre-container launcher/argument failures remain separate; no assertion/source change or full-suite rerun for their correction.",
+    "Prior full71browser/149file1242testCI evidence remains bound to its3829 image and previous source snapshot; not relabelled as this image.",
+    "Paired2page review doesnot establish taggedPDF/AT/accessibility or formal security/release acceptance."
+  ],
+  "finalizedAt": "2026-11-06T12:14:20.824Z"
+}

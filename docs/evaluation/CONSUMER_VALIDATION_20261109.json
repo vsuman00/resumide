@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "consumer-validation/2026-11-09",
+  "status": "COMPLETE_WITH_FINDINGS_AND_BLOCKED_CAPABILITIES",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "dirtySourceInputs": 615,
+  "sourceUnchanged": true,
+  "pricing": "deferred; all services currently free of commercial charges",
+  "results": {
+    "unitTests": {
+      "passed": 1453,
+      "files": 160
+    },
+    "browser": {
+      "uniqueCases": 66,
+      "passed": 65,
+      "unresolvedConsumerExpectationFailures": 1,
+      "executions": 68,
+      "diagnosedHarnessFailures": 2
+    },
+    "independentAts": {
+      "assertions": 39,
+      "passed": 32,
+      "failed": 7,
+      "downstreamUnsupportedClaimProbes": 2
+    },
+    "roleCoverage": {
+      "checksPassed": 9,
+      "vocabularyDiscovered": 21,
+      "requirements": 22,
+      "authoritativeScores": "withheld"
+    },
+    "canonicalRenderParity": {
+      "passed": 20,
+      "engineeringPass": true,
+      "releasePass": false
+    },
+    "liveAi": {
+      "attempts": 2,
+      "httpStatuses": [401, 401],
+      "requestedOutputTokenCeilingsTotal": 2400,
+      "actualUsage": "unknown",
+      "rewriteAndBuildLiveQuality": "not measured"
+    },
+    "latex": {
+      "imageAvailable": false,
+      "buildAttempts": 2,
+      "failure": "Docker/BuildKit pinned release asset retrieval timeout",
+      "currentRuntimeAcceptance": "blocked"
+    },
+    "ocr": {
+      "image": "sha256:ab1d5c0fab7533a23584bd533df8459fdf2090fb27fbabe3355bbc7fb750b58c",
+      "runtimeCommandsPassed": 4,
+      "normalFontObservedFields": {
+        "matched": 72,
+        "documents": 9,
+        "authoredFamilies": 3
+      },
+      "originalScannedCharacterErrorRate": {
+        "legacy": 0.17105,
+        "fusion": 0.18421
+      },
+      "consumerAutomaticAdapter": "not supplied",
+      "scoringEligible": false
+    },
+    "ownerLocalPdf": {
+      "bytes": 130556,
+      "pages": 1,
+      "characters": 3778,
+      "nativePageCoverage": 1,
+      "contactPresenceChecks": "pass",
+      "standardSectionsDetected": 6,
+      "fieldStates": {
+        "reviewRequired": 4,
+        "conflicts": 3,
+        "notEvaluated": 1
+      },
+      "scores": "withheld",
+      "uploaded": false,
+      "providerCalls": 0,
+      "rawTextRetained": false,
+      "initialHarnessFailuresPreserved": 3
+    },
+    "npmProductionAdvisories": 0,
+    "cleanup": {
+      "syntheticOwners": 29,
+      "exactObjects": 8,
+      "exactRateKeyAllowlist": 65,
+      "rateBucketsRemoved": 12,
+      "checkedResiduals": 0
+    }
+  },
+  "findings": [
+    "CV01 live authentication unavailable",
+    "CV02 LaTeX runtime unavailable",
+    "CV03 unsupported legacy writer claim labelled grounded",
+    "CV04 correction transfer/disclosure UX",
+    "CV05 automatic scanned-upload OCR not wired",
+    "CV06 draft alias coverage",
+    "CV07 generic Build rewrite fact-guard limit",
+    "CV08 missing-image error/quarantine UX"
+  ],
+  "applicationFixesApplied": false,
+  "deployed": false,
+  "published": false,
+  "report": "docs/evaluation/CONSUMER_VALIDATION_20261109.md"
+}

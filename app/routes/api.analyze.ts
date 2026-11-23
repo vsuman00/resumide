@@ -1,4 +1,9 @@
-import { createQueuedAnalysis } from "~/lib/server/analysis-ingestion";
+import { createHash } from "node:crypto";
+import {
+  createQueuedAnalysis,
+  AnalysisAdmissionError,
+  ANALYSIS_ADMISSION_POLICY_VERSION,
+} from "~/lib/server/analysis-ingestion";
 import {
   analysisRateLimitKey,
   parseBoundedAnalyzeFormData,
@@ -11,11 +16,12 @@ import {
   PublicApiError,
   toErrorResponse,
 } from "~/lib/server/errors";
-import { createRequestId } from "~/lib/server/request-context";
+import { requestIdFrom } from "~/lib/server/request-context";
 
 import {
   recordAuditEvent,
   requireAndRecordAiConsent,
+  AI_CONSENT_POLICY_VERSION,
 } from "~/lib/server/privacy";
 import {
   createSupabaseAdminClient,
@@ -31,12 +37,12 @@ import {
 //   jobTitle: string
 //   jobDescription: string
 // Returns: { feedback: Feedback }
-export function loader() {
-  return methodNotAllowedResponse(createRequestId(), ["POST"]);
+export function loader({ request }: { request: Request }) {
+  return methodNotAllowedResponse(requestIdFrom(request), ["POST"]);
 }
 
 export async function action({ request }: { request: Request }) {
-  const requestId = createRequestId();
+  const requestId = requestIdFrom(request);
   if (request.method !== "POST") {
     return methodNotAllowedResponse(requestId, ["POST"]);
   }
@@ -116,6 +122,31 @@ export async function action({ request }: { request: Request }) {
       jobDescription,
       idempotencyKey,
       requestId,
+      bindingEnabled: serverConfig.ANALYSIS_ADMISSION_BINDING_ENABLED,
+      requestPolicySha256: serverConfig.ANALYSIS_ADMISSION_BINDING_ENABLED
+        ? createHash("sha256")
+            .update(
+              JSON.stringify({
+                admission: ANALYSIS_ADMISSION_POLICY_VERSION,
+                consent: AI_CONSENT_POLICY_VERSION,
+                upload: config,
+                nativeEvidence: serverConfig.NATIVE_EVIDENCE_ENABLED,
+                evidenceReview: serverConfig.EVIDENCE_REVIEW_ENABLED,
+                nativeLayout: serverConfig.NATIVE_LAYOUT_ENABLED,
+                maxPdfPages: serverConfig.MAX_PDF_PAGES,
+                maxExtractedCharacters: serverConfig.MAX_EXTRACTED_CHARACTERS,
+                extractionTimeoutMs: serverConfig.EXTRACTION_TIMEOUT_MS,
+                scoring: serverConfig.SCORING_V2_ENABLED,
+                jobIntelligence: serverConfig.JOB_INTELLIGENCE_ENABLED,
+                ai: serverConfig.AI_ENABLED,
+                model: serverConfig.OPENAI_MODEL,
+                outputTokens: serverConfig.OPENAI_MAX_OUTPUT_TOKENS,
+                budgetEnabled: serverConfig.AI_BUDGET_ENABLED,
+                budgetPolicy: serverConfig.AI_BUDGET_POLICY_VERSION,
+              }),
+            )
+            .digest("hex")
+        : undefined,
     });
     const id = persisted.analysisId;
     await recordAuditEvent({
@@ -130,6 +161,33 @@ export async function action({ request }: { request: Request }) {
       { status: 202, headers: responseHeaders },
     );
   } catch (error) {
+    if (error instanceof AnalysisAdmissionError) {
+      const status =
+        error.code === "ADMISSION_CONFLICT"
+          ? 409
+          : error.code === "ADMISSION_DENIED"
+            ? 403
+            : error.code === "ADMISSION_INVALID"
+              ? 400
+              : 503;
+      return Response.json(
+        {
+          error: {
+            code: error.code,
+            message: error.message,
+            retryable: status === 503,
+            requestId,
+          },
+        },
+        {
+          status,
+          headers: {
+            "X-Request-Id": requestId,
+            "Cache-Control": "private, no-store",
+          },
+        },
+      );
+    }
     return toErrorResponse(error, requestId);
   }
 }

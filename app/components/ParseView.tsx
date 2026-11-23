@@ -1,8 +1,30 @@
 import { useState } from "react";
 import type { NativeLayout } from "~/lib/native-layout-schema";
+import {
+  inspectPageText,
+  type PageTextReview,
+} from "~/lib/page-text-diagnostics";
 import NativeLayoutEvidence from "./NativeLayoutEvidence";
 
 type Severity = "info" | "warn" | "error";
+const savedTextReasonLabels = {
+  no_text: "No text was found in this saved group.",
+  limited_text: "Little text was found in this saved group.",
+  replacement_character:
+    "Saved extracted text contains a replacement character. Compare it with your PDF.",
+  invalid_unicode_scalar:
+    "Saved extracted text contains an invalid character sequence. Compare it with your PDF.",
+  unexpected_control_character:
+    "Saved extracted text contains an unexpected control character. Compare it with your PDF.",
+  duplicate_page_text:
+    "Identical text appears in another saved text group. Compare both groups with your PDF.",
+} satisfies Record<
+  Extract<
+    PageTextReview,
+    { state: "available" }
+  >["pages"][number]["reasons"][number],
+  string
+>;
 
 const Field = ({
   label,
@@ -38,9 +60,15 @@ const ParseView = ({
   nativeLayout?: NativeLayout | null;
 }) => {
   const { contact, sections, warnings, totalPages, totalLines } = parseView;
+  const savedTextReview = inspectPageText(parseView.pages, totalPages);
+  const fallbackPageCount =
+    savedTextReview.state === "unavailable" &&
+    savedTextReview.reason === "missing_page_data"
+      ? totalPages
+      : 1;
   const pages = parseView.pages.length
     ? parseView.pages
-    : Array.from({ length: Math.max(1, totalPages) }, (_, index) => ({
+    : Array.from({ length: fallbackPageCount }, (_, index) => ({
         pageNumber: index + 1,
         text: "",
         lineCount: index === 0 ? totalLines : 0,
@@ -61,6 +89,12 @@ const ParseView = ({
   const selectedBlock = layoutPage?.blocks.find(
     (block) => block.id === selectedRun,
   );
+  const savedPageObservation =
+    savedTextReview.state === "available"
+      ? savedTextReview.pages.find(
+          (item) => item.pageNumber === page.pageNumber,
+        )
+      : undefined;
 
   return (
     <section className="parse-view" aria-labelledby="parse-view-heading">
@@ -71,12 +105,13 @@ const ParseView = ({
         </div>
         <span>
           {totalPages} page{totalPages === 1 ? "" : "s"} · {page.confidence}{" "}
-          confidence
+          text availability
         </span>
       </div>
       <p className="parse-view-intro">
         This is an ATS-like parse simulation, not an exact proprietary ATS
-        parser. {totalLines} lines were extracted for review.
+        parser. {totalLines} lines were extracted for review. Text availability
+        reflects extracted text length. Reliability and accuracy are unassessed.
       </p>
 
       <div className="parse-comparison">
@@ -155,8 +190,8 @@ const ParseView = ({
               ))}
             </select>
             <span className={`parse-confidence is-${page.confidence}`}>
-              {page.confidence[0].toUpperCase() + page.confidence.slice(1)}{" "}
-              confidence
+              {page.confidence[0].toUpperCase() + page.confidence.slice(1)} text
+              availability
             </span>
           </div>
           {layoutPage ? (
@@ -172,6 +207,44 @@ const ParseView = ({
           <div className="parse-page-evidence" aria-live="polite">
             <h4>Page {page.pageNumber} extracted evidence</h4>
             <pre>{page.text || "No text extracted from this page."}</pre>
+            <section aria-labelledby="saved-text-observations-heading">
+              <h4 id="saved-text-observations-heading">
+                Observations from saved text
+              </h4>
+              <p>
+                These are saved text groups. Original PDF page boundaries and
+                whether text came from the PDF or OCR are unverified. Extraction
+                reliability and accuracy remain unassessed.
+              </p>
+              {savedPageObservation ? (
+                <>
+                  {savedPageObservation.reasons.length ? (
+                    <ul>
+                      {savedPageObservation.reasons.map((reason) => (
+                        <li key={reason}>{savedTextReasonLabels[reason]}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p>
+                      No listed review reasons were found in this saved text
+                      group. Extraction reliability and accuracy remain
+                      unassessed.
+                    </p>
+                  )}
+                  {savedPageObservation.duplicatePageNumbers.length ? (
+                    <p>
+                      Matching saved text groups:{" "}
+                      {savedPageObservation.duplicatePageNumbers.join(", ")}.
+                    </p>
+                  ) : null}
+                </>
+              ) : (
+                <p>
+                  Observations from saved text are unavailable. Compare the
+                  saved text with your PDF.
+                </p>
+              )}
+            </section>
             {page.warnings.length > 0 ? (
               <ul>
                 {page.warnings.map((message) => (
@@ -179,7 +252,10 @@ const ParseView = ({
                 ))}
               </ul>
             ) : (
-              <p>No page-specific limitations detected.</p>
+              <p>
+                No additional page warnings were recorded. Page reliability and
+                accuracy remain unassessed.
+              </p>
             )}
           </div>
           <div className="parse-extracted-block">

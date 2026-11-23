@@ -1,0 +1,392 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/components/WritingDiagnosticComparison.test.tsx (10 tests | 1 failed) 252ms
+   ✓ labels projected wording as not saved without inheriting source or confirmation records 57ms
+   ✓ shows text counts and distinct new/resolved warning observations without scoring them 26ms
+   ✓ uses actual saved pair references in either selected direction without claiming an accepted transition 4ms
+   ✓ describes record-only confirmation changes without claiming wording improvement 11ms
+   ✓ labels added claims as absent rather than pretending a zero count or inherited record 8ms
+   ✓ labels removed claims as absent rather than pretending a zero count or inherited record 8ms
+   ✓ keeps no-change previews projected and same-version saved comparisons honest 3ms
+   ✓ shows the complete remaining count alongside the bounded diagnostic rows 103ms
+   ✓ has unique region labels and no mutation controls or qualification promises 5ms
+   × associates saved wording by fact ID even when comparison rows are ordered differently 28ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/WritingDiagnosticComparison.test.tsx > associates saved wording by fact ID even when comparison rows are ordered differently
+TestingLibraryElementError: Unable to find an accessible element with the role "blockquote" and name "Saved wording before"
+
+Here are the accessible roles:
+
+  heading:
+
+  Name "Fact 40000000-0000-4000-8000-000000000003":
+  [36m<h4 />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------table:
+
+  Name "Writing and record observations":
+  [36m<table[39m
+    [33maria-label[39m=[32m"Writing and record observations"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  caption:
+
+  Name "Text and recorded state in the selected comparison":
+  [36m<caption />[39m
+
+  --------------------------------------------------
+  rowgroup:
+
+  Name "":
+  [36m<thead />[39m
+
+  Name "":
+  [36m<tbody />[39m
+
+  --------------------------------------------------
+  row:
+
+  Name "Observation Before After":
+  [36m<tr />[39m
+
+  Name "Word count 4 6":
+  [36m<tr />[39m
+
+  Name "Fact state candidate confirmed unconfirmed":
+  [36m<tr />[39m
+
+  Name "Recorded source references 1 0":
+  [36m<tr />[39m
+
+  Name "Confirmation record Recorded Not recorded":
+  [36m<tr />[39m
+
+  --------------------------------------------------
+  columnheader:
+
+  Name "Observation":
+  [36m<th[39m
+    [33mscope[39m=[32m"col"[39m
+  [36m/>[39m
+
+  Name "Before":
+  [36m<th[39m
+    [33mscope[39m=[32m"col"[39m
+  [36m/>[39m
+
+  Name "After":
+  [36m<th[39m
+    [33mscope[39m=[32m"col"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  rowheader:
+
+  Name "Word count":
+  [36m<th[39m
+    [33mscope[39m=[32m"row"[39m
+  [36m/>[39m
+
+  Name "Fact state":
+  [36m<th[39m
+    [33mscope[39m=[32m"row"[39m
+  [36m/>[39m
+
+  Name "Recorded source references":
+  [36m<th[39m
+    [33mscope[39m=[32m"row"[39m
+  [36m/>[39m
+
+  Name "Confirmation record":
+  [36m<th[39m
+    [33mscope[39m=[32m"row"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  cell:
+
+  Name "4":
+  [36m<td />[39m
+
+  Name "6":
+  [36m<td />[39m
+
+  Name "candidate confirmed":
+  [36m<td />[39m
+
+  Name "unconfirmed":
+  [36m<td />[39m
+
+  Name "1":
+  [36m<td />[39m
+
+  Name "0":
+  [36m<td />[39m
+
+  Name "Recorded":
+  [36m<td />[39m
+
+  Name "Not recorded":
+  [36m<td />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "Warnings before":
+  [36m<ul[39m
+    [33maria-label[39m=[32m"Warnings before"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "Warnings after":
+  [36m<ul[39m
+    [33maria-label[39m=[32m"Warnings after"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "New warnings":
+  [36m<ul[39m
+    [33maria-label[39m=[32m"New warnings"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "Resolved warnings":
+  [36m<ul[39m
+    [33maria-label[39m=[32m"Resolved warnings"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<article[39m
+  [33mclass[39m=[32m"account-card"[39m
+  [33mstyle[39m=[32m"overflow-wrap: anywhere;"[39m
+[36m>[39m
+  [36m<h4>[39m
+    [0mFact [0m
+    [0m40000000-0000-4000-8000-000000000003[0m
+  [36m</h4>[39m
+  [36m<p>[39m
+    [0mWording changed[0m
+  [36m</p>[39m
+  [36m<table[39m
+    [33maria-label[39m=[32m"Writing and record observations"[39m
+  [36m>[39m
+    [36m<caption>[39m
+      [0mText and recorded state in the selected comparison[0m
+    [36m</caption>[39m
+    [36m<thead>[39m
+      [36m<tr>[39m
+        [36m<th[39m
+          [33mscope[39m=[32m"col"[39m
+        [36m>[39m
+          [0mObservation[0m
+        [36m</th>[39m
+        [36m<th[39m
+          [33mscope[39m=[32m"col"[39m
+        [36m>[39m
+          [0mBefore[0m
+        [36m</th>[39m
+        [36m<th[39m
+          [33mscope[39m=[32m"col"[39m
+        [36m>[39m
+          [0mAfter[0m
+        [36m</th>[39m
+      [36m</tr>[39m
+    [36m</thead>[39m
+    [36m<tbody>[39m
+      [36m<tr>[39m
+        [36m<th[39m
+          [33mscope[39m=[32m"row"[39m
+        [36m>[39m
+          [0mWord count[0m
+        [36m</th>[39m
+        [36m<td>[39m
+          [0m4[0m
+        [36m</td>[39m
+        [36m<td>[39m
+          [0m6[0m
+        [36m</td>[39m
+      [36m</tr>[39m
+      [36m<tr>[39m
+        [36m<th[39m
+          [33mscope[39m=[32m"row"[39m
+        [36m>[39m
+          [0mFact state[0m
+        [36m</th>[39m
+        [36m<td>[39m
+          [0mcandidate confirmed[0m
+        [36m</td>[39m
+        [36m<td>[39m
+          [0munconfirmed[0m
+        [36m</td>[39m
+      [36m</tr>[39m
+      [36m<tr>[39m
+        [36m<th[39m
+          [33mscope[39m=[32m"row"[39m
+        [36m>[39m
+          [0mRecorded source references[0m
+        [36m</th>[39m
+        [36m<td>[39m
+          [0m1[0m
+        [36m</td>[39m
+        [36m<td>[39m
+          [0m0[0m
+        [36m</td>[39m
+      [36m</tr>[39m
+      [36m<tr>[39m
+        [36m<th[39m
+          [33mscope[39m=[32m"row"[39m
+        [36m>[39m
+          [0mConfirmation record[0m
+        [36m</th>[39m
+        [36m<td>[39m
+          [0mRecorded[0m
+        [36m</td>[39m
+        [36m<td>[39m
+          [0mNot recorded[0m
+        [36m</td>[39m
+      [36m</tr>[39m
+    [36m</tbody>[39m
+  [36m</table>[39m
+  [36m<p>[39m
+    [0mText word-count change: +2.[0m
+  [36m</p>[39m
+  [36m<div>[39m
+    [36m<p>[39m
+      [0mWarnings before[0m
+      [0m:[0m
+    [36m</p>[39m
+    [36m<ul[39m
+      [33maria-label[39m=[32m"Warnings before"[39m
+    [36m>[39m
+      [36m<li>[39m
+        [0mAdjacent repeated words need review.[0m
+      [36m</li>[39m
+    [36m</ul>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<p>[39m
+      [0mWarnings after[0m
+      [0m:[0m
+    [36m</p>[39m
+    [36m<ul[39m
+      [33maria-label[39m=[32m"Warnings after"[39m
+    [36m>[39m
+      [36m<li>[39m
+        [0mReview punctuation and sentence flow.[0m
+      [36m</li>[39m
+    [36m</ul>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<p>[39m
+      [0mNew warnings[0m
+      [0m:[0m
+    [36m</p>[39m
+    [36m<ul[39m
+      [33maria-label[39m=[32m"New warnings"[39m
+    [36m>[39m
+      [36m<li>[39m
+        [0mReview punctuation and sentence flow.[0m
+      [36m</li>[39m
+    [36m</ul>[39m
+  [36m</div>[39m
+  [36m<div>[39m
+    [36m<p>[39m
+      [0mResolved warnings[0m
+      [0m:[0m
+    [36m</p>[39m
+    [36m<ul[39m
+      [33maria-label[39m=[32m"Resolved warnings"[39m
+    [36m>[39m
+      [36m<li>[39m
+        [0mAdjacent repeated words need review.[0m
+      [36m</li>[39m
+    [36m</ul>[39m
+  [36m</div>[39m
+[36m</article>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/WritingDiagnosticComparison.test.tsx:308:16
+    306|   const first = within(screen.getByRole("heading",{name:`Fact ${factId…
+    307|   const second = within(screen.getByRole("heading",{name:`Fact ${secon…
+    308|   expect(first.getByRole("blockquote",{name:"Saved wording before"}).t…
+       |                ^
+    309|   expect(first.getByRole("blockquote",{name:"Saved wording after"}).te…
+    310|   expect(second.getByRole("blockquote",{name:"Saved wording before"}).…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 9 passed (10)
+   Start at  10:06:09
+   Duration  919ms (transform 35ms, setup 0ms, import 115ms, tests 252ms, environment 486ms)
+
+JSON report written to /private/tmp/resumide-writing-traceability-successor-s3pacz12/red/tests.json

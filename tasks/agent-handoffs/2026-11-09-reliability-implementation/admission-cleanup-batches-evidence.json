@@ -1,0 +1,68 @@
+{
+  "task": "CR-R17-S05",
+  "checkedDate": "2026-11-21",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "checkout": "dirty integration worktree",
+  "inputSha256": {
+    "app/lib/server/privacy-worker.ts": "4d5ba776bba6b91371376d534925c02d56d9feaa4458820f51d76da0f25d9362",
+    "app/lib/server/storage.ts": "d653c9e92d0e77449309a7da41c1b2b468a36e3748c249114ef5e32eaf89b6bc",
+    "tests/unit/privacy-claim-fence.test.ts": "e1293a6dbf0abb86b6609c71a0bfafeffb1180e700dafbf675ff02f019109aef",
+    "tests/unit/storage.test.ts": "30436353827bca4dd6b1c5118db44695cfd7e3aea8600ca34ac4247493a31001",
+    "supabase/migrations/20261121203700_analysis_admission_cleanup_recovery.sql": "5df9e7ed5ad8d538e5d1695c726d72efaedb69b17423d0f4136069ec4751282d",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-cleanup-recovery-native-fixture.py.txt": "646c561c65735786eff003f9036388a0616ba2799e67e29de99cda9fa89ac7ec"
+  },
+  "before": {
+    "failed": 5,
+    "passed": 23,
+    "logSha256": "93b07b9ddad20c4605225eaf7f4d7c3cbb68bf6489bec214fdcfa7545fed8d46"
+  },
+  "after": {
+    "focusedCases": 108,
+    "focusedFiles": 4,
+    "unit": [
+      {
+        "passed": 6787,
+        "files": 322,
+        "sha256": "90fd81a6f90e4b3909ffcb7bd651d69113452b742c30351bd3264cdc799942c6"
+      },
+      {
+        "passed": 3,
+        "files": 1,
+        "sha256": "c362ebc6ae84f73c72ba7626a61033f3fda02b7945a88cf2293b9bbdd6102983"
+      }
+    ]
+  },
+  "batchTest": {
+    "completedUploads": 5,
+    "positiveBatches": 2,
+    "sameAttempt": true,
+    "exhaustionObserved": true
+  },
+  "deadlineTest": {
+    "boundMs": 20000,
+    "recordedBeforeExpiry": 4,
+    "lateResultsRecorded": 0,
+    "callerCancellationReachedSdk": true
+  },
+  "statics": {
+    "commands": ["format:check", "typecheck", "lint", "build", "build:worker"],
+    "exitCode": 0,
+    "lintWarnings": 4,
+    "logSha256": "b44bb1010ad1a487b8b4f4c1fd224105d23dcf5d4633e8ba64d0c4bca2005b4d"
+  },
+  "native": {
+    "scope": "Same SQL and synthetic support relations as CR-R17-S04",
+    "status": "PASS",
+    "fixture": "admission-cleanup-recovery-native-fixture.py.txt"
+  },
+  "migrationInventory": {
+    "pinnedFiles": 85,
+    "allUnchanged": true,
+    "file": "managed-schema-inventory-85.json"
+  },
+  "notRun": [
+    "managed Storage or database replay",
+    "account-wide retirement",
+    "deployment"
+  ]
+}

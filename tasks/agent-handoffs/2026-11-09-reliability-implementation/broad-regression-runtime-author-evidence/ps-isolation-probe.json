@@ -1,0 +1,17 @@
+{
+  "policy": "(version 1)\n(allow default)\n(deny network*)\n(deny file-write* (subpath \"/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/.git\"))\n(deny file-read* (literal \"/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/.env\"))\n(deny file-read* (literal \"/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/.env.local\"))\n(deny file-read* (literal \"/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/.env.test\"))\n(deny file-read* (literal \"/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/.env.test.local\"))\n(deny file-read* (literal \"/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/.env.development\"))\n(deny file-read* (literal \"/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/.env.development.local\"))\n(deny file-read* (literal \"/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/.env.production\"))\n(deny file-read* (literal \"/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/.env.production.local\"))\n",
+  "results": [
+    {
+      "label": "plain",
+      "exit": 0,
+      "stdout": "{\"pid\":7120,\"identity\":\"7120  7112 Sun Nov 15 16:36:50 2026\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "same_broad_policy",
+      "exit": 1,
+      "stdout": "{\"pid\":7124,\"code\":\"EPERM\",\"status\":null,\"signal\":null,\"stderr\":\"undefined\"}\n",
+      "stderr": ""
+    }
+  ]
+}

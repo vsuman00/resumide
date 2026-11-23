@@ -1,0 +1,102 @@
+
+> test
+> vitest run tests/unit/canonical-route.test.ts tests/components/CanonicalCorrections.test.tsx -t U03 key
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/canonical-route.test.ts (28 tests | 1 failed | 27 skipped) 10ms
+     ↓ loads the owned correction workspace when correction review is enabled
+     ↓ submits a strictly bound assign command with authenticated identity and precise success copy
+     ↓ submits a strictly bound apply command with authenticated identity and precise success copy
+     ↓ submits a strictly bound add command with authenticated identity and precise success copy
+     ↓ submits a strictly bound reapply command with authenticated identity and precise success copy
+     ↓ rejects authoritative ownerId inside a correction command
+     ↓ rejects authoritative value inside a correction command
+     ↓ does not admit correction writes while the feature is disabled
+     ↓ preserves a correction conflict and private response without claiming success
+     ↓ rejects cross-origin writes before authentication or privileged clients
+     ↓ requires sign-in before privileged calls
+     ↓ keeps authoring disabled by default and rejects unsupported methods
+     ↓ rejects supplied ownerId
+     ↓ rejects supplied organizationId
+     ↓ rejects supplied confirmation
+     ↓ rejects supplied __proto__
+     ↓ rejects duplicate and oversized streamed forms
+     ↓ passes authenticated identity and preserves conflict status
+     ↓ U03 draft retains a parsed authenticated edit after status 409
+     ↓ U03 draft retains a parsed authenticated edit after status 422
+     ↓ U03 draft retains a parsed authenticated rename_section after status 409
+     ↓ U03 draft never reflects unauthenticated, unparsed or successful submissions
+     ↓ rejects invalid read pagination before repository access
+     ↓ does not accept JSON or silently normalize a supplied correction
+     × U03 key loader supplies distinct fresh operation-target review keys 9ms
+     ↓ U03 resolution returns a separate authenticated parsed edit resolution on success
+     ↓ U03 resolution returns a separate authenticated parsed rename_section resolution on success
+     ↓ preserves private SSR headers and refreshed cookies
+ ❯ tests/components/CanonicalCorrections.test.tsx (19 tests | 2 failed | 17 skipped) 111ms
+     ↓ U03 draft retains a validated edit in a native server-rendered rejected response
+     ↓ U03 draft retains a validated rename_section in a native server-rendered rejected response
+     ↓ U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery
+     × U03 key withholds a fresh review when the target key is undefined 86ms
+     × U03 key withholds a fresh review when the target key is not-a-uuid 24ms
+     ↓ U03 resolution retains a rejected edit through unrelated successful and failed actions
+     ↓ U03 resolution preserves separate rejected targets until their own exact successful save
+     ↓ U03 draft retains text without permitting a historical recovery or inferred replacement target
+     ↓ U03 draft retains text without permitting a missing_target recovery or inferred replacement target
+     ↓ imports a saved correction through the reviewed path and leaves its fact unconfirmed
+     ↓ shows the exact diff and provenance, applies without retyping, and retains the operation key after a retryable failure
+     ↓ requires an explicit employer target and acknowledgement before assignment
+     ↓ reviews an absent-field placement before assigning and then adding an unconfirmed fact
+     ↓ shows undo provenance and requires fresh assignment before explicit reapply
+     ↓ keeps previews available and mutations unavailable when authoritative write readiness is false
+     ↓ keeps original import unavailable until correction write readiness returns
+     ↓ does not apply into a historical selected version or expose technical identifiers as labels
+     ↓ disables correction controls while a submission is pending
+     ↓ preserves the legacy workspace when correction review data is absent
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 key withholds a fresh review when the target key is undefined
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 key withholds a fresh review when the target key is not-a-uuid
+AssertionError: expected <button type="submit" …(1)></button> to be null
+
+- Expected:
+null
+
++ Received:
+<button
+  class="back-button"
+  type="submit"
+>
+  Save reviewed correction
+</button>
+
+ ❯ tests/components/CanonicalCorrections.test.tsx:661:9
+    659|           name: "Save reviewed correction",
+    660|         }),
+    661|       ).toBeNull();
+       |         ^
+    662|       const exact = within(region)
+    663|         .getByRole("button", { name: "Retry this exact correction" })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/unit/canonical-route.test.ts > canonical authorization and bounded forms > U03 key loader supplies distinct fresh operation-target review keys
+AssertionError: expected { …(6) } to have property "retainedKeys"
+ ❯ tests/unit/canonical-route.test.ts:370:24
+    368|       params: { id: id(1) },
+    369|     });
+    370|     expect(first.data).toHaveProperty("retainedKeys");
+       |                        ^
+    371|     const firstKeys = (first.data as { retainedKeys: Record<string, st…
+    372|       .retainedKeys;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 44 skipped (47)
+   Start at  00:04:33
+   Duration  615ms (transform 269ms, setup 0ms, import 427ms, tests 121ms, environment 247ms)
+

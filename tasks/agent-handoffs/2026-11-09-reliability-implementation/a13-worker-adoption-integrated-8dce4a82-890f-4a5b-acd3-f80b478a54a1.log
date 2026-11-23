@@ -1,0 +1,30 @@
+
+> test
+> vitest run tests/unit/initial-feedback-stage.test.ts tests/unit/worker-readiness.test.ts tests/unit/config.test.ts tests/unit/qualitative-stage.test.ts tests/unit/qualitative-stage-outage.test.ts tests/unit/worker-runner.test.ts tests/unit/analysis-worker-fence.test.ts tests/unit/worker-startup.test.ts tests/unit/document-worker-cli.test.ts tests/unit/initial-feedback-service.test.ts --maxWorkers=4
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats
+
+ ✓ tests/unit/worker-readiness.test.ts (108 tests) 302ms
+ ✓ tests/unit/initial-feedback-service.test.ts (16 tests) 165ms
+ ✓ tests/unit/worker-runner.test.ts (16 tests) 456ms
+     ✓ keeps a standalone idle worker alive until shutdown  409ms
+ ✓ tests/unit/document-worker-cli.test.ts (4 tests) 668ms
+ ✓ tests/unit/worker-startup.test.ts (3 tests) 111ms
+ ✓ tests/unit/analysis-worker-fence.test.ts (13 tests) 51ms
+ ✓ tests/unit/initial-feedback-stage.test.ts (13 tests) 140ms
+ ✓ tests/unit/config.test.ts (30 tests) 28ms
+ ✓ tests/unit/qualitative-stage-outage.test.ts (10 tests) 30ms
+ ✓ tests/unit/qualitative-stage.test.ts (10 tests) 8ms
+
+ Test Files  10 passed (10)
+      Tests  223 passed (223)
+   Start at  17:50:11
+   Duration  999ms (transform 542ms, setup 0ms, import 1.21s, tests 1.96s, environment 0ms)
+
+
+> typecheck
+> react-router typegen && tsc
+
+tasks/agent-handoffs/2026-11-09-reliability-implementation/a13-worker-backend-author-evidence/config.preimage.ts(2,38): error TS2307: Cannot find module './openai-model.ts' or its corresponding type declarations.
+tasks/agent-handoffs/2026-11-09-reliability-implementation/a13-worker-backend-author-evidence/config.preimage.ts(6,8): error TS2307: Cannot find module './egress-policy.ts' or its corresponding type declarations.

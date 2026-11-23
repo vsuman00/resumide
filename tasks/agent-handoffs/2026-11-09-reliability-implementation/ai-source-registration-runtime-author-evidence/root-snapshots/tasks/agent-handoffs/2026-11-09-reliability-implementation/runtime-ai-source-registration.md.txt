@@ -1,0 +1,21 @@
+# Legacy rewrite source registration: runtime handoff
+
+Status: implemented and locally verified with synthetic RPCs. Root integration, Native verification, owner acceptance and deployment approval remain separate. Deployment stays HOLD. Base HEAD is a0b239299d75b0bd64b588fe743ebe2975fb28b9; no Git mutation occurred.
+
+The twelve allocated files implement OP2 source identity, the legacy rewrite reserve bridge and a mandatory twelfth privacy collection, aiBudgetSourceRegistrations. OP1 stays unchanged. OP2 binds the exact owner, organization, kind, analysis, immutable version and untrimmed printable ASCII nonce. Independent Python golden vectors are preserved in the tests. The bridge validates fixed scope before any RPC, reads exact current readiness, and routes reserve_next only to ai_budget_reserve_source_next through the existing strict receipt decoder. There is no generic reservation fallback. Claim, release, unknown and settlement retain their existing wire; post-reserve accounting does not acquire another Node readiness prerequisite.
+
+Every privacy export reads the source registration inventory, including when all feature flags are off. It requires the independent export capability and exact source pins, validates complete owner data within 4096 rows and 32 MiB, recomputes every OP2, and checks each registration against the exported budget operation id/user_id/organization_id/binding_sha256. Any inconsistency refuses the entire manifest. These separate RPCs do not provide a transactional snapshot. Native owns parent ownership and locked source admission; fake RPCs do not prove those properties. Registered timestamps do not establish retention clocks.
+
+Final readonly dependencies: ai-budget-source-profile.ts SHA4e58ed683ad52e954e82af1448a05728ba9bc23d93291668697c51444852c213 and owned-ai-disposition-profile.ts SHA2bf28431b1ab7da5659b5f861ca2f844754b8734c5209c8e093f6583386c121b. Root owns their transfer and backend owns their bytes.
+
+Validation used pinned Node22.23.4, empty HOME, explicit synthetic environment/private marker, OS network and actual dotenv read denials, and Git write denial. The process supervisor ran outside Seatbelt. No DB, SQL execution/parsing, provider, services, browser, dependency installation or deployment ran.
+
+- Meaningful baseline RED: /tmp/resumide-ai-source-runtime-ZxEyRK, one actual assertion failed because the old service returned200 after the source reserve denial; eleven unrelated cases were filtered. PG41135 closed. This was not a missing-module failure.
+- Initial focused PASS: /tmp/resumide-ai-source-runtime-11HKj1, 234 tests across eight files, no skipped cases, 908 stable inputs, PG43982 closed.
+- Scoped formatting mutation: /tmp/resumide-ai-source-runtime-fkWjYj, command exit0, PG44100 closed. The generic stable-input status is intentionally FAILED_OR_INCOMPLETE because formatting changed the twelve owned files; its original receipt is preserved.
+- Static failure: /tmp/resumide-ai-source-runtime-VIcoNv, scoped format/lint passed; tsc rejected one timeout mock's inferred return type. PG44145/44152/44159 closed. The successor adds only an explicit Promise reply annotation.
+- Static successor PASS: /tmp/resumide-ai-source-runtime-6PEHNf, twelve-file format/lint and tsc --noEmit passed, 908 stable inputs, PG44328/44345/44352 closed. Root will run canonical integrated type generation and builds.
+- Formatted focused PASS: /tmp/resumide-ai-source-runtime-b4O0O3, 234 passed, no skipped cases, PG44451 closed. A final test-title correction removed an unsupported retirement implication without changing assertions.
+- Exact final focused PASS: /tmp/resumide-ai-source-runtime-YdAprO, 234 passed across eight files, no skipped cases, 908 stable inputs, PG44535 closed. All failures, logs and start identities remain in their original receipts.
+
+Exact preimages, final source hashes, contract dependencies, receipt/log hashes and independently rechecked absent groups are in /tmp/resumide-ai-source-runtime-release.json. Existing ownership, payload binding, scheduling, scoring, persistence, cancellation and eleven privacy collection assertions remain. All-caller adoption, legacy quota preservation, Native roles/transactions/races, historical repair, Auth/restore closure and release acceptance remain required next work.

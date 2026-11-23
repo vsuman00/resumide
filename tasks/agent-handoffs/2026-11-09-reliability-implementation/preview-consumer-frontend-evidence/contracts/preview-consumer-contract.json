@@ -1,0 +1,87 @@
+{
+  "task": "CR-A14",
+  "stage": "ACTUAL_OWNED_PREVIEW_CONSUMER",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Source/synthetic/DOM only; preserve all existing policy, kernel outputs, IR1.0.4, numerical/write/CAS/consent/flags/history/assertions. No provider/DB/SQL/browser/runtime/deploy.",
+  "plan": {
+    "api": "buildJdClauseOrderPlan(rawContext, expected:{analysisId,ownerId,canonicalVersionId,requirementVersionId}):JdClauseOrderPlan",
+    "schemaVersion": "jd-clause-order-plan/2.0.0",
+    "fields": [
+      "schemaVersion",
+      "id",
+      "binding",
+      "policies",
+      "state",
+      "reason",
+      "drafts",
+      "inspectedPairCount",
+      "truncated",
+      "scoreValue",
+      "scoreDelta",
+      "qualificationCredit"
+    ],
+    "binding": "existing exact TypedAuthoringBindingSchema; immutable source/canonical/requirements/heads/profiles",
+    "policies": "same current draft clauseOrderVersion/clauseOrderSha256/writingSupportVersion",
+    "state": [
+      "available",
+      "unavailable"
+    ],
+    "reason": [
+      null,
+      "historical_inputs",
+      "unsupported_context",
+      "no_admitted_pairs"
+    ],
+    "identity": "SHA256 JSON ordered body excluding id",
+    "limits": {
+      "inspectedPairs": 50,
+      "visibleDrafts": 5
+    },
+    "order": "actual canonical contribution fact order then saved JD clause order, no hidden score ranking",
+    "counts": "inspectedPairCount counts real attempted fact/JD pairs only; truncated true if inspection/output cap leaves unexamined pairs. No inferred eligible total.",
+    "derivation": "Validate context once; share private validated admission/reconstruction, no50full-context parses; preserve existing single draft API/output/policy. Ordinary unsupported candidates skip within limit, unsafe invalid owned binding refuses. Historical inputs explicit unavailable, no head substitution.",
+    "numerics": "scoreValue=null;scoreDelta=null;qualificationCredit=not_assessed"
+  },
+  "ownedReader": {
+    "file": "app/lib/server/score-v2-repository.ts",
+    "option": "Optional trusted SIXTH server parameter {clauseOrderPreview:boolean}, default false. Fifth remains canonicalSnapshot. Raw ScoreReadOptions/query unchanged.",
+    "preparation": "Same existing typed context before final owned reread; no new RPC/reader calls. Omitted/false no new draft work/data.",
+    "release": "Return plan only after unchanged final owned privacy/source/pair/head/hash checks. Unsupported/no draft preserves diagnostics/JD priorities.",
+    "metadata": "Optional jdClauseOrderPlan on ScoreReadMetadata; no compulsory old fixture changes."
+  },
+  "route": {
+    "file": "app/routes/analysis.score.tsx",
+    "optionSource": "Actual existing server AUTHORING_ENABLED supplied as sixth parameter, explicit undefined fifth. No public/query activation.",
+    "display": "Validate server plan/pair/source/owner/selected version binding against actual owned score model before serialization. Mount beside existing JD priorities on score/author page. Config false removes any plan data. Historical refusal visible without fresh version substitution.",
+    "ui": "Retain exact draft detail view; add bounded plan wrapper with honest no-admitted/unsupported/historical/truncated wording. No command/receipt/ack/save/undo controls or numerical claims."
+  },
+  "owners": {
+    "backend": [
+      "app/lib/server/jd-clause-order-drafting.ts",
+      "app/lib/server/score-v2-repository.ts",
+      "tests/unit/jd-clause-order-repository.test.ts"
+    ],
+    "frontend": [
+      "app/components/JdClauseOrderReview.tsx",
+      "app/routes/analysis.score.tsx",
+      "tests/components/JdClauseOrderPage.test.tsx",
+      "tests/unit/score-v2-route.test.ts",
+      "tests/unit/typed-score-route.test.ts"
+    ],
+    "reviewer": [
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/preview-consumer-review.md"
+    ],
+    "Root": "shared docs/contracts/sync/integration/combined verification"
+  },
+  "existingTestChanges": "Only extend two exact score-reader call-signature assertions with fifth undefined and sixth actual flag; preserve original first four arguments and every other assertion/case identity. No weakening/suppression.",
+  "acceptance": [
+    "Real owned reader delivers positive draft unchanged from actual kernel",
+    "Default-off no work/data; raw query cannot opt in",
+    "Historical/no-supported/truncated handled honestly",
+    "Changed final source/privacy/heads/pair/content refuses release",
+    "Actual route-render DOM complete draft/source/JD/pinned versions",
+    "Auth/private headers/legacy controls preserved",
+    "Root combined affected tests then full typecheck/lint/web/worker under strict sealed supervisor"
+  ],
+  "remaining": "Additive independent Native v2 commands/receipts/atomic candidate decisions/undo, broader grammar/usefulness, actual runtime/consumer/release still open."
+}

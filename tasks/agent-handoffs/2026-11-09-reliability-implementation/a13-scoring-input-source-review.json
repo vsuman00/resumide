@@ -1,0 +1,40 @@
+{
+  "status": "PASS_TEXT_SOURCE_REVIEW_ONLY",
+  "migration": "supabase/migrations/20261115045834_legacy_scoring_input.sql",
+  "migrationSha256": "2cb4e2e684d4f4270085a541911422637b811aba8b02ce668f5dab4833dc8f80",
+  "routineBodies": 16,
+  "manifestBodiesMatched": 21,
+  "guardedOldSuccessorsMatched": 6,
+  "profilePinsMatched": 6,
+  "checks": {
+    "input4MiB": true,
+    "export32MiB": true,
+    "queueInsertCorrelation": true,
+    "immutableUpdate": true,
+    "serviceAclCovered": true,
+    "normalizedActualRowDigest": true,
+    "exactReplayBeforeFreshness": true,
+    "raisesOldFalse": true,
+    "noOldFunctionReplace": true,
+    "oneMetadataGrant": true,
+    "readersNoDml": true
+  },
+  "oldSourceFiles": {
+    "supabase/migrations/20260910110000_version_skill_taxonomy.sql": "61ff7b1bc7c59f0792a157206285ea1ed4dd91fc369bf55e26fb91e3e398f5c8",
+    "supabase/migrations/20260910100000_complete_phase4_recovery_and_partial_results.sql": "2168107dadb55ca6dc6dda8ca6f0bd1f8f0b80cdbbb0958f5cae48e57143fc53",
+    "supabase/migrations/20261110085512_privacy_write_barrier.sql": "ef62285882a13d9c4e8813161fd55f80333faedda45e7f4f3fb52b22997a0417",
+    "supabase/migrations/20261110082455_analysis_stage_write_fencing.sql": "a6e1775315ad5cb05017a5a3adb86354e1ac21d7d4a458f0986194320b4320cb",
+    "supabase/migrations/20261011140000_document_evidence_review.sql": "33800fe7d65b77bad74889dd21092a51760b8c3ea82dfd60d98196b58d9b234e"
+  },
+  "sqlParsing": "NOT_RUN",
+  "sqlExecution": "NOT_RUN",
+  "nativeBehavior": "UNPROVEN",
+  "setupFailurePreserved": "Initial inline source-review identifier regex excluded digits in sha256 routine names, causing KeyError before review. Corrected lexical matcher only; no product source change or application test rerun.",
+  "reviewFixes": [
+    "separate4MiBinput/32MiBexport limits",
+    "absent deterministic result is not legacy_unbound",
+    "static queue tuple insert correlation",
+    "old producer exact serviceACL admission",
+    "UTC-normalized actual row digest"
+  ]
+}

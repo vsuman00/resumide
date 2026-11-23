@@ -1,0 +1,41 @@
+{
+  "status": "PASS",
+  "at": "2026-11-13T12:51:45.937783+00:00",
+  "receipt": "a02-source-u10-integrated-610c4f0e-ff0e-4794-9364-9160c5e8e832.json",
+  "sha256": "6d7d37492ff6ab62859b5721d820924531db6bc4621f421e4ad85fea8a1663cc",
+  "sourceInputsRehashed": 726,
+  "logRehashed": true,
+  "artifactsRehashed": ["build/server/index.js", "build/worker/analysis.mjs"],
+  "ownedGroups": [
+    {
+      "processGroup": 4555,
+      "state": "ABSENT",
+      "command": "npm test -- tests/unit/grouped-import-source-sql.test.ts tests/unit/grouped-import-commands.test.ts tests/components/RewriteGenerator.test.tsx tests/components/ResumeWriter.test.tsx tests/unit/rewrite-service.test.ts"
+    },
+    {
+      "processGroup": 4578,
+      "state": "ABSENT",
+      "command": "npm run typecheck"
+    },
+    {
+      "processGroup": 4599,
+      "state": "ABSENT",
+      "command": "npm run lint"
+    },
+    {
+      "processGroup": 4616,
+      "state": "ABSENT",
+      "command": "npm run build"
+    },
+    {
+      "processGroup": 4648,
+      "state": "ABSENT",
+      "command": "npm run build:worker"
+    }
+  ],
+  "sourceOnlySql": true,
+  "databaseOperations": 0,
+  "providerRequests": 0,
+  "runtimeSession": "19655 CLOSED",
+  "dagSha256Before": "b03da295d81b76bccd87757d1c6ef44af4a67189d284b83622affe7003191049"
+}

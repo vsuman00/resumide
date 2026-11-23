@@ -1,0 +1,240 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { DOCUMENT_PAGE_COUNT_READINESS_PROFILE } from "../../app/lib/server/document-page-count-readiness-profile";
+
+// Textual source contracts only: no SQL parsing, execution, transaction/role or
+// actual extractor authority is established by these checks.
+const source = readFileSync(
+  new URL(
+    "../../supabase/migrations/20261117060054_document_evidence_page_count.sql",
+    import.meta.url,
+  ),
+  "utf8",
+);
+const body = (tag: string) => {
+  const parts = source.split(`$${tag}$`);
+  expect(parts).toHaveLength(3);
+  return parts[1];
+};
+const hash = (value: string) =>
+  createHash("sha256").update(value).digest("hex");
+const writer = body("page_count_writer");
+const dispatcher = body("page_count_dispatcher");
+const checker = body("page_count_checker");
+const metadata = body("page_count_metadata");
+const manifest = JSON.parse(
+  checker.split("$page_count_manifest$")[1],
+) as Array<{ signature: string; sha256: string; resultType: string }>;
+
+describe("atomic document page-count migration source, not Native acceptance", () => {
+  it("adds only the required overload and preserves the original four-argument definition", () => {
+    expect(source).toContain("SOURCE ONLY / UNPARSED / UNEXECUTED");
+    expect(source).toContain(
+      "p_analysis_id uuid,p_envelope jsonb,p_process_id text,p_request_id text,p_page_count integer",
+    );
+    expect(source).not.toMatch(/p_page_count integer\s+default/iu);
+    expect(source).not.toMatch(
+      /create(?: or replace)? function public\.persist_document_evidence\([^)]*p_request_id text\s*\)/iu,
+    );
+    expect(source.match(/create(?: or replace)? function/giu)).toHaveLength(4);
+    expect(source.replace(/--[^\n]*/gu, "")).not.toMatch(
+      /\b(?:backfill|delete from|alter table|truncate|update public\.analyses)\b/iu,
+    );
+  });
+  it("requires an independent bounded count and every ordered native page including blanks", () => {
+    expect(writer).toContain(
+      "p_page_count is null or p_page_count not between 1 and 20",
+    );
+    expect(writer).toContain(
+      "jsonb_array_length(p_envelope->'nativeSource'->'pages')<>p_page_count",
+    );
+    expect(writer).toContain("ordinal:=ordinal+1");
+    expect(writer).toContain(
+      "page->>'id' is distinct from 'page-'||ordinal::text",
+    );
+    expect(writer).toContain(
+      "page->>'pageNumber' is distinct from ordinal::text",
+    );
+    expect(writer).not.toMatch(/p_page_count\s*:=/u);
+    expect(writer).not.toMatch(/page->>'text'.*(?:<>|!=)\s*''/u);
+  });
+  it("locks and binds actual owner, membership, version, root and checksum", () => {
+    expect(writer).toContain(
+      "public.analyses where id=p_analysis_id for update",
+    );
+    expect(writer).toContain("private.try_candidate_privacy_write(a.owner_id)");
+    expect(writer).toContain(
+      "m.organization_id=a.organization_id and m.user_id=a.owner_id",
+    );
+    expect(writer).toContain("for no key update skip locked");
+    expect(writer).toContain(
+      "root.organization_id=a.organization_id and root.status='active' for share skip locked",
+    );
+    for (const binding of ["ownerId", "analysisId", "sourceId", "inputSha256"])
+      expect(writer).toContain(`p_envelope->>'${binding}' is distinct from`);
+  });
+  it("refuses conflicting known metadata and legacy unknown-count replays before persistence", () => {
+    expect(writer).toContain(
+      "v.page_count is not null and v.page_count<>p_page_count",
+    );
+    expect(writer).toContain(
+      "if found and v.page_count is null then return false;end if;",
+    );
+    expect(writer.indexOf("if found and v.page_count is null")).toBeLessThan(
+      writer.indexOf("if public.persist_document_evidence"),
+    );
+    expect(writer).toContain("where id=(p_envelope->>'id')::uuid");
+  });
+  it("uses an exception-protected write block and raises on any post-write refusal", () => {
+    expect(writer).toContain(
+      "if public.persist_document_evidence(p_analysis_id,p_envelope,p_process_id,p_request_id) is not true then\n    raise exception",
+    );
+    const writes = writer.slice(
+      writer.indexOf("if public.persist_document_evidence"),
+    );
+    expect(writes).toContain(
+      "update public.resume_versions set page_count=p_page_count",
+    );
+    expect(writes).toContain(
+      "and resume_id=v.resume_id and checksum=v.checksum and page_count is null",
+    );
+    expect(writes).toContain("get diagnostics affected=row_count");
+    expect(writes).toContain("if affected<>1 then raise exception");
+    expect(writes).toMatch(
+      /return true;\s*exception when others then return false;\s*end;/u,
+    );
+    expect(
+      writes.replace("exception when others then return false;", ""),
+    ).not.toContain("return false");
+  });
+  it("retains exact old/new dispatcher keysets and explicit calls without fallback", () => {
+    expect(dispatcher).toContain(
+      "keys:=array['p_analysis_id','p_envelope','p_process_id','p_request_id']",
+    );
+    expect(dispatcher).toContain("keys:=keys||array['p_page_count']");
+    expect(dispatcher).toContain(
+      "private.analysis_stage_parameter_keys(p_parameters,keys)",
+    );
+    expect(dispatcher).toContain(
+      "(p_parameters->>'p_page_count')::integer not between 1 and 20",
+    );
+    expect(dispatcher).toContain(
+      "p_parameters->>'p_request_id',\n          (p_parameters->>'p_page_count')::integer)",
+    );
+    expect(dispatcher).toContain(
+      "else\n      result:=public.persist_document_evidence",
+    );
+    expect(
+      dispatcher.match(/private\.lock_analysis_stage_lease\(/gu),
+    ).toHaveLength(2);
+    expect(dispatcher).toContain(
+      "if result is not true or not private.lock_analysis_stage_lease",
+    );
+    expect(dispatcher).toContain("errcode='P0F01'");
+  });
+  it("pins the actual source bodies, privacy and lease closure with fixed native attributes", () => {
+    expect(manifest).toHaveLength(17);
+    expect(new Set(manifest.map((item) => item.signature)).size).toBe(17);
+    for (const [signature, value] of [
+      [
+        "public.persist_document_evidence(uuid,jsonb,text,text,integer)",
+        writer,
+      ],
+      [
+        "public.persist_analysis_stage_v2(uuid,text,integer,uuid,text,jsonb)",
+        dispatcher,
+      ],
+      ["public.read_document_page_count_readiness()", metadata],
+    ])
+      expect(
+        manifest.find((item) => item.signature === signature)?.sha256,
+      ).toBe(hash(value));
+    for (const signature of [
+      "private.lock_analysis_stage_lease(uuid,text,integer,uuid)",
+      "private.try_candidate_privacy_write(uuid)",
+      "private.candidate_write_blocked(uuid)",
+      "private.guard_candidate_privacy_write()",
+      "private.serialize_deletion_request()",
+      "private.try_lock_candidate_owners(uuid[])",
+    ])
+      expect(manifest.some((item) => item.signature === signature)).toBe(true);
+    expect(
+      manifest.find((item) =>
+        item.signature.startsWith("private.evidence_integer("),
+      )?.signature,
+    ).toBe("private.evidence_integer(jsonb,bigint,bigint)");
+    for (const field of [
+      "proowner",
+      "prosecdef",
+      "provolatile",
+      "prolang",
+      "prorettype",
+      "proconfig",
+      "proretset",
+      "proisstrict",
+      "prokind",
+      "prosrc",
+    ])
+      expect(checker).toContain(field);
+    expect(checker).toContain(
+      "t.tgqual is null and t.tgenabled='O' and t.tgtype=23",
+    );
+    expect(checker).toContain("t.tgnargs=0 and t.tgargs=''::bytea");
+    expect(checker).toContain("to_regclass('public.data_requests')");
+    expect(checker).toContain("private.owned_ai_deletion_dispositions");
+  });
+  it("derives current trusted pins and separates capabilities from schema integrity", () => {
+    expect(DOCUMENT_PAGE_COUNT_READINESS_PROFILE).toEqual({
+      schemaVersion: "document-page-count-readiness/1.0.0",
+      profileVersion: "document-page-count-native/1.0.0",
+      checkerSha256: hash(checker),
+      writerSha256: hash(writer),
+      metadataSha256: hash(metadata),
+    });
+    const keys = [...metadata.matchAll(/^ {2}'([A-Za-z0-9]+)',/gmu)].map(
+      (match) => match[1],
+    );
+    expect(keys).toEqual([
+      "schemaVersion",
+      "profileVersion",
+      "checkerSha256",
+      "writerSha256",
+      "metadataSha256",
+      "schemaReady",
+      "writerExecutable",
+      "fencedWriterExecutable",
+    ]);
+    expect(metadata).toContain(
+      "'schemaReady',private.document_page_count_ready()",
+    );
+    expect(metadata).toContain(
+      "has_function_privilege('service_role',writer_oid,'EXECUTE')",
+    );
+    expect(metadata).toContain(
+      "has_function_privilege('service_role',fenced_oid,'EXECUTE')",
+    );
+    expect(checker).toContain("acl.is_grantable");
+    expect(checker).toContain("array['anon','authenticated','service_role']");
+  });
+  it("does not change frozen JD2 functions or grant any client writer authority", () => {
+    expect(source).not.toMatch(
+      /(?:create(?: or replace)? function|grant execute on function) (?:private|public)\.jd_clause/iu,
+    );
+    expect(source).toContain("from public,anon,authenticated,service_role;");
+    expect(source).toContain(
+      "public.read_document_page_count_readiness() to service_role;",
+    );
+    const jd2 = readFileSync(
+      new URL(
+        "../../supabase/migrations/20261116192537_jd_clause_order_decisions.sql",
+        import.meta.url,
+      ),
+      "utf8",
+    );
+    expect(hash(jd2)).toBe(
+      "29b472876fa69037e4555c461365cc1f50c8d51b5fd20cdfa4913bdcfacbf6d9",
+    );
+    expect(source.trimEnd()).toMatch(/commit;$/u);
+  });
+});

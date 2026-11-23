@@ -1,0 +1,58 @@
+{
+  "task": "CR-A01-S02",
+  "status": "LEGACY_DISPLAY_EXTENSION",
+  "at": "2026-11-13T09:29:11.397416+00:00",
+  "supersedes": false,
+  "extends": "a01-s02-contract.json",
+  "purpose": "Close adverse-warning omission in legacy saved parse display without changing parse-sim-v1 payload, checksum, stored shape, numerical rules or OCR routing.",
+  "exports": {
+    "module": "app/lib/page-text-diagnostics.ts",
+    "function": "inspectPageText(pages: unknown, expectedPageCount: unknown): PageTextReview",
+    "constant": "PAGE_TEXT_AVAILABILITY_UNITS = 8",
+    "result": {
+      "modelVersion": "page-text-observations/1.0.0",
+      "reliability": "unassessed",
+      "variants": {
+        "available": {
+          "state": "available",
+          "pages": [
+            {
+              "pageNumber": "declared sequential ordinal1..expected count",
+              "textAvailable": "non-whitespace UTF16 units>=8",
+              "nonWhitespaceUtf16Units": "exact existing whitespace semantics",
+              "reasons": [
+                "no_text",
+                "limited_text",
+                "replacement_character",
+                "invalid_unicode_scalar",
+                "unexpected_control_character",
+                "duplicate_page_text"
+              ],
+              "duplicatePageNumbers": "all matching other eligible declared page ordinals in order"
+            }
+          ]
+        },
+        "unavailable": {
+          "state": "unavailable",
+          "reason": [
+            "missing_page_data",
+            "invalid_page_metadata",
+            "unsupported_bounds"
+          ]
+        }
+      }
+    }
+  },
+  "inputRules": "Require actual dense array of1..20 objects with sequential distinct pageNumber1..N and raw text strings, expectedPageCount equal1..20 integer; allow extra native metadata but ignore it. Aggregate raw UTF16 units plus2*(N-1)<=500000. No truncation, invented boundaries, normalization, raw text/hash output, mutation or Node imports. Missing/malformed/out-of-bound metadata yields unavailable. Existing native source must remain validated before wrapper.",
+  "nativeAdapter": "Keep deriveNativePageDiagnostics(native: NativeEvidence), native-page-review/1.0.0, fields/reasons/IDs, reason order and behavior byte-equivalent over valid native sources; adapt generic duplicate ordinals to original native IDs. Existing PdfTextProfile/selection outputs and MIN_USABLE_TEXT_CHARACTERS_PER_PAGE export value8 unchanged. Share the threshold constant, not two independently mutable rules. No stored native API shape change.",
+  "legacyView": "Apply scanner ONLY to original supplied parseView.pages with parseView.totalPages, not component fallback pages; no derived warnings when scanner unavailable. Show unavailable notice and review guidance instead. Label output Saved extracted-text observations; original PDF page completeness and native/OCR provenance are unverified. Render separate derived reasons and matching saved-text group ordinals alongside recorded warnings. Preserve supplied object/result fields/CSS/current private behavior. No raw diagnostics serialization or numeric/confidence proof; no clean-page assurance.",
+  "proof": "Before code change capture actual current DOM RED using real parseSim adverse output (replacement/identical saved text). Preserve original native28 controls, all prior component assertions, source bytes and legacy producer/checksum modules. Add malformed/missing/dense/bounds/exact duplicate/unavailable and no-fallback controls. Root final combined7-file gate includes all new/old native and component tests once.",
+  "frozenProducerSources": {
+    "app/lib/server/parseSim.ts": "5de46cf5a72efc03c7916c1feed8027d92a361d6c9da3757dd0830636534ea07",
+    "app/lib/server/scoring-stage.ts": "fd7d8fa7f9677f03756bf884f80e7470e35ce0b38a5c4f6c1d53dc7984ca86d5",
+    "app/lib/server/atsRules.ts": "3f9e14bdc8c5c3ff13ea591f35dd5d847da5953e2e70a45fa389c090a6ca6947",
+    "app/lib/server/document-evidence.ts": "f4d16c019146924f2390fa764131e3c6b9f69c65531d90315f0a64645a244e67",
+    "app/lib/server/native-evidence-schema.ts": "fa26cede5a7a7f4f4910bd6099b44b1bada463eafbdfeb6fd48e164ecea21e39"
+  },
+  "boundaries": "Source/local synthetic only; no DB/SQL/provider/env/PII/OCR/Docker/Git mutation/deploy/deps. No producer/storage/correction/score-policy change, no quality/calibration/native/fullconsumer/release acceptance."
+}

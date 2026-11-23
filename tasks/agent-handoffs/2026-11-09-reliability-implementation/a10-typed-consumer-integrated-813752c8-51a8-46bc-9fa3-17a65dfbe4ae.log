@@ -1,0 +1,456 @@
+
+> test
+> vitest run tests/unit/requirement-relationship-context.test.ts tests/unit/requirement-semantic-evidence.test.ts tests/unit/requirement-duration.test.ts tests/unit/requirement-coverage.test.ts tests/components/RequirementCoverageReview.test.tsx tests/unit/typed-score-route.test.ts tests/unit/typed-score-repository.test.ts tests/unit/score-v2-contract.test.ts tests/unit/score-v2-engine.test.ts tests/unit/score-v2-route.test.ts tests/unit/score-inflation.test.ts tests/unit/authoring-contract.test.ts tests/unit/authoring-proposals.test.ts tests/unit/authoring-route.test.ts tests/unit/authoring-forms.test.ts tests/unit/authoring-clarification-preview.test.ts tests/components/UncalibratedScores.test.tsx
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats
+
+ ✓ tests/unit/score-inflation.test.ts (2 tests) 73ms
+ ✓ tests/unit/authoring-proposals.test.ts (3 tests) 99ms
+ ✓ tests/unit/score-v2-engine.test.ts (30 tests) 297ms
+ ✓ tests/unit/authoring-contract.test.ts (4 tests) 130ms
+ ✓ tests/unit/authoring-clarification-preview.test.ts (16 tests) 232ms
+ ✓ tests/unit/requirement-duration.test.ts (32 tests) 64ms
+ ✓ tests/unit/typed-score-route.test.ts (14 tests) 342ms
+ ✓ tests/unit/authoring-forms.test.ts (16 tests) 28ms
+ ✓ tests/unit/requirement-coverage.test.ts (32 tests) 771ms
+ ✓ tests/unit/score-v2-contract.test.ts (8 tests) 9ms
+ ✓ tests/unit/authoring-route.test.ts (11 tests) 18ms
+ ✓ tests/components/UncalibratedScores.test.tsx (2 tests) 26ms
+ ✓ tests/unit/requirement-semantic-evidence.test.ts (38 tests) 849ms
+ ❯ tests/unit/requirement-relationship-context.test.ts (88 tests | 1 failed) 886ms
+     ✓ reads actual grouped-builder headers through one exact RPC without semantic eligibility 104ms
+     ✓ refuses a regroup origin inside an association-family snapshot 7ms
+     ✓ normalizes explicit null selections and preserves an actual none marker 5ms
+     ✓ loads an explicit historical canonical/JD pair independently of later heads 8ms
+     ✓ preserves actual nullable pageCount null without observed-page substitution 3ms
+     ✓ preserves actual nullable pageCount 1 without observed-page substitution 7ms
+     ✓ preserves actual nullable pageCount 21 without observed-page substitution 10ms
+     ✓ preserves actual nullable pageCount 2147483647 without observed-page substitution 8ms
+     ✓ preserves an empty association marker rather than converting it to none 3ms
+     ✓ preserves an empty regroup marker rather than converting it to none 3ms
+     ✓ reads real Core-prepared regroup headers without granting carried semantic support 7ms
+     ✓ allows a regroup snapshot to retain an earlier association origin 10ms
+     ✓ separates exact current declaration from observed source through real ancestors 11ms
+     ✓ pins the exact published model/JD/Unicode/readiness profile independently 106ms
+     ✓ rejects null before any RPC 1ms
+     ✓ rejects array before any RPC 0ms
+     ✓ rejects primitive before any RPC 0ms
+     ✓ rejects unknown key before any RPC 0ms
+     ✓ rejects caller proof before any RPC 0ms
+     ✓ rejects invalid canonical UUID before any RPC 0ms
+     ✓ rejects invalid requirement UUID before any RPC 0ms
+     ✓ rejects non-null version type before any RPC 0ms
+     ✓ rejects malformed owned IDs invalid-analysis/20000000-0000-4000-8000-000000000001 without RPC 0ms
+     ✓ rejects malformed owned IDs 20000000-0000-4000-8000-000000000004/invalid-owner without RPC 1ms
+     ✓ requires explicit selected UUIDs to match the returned pair 14ms
+     ✓ refuses source owner swaps 10ms
+     ✓ refuses organization swaps 5ms
+     ✓ refuses resume root swaps 7ms
+     ✓ refuses analysis swaps 7ms
+     ✓ refuses source version swaps 12ms
+     ✓ refuses attempt swaps 14ms
+     ✓ refuses source SHA swaps 16ms
+     ✓ refuses wrapped attempt swaps 2ms
+     ✓ refuses attempt number swaps 2ms
+     ✓ refuses extractor swaps 2ms
+     ✓ refuses canonical version swaps 6ms
+     ✓ refuses locale swaps 9ms
+     ✓ refuses canonical row revision swaps 6ms
+     ✓ refuses JD version swaps 2ms
+     ✓ refuses JD source SHA swaps 2ms
+     ✓ refuses JD owner swaps 10ms
+     ✓ refuses current canonical head swaps 9ms
+     ✓ refuses canonical head revision swaps 2ms
+     ✓ refuses current requirement head swaps 12ms
+     ✓ refuses requirement head revision swaps 15ms
+     ✓ refuses snapshot version swaps 11ms
+     ✓ refuses snapshot SHA swaps 9ms
+     ✓ refuses scoring authority swaps 10ms
+     ✓ refuses semantic authority swaps 15ms
+     ✓ refuses unknown field swaps 4ms
+     ✓ refuses invalid actual pageCount 0 8ms
+     ✓ refuses invalid actual pageCount -1 8ms
+     ✓ refuses invalid actual pageCount 1.5 3ms
+     ✓ refuses invalid actual pageCount 2147483648 3ms
+     ✓ refuses source order member/citation swaps 4ms
+     ✓ refuses assertion member/citation swaps 8ms
+     ✓ refuses field member/citation swaps 13ms
+     ✓ refuses fact member/citation swaps 5ms
+     ✓ refuses current value member/citation swaps 4ms
+     ✓ refuses current state member/citation swaps 17ms
+     ✓ refuses source value member/citation swaps 3ms
+     ✓ refuses current section member/citation swaps 3ms
+     ✓ refuses current entry member/citation swaps 5ms
+     ✓ refuses bullet location member/citation swaps 22ms
+     ✓ refuses source attempt member/citation swaps 4ms
+     ✓ refuses source span member/citation swaps 7ms
+     ✓ refuses source page member/citation swaps 8ms
+     ✓ refuses source method member/citation swaps 3ms
+     ✓ refuses source start member/citation swaps 3ms
+     ✓ refuses source end member/citation swaps 3ms
+     ✓ refuses page start member/citation swaps 14ms
+     ✓ refuses page end member/citation swaps 8ms
+     ✓ refuses missing/duplicate members, duplicated groups and incoherent prefix identities 41ms
+     ✓ refuses shared current placement rather than choosing one of multiple locations 11ms
+     ✓ refuses mismatched exact confirmation, origin version, origin fact and mapping kind 42ms
+     ✓ refuses incomplete, reordered, duplicated, revision-skipped and foreign ancestor suffixes 45ms
+     ✓ maps exact not_found protocol failures to fixed errors 0ms
+     ✓ maps exact unavailable protocol failures to fixed errors 0ms
+     ✓ refuses malformed/extra-key protocol payloads without leaking their data 0ms
+     ✓ sanitizes returned RPC errors and never uses table fallback 7ms
+     ✓ sanitizes thrown RPC errors and never uses table fallback 5ms
+     ✓ refuses cyclic and over-depth results with a fixed failure 0ms
+     ✓ refuses excess ancestor/member/group cardinalities rather than truncating 43ms
+     × keeps the existing typed-scoring503 pause explicit 18ms
+     ✓ keeps one loaded proof cache, selected historical prefix and final owned pair/head recheck 0ms
+     ✓ charges new JD/projection/output visits without resets or a new32 active-origin ceiling 0ms
+     ✓ preserves old103 readiness entries and binds all35 added definitions to actual source bytes 3ms
+     ✓ keeps public admission scoped to service_role and private helpers denied 0ms
+ ✓ tests/unit/score-v2-route.test.ts (15 tests) 20ms
+ ✓ tests/unit/typed-score-repository.test.ts (26 tests) 615ms
+ ✓ tests/components/RequirementCoverageReview.test.tsx (10 tests) 352ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/requirement-relationship-context.test.ts > protocol, bounds and sanitized failures > keeps the existing typed-scoring503 pause explicit
+AssertionError: expected 'import { z } from "zod";\nimport { lo…' to contain '503,\n      "Saved typed JD requireme…'
+
+- Expected
++ Received
+
+- 503,
+-       "Saved typed JD requirements can be reviewed on the JD page. Scoring diagnostics and proposals are paused until typed requirement coverage is available."
++ import { z } from "zod";
++ import { loadCanonical, CanonicalError } from "./canonical-repository";
++ import { loadJobRequirements } from "./job-requirement-repository";
++ import { DocumentEvidenceSchema } from "./document-evidence";
++ import {
++   buildScoreDiagnostics,
++   type ScoreDiagnostics,
++ } from "./score-v2-engine";
++ import {
++   buildTypedScoreDiagnostics,
++   type TypedScoreDiagnosticResult,
++ } from "./typed-score-diagnostics";
++ import {
++   loadRequirementRelationshipContext,
++   RequirementRelationshipContextError,
++ } from "./requirement-relationship-context";
++ import type { createSupabaseAdminClient } from "./supabase";
++ type Client = Pick<
++   ReturnType<typeof createSupabaseAdminClient>,
++   "from" | "rpc"
++ >;
++ export const ScoreReadOptions = z.strictObject({
++   canonical: z.uuid().optional(),
++   requirements: z.uuid().optional(),
++   expectedCanonical: z.uuid().optional(),
++   expectedRequirements: z.uuid().optional(),
++ });
++ type ScoreReadMetadata = {
++   analysisId: string;
++   sourceExcerpts: { id: string; text: string; truncated: boolean }[];
++   canonical: { versionId: string; revision: number; headId: string | null };
++   requirements: {
++     versionId: string;
++     revision: number;
++     headId: string | null;
++   } | null;
++   historical: boolean;
++ };
++ export type ScoreDiagnosticReadModel = ScoreReadMetadata &
++   (
++     | { diagnostics: ScoreDiagnostics; typedCoverage?: undefined }
++     | TypedScoreDiagnosticResult
++   );
++
++ export async function loadScoreDiagnostics(
++   client: Client,
++   analysisId: string,
++   ownerId: string,
++   raw: unknown = {},
++   canonicalSnapshot?: Awaited<ReturnType<typeof loadCanonical>>,
++ ): Promise<ScoreDiagnosticReadModel> {
++   const parsed = ScoreReadOptions.safeParse(raw);
++   if (!parsed.success)
++     throw new CanonicalError(422, "Choose valid scoring input versions.");
++   const options = parsed.data;
++   const [canonical, analysis] = await Promise.all([
++     canonicalSnapshot ??
++       loadCanonical(client, analysisId, ownerId, {
++         versionId: options.canonical,
++       }),
++     client
++       .from("analyses")
++       .select("job_id")
++       .eq("id", analysisId)
++       .eq("owner_id", ownerId)
++       .maybeSingle(),
++   ]);
++   if (!canonical.current)
++     throw new CanonicalError(
++       422,
++       "Import your structured resume before reviewing scoring diagnostics.",
++     );
++   const doc = canonical.current.document;
++   if (
++     canonical.analysisId !== analysisId ||
++     doc.ownerId !== ownerId ||
++     (options.canonical && doc.versionId !== options.canonical)
++   )
++     throw new CanonicalError(422, "Scoring input binding failed.");
++   if (analysis.error)
++     throw new CanonicalError(503, "Scoring inputs are unavailable.");
++   if (!analysis.data)
++     throw new CanonicalError(404, "Scoring inputs not found.");
++   const [requirements, evidence, source] = await Promise.all([
++     analysis.data.job_id
++       ? loadJobRequirements(client, analysisId, ownerId, {
++           versionId: options.requirements,
++         })
++       : Promise.resolve(null),
++     client
++       .from("document_evidence_attempts")
++       .select("envelope,resume_version_id,input_sha256")
++       .eq("id", doc.sourceEvidenceVersionId!)
++       .eq("analysis_id", analysisId)
++       .eq("owner_id", ownerId)
++       .maybeSingle(),
++     client
++       .from("resume_versions")
++       .select("page_count")
++       .eq("id", canonical.current.sourceId)
++       .eq("owner_id", ownerId)
++       .eq("organization_id", doc.organizationId)
++       .maybeSingle(),
++   ]);
++   if (!requirements && options.requirements)
++     throw new CanonicalError(404, "Scoring inputs not found.");
++   if (
++     (options.expectedCanonical &&
++       options.expectedCanonical !== canonical.headId) ||
++     (options.expectedRequirements &&
++       options.expectedRequirements !== requirements?.headId)
++   )
++     throw new CanonicalError(
++       409,
++       "Scoring inputs changed. Reload before continuing.",
++     );
++   if (evidence.error || source.error)
++     throw new CanonicalError(503, "Scoring inputs are unavailable.");
++   const envelope = DocumentEvidenceSchema.safeParse(evidence.data?.envelope);
++   if (
++     !source.data ||
++     !envelope.success ||
++     evidence.data?.resume_version_id !== canonical.current.sourceId ||
++     evidence.data?.input_sha256 !== doc.inputSha256 ||
++     envelope.data.sourceId !== canonical.current.sourceId
++   )
++     throw new CanonicalError(422, "Scoring evidence failed integrity checks.");
++   const requirementDocument = requirements?.current?.document ?? null;
++   if (requirementDocument?.schemaVersion === "requirements/2.0.0") {
++     const selection = {
++       canonicalVersionId: doc.versionId,
++       requirementVersionId: requirementDocument.id,
++     };
++     try {
++       const context = await loadRequirementRelationshipContext(
++         client,
++         analysisId,
++         ownerId,
++         selection,
++       );
++       if (
++         context.heads.canonicalHeadId !== canonical.headId ||
++         context.heads.requirementHeadId !== requirements?.headId ||
++         (!options.canonical &&
++           context.canonical.versionId !== context.heads.canonicalHeadId) ||
++         (!options.requirements &&
++           context.requirements.versionId !== context.heads.requirementHeadId) ||
++         (options.expectedCanonical &&
++           options.expectedCanonical !== context.heads.canonicalHeadId) ||
++         (options.expectedRequirements &&
++           options.expectedRequirements !== context.heads.requirementHeadId)
++       )
++         throw new CanonicalError(
++           409,
++           "Scoring inputs changed. Reload before continuing.",
++         );
++       const result = buildTypedScoreDiagnostics(context);
++       // A second owned read rechecks privacy, source ownership, pair linkage and both heads.
++       const final = await loadRequirementRelationshipContext(
++         client,
++         analysisId,
++         ownerId,
++         selection,
++       );
++       const finalAnalysis = await client
++         .from("analyses")
++         .select("job_id")
++         .eq("id", analysisId)
++         .eq("owner_id", ownerId)
++         .maybeSingle();
++       if (finalAnalysis.error)
++         throw new CanonicalError(503, "Scoring inputs are unavailable.");
++       if (!finalAnalysis.data)
++         throw new CanonicalError(404, "Scoring inputs not found.");
++       if (
++         finalAnalysis.data.job_id !== analysis.data.job_id ||
++         final.heads.canonicalHeadId !== context.heads.canonicalHeadId ||
++         final.heads.canonicalHeadRevision !==
++           context.heads.canonicalHeadRevision ||
++         final.heads.requirementHeadId !== context.heads.requirementHeadId ||
++         final.heads.requirementHeadRevision !==
++           context.heads.requirementHeadRevision ||
++         final.canonical.contentSha256 !== context.canonical.contentSha256 ||
++         final.requirements.contentSha256 !==
++           context.requirements.contentSha256 ||
++         final.sourceMetadata.pageCount !== context.sourceMetadata.pageCount
++       )
++         throw new CanonicalError(
++           409,
++           "Scoring inputs changed. Reload before continuing.",
++         );
++       return {
++         analysisId,
++         ...result,
++         sourceExcerpts: context.attempt.envelope.spans
++           .filter((span) =>
++             result.diagnostics.rules.some((rule) =>
++               rule.citations.some(
++                 (cite) => cite.kind === "document_span" && cite.id === span.id,
++               ),
++             ),
++           )
++           .slice(0, 20)
++           .map((span) => ({
++             id: span.id,
++             text: Array.from(span.text).slice(0, 2000).join(""),
++             truncated: Array.from(span.text).length > 2000,
++           })),
++         canonical: {
++           versionId: context.canonical.versionId,
++           revision: context.canonical.revision,
++           headId: context.heads.canonicalHeadId,
++         },
++         requirements: {
++           versionId: context.requirements.versionId,
++           revision: context.requirements.revision,
++           headId: context.heads.requirementHeadId,
++         },
++         historical:
++           context.canonical.versionId !== context.heads.canonicalHeadId ||
++           context.requirements.versionId !== context.heads.requirementHeadId,
++       };
++     } catch (error) {
++       if (error instanceof CanonicalError) throw error;
++       if (
++         error instanceof RequirementRelationshipContextError &&
++         error.reason === "not_found"
++       )
++         throw new CanonicalError(404, "Scoring inputs not found.");
++       throw new CanonicalError(
++         503,
++         "Typed scoring diagnostics are unavailable. Reload before continuing.",
++       );
++     }
++   }
++   let diagnostics;
++   try {
++     diagnostics = buildScoreDiagnostics({
++       evidence: envelope.data,
++       canonical: doc,
++       requirements: requirementDocument,
++       ...(source.data.page_count == null
++         ? {}
++         : { expectedPageCount: source.data.page_count }),
++     });
++   } catch {
++     throw new CanonicalError(422, "Scoring inputs failed integrity checks.");
++   }
++   // Recheck deletion/active ownership and moving heads before releasing private data.
++   const [final, finalRequirements] = await Promise.all([
++     loadCanonical(client, analysisId, ownerId, { versionId: doc.versionId }),
++     requirements
++       ? loadJobRequirements(client, analysisId, ownerId, {
++           versionId: requirements.current?.document.id,
++         })
++       : Promise.resolve(null),
++   ]);
++   const finalAnalysis = await client
++     .from("analyses")
++     .select("job_id")
++     .eq("id", analysisId)
++     .eq("owner_id", ownerId)
++     .maybeSingle();
++   if (finalAnalysis.error)
++     throw new CanonicalError(503, "Scoring inputs are unavailable.");
++   if (!finalAnalysis.data)
++     throw new CanonicalError(404, "Scoring inputs not found.");
++   if (finalAnalysis.data.job_id !== analysis.data.job_id)
++     throw new CanonicalError(
++       409,
++       "Scoring inputs changed. Reload before continuing.",
++     );
++   if (
++     final.headId !== canonical.headId ||
++     finalRequirements?.headId !== requirements?.headId
++   )
++     throw new CanonicalError(
++       409,
++       "Scoring inputs changed. Reload before continuing.",
++     );
++   return {
++     analysisId,
++     diagnostics,
++     sourceExcerpts: envelope.data.spans
++       .filter((span) =>
++         diagnostics.rules.some((rule) =>
++           rule.citations.some(
++             (c) => c.kind === "document_span" && c.id === span.id,
++           ),
++         ),
++       )
++       .slice(0, 20)
++       .map((span) => ({
++         id: span.id,
++         text: Array.from(span.text).slice(0, 2000).join(""),
++         truncated: Array.from(span.text).length > 2000,
++       })),
++     canonical: {
++       versionId: doc.versionId,
++       revision: canonical.current.revision,
++       headId: canonical.headId,
++     },
++     requirements: requirements?.current
++       ? {
++           versionId: requirements.current.document.id,
++           revision: requirements.current.revision,
++           headId: requirements.headId,
++         }
++       : null,
++     historical:
++       doc.versionId !== canonical.headId ||
++       (!!requirements?.current &&
++         requirements.current.document.id !== requirements.headId),
++   };
++ }
++
+
+ ❯ tests/unit/requirement-relationship-context.test.ts:1034:20
+    1032|       'if (requirementDocument?.schemaVersion === "requirements/2.0.0"…
+    1033|     );
+    1034|     expect(source).toContain(
+       |                    ^
+    1035|       '503,\n      "Saved typed JD requirements can be reviewed on the…
+    1036|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 16 passed (17)
+      Tests  1 failed | 346 passed (347)
+   Start at  18:14:44
+   Duration  1.69s (transform 2.12s, setup 0ms, import 4.70s, tests 4.81s, environment 1.05s)
+

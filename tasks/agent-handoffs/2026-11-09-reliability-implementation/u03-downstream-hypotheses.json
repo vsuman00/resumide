@@ -1,0 +1,33 @@
+{
+  "status": "SOURCE_HYPOTHESES_NOT_REPRODUCED_NOT_U03_SCOPE",
+  "reviewer": "a04_runtime",
+  "findings": [
+    {
+      "task": "CR-A10",
+      "source": "app/lib/server/score-v2-engine.ts:93,350",
+      "hypothesis": "Exact confirmed uncited correction may still be labelled candidate_confirmation_required because confirmed also demands sources.",
+      "futureReproduction": "Synthetic certification correction followed by exact canonical confirmation; inspect requirement reason.",
+      "preserve": [
+        "No invented citations",
+        "Candidate-authored provenance",
+        "Numeric withholding/calibration floors"
+      ],
+      "possibleResolution": "Explain declaration versus verified evidence; do not grant source proof merely to remove a reason."
+    },
+    {
+      "task": "CR-U18",
+      "source": "app/lib/server/artifact-source-links.ts:18; artifact-repository.ts:16",
+      "hypothesis": "Confirmed corrected contact URL can fail export when current plan intentionally replaces an old PDF annotation URL.",
+      "futureReproduction": "Synthetic original mailto link replaced by explicit confirmed current email; verify exact corrected plan.",
+      "preserve": [
+        "Foreign/stale/version checks",
+        "Unconfirmed export denial",
+        "Unsafe or unexplained missing source-link loss denial"
+      ],
+      "possibleResolution": "Require scoped confirmed replacement provenance; never blanket-ignore old annotations."
+    }
+  ],
+  "testsRun": 0,
+  "databaseOperations": 0,
+  "implementationAllocated": false
+}

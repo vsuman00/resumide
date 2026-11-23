@@ -1,0 +1,8 @@
+import { useId } from "react";
+import type { JdRecommendationPlan } from "~/lib/server/jd-recommendations";
+
+// Baseline reason-only presentation, before the bounded review details are added.
+export default function JdRecommendations({ plan }: { plan: JdRecommendationPlan; base: string }) {
+  const heading = useId();
+  return <section aria-labelledby={heading}><h2 id={heading}>JD review priorities</h2><ol>{plan.items.map(item => <li key={item.id}>{item.reason}</li>)}</ol></section>;
+}

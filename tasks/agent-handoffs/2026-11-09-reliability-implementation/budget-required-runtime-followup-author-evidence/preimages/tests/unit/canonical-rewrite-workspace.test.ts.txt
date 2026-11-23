@@ -1,0 +1,887 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  createRequirementContextFixture,
+  requirementFixtureId as id,
+} from "../fixtures/requirement-context";
+import { buildTypedAuthoringPatch } from "../../app/lib/server/typed-authoring-protocol";
+import { CANONICAL_REWRITE_WORKSPACE_PROFILE as profile } from "../../app/lib/server/canonical-rewrite-workspace-profile";
+import { CANONICAL_REWRITE_READINESS_PROFILE as rewriteProfile } from "../../app/lib/server/canonical-rewrite-readiness-profile";
+import {
+  createCanonicalRewriteRequest,
+  reconstructCanonicalRewrite,
+  type CanonicalRewritePublication,
+  type CanonicalRewriteOperation,
+} from "../../app/lib/server/canonical-rewrite-contract";
+import {
+  loadCanonicalRewriteWorkspace,
+  runCanonicalRewrite,
+} from "../../app/lib/server/canonical-rewrite-repository";
+const mocks = vi.hoisted(() => ({
+  config: {
+    CANONICAL_REWRITE_ENABLED: true,
+    AUTHORING_ENABLED: true,
+    SCORING_V2_ENABLED: true,
+    AI_ENABLED: false,
+    APP_ORIGIN: "https://example.test",
+    OPENAI_MODEL: "unit-model",
+  },
+  user: vi.fn(),
+  server: vi.fn(),
+  admin: vi.fn(),
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getServerConfig: () => mocks.config,
+}));
+vi.mock("../../app/lib/server/auth", () => ({
+  getAuthenticatedUser: mocks.user,
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseServerClient: mocks.server,
+  createSupabaseAdminClient: mocks.admin,
+}));
+import {
+  CanonicalRewriteWorkspaceStateSchema,
+  loadCanonicalRewriteWorkspaceState,
+  initializeCanonicalRewriteWorkspace,
+  readCanonicalRewriteWorkspaceSelection,
+} from "../../app/lib/server/canonical-rewrite-workspace";
+import { action, loader } from "../../app/routes/analysis.rewrite.workspace";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  Object.assign(mocks.config, {
+    CANONICAL_REWRITE_ENABLED: true,
+    AUTHORING_ENABLED: true,
+    SCORING_V2_ENABLED: true,
+    AI_ENABLED: false,
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => {
+      throw Error("UNEXPECTED_NETWORK");
+    }),
+  );
+});
+afterEach(() => {
+  expect(globalThis.fetch).not.toHaveBeenCalled();
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+type Slot = {
+  id: string;
+  updatedAt: string;
+  contentSha256: string;
+  versionId: string | null;
+  revision: number;
+  headId: string | null;
+  projection: {
+    summary: string | null;
+    bullets: { original: string; rewrite: string; reasoning: string }[];
+  };
+};
+async function store() {
+  const f = await createRequirementContextFixture({ confirm: true });
+  const selected = {
+    canonicalVersionId: f.context.canonical.versionId,
+    requirementVersionId: f.context.requirements.versionId,
+  };
+  const patch = buildTypedAuthoringPatch(
+    f.context,
+    {
+      ...selected,
+      clauseId: f.context.requirements.content.relations.clauses[0].id,
+      targetFactId: f.targetFactId,
+    },
+    "Created",
+  );
+  const fact = f.context.canonical.content.facts.find(
+    (v) => v.id === f.targetFactId,
+  )!;
+  let slot: Slot | null = null,
+    publication: CanonicalRewritePublication | null = null,
+    operation: CanonicalRewriteOperation | null = null,
+    inserts = 0;
+  const control = {
+    initializerExecutable: true,
+    schemaReady: true,
+    writerExecutable: true,
+    privacy: false,
+    historical: false,
+    staleAtWrite: false,
+    ambiguousInsert: false,
+    corruptCreated: false,
+    profilePatch: {} as Record<string, unknown>,
+    contextPatch: null as unknown,
+  };
+  const events: string[] = [];
+  const context = () => {
+    const value = structuredClone(f.context);
+    if (control.historical) {
+      value.heads.canonicalHeadId = id(991);
+      value.heads.canonicalHeadRevision++;
+    }
+    return value;
+  };
+  const nativeContext = () => {
+    if (!slot) throw Error("MISSING_FAKE_DATABASE_SLOT");
+    const { projection, ...draft } = slot;
+    return {
+      schemaVersion: "canonical-rewrite-context/1.0.0",
+      status: "available",
+      relationshipContext: context(),
+      draft,
+      bindingSha256: "2".repeat(64),
+      manifest: [
+        {
+          sourceId: 0,
+          factId: fact.id,
+          valueSha256: patch.target.currentValueSha256,
+          location: {
+            sectionId: patch.target.sectionId,
+            entryId: patch.target.entryId,
+            bulletId: patch.target.bulletId,
+          },
+          confirmation: fact.confirmation,
+          basis: patch.support.basis,
+          currentCitations: patch.sourceCitations,
+          clauseIds: [patch.selection.clauseId],
+          authoringVersion: patch.policies.authoringVersion,
+        },
+      ],
+      saved: publication
+        ? { state: "current", publication, legacyDraft: null }
+        : {
+            state: "legacy_unbound",
+            publication: null,
+            legacyDraft: projection,
+          },
+      readiness: {
+        ...rewriteProfile,
+        schemaReady: true,
+        mutatorsExecutable: control.writerExecutable,
+      },
+    };
+  };
+  const state = () => {
+    const readiness = {
+      ...profile,
+      schemaReady: control.schemaReady,
+      initializerExecutable: control.initializerExecutable,
+      ...control.profilePatch,
+    };
+    return slot
+      ? {
+          schemaVersion: "canonical-rewrite-workspace-state/1.0.0",
+          status: "available",
+          context: nativeContext(),
+          readiness,
+        }
+      : {
+          schemaVersion: "canonical-rewrite-workspace-state/1.0.0",
+          status: "initialization_required",
+          relationshipContext: control.contextPatch ?? context(),
+          readiness,
+        };
+  };
+  const seed = (summary: string | null = null) => {
+    slot = {
+      id: id(901),
+      updatedAt: "2026-11-15T00:00:00.123456Z",
+      contentSha256: "1".repeat(64),
+      versionId: null,
+      revision: 0,
+      headId: null,
+      projection: { summary, bullets: [] },
+    };
+  };
+  const client = {
+    rpc: vi.fn(async (name: string, args: Record<string, unknown>) => {
+      events.push(name);
+      if (
+        args.p_user_id !== f.owned.ownerId ||
+        args.p_analysis_id !== f.owned.analysisId ||
+        control.privacy
+      )
+        return {
+          data: null,
+          error: { code: "42501", message: "PRIVATE_UNIT_OWNERSHIP" },
+        };
+      if (name === "read_canonical_rewrite_workspace_state")
+        return { data: state(), error: null };
+      if (name === "initialize_canonical_rewrite_workspace") {
+        if (control.staleAtWrite || control.historical)
+          return {
+            data: null,
+            error: { code: "P0C01", message: "PRIVATE_UNIT_STALE" },
+          };
+        if (!control.initializerExecutable)
+          return { data: null, error: { code: "P0C03" } };
+        const created = !slot;
+        if (created) {
+          seed();
+          inserts++;
+        }
+        if (control.ambiguousInsert) {
+          control.ambiguousInsert = false;
+          throw Error("PRIVATE_UNIT_AMBIGUOUS_RESPONSE");
+        }
+        const result = state();
+        if (control.corruptCreated && result.status === "available")
+          result.context!.saved = {
+            state: "legacy_unbound",
+            publication: null,
+            legacyDraft: {
+              summary: "Unexpected nonempty content",
+              bullets: [],
+            },
+          };
+        return {
+          data: {
+            schemaVersion: "canonical-rewrite-workspace-initialization/1.0.0",
+            created,
+            state: result,
+          },
+          error: null,
+        };
+      }
+      if (name === "read_canonical_rewrite_context")
+        return slot
+          ? { data: nativeContext(), error: null }
+          : {
+              data: null,
+              error: { code: "P0002", message: "PRIVATE_UNIT_NO_SUMMARY" },
+            };
+      if (name === "prepare_canonical_rewrite") {
+        const command = args.p_command as {
+          request: NonNullable<typeof operation>["request"];
+          policy: NonNullable<typeof operation>["policy"];
+        };
+        if (operation)
+          return {
+            data: {
+              status: "prepared",
+              operation: { ...operation, dispatchAllowed: false },
+              context: null,
+            },
+            error: null,
+          };
+        operation = {
+          schemaVersion: "canonical-rewrite-operation/1.0.0",
+          operationId: command.request.operationId,
+          ownerId: f.owned.ownerId,
+          analysisId: f.owned.analysisId,
+          request: command.request,
+          policy: command.policy,
+          bindingSha256: "2".repeat(64),
+          state: "reserved",
+          dispatchAllowed: false,
+          publication: null,
+        };
+        return {
+          data: { status: "prepared", operation, context: nativeContext() },
+          error: null,
+        };
+      }
+      if (name === "claim_canonical_rewrite_dispatch") {
+        operation!.state = "dispatched";
+        operation!.dispatchAllowed = true;
+        return {
+          data: { operation: { ...operation! }, budget: null },
+          error: null,
+        };
+      }
+      if (name === "settle_canonical_rewrite_attempt")
+        return {
+          data: {
+            schemaVersion: "canonical-rewrite-settlement/1.0.0",
+            operationId: operation!.operationId,
+            bindingSha256: operation!.bindingSha256,
+            usage: args.p_usage,
+            state: operation!.state,
+          },
+          error: null,
+        };
+      if (name === "finish_canonical_rewrite") {
+        const workspace = await loadCanonicalRewriteWorkspace(
+          { rpc: async () => ({ data: nativeContext(), error: null }) },
+          f.owned.analysisId,
+          f.owned.ownerId,
+          { ...selected, model: "unit-model" },
+        );
+        const result = reconstructCanonicalRewrite(
+          workspace,
+          operation!.operationId,
+          args.p_plan,
+        );
+        publication = {
+          result,
+          receipt: {
+            schemaVersion: "canonical-rewrite-receipt/1.0.0",
+            state: "saved_proposals",
+            operationId: operation!.operationId,
+            bindingSha256: operation!.bindingSha256,
+            runId: id(920),
+            draftId: slot!.id,
+            draftVersionId: id(921),
+            revision: 1,
+            draftUpdatedAt: "2026-11-15T00:00:01.654321Z",
+            resultSha256: "3".repeat(64),
+            projectionSha256: "4".repeat(64),
+            idempotent: false,
+          },
+        };
+        slot = {
+          ...slot!,
+          updatedAt: publication.receipt.draftUpdatedAt,
+          contentSha256: publication.receipt.projectionSha256,
+          versionId: publication.receipt.draftVersionId,
+          headId: publication.receipt.draftVersionId,
+          revision: 1,
+          projection: {
+            summary: null,
+            bullets: result.bullets.map((b) => ({
+              original: b.before,
+              rewrite: b.after,
+              reasoning: b.rationale,
+            })),
+          },
+        };
+        operation!.state = "saved";
+        operation!.dispatchAllowed = false;
+        operation!.publication = publication;
+        return { data: publication, error: null };
+      }
+      throw Error("UNEXPECTED_BOOTSTRAP_RPC");
+    }),
+  };
+  mocks.user.mockResolvedValue({ id: f.owned.ownerId });
+  mocks.server.mockReturnValue({});
+  mocks.admin.mockReturnValue(client);
+  const request = (
+    form: URLSearchParams | FormData = new URLSearchParams(selected),
+    signal?: AbortSignal,
+  ) =>
+    new Request(
+      `https://example.test/analysis/${f.owned.analysisId}/rewrite/workspace`,
+      {
+        method: "POST",
+        headers: { Origin: "https://example.test" },
+        body: form,
+        signal,
+      },
+    );
+  const post = () =>
+    action({ request: request(), params: { id: f.owned.analysisId } });
+  return {
+    ...f,
+    selected,
+    client,
+    state,
+    control,
+    events,
+    seed,
+    request,
+    post,
+    get slot() {
+      return slot;
+    },
+    get inserts() {
+      return inserts;
+    },
+  };
+}
+
+describe("actual owned bootstrap with real builders and fake native storage", () => {
+  it("shows the old reader's missing-slot boundary without inventing a draft", async () => {
+    const f = await store();
+    await expect(
+      loadCanonicalRewriteWorkspace(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        { ...f.selected, model: "unit-model" },
+      ),
+    ).rejects.toMatchObject({ reason: "not_found" });
+    expect(f.slot).toBeNull();
+    expect(f.inserts).toBe(0);
+  });
+  it("reads an honest missing state with no writer mutation or fake draft tokens", async () => {
+    const f = await store(),
+      state = await loadCanonicalRewriteWorkspaceState(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        { ...f.selected, model: "unit-model" },
+      );
+    expect(state).toMatchObject({
+      status: "initialization_required",
+      binding: {
+        source: f.context.source,
+        canonical: { versionId: f.selected.canonicalVersionId },
+      },
+      canInitialize: true,
+    });
+    expect(CanonicalRewriteWorkspaceStateSchema.parse(state)).toEqual(state);
+    expect(JSON.stringify(state)).not.toMatch(
+      /draftId|updatedAt|draftVersionId/u,
+    );
+    expect(f.events).toEqual(["read_canonical_rewrite_workspace_state"]);
+    expect(f.inserts).toBe(0);
+  });
+  it("initializes with AI off and returns actual empty tokens without generation capability", async () => {
+    const f = await store(),
+      response = await f.post(),
+      result = await response.json();
+    expect(response.status).toBe(200);
+    expect(result).toMatchObject({
+      kind: "workspace_initialized",
+      created: true,
+      workspace: {
+        binding: {
+          draft: {
+            id: f.slot!.id,
+            updatedAt: f.slot!.updatedAt,
+            contentSha256: f.slot!.contentSha256,
+            revision: 0,
+            versionId: null,
+            headId: null,
+          },
+        },
+        saved: {
+          state: "legacy_unbound",
+          publication: null,
+          legacyDraft: { summary: null, bullets: [] },
+        },
+        canGenerate: false,
+      },
+    });
+    expect(f.inserts).toBe(1);
+    expect(f.events).toEqual([
+      "read_canonical_rewrite_workspace_state",
+      "initialize_canonical_rewrite_workspace",
+    ]);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+  });
+  it.each([null, "Retained prior legacy text"])(
+    "preserves an existing projection %s without invoking a writer or requiring generation eligibility",
+    async (summary) => {
+      const f = await store();
+      f.seed(summary);
+      f.control.initializerExecutable = false;
+      f.control.writerExecutable = false;
+      const before = structuredClone(f.slot);
+      const result = await initializeCanonicalRewriteWorkspace(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.selected,
+        { model: "unit-model" },
+      );
+      expect(result).toMatchObject({
+        created: false,
+        workspace: {
+          canGenerate: false,
+          binding: { draft: { id: before!.id, updatedAt: before!.updatedAt } },
+        },
+      });
+      expect(f.slot).toEqual(before);
+      expect(f.inserts).toBe(0);
+      expect(f.events).toEqual(["read_canonical_rewrite_workspace_state"]);
+    },
+  );
+  it("retries an ambiguous insert as an existing current row with no duplicate or automatic generation", async () => {
+    const f = await store();
+    f.control.ambiguousInsert = true;
+    await expect(
+      initializeCanonicalRewriteWorkspace(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.selected,
+        { model: "unit-model" },
+      ),
+    ).rejects.toMatchObject({ reason: "unavailable", recovery: "retry_exact" });
+    const first = structuredClone(f.slot);
+    const retry = await initializeCanonicalRewriteWorkspace(
+      f.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      f.selected,
+      { model: "unit-model" },
+    );
+    expect(retry.created).toBe(false);
+    expect(f.slot).toEqual(first);
+    expect(f.inserts).toBe(1);
+    expect(
+      f.events.filter((n) => n === "initialize_canonical_rewrite_workspace"),
+    ).toHaveLength(1);
+  });
+  it("uses real initialization tokens for a separately consented existing generation protocol and exact replay", async () => {
+    const f = await store(),
+      before = JSON.stringify(f.context.canonical.content),
+      init = await initializeCanonicalRewriteWorkspace(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.selected,
+        { model: "unit-model" },
+      );
+    const command = createCanonicalRewriteRequest(init.workspace, id(922)),
+      authorize = vi.fn(async () => {}),
+      execute = vi.fn(async () => ({
+        output: {
+          summarySourceId: null,
+          bullets: [
+            {
+              sourceId: 0,
+              clauseId: init.workspace.clauses[0].clauseId,
+              operation: "equivalent_action",
+              replacementAction: "Created",
+            },
+          ],
+        },
+        usage: { inputTokens: 8, outputTokens: 3 },
+      }));
+    expect(command.draftId).toBe(f.slot!.id);
+    expect(command.expectedDraftUpdatedAt).toBe(f.slot!.updatedAt);
+    expect(execute).not.toHaveBeenCalled();
+    const options = {
+      model: "unit-model",
+      expectedProfile: rewriteProfile,
+      getTransport: () => ({ execute }),
+      timeoutMs: 1000,
+      authorize,
+    };
+    const saved = await runCanonicalRewrite(
+      f.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      command,
+      options,
+    );
+    expect(saved.kind).toBe("saved");
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(authorize).toHaveBeenCalledTimes(1);
+    expect(
+      await runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        command,
+        options,
+      ),
+    ).toEqual(saved);
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(f.inserts).toBe(1);
+    expect(JSON.stringify(f.context.canonical.content)).toBe(before);
+    const slot = structuredClone(f.slot),
+      existing = await initializeCanonicalRewriteWorkspace(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.selected,
+        { model: "unit-model" },
+      );
+    expect(existing.created).toBe(false);
+    expect(existing.workspace.saved.state).toBe("current");
+    expect(f.slot).toEqual(slot);
+  });
+  it.each(["missing", "existing"])(
+    "requires current heads on %s initialization",
+    async (kind) => {
+      const f = await store();
+      if (kind === "existing") f.seed();
+      f.control.historical = true;
+      await expect(
+        initializeCanonicalRewriteWorkspace(
+          f.client,
+          f.owned.analysisId,
+          f.owned.ownerId,
+          f.selected,
+          { model: "unit-model" },
+        ),
+      ).rejects.toMatchObject({ reason: "stale_inputs" });
+      expect(f.events).not.toContain("initialize_canonical_rewrite_workspace");
+      expect(f.inserts).toBe(0);
+    },
+  );
+  it("preserves historical missing read status without claiming initialization capability", async () => {
+    const f = await store();
+    f.control.historical = true;
+    expect(
+      await loadCanonicalRewriteWorkspaceState(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        { ...f.selected, model: "unit-model" },
+      ),
+    ).toMatchObject({
+      status: "initialization_required",
+      canInitialize: false,
+    });
+    await expect(
+      loadCanonicalRewriteWorkspaceState(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        { model: "unit-model" },
+      ),
+    ).rejects.toMatchObject({ reason: "invalid_result" });
+  });
+  it("lets native fresh CAS refuse a head change after the owned preflight", async () => {
+    const f = await store();
+    f.control.staleAtWrite = true;
+    await expect(
+      initializeCanonicalRewriteWorkspace(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.selected,
+        { model: "unit-model" },
+      ),
+    ).rejects.toMatchObject({ reason: "stale_inputs" });
+    expect(f.inserts).toBe(0);
+  });
+  it.each(["foreign owner", "privacy"])(
+    "refuses %s without initialization",
+    async (kind) => {
+      const f = await store();
+      f.control.privacy = kind === "privacy";
+      await expect(
+        loadCanonicalRewriteWorkspaceState(
+          f.client,
+          f.owned.analysisId,
+          kind === "privacy" ? f.owned.ownerId : id(999),
+          { model: "unit-model" },
+        ),
+      ).rejects.toMatchObject({ reason: "not_found" });
+      expect(f.inserts).toBe(0);
+    },
+  );
+  it("requires full RR source proof and exact bootstrap metadata", async () => {
+    const f = await store();
+    const bad = structuredClone(f.context);
+    bad.attempt.envelope.ownerId = id(998);
+    f.control.contextPatch = bad;
+    await expect(
+      loadCanonicalRewriteWorkspaceState(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        { ...f.selected, model: "unit-model" },
+      ),
+    ).rejects.toMatchObject({ reason: "invalid_result" });
+    expect(f.inserts).toBe(0);
+    f.control.contextPatch = null;
+    f.control.profilePatch = { readerSha256: "a".repeat(64) };
+    await expect(
+      loadCanonicalRewriteWorkspaceState(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        { model: "unit-model" },
+      ),
+    ).rejects.toMatchObject({ reason: "unavailable" });
+  });
+  it("withholds missing-slot initialization when its separate capability is denied", async () => {
+    const f = await store();
+    f.control.initializerExecutable = false;
+    expect(
+      await loadCanonicalRewriteWorkspaceState(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        { model: "unit-model" },
+      ),
+    ).toMatchObject({
+      status: "initialization_required",
+      canInitialize: false,
+    });
+    await expect(
+      initializeCanonicalRewriteWorkspace(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.selected,
+        { model: "unit-model" },
+      ),
+    ).rejects.toMatchObject({ reason: "unavailable" });
+    expect(f.inserts).toBe(0);
+    expect(f.events).not.toContain("initialize_canonical_rewrite_workspace");
+  });
+  it("refuses a forged created=true nonempty projection while preserving exact retry recovery", async () => {
+    const f = await store();
+    f.control.corruptCreated = true;
+    await expect(
+      initializeCanonicalRewriteWorkspace(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.selected,
+        { model: "unit-model" },
+      ),
+    ).rejects.toMatchObject({
+      reason: "invalid_result",
+      recovery: "retry_exact",
+    });
+    expect(f.inserts).toBe(1);
+    f.control.corruptCreated = false;
+    expect(
+      (
+        await initializeCanonicalRewriteWorkspace(
+          f.client,
+          f.owned.analysisId,
+          f.owned.ownerId,
+          f.selected,
+          { model: "unit-model" },
+        )
+      ).created,
+    ).toBe(false);
+    expect(f.inserts).toBe(1);
+  });
+});
+
+describe("bounded authenticated initialization resource", () => {
+  it.each(["urlencoded", "multipart"])(
+    "admits exact two UUID fields in %s",
+    async (kind) => {
+      const f = await store(),
+        form =
+          kind === "urlencoded"
+            ? new URLSearchParams(f.selected)
+            : new FormData();
+      if (form instanceof FormData)
+        for (const [k, v] of Object.entries(f.selected)) form.set(k, v);
+      expect(
+        await readCanonicalRewriteWorkspaceSelection(f.request(form)),
+      ).toEqual(f.selected);
+    },
+  );
+  it.each(["duplicate", "unknown", "file", "malformed", "uppercase"])(
+    "refuses %s fields before admin IO",
+    async (kind) => {
+      const f = await store();
+      let form: URLSearchParams | FormData = new URLSearchParams(f.selected);
+      if (kind === "duplicate")
+        form.append("canonicalVersionId", f.selected.canonicalVersionId);
+      if (kind === "unknown") form.set("draftId", id(701));
+      if (kind === "malformed") form.set("canonicalVersionId", "not-an-id");
+      if (kind === "uppercase")
+        form.set("canonicalVersionId", "A0000000-0000-4000-8000-000000000001");
+      if (kind === "file") {
+        form = new FormData();
+        form.set(
+          "canonicalVersionId",
+          new Blob([f.selected.canonicalVersionId]),
+          "id.txt",
+        );
+        form.set("requirementVersionId", f.selected.requirementVersionId);
+      }
+      expect(
+        (
+          await action({
+            request: f.request(form),
+            params: { id: f.owned.analysisId },
+          })
+        ).status,
+      ).toBe(422);
+      expect(mocks.admin).not.toHaveBeenCalled();
+    },
+  );
+  it("refuses encoded overflow and stalled/cancel-rejecting bodies without waiting for cleanup", async () => {
+    const f = await store();
+    const oversized = new URLSearchParams(f.selected);
+    oversized.set("padding", "x".repeat(4097));
+    expect(
+      (
+        await action({
+          request: f.request(oversized),
+          params: { id: f.owned.analysisId },
+        })
+      ).status,
+    ).toBe(413);
+    expect(mocks.admin).not.toHaveBeenCalled();
+    vi.useFakeTimers();
+    const cancel = vi.fn(() => Promise.reject(Error("PRIVATE_UNIT_CANCEL")));
+    const stream = new ReadableStream<Uint8Array>(
+      { pull: () => new Promise(() => {}), cancel },
+      { highWaterMark: 0 },
+    );
+    const request = new Request("https://example.test", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: stream,
+      duplex: "half",
+    } as RequestInit & { duplex: "half" });
+    const pending = readCanonicalRewriteWorkspaceSelection(request, 5).catch(
+      (e) => e,
+    );
+    await vi.advanceTimersByTimeAsync(6);
+    expect(await pending).toMatchObject({
+      reason: "unavailable",
+      recovery: "retry_exact",
+    });
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(stream.locked).toBe(false);
+  });
+  it.each([
+    "CANONICAL_REWRITE_ENABLED",
+    "AUTHORING_ENABLED",
+    "SCORING_V2_ENABLED",
+  ] as const)("checks %s before service IO", async (flag) => {
+    const f = await store();
+    mocks.config[flag] = false;
+    expect((await f.post()).status).toBe(404);
+    expect(mocks.server).not.toHaveBeenCalled();
+    expect(mocks.admin).not.toHaveBeenCalled();
+  });
+  it("rejects GET, wrong origin and unauthenticated callers without writing", async () => {
+    const f = await store();
+    const get = await loader({
+      request: new Request("https://example.test/analysis/x/rewrite/workspace"),
+      params: { id: f.owned.analysisId },
+    });
+    expect(get.status).toBe(405);
+    expect(get.headers.get("Allow")).toBe("POST");
+    const foreign = new Request(f.request(), {
+      headers: { Origin: "https://foreign.test" },
+    });
+    expect(
+      (await action({ request: foreign, params: { id: f.owned.analysisId } }))
+        .status,
+    ).toBe(403);
+    expect(mocks.admin).not.toHaveBeenCalled();
+    mocks.user.mockResolvedValue(null);
+    expect((await f.post()).status).toBe(401);
+    expect(f.inserts).toBe(0);
+  });
+  it("bounds pending RPC and observes pre-abort without a writer attempt", async () => {
+    const f = await store(),
+      controller = new AbortController();
+    controller.abort();
+    await expect(
+      loadCanonicalRewriteWorkspaceState(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        { model: "unit-model", signal: controller.signal },
+      ),
+    ).rejects.toMatchObject({ reason: "unavailable" });
+    expect(f.events).toEqual([]);
+    vi.useFakeTimers();
+    const client = {
+      rpc: vi.fn(
+        () => new Promise<{ data: unknown; error: unknown }>(() => {}),
+      ),
+    };
+    const pending = loadCanonicalRewriteWorkspaceState(
+      client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      { model: "unit-model", timeoutMs: 5 },
+    ).catch((e) => e);
+    await vi.advanceTimersByTimeAsync(6);
+    expect(await pending).toMatchObject({ reason: "unavailable" });
+    expect(client.rpc).toHaveBeenCalledTimes(1);
+  });
+});

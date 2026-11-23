@@ -1,0 +1,4 @@
+import {createHash} from "node:crypto";
+import {JD_CLAUSE_ORDER_POLICY,JD_CLAUSE_ORDER_POLICY_VERSION,JD_CLAUSE_ORDER_POLICY_SHA256} from "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/app/lib/server/jd-clause-order-drafting";
+import {REQUIREMENT_RELATIONSHIP_CONTEXT_PROFILES} from "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/app/lib/server/requirement-relationship-context";
+console.log(JSON.stringify({JD_CLAUSE_ORDER_POLICY_VERSION,JD_CLAUSE_ORDER_POLICY_SHA256,policyDerivedSha256:createHash("sha256").update(JSON.stringify(JD_CLAUSE_ORDER_POLICY)).digest("hex"),relationshipProfilesSha256:createHash("sha256").update(JSON.stringify(REQUIREMENT_RELATIONSHIP_CONTEXT_PROFILES)).digest("hex"),JD_CLAUSE_ORDER_POLICY,REQUIREMENT_RELATIONSHIP_CONTEXT_PROFILES}));

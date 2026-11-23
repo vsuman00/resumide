@@ -1,0 +1,79 @@
+{
+  "omission-red": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/owned-ai-privacy-export.test.ts",
+      "--maxWorkers=1",
+      "--no-file-parallelism"
+    ],
+    "expectedExit": 1
+  },
+  "finite": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/privacy-operations.test.ts",
+      "tests/unit/owned-ai-privacy-export.test.ts",
+      "--maxWorkers=1",
+      "--no-file-parallelism"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/privacy-worker.ts",
+      "tests/unit/privacy-operations.test.ts",
+      "tests/unit/owned-ai-privacy-export.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/privacy-worker.ts",
+      "tests/unit/privacy-operations.test.ts",
+      "tests/unit/owned-ai-privacy-export.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "types": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-owned-ai-privacy-u30cd8x6/types.cjs"
+    ],
+    "expectedExit": 0
+  },
+  "privacy-fixture": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/privacy.test.ts",
+      "--maxWorkers=1",
+      "--no-file-parallelism"
+    ],
+    "expectedExit": 0
+  },
+  "types-final": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-owned-ai-privacy-u30cd8x6/types-final.cjs"
+    ],
+    "expectedExit": 0
+  },
+  "privacy-fixture-lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "tests/unit/privacy.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "privacy-fixture-format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "tests/unit/privacy.test.ts"
+    ],
+    "expectedExit": 0
+  }
+}

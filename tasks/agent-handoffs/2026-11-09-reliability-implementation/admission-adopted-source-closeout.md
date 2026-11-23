@@ -1,0 +1,9 @@
+# Adopted upload source bindings
+
+CR-R17-S08 records the exact source identity needed for a later adopted-upload retirement handoff. The account deletion inventory now captures a private binding between the adopted upload, acknowledged Storage object, owning analysis, resume version, resume and job. It records the source checksum and size through a single binding hash. The live deletion claim and owner lock cover this observation.
+
+The source can qualify through a terminal analysis or the existing evidence-review handoff. Any recorded queue row, including an expired lease, excludes it. Other exclusions include a shared source version, a mismatched owner or relationship, missing transport evidence and a mismatched evidence handoff. Later claims recheck the binding and preserve the first timestamp and attempt. Drift or an eligibility change holds retirement. The owner export includes the binding with its existing inventory.
+
+The baseline regression reproduced the missing adopted-source binding. The [PostgreSQL 17 fixture](admission-adopted-source-native-fixture.py.txt) executed the actual migration and review-handoff predicate with synthetic supporting relations. It verified two eligible sources, seven excluded controls, stale-claim refusal, stable replay, source and queue drift, and owner export. The integrated local application suite passed 6,792 tests across 323 files, formatting, typecheck, lint and both builds. Lint reported four existing warnings. [Verification receipt](admission-adopted-source-evidence.json).
+
+The binding supplies source identity and database queue evidence. Adopted Storage removal still requires a durable handoff to the deletion plan, verification of actual object absence and exact ledger retirement. The [88-migration inventory](managed-schema-inventory-88.json) pins this local successor and preserves all prior files. Managed verification remains open.

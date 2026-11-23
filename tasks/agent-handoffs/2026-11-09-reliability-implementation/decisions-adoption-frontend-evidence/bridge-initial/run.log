@@ -1,0 +1,39 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/components/JdClauseOrderBridge.test.tsx (17 tests | 1 failed) 5835ms
+   ✓ renders actual prepared full review without a readonly contradiction or automatic request 150ms
+   ✓ posts only the exact accepted command with fresh acknowledgement and same-origin bounded options 61ms
+   ✓ omits acceptance acknowledgement for exact rejection and offers no undo 31ms
+   ✓ undo posts the accepted2 receipt with a new key and accepts only correlated undo2 57ms
+   ✓ retains exact unknown acceptance across same-source changed heads and a null workspace 64ms
+   ✓ does not erase an earlier unknown acceptance after a later validated unavailable response 71ms
+   ✓ retains the same undo payload and key through unknown and later known errors 57ms
+   ✓ refuses a wrong undo event/key without losing the exact retry payload 52ms
+   ✓ rejects receipt1 downgrades without offering undo or claiming a save 34ms
+   ✓ withholds controls on a tampered prepared workspace 10ms
+   ✓ aborts and discards an old in-flight request on an actual source change 46ms
+   ✓ sends one action during a double click and preserves the confirmed review when fresh workspace vanishes 40ms
+   × bounds ignored-signal transport at five seconds without automatic retry 5014ms
+   ✓ checks elapsed time even when a transport blocks past the timer callback 56ms
+   ✓ refuses an oversized response stream before it can claim a save 40ms
+   ✓ does not trust a recovery class thrown by transport as an HTTP error envelope 38ms
+   ✓ shows the existing readonly preview when no writer workspace is admitted 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/JdClauseOrderBridge.test.tsx > bounds ignored-signal transport at five seconds without automatic retry
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/components/JdClauseOrderBridge.test.tsx:94:1
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 passed (17)
+   Start at  04:55:25
+   Duration  6.86s (transform 243ms, setup 0ms, import 457ms, tests 5.84s, environment 507ms)
+
+JSON report written to /private/tmp/resumide-decisions-adoption-frontend-qgjefki3/bridge-initial/tests.json

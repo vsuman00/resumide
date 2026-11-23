@@ -1,0 +1,683 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx (8 tests | 4 failed) 537ms
+   × shows complete before/after and the actual xyz structural reason 183ms
+   × shows complete before/after and the actual action_impact_context structural reason 59ms
+   × shows complete before/after and the actual action_scope_result structural reason 70ms
+   × shows exact unchanged source fact binding and recorded provenance without upgrading historical references 38ms
+   ✓ keeps projected and saved diagnostics distinct and numerical outcomes unavailable 49ms
+   ✓ preserves the exact acceptance payload, explicit acknowledgement and reject action 61ms
+   ✓ leaves incomplete XYZ unavailable without making measurements mandatory for the metric-free alternative 49ms
+   ✓ preserves historical read-only state 28ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > shows complete before/after and the actual xyz structural reason
+TestingLibraryElementError: Unable to find an accessible element with the role "blockquote" and name "Complete current wording"
+
+Here are the accessible roles:
+
+  heading:
+
+  Name "xyz":
+  [36m<h4 />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------list:
+
+  Name "":
+  [36m<ul />[39m
+
+  --------------------------------------------------blockquote:
+
+  Name "":
+  [36m<blockquote />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------checkbox:
+
+  Name "I reviewed and confirm every proposed claim.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Accept xyz":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  --------------------------------------------------button:
+
+  Name "Reject xyz":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<article[39m
+  [33mclass[39m=[32m"account-card"[39m
+[36m>[39m
+  [36m<h4>[39m
+    [0mxyz[0m
+  [36m</h4>[39m
+  [36m<p>[39m
+    [0mState: [0m
+    [0mready[0m
+    [0m; confidence: uncalibrated.[0m
+  [36m</p>[39m
+  [36m<p>[39m
+    [0mReorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.[0m
+  [36m</p>[39m
+  [36m<p>[39m
+    [0mFactual strength: candidate-declared; domain quality needs review.[0m
+  [36m</p>[39m
+  [36m<ul />[39m
+  [36m<blockquote>[39m
+    [0mFewer release failures; measured by Release review records; by Automated checks.[0m
+  [36m</blockquote>[39m
+  [36m<p>[39m
+    [0mProjected before acceptance: unavailable. Actual after a saved version: unavailable. Numeric delta: unavailable.[0m
+  [36m</p>[39m
+  [36m<form[39m
+    [33maction[39m=[32m"/analysis/22222222-2222-4222-8222-222222222222/author"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mmethod[39m=[32m"post"[39m
+  [36m>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"action"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"accept"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"expectedVersionId"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"2e591aa1-e75e-487d-bc8f-1370ffeb11c3"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"idempotencyKey"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"c61284d5-7fd3-463d-ab5b-f70cb37bd40f"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"patch"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"{\"schemaVersion\":\"suggestion-patch/1.0.0\",\"id\":\"c925fdba-b6fe-401a-8679-5fd0a428411d\",\"producerVersion\":\"grounded-patterns/1.0.0\",\"baseVersionId\":\"2e591aa1-e75e-487d-bc8f-1370ffeb11c3\",\"targetFactId\":\"877c7113-fb53-426d-b1f1-96eb6c908299\",\"sectionId\":\"4e2daf3e-f2f1-47e9-8d53-900185c1a2be\",\"entryId\":\"25e207e8-6611-40d1-bdc2-a5efb0e2a3c7\",\"sourceFactIds\":[\"877c7113-fb53-426d-b1f1-96eb6c908299\"],\"affectedRuleIds\":[],\"affectedRequirementIds\":[],\"pattern\":\"xyz\",\"operations\":[{\"operation\":\"replace_fact\",\"factId\":\"877c7113-fb53-426d-b1f1-96eb6c908299\",\"value\":\"Fewer release failures; measured by Release review records; by Automated checks.\"}],\"rationale\":\"Reorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.\",\"confidence\":{\"kind\":\"uncalibrated\",\"value\":null},\"clarificationNeeds\":[],\"state\":\"ready\"}"[39m
+    [36m/>[39m
+    [36m<label>[39m
+      [36m<input[39m
+        [33mname[39m=[32m"confirmation"[39m
+        [33mrequired[39m=[32m""[39m
+        [33mtype[39m=[32m"checkbox"[39m
+        [33mvalue[39m=[32m"true"[39m
+      [36m/>[39m
+      [0mI reviewed and confirm every proposed claim.[0m
+    [36m</label>[39m
+    [36m<button[39m
+      [33mtype[39m=[32m"submit"[39m
+    [36m>[39m
+      [0mAccept [0m
+      [0mxyz[0m
+    [36m</button>[39m
+  [36m</form>[39m
+  [36m<form[39m
+    [33maction[39m=[32m"/analysis/22222222-2222-4222-8222-222222222222/author"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mmethod[39m=[32m"post"[39m
+  [36m>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"action"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"reject"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"expectedVersionId"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"2e591aa1-e75e-487d-bc8f-1370ffeb11c3"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"idempotencyKey"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"ad9839a3-d6ee-4809-b3e3-27fa076c3174"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"patch"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"{\"schemaVersion\":\"suggestion-patch/1.0.0\",\"id\":\"c925fdba-b6fe-401a-8679-5fd0a428411d\",\"producerVersion\":\"grounded-patterns/1.0.0\",\"baseVersionId\":\"2e591aa1-e75e-487d-bc8f-1370ffeb11c3\",\"targetFactId\":\"877c7113-fb53-426d-b1f1-96eb6c908299\",\"sectionId\":\"4e2daf3e-f2f1-47e9-8d53-900185c1a2be\",\"entryId\":\"25e207e8-6611-40d1-bdc2-a5efb0e2a3c7\",\"sourceFactIds\":[\"877c7113-fb53-426d-b1f1-96eb6c908299\"],\"affectedRuleIds\":[],\"affectedRequirementIds\":[],\"pattern\":\"xyz\",\"operations\":[{\"operation\":\"replace_fact\",\"factId\":\"877c7113-fb53-426d-b1f1-96eb6c908299\",\"value\":\"Fewer release failures; measured by Release review records; by Automated checks.\"}],\"rationale\":\"Reorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.\",\"confidence\":{\"kind\":\"uncalibrated\",\"value\":null},\"clarificationNeeds\":[],\"state\":\"ready\"}"[39m
+    [36m/>[39m
+    [36m<button[39m
+      [33mtype[39m=[32m"submit"[39m
+    [36m>[39m
+      [0mReject [0m
+      [0mxyz[0m
+    [36m</button>[39m
+  [36m</form>[39m
+[36m</article>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx:44:15
+     42| ] as const)("shows complete before/after and the actual %s structural …
+     43|   const f = fixture(pattern); const { article } = await show(f); const…
+     44|   expect(view.getByRole("blockquote", { name: "Complete current wordin…
+       |               ^
+     45|   expect(view.getByRole("blockquote", { name: "Complete proposed wordi…
+     46|   expect(view.getByText(reason)).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > shows complete before/after and the actual action_impact_context structural reason
+TestingLibraryElementError: Unable to find an accessible element with the role "blockquote" and name "Complete current wording"
+
+Here are the accessible roles:
+
+  heading:
+
+  Name "action impact context":
+  [36m<h4 />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------list:
+
+  Name "":
+  [36m<ul />[39m
+
+  --------------------------------------------------blockquote:
+
+  Name "":
+  [36m<blockquote />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------checkbox:
+
+  Name "I reviewed and confirm every proposed claim.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Accept action impact context":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  --------------------------------------------------button:
+
+  Name "Reject action impact context":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<article[39m
+  [33mclass[39m=[32m"account-card"[39m
+[36m>[39m
+  [36m<h4>[39m
+    [0maction impact context[0m
+  [36m</h4>[39m
+  [36m<p>[39m
+    [0mState: [0m
+    [0mready[0m
+    [0m; confidence: uncalibrated.[0m
+  [36m</p>[39m
+  [36m<p>[39m
+    [0mReorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.[0m
+  [36m</p>[39m
+  [36m<p>[39m
+    [0mFactual strength: candidate-declared; domain quality needs review.[0m
+  [36m</p>[39m
+  [36m<ul />[39m
+  [36m<blockquote>[39m
+    [0mBuilt reliable services; impact: Fewer release failures; context: Internal services.[0m
+  [36m</blockquote>[39m
+  [36m<p>[39m
+    [0mProjected before acceptance: unavailable. Actual after a saved version: unavailable. Numeric delta: unavailable.[0m
+  [36m</p>[39m
+  [36m<form[39m
+    [33maction[39m=[32m"/analysis/22222222-2222-4222-8222-222222222222/author"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mmethod[39m=[32m"post"[39m
+  [36m>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"action"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"accept"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"expectedVersionId"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"a3b7a9e9-9395-41eb-b4f9-e6ea7e1cedb5"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"idempotencyKey"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"e39b6c9e-ac74-4deb-b60b-43109f2e4635"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"patch"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"{\"schemaVersion\":\"suggestion-patch/1.0.0\",\"id\":\"e8144d73-aae2-4646-880e-e5ae1c5589f9\",\"producerVersion\":\"grounded-patterns/1.0.0\",\"baseVersionId\":\"a3b7a9e9-9395-41eb-b4f9-e6ea7e1cedb5\",\"targetFactId\":\"48b5dee1-9817-415e-8ead-36e4fcb1810c\",\"sectionId\":\"629b4867-3f45-4b07-9e2f-56dd52fa9d1b\",\"entryId\":\"dae12418-1330-43e1-961e-c67f49f8184b\",\"sourceFactIds\":[\"48b5dee1-9817-415e-8ead-36e4fcb1810c\"],\"affectedRuleIds\":[],\"affectedRequirementIds\":[],\"pattern\":\"action_impact_context\",\"operations\":[{\"operation\":\"replace_fact\",\"factId\":\"48b5dee1-9817-415e-8ead-36e4fcb1810c\",\"value\":\"Built reliable services; impact: Fewer release failures; context: Internal services.\"}],\"rationale\":\"Reorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.\",\"confidence\":{\"kind\":\"uncalibrated\",\"value\":null},\"clarificationNeeds\":[],\"state\":\"ready\"}"[39m
+    [36m/>[39m
+    [36m<label>[39m
+      [36m<input[39m
+        [33mname[39m=[32m"confirmation"[39m
+        [33mrequired[39m=[32m""[39m
+        [33mtype[39m=[32m"checkbox"[39m
+        [33mvalue[39m=[32m"true"[39m
+      [36m/>[39m
+      [0mI reviewed and confirm every proposed claim.[0m
+    [36m</label>[39m
+    [36m<button[39m
+      [33mtype[39m=[32m"submit"[39m
+    [36m>[39m
+      [0mAccept [0m
+      [0maction impact context[0m
+    [36m</button>[39m
+  [36m</form>[39m
+  [36m<form[39m
+    [33maction[39m=[32m"/analysis/22222222-2222-4222-8222-222222222222/author"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mmethod[39m=[32m"post"[39m
+  [36m>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"action"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"reject"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"expectedVersionId"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"a3b7a9e9-9395-41eb-b4f9-e6ea7e1cedb5"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"idempotencyKey"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"6411a845-8e24-4c54-a016-a595bdaa5524"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"patch"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"{\"schemaVersion\":\"suggestion-patch/1.0.0\",\"id\":\"e8144d73-aae2-4646-880e-e5ae1c5589f9\",\"producerVersion\":\"grounded-patterns/1.0.0\",\"baseVersionId\":\"a3b7a9e9-9395-41eb-b4f9-e6ea7e1cedb5\",\"targetFactId\":\"48b5dee1-9817-415e-8ead-36e4fcb1810c\",\"sectionId\":\"629b4867-3f45-4b07-9e2f-56dd52fa9d1b\",\"entryId\":\"dae12418-1330-43e1-961e-c67f49f8184b\",\"sourceFactIds\":[\"48b5dee1-9817-415e-8ead-36e4fcb1810c\"],\"affectedRuleIds\":[],\"affectedRequirementIds\":[],\"pattern\":\"action_impact_context\",\"operations\":[{\"operation\":\"replace_fact\",\"factId\":\"48b5dee1-9817-415e-8ead-36e4fcb1810c\",\"value\":\"Built reliable services; impact: Fewer release failures; context: Internal services.\"}],\"rationale\":\"Reorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.\",\"confidence\":{\"kind\":\"uncalibrated\",\"value\":null},\"clarificationNeeds\":[],\"state\":\"ready\"}"[39m
+    [36m/>[39m
+    [36m<button[39m
+      [33mtype[39m=[32m"submit"[39m
+    [36m>[39m
+      [0mReject [0m
+      [0maction impact context[0m
+    [36m</button>[39m
+  [36m</form>[39m
+[36m</article>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx:44:15
+     42| ] as const)("shows complete before/after and the actual %s structural …
+     43|   const f = fixture(pattern); const { article } = await show(f); const…
+     44|   expect(view.getByRole("blockquote", { name: "Complete current wordin…
+       |               ^
+     45|   expect(view.getByRole("blockquote", { name: "Complete proposed wordi…
+     46|   expect(view.getByText(reason)).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > shows complete before/after and the actual action_scope_result structural reason
+TestingLibraryElementError: Unable to find an accessible element with the role "blockquote" and name "Complete current wording"
+
+Here are the accessible roles:
+
+  heading:
+
+  Name "action scope result":
+  [36m<h4 />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------list:
+
+  Name "":
+  [36m<ul />[39m
+
+  --------------------------------------------------blockquote:
+
+  Name "":
+  [36m<blockquote />[39m
+
+  --------------------------------------------------paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------checkbox:
+
+  Name "I reviewed and confirm every proposed claim.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Accept action scope result":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  --------------------------------------------------button:
+
+  Name "Reject action scope result":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<article[39m
+  [33mclass[39m=[32m"account-card"[39m
+[36m>[39m
+  [36m<h4>[39m
+    [0maction scope result[0m
+  [36m</h4>[39m
+  [36m<p>[39m
+    [0mState: [0m
+    [0mready[0m
+    [0m; confidence: uncalibrated.[0m
+  [36m</p>[39m
+  [36m<p>[39m
+    [0mReorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.[0m
+  [36m</p>[39m
+  [36m<p>[39m
+    [0mFactual strength: candidate-declared; domain quality needs review.[0m
+  [36m</p>[39m
+  [36m<ul />[39m
+  [36m<blockquote>[39m
+    [0mBuilt reliable services; scope: Internal services; result: Fewer release failures.[0m
+  [36m</blockquote>[39m
+  [36m<p>[39m
+    [0mProjected before acceptance: unavailable. Actual after a saved version: unavailable. Numeric delta: unavailable.[0m
+  [36m</p>[39m
+  [36m<form[39m
+    [33maction[39m=[32m"/analysis/22222222-2222-4222-8222-222222222222/author"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mmethod[39m=[32m"post"[39m
+  [36m>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"action"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"accept"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"expectedVersionId"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"3384c223-2f76-466e-8e90-117f31a0720b"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"idempotencyKey"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"7831da77-3d97-4173-a1ed-86d5227ca9a6"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"patch"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"{\"schemaVersion\":\"suggestion-patch/1.0.0\",\"id\":\"b92100b1-8dfa-4aba-8305-e9f15b39180c\",\"producerVersion\":\"grounded-patterns/1.0.0\",\"baseVersionId\":\"3384c223-2f76-466e-8e90-117f31a0720b\",\"targetFactId\":\"660d0c1b-df3b-468f-a7b1-223bc9e7217c\",\"sectionId\":\"6f6b1ce4-0455-4790-b1f5-68e22440de68\",\"entryId\":\"de9df168-1a62-495f-bbe8-d18c8d26b6d3\",\"sourceFactIds\":[\"660d0c1b-df3b-468f-a7b1-223bc9e7217c\"],\"affectedRuleIds\":[],\"affectedRequirementIds\":[],\"pattern\":\"action_scope_result\",\"operations\":[{\"operation\":\"replace_fact\",\"factId\":\"660d0c1b-df3b-468f-a7b1-223bc9e7217c\",\"value\":\"Built reliable services; scope: Internal services; result: Fewer release failures.\"}],\"rationale\":\"Reorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.\",\"confidence\":{\"kind\":\"uncalibrated\",\"value\":null},\"clarificationNeeds\":[],\"state\":\"ready\"}"[39m
+    [36m/>[39m
+    [36m<label>[39m
+      [36m<input[39m
+        [33mname[39m=[32m"confirmation"[39m
+        [33mrequired[39m=[32m""[39m
+        [33mtype[39m=[32m"checkbox"[39m
+        [33mvalue[39m=[32m"true"[39m
+      [36m/>[39m
+      [0mI reviewed and confirm every proposed claim.[0m
+    [36m</label>[39m
+    [36m<button[39m
+      [33mtype[39m=[32m"submit"[39m
+    [36m>[39m
+      [0mAccept [0m
+      [0maction scope result[0m
+    [36m</button>[39m
+  [36m</form>[39m
+  [36m<form[39m
+    [33maction[39m=[32m"/analysis/22222222-2222-4222-8222-222222222222/author"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mmethod[39m=[32m"post"[39m
+  [36m>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"action"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"reject"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"expectedVersionId"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"3384c223-2f76-466e-8e90-117f31a0720b"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"idempotencyKey"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"0296bff0-2f7e-4129-a24c-61b760057c9a"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"patch"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"{\"schemaVersion\":\"suggestion-patch/1.0.0\",\"id\":\"b92100b1-8dfa-4aba-8305-e9f15b39180c\",\"producerVersion\":\"grounded-patterns/1.0.0\",\"baseVersionId\":\"3384c223-2f76-466e-8e90-117f31a0720b\",\"targetFactId\":\"660d0c1b-df3b-468f-a7b1-223bc9e7217c\",\"sectionId\":\"6f6b1ce4-0455-4790-b1f5-68e22440de68\",\"entryId\":\"de9df168-1a62-495f-bbe8-d18c8d26b6d3\",\"sourceFactIds\":[\"660d0c1b-df3b-468f-a7b1-223bc9e7217c\"],\"affectedRuleIds\":[],\"affectedRequirementIds\":[],\"pattern\":\"action_scope_result\",\"operations\":[{\"operation\":\"replace_fact\",\"factId\":\"660d0c1b-df3b-468f-a7b1-223bc9e7217c\",\"value\":\"Built reliable services; scope: Internal services; result: Fewer release failures.\"}],\"rationale\":\"Reorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.\",\"confidence\":{\"kind\":\"uncalibrated\",\"value\":null},\"clarificationNeeds\":[],\"state\":\"ready\"}"[39m
+    [36m/>[39m
+    [36m<button[39m
+      [33mtype[39m=[32m"submit"[39m
+    [36m>[39m
+      [0mReject [0m
+      [0maction scope result[0m
+    [36m</button>[39m
+  [36m</form>[39m
+[36m</article>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx:44:15
+     42| ] as const)("shows complete before/after and the actual %s structural …
+     43|   const f = fixture(pattern); const { article } = await show(f); const…
+     44|   expect(view.getByRole("blockquote", { name: "Complete current wordin…
+       |               ^
+     45|   expect(view.getByRole("blockquote", { name: "Complete proposed wordi…
+     46|   expect(view.getByText(reason)).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > shows exact unchanged source fact binding and recorded provenance without upgrading historical references
+TestingLibraryElementError: Unable to find an element with the text: f319b99e-7b05-49e2-be34-464509b133ae. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<article[39m
+  [33mclass[39m=[32m"account-card"[39m
+[36m>[39m
+  [36m<h4>[39m
+    [0maction scope result[0m
+  [36m</h4>[39m
+  [36m<p>[39m
+    [0mState: [0m
+    [0mclarification required[0m
+    [0m; confidence: uncalibrated.[0m
+  [36m</p>[39m
+  [36m<p>[39m
+    [0mReorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.[0m
+  [36m</p>[39m
+  [36m<p>[39m
+    [0mFactual strength: candidate-declared; domain quality needs review.[0m
+  [36m</p>[39m
+  [36m<ul />[39m
+  [36m<blockquote>[39m
+    [0mBuilt reliable services[0m
+  [36m</blockquote>[39m
+  [36m<p>[39m
+    [0mClarification needed: [0m
+    [0mresult, scope[0m
+  [36m</p>[39m
+  [36m<p>[39m
+    [0mProjected before acceptance: unavailable. Actual after a saved version: unavailable. Numeric delta: unavailable.[0m
+  [36m</p>[39m
+  [36m<form[39m
+    [33maction[39m=[32m"/analysis/22222222-2222-4222-8222-222222222222/author"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mmethod[39m=[32m"post"[39m
+  [36m>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"action"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"accept"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"expectedVersionId"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"cd84ecd4-6393-4b07-b5de-2899b50255a4"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"idempotencyKey"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"90822094-cacf-4b25-b57b-bd5abfe98ac4"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"patch"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"{\"schemaVersion\":\"suggestion-patch/1.0.0\",\"id\":\"a98e959a-922e-47ad-8154-97032bbc59ab\",\"producerVersion\":\"grounded-patterns/1.0.0\",\"baseVersionId\":\"cd84ecd4-6393-4b07-b5de-2899b50255a4\",\"targetFactId\":\"f319b99e-7b05-49e2-be34-464509b133ae\",\"sectionId\":\"70d5245f-b466-4794-8535-58ebc96344d0\",\"entryId\":\"817d8356-8758-4a7c-83b1-986d579996a3\",\"sourceFactIds\":[\"f319b99e-7b05-49e2-be34-464509b133ae\"],\"affectedRuleIds\":[],\"affectedRequirementIds\":[],\"pattern\":\"action_scope_result\",\"operations\":[{\"operation\":\"replace_fact\",\"factId\":\"f319b99e-7b05-49e2-be34-464509b133ae\",\"value\":\"Built reliable services\"}],\"rationale\":\"Reorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.\",\"confidence\":{\"kind\":\"uncalibrated\",\"value\":null},\"clarificationNeeds\":[\"result\",\"scope\"],\"state\":\"clarification_required\"}"[39m
+    [36m/>[39m
+    [36m<label>[39m
+      [36m<input[39m
+        [33mname[39m=[32m"confirmation"[39m
+        [33mrequired[39m=[32m""[39m
+        [33mtype[39m=[32m"checkbox"[39m
+        [33mvalue[39m=[32m"true"[39m
+      [36m/>[39m
+      [0mI reviewed and confirm every proposed claim.[0m
+    [36m</label>[39m
+    [36m<button[39m
+      [33mdisabled[39m=[32m""[39m
+      [33mtype[39m=[32m"submit"[39m
+    [36m>[39m
+      [0mAccept [0m
+      [0maction scope result[0m
+    [36m</button>[39m
+  [36m</form>[39m
+  [36m<form[39m
+    [33maction[39m=[32m"/analysis/22222222-2222-4222-8222-222222222222/author"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mmethod[39m=[32m"post"[39m
+  [36m>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"action"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"reject"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"expectedVersionId"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"cd84ecd4-6393-4b07-b5de-2899b50255a4"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"idempotencyKey"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"03007121-a6ee-45b5-8ffd-4cf92433d3b7"[39m
+    [36m/>[39m
+    [36m<input[39m
+      [33mname[39m=[32m"patch"[39m
+      [33mtype[39m=[32m"hidden"[39m
+      [33mvalue[39m=[32m"{\"schemaVersion\":\"suggestion-patch/1.0.0\",\"id\":\"a98e959a-922e-47ad-8154-97032bbc59ab\",\"producerVersion\":\"grounded-patterns/1.0.0\",\"baseVersionId\":\"cd84ecd4-6393-4b07-b5de-2899b50255a4\",\"targetFactId\":\"f319b99e-7b05-49e2-be34-464509b133ae\",\"sectionId\":\"70d5245f-b466-4794-8535-58ebc96344d0\",\"entryId\":\"817d8356-8758-4a7c-83b1-986d579996a3\",\"sourceFactIds\":[\"f319b99e-7b05-49e2-be34-464509b133ae\"],\"affectedRuleIds\":[],\"affectedRequirementIds\":[],\"pattern\":\"action_scope_result\",\"operations\":[{\"operation\":\"replace_fact\",\"factId\":\"f319b99e-7b05-49e2-be34-464509b133ae\",\"value\":\"Built reliable services\"}],\"rationale\":\"Reorder only candidate-confirmed contribution and clarification text. Review every proposed claim before accepting.\",\"confidence\":{\"kind\":\"uncalibrated\",\"value\":null},\"clarificationNeeds\":[\"result\",\"scope\"],\"state\":\"clarification_required\"}"[39m
+    [36m/>[39m
+    [36m<button[39m
+      [33mtype[39m=[32m"submit"[39m
+    [36m>[39m
+      [0mReject [0m
+      [0maction scope result[0m
+    [36m</button>[39m
+  [36m</form>[39m
+[36m</article>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx:51:15
+     49| it("shows exact unchanged source fact binding and recorded provenance …
+     50|   const f = fixture("action_scope_result", true, true); const { articl…
+     51|   expect(view.getByText(f.fact.id, { exact: false })).toBeTruthy();
+       |               ^
+     52|   expect(view.getByText(/Recorded provenance may describe earlier word…
+     53|   expect(view.getByText(/Candidate confirmation is a declaration/u)).t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 4 passed (8)
+   Start at  09:12:08
+   Duration  1.37s (transform 137ms, setup 0ms, import 303ms, tests 537ms, environment 472ms)
+
+JSON report written to /private/tmp/resumide-jd-recommendations-frontend-1904wvcp/review-red-fixture-corrected/tests.json

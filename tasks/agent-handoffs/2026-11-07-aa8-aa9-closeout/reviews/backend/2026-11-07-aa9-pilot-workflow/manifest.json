@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "path": "app/lib/server/pilot-workflow.ts",
+      "sha256": "4e9125086e9b4426542ac569b5fec1926c976669ede84af8729ada95b2f6194a"
+    },
+    {
+      "path": "tests/unit/pilot-workflow.test.ts",
+      "sha256": "615a852738c8bdd0395ddf241b944cbe784a6762d014366e9db7f07516bba758"
+    },
+    {
+      "path": "tasks/agent-handoffs/2026-11-07-aa9-pilot-workflow/README.md",
+      "sha256": "fb517eff1fe92c0020945467e3a8de8324c7816e147b88077194ffbe617cd2fe"
+    }
+  ],
+  "node": "22.23.4",
+  "behavioralTests": {
+    "passed": 17,
+    "exit": 0
+  },
+  "focusedChecks": {
+    "typescript": 0,
+    "eslint": 0,
+    "prettier": 0
+  },
+  "redGreen": [
+    "Malformed adapter output must stop; active before, stopped after",
+    "Cached reads during pending deletion must deny; idempotent rubric leaked before, RUN_BUSY after"
+  ],
+  "deployment": "EXPLICITLY_STOPPED_NO_DEPLOYMENT_REQUEST_OR_ACTION",
+  "evidence": "ephemeral synthetic local execution; actual external vendor/customer/hosted deletion notperformed",
+  "asyncReviewRegression": {
+    "red": "Expired actor received rubric; revoked target called twice",
+    "green": "No rubric returned; one completed observation preserved then stopped"
+  }
+}

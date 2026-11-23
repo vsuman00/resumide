@@ -1,0 +1,72 @@
+{
+  "task": "CR-A10 owned relationship context prerequisite",
+  "status": "IMPLEMENTATION_CONTRACT_SOURCE_ONLY",
+  "at": "2026-11-14T10:46:07.248394+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "migration": "supabase/migrations/20261114104337_requirement_relationship_context.sql",
+  "fullSequence": "Owned header reader/adapter -> versioned explicit-source/declaration semantic producer -> typed coverage -> actual typed diagnostic consumer -> separately bound authoring. This prerequisite does not complete A10.",
+  "rpc": {
+    "name": "public.read_requirement_relationship_context",
+    "args": {
+      "p_user_id": "uuid",
+      "p_analysis_id": "uuid",
+      "p_selection": "strict object {canonicalVersionId:uuid|null,requirementVersionId:uuid|null}; both keys required"
+    },
+    "selection": "Null resolves current under the same owned snapshot; explicit historical versions remain independent of current review/head proof caps. Selected versions and captured latest heads are distinct.",
+    "permissions": "SECURITY DEFINER, empty search_path, fully qualified access; revoke PUBLIC/anon/authenticated and grant only service_role. Reuse established server ownership/privacy/membership checks. All private helpers remain denied."
+  },
+  "adapter": {
+    "file": "app/lib/server/requirement-relationship-context.ts",
+    "export": "loadRequirementRelationshipContext(client, analysisId, ownerId, options={})",
+    "options": "Strict canonicalVersionId/requirementVersionId UUID|null optional; normalize omitted to null; invalid input fails before RPC. No caller context/proof/eligibility fields.",
+    "transport": "One exact RPC, no table fallback or hidden query. Sanitize DB errors; do not return/log raw messages or private content on failure.",
+    "decoder": "Strict available/not_found/unavailable protocol union; parse actual canonical/evidence/typed-JD schemas, exact owner/source/version/head/citation/location/profile bindings. Native hashes are opaque PG JSONB-text UTF8 SHA256, never JSON.stringify hashes."
+  },
+  "dto": {
+    "schemaVersion": "requirement-relationship-context/1.0.0",
+    "status": "available | not_found | unavailable; failure branches contain only protocol/status/scoringEligible:false",
+    "authority": "owned_header_relations_only (available branch only); no semantic or numeric eligibility",
+    "scoringEligible": false,
+    "source": "exact ownerId,organizationId,resumeId,analysisId,sourceId,attemptId,inputSha256",
+    "sourceMetadata": "{pageCount: actual nullable bounded positive integer from owned resume_versions.page_count}; no observed-page substitution or clamp",
+    "attempt": "{id,attemptNumber,envelope}; actual owned evidence schema",
+    "canonical": "{versionId,revision,contentSha256,locale,content}; real selected owned row",
+    "requirements": "{versionId,revision,inputSha256,contentSha256,content}; typed requirements/2.0.0 validated with actual JD validator and admission/alias/relation/unicode policies",
+    "ancestors": "Ordered actual owned suffix <=64; versionId/revision/native contentSha256/content. Exact predecessor IDs and decrementing revisions; never fabricated ancestry.",
+    "heads": "{canonicalHeadId,canonicalHeadRevision,requirementHeadId,requirementHeadRevision}; capture and final recheck with selected pair/job link/privacy",
+    "profiles": "Exact existing correction/association/regroup/JD admission profiles plus guarded canonical readiness successor identity. Publish actual exact nested schema/constants together before test GREEN; no permissive record/unknown fields for security metadata.",
+    "headerSnapshot": "Derived actual marker family regroup|association|none (preserve empty markers), existing family creation kind/null, selected snapshot through-prefix identity and ordered active groups. No producer-based inference.",
+    "groups": "Section/entry plus typed origin family,batchId,groupId,originalApprovalVersionId and exact immutable source selection. Members: source order/assertion/field/fact, current value/state/confirmation separate from observed source value, complete citation/page/method/offset tuples, current location and current_citations|owned_ancestor_chain with original version/fact references. Field only employer|role|dates. Publish precise strict source-selection/member wire shape in coherent module before dependent tests."
+  },
+  "proof": "Use entry_regroup_scope, loaded base/prove_data/links/header/origin/resolve_loaded with ONE invocation cache. Historical through-prefix comes from selected immutable snapshot; never entry_regroup_current. No direct application table privileges or per-group validation wrapper/cache resets. Final pair/head/job-link/active ownership/deletion recheck before return. Missing catalogs, invalid/duplicate/missing members or malformed proof fail closed.",
+  "budgets": "Preserve exact current aggregate/per-kind/per-base ceilings. Charge added JD/projection/output visits and unique bytes; no origin reset, no new32 active-group ceiling, no silent truncation. No OS-memory/latency guarantee claimed.",
+  "readiness": "Guard exact preimages/postimages and add actual new reader/helper definitions/attributes/grants to readiness successor. All historical writer denials/bodies and defaults stay. Older verifier receipts remain pinned to their original snapshots; new deferred current-profile verifier must preserve relevant checks, not weaken assertions.",
+  "preserve": [
+    "All existing SQL source, labels, manifests, thresholds and failed receipts.",
+    "No table/writer/canonical producer/engine/score weights or user route changes.",
+    "Typed scoring503, authoring pause and numeric withholding remain unchanged.",
+    "Headers never establish carried skill/contribution/responsibility/duration. Current confirmation differs from observed source support."
+  ],
+  "ownership": {
+    "backend": [
+      "Root-generated migration",
+      "app/lib/server/requirement-relationship-context.ts",
+      "scripts/verify-requirement-relationship-context.sql",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a10-relationship-context.md"
+    ],
+    "frontend_tests": [
+      "tests/unit/requirement-relationship-context.test.ts",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a10-relationship-context-tests.md"
+    ],
+    "reviewer": "pricing_validation: finite read-only wire/SQL/resource/ownership/adapter and counterexample review; no pricing work.",
+    "root": "Contract, dependency/ownership synchronization, migration order, shared docs and final integrated affected gate."
+  },
+  "acceptance": [
+    "Real helper-generated canonical/JD fixtures and actual adapter fakeRPC: current/historical/non-head/none/association/regroup/empty-header positives. These are source/mock only.",
+    "Cross-owner/root/source/attempt/SHA/version/profile/confirmation/location/citation swaps; missing/duplicate member, prefix or ancestry corruption; no source data in sanitized failures.",
+    "Page_count nullable/actual metadata; zero dispatch on invalid input; one exact RPC/no table fallback.",
+    "Shared resource/loaded helper source contracts and deferred native cases for scope/privacy/ACL/current-vs-historical/old later-prefix overflow/lifecycle/resource limits. Do not execute SQL.",
+    "Relevant source/static checks and one Root affected gate plus full types/lint/web/worker after exact release. No full old campaigns merely to repeat green."
+  ],
+  "boundaries": "No SQL parser/execution/native DB/advisors, hosted writes, real env/keys/PII, services/browser/compiler/Docker/providers/dependencies/Git/deployment. No actual data/operator allocation. Source only."
+}

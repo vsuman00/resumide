@@ -1,0 +1,84 @@
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { readAiReadiness } from "../app/lib/server/ai-readiness.ts";
+
+type Environment = Readonly<Record<string, string | undefined>>;
+const invalidArguments = () => ({
+  exitCode: 2,
+  output: {
+    schemaVersion: "ai-readiness/offline-v1",
+    mode: "offline",
+    status: "invalid_arguments",
+    authentication: "not_tested",
+    providerRequests: 0,
+  },
+});
+/** Offline only; unsupported flags are rejected without echoing argv. */
+export async function runAiDoctor(
+  argv: readonly string[],
+  environment: Environment = process.env,
+) {
+  if (argv.length === 1 && argv[0] === "--help")
+    return {
+      exitCode: 0,
+      output: {
+        mode: "offline",
+        status: "help",
+        authentication: "not_tested",
+        providerRequests: 0,
+        usage:
+          "doctor-ai [--workspace PATH] [--source env-file|process] [--env-file PATH]. Offline metadata only; no authentication test or provider request.",
+      },
+    };
+  const values = new Map<string, string>();
+  for (let index = 0; index < argv.length; index += 2) {
+    const name = argv[index],
+      value = argv[index + 1];
+    if (
+      !["--workspace", "--source", "--env-file"].includes(name) ||
+      values.has(name) ||
+      !value ||
+      value.startsWith("--")
+    )
+      return invalidArguments();
+    values.set(name, value);
+  }
+  const source = values.get("--source") ?? "env-file";
+  if (
+    !["env-file", "process"].includes(source) ||
+    (source === "process" && values.has("--env-file"))
+  )
+    return invalidArguments();
+  const report = await readAiReadiness({
+    source: source === "process" ? "process" : "env_file",
+    workspaceRoot: values.get("--workspace"),
+    envFile: values.get("--env-file"),
+    environment,
+  });
+  return {
+    exitCode: report.status === "configuration_plausible" ? 0 : 1,
+    output: report,
+  };
+}
+
+if (
+  process.argv[1] &&
+  pathToFileURL(resolve(process.argv[1])).href === import.meta.url
+) {
+  try {
+    const result = await runAiDoctor(process.argv.slice(2));
+    process.stdout.write(JSON.stringify(result.output, null, 2) + "\n");
+    process.exitCode = result.exitCode;
+  } catch {
+    process.stdout.write(
+      JSON.stringify({
+        schemaVersion: "ai-readiness/offline-v1",
+        mode: "offline",
+        status: "diagnostic_unavailable",
+        authentication: "not_tested",
+        providerRequests: 0,
+      }) + "\n",
+    );
+    process.exitCode = 1;
+  }
+}

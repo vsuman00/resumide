@@ -1,0 +1,103 @@
+import type { Family } from "./ocr-print-pilot";
+
+const slateFamily: Family = {
+  id: "reliability-dev-slate-glyph-boxes",
+  partition: "development",
+  left: 58,
+  top: 81,
+  gap: 25,
+  lines: [
+    "Demo Candidate Rowan",
+    "Email: rowan.slate@example.test",
+    "Phone: 0000000000",
+    "Work History",
+    "Test Engineer | Fictional Slate Lab | Hybrid | Apr 2020 - May 2024",
+    "Checked routing keys B–Y and the identifier B-Y.",
+    "Compared ranges 3–9 with the test key 3-9.",
+    "Recorded red – blue and green - amber labels.",
+    "Exported notes — including the pre-release flags.",
+    "Recorded temperatures from −4 to 5 Celsius.",
+    "Education: BSc Information Science",
+    "Certification: Demo Systems Assurance Certificate",
+  ],
+  fields: {
+    name: "Demo Candidate Rowan",
+    email: "rowan.slate@example.test",
+    phone: "0000000000",
+    employer: "Fictional Slate Lab",
+    role: "Test Engineer",
+    dates: "Apr 2020 - May 2024",
+    education: "BSc Information Science",
+    certification: "Demo Systems Assurance Certificate",
+  },
+};
+
+const cedarFamily: Family = {
+  id: "reliability-dev-cedar-punctuation",
+  partition: "development",
+  top: 67,
+  left: 61,
+  gap: 24,
+  lines: [
+    "Demo Candidate Willow",
+    "Email: willow.cedar@example.test",
+    "Phone: 0000000000",
+    "Professional Experience",
+    "Release Engineer | Fictional Cedar Lab | Remote | Mar 2019 - Sep 2021",
+    "Checked bins A-Z and index ranges 2–8.",
+    "Checked bins A–Z and index ranges 2-8.",
+    "Matched the red - green marker on the sample image.",
+    "Matched the blue – yellow marker on the sample image.",
+    "Checked pre-release flags and archived build-ready files.",
+    "Education: BEng Software Systems",
+    "Certification: Demo Release Engineering Certificate",
+  ],
+  fields: {
+    name: "Demo Candidate Willow",
+    email: "willow.cedar@example.test",
+    phone: "0000000000",
+    employer: "Fictional Cedar Lab",
+    role: "Release Engineer",
+    dates: "Mar 2019 - Sep 2021",
+    education: "BEng Software Systems",
+    certification: "Demo Release Engineering Certificate",
+  },
+};
+
+const graniteFamily: Family = {
+  id: "reliability-dev-granite-numeric-marks",
+  partition: "development",
+  left: 55,
+  top: 75,
+  gap: 25,
+  lines: [
+    "Demo Candidate Maple",
+    "Email: maple.granite@example.test",
+    "Phone: 0000000000",
+    "Work History",
+    "Data Engineer | Fictional Granite Lab | Hybrid | Jun 2020 - May 2024",
+    "Recorded changes from −4 through −8 units.",
+    "Kept signed keys -4 and -8 in the notes.",
+    "Retained marks —4 and —8 in the reference table.",
+    "Copied labels –4 and –8 from the fixture key.",
+    "Compared the interval 2–8 against key 2-8.",
+    "Education: BSc Information Science",
+    "Certification: Demo Data Quality Certificate",
+  ],
+  fields: {
+    name: "Demo Candidate Maple",
+    email: "maple.granite@example.test",
+    phone: "0000000000",
+    employer: "Fictional Granite Lab",
+    role: "Data Engineer",
+    dates: "Jun 2020 - May 2024",
+    education: "BSc Information Science",
+    certification: "Demo Data Quality Certificate",
+  },
+};
+
+export const NUMERIC_PUNCTUATION_DEVELOPMENT_FAMILIES = [
+  { family: slateFamily, originalIndex: 1, compareWithPrevious: false },
+  { family: cedarFamily, originalIndex: 0, compareWithPrevious: false },
+  { family: graniteFamily, originalIndex: 1, compareWithPrevious: true },
+] as const;

@@ -1,0 +1,223 @@
+import { useId } from "react";
+import type {
+  WritingComparison,
+  SavedWritingComparison,
+} from "~/lib/writing-comparison";
+import type { compareCanonical } from "~/lib/server/canonical-content";
+
+type FactChange = ReturnType<typeof compareCanonical>[number];
+
+const changes = {
+  wording_changed: "Wording changed",
+  record_only: "Record changes only; wording unchanged",
+  added: "Fact added to this selected version",
+  removed: "Fact absent from this selected version",
+  unchanged: "Wording unchanged",
+};
+const present = (value: number | null) =>
+  value === null ? "Absent" : String(value);
+const recorded = (value: boolean | null) =>
+  value === null ? "Absent" : value ? "Recorded" : "Not recorded";
+function WarningList({
+  label,
+  warnings,
+}: {
+  label: string;
+  warnings: string[];
+}) {
+  return (
+    <div>
+      <p>{label}:</p>
+      {warnings.length ? (
+        <ul aria-label={label}>
+          {warnings.map((warning) => (
+            <li key={warning}>{warning}</li>
+          ))}
+        </ul>
+      ) : (
+        <p>No warnings observed in this check.</p>
+      )}
+    </div>
+  );
+}
+function FactObservations({
+  item,
+  factChange,
+}: {
+  item: WritingComparison;
+  factChange?: FactChange;
+}) {
+  const projected = item.mode === "projected";
+  const Heading = projected ? "h6" : "h4";
+  return (
+    <article className="account-card" style={{ overflowWrap: "anywhere" }}>
+      <Heading>Fact {item.factId}</Heading>
+      <p>{changes[item.changeKind]}</p>
+      {!projected && (
+        <>
+          <p>Saved wording before:</p>
+          <blockquote
+            aria-label="Saved wording before"
+            style={{ whiteSpace: "pre-wrap" }}
+          >
+            {factChange
+              ? (factChange.before?.value ?? "Absent")
+              : "Unavailable"}
+          </blockquote>
+          <p>Saved wording after:</p>
+          <blockquote
+            aria-label="Saved wording after"
+            style={{ whiteSpace: "pre-wrap" }}
+          >
+            {factChange ? (factChange.after?.value ?? "Absent") : "Unavailable"}
+          </blockquote>
+          {!factChange && (
+            <p>
+              Saved wording is unavailable because its comparison row is
+              missing.
+            </p>
+          )}
+        </>
+      )}
+      <table aria-label="Writing and record observations">
+        <caption>Text and recorded state in the selected comparison</caption>
+        <thead>
+          <tr>
+            <th scope="col">Observation</th>
+            <th scope="col">Before</th>
+            <th scope="col">{projected ? "Proposed text" : "After"}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Word count</th>
+            <td>{present(item.beforeWordCount)}</td>
+            <td>{present(item.afterWordCount)}</td>
+          </tr>
+          <tr>
+            <th scope="row">Fact state</th>
+            <td>{item.beforeState?.replaceAll("_", " ") ?? "Absent"}</td>
+            <td>
+              {projected
+                ? "Not saved"
+                : (item.afterState?.replaceAll("_", " ") ?? "Absent")}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Recorded source references</th>
+            <td>{present(item.beforeSourceReferenceCount)}</td>
+            <td>
+              {projected
+                ? "Not saved"
+                : present(item.afterSourceReferenceCount)}
+            </td>
+          </tr>
+          <tr>
+            <th scope="row">Confirmation record</th>
+            <td>{recorded(item.beforeConfirmationRecorded)}</td>
+            <td>
+              {projected
+                ? "Not saved"
+                : recorded(item.afterConfirmationRecorded)}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        {item.wordCountDelta === null
+          ? "Text word-count change: unavailable when a fact is absent."
+          : `Text word-count change: ${item.wordCountDelta > 0 ? "+" : ""}${item.wordCountDelta}.`}
+      </p>
+      <WarningList label="Warnings before" warnings={item.beforeWarnings} />
+      <WarningList
+        label={projected ? "Warnings in proposed text" : "Warnings after"}
+        warnings={item.afterWarnings}
+      />
+      <WarningList label="New warnings" warnings={item.newWarnings} />
+      <WarningList label="Resolved warnings" warnings={item.resolvedWarnings} />
+    </article>
+  );
+}
+/** Read-only observations. Saved identities come exclusively from the owned reader. */
+export default function WritingDiagnosticComparison({
+  comparison,
+  factChanges,
+}: {
+  comparison: WritingComparison | SavedWritingComparison;
+  factChanges?: readonly FactChange[];
+}) {
+  const heading = useId();
+  const saved = comparison.schemaVersion === "saved-writing-comparison/1.0.0";
+  const projected = comparison.mode === "projected";
+  const Heading = projected ? "h5" : "h3";
+  const items = saved ? comparison.items : [comparison];
+  return (
+    <section aria-labelledby={heading}>
+      <Heading id={heading}>
+        {projected
+          ? "Projected writing observations (not saved)"
+          : "Saved writing observations"}
+      </Heading>
+      <p>
+        Text counts and writing warnings are observations, not quality, ATS or
+        JD scores. A resolved warning does not establish factual accuracy or
+        qualification.
+      </p>
+      {saved ? (
+        <>
+          <p>
+            Selected before: revision {comparison.beforeRevision}, version{" "}
+            {comparison.beforeVersionId}.
+          </p>
+          <p>
+            Selected after: revision {comparison.afterRevision}, version{" "}
+            {comparison.afterVersionId}.
+          </p>
+          <p>
+            Showing writing observations for {comparison.items.length} of{" "}
+            {comparison.total} changed facts.
+          </p>
+          <p>
+            {comparison.remainingCount} more changed facts remain in the
+            complete fact comparison.
+          </p>
+        </>
+      ) : (
+        <>
+          <p>Before version: {comparison.beforeVersionId}.</p>
+          {!projected && <p>After version: {comparison.afterVersionId}.</p>}
+        </>
+      )}
+      {projected ? (
+        <p>
+          Proposed text has no saved version, source references or confirmation.
+          These observations do not apply or save the wording, even when its
+          text is unchanged.
+        </p>
+      ) : (
+        <p>
+          Comparison direction does not establish chronology or an accepted
+          suggestion. Both sides describe the selected saved records.
+        </p>
+      )}
+      <p>
+        Recorded source references may describe earlier wording. A confirmation
+        records a candidate declaration, not independent verification.
+      </p>
+      {items.map((item) => (
+        <FactObservations
+          key={item.factId}
+          item={item}
+          factChange={factChanges?.find((change) => change.id === item.factId)}
+        />
+      ))}
+      {saved && comparison.items.length === 0 && (
+        <p>No fact changes in the selected saved pair.</p>
+      )}
+      <p>
+        Numeric score and delta: unavailable. Qualification credit: not
+        assessed. No JD coverage change is assessed by this comparison.
+      </p>
+    </section>
+  );
+}

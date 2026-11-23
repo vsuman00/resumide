@@ -1,0 +1,118 @@
+{
+  "status": "VERIFIED_LOCAL_RECONCILED_AGGREGATION_FAILURE",
+  "receipt": "tasks/agent-handoffs/2026-11-09-reliability-implementation/document-page-count-61576f59-f19d-4759-8bd1-b25e18e02070.json",
+  "receiptSha256": "de0c779e93ce69260ba2ab788dfa3579b031716831f4faeb31e67effb93f038c",
+  "originalWrapperStatus": "FAILED_OR_INCOMPLETE",
+  "originalWrapperExitCode": 1,
+  "controllerSession": 94278,
+  "controllerSessionTerminal": true,
+  "cause": "Controller adapted from four to six commands retained an exact four-command count. All six commands actually exited0; original failing receipt unchanged. Only controller count changed4->6, no product/test assertions changed.",
+  "controllerBefore": {
+    "snapshot": "tasks/agent-handoffs/2026-11-09-reliability-implementation/document-page-count-controller-preaggregation.mjs.txt",
+    "sha256": "db6e31fa3642637a71be46902cdcd7b4c55e333eb144d071a823df496eed124c"
+  },
+  "controllerAfter": {
+    "path": "tasks/agent-handoffs/2026-11-09-reliability-implementation/document-page-count-controller.mjs",
+    "sha256": "296a0ccf5b8015b13d84a5752c415cc7e7f68d56c761e473d3c870260ac86f66",
+    "requiredCommandCount": 6
+  },
+  "freshTests": 481,
+  "freshTestFiles": 18,
+  "failedTests": 0,
+  "pendingTests": 0,
+  "freshChecks": [
+    "affected-source-format",
+    "affected-tests",
+    "typecheck",
+    "lint",
+    "web-build",
+    "worker-build"
+  ],
+  "sourceInputsVerified": 1007,
+  "sourceDriftDuringRun": [],
+  "postRunDrift": [
+    {
+      "path": "tasks/agent-handoffs/2026-11-09-reliability-implementation/document-page-count-controller.mjs",
+      "reason": "One-line controller aggregation correction only"
+    }
+  ],
+  "commandGroupsAbsent": [
+    {
+      "label": "affected-source-format",
+      "processGroup": 57344,
+      "present": false
+    },
+    {
+      "label": "affected-tests",
+      "processGroup": 57353,
+      "present": false
+    },
+    {
+      "label": "typecheck",
+      "processGroup": 57381,
+      "present": false
+    },
+    {
+      "label": "lint",
+      "processGroup": 57409,
+      "present": false
+    },
+    {
+      "label": "web-build",
+      "processGroup": 57431,
+      "present": false
+    },
+    {
+      "label": "worker-build",
+      "processGroup": 57464,
+      "present": false
+    }
+  ],
+  "controllerPresent": false,
+  "artifacts": {
+    "build/server/index.js": {
+      "bytes": 853,
+      "sha256": "a8517017b6eebb6a83156bd024f902366b6b2d26f1e53aba575c08ec831101f9",
+      "modifiedAt": "2026-11-17T06:23:13.551388+00:00",
+      "evidence": "OBSERVED_AFTER_SUCCESSFUL_BUILD_COMMANDS"
+    },
+    "build/worker/analysis.mjs": {
+      "bytes": 336464,
+      "sha256": "f272cf73e08d4e390713e704901d0831cfbd46a9040e953501561a6f28286c1d",
+      "modifiedAt": "2026-11-17T06:23:14.046895+00:00",
+      "evidence": "OBSERVED_AFTER_SUCCESSFUL_BUILD_COMMANDS"
+    }
+  },
+  "actualSql": "UNPARSED_UNEXECUTED",
+  "databaseOperations": 0,
+  "browserRuns": 0,
+  "providerRequests": 0,
+  "goal": "INCOMPLETE",
+  "deployment": "HOLD",
+  "peerReview": {
+    "backend": "ACK final SQL/readiness; original cases and startup source retained",
+    "runtime": "ACK exact controller-only reconciliation, raw results/source/artifact/log hashes",
+    "frontend": "ACK exact reconciliation and no SQL/browser/stored-count/full-suite claim"
+  },
+  "scope": {
+    "integratedFiles": 17,
+    "priorRawInputs": 989,
+    "changedPriorInputs": 9,
+    "unchangedPriorInputs": 980,
+    "oldMigrationsUnchanged": 80,
+    "newMigrationApplied": false,
+    "parentCounts": {
+      "VERIFIED": 2,
+      "PARTIAL": 42,
+      "PLANNED": 20
+    }
+  },
+  "documentationChecks": {
+    "newCloseoutAndContextFormatting": "PASS",
+    "localMarkdownLinks": "PASS",
+    "gitDiffCheck": "PASS",
+    "prose": "Edited Markdown low density, zero suspicious codepoints; deterministic cleanup of new report/context left bytes unchanged",
+    "fullRepositoryFormatting": "NOT_CLAIMED; inherited tracker formatting drift remains recorded in native-schema-integrated-review.json",
+    "fullCi": "NOT_RUN; source-only affected verification does not cover hosted/browser/provider/security/runtime acceptance"
+  }
+}

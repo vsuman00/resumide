@@ -1,0 +1,162 @@
+
+> test
+> vitest run tests/unit/owned-ai-budget-export.test.ts -t enforces absolute elapsed deadline
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats[39m
+
+ [31m❯[39m tests/unit/owned-ai-budget-export.test.ts [2m([22m[2m25 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m24 skipped[39m[2m)[22m[32m 10[2mms[22m[39m
+     [2m[90m↓[39m[22m admits each real lifecycle shape and preserves unknown nulls
+     [2m[90m↓[39m[22m uses exact large integer costs from the existing R03 producer math
+     [2m[90m↓[39m[22m preserves whole historical multi-organization owner rows without current membership
+     [2m[90m↓[39m[22m records a redacted foreign actor while rejecting disclosure of that UUID
+     [2m[90m↓[39m[22m exports own operator records/actions without foreign target or usage fields
+     [2m[90m↓[39m[22m rejects malformed/nonexact numeric value 0
+     [2m[90m↓[39m[22m rejects malformed/nonexact numeric value 01
+     [2m[90m↓[39m[22m rejects malformed/nonexact numeric value -1
+     [2m[90m↓[39m[22m rejects malformed/nonexact numeric value 1.0
+     [2m[90m↓[39m[22m rejects malformed/nonexact numeric value 1e3
+     [2m[90m↓[39m[22m rejects malformed/nonexact numeric value NaN
+     [2m[90m↓[39m[22m rejects malformed/nonexact numeric value Infinity
+     [2m[90m↓[39m[22m rejects malformed/nonexact numeric value 9007199254740992
+     [2m[90m↓[39m[22m rejects owner/parent/duplicate/binding/cost corruption independently
+     [2m[90m↓[39m[22m rejects impossible history, fabricated zero unknowns and false non-overrun acknowledgment
+     [2m[90m↓[39m[22m requires exact current source metadata before the one owned data RPC
+     [2m[90m↓[39m[22m fails malformed/staged/drifted readiness without data lookup
+     [2m[90m↓[39m[22m fails malformed/staged/drifted readiness without data lookup
+     [2m[90m↓[39m[22m fails malformed/staged/drifted readiness without data lookup
+     [2m[90m↓[39m[22m fails malformed/staged/drifted readiness without data lookup
+     [2m[90m↓[39m[22m fails malformed/staged/drifted readiness without data lookup
+     [2m[90m↓[39m[22m keeps permission errors safe without empty fallback
+     [2m[90m↓[39m[22m pre-aborts with zero IO and forwards mid-query cancellation
+[31m     [31m×[31m enforces absolute elapsed deadline even before a delayed timer callback[39m[32m 10[2mms[22m[39m
+     [2m[90m↓[39m[22m times out without accepting late data and safely handles synchronous throws
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/unit/owned-ai-budget-export.test.ts[2m > [22mowned R03 export; synthetic RPCs, no Native proof[2m > [22menforces absolute elapsed deadline even before a delayed timer callback
+[31m[1mAssertionError[22m: promise resolved "{ …(8) }" instead of rejecting[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- Error {[39m
+[32m-   "message": "rejected promise",[39m
+[31m+ {[39m
+[31m+   "attempts": [[39m
+[31m+     {[39m
+[31m+       "actual_cost_microusd": "59",[39m
+[31m+       "actual_input_tokens": "37",[39m
+[31m+       "actual_output_tokens": "11",[39m
+[31m+       "created_at": "2026-11-15T00:00:00.000001Z",[39m
+[31m+       "id": "a0000000-0000-4000-8000-000000000020",[39m
+[31m+       "operation_id": "a0000000-0000-4000-8000-000000000010",[39m
+[31m+       "ordinal": 1,[39m
+[31m+       "organization_id": "a0000000-0000-4000-8000-000000000002",[39m
+[31m+       "period": "2026-11-01",[39m
+[31m+       "reserved_cost_microusd": "3000",[39m
+[31m+       "state": "settled",[39m
+[31m+       "updated_at": "2026-11-15T00:00:00.000001Z",[39m
+[31m+     },[39m
+[31m+   ],[39m
+[31m+   "events": [[39m
+[31m+     {[39m
+[31m+       "attempt_id": "a0000000-0000-4000-8000-000000000020",[39m
+[31m+       "cost_microusd": null,[39m
+[31m+       "created_at": "2026-11-15T00:00:00.000001Z",[39m
+[31m+       "evidence_sha256": null,[39m
+[31m+       "id": "a0000000-0000-4000-8000-000000000100",[39m
+[31m+       "input_tokens": null,[39m
+[31m+       "kind": "reserve",[39m
+[31m+       "operator_disposition": "none",[39m
+[31m+       "operator_id": null,[39m
+[31m+       "output_tokens": null,[39m
+[31m+       "reconciliation_id": null,[39m
+[31m+     },[39m
+[31m+     {[39m
+[31m+       "attempt_id": "a0000000-0000-4000-8000-000000000020",[39m
+[31m+       "cost_microusd": null,[39m
+[31m+       "created_at": "2026-11-15T00:00:00.000001Z",[39m
+[31m+       "evidence_sha256": null,[39m
+[31m+       "id": "a0000000-0000-4000-8000-000000000101",[39m
+[31m+       "input_tokens": null,[39m
+[31m+       "kind": "dispatch",[39m
+[31m+       "operator_disposition": "none",[39m
+[31m+       "operator_id": null,[39m
+[31m+       "output_tokens": null,[39m
+[31m+       "reconciliation_id": null,[39m
+[31m+     },[39m
+[31m+     {[39m
+[31m+       "attempt_id": "a0000000-0000-4000-8000-000000000020",[39m
+[31m+       "cost_microusd": null,[39m
+[31m+       "created_at": "2026-11-15T00:00:00.000001Z",[39m
+[31m+       "evidence_sha256": null,[39m
+[31m+       "id": "a0000000-0000-4000-8000-000000000102",[39m
+[31m+       "input_tokens": null,[39m
+[31m+       "kind": "unknown",[39m
+[31m+       "operator_disposition": "none",[39m
+[31m+       "operator_id": null,[39m
+[31m+       "output_tokens": null,[39m
+[31m+       "reconciliation_id": null,[39m
+[31m+     },[39m
+[31m+     {[39m
+[31m+       "attempt_id": "a0000000-0000-4000-8000-000000000020",[39m
+[31m+       "cost_microusd": "59",[39m
+[31m+       "created_at": "2026-11-15T00:00:00.000001Z",[39m
+[31m+       "evidence_sha256": "2222222222222222222222222222222222222222222222222222222222222222",[39m
+[31m+       "id": "a0000000-0000-4000-8000-000000000103",[39m
+[31m+       "input_tokens": "37",[39m
+[31m+       "kind": "reconcile",[39m
+[31m+       "operator_disposition": "redacted",[39m
+[31m+       "operator_id": null,[39m
+[31m+       "output_tokens": "11",[39m
+[31m+       "reconciliation_id": "a0000000-0000-4000-8000-000000000500",[39m
+[31m+     },[39m
+[31m+   ],[39m
+[31m+   "omissions": {[39m
+[31m+     "foreignOperatorIdentity": "redacted",[39m
+[31m+     "foreignTargetHistory": "redacted",[39m
+[31m+     "periodOpenings": "not_subject_attributable",[39m
+[31m+     "sharedPools": "not_subject_attributable",[39m
+[31m+   },[39m
+[31m+   "operations": [[39m
+[31m+     {[39m
+[31m+       "attempt_limit": 3,[39m
+[31m+       "binding_sha256": "6c5a696e2e0c379e35eef9cdbe413c57fd8db6dcafbe4ff43356cb2279df6bd5",[39m
+[31m+       "created_at": "2026-11-15T00:00:00.000001Z",[39m
+[31m+       "id": "a0000000-0000-4000-8000-000000000010",[39m
+[31m+       "input_microusd_per_million": "1000000",[39m
+[31m+       "model": "synthetic-model",[39m
+[31m+       "organization_id": "a0000000-0000-4000-8000-000000000002",[39m
+[31m+       "output_microusd_per_million": "2000000",[39m
+[31m+       "payload_sha256": "1111111111111111111111111111111111111111111111111111111111111111",[39m
+[31m+       "policy_version": "synthetic-budget/1",[39m
+[31m+       "prompt_policy_version": "synthetic-prompt/1",[39m
+[31m+       "reserved_input_tokens": "1000",[39m
+[31m+       "reserved_output_tokens": "1000",[39m
+[31m+       "surface": "qualitative",[39m
+[31m+       "user_id": "a0000000-0000-4000-8000-000000000001",[39m
+[31m+     },[39m
+[31m+   ],[39m
+[31m+   "operatorActions": [],[39m
+[31m+   "ownerId": "a0000000-0000-4000-8000-000000000001",[39m
+[31m+   "reconciliationOperators": [],[39m
+[31m+   "schemaVersion": "owned-ai-budget-export/1.0.0",[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/unit/owned-ai-budget-export.test.ts:[2m398:113[22m[39m
+    [90m396|[39m     [35mlet[39m reads [33m=[39m [34m0[39m[33m;[39m
+    [90m397|[39m     [35mconst[39m second [33m=[39m [34mclient[39m()[33m;[39m
+    [90m398|[39m     await expect(readOwnedAiBudgetExport(second, owner, profile, {time…
+    [90m   |[39m                                                                                                                 [31m^[39m
+    [90m399|[39m     [34mexpect[39m(second[33m.[39mrpc)[33m.[39m[34mtoHaveBeenCalledTimes[39m([34m2[39m)[33m;[39m
+    [90m400|[39m   })[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m24 skipped[39m[90m (25)[39m
+[2m   Start at [22m 16:11:00
+[2m   Duration [22m 153ms[2m (transform 40ms, setup 0ms, import 79ms, tests 10ms, environment 0ms)[22m
+

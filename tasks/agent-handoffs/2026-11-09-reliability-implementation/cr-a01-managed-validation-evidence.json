@@ -1,0 +1,47 @@
+{
+  "task": "CR-A01-S08",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "status": "POST_REPLAY_PREFLIGHT_VERIFIED_LOCALLY_MANAGED_ACCEPTANCE_OPEN",
+  "packetOrderedDigest": "310f2c7174f4b6f9ab69bd38fc59b6d84ffeabdee55b2d2cdc5da6ffa034ed76",
+  "sourceSha256": {
+    "scripts/verify-managed-document-worker-ready.sql": "e5f3657e4ae2dd23f4ab585044c611278c5a322560186c21f127ea994be43eb4",
+    "scripts/verify-empty-supabase-target.sql": "a98e1326e1ed13a8333b382b7659b8292e1dccee27bba25f343738b452d04cba",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/managed-schema-worker-successor-93.json": "727c71d2a058c096fd72475daa4b3efc33c5dbaa15c6f91becb9fbbf0ce71383",
+    "app/lib/server/document-page-count-readiness-profile.ts": "b2d453e2c9bae1f73471ee3328a73d7cbc8a09b50eb1f7a776de13253fc4aff9",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-a01-managed-validation-action.md": "750e71aec74af181964e5a36231f06f7aeb3cc212836cb6e5d56cc3e3979cade"
+  },
+  "localTarget": "disposable socket-only PostgreSQL 17 with synthetic platform scaffolding",
+  "operationsExecuted": 93,
+  "result": {
+    "status": "ready",
+    "cleanupReady": true,
+    "schemaVersion": "document-worker-post-replay/1",
+    "pageCountReady": true,
+    "fixtureQueuesEmpty": true,
+    "workerFencingReady": true,
+    "externalIsolationProved": false
+  },
+  "negativeCases": {
+    "DOCUMENT_WORKER_TARGET_NOT_EMPTY": {
+      "logSha256": "63863d2af72213db177982905d3a92090e17de46ba52858f55d164319a48a2b6"
+    },
+    "DOCUMENT_WORKER_PRIVATE_BUCKET_MISSING": {
+      "logSha256": "cf150dae7496e79b1cb77e3bba58d5c236541487f89b39077a7281caf14bb871"
+    },
+    "DOCUMENT_WORKER_RETIREMENT_ROLE_MISMATCH": {
+      "logSha256": "04193bfdd25701b24cc457ed8431f65e8e249dab045d62835bdabd5bbf31c51d"
+    }
+  },
+  "readyLogSha256": "7d74d35b37c9ed77a10e4d170e0cc19aace3d19958837a728d83f46cb2231523",
+  "runLogSha256": "262bf7cd5c5b618cf07dac2bba9558157bfe81b030c1992c0d527403793fdf3c",
+  "managedMetadata": {
+    "activeProjects": 1,
+    "dedicatedActiveCandidates": 0,
+    "resumideDevelopmentBranches": 0
+  },
+  "remaining": [
+    "Target identity and exclusivity approval",
+    "Apply exact ordered migration packet",
+    "Run authenticated HTTP upload, real parser, worker lease recovery and exact Storage cleanup"
+  ]
+}

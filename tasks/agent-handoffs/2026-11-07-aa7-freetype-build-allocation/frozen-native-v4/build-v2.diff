@@ -1,0 +1,36 @@
+--- build.py
++++ build-v2.py
+@@ -40,6 +40,9 @@
+                 os.killpg(p.pid, signal.SIGKILL); p.wait()
+             output.flush()
+             phases.append({'name': name, 'exitCode': p.returncode, 'seconds': round(time.monotonic() - begin, 3), 'logSha256': digest(log)})
++    if (time.monotonic() - begin > timeout or time.monotonic() - started > 1800
++            or sum(f.stat().st_size for f in export.iterdir() if f.is_file()) > 268435456):
++        raise RuntimeError('terminal native phase/global/export bound')
+     if p.returncode or log.stat().st_size > 33554432:
+         raise RuntimeError('native phase failed: ' + name)
+     return log.read_text(errors='replace')
+@@ -117,6 +120,10 @@
+     for item in archive_names.values(): shutil.copy2(source.parent / item['file'], export / item['file'])
+     shutil.copy2(client, export / client.name)
+     shutil.copy2(source / 'debian/tests/libfreetype-dev', export / 'original-debian-autopkgtest.sh')
++    if (time.monotonic() - started > 1800
++            or sum(f.stat().st_size for f in export.iterdir() if f.is_file()) > 268435456
++            or sum(f.stat().st_size for f in export.glob('*.deb')) > 67108864):
++        raise RuntimeError('final native export/package/time bound')
+     outcome = {'status': 'native-private-source-abi-font-checks-pass', 'failure': None, 'receipt': receipt}
+ except BaseException as error:
+     outcome = {'status': 'FAILED', 'failure': type(error).__name__ + ': ' + str(error), 'phase': phase}
+@@ -125,6 +132,12 @@
+     outcome['phases'] = phases
+     outcome['runtimeAdopted'] = False
+     (export / 'build-outcome.json').write_text(json.dumps(outcome, indent=2) + '\n')
++    if (time.monotonic() - started > 1800
++            or sum(f.stat().st_size for f in export.iterdir() if f.is_file()) > 268435456):
++        outcome['status'] = 'FAILED'
++        outcome['terminalBoundFailure'] = 'final outcome/global/export bound'
++        (export / 'build-outcome.json').write_text(json.dumps(outcome, indent=2) + '\n')
++        raise RuntimeError('terminal native receipt bound')
+     print('AA7_FREETYPE_OUTCOME ' + json.dumps(outcome), flush=True)
+     for log in sorted(export.glob('*.log')):
+         print('AA7_FREETYPE_LOG ' + json.dumps({'name': log.name, 'bytes': log.stat().st_size,

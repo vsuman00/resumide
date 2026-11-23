@@ -1,0 +1,89 @@
+-- Disposable PostgreSQL fixture for the staged accounting export.
+begin;
+set local plpgsql.check_asserts=on;
+set local statement_timeout='15s';
+
+do $export$
+declare
+  owner_id uuid:=gen_random_uuid();
+  foreign_id uuid:=gen_random_uuid();
+  other_user uuid;
+  organization_id uuid;
+  operation_id uuid;
+  attempt_id uuid;
+  current_period date:=date_trunc('month',clock_timestamp() at time zone 'UTC')::date;
+  payload text:=repeat('a',64);
+  sample_policy constant text:='synthetic-budget-policy';
+  sample_model constant text:='synthetic-model';
+  sample_prompt constant text:='synthetic-prompt';
+  nonce constant text:='synthetic-export-alias-probe';
+  receipt jsonb;
+  answer jsonb;
+begin
+  assert current_setting('listen_addresses')='', 'private socket required';
+  assert not exists(select 1 from auth.users), 'clean fixture required';
+  assert private.owned_ai_budget_export_ready();
+  assert private.ai_budget_source_ready();
+  assert private.owned_ai_disposition_ready();
+  assert private.privacy_generation_ready();
+  insert into auth.users(id,email)
+    values(owner_id,'synthetic-owner@example.test'),(foreign_id,'synthetic-outsider@example.test');
+
+  answer:=public.export_owned_ai_budget_records(owner_id);
+  assert answer->>'ownerId'=owner_id::text;
+  assert answer->'operations'='[]'::jsonb and answer->'attempts'='[]'::jsonb
+    and answer->'events'='[]'::jsonb;
+
+  insert into private.ai_budget_policies(version,model,monthly_token_limit,monthly_cost_limit_microusd,
+    input_microusd_per_million,output_microusd_per_million,max_attempts,enabled,approval_sha256)
+    values(sample_policy,sample_model,2000,5000,100,200,1,true,repeat('b',64));
+  foreach other_user in array array[owner_id,foreign_id] loop
+    select o.id into strict organization_id from public.organizations o where o.owner_id=other_user;
+    operation_id:=private.ai_budget_source_identity(other_user,organization_id,'build_account',null,null,nonce);
+    attempt_id:=gen_random_uuid();
+    insert into private.ai_budget_period_openings(
+      organization_id,period,pool_policy_version,opening_spent_tokens,opening_spent_cost_microusd,
+      unresolved_legacy_attempts,evidence_sha256)
+      values(organization_id,current_period,sample_policy,0,0,0,repeat('c',64));
+    receipt:=public.ai_budget_reserve_source_next(other_user,organization_id,
+      jsonb_build_object('schemaVersion','ai-budget-source/2.0.0','kind','build_account','requestNonce',nonce),
+      jsonb_build_object('operationId',operation_id,'attemptId',attempt_id,'surface','build','payloadSha256',payload,
+        'model',sample_model,'promptPolicyVersion',sample_prompt,'policyVersion',sample_policy,
+        'reservedInputTokens','400','reservedOutputTokens','100'));
+    assert receipt->>'status'='ok' and receipt#>>'{receipt,attemptId}'=attempt_id::text, 'synthetic reserve failed';
+  end loop;
+
+  answer:=public.export_owned_ai_budget_records(owner_id);
+  assert jsonb_array_length(answer->'operations')=1 and jsonb_array_length(answer->'attempts')=1
+    and jsonb_array_length(answer->'events')=1;
+  assert answer#>>'{operations,0,user_id}'=owner_id::text
+    and answer#>>'{operations,0,id}'=answer#>>'{attempts,0,operation_id}'
+    and answer#>>'{attempts,0,id}'=answer#>>'{events,0,attempt_id}';
+  assert answer#>>'{attempts,0,state}'='reserved'
+    and answer#>'{attempts,0,actual_input_tokens}'='null'::jsonb
+    and answer#>>'{events,0,kind}'='reserve';
+  assert position(foreign_id::text in answer::text)=0
+    and position(operation_id::text in answer::text)=0
+    and position(attempt_id::text in answer::text)=0;
+  assert (select count(*) from private.ai_budget_operations)=2
+    and (select count(*) from private.ai_budget_attempts)=2
+    and (select count(*) from private.ai_budget_events)=2;
+  raise notice 'PASS: empty and populated owner export, foreign exclusion and immutable rows';
+end;
+$export$;
+
+set local role service_role;
+do $permissions$
+declare metadata jsonb:=public.read_owned_ai_budget_export_readiness();
+begin
+  assert metadata->'schemaReady'='true'::jsonb and metadata->'exportExecutable'='false'::jsonb;
+  assert metadata->>'checkerSha256'='c162ab0186bbda9079989843f0aa094d69d83a5b0e12db18b23a56ea30f42501'
+    and metadata->>'exportSha256'='45adc45061a3f80ae2f5db27e8814c8c1664d0f4b6b0941b824f53aea3e22c53';
+  assert not has_function_privilege('service_role','public.export_owned_ai_budget_records(uuid)','EXECUTE')
+    and not has_function_privilege('authenticated','public.export_owned_ai_budget_records(uuid)','EXECUTE')
+    and not has_function_privilege('anon','public.export_owned_ai_budget_records(uuid)','EXECUTE');
+  raise notice 'PASS: service-role readiness stays readable and the export stays restricted';
+end;
+$permissions$;
+reset role;
+rollback;

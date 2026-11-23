@@ -1,0 +1,23 @@
+import { INACTIVE_DELETION_STATUSES } from "../privacy-deletion";
+
+type StatusFilter = {
+  neq(
+    column: "status",
+    value: (typeof INACTIVE_DELETION_STATUSES)[number],
+  ): unknown;
+};
+
+/** Failed work and a successfully withdrawn request do not block access. */
+export function filterBlockingDeletions(query: StatusFilter): void {
+  // PostgREST filters mutate this builder; callers keep its concrete result type.
+  for (const status of INACTIVE_DELETION_STATUSES) query.neq("status", status);
+}
+
+export function deletionAccessState(result: {
+  data: unknown;
+  error: unknown;
+}): "clear" | "blocked" | "unavailable" {
+  if (result.error !== null || !Array.isArray(result.data))
+    return "unavailable";
+  return result.data.length === 0 ? "clear" : "blocked";
+}

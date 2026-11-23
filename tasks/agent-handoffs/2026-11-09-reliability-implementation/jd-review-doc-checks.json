@@ -1,0 +1,42 @@
+{
+  "status": "PASS",
+  "at": "2026-11-10T19:13:51.283005+00:00",
+  "checks": [
+    {
+      "command": [
+        "/Users/vaibhavsuman/.npm/_npx/361c55be1121897e/node_modules/node/bin/node",
+        "node_modules/prettier/bin/prettier.cjs",
+        "--check",
+        "tasks/agent-handoffs/2026-11-09-reliability-implementation/jd-review-closeout.md",
+        "tasks/reliability-remediation-plan.json",
+        "tasks/agent-handoffs/2026-11-09-reliability-implementation/jd-review-completion.json",
+        "docs/design/SCORING_V2_REVIEW.md",
+        "docs/design/JOB_INTELLIGENCE_REVIEW.md",
+        "docs/ATS_SCORING_AND_AUTHORING_SPEC.md"
+      ],
+      "exitCode": 0,
+      "output": "Checking formatting...\nAll matched files use Prettier code style!\n"
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "output": ""
+    }
+  ],
+  "formattedJsonValuesPreserved": true,
+  "reportDesignLinks": "VALID",
+  "DAG": "64 unique IDs/dependencies/topological order preserved",
+  "counts": {
+    "VERIFIED": 2,
+    "PARTIAL": 33,
+    "PLANNED": 29
+  },
+  "rootSourceMatchesArchivedReleasePackets": {
+    "backend": 5,
+    "frontend": 3
+  }
+}

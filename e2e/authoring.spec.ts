@@ -4,6 +4,7 @@ import { test, expect, type BrowserContext } from "@playwright/test";
 import { createScoreFixture } from "../scripts/score-v2-test-fixture";
 import { loadCanonical } from "../app/lib/server/canonical-repository";
 import { applyAuthoring } from "../app/lib/server/authoring-repository";
+import { clarifyValue } from "../app/lib/server/authoring-contract";
 async function login(
   context: BrowserContext,
   f: Awaited<ReturnType<typeof createScoreFixture>>,
@@ -78,13 +79,27 @@ test("candidate edits, clarifies, accepts and undoes a source-bound patch by key
     for (const [kind, value] of [
       ["result", "Fewer release defects"],
       ["scope", "Internal tests"],
-    ]) {
+    ] as const) {
+      const beforeValue = await page
+        .locator(`#author-fact-${fact.id}`)
+        .inputValue();
       const answer = page.locator(`#question-${kind}`);
       await answer.fill(value);
       const form = answer.locator("..");
-      await form.getByRole("checkbox").check();
       await form
-        .getByRole("button", { name: `Save ${kind} clarification` })
+        .getByRole("button", { name: `Preview ${kind} clarification` })
+        .click();
+      const preview = page.getByRole("region", {
+        name: "Clarification preview",
+      });
+      await expect(preview).toBeVisible();
+      expect(
+        await preview.getByLabel("Complete fact to confirm").textContent(),
+      ).toBe(clarifyValue(beforeValue, kind, value));
+      await expect(preview.getByRole("checkbox")).not.toBeChecked();
+      await preview.getByRole("checkbox").check();
+      await preview
+        .getByRole("button", { name: "Confirm complete fact" })
         .click();
       await expect(page.locator(`#author-fact-${fact.id}`)).toHaveValue(
         new RegExp(value),

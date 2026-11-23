@@ -1,0 +1,890 @@
+import { constants } from "node:fs";
+import { lstat, open, realpath, stat } from "node:fs/promises";
+import { isAbsolute, relative, resolve, sep } from "node:path";
+import { parseEnv } from "node:util";
+import {
+  isAllowedOpenAiBaseUrl,
+  DEFAULT_OPENAI_BASE_URL,
+} from "./egress-policy.ts";
+import { DEFAULT_OPENAI_MODEL } from "./openai-model.ts";
+
+const MAX_ENV_BYTES = 128 * 1024;
+const settingNames = {
+  apiKey: "OPENAI_API_KEY",
+  model: "OPENAI_MODEL",
+  baseUrl: "OPENAI_BASE_URL",
+  aiEnabled: "AI_ENABLED",
+  buildAiEnabled: "BUILD_AI_ASSIST_ENABLED",
+  organization: "OPENAI_ORG_ID",
+  project: "OPENAI_PROJECT_ID",
+  logging: "OPENAI_LOG",
+} as const;
+type Setting = keyof typeof settingNames;
+type Environment = Readonly<Record<string, string | undefined>>;
+export type AiReadinessIssue =
+  | "workspace_unavailable"
+  | "env_path_invalid"
+  | "env_path_outside_workspace"
+  | "env_path_symlink"
+  | "env_file_missing"
+  | "env_file_not_regular"
+  | "env_file_too_large"
+  | "env_file_unavailable"
+  | "env_parse_invalid"
+  | "duplicate_definitions"
+  | "credential_missing"
+  | "credential_format_unrecognized"
+  | "model_missing_or_malformed"
+  | "endpoint_not_allowed"
+  | "flag_invalid"
+  | "cached_configuration_differs";
+export type AiReadinessInput = {
+  source?: "env_file" | "process";
+  workspaceRoot?: string;
+  envFile?: string;
+  environment?: Environment;
+  /** A caller-provided snapshot only; no running process is inspected. */
+  cachedEnvironment?: Environment;
+};
+function settings<T>(value: T): Record<Setting, T> {
+  return {
+    apiKey: value,
+    model: value,
+    baseUrl: value,
+    aiEnabled: value,
+    buildAiEnabled: value,
+    organization: value,
+    project: value,
+    logging: value,
+  };
+}
+function inside(root: string, path: string) {
+  const part = relative(root, path);
+  return part !== ".." && !part.startsWith(`..${sep}`) && !isAbsolute(part);
+}
+/** Let Node decide which assignments exist, including its quote fallbacks. */
+function definitions(text: string) {
+  const counts = settings(0);
+  let prefix = "__RESUMIDE_AI_ASSIGNMENT_";
+  while (text.includes(prefix)) prefix = "_" + prefix;
+  const markers = new Map<string, Setting>();
+  const names = Object.values(settingNames).join("|");
+  const pattern = new RegExp(
+    `^([^\\S\\n]*(?:export[^\\S\\n]+)?)(${names})([^\\S\\n]*=)`,
+    "gm",
+  );
+  // This private copy preserves quotes and values. Replaced names inside a
+  // quoted value stay data; only marker keys emitted by parseEnv are counted.
+  const marked = text.replace(
+    pattern,
+    (_match, before: string, key: string, after: string) => {
+      const name = (Object.keys(settingNames) as Setting[]).find(
+        (name) => settingNames[name] === key,
+      )!;
+      const marker = `${prefix}${markers.size}`;
+      markers.set(marker, name);
+      return before + marker + after;
+    },
+  );
+  const parsed = parseEnv(marked);
+  for (const [marker, name] of markers) {
+    if (Object.hasOwn(parsed, marker)) counts[name]++;
+  }
+  return counts;
+}
+
+function effective(environment: Environment) {
+  return {
+    OPENAI_API_KEY: environment.OPENAI_API_KEY,
+    OPENAI_ORG_ID: environment.OPENAI_ORG_ID,
+    OPENAI_PROJECT_ID: environment.OPENAI_PROJECT_ID,
+    OPENAI_LOG: environment.OPENAI_LOG,
+    OPENAI_MODEL:
+      environment.OPENAI_MODEL === undefined
+        ? DEFAULT_OPENAI_MODEL
+        : environment.OPENAI_MODEL,
+    OPENAI_BASE_URL:
+      environment.OPENAI_BASE_URL === undefined
+        ? DEFAULT_OPENAI_BASE_URL
+        : environment.OPENAI_BASE_URL,
+    AI_ENABLED:
+      environment.AI_ENABLED === undefined ? "true" : environment.AI_ENABLED,
+    BUILD_AI_ASSIST_ENABLED:
+      environment.BUILD_AI_ASSIST_ENABLED === undefined
+        ? "false"
+        : environment.BUILD_AI_ASSIST_ENABLED,
+  };
+}
+
+/** Offline metadata only. Plausibility is never authentication or live readiness. */
+async function resolveAiReadiness(input: AiReadinessInput = {}) {
+  const source = input.source ?? "env_file";
+  const inherited = input.environment ?? process.env;
+  const issues = new Set<AiReadinessIssue>();
+  let fileEnvironment: Record<string, string | undefined> = {};
+  let counts = settings(0);
+  let fileRead = false;
+  let workspaceResolved = false;
+  let pathWithinWorkspace: boolean | null = null;
+  let fileModifiedAtUtc: string | null = null;
+  if (source === "env_file") {
+    let root: string | undefined;
+    try {
+      root = await realpath(input.workspaceRoot ?? process.cwd());
+      if (!(await stat(root)).isDirectory())
+        throw new Error("Unavailable workspace");
+      workspaceResolved = true;
+    } catch {
+      issues.add("workspace_unavailable");
+    }
+    if (root) {
+      const envFile = input.envFile ?? ".env";
+      if (!envFile || envFile.includes("\0")) issues.add("env_path_invalid");
+      else {
+        const path = resolve(root, envFile);
+        pathWithinWorkspace = inside(root, path);
+        if (!pathWithinWorkspace) issues.add("env_path_outside_workspace");
+        else {
+          try {
+            const metadata = await lstat(path);
+            if (metadata.isSymbolicLink()) issues.add("env_path_symlink");
+            else if (!metadata.isFile()) issues.add("env_file_not_regular");
+            else if (!inside(root, await realpath(path))) {
+              pathWithinWorkspace = false;
+              issues.add("env_path_outside_workspace");
+            } else {
+              const handle = await open(
+                path,
+                constants.O_RDONLY | constants.O_NOFOLLOW,
+              );
+              try {
+                const opened = await handle.stat();
+                if (!opened.isFile()) issues.add("env_file_not_regular");
+                else if (opened.size > MAX_ENV_BYTES)
+                  issues.add("env_file_too_large");
+                else {
+                  const bytes = Buffer.alloc(MAX_ENV_BYTES + 1);
+                  let length = 0;
+                  while (length < bytes.length) {
+                    const read = await handle.read(
+                      bytes,
+                      length,
+                      bytes.length - length,
+                      length,
+                    );
+                    if (!read.bytesRead) break;
+                    length += read.bytesRead;
+                  }
+                  if (length > MAX_ENV_BYTES) issues.add("env_file_too_large");
+                  else {
+                    const payload = bytes.subarray(0, length),
+                      text = payload.toString("utf8");
+                    if (
+                      !Buffer.from(text, "utf8").equals(payload) ||
+                      text.includes("\0")
+                    )
+                      issues.add("env_parse_invalid");
+                    else {
+                      fileEnvironment = parseEnv(text);
+                      counts = definitions(text);
+                      fileRead = true;
+                      fileModifiedAtUtc = opened.mtime.toISOString();
+                    }
+                  }
+                }
+              } finally {
+                await handle.close();
+              }
+            }
+          } catch (error) {
+            const code =
+              error && typeof error === "object" && "code" in error
+                ? error.code
+                : null;
+            issues.add(
+              code === "ENOENT" ? "env_file_missing" : "env_file_unavailable",
+            );
+          }
+        }
+      }
+    }
+  }
+  const overrides = settings(false),
+    differs = settings(false);
+  const selected: Record<string, string | undefined> =
+    source === "env_file" ? { ...fileEnvironment } : {};
+  for (const name of Object.keys(settingNames) as Setting[]) {
+    const key = settingNames[name];
+    if (inherited[key] !== undefined) {
+      selected[key] = inherited[key];
+      if (source === "env_file") {
+        overrides[name] = true;
+        differs[name] = inherited[key] !== fileEnvironment[key];
+      }
+    }
+  }
+  if (Object.values(counts).some((count) => count > 1))
+    issues.add("duplicate_definitions");
+  const config = effective(selected);
+  const key = config.OPENAI_API_KEY;
+  const present = typeof key === "string" && key.length > 0;
+  const formatPlausible = present && /^sk-[A-Za-z0-9_-]{20,}$/.test(key);
+  if (!present) issues.add("credential_missing");
+  else if (!formatPlausible) issues.add("credential_format_unrecognized");
+  const endpointAllowed = isAllowedOpenAiBaseUrl(config.OPENAI_BASE_URL);
+  if (!endpointAllowed) issues.add("endpoint_not_allowed");
+  const modelPresent = config.OPENAI_MODEL.length > 0;
+  const modelPlausible =
+    modelPresent &&
+    /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$/.test(config.OPENAI_MODEL);
+  if (!modelPlausible) issues.add("model_missing_or_malformed");
+  const flag = (value: string) => {
+    if (value === "true") return true;
+    if (value === "false") return false;
+    issues.add("flag_invalid");
+    return null;
+  };
+  const flags = {
+    aiEnabled: flag(config.AI_ENABLED),
+    buildAiEnabled: flag(config.BUILD_AI_ASSIST_ENABLED),
+  };
+  const cached =
+    input.cachedEnvironment === undefined
+      ? null
+      : effective(input.cachedEnvironment);
+  const matches =
+    cached === null
+      ? null
+      : (Object.keys(settingNames) as Setting[]).every(
+          (name) => cached[settingNames[name]] === config[settingNames[name]],
+        );
+  if (matches === false) issues.add("cached_configuration_differs");
+  const context = (
+    name: "OPENAI_ORG_ID" | "OPENAI_PROJECT_ID" | "OPENAI_LOG",
+  ) => ({
+    present: typeof selected[name] === "string" && selected[name]!.length > 0,
+    source:
+      inherited[name] !== undefined
+        ? ("process_env" as const)
+        : fileEnvironment[name] !== undefined
+          ? ("env_file" as const)
+          : ("missing" as const),
+  });
+  const report = {
+    schemaVersion: "ai-readiness/offline-v1" as const,
+    mode: "offline" as const,
+    status: issues.size
+      ? ("configuration_issues" as const)
+      : ("configuration_plausible" as const),
+    authentication: "not_tested" as const,
+    providerRequests: 0 as const,
+    source: {
+      selected: source,
+      workspaceResolved,
+      pathWithinWorkspace,
+      fileRead,
+      fileModifiedAtUtc,
+      parser: "node:util.parseEnv",
+      automaticFallback: false as const,
+      definitions: counts,
+      processOverrides: overrides,
+      processDiffersFromFile: differs,
+    },
+    credential: {
+      present,
+      formatPlausible,
+      noSurroundingWhitespace: present ? key === key.trim() : null,
+      source:
+        inherited.OPENAI_API_KEY !== undefined
+          ? ("process_env" as const)
+          : fileEnvironment.OPENAI_API_KEY !== undefined
+            ? ("env_file" as const)
+            : ("missing" as const),
+    },
+    endpoint: {
+      allowed: endpointAllowed,
+      usesDefault: selected.OPENAI_BASE_URL === undefined,
+    },
+    model: {
+      present: modelPresent,
+      usesDefault: selected.OPENAI_MODEL === undefined,
+      identifierPlausible: modelPlausible,
+    },
+    flags,
+    sdkContext: {
+      organization: context("OPENAI_ORG_ID"),
+      project: context("OPENAI_PROJECT_ID"),
+      logging: context("OPENAI_LOG"),
+    },
+    cache: {
+      compared: cached !== null,
+      matchesEffective: matches,
+      restartRequired: matches === null ? null : !matches,
+    },
+    issues: [...issues],
+  };
+  return { report, config };
+}
+
+/** Offline metadata only; the sensitive effective configuration remains private. */
+export async function readAiReadiness(input: AiReadinessInput = {}) {
+  return (await resolveAiReadiness(input)).report;
+}
+
+export type AiReadinessDependencies = {
+  fetch?: typeof globalThis.fetch;
+  now?: () => number;
+  signal?: AbortSignal;
+};
+export type AiLiveFailure =
+  | "allocation_invalid"
+  | "allocation_unavailable"
+  | "configuration_invalid"
+  | "cancelled"
+  | "deadline_exceeded"
+  | "transport_refused"
+  | "provider_error"
+  | "network_error"
+  | "response_invalid"
+  | "response_too_large"
+  | "diagnostic_unavailable";
+export type AiLiveReport = {
+  schemaVersion: "ai-readiness/live-v1";
+  mode: "live";
+  status:
+    | "allocation_refused"
+    | "configuration_issues"
+    | "model_access_confirmed"
+    | "model_access_failed"
+    | "diagnostic_unavailable";
+  authentication: "not_tested" | "model_access_confirmed" | "failed";
+  failure: AiLiveFailure | null;
+  allocationAccepted: boolean;
+  providerRequests: 0 | 1;
+  generationRequests: 0;
+  retries: 0;
+  redirects: 0;
+  httpStatus: number | null;
+  deadlineAborted: boolean;
+};
+type Selection = {
+  workspaceRoot: string;
+  source: "env_file" | "process";
+  envFile: string | null;
+  envPath: string | null;
+};
+type Allocation = {
+  schemaVersion: "ai-doctor-live-allocation/1.0.0";
+  allocationId: string;
+  ownerConfirmed: true;
+  operation: "model_access";
+  workspaceRoot: string;
+  source: "env_file" | "process";
+  envFile: string | null;
+  model: string;
+  expiresAt: string;
+  maxRequests: 1;
+  maxOutputTokens: 0;
+  timeoutMs: number;
+};
+const MAX_ALLOCATION_BYTES = 16 * 1024;
+const MAX_RESPONSE_BYTES = 64 * 1024;
+const allocationKeys = [
+  "schemaVersion",
+  "allocationId",
+  "ownerConfirmed",
+  "operation",
+  "workspaceRoot",
+  "source",
+  "envFile",
+  "model",
+  "expiresAt",
+  "maxRequests",
+  "maxOutputTokens",
+  "timeoutMs",
+];
+const modelIdentifier = /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,119}$/u;
+function object(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+async function selection(input: AiReadinessInput): Promise<Selection | null> {
+  const source = input.source ?? "env_file";
+  if (source !== "env_file" && source !== "process") return null;
+  if (source === "process" && input.envFile !== undefined) return null;
+  try {
+    const workspaceRoot = await realpath(input.workspaceRoot ?? process.cwd());
+    if (!(await stat(workspaceRoot)).isDirectory()) return null;
+    if (source === "process")
+      return { workspaceRoot, source, envFile: null, envPath: null };
+    const file = input.envFile ?? ".env";
+    if (!file || file.includes("\0") || isAbsolute(file)) return null;
+    const envPath = resolve(workspaceRoot, file),
+      envFile = relative(workspaceRoot, envPath).split(sep).join("/");
+    if (!inside(workspaceRoot, envPath) || !envFile) return null;
+    return { workspaceRoot, source, envFile, envPath };
+  } catch {
+    return null;
+  }
+}
+function allocation(
+  value: unknown,
+  selected: Selection,
+  now: number,
+): Allocation | null {
+  if (
+    !object(value) ||
+    !Number.isFinite(now) ||
+    Object.keys(value).length !== allocationKeys.length ||
+    allocationKeys.some((k) => !Object.hasOwn(value, k))
+  )
+    return null;
+  if (
+    value.schemaVersion !== "ai-doctor-live-allocation/1.0.0" ||
+    value.ownerConfirmed !== true ||
+    value.operation !== "model_access" ||
+    typeof value.allocationId !== "string" ||
+    !/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/u.test(
+      value.allocationId,
+    ) ||
+    value.workspaceRoot !== selected.workspaceRoot ||
+    value.source !== selected.source ||
+    value.envFile !== selected.envFile ||
+    typeof value.model !== "string" ||
+    !modelIdentifier.test(value.model) ||
+    typeof value.expiresAt !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/u.test(
+      value.expiresAt,
+    ) ||
+    value.maxRequests !== 1 ||
+    value.maxOutputTokens !== 0 ||
+    typeof value.timeoutMs !== "number" ||
+    !Number.isInteger(value.timeoutMs) ||
+    value.timeoutMs < 1 ||
+    value.timeoutMs > 10000
+  )
+    return null;
+  const expiry = Date.parse(value.expiresAt);
+  const padded = value.expiresAt.replace(
+    /(?:\.(\d{1,3}))?Z$/u,
+    (_match, fraction: string | undefined) =>
+      "." + (fraction ?? "").padEnd(3, "0") + "Z",
+  );
+  if (
+    !Number.isFinite(expiry) ||
+    new Date(expiry).toISOString() !== padded ||
+    expiry <= now ||
+    expiry - now > 30 * 60 * 1000
+  )
+    return null;
+  return value as Allocation;
+}
+/** Admission metadata only: never opens the selected configuration file. */
+export async function readAiReadinessAllocation(
+  input: AiReadinessInput,
+  file: string,
+): Promise<
+  | { state: "available"; allocation: unknown }
+  | {
+      state: "refused";
+      failure: "allocation_invalid" | "allocation_unavailable";
+    }
+> {
+  const selected = await selection(input);
+  if (!selected || !file || file.includes("\0"))
+    return { state: "refused", failure: "allocation_invalid" };
+  const path = resolve(selected.workspaceRoot, file);
+  if (!inside(selected.workspaceRoot, path) || path === selected.envPath)
+    return { state: "refused", failure: "allocation_invalid" };
+  try {
+    const metadata = await lstat(path);
+    if (
+      metadata.isSymbolicLink() ||
+      !metadata.isFile() ||
+      metadata.size > MAX_ALLOCATION_BYTES
+    )
+      return { state: "refused", failure: "allocation_invalid" };
+    const canonical = await realpath(path);
+    if (
+      !inside(selected.workspaceRoot, canonical) ||
+      canonical === selected.envPath
+    )
+      return { state: "refused", failure: "allocation_invalid" };
+    if (selected.envPath) {
+      // Compare aliases/inodes before opening allocation: a key file cannot masquerade as the scope record.
+      let envMetadata;
+      try {
+        envMetadata = await stat(selected.envPath);
+      } catch (error) {
+        if (!object(error) || error.code !== "ENOENT")
+          return { state: "refused", failure: "allocation_invalid" };
+      }
+      if (
+        envMetadata &&
+        envMetadata.dev === metadata.dev &&
+        envMetadata.ino === metadata.ino
+      )
+        return { state: "refused", failure: "allocation_invalid" };
+    }
+    const handle = await open(path, constants.O_RDONLY | constants.O_NOFOLLOW);
+    try {
+      const opened = await handle.stat();
+      if (
+        !opened.isFile() ||
+        opened.dev !== metadata.dev ||
+        opened.ino !== metadata.ino ||
+        opened.size > MAX_ALLOCATION_BYTES
+      )
+        return { state: "refused", failure: "allocation_invalid" };
+      const bytes = Buffer.alloc(MAX_ALLOCATION_BYTES + 1);
+      let length = 0;
+      while (length < bytes.length) {
+        const read = await handle.read(
+          bytes,
+          length,
+          bytes.length - length,
+          length,
+        );
+        if (!read.bytesRead) break;
+        length += read.bytesRead;
+      }
+      if (length > MAX_ALLOCATION_BYTES)
+        return { state: "refused", failure: "allocation_invalid" };
+      const text = new TextDecoder("utf-8", { fatal: true }).decode(
+        bytes.subarray(0, length),
+      );
+      const parsed: unknown = JSON.parse(text);
+      if (!object(parsed))
+        return { state: "refused", failure: "allocation_invalid" };
+      // The allocation is flat scalars only. Decode keys before rejecting duplicates, including escaped spellings.
+      const keys = [
+        ...text.matchAll(/(?:\{|,)\s*("(?:[^"\\]|\\.)*")\s*:/gu),
+      ].map((match) => JSON.parse(match[1]) as string);
+      if (
+        keys.length !== Object.keys(parsed).length ||
+        new Set(keys).size !== keys.length
+      )
+        return { state: "refused", failure: "allocation_invalid" };
+      return { state: "available", allocation: parsed };
+    } finally {
+      await handle.close();
+    }
+  } catch {
+    return { state: "refused", failure: "allocation_unavailable" };
+  }
+}
+export function refusedAiReadinessAllocation(
+  failure:
+    "allocation_invalid" | "allocation_unavailable" = "allocation_invalid",
+): AiLiveReport {
+  return {
+    schemaVersion: "ai-readiness/live-v1",
+    mode: "live",
+    status: "allocation_refused",
+    authentication: "not_tested",
+    failure,
+    allocationAccepted: false,
+    providerRequests: 0,
+    generationRequests: 0,
+    retries: 0,
+    redirects: 0,
+    httpStatus: null,
+    deadlineAborted: false,
+  };
+}
+async function abortable<T>(
+  start: () => Promise<T>,
+  signal: AbortSignal,
+): Promise<T> {
+  if (signal.aborted) throw Error("AI_READINESS_ABORTED");
+  let listener: (() => void) | undefined;
+  const aborted = new Promise<never>((_resolve, reject) => {
+    listener = () => reject(Error("AI_READINESS_ABORTED"));
+    signal.addEventListener("abort", listener, { once: true });
+  });
+  try {
+    return await Promise.race([
+      Promise.resolve().then(() => {
+        if (signal.aborted) throw Error("AI_READINESS_ABORTED");
+        return start();
+      }),
+      aborted,
+    ]);
+  } finally {
+    if (listener) signal.removeEventListener("abort", listener);
+  }
+}
+/** A declared operator allocation is scope, never proof of ownership or global spend. */
+export async function runAllocatedAiReadiness(
+  input: AiReadinessInput,
+  rawAllocation: unknown,
+  dependencies: AiReadinessDependencies = {},
+): Promise<AiLiveReport> {
+  const selected = await selection(input),
+    clock = dependencies.now ?? Date.now;
+  const admittedAt = clock();
+  const admitted = selected
+    ? allocation(rawAllocation, selected, admittedAt)
+    : null;
+  if (!selected || !admitted) return refusedAiReadinessAllocation();
+  const report: AiLiveReport = {
+    ...refusedAiReadinessAllocation(),
+    status: "model_access_failed",
+    failure: null,
+    allocationAccepted: true,
+  };
+  const controller = new AbortController();
+  let failure: AiLiveFailure | null = null;
+  const cancelled = () => {
+    failure ??= "cancelled";
+    controller.abort();
+  };
+  const expire = () => {
+    report.deadlineAborted = true;
+    failure ??= "deadline_exceeded";
+    controller.abort();
+  };
+  const deadlineAt = Math.min(
+    admittedAt + admitted.timeoutMs,
+    Date.parse(admitted.expiresAt),
+  );
+  const deadline = setTimeout(expire, Math.max(0, deadlineAt - clock()));
+  dependencies.signal?.addEventListener("abort", cancelled, { once: true });
+  const refuse = (code: AiLiveFailure): never => {
+    failure ??= code;
+    throw Error("AI_READINESS_REFUSED");
+  };
+  const enforceDeadline = () => {
+    if (clock() >= deadlineAt) expire();
+    if (controller.signal.aborted) refuse(failure ?? "deadline_exceeded");
+  };
+  try {
+    if (dependencies.signal?.aborted) cancelled();
+    enforceDeadline();
+    // The SAME private resolver feeds offline diagnostics and this one admitted live operation.
+    const resolved = await resolveAiReadiness({
+      ...input,
+      workspaceRoot: selected.workspaceRoot,
+    });
+    const config = resolved.config;
+    if (
+      resolved.report.status !== "configuration_plausible" ||
+      config.OPENAI_MODEL !== admitted.model ||
+      config.OPENAI_API_KEY!.length > 4096 ||
+      [config.OPENAI_ORG_ID, config.OPENAI_PROJECT_ID].some(
+        (value) =>
+          value !== undefined &&
+          value !== "" &&
+          (!/^[\x21-\x7e]{1,200}$/u.test(value) || value !== value.trim()),
+      )
+    ) {
+      return {
+        ...report,
+        status: "configuration_issues",
+        authentication: "not_tested",
+        failure: "configuration_invalid",
+      };
+    }
+    enforceDeadline();
+    const model = config.OPENAI_MODEL,
+      expected = new URL(
+        `https://api.openai.com/v1/models/${encodeURIComponent(model).replace(/%3A/gu, ":")}`,
+      );
+    const fetchTransport = dependencies.fetch ?? globalThis.fetch;
+    const guardedFetch: typeof globalThis.fetch = async (resource, options) => {
+      enforceDeadline();
+      const url = new URL(
+        typeof resource === "string"
+          ? resource
+          : resource instanceof URL
+            ? resource.href
+            : resource.url,
+      );
+      if (
+        report.providerRequests !== 0 ||
+        url.href !== expected.href ||
+        url.username ||
+        url.password ||
+        url.search ||
+        url.hash ||
+        (options?.method ?? "GET").toUpperCase() !== "GET" ||
+        (options?.body !== undefined && options.body !== null)
+      )
+        refuse("transport_refused");
+      const signal = options?.signal
+        ? AbortSignal.any([controller.signal, options.signal])
+        : controller.signal;
+      if (signal.aborted) refuse(failure ?? "cancelled");
+      const headers = new Headers({
+        accept: "application/json",
+        authorization: `Bearer ${config.OPENAI_API_KEY}`,
+      });
+      if (config.OPENAI_ORG_ID)
+        headers.set("OpenAI-Organization", config.OPENAI_ORG_ID);
+      if (config.OPENAI_PROJECT_ID)
+        headers.set("OpenAI-Project", config.OPENAI_PROJECT_ID);
+      // Ambient SDK headers/options are not forwarded. Exactly this selected authenticated GET may dispatch.
+      const response = await abortable(() => {
+        enforceDeadline();
+        if (report.providerRequests !== 0) refuse("transport_refused");
+        report.providerRequests = 1;
+        return fetchTransport(url.href, {
+          method: "GET",
+          headers,
+          signal,
+          redirect: "error",
+        });
+      }, signal);
+      report.httpStatus =
+        Number.isInteger(response.status) &&
+        response.status >= 100 &&
+        response.status <= 599
+          ? response.status
+          : null;
+      if (response.status >= 300 && response.status <= 399) {
+        void response.body?.cancel().then(
+          () => undefined,
+          () => {
+            failure ??= "transport_refused";
+          },
+        );
+        refuse("transport_refused");
+      }
+      if (response.status >= 400) {
+        void response.body?.cancel().then(
+          () => undefined,
+          () => {
+            failure ??= "provider_error";
+          },
+        );
+        refuse("provider_error");
+      }
+      if (response.status !== 200 || !response.body)
+        return refuse("response_invalid");
+      const reader = response.body.getReader();
+      let finished = false,
+        length = 0;
+      const chunks: Uint8Array[] = [];
+      try {
+        for (;;) {
+          const next = await abortable(() => reader.read(), signal);
+          if (next.done) {
+            finished = true;
+            break;
+          }
+          length += next.value.byteLength;
+          if (length > MAX_RESPONSE_BYTES) refuse("response_too_large");
+          chunks.push(next.value);
+        }
+      } finally {
+        try {
+          if (!finished) {
+            const cancellation = reader.cancel().then(
+              () => undefined,
+              () => {
+                failure ??= "response_invalid";
+              },
+            );
+            if (!signal.aborted) await abortable(() => cancellation, signal);
+          }
+        } finally {
+          reader.releaseLock();
+        }
+      }
+      enforceDeadline();
+      const bytes = new Uint8Array(length);
+      let offset = 0;
+      for (const chunk of chunks) {
+        bytes.set(chunk, offset);
+        offset += chunk.length;
+      }
+      let body: unknown;
+      try {
+        body = JSON.parse(
+          new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+        );
+      } catch {
+        return refuse("response_invalid");
+      }
+      if (
+        !object(body) ||
+        body.id !== model ||
+        body.object !== "model" ||
+        typeof body.created !== "number" ||
+        !Number.isSafeInteger(body.created) ||
+        body.created < 0 ||
+        typeof body.owned_by !== "string" ||
+        !body.owned_by.length ||
+        body.owned_by.length > 200
+      )
+        return refuse("response_invalid");
+      enforceDeadline();
+      // Keep the real installed SDK's retrieve/parse path; discard all unneeded provider response fields.
+      return new Response(
+        JSON.stringify({
+          id: body.id,
+          object: body.object,
+          created: body.created,
+          owned_by: body.owned_by,
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    };
+    const { default: OpenAI } = await import("openai");
+    enforceDeadline();
+    const client = new OpenAI({
+      apiKey: config.OPENAI_API_KEY!,
+      adminAPIKey: null,
+      webhookSecret: null,
+      baseURL: config.OPENAI_BASE_URL.replace(/\/$/u, ""),
+      organization: config.OPENAI_ORG_ID || null,
+      project: config.OPENAI_PROJECT_ID || null,
+      maxRetries: 0,
+      timeout: Math.min(admitted.timeoutMs, Math.max(1, deadlineAt - clock())),
+      logLevel: "off",
+      logger: {
+        debug: () => undefined,
+        info: () => undefined,
+        warn: () => undefined,
+        error: () => undefined,
+      },
+      fetch: guardedFetch,
+    });
+    await abortable(
+      () =>
+        client.models.retrieve(model, {
+          signal: controller.signal,
+          maxRetries: 0,
+          timeout: Math.max(1, deadlineAt - clock()),
+        }),
+      controller.signal,
+    );
+    enforceDeadline();
+    return {
+      ...report,
+      status: "model_access_confirmed",
+      authentication: "model_access_confirmed",
+      failure: null,
+    };
+  } catch {
+    const code: AiLiveFailure =
+      failure ??
+      (report.deadlineAborted
+        ? "deadline_exceeded"
+        : report.providerRequests
+          ? "network_error"
+          : "diagnostic_unavailable");
+    return {
+      ...report,
+      status:
+        code === "diagnostic_unavailable"
+          ? "diagnostic_unavailable"
+          : "model_access_failed",
+      authentication: report.httpStatus === 401 ? "failed" : "not_tested",
+      failure: code,
+    };
+  } finally {
+    clearTimeout(deadline);
+    dependencies.signal?.removeEventListener("abort", cancelled);
+    controller.abort();
+  }
+}

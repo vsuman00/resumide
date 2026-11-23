@@ -1,0 +1,1077 @@
+--- a/app/lib/server/retention.ts
++++ b/app/lib/server/retention.ts
+@@ -1,14 +1,105 @@
++import { z } from "zod";
+ import { retentionCutoff } from "./privacy-operations";
+-import { createResumeStorage } from "./storage";
++import { createResumeStorage, createResumeStorageKey } from "./storage";
+ import { createSupabaseAdminClient } from "./supabase";
++import { runProviderAttempt } from "./provider-attempt";
++import { OwnedAiDispositionReadinessSchema } from "./owned-ai-disposition-export";
++import { OWNED_AI_DISPOSITION_PROFILE } from "./owned-ai-disposition-profile";
+ 
++export type RetentionOptions = { signal?: AbortSignal; timeoutMs?: number };
+ export interface RetentionRepository {
+   claimExpiredObjects(
+     before: string,
+     limit: number,
++    options?: RetentionOptions,
+   ): Promise<Array<{ id: string; storageKey: string }>>;
+-  complete(id: string): Promise<void>;
+-  fail(id: string, errorCode: string): Promise<void>;
++  complete(id: string, options?: RetentionOptions): Promise<void>;
++  fail(
++    id: string,
++    errorCode: string,
++    options?: RetentionOptions,
++  ): Promise<void>;
++}
++type Code =
++  | "RETENTION_CLAIM_UNAVAILABLE"
++  | "RETENTION_STORAGE_UNCONFIRMED"
++  | "RETENTION_COMPLETION_UNCONFIRMED"
++  | "RETENTION_FAILURE_UNCONFIRMED";
++const messages: Record<Code, string> = {
++  RETENTION_CLAIM_UNAVAILABLE: "Retention claim failed.",
++  RETENTION_STORAGE_UNCONFIRMED:
++    "Retention storage removal could not be confirmed.",
++  RETENTION_COMPLETION_UNCONFIRMED:
++    "Retention completion could not be confirmed.",
++  RETENTION_FAILURE_UNCONFIRMED: "Retention failure could not be recorded.",
++};
++export class RetentionError extends Error {
++  constructor(readonly code: Code) {
++    super(messages[code]);
++    this.name = "RetentionError";
++  }
++}
++type Deadline = {
++  signal: AbortSignal;
++  active(): void;
++  rpcOptions(): RetentionOptions;
++};
++async function bounded<T>(
++  options: RetentionOptions,
++  maxMs: number,
++  failure: () => RetentionError,
++  execute: (deadline: Deadline) => Promise<T>,
++): Promise<T> {
++  const controller = new AbortController();
++  const abort = () => controller.abort();
++  try {
++    const timeoutMs = options.timeoutMs ?? maxMs;
++    if (
++      !Number.isSafeInteger(timeoutMs) ||
++      timeoutMs < 1 ||
++      timeoutMs > maxMs ||
++      options.signal?.aborted
++    )
++      throw failure();
++    let observed = Date.now();
++    const end = observed + timeoutMs;
++    if (!Number.isSafeInteger(observed) || !Number.isSafeInteger(end))
++      throw failure();
++    options.signal?.addEventListener("abort", abort, { once: true });
++    if (options.signal?.aborted) abort();
++    return await runProviderAttempt({
++      timeoutMs,
++      signal: controller.signal,
++      failure,
++      execute: async (signal) => {
++        const active = () => {
++          const at = Date.now();
++          if (!Number.isSafeInteger(at) || at < observed || at >= end)
++            controller.abort();
++          if (signal.aborted) throw failure();
++          observed = at;
++        };
++        const deadline = {
++          signal,
++          active,
++          rpcOptions() {
++            active();
++            return { signal, timeoutMs: Math.min(5000, end - observed) };
++          },
++        };
++        active();
++        const result = await execute(deadline);
++        active();
++        return result;
++      },
++    });
++  } catch (error) {
++    if (error instanceof RetentionError) throw error;
++    throw failure();
++  } finally {
++    options.signal?.removeEventListener("abort", abort);
++    controller.abort();
++  }
+ }
+ 
+ export async function runRetentionSweep(
+@@ -17,56 +108,195 @@
+   now: Date,
+   retentionDays: number,
+   limit = 100,
++  options: RetentionOptions = {},
+ ): Promise<{ claimed: number; completed: number; failed: number }> {
+-  const items = await repository.claimExpiredObjects(
+-    retentionCutoff(now, retentionDays).toISOString(),
+-    limit,
+-  );
+-  let completed = 0;
+-  let failed = 0;
+-  for (const item of items) {
+-    try {
+-      await removeObject(item.storageKey);
+-      await repository.complete(item.id);
++  let phase: Code = "RETENTION_CLAIM_UNAVAILABLE";
++  const failure = () => new RetentionError(phase);
++  return bounded(options, 30000, failure, async (deadline) => {
++    if (
++      !(now instanceof Date) ||
++      !Number.isFinite(now.getTime()) ||
++      !Number.isSafeInteger(retentionDays) ||
++      retentionDays < 1 ||
++      retentionDays > 3650 ||
++      !validLimit(limit)
++    )
++      throw failure();
++    const items = await repository.claimExpiredObjects(
++      retentionCutoff(now, retentionDays).toISOString(),
++      limit,
++      deadline.rpcOptions(),
++    );
++    deadline.active();
++    let completed = 0,
++      failed = 0;
++    for (const item of items) {
++      phase = "RETENTION_STORAGE_UNCONFIRMED";
++      deadline.active();
++      try {
++        // The storage API has no abort hook. A bounded wait is not proof that a
++        // timed-out or cancelled removal stopped at the object service.
++        await removeObject(item.storageKey);
++      } catch {
++        deadline.active();
++        phase = "RETENTION_FAILURE_UNCONFIRMED";
++        await repository.fail(
++          item.id,
++          "STORAGE_DELETE_FAILED",
++          deadline.rpcOptions(),
++        );
++        deadline.active();
++        failed += 1;
++        continue;
++      }
++      deadline.active();
++      phase = "RETENTION_COMPLETION_UNCONFIRMED";
++      // Completion uncertainty must never be relabelled as storage failure.
++      await repository.complete(item.id, deadline.rpcOptions());
++      deadline.active();
+       completed += 1;
+-    } catch {
+-      await repository.fail(item.id, "STORAGE_DELETE_FAILED");
+-      failed += 1;
+     }
+-  }
+-  return { claimed: items.length, completed, failed };
++    return { claimed: items.length, completed, failed };
++  });
+ }
+ 
++const uuid = z.uuid().regex(/^[a-f0-9-]+$/u);
++const stamp = z.iso.datetime();
++const validLimit = (limit: number) =>
++  Number.isSafeInteger(limit) && limit >= 1 && limit <= 1000;
++const row = z.strictObject({
++  item_id: uuid,
++  resume_id: uuid,
++  storage_key: z.string().max(300),
++});
++const frame =
++  /^organizations\/([a-f0-9-]{36})\/resumes\/([a-f0-9-]{36})\/versions\/([a-f0-9-]{36})\.pdf$/u;
++function claimItems(raw: unknown, limit: number) {
++  if (!Array.isArray(raw) || raw.length > limit)
++    throw new RetentionError("RETENTION_CLAIM_UNAVAILABLE");
++  const parsed = z.array(row).max(limit).safeParse(raw);
++  if (!parsed.success) throw new RetentionError("RETENTION_CLAIM_UNAVAILABLE");
++  const items = new Set<string>(),
++    keys = new Set<string>(),
++    versions = new Set<string>();
++  return parsed.data.map((item) => {
++    const parts = frame.exec(item.storage_key);
++    if (
++      !parts ||
++      !uuid.safeParse(parts[1]).success ||
++      !uuid.safeParse(parts[3]).success ||
++      parts[2] !== item.resume_id ||
++      createResumeStorageKey({
++        organizationId: parts[1],
++        resumeId: item.resume_id,
++        versionId: parts[3],
++      }) !== item.storage_key ||
++      items.has(item.item_id) ||
++      keys.has(item.storage_key) ||
++      versions.has(parts[3])
++    )
++      throw new RetentionError("RETENTION_CLAIM_UNAVAILABLE");
++    items.add(item.item_id);
++    keys.add(item.storage_key);
++    versions.add(parts[3]);
++    return { id: item.item_id, storageKey: item.storage_key };
++  });
++}
++type Reply = { data: unknown; error: unknown };
++export interface RetentionRpcClient {
++  rpc(
++    name: string,
++    args: Record<string, unknown>,
++  ): PromiseLike<Reply> & {
++    abortSignal?: (signal: AbortSignal) => PromiseLike<Reply>;
++  };
++}
+ export class SupabaseRetentionRepository implements RetentionRepository {
+-  async claimExpiredObjects(before: string, limit: number) {
+-    const { data, error } = await createSupabaseAdminClient().rpc(
++  constructor(private readonly client?: RetentionRpcClient) {}
++  private async operation<T>(
++    name: string,
++    args: Record<string, unknown>,
++    options: RetentionOptions,
++    code: Code,
++    decode: (raw: unknown) => T,
++  ): Promise<T> {
++    const failure = () => new RetentionError(code);
++    return bounded(options, 5000, failure, async (deadline) => {
++      const client: RetentionRpcClient =
++        this.client ?? createSupabaseAdminClient();
++      const invoke = async (method: string, input: Record<string, unknown>) => {
++        deadline.active();
++        const pending = client.rpc(method, input);
++        const reply = await (typeof pending.abortSignal === "function"
++          ? pending.abortSignal(deadline.signal)
++          : pending);
++        deadline.active();
++        if (!reply || reply.error !== null) throw failure();
++        return reply.data;
++      };
++      const metadata = OwnedAiDispositionReadinessSchema.safeParse(
++        await invoke("read_owned_ai_disposition_readiness", {}),
++      );
++      if (
++        !metadata.success ||
++        !metadata.data.schemaReady ||
++        Object.entries(OWNED_AI_DISPOSITION_PROFILE).some(
++          ([key, expected]) =>
++            metadata.data[key as keyof typeof metadata.data] !== expected,
++        )
++      )
++        throw failure();
++      return decode(await invoke(name, args));
++    });
++  }
++  async claimExpiredObjects(
++    before: string,
++    limit: number,
++    options: RetentionOptions = {},
++  ) {
++    if (!stamp.safeParse(before).success || !validLimit(limit))
++      throw new RetentionError("RETENTION_CLAIM_UNAVAILABLE");
++    return this.operation(
+       "claim_expired_resume_objects",
+       { p_before: before, p_limit: limit },
++      options,
++      "RETENTION_CLAIM_UNAVAILABLE",
++      (raw) => claimItems(raw, limit),
+     );
+-    if (error) throw new Error("Retention claim failed.");
+-    return (Array.isArray(data) ? data : []).map((item) => ({
+-      id: String(item.item_id),
+-      storageKey: String(item.storage_key),
+-    }));
+-  }
+-
+-  async complete(id: string) {
+-    const { error } = await createSupabaseAdminClient().rpc(
++  }
++  async complete(id: string, options: RetentionOptions = {}) {
++    if (!uuid.safeParse(id).success)
++      throw new RetentionError("RETENTION_COMPLETION_UNCONFIRMED");
++    await this.operation(
+       "complete_retention_item",
+       { p_item_id: id },
++      options,
++      "RETENTION_COMPLETION_UNCONFIRMED",
++      (raw) => {
++        if (raw !== true)
++          throw new RetentionError("RETENTION_COMPLETION_UNCONFIRMED");
++      },
+     );
+-    if (error) throw new Error("Retention completion failed.");
+-  }
+-
+-  async fail(id: string, errorCode: string) {
+-    const { error } = await createSupabaseAdminClient().rpc(
++  }
++  async fail(id: string, errorCode: string, options: RetentionOptions = {}) {
++    if (
++      !uuid.safeParse(id).success ||
++      typeof errorCode !== "string" ||
++      !/^[A-Z][A-Z0-9_]{0,63}$/u.test(errorCode)
++    )
++      throw new RetentionError("RETENTION_FAILURE_UNCONFIRMED");
++    await this.operation(
+       "fail_retention_item",
+       { p_item_id: id, p_error_code: errorCode },
++      options,
++      "RETENTION_FAILURE_UNCONFIRMED",
++      (raw) => {
++        if (raw !== true)
++          throw new RetentionError("RETENTION_FAILURE_UNCONFIRMED");
++      },
+     );
+-    if (error) throw new Error("Retention failure could not be recorded.");
+-  }
+-}
+-
++  }
++}
+ export function createRetentionObjectRemover() {
+   const storage = createResumeStorage();
+   return (storageKey: string) => storage.remove(storageKey);
+--- a/tests/unit/retention.test.ts
++++ b/tests/unit/retention.test.ts
+@@ -0,0 +1,558 @@
++import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
++const db = vi.hoisted(() => ({ rpc: vi.fn() }));
++vi.mock("../../app/lib/server/supabase", () => ({
++  createSupabaseAdminClient: () => ({ rpc: db.rpc }),
++}));
++import {
++  SupabaseRetentionRepository,
++  runRetentionSweep,
++} from "../../app/lib/server/retention";
++import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
++import { createResumeStorageKey } from "../../app/lib/server/storage";
++const id = (n: number) =>
++  `c0000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
++const before = "2026-10-15T00:00:00.000Z";
++const now = new Date("2026-11-15T00:00:00Z");
++const ready = () => ({
++  ...OWNED_AI_DISPOSITION_PROFILE,
++  schemaReady: true,
++  exportExecutable: false,
++  accessExecutable: false,
++});
++const row = (n = 1, root = 2) => ({
++  item_id: id(n),
++  resume_id: id(root),
++  storage_key: createResumeStorageKey({
++    organizationId: id(3),
++    resumeId: id(root),
++    versionId: id(n + 100),
++  }),
++});
++type Reply = { data: unknown; error: unknown };
++function query(reply: Reply | Promise<Reply>, ignoreAbort = false) {
++  const pending = Promise.resolve(reply),
++    aborted = vi.fn();
++  return Object.assign(pending, {
++    aborted,
++    abortSignal: vi.fn((signal: AbortSignal) => {
++      if (ignoreAbort) return pending;
++      return new Promise<Reply>((resolve, reject) => {
++        const abort = () => {
++          aborted();
++          reject(new Error("PRIVATE_ABORT"));
++        };
++        if (signal.aborted) abort();
++        else signal.addEventListener("abort", abort, { once: true });
++        void pending.then(
++          (value) => {
++            signal.removeEventListener("abort", abort);
++            resolve(value);
++          },
++          (error) => {
++            signal.removeEventListener("abort", abort);
++            reject(error);
++          },
++        );
++      });
++    }),
++  });
++}
++function fixture(overrides: Record<string, unknown> = {}) {
++  const data: Record<string, unknown> = {
++    read_owned_ai_disposition_readiness: ready(),
++    claim_expired_resume_objects: [row()],
++    complete_retention_item: true,
++    fail_retention_item: true,
++    ...overrides,
++  };
++  const queries: Array<ReturnType<typeof query>> = [];
++  db.rpc.mockImplementation((name: string) => {
++    const pending = query({ data: data[name], error: null });
++    queries.push(pending);
++    return pending;
++  });
++  return { data, queries, repository: new SupabaseRetentionRepository() };
++}
++beforeEach(() => vi.resetAllMocks());
++afterEach(() => {
++  vi.useRealTimers();
++  vi.restoreAllMocks();
++});
++describe("retention receipt regressions", () => {
++  it("refuses a null claim instead of manufacturing an empty successful sweep", async () => {
++    const f = fixture({ claim_expired_resume_objects: null });
++    await expect(
++      f.repository.claimExpiredObjects(before, 100),
++    ).rejects.toThrow();
++    expect(db.rpc).toHaveBeenCalledWith("claim_expired_resume_objects", {
++      p_before: before,
++      p_limit: 100,
++    });
++  });
++  it("refuses a false completion acknowledgment", async () => {
++    const f = fixture({ complete_retention_item: false });
++    await expect(f.repository.complete(id(1))).rejects.toThrow();
++    expect(db.rpc).toHaveBeenCalledWith("complete_retention_item", {
++      p_item_id: id(1),
++    });
++  });
++  it("does not label a completion failure as failed storage deletion", async () => {
++    const repository = {
++      claimExpiredObjects: vi
++        .fn()
++        .mockResolvedValue([
++          { id: id(1), storageKey: "synthetic-immutable-key" },
++        ]),
++      complete: vi
++        .fn()
++        .mockRejectedValue(new Error("synthetic-completion-unknown")),
++      fail: vi.fn().mockResolvedValue(undefined),
++    };
++    const remove = vi.fn().mockResolvedValue(undefined);
++    await runRetentionSweep(repository, remove, now, 30).catch(() => undefined);
++    expect(remove).toHaveBeenCalledTimes(1);
++    expect(repository.fail).not.toHaveBeenCalled();
++  });
++});
++describe("retention exact current metadata and claim wire", () => {
++  it("requires current metadata while access/export may remain denied", async () => {
++    const f = fixture();
++    expect(await f.repository.claimExpiredObjects(before, 100)).toEqual([
++      { id: row().item_id, storageKey: row().storage_key },
++    ]);
++    expect(db.rpc.mock.calls).toEqual([
++      ["read_owned_ai_disposition_readiness", {}],
++      ["claim_expired_resume_objects", { p_before: before, p_limit: 100 }],
++    ]);
++    expect(f.queries[0].abortSignal.mock.calls[0][0]).toBe(
++      f.queries[1].abortSignal.mock.calls[0][0],
++    );
++  });
++  it("accepts exact empty inventory, repeated roots and a full requested batch", async () => {
++    for (const rows of [
++      [],
++      [row(1), row(2)],
++      Array.from({ length: 1000 }, (_, n) => row(n + 1)),
++    ]) {
++      const f = fixture({ claim_expired_resume_objects: rows });
++      expect(await f.repository.claimExpiredObjects(before, 1000)).toHaveLength(
++        rows.length,
++      );
++    }
++  });
++  it.each([
++    null,
++    {},
++    { ...ready(), schemaReady: false },
++    { ...ready(), extra: true },
++    ...Object.keys(OWNED_AI_DISPOSITION_PROFILE).map((key) => ({
++      ...ready(),
++      [key]: key.endsWith("Sha256") ? "0".repeat(64) : "wrong-current-pin",
++    })),
++  ])(
++    "blocks missing/mismatched current metadata before claim %#",
++    async (metadata) => {
++      const f = fixture({ read_owned_ai_disposition_readiness: metadata });
++      await expect(
++        f.repository.claimExpiredObjects(before, 10),
++      ).rejects.toMatchObject({ code: "RETENTION_CLAIM_UNAVAILABLE" });
++      expect(db.rpc).toHaveBeenCalledTimes(1);
++    },
++  );
++  const invalid = [
++    {},
++    "not-an-array",
++    [null],
++    [{ ...row(), item_id: undefined }],
++    [{ ...row(), item_id: 12 }],
++    [{ ...row(), resume_id: "invalid" }],
++    [{ ...row(), storage_key: undefined }],
++    [{ ...row(), storage_key: 12 }],
++    [{ ...row(), extra: true }],
++    [{ ...row(), storage_key: row().storage_key.replace(id(2), id(9)) }],
++    [{ ...row(), storage_key: row().storage_key + "/extra" }],
++    [
++      {
++        ...row(),
++        storage_key: row().storage_key.replace(
++          "organizations/",
++          "organizations/../",
++        ),
++      },
++    ],
++    [
++      {
++        ...row(),
++        storage_key: row().storage_key.replace("versions/", "versions/%2f"),
++      },
++    ],
++    [
++      {
++        ...row(),
++        storage_key: row().storage_key.replace(id(3), "not-an-organization"),
++      },
++    ],
++    [row(), row()],
++    [row(), { ...row(2), item_id: row().item_id }],
++    [row(), { ...row(2), storage_key: row().storage_key }],
++    [row(), { ...row(1, 9), item_id: id(7) }],
++    [row(), { ...row(2), resume_id: id(9) }],
++  ];
++  it.each(invalid.map((data) => ({ data })))(
++    "rejects the entire malformed/colliding claim %#",
++    async ({ data }) => {
++      const f = fixture({ claim_expired_resume_objects: data });
++      const remove = vi.fn();
++      await expect(
++        runRetentionSweep(f.repository, remove, now, 30),
++      ).rejects.toMatchObject({ code: "RETENTION_CLAIM_UNAVAILABLE" });
++      expect(remove).not.toHaveBeenCalled();
++      expect(
++        db.rpc.mock.calls.some(([name]) =>
++          ["complete_retention_item", "fail_retention_item"].includes(name),
++        ),
++      ).toBe(false);
++    },
++  );
++  it("rejects more than the requested limit without truncation", async () => {
++    const f = fixture({ claim_expired_resume_objects: [row(1), row(2)] });
++    await expect(
++      f.repository.claimExpiredObjects(before, 1),
++    ).rejects.toMatchObject({ code: "RETENTION_CLAIM_UNAVAILABLE" });
++  });
++  it.each([0, -1, 1.5, 1001, NaN, Infinity])(
++    "rejects an invalid batch limit %s before RPC",
++    async (limit) => {
++      const f = fixture();
++      await expect(
++        f.repository.claimExpiredObjects(before, limit),
++      ).rejects.toThrow();
++      expect(db.rpc).not.toHaveBeenCalled();
++    },
++  );
++  it.each(["not-a-time", "2026-02-30T00:00:00Z"])(
++    "rejects invalid cutoff %s before RPC",
++    async (cutoff) => {
++      const f = fixture();
++      await expect(
++        f.repository.claimExpiredObjects(cutoff, 10),
++      ).rejects.toThrow();
++      expect(db.rpc).not.toHaveBeenCalled();
++    },
++  );
++});
++describe("retention durable boolean acknowledgments", () => {
++  it.each(
++    [false, null, undefined, 0, 1, "true", {}, [true]].map((data) => ({
++      data,
++    })),
++  )("refuses nontrue completion/failure receipts %#", async ({ data }) => {
++    const f = fixture({
++      complete_retention_item: data,
++      fail_retention_item: data,
++    });
++    await expect(f.repository.complete(id(1))).rejects.toMatchObject({
++      code: "RETENTION_COMPLETION_UNCONFIRMED",
++    });
++    await expect(
++      f.repository.fail(id(1), "STORAGE_DELETE_FAILED"),
++    ).rejects.toMatchObject({ code: "RETENTION_FAILURE_UNCONFIRMED" });
++  });
++  it("preserves void results for true receipts, including idempotent completed items", async () => {
++    const f = fixture();
++    await expect(f.repository.complete(id(1))).resolves.toBeUndefined();
++    await expect(f.repository.complete(id(1))).resolves.toBeUndefined();
++    await expect(
++      f.repository.fail(id(2), "STORAGE_DELETE_FAILED"),
++    ).resolves.toBeUndefined();
++  });
++  it.each([
++    "claim_expired_resume_objects",
++    "complete_retention_item",
++    "fail_retention_item",
++  ])("does not expose private RPC errors from %s", async (method) => {
++    const f = fixture(),
++      original = db.rpc.getMockImplementation()!;
++    db.rpc.mockImplementation((name, args) =>
++      name === method
++        ? query({ data: null, error: { message: "PRIVATE_RETENTION_DETAIL" } })
++        : original(name, args),
++    );
++    const result =
++      method === "claim_expired_resume_objects"
++        ? f.repository.claimExpiredObjects(before, 1)
++        : method === "complete_retention_item"
++          ? f.repository.complete(id(1))
++          : f.repository.fail(id(1), "STORAGE_DELETE_FAILED");
++    await expect(result).rejects.toBeInstanceOf(Error);
++    await expect(result).rejects.not.toThrow("PRIVATE_RETENTION_DETAIL");
++  });
++  it("checks current metadata again before completion and failure mutations", async () => {
++    const f = fixture({ read_owned_ai_disposition_readiness: null });
++    await expect(f.repository.complete(id(1))).rejects.toThrow();
++    await expect(
++      f.repository.fail(id(1), "STORAGE_DELETE_FAILED"),
++    ).rejects.toThrow();
++    expect(
++      db.rpc.mock.calls.every(
++        ([name]) => name === "read_owned_ai_disposition_readiness",
++      ),
++    ).toBe(true);
++  });
++});
++describe("retention bounded RPC lifecycle", () => {
++  it("rejects nonfinite time before issuing metadata", async () => {
++    const f = fixture();
++    vi.spyOn(Date, "now").mockReturnValue(NaN);
++    await expect(
++      f.repository.claimExpiredObjects(before, 1),
++    ).rejects.toMatchObject({ code: "RETENTION_CLAIM_UNAVAILABLE" });
++    expect(db.rpc).not.toHaveBeenCalled();
++  });
++  it("rejects a backwards clock at the metadata await boundary", async () => {
++    vi.useFakeTimers();
++    vi.setSystemTime(now);
++    const f = fixture(),
++      original = db.rpc.getMockImplementation()!;
++    db.rpc.mockImplementation((name, args) => {
++      const pending = original(name, args);
++      vi.setSystemTime(new Date(now.getTime() - 1));
++      return pending;
++    });
++    await expect(
++      f.repository.claimExpiredObjects(before, 1),
++    ).rejects.toMatchObject({ code: "RETENTION_CLAIM_UNAVAILABLE" });
++    expect(db.rpc).toHaveBeenCalledTimes(1);
++    expect(vi.getTimerCount()).toBe(0);
++  });
++  it.each([
++    "read_owned_ai_disposition_readiness",
++    "claim_expired_resume_objects",
++    "complete_retention_item",
++    "fail_retention_item",
++  ])("bounds pending %s with propagated cancellation", async (method) => {
++    vi.useFakeTimers();
++    const f = fixture(),
++      original = db.rpc.getMockImplementation()!;
++    const pending = query(new Promise<Reply>(() => {}));
++    db.rpc.mockImplementation((name, args) =>
++      name === method ? pending : original(name, args),
++    );
++    const options = { timeoutMs: 20 };
++    const result = (
++      method === "complete_retention_item"
++        ? f.repository.complete(id(1), options)
++        : method === "fail_retention_item"
++          ? f.repository.fail(id(1), "STORAGE_DELETE_FAILED", options)
++          : f.repository.claimExpiredObjects(before, 1, options)
++    ).catch((error: unknown) => error);
++    await vi.advanceTimersByTimeAsync(20);
++    expect(await result).toBeInstanceOf(Error);
++    expect(pending.abortSignal.mock.calls[0][0].aborted).toBe(true);
++    expect(pending.aborted).toHaveBeenCalledTimes(1);
++    expect(vi.getTimerCount()).toBe(0);
++  });
++  it("uses one metadata/claim deadline instead of resetting time for the second RPC", async () => {
++    vi.useFakeTimers();
++    const f = fixture();
++    const metadata = query(
++      new Promise<Reply>((resolve) =>
++        setTimeout(() => resolve({ data: ready(), error: null }), 15),
++      ),
++    );
++    const pending = query(new Promise<Reply>(() => {}));
++    db.rpc.mockImplementation((name) =>
++      name === "read_owned_ai_disposition_readiness" ? metadata : pending,
++    );
++    const result = f.repository
++      .claimExpiredObjects(before, 1, { timeoutMs: 20 })
++      .catch((error: unknown) => error);
++    await vi.advanceTimersByTimeAsync(20);
++    expect(await result).toMatchObject({ code: "RETENTION_CLAIM_UNAVAILABLE" });
++    expect(pending.aborted).toHaveBeenCalledTimes(1);
++    expect(vi.getTimerCount()).toBe(0);
++  });
++  it.each([
++    "read_owned_ai_disposition_readiness",
++    "claim_expired_resume_objects",
++  ])(
++    "refuses %s crossing elapsed deadline before timer dispatch",
++    async (method) => {
++      vi.useFakeTimers();
++      vi.setSystemTime(now);
++      const f = fixture(),
++        original = db.rpc.getMockImplementation()!;
++      db.rpc.mockImplementation((name, args) => {
++        const pending = original(name, args);
++        if (name === method) vi.setSystemTime(new Date(now.getTime() + 21));
++        return pending;
++      });
++      await expect(
++        f.repository.claimExpiredObjects(before, 1, { timeoutMs: 20 }),
++      ).rejects.toMatchObject({ code: "RETENTION_CLAIM_UNAVAILABLE" });
++      expect(vi.getTimerCount()).toBe(0);
++      if (method === "read_owned_ai_disposition_readiness")
++        expect(db.rpc).toHaveBeenCalledTimes(1);
++    },
++  );
++  it("rejects cancelled calls before RPC and rejects late ignored replies", async () => {
++    vi.useFakeTimers();
++    const f = fixture(),
++      cancelled = new AbortController();
++    cancelled.abort();
++    await expect(
++      f.repository.claimExpiredObjects(before, 1, { signal: cancelled.signal }),
++    ).rejects.toThrow();
++    expect(db.rpc).not.toHaveBeenCalled();
++    let resolve!: (reply: Reply) => void;
++    const pending = query(
++        new Promise<Reply>((done) => {
++          resolve = done;
++        }),
++        true,
++      ),
++      controller = new AbortController();
++    db.rpc.mockImplementation(() => pending);
++    const result = f.repository
++      .claimExpiredObjects(before, 1, { signal: controller.signal })
++      .catch((error: unknown) => error);
++    await vi.advanceTimersByTimeAsync(0);
++    controller.abort();
++    expect(await result).toMatchObject({ code: "RETENTION_CLAIM_UNAVAILABLE" });
++    resolve({ data: ready(), error: null });
++    await vi.advanceTimersByTimeAsync(0);
++    expect(db.rpc).toHaveBeenCalledTimes(1);
++    expect(vi.getTimerCount()).toBe(0);
++  });
++});
++describe("retention sweep outcome accounting", () => {
++  it("counts only confirmed completion acknowledgments", async () => {
++    const f = fixture({ claim_expired_resume_objects: [row(1), row(2)] }),
++      remove = vi.fn().mockResolvedValue(undefined);
++    expect(await runRetentionSweep(f.repository, remove, now, 30, 2)).toEqual({
++      claimed: 2,
++      completed: 2,
++      failed: 0,
++    });
++    expect(remove.mock.calls).toEqual([
++      [row(1).storage_key],
++      [row(2).storage_key],
++    ]);
++    expect(db.rpc).not.toHaveBeenCalledWith(
++      "fail_retention_item",
++      expect.anything(),
++    );
++  });
++  it("records removal errors before counting failures", async () => {
++    const f = fixture(),
++      remove = vi.fn().mockRejectedValue(new Error("PRIVATE_STORAGE_DETAIL"));
++    expect(await runRetentionSweep(f.repository, remove, now, 30)).toEqual({
++      claimed: 1,
++      completed: 0,
++      failed: 1,
++    });
++    expect(db.rpc).toHaveBeenCalledWith("fail_retention_item", {
++      p_item_id: id(1),
++      p_error_code: "STORAGE_DELETE_FAILED",
++    });
++    expect(db.rpc).not.toHaveBeenCalledWith(
++      "complete_retention_item",
++      expect.anything(),
++    );
++  });
++  it("stops on an unacknowledged already-deleted failure without a fabricated failed count", async () => {
++    const f = fixture({
++        claim_expired_resume_objects: [row(1), row(2)],
++        fail_retention_item: false,
++      }),
++      remove = vi
++        .fn()
++        .mockRejectedValue(new Error("synthetic-removal-failure"));
++    await expect(
++      runRetentionSweep(f.repository, remove, now, 30),
++    ).rejects.toMatchObject({ code: "RETENTION_FAILURE_UNCONFIRMED" });
++    expect(remove).toHaveBeenCalledTimes(1);
++  });
++  it("never calls failure after object removal succeeds but completion is unacknowledged", async () => {
++    const f = fixture({
++        claim_expired_resume_objects: [row(1), row(2)],
++        complete_retention_item: false,
++      }),
++      remove = vi.fn().mockResolvedValue(undefined);
++    await expect(
++      runRetentionSweep(f.repository, remove, now, 30),
++    ).rejects.toMatchObject({ code: "RETENTION_COMPLETION_UNCONFIRMED" });
++    expect(remove).toHaveBeenCalledTimes(1);
++    expect(db.rpc).not.toHaveBeenCalledWith(
++      "fail_retention_item",
++      expect.anything(),
++    );
++  });
++  it.each(["deadline", "cancel"])(
++    "leaves pending removal uncertain and prevents late downstream work: %s",
++    async (reason) => {
++      vi.useFakeTimers();
++      const f = fixture(),
++        controller = new AbortController();
++      let resolve!: () => void;
++      const remove = vi.fn(
++        () =>
++          new Promise<void>((done) => {
++            resolve = done;
++          }),
++      );
++      const result = runRetentionSweep(f.repository, remove, now, 30, 100, {
++        timeoutMs: 20,
++        signal: controller.signal,
++      }).catch((error: unknown) => error);
++      await vi.advanceTimersByTimeAsync(0);
++      expect(remove).toHaveBeenCalledTimes(1);
++      if (reason === "cancel") controller.abort();
++      else await vi.advanceTimersByTimeAsync(20);
++      expect(await result).toMatchObject({
++        code: "RETENTION_STORAGE_UNCONFIRMED",
++      });
++      resolve();
++      await vi.advanceTimersByTimeAsync(0);
++      expect(
++        db.rpc.mock.calls.every(([name]) =>
++          [
++            "read_owned_ai_disposition_readiness",
++            "claim_expired_resume_objects",
++          ].includes(name),
++        ),
++      ).toBe(true);
++      expect(vi.getTimerCount()).toBe(0);
++    },
++  );
++  it("does not give completion a fresh budget after a slow removal", async () => {
++    vi.useFakeTimers();
++    vi.setSystemTime(now);
++    const f = fixture();
++    const remove = vi.fn(async () => {
++      vi.setSystemTime(new Date(now.getTime() + 21));
++    });
++    await expect(
++      runRetentionSweep(f.repository, remove, now, 30, 100, { timeoutMs: 20 }),
++    ).rejects.toMatchObject({ code: "RETENTION_STORAGE_UNCONFIRMED" });
++    expect(db.rpc).not.toHaveBeenCalledWith(
++      "complete_retention_item",
++      expect.anything(),
++    );
++    expect(db.rpc).not.toHaveBeenCalledWith(
++      "fail_retention_item",
++      expect.anything(),
++    );
++  });
++  it("accepts repeat immutable-key delivery without promising exclusive claim", async () => {
++    const f = fixture(),
++      remove = vi.fn().mockResolvedValue(undefined);
++    for (let attempt = 0; attempt < 2; attempt++)
++      expect(await runRetentionSweep(f.repository, remove, now, 30)).toEqual({
++        claimed: 1,
++        completed: 1,
++        failed: 0,
++      });
++    expect(remove).toHaveBeenCalledTimes(2);
++  });
++});
+--- a/tests/unit/privacy-operations.test.ts
++++ b/tests/unit/privacy-operations.test.ts
+@@ -448,6 +448,10 @@
+     expect(repository.fail).toHaveBeenCalledWith(
+       "item-1",
+       "STORAGE_DELETE_FAILED",
++      expect.objectContaining({
++        signal: expect.any(AbortSignal),
++        timeoutMs: expect.any(Number),
++      }),
+     );
+     expect(repository.complete).not.toHaveBeenCalled();
+   });
+--- a/scripts/run-retention.ts
++++ b/scripts/run-retention.ts
+@@ -5,13 +5,30 @@
+   SupabaseRetentionRepository,
+ } from "../app/lib/server/retention";
+ 
+-const config = getServerConfig();
+-const report = await runRetentionSweep(
+-  new SupabaseRetentionRepository(),
+-  createRetentionObjectRemover(),
+-  new Date(),
+-  config.RETENTION_DAYS,
+-);
+-console.log(
+-  JSON.stringify({ retentionDays: config.RETENTION_DAYS, ...report }),
+-);
++const shutdown = new AbortController();
++const stop = () => shutdown.abort();
++process.once("SIGINT", stop);
++process.once("SIGTERM", stop);
++try {
++  const config = getServerConfig();
++  const report = await runRetentionSweep(
++    new SupabaseRetentionRepository(),
++    createRetentionObjectRemover(),
++    new Date(),
++    config.RETENTION_DAYS,
++    100,
++    { signal: shutdown.signal },
++  );
++  if (shutdown.signal.aborted) throw new Error("Retention sweep interrupted.");
++  process.stdout.write(
++    `${JSON.stringify({ retentionDays: config.RETENTION_DAYS, ...report })}\n`,
++  );
++} catch {
++  process.stderr.write(
++    "[resumide] retention sweep could not be confirmed; retry to reconcile pending items.\n",
++  );
++  process.exitCode = 1;
++} finally {
++  process.removeListener("SIGINT", stop);
++  process.removeListener("SIGTERM", stop);
++}
+--- a/tests/unit/retention-cli.test.ts
++++ b/tests/unit/retention-cli.test.ts
+@@ -0,0 +1,115 @@
++import { afterEach, beforeEach, expect, it, vi } from "vitest";
++const mocks = vi.hoisted(() => ({
++  config: vi.fn(),
++  sweep: vi.fn(),
++  remove: vi.fn(),
++  construct: vi.fn(),
++}));
++vi.mock("../../app/lib/server/config", () => ({
++  getServerConfig: mocks.config,
++}));
++vi.mock("../../app/lib/server/retention", () => ({
++  SupabaseRetentionRepository: class {
++    constructor() {
++      mocks.construct();
++    }
++  },
++  createRetentionObjectRemover: () => mocks.remove,
++  runRetentionSweep: mocks.sweep,
++}));
++const load = () => import("../../scripts/run-retention");
++let exitCode: typeof process.exitCode;
++const snapshotListeners = () => ({
++  SIGINT: new Set(process.listeners("SIGINT")),
++  SIGTERM: new Set(process.listeners("SIGTERM")),
++});
++let listeners: ReturnType<typeof snapshotListeners>;
++let output: ReturnType<typeof vi.spyOn>, errors: ReturnType<typeof vi.spyOn>;
++beforeEach(() => {
++  vi.resetModules();
++  vi.resetAllMocks();
++  exitCode = process.exitCode;
++  listeners = snapshotListeners();
++  output = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
++  errors = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
++  mocks.config.mockReturnValue({ RETENTION_DAYS: 30 });
++  mocks.sweep.mockResolvedValue({ claimed: 2, completed: 1, failed: 1 });
++});
++afterEach(() => {
++  for (const name of ["SIGINT", "SIGTERM"] as const) {
++    const added = process
++      .listeners(name)
++      .filter((listener) => !listeners[name].has(listener));
++    for (const listener of added) process.removeListener(name, listener);
++    expect(added).toEqual([]);
++  }
++  process.exitCode = exitCode;
++  vi.restoreAllMocks();
++});
++it("imports the actual CLI, forwards its controller and preserves the success report wire", async () => {
++  await load();
++  expect(mocks.construct).toHaveBeenCalledTimes(1);
++  expect(mocks.sweep).toHaveBeenCalledWith(
++    expect.any(Object),
++    mocks.remove,
++    expect.any(Date),
++    30,
++    100,
++    { signal: expect.any(AbortSignal) },
++  );
++  expect(output).toHaveBeenCalledExactlyOnceWith(
++    `${JSON.stringify({ retentionDays: 30, claimed: 2, completed: 1, failed: 1 })}\n`,
++  );
++  expect(errors).not.toHaveBeenCalled();
++});
++it("reports a safe configuration failure before constructing any repository", async () => {
++  mocks.config.mockImplementation(() => {
++    throw new Error("PRIVATE_CONFIG_DETAIL");
++  });
++  await load();
++  expect(mocks.construct).not.toHaveBeenCalled();
++  expect(mocks.sweep).not.toHaveBeenCalled();
++  expect(output).not.toHaveBeenCalled();
++  expect(process.exitCode).toBe(1);
++  expect(JSON.stringify(errors.mock.calls)).not.toContain(
++    "PRIVATE_CONFIG_DETAIL",
++  );
++});
++it("does not print a success report or private detail for an unconfirmed sweep", async () => {
++  mocks.sweep.mockRejectedValue(
++    new Error("PRIVATE_STORAGE_OR_COMPLETION_DETAIL"),
++  );
++  await load();
++  expect(output).not.toHaveBeenCalled();
++  expect(errors).toHaveBeenCalledTimes(1);
++  expect(JSON.stringify(errors.mock.calls)).not.toContain(
++    "PRIVATE_STORAGE_OR_COMPLETION_DETAIL",
++  );
++  expect(process.exitCode).toBe(1);
++});
++it.each(["SIGINT", "SIGTERM"] as const)(
++  "forwards %s cancellation and suppresses a late resolved report",
++  async (name) => {
++    let finish!: () => void;
++    mocks.sweep.mockImplementation(
++      () =>
++        new Promise<void>((resolve) => {
++          finish = resolve;
++        }),
++    );
++    const loading = load();
++    await vi.waitFor(() => expect(mocks.sweep).toHaveBeenCalledTimes(1));
++    const signal = mocks.sweep.mock.calls[0][5].signal as AbortSignal;
++    expect(signal.aborted).toBe(false);
++    const stop = process
++      .listeners(name)
++      .find((listener) => !listeners[name].has(listener));
++    expect(stop).toBeDefined();
++    stop?.(name);
++    expect(signal.aborted).toBe(true);
++    finish();
++    await loading;
++    expect(output).not.toHaveBeenCalled();
++    expect(process.exitCode).toBe(1);
++  },
++);

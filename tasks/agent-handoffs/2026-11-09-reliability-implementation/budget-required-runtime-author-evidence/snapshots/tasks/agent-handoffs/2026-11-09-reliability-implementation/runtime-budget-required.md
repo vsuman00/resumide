@@ -1,0 +1,24 @@
+# Mandatory technical budget: runtime handoff
+
+Status: implemented and locally verified against seven actual backend profile dependencies. Root integration and Native/owner/release acceptance remain separate. Deployment stays HOLD. Base HEAD is a0b239299d75b0bd64b588fe743ebe2975fb28b9. The allocation owns five product files, eight fixtures and this handoff; original bytes are archived under /tmp/resumide-budget-required-preimages and match the allocated hashes. Contract SHAa41b99990fd04267017e823f21043b1965ba378057b83741a973b6cb7c7198d9 is unchanged.
+
+Fresh provider work now requires technical budget selection in all five app server paths. Legacy qualitative uses its existing nonretryable deterministic partial flow for disabled/missing flags or policy, before constructing a transport. Rewrite and Build return their existing unavailable response before legacy usage observations, monthly request buckets, consent/audit or provider construction as applicable. Their direct unbudgeted execution alternatives are removed. A12 preserves saved/pending/rejected and validated workspace exits, then requires options.budget and nonempty policy before authorize, factory or claim. Its public writing policy and receipt remain unchanged. A13 preserves available/pending/prepare replay and AI-disabled/ineligible deterministic exits; fresh stored NULL/missing policy refuses through the existing pre_dispatch_unavailable finish before authorization, quota, claim or factory. No injected transport, NODE_ENV or production test harness can bypass these guards.
+
+Existing budgeted source IDs, strict receipt decoding, typed claims, known/unknown accounting, lease/cancellation checks and late settlement remain. No production policy/rate/limit/model/pricing value or flag/grant activation changed. Shared usage observations remain available to their other readers; they no longer substitute for reservation in these provider branches.
+
+Positive fixtures now explicitly model actual source readiness, reservation and typed claim. The obsolete Build monthly-observation/bucket expectations now check real technical reservation or pre-consent rate denial, preserving status, resource-bound, consent/audit and no-SDK intent. A12 ambiguous claims now assert the existing admitted-budget AI_BUDGET_UNAVAILABLE boundary. A13 cancellation now asserts the existing admitted-budget cancelled code/annotation while retaining unknown hold, NULL usage, no publication and no redispatch; no product accounting/cancellation change was made. New negative cases cover absent/disabled flags, missing/empty/whitespace policy, missing stored fields, NULL A13 policy, no factory/SDK/legacy quota fallback, and budget-off saved/deterministic controls. All original185 cases remain; the final210 cases include25 additions. The two existing budget suites were read-only checks.
+
+Preserved finite receipts under /tmp/resumide-budget-required-:
+
+- v7eeNM: meaningful baseline RED; old Build returned200 despite no technical admission. One failed case,32 filtered; PG60212 closed. No missing-module failure.
+- gMM0Tz: first product successor145 passed/41 old-fixture failures; PG60299 closed.
+- zD1fsg:180 passed/six fixture failures; PG61330 closed.
+- 2GsZz9, feD07j and in1bWt: strict cancellation wire/annotation failures retained while positive harnesses moved to admitted budgets; PG61701/62242/62401 closed. A failed edit script matched no formatted fixture and wrote no source; its error is separately preserved.
+- tzlEPf and Qipj3E: scoped formatting exited0; generic stable-input status records intentional owned-file formatting, PG62548/62743 closed.
+- 17H9xM: scoped formatting/lint passed; PG62576/62583 closed.
+- crZFIc: exact final thirteen-file formatting/lint and full tsc --noEmit passed,918 stable inputs, PG62771/62778/62785 closed.
+- jLAmCJ: exact final ten-file gate210 passed/zero failed/zero skipped,918 stable inputs, PG62895 closed.
+
+/tmp/resumide-budget-required-release.json binds all thirteen file hashes, handoff, allocated preimages, contract, seven readonly actual profiles, receipt/log/source snapshots, start identities and independently absent process groups. Root's budget-required-runtime-profile-sync.json owns the dependency transfer. No broad test suite or app build was repeated; Root owns the combined gate.
+
+Checks used pinned Node22.23.4, empty HOME, explicit synthetic environment/private marker and OS network/root dotenv read/Git write denials. The supervisor ran outside Seatbelt. SDK/transport/RPC doubles supply source evidence, not Native locking or live-provider proof. No DB, Native parsing/execution, provider network, services, browser, dependency installation, Git mutation or deployment ran. Full expiry, aggregate folding, foreign actor/Auth/restore, Native/representative and release gates remain open.

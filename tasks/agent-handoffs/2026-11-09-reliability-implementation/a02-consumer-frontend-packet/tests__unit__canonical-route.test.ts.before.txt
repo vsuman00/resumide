@@ -1,0 +1,450 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({
+  user: vi.fn(),
+  admin: vi.fn(),
+  server: vi.fn(),
+  load: vi.fn(),
+  workspace: vi.fn(),
+  mutate: vi.fn(),
+  enabled: true,
+  correctionsEnabled: false,
+}));
+vi.mock("../../app/lib/server/auth", () => ({
+  getAuthenticatedUser: mocks.user,
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseAdminClient: mocks.admin,
+  createSupabaseServerClient: mocks.server,
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getServerConfig: () => ({
+    APP_ORIGIN: "https://example.test",
+    CANONICAL_AUTHORING_ENABLED: mocks.enabled,
+    CANONICAL_CORRECTIONS_ENABLED: mocks.correctionsEnabled,
+    EVIDENCE_REVIEW_ENABLED: true,
+  }),
+}));
+vi.mock("../../app/lib/server/canonical-repository", async (original) => ({
+  ...(await original<
+    typeof import("../../app/lib/server/canonical-repository")
+  >()),
+  loadCanonical: mocks.load,
+  loadCanonicalCorrectionWorkspace: mocks.workspace,
+  mutateCanonical: mocks.mutate,
+}));
+import { action, loader, headers } from "../../app/routes/analysis.canonical";
+import {
+  CanonicalError,
+  readCanonicalForm,
+} from "../../app/lib/server/canonical-repository";
+import type { CanonicalCorrectionCommand } from "../../app/lib/server/canonical-correction-commands";
+const id = (n: number) =>
+  `10000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+function form() {
+  return new URLSearchParams({
+    operation: "confirm",
+    expectedVersionId: id(2),
+    idempotencyKey: id(3),
+    factId: id(4),
+  });
+}
+function correction(
+  kind: CanonicalCorrectionCommand["kind"] = "apply",
+): CanonicalCorrectionCommand {
+  const common = {
+    schemaVersion: "candidate-correction-command/1.0.0" as const,
+    idempotencyKey: id(3),
+    sourceId: id(10),
+    attemptId: id(11),
+    inputSha256: "a".repeat(64),
+    evidenceSchemaVersion: "evidence/2.0.0" as const,
+    fieldExtractorVersion: "evidence-fields/test",
+    targetModelVersion: "evidence-targets/1.0.0" as const,
+    projectionModelVersion: "canonical-corrections/1.0.1" as const,
+    admissionPolicyVersion: "candidate-correction-admission/1.0.0" as const,
+    expectedReviewRevision: 2,
+    expectedAssignmentRevision: 1,
+    expectedVersionId: id(2),
+    acknowledgement: true as const,
+  };
+  if (kind === "assign")
+    return {
+      ...common,
+      kind,
+      selectors: [
+        {
+          eventId: id(12),
+          targetKind: "observed_assertion",
+          assertionId: "assertion-employer",
+          opaqueTargetId: "source-target-employer",
+          mappingMode: "existing",
+          baseVersionId: id(2),
+          factId: id(4),
+          mappingProofKind: "current_citations",
+          originVersionId: null,
+          originFactId: null,
+          location: {
+            kind: "entry",
+            sectionId: id(13),
+            entryId: id(14),
+            bulletId: null,
+            newSectionType: null,
+            newSectionTitle: null,
+          },
+          supersedesAssignmentId: null,
+        },
+      ],
+    };
+  return {
+    ...common,
+    kind,
+    selectors: [
+      {
+        assignmentId: id(15),
+        priorApplicationId: kind === "reapply" ? id(16) : null,
+      },
+    ],
+  };
+}
+function correctionForm(command: unknown = correction()) {
+  return new URLSearchParams({
+    operation: "correction",
+    command: JSON.stringify(command),
+  });
+}
+function args(body = form(), origin = "https://example.test", method = "POST") {
+  return {
+    request: new Request(`https://example.test/analysis/${id(1)}/canonical`, {
+      method,
+      headers: { Origin: origin },
+      body,
+    }),
+    params: { id: id(1) },
+  };
+}
+describe("canonical authorization and bounded forms", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.enabled = true;
+    mocks.correctionsEnabled = false;
+    mocks.user.mockResolvedValue({ id: id(5) });
+    mocks.mutate.mockResolvedValue({ revision: 2 });
+    mocks.load.mockResolvedValue({ current: null, history: [] });
+    mocks.workspace.mockResolvedValue({
+      current: null,
+      history: [],
+      corrections: null,
+    });
+  });
+  it("loads the owned correction workspace when correction review is enabled", async () => {
+    mocks.correctionsEnabled = true;
+    await loader({
+      request: new Request("https://example.test/canonical"),
+      params: { id: id(1) },
+    });
+    expect(mocks.workspace).toHaveBeenCalledWith(undefined, id(1), id(5), {
+      versionId: undefined,
+      compareId: undefined,
+      offset: 0,
+    });
+    expect(mocks.load).not.toHaveBeenCalled();
+  });
+  it.each(["assign", "apply", "add", "reapply"] as const)(
+    "submits a strictly bound %s command with authenticated identity and precise success copy",
+    async (kind) => {
+      mocks.correctionsEnabled = true;
+      mocks.mutate.mockResolvedValue({
+        status: kind === "assign" ? "assigned" : "applied",
+        revision: kind === "assign" ? null : 3,
+      });
+      const command = correction(kind);
+      const result = await action(args(correctionForm(command)));
+      expect(result.init?.status ?? 200).toBe(200);
+      expect(mocks.mutate).toHaveBeenCalledWith(
+        undefined,
+        id(1),
+        id(5),
+        { operation: "correction", command },
+        expect.any(String),
+      );
+      expect(result.data.error).toBeNull();
+      if (!("success" in result.data))
+        throw new Error("Expected a successful correction response.");
+      expect(result.data.success).toBe(
+        kind === "assign"
+          ? "Correction target saved. Review the proposed change before applying it."
+          : "Version 3 saved for review. Confirm the new fact separately.",
+      );
+      expect(new Headers(result.init?.headers).get("Cache-Control")).toBe(
+        "private, no-store",
+      );
+    },
+  );
+  it.each(["ownerId", "value"])(
+    "rejects authoritative %s inside a correction command",
+    async (field) => {
+      mocks.correctionsEnabled = true;
+      const response = await action(
+        args(correctionForm({ ...correction(), [field]: "untrusted" })),
+      );
+      expect(response.init?.status).toBe(422);
+      expect(mocks.mutate).not.toHaveBeenCalled();
+    },
+  );
+  it("does not admit correction writes while the feature is disabled", async () => {
+    const response = await action(args(correctionForm()));
+    expect(response.init?.status).toBe(404);
+    expect(mocks.mutate).not.toHaveBeenCalled();
+  });
+  it("preserves a correction conflict and private response without claiming success", async () => {
+    mocks.correctionsEnabled = true;
+    mocks.mutate.mockRejectedValue(
+      new CanonicalError(409, "Reload latest version."),
+    );
+    const response = await action(args(correctionForm()));
+    expect(response.init?.status).toBe(409);
+    expect(response.data).toEqual({
+      error: "Reload latest version.",
+      success: null,
+    });
+    expect(new Headers(response.init?.headers).get("Cache-Control")).toBe(
+      "private, no-store",
+    );
+  });
+  it("rejects cross-origin writes before authentication or privileged clients", async () => {
+    expect(
+      (await action(args(form(), "https://foreign.example.test"))).init?.status,
+    ).toBe(403);
+    expect(mocks.user).not.toHaveBeenCalled();
+    expect(mocks.admin).not.toHaveBeenCalled();
+  });
+  it("requires sign-in before privileged calls", async () => {
+    mocks.user.mockResolvedValue(null);
+    expect((await action(args())).init?.status).toBe(401);
+    expect(mocks.admin).not.toHaveBeenCalled();
+    await expect(
+      loader({
+        request: new Request("https://example.test/canonical"),
+        params: { id: id(1) },
+      }),
+    ).rejects.toMatchObject({ status: 302 });
+  });
+  it("keeps authoring disabled by default and rejects unsupported methods", async () => {
+    mocks.enabled = false;
+    expect((await action(args())).init?.status).toBe(404);
+    expect(mocks.admin).not.toHaveBeenCalled();
+    mocks.enabled = true;
+    const response = await action(args(form(), "https://example.test", "PUT"));
+    expect(response.init?.status).toBe(405);
+    expect(new Headers(response.init?.headers).get("Allow")).toBe("POST");
+  });
+  it.each(["ownerId", "organizationId", "confirmation", "__proto__"])(
+    "rejects supplied %s",
+    async (key) => {
+      const values = form();
+      values.set(key, id(99));
+      expect((await action(args(values))).init?.status).toBe(422);
+      expect(mocks.mutate).not.toHaveBeenCalled();
+    },
+  );
+  it("rejects duplicate and oversized streamed forms", async () => {
+    const duplicated = form();
+    duplicated.append("factId", id(99));
+    expect((await action(args(duplicated))).init?.status).toBe(422);
+    const large = form();
+    large.set("value", "x".repeat(17000));
+    expect((await action(args(large))).init?.status).toBe(422);
+    expect(mocks.mutate).not.toHaveBeenCalled();
+  });
+  it("passes authenticated identity and preserves conflict status", async () => {
+    mocks.mutate.mockRejectedValue(
+      new CanonicalError(409, "Reload latest version."),
+    );
+    const response = await action(args());
+    expect(response.init?.status).toBe(409);
+    expect(mocks.mutate).toHaveBeenCalledWith(
+      undefined,
+      id(1),
+      id(5),
+      expect.objectContaining({ operation: "confirm" }),
+      expect.any(String),
+    );
+    expect(new Headers(response.init?.headers).get("Cache-Control")).toContain(
+      "no-store",
+    );
+  });
+  it.each([
+    ["edit", 409],
+    ["edit", 422],
+    ["rename_section", 409],
+  ] as const)(
+    "U03 draft retains a parsed authenticated %s after status %s",
+    async (operation, status) => {
+      const submitted = {
+        operation,
+        expectedVersionId: id(2),
+        idempotencyKey: id(3),
+        ...(operation === "edit" ? { factId: id(4) } : { sectionId: id(4) }),
+        value: "Retained candidate draft",
+      };
+      mocks.mutate.mockRejectedValue(
+        new CanonicalError(status, "Review the latest saved version."),
+      );
+      const response = await action(args(new URLSearchParams(submitted)));
+      expect(response.init?.status).toBe(status);
+      expect(response.data).toMatchObject({ submitted, success: null });
+      expect(new Headers(response.init?.headers).get("Cache-Control")).toBe(
+        "private, no-store",
+      );
+    },
+  );
+  it("U03 draft never reflects unauthenticated, unparsed or successful submissions", async () => {
+    const submitted = new URLSearchParams({
+      operation: "edit",
+      expectedVersionId: id(2),
+      idempotencyKey: id(3),
+      factId: id(4),
+      value: "Retained candidate draft",
+    });
+    mocks.user.mockResolvedValue(null);
+    expect((await action(args(submitted))).data).not.toHaveProperty(
+      "submitted",
+    );
+    mocks.user.mockResolvedValue({ id: id(5) });
+    const malformed = new URLSearchParams(submitted);
+    malformed.append("ownerId", id(99));
+    expect((await action(args(malformed))).data).not.toHaveProperty(
+      "submitted",
+    );
+    expect(mocks.mutate).not.toHaveBeenCalled();
+    expect((await action(args(submitted))).data).not.toHaveProperty(
+      "submitted",
+    );
+  });
+  it("rejects invalid read pagination before repository access", async () => {
+    await expect(
+      loader({
+        request: new Request("https://example.test/canonical?offset=1.5"),
+        params: { id: id(1) },
+      }),
+    ).rejects.toMatchObject({ init: { status: 422 } });
+    expect(mocks.load).not.toHaveBeenCalled();
+  });
+  it("does not accept JSON or silently normalize a supplied correction", async () => {
+    await expect(
+      readCanonicalForm(
+        new Request("https://example.test/canonical", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        }),
+      ),
+    ).rejects.toMatchObject({ status: 422 });
+    const values = new URLSearchParams({
+      operation: "edit",
+      expectedVersionId: id(2),
+      idempotencyKey: id(3),
+      factId: id(4),
+      value: " padded ",
+    });
+    expect((await action(args(values))).init?.status).toBe(422);
+  });
+  it("U03 key loader supplies distinct fresh operation-target review keys", async () => {
+    mocks.load.mockResolvedValue({
+      current: {
+        document: {
+          facts: [{ id: id(4) }, { id: id(6) }],
+          sections: [{ id: id(7) }, { id: id(8) }],
+        },
+      },
+      history: [],
+    });
+    const first = await loader({
+      request: new Request("https://example.test/canonical"),
+      params: { id: id(1) },
+    });
+    const second = await loader({
+      request: new Request("https://example.test/canonical"),
+      params: { id: id(1) },
+    });
+    expect(first.data).toHaveProperty("retainedKeys");
+    const firstKeys = (first.data as { retainedKeys: Record<string, string> })
+      .retainedKeys;
+    const secondKeys = (second.data as { retainedKeys: Record<string, string> })
+      .retainedKeys;
+    expect(Object.keys(firstKeys).sort()).toEqual(
+      [
+        `edit:${id(4)}`,
+        `edit:${id(6)}`,
+        `rename_section:${id(7)}`,
+        `rename_section:${id(8)}`,
+      ].sort(),
+    );
+    const allKeys = [...Object.values(firstKeys), ...Object.values(secondKeys)];
+    expect(new Set(allKeys).size).toBe(8);
+    for (const key of allKeys)
+      expect(key).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+      );
+  });
+  it.each(["edit", "rename_section"] as const)(
+    "U03 resolution returns a separate authenticated parsed %s resolution on success",
+    async (operation) => {
+      const command: Record<string, string> =
+        operation === "edit"
+          ? {
+              operation,
+              expectedVersionId: id(2),
+              idempotencyKey: id(3),
+              factId: id(4),
+              value: "Resolved correction",
+            }
+          : {
+              operation,
+              expectedVersionId: id(2),
+              idempotencyKey: id(3),
+              sectionId: id(4),
+              value: "Resolved title",
+            };
+      const result = await action(args(new URLSearchParams(command)));
+      expect(result.init?.status ?? 200).toBe(200);
+      expect(result.data).toHaveProperty("resolved", command);
+      expect(result.data).not.toHaveProperty("submitted");
+      expect(new Headers(result.init?.headers).get("Cache-Control")).toBe(
+        "private, no-store",
+      );
+      const unrelated = await action(args());
+      expect(unrelated.data).not.toHaveProperty("resolved");
+      mocks.user.mockResolvedValueOnce(null);
+      expect(
+        (await action(args(new URLSearchParams(command)))).data,
+      ).not.toHaveProperty("resolved");
+      expect(
+        (
+          await action(
+            args(new URLSearchParams({ ...command, ownerId: id(9) })),
+          )
+        ).data,
+      ).not.toHaveProperty("resolved");
+    },
+  );
+  it("preserves private SSR headers and refreshed cookies", () => {
+    const result = new Headers(
+      headers({
+        parentHeaders: new Headers({
+          "Content-Security-Policy": "default-src 'self'",
+        }),
+        loaderHeaders: new Headers({
+          "Set-Cookie": "loader=refreshed; HttpOnly",
+        }),
+        actionHeaders: new Headers({
+          "Set-Cookie": "action=refreshed; HttpOnly",
+        }),
+        errorHeaders: new Headers({ "Cache-Control": "public" }),
+      }),
+    );
+    expect(result.get("Cache-Control")).toBe("private, no-store");
+    expect(result.get("X-Robots-Tag")).toBe("noindex, nofollow");
+    expect(result.getSetCookie()).toHaveLength(2);
+  });
+});

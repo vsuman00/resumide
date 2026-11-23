@@ -1,0 +1,121 @@
+{
+  "status": "SCOPED_APPLICATION_GATE_PASS_NATIVE_NOT_EVALUATED",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "dirtyScope": "Preserved main checkout plus exact18agent packet files(one unchanged), Root feature controls and type-only overload follow-up; no Git action.",
+  "behavioralTests": {
+    "passed": 282,
+    "files": 21,
+    "receipt": "a04-integrated-499b28c4-a495-4df3-a4c5-e0b6f443da0a.json",
+    "afterTestChange": "Type declarations/overloads only; independent runtime emission equality before resumed checks.",
+    "repeated": false
+  },
+  "checks": {
+    "npm run typecheck": "PASS",
+    "npm run lint": "PASS",
+    "npm run build": "PASS",
+    "npm run build:worker": "PASS"
+  },
+  "sourceInputs": 701,
+  "sourceDriftDuringRuns": [],
+  "inheritedBehavioralEvidence": {
+    "receipt": "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tasks/agent-handoffs/2026-11-09-reliability-implementation/a04-integrated-499b28c4-a495-4df3-a4c5-e0b6f443da0a.json",
+    "sha256": "6916c53e07870bde2c4babfb939c16140be8521390e7f0755287bb770e717f41",
+    "logSha256": "30572455aec660d6d93761bf8c66da312006922393f9642e0d0673990e042c82",
+    "testsPassed": 282,
+    "testFilesPassed": 21,
+    "changedApplicationInputs": [
+      "app/lib/server/canonical-repository.ts"
+    ],
+    "emittedRuntimeSha256": "6cf38a6e27f590bd037276ba029b824842cb32186f128a936ccea58c10799ecb",
+    "runtimeByteIdentical": true,
+    "commentsAndTypesRemovedForComparison": true
+  },
+  "receipts": [
+    {
+      "receipt": "a04-integrated-499b28c4-a495-4df3-a4c5-e0b6f443da0a.json",
+      "sha256": "6916c53e07870bde2c4babfb939c16140be8521390e7f0755287bb770e717f41",
+      "log": "a04-integrated-499b28c4-a495-4df3-a4c5-e0b6f443da0a.log",
+      "logSha256": "30572455aec660d6d93761bf8c66da312006922393f9642e0d0673990e042c82",
+      "status": "FAILED_OR_INCOMPLETE"
+    },
+    {
+      "receipt": "a04-checks-followup-4feb0e9f-7be7-43b2-b178-7522f24f4b32.json",
+      "sha256": "246f3e44123ad945de7b2422ba0b7990ef7f7fcb61bb40f7ff342814a8223ccc",
+      "log": "a04-checks-followup-4feb0e9f-7be7-43b2-b178-7522f24f4b32.log",
+      "logSha256": "004f11317133431da68c3ef9d3a5baf6e7919f49da0bc7ee793c0a389229c4f6",
+      "status": "FAILED_OR_INCOMPLETE"
+    },
+    {
+      "receipt": "a04-checks-followup-3de3cfb1-194e-4cac-be78-c8bc9fb732e5.json",
+      "sha256": "740de13fd1efb523e862d4bb3bae916fc127c50f51ef4078893d3a906f3ab4d6",
+      "log": "a04-checks-followup-3de3cfb1-194e-4cac-be78-c8bc9fb732e5.log",
+      "logSha256": "fd11f382fe427e681b3bc0f455b7a5efb1540fe0b1687db58bb5a48bef6502a9",
+      "status": "PASS"
+    }
+  ],
+  "processGroups": [
+    {
+      "processGroup": 8365,
+      "startIdentity": "8365  8365 Tue Nov 10 22:25:08 2026",
+      "absentNow": true,
+      "command": "npm test -- tests/unit/config.test.ts tests/unit/canonical-resume-schema.test.ts tests/unit/canonical-content.test.ts tests/unit/canonical-corrections.test.ts tests/unit/canonical-sql-contract.test.ts tests/unit/canonical-correction-repository.test.ts tests/unit/canonical-route.test.ts tests/components/CanonicalCorrections.test.tsx tests/unit/authoring-contract.test.ts tests/unit/authoring-proposals.test.ts tests/unit/authoring-forms.test.ts tests/unit/authoring-route.test.ts tests/unit/artifact-contract.test.ts tests/unit/artifact-source-links.test.ts tests/unit/artifact-corruption.test.ts tests/unit/artifact-repository.test.ts tests/unit/artifact-route.test.ts tests/unit/artifact-renderer.test.ts tests/unit/score-v2-contract.test.ts tests/unit/score-v2-engine.test.ts tests/unit/score-v2-route.test.ts"
+    },
+    {
+      "processGroup": 8410,
+      "startIdentity": "8410  8410 Tue Nov 10 22:25:14 2026",
+      "absentNow": true,
+      "command": "npm run typecheck"
+    },
+    {
+      "processGroup": 8933,
+      "startIdentity": "8933  8933 Tue Nov 10 22:32:25 2026",
+      "absentNow": true,
+      "command": "npm run typecheck"
+    },
+    {
+      "processGroup": 9152,
+      "startIdentity": "9152  9152 Tue Nov 10 22:36:04 2026",
+      "absentNow": true,
+      "command": "npm run typecheck"
+    },
+    {
+      "processGroup": 9178,
+      "startIdentity": "9178  9178 Tue Nov 10 22:36:09 2026",
+      "absentNow": true,
+      "command": "npm run lint"
+    },
+    {
+      "processGroup": 9199,
+      "startIdentity": "9199  9199 Tue Nov 10 22:36:11 2026",
+      "absentNow": true,
+      "command": "npm run build"
+    },
+    {
+      "processGroup": 9242,
+      "startIdentity": "9242  9242 Tue Nov 10 22:36:14 2026",
+      "absentNow": true,
+      "command": "npm run build:worker"
+    }
+  ],
+  "artifacts": [
+    {
+      "file": "build/server/index.js",
+      "bytes": 843960,
+      "sha256": "43553193bd2f4c52367286dc1977056991eb66794282956b34af536f808e8b06"
+    },
+    {
+      "file": "build/worker/analysis.mjs",
+      "bytes": 168159,
+      "sha256": "cfc31ea7d0f630a0fee9de130cc17226dd633ba84f3c04edadf0e1b68062aca9"
+    }
+  ],
+  "nativeSql": "NOT_PARSED_NOT_APPLIED_NOT_RUN",
+  "operator": "MUTATING_ROLLBACK_ONLY_DRAFT_NOT_RUN",
+  "browser": "NOT_RUN",
+  "providerRequests": 0,
+  "databaseOperations": 0,
+  "dockerOperations": 0,
+  "deployment": false,
+  "fullPlanComplete": false,
+  "knownFailedReceiptsPreserved": true
+}

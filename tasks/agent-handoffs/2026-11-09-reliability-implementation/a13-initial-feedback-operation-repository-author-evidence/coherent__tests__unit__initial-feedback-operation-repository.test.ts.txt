@@ -1,0 +1,784 @@
+import { createHash } from "node:crypto";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { scoreExtractedResume } from "../../app/lib/server/scoring-stage";
+import { createInitialFeedbackPublicationPolicy } from "../../app/lib/server/initial-feedback-publication-policy";
+import { INITIAL_FEEDBACK_OPERATION_PROFILE } from "../../app/lib/server/initial-feedback-operation-profile";
+import {
+  InitialFeedbackPrepareSchema,
+  InitialFeedbackClaimSchema,
+  type InitialFeedbackClaim,
+} from "../../app/lib/server/initial-feedback-operation-contract";
+import {
+  hashAiBudgetBinding,
+  calculateAiBudgetCost,
+} from "../../app/lib/server/ai-budget";
+import {
+  createInitialFeedbackOperationRepository,
+  InitialFeedbackOperationError,
+  type InitialFeedbackOperationClient,
+  type InitialFeedbackBudgetClaim,
+} from "../../app/lib/server/initial-feedback-operation-repository";
+
+const uuid = (n: number) =>
+  `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const sha = (s: string) => createHash("sha256").update(s).digest("hex");
+const known = { inputTokens: "11", outputTokens: "7" };
+const ready = () => ({
+  ...INITIAL_FEEDBACK_OPERATION_PROFILE,
+  schemaReady: true,
+  prepareExecutable: true,
+  claimExecutable: true,
+  settleExecutable: true,
+});
+function fixture(budgetOn = false) {
+  const text = "Built services using Python";
+  const policy = createInitialFeedbackPublicationPolicy({
+    model: "unit-model",
+    maxOutputTokens: 1200,
+    attemptLimit: 3,
+    budgetPolicyVersion: budgetOn ? "unit-budget/1" : null,
+  });
+  // Real scorer/checksum and strict context validation. UUIDs and Native JSONB
+  // digests are synthetic opaque RPC metadata, never JS emulation/native proof.
+  const result = scoreExtractedResume({
+    text,
+    pageCount: 1,
+    pageTexts: [text],
+    textChecksum: sha(text),
+    jobDescription: "Python required",
+  });
+  const context = {
+    scoringContext: {
+      schemaVersion: "legacy-scoring-input/1.0.0",
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      requestId: null,
+      source: {
+        resumeId: uuid(4),
+        resumeVersionId: uuid(5),
+        fileChecksum: "a".repeat(64),
+        bytes: 1000,
+        mediaType: "application/pdf",
+      },
+      extraction: {
+        text,
+        pageCount: 1,
+        pageTexts: [text],
+        textChecksum: sha(text),
+        extractorVersion: "unpdf-v1",
+        contentSha256: "b".repeat(64),
+      },
+      job: {
+        kind: "owned_job",
+        id: uuid(6),
+        title: "Unit role",
+        description: "Python required",
+        companyName: "",
+        contentSha256: "c".repeat(64),
+      },
+      producer: {
+        parserVersion: "parse-sim-v1",
+        rulesetVersion: "ats-rules-v4",
+        normalizerVersion: "normalizer-v1",
+        taxonomyVersion: "skills-taxonomy-v1",
+      },
+      binding: {
+        schemaVersion: "legacy-scoring-binding/1.0.0",
+        analysisId: uuid(1),
+        ownerId: uuid(2),
+        organizationId: uuid(3),
+        resumeId: uuid(4),
+        resumeVersionId: uuid(5),
+        fileChecksum: "a".repeat(64),
+        textChecksum: sha(text),
+        extractionSha256: "b".repeat(64),
+        jobId: uuid(6),
+        jobSha256: "c".repeat(64),
+        inputBindingSha256: "d".repeat(64),
+      },
+    },
+    deterministicResult: result,
+    currentness: "current",
+    generationEligibility: "eligible",
+  };
+  const attempt = {
+    attemptId: uuid(8),
+    ordinal: 1,
+    state: "reserved",
+    claimedAt: null,
+    usage: null,
+    errorCode: null,
+    budgetAttemptId: null,
+  };
+  const operation = {
+    schemaVersion: "initial-feedback-operation/1.0.0",
+    operationId: uuid(7),
+    analysisId: uuid(1),
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    binding: {
+      schemaVersion: "initial-feedback-binding/1.0.0",
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      resumeId: uuid(4),
+      resumeVersionId: uuid(5),
+      scoringInputSha256: "d".repeat(64),
+      deterministicContentSha256: "e".repeat(64),
+      resultChecksum: result.resultChecksum,
+      sourceTextSha256: sha(text),
+      jobId: uuid(6),
+      jobSha256: "c".repeat(64),
+      policy,
+    },
+    bindingSha256: "f".repeat(64),
+    state: "open",
+    attemptLimit: 3,
+    attempts: [attempt],
+    publicationId: null,
+  };
+  const prepared = InitialFeedbackPrepareSchema.parse({
+    schemaVersion: "initial-feedback-prepare/1.0.0",
+    status: "prepared",
+    operation,
+    attempt,
+    context,
+    dispatchAllowed: false,
+    replayed: false,
+  });
+  const scope = {
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    analysisId: uuid(1),
+    lease: { workerId: "unit-worker", attempt: 2, leaseFence: uuid(10) },
+    policy,
+  };
+  return { prepared, scope };
+}
+function claiming(f: ReturnType<typeof fixture>): InitialFeedbackClaim {
+  const attempt = {
+    ...f.prepared.operation.attempts[0],
+    state: "dispatched",
+    claimedAt: "2026-11-15T00:00:00.123456Z",
+  };
+  return InitialFeedbackClaimSchema.parse({
+    schemaVersion: "initial-feedback-claim/1.0.0",
+    operation: { ...f.prepared.operation, attempts: [attempt] },
+    attempt,
+    dispatchAllowed: true,
+    replayed: false,
+    budget: null,
+  });
+}
+function settlement(
+  c: InitialFeedbackClaim,
+  usage: typeof known | null = known,
+  errorCode: "timeout" | null = null,
+) {
+  return {
+    schemaVersion: "initial-feedback-settlement/1.0.0",
+    operationId: c.operation.operationId,
+    attemptId: c.attempt.attemptId,
+    bindingSha256: c.operation.bindingSha256,
+    state:
+      usage === null ? "held_unknown" : errorCode === null ? "known" : "failed",
+    usage,
+    errorCode,
+    replayed: false,
+  };
+}
+function harness(
+  f = fixture(),
+  options: { timeoutMs?: number; now?: () => number } = {},
+) {
+  const data = {
+    metadata: ready(),
+    prepare: structuredClone(f.prepared),
+    claim: claiming(f),
+    settle: settlement(claiming(f)),
+  };
+  const rpc = vi.fn<InitialFeedbackOperationClient["rpc"]>(
+    async (name: string) => {
+      const value =
+        name === "read_initial_feedback_operation_readiness"
+          ? data.metadata
+          : name === "prepare_initial_feedback"
+            ? data.prepare
+            : name === "claim_initial_feedback_dispatch"
+              ? data.claim
+              : name === "settle_initial_feedback_attempt"
+                ? data.settle
+                : null;
+      if (value === null) throw Error("Unexpected RPC");
+      return { data: structuredClone(value), error: null };
+    },
+  );
+  const repo = createInitialFeedbackOperationRepository(
+    { rpc },
+    f.scope,
+    options,
+  );
+  return { f, data, rpc, repo };
+}
+async function winner(h: ReturnType<typeof harness>) {
+  const p = await h.repo.prepare();
+  const c = await h.repo.claim(p);
+  expect(c.status).toBe("won");
+  if (c.status !== "won") throw Error("Winning fixture unavailable");
+  return c;
+}
+afterEach(() => vi.useRealTimers());
+describe("initial-feedback FOUNDATION RPC boundary (fake RPC, no Native execution)", () => {
+  it("uses exact fresh metadata then one prepare RPC, retaining original lease/native hash", async () => {
+    const h = harness();
+    const p = await h.repo.prepare();
+    expect(p).toEqual(h.f.prepared);
+    expect(h.rpc.mock.calls).toEqual([
+      ["read_initial_feedback_operation_readiness", {}],
+      [
+        "prepare_initial_feedback",
+        {
+          p_analysis_id: uuid(1),
+          p_lease: h.f.scope.lease,
+          p_policy: {
+            version: h.f.scope.policy.version,
+            sha256: h.f.scope.policy.sha256,
+          },
+          p_retry_after_attempt_id: null,
+        },
+      ],
+    ]);
+    expect(p.operation.bindingSha256).toBe("f".repeat(64));
+    expect(p.operation.bindingSha256).not.toBe(
+      sha(JSON.stringify(p.operation.binding)),
+    );
+    expect(p.dispatchAllowed).toBe(false);
+  });
+  it.each(["missing", "unknown", "drift", "schema", "staged"])(
+    "refuses %s foundation metadata without mutation/fallback",
+    async (kind) => {
+      const h = harness();
+      h.rpc.mockImplementationOnce(async () => ({
+        data:
+          kind === "missing"
+            ? null
+            : kind === "unknown"
+              ? { ...ready(), readerExecutable: true }
+              : kind === "drift"
+                ? { ...ready(), claimSha256: "0".repeat(64) }
+                : kind === "schema"
+                  ? { ...ready(), schemaReady: false }
+                  : { ...ready(), prepareExecutable: false },
+        error: null,
+      }));
+      await expect(h.repo.prepare()).rejects.toMatchObject({
+        code: "unavailable",
+        mutationStatus: "not_sent",
+      });
+      expect(h.rpc).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("refuses invalid scope/selector before RPC and does not import caller profile authority", async () => {
+    const h = harness();
+    expect(() =>
+      createInitialFeedbackOperationRepository(
+        { rpc: h.rpc },
+        { ...h.f.scope, ownerId: "bad" },
+      ),
+    ).toThrow(InitialFeedbackOperationError);
+    await expect(h.repo.prepare("bad")).rejects.toMatchObject({
+      code: "invalid",
+    });
+    expect(h.rpc).not.toHaveBeenCalled();
+  });
+  it.each(["ownerId", "organizationId", "analysisId"] as const)(
+    "refuses foreign %s even when reply internally correlates",
+    async (field) => {
+      const h = harness();
+      h.data.prepare.operation[field] = uuid(90);
+      h.data.prepare.operation.binding[field] = uuid(90);
+      await expect(h.repo.prepare()).rejects.toMatchObject({
+        code: "unavailable",
+        mutationStatus: "unknown",
+      });
+      expect(h.rpc).toHaveBeenCalledTimes(2);
+    },
+  );
+  it("refuses valid but unrequested fresh policy and tampered deterministic checksum", async () => {
+    const h = harness();
+    h.data.prepare.operation.binding.policy =
+      createInitialFeedbackPublicationPolicy({
+        model: "other-model",
+        maxOutputTokens: 1200,
+        attemptLimit: 3,
+        budgetPolicyVersion: null,
+      });
+    await expect(h.repo.prepare()).rejects.toMatchObject({
+      code: "unavailable",
+    });
+    const second = harness();
+    if (second.data.prepare.status !== "prepared") throw Error("Fixture");
+    second.data.prepare.context.deterministicResult.score = 99;
+    await expect(second.repo.prepare()).rejects.toMatchObject({
+      code: "unavailable",
+    });
+  });
+  it("preserves pending captured policy after selector movement; pending cannot be claimed", async () => {
+    const h = harness();
+    const old = structuredClone(h.f.prepared);
+    const moved = createInitialFeedbackPublicationPolicy({
+      model: "next-model",
+      maxOutputTokens: 1200,
+      attemptLimit: 3,
+      budgetPolicyVersion: null,
+    });
+    const repo = createInitialFeedbackOperationRepository(
+      { rpc: h.rpc },
+      { ...h.f.scope, policy: moved },
+    );
+    h.rpc.mockImplementation(async (name) => ({
+      data:
+        name === "read_initial_feedback_operation_readiness"
+          ? ready()
+          : {
+              schemaVersion: "initial-feedback-prepare/1.0.0",
+              status: "pending",
+              operation: old.operation,
+              attempt: old.operation.attempts[0],
+              context: null,
+              dispatchAllowed: false,
+              replayed: true,
+            },
+      error: null,
+    }));
+    const pending = await repo.prepare();
+    expect(pending.status).toBe("pending");
+    expect(pending.operation.binding.policy).toEqual(
+      old.operation.binding.policy,
+    );
+    await expect(repo.claim(pending)).rejects.toMatchObject({
+      code: "invalid",
+      mutationStatus: "not_sent",
+    });
+    expect(h.rpc).toHaveBeenCalledTimes(2);
+    const first = {
+      ...old.operation.attempts[0],
+      state: "failed",
+      claimedAt: "2026-11-15T00:00:00Z",
+      usage: known,
+      errorCode: "provider_failed",
+    };
+    const second = {
+      ...first,
+      attemptId: uuid(18),
+      ordinal: 2,
+      errorCode: "timeout",
+    };
+    const third = {
+      ...old.operation.attempts[0],
+      attemptId: uuid(28),
+      ordinal: 3,
+    };
+    h.rpc.mockImplementation(async (name) => ({
+      data:
+        name === "read_initial_feedback_operation_readiness"
+          ? ready()
+          : {
+              schemaVersion: "initial-feedback-prepare/1.0.0",
+              status: "pending",
+              operation: { ...old.operation, attempts: [first, second, third] },
+              attempt: second,
+              context: null,
+              dispatchAllowed: false,
+              replayed: true,
+            },
+      error: null,
+    }));
+    const earlier = await repo.prepare(first.attemptId);
+    expect(earlier.status === "pending" && earlier.attempt?.attemptId).toBe(
+      second.attemptId,
+    );
+    expect(earlier.context).toBe(null);
+    await expect(repo.claim(earlier)).rejects.toMatchObject({
+      code: "invalid",
+    });
+    expect(h.rpc.mock.calls.at(-1)?.[1].p_retry_after_attempt_id).toBe(
+      first.attemptId,
+    );
+  });
+  it("returns no permission for false/replayed claim and never settles/releases its winner", async () => {
+    const h = harness();
+    const p = await h.repo.prepare();
+    h.data.claim.dispatchAllowed = false;
+    h.data.claim.replayed = true;
+    const reply = await h.repo.claim(p);
+    expect(reply.status).toBe("not_won");
+    expect(reply).not.toHaveProperty("dispatch");
+    expect(h.rpc.mock.calls.map((c) => c[0])).toEqual([
+      "read_initial_feedback_operation_readiness",
+      "prepare_initial_feedback",
+      "read_initial_feedback_operation_readiness",
+      "claim_initial_feedback_dispatch",
+    ]);
+  });
+  it.each(["claimExecutable", "settleExecutable"] as const)(
+    "does not dispatch when %s is false in fresh admission",
+    async (key) => {
+      const h = harness();
+      const p = await h.repo.prepare();
+      h.data.metadata[key] = false;
+      await expect(h.repo.claim(p)).rejects.toMatchObject({
+        code: "unavailable",
+        mutationStatus: "not_sent",
+      });
+      expect(h.rpc).toHaveBeenCalledTimes(3);
+    },
+  );
+  it("correlates op/attempt/binding and does not mint a token for malformed true claim", async () => {
+    const h = harness();
+    const p = await h.repo.prepare();
+    h.data.claim.operation.bindingSha256 = "9".repeat(64);
+    await expect(h.repo.claim(p)).rejects.toMatchObject({
+      code: "unavailable",
+      mutationStatus: "unknown",
+    });
+    h.data.claim = claiming(h.f);
+    h.data.claim.replayed = true;
+    await expect(h.repo.claim(p)).rejects.toMatchObject({
+      code: "unavailable",
+      mutationStatus: "unknown",
+    });
+    expect(
+      h.rpc.mock.calls.every(
+        ([n]) => !n.includes("settle") && !n.includes("release"),
+      ),
+    ).toBe(true);
+  });
+  it("winning capability uses private copies despite public nested mutation; forged and cross-instance fail before RPC", async () => {
+    const h = harness();
+    const won = await winner(h);
+    won.claim.operation.operationId = uuid(99);
+    won.claim.attempt.attemptId = uuid(98);
+    expect(Object.isFrozen(won.dispatch)).toBe(true);
+    const before = h.rpc.mock.calls.length;
+    await expect(
+      h.repo.settle({ ...won.dispatch }, { usage: known, errorCode: null }),
+    ).rejects.toMatchObject({ code: "invalid" });
+    const other = harness();
+    await expect(
+      other.repo.settle(won.dispatch, { usage: known, errorCode: null }),
+    ).rejects.toMatchObject({ code: "invalid" });
+    expect(other.rpc).not.toHaveBeenCalled();
+    expect(h.rpc).toHaveBeenCalledTimes(before);
+    await h.repo.settle(won.dispatch, { usage: known, errorCode: null });
+    expect(h.rpc.mock.calls.at(-1)).toEqual([
+      "settle_initial_feedback_attempt",
+      {
+        p_operation_id: uuid(7),
+        p_attempt_id: uuid(8),
+        p_binding_sha256: "f".repeat(64),
+        p_usage: known,
+        p_error_code: null,
+      },
+    ]);
+  });
+  it("settles after candidate cancellation/metadata denial without refreshing content, consent, month or R03", async () => {
+    const h = harness();
+    const signal = new AbortController();
+    const p = await h.repo.prepare(null, { signal: signal.signal });
+    const won = await h.repo.claim(p, null, { signal: signal.signal });
+    if (won.status !== "won") throw Error("Fixture");
+    signal.abort();
+    h.data.metadata.schemaReady = false;
+    const before = h.rpc.mock.calls.length;
+    const receipt = await h.repo.settle(won.dispatch, {
+      usage: known,
+      errorCode: null,
+    });
+    expect(receipt.state).toBe("known");
+    expect(h.rpc.mock.calls.slice(before).map((c) => c[0])).toEqual([
+      "settle_initial_feedback_attempt",
+    ]);
+  });
+  it("preserves held unknown/terminal error, permits one late known, rejects changed known/error", async () => {
+    const h = harness();
+    const won = await winner(h);
+    h.data.settle = settlement(claiming(h.f), null, "timeout");
+    expect(
+      (await h.repo.settle(won.dispatch, { usage: null, errorCode: "timeout" }))
+        .state,
+    ).toBe("held_unknown");
+    h.data.settle = settlement(claiming(h.f), known, "timeout");
+    const late = await h.repo.settle(won.dispatch, {
+      usage: known,
+      errorCode: null,
+    });
+    expect(late).toMatchObject({
+      state: "failed",
+      usage: known,
+      errorCode: "timeout",
+    });
+    const before = h.rpc.mock.calls.length;
+    await expect(
+      h.repo.settle(won.dispatch, {
+        usage: { inputTokens: "12", outputTokens: "7" },
+        errorCode: null,
+      }),
+    ).rejects.toMatchObject({ code: "invalid" });
+    await expect(
+      h.repo.settle(won.dispatch, {
+        usage: known,
+        errorCode: "invalid_output",
+      }),
+    ).rejects.toMatchObject({ code: "invalid" });
+    expect(h.rpc).toHaveBeenCalledTimes(before);
+    h.data.settle.replayed = true;
+    expect(
+      (await h.repo.settle(won.dispatch, { usage: null, errorCode: null }))
+        .usage,
+    ).toEqual(known);
+  });
+  it("refuses settlement with wrong identity/counters and retains exact original input for manual retry", async () => {
+    const h = harness();
+    const won = await winner(h);
+    h.data.settle.operationId = uuid(99);
+    await expect(
+      h.repo.settle(won.dispatch, { usage: known, errorCode: null }),
+    ).rejects.toMatchObject({ code: "unavailable", mutationStatus: "unknown" });
+    const before = h.rpc.mock.calls.length;
+    await expect(
+      h.repo.settle(won.dispatch, { usage: null, errorCode: "timeout" }),
+    ).rejects.toMatchObject({ code: "invalid" });
+    expect(h.rpc).toHaveBeenCalledTimes(before);
+    h.data.settle = settlement(claiming(h.f));
+    await h.repo.settle(won.dispatch, { usage: known, errorCode: null });
+    expect(h.rpc.mock.calls.at(-1)).toEqual(h.rpc.mock.calls.at(-2));
+  });
+  it.each(["22023", "42501", "P0C01", "P0C03", "XX000"])(
+    "maps %s to fixed safe mutation outcome without raw messages/retry",
+    async (code) => {
+      const h = harness();
+      h.rpc
+        .mockImplementationOnce(async () => ({ data: ready(), error: null }))
+        .mockImplementationOnce(async () => ({
+          data: null,
+          error: { code, message: "PRIVATE_SOURCE_PROVIDER_DETAIL" },
+        }));
+      const error = await h.repo.prepare().catch((e) => e);
+      expect(error).toBeInstanceOf(InitialFeedbackOperationError);
+      expect(error.mutationStatus).toBe(
+        code === "XX000" ? "unknown" : "refused",
+      );
+      expect(JSON.stringify(error)).not.toContain(
+        "PRIVATE_SOURCE_PROVIDER_DETAIL",
+      );
+      expect(error.message).toBe("Initial feedback operation is unavailable.");
+      expect(h.rpc).toHaveBeenCalledTimes(2);
+    },
+  );
+  it("preaborted prepare and settlement make zero new RPCs", async () => {
+    const h = harness();
+    const a = new AbortController();
+    a.abort();
+    await expect(
+      h.repo.prepare(null, { signal: a.signal }),
+    ).rejects.toMatchObject({ code: "cancelled", mutationStatus: "not_sent" });
+    expect(h.rpc).not.toHaveBeenCalled();
+    const won = await winner(h),
+      before = h.rpc.mock.calls.length;
+    await expect(
+      h.repo.settle(
+        won.dispatch,
+        { usage: known, errorCode: null },
+        { signal: a.signal },
+      ),
+    ).rejects.toMatchObject({ code: "cancelled", mutationStatus: "not_sent" });
+    expect(h.rpc).toHaveBeenCalledTimes(before);
+  });
+  it("bounds ignored-abort metadata and does not later send the mutation", async () => {
+    vi.useFakeTimers();
+    const h = harness(undefined, { timeoutMs: 25 });
+    let complete!: (v: { data: unknown; error: unknown }) => void;
+    h.rpc.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          complete = resolve;
+        }),
+    );
+    const pending = h.repo.prepare();
+    const check = expect(pending).rejects.toMatchObject({
+      code: "unavailable",
+      mutationStatus: "not_sent",
+    });
+    await vi.advanceTimersByTimeAsync(25);
+    await check;
+    complete({ data: ready(), error: null });
+    await vi.runAllTimersAsync();
+    expect(h.rpc).toHaveBeenCalledTimes(1);
+  });
+  it("bounds ambiguous claim without token, no automatic retry/settlement", async () => {
+    vi.useFakeTimers();
+    const h = harness(undefined, { timeoutMs: 25 });
+    const p = await h.repo.prepare();
+    h.rpc
+      .mockImplementationOnce(async () => ({ data: ready(), error: null }))
+      .mockImplementationOnce(() => new Promise(() => {}));
+    const pending = h.repo.claim(p);
+    const check = expect(pending).rejects.toMatchObject({
+      code: "unavailable",
+      mutationStatus: "unknown",
+    });
+    await vi.advanceTimersByTimeAsync(25);
+    await check;
+    expect(h.rpc).toHaveBeenCalledTimes(4);
+  });
+  it("bounds settlement cancellation and retries exact retained technical input only", async () => {
+    const h = harness();
+    const won = await winner(h);
+    const a = new AbortController();
+    h.rpc.mockImplementationOnce(() => new Promise(() => {}));
+    const pending = h.repo.settle(
+      won.dispatch,
+      { usage: known, errorCode: null },
+      { signal: a.signal },
+    );
+    const check = expect(pending).rejects.toMatchObject({
+      code: "cancelled",
+      mutationStatus: "unknown",
+    });
+    await vi.waitFor(() => expect(h.rpc).toHaveBeenCalledTimes(5));
+    a.abort();
+    await check;
+    await expect(
+      h.repo.settle(won.dispatch, { usage: null, errorCode: "timeout" }),
+    ).rejects.toMatchObject({ code: "invalid" });
+    const done = await h.repo.settle(won.dispatch, {
+      usage: known,
+      errorCode: null,
+    });
+    expect(done.usage).toEqual(known);
+    expect(h.rpc.mock.calls.at(-1)).toEqual(h.rpc.mock.calls.at(-2));
+  });
+  it("rejects immediate valid response after absolute deadline even if timer did not run", async () => {
+    let clock = 0;
+    const h = harness(undefined, { timeoutMs: 25, now: () => clock });
+    h.rpc
+      .mockImplementationOnce(async () => ({ data: ready(), error: null }))
+      .mockImplementationOnce(async () => {
+        clock = 26;
+        return { data: h.data.prepare, error: null };
+      });
+    await expect(h.repo.prepare()).rejects.toMatchObject({
+      code: "unavailable",
+      mutationStatus: "unknown",
+    });
+    expect(h.rpc).toHaveBeenCalledTimes(2);
+  });
+  it("preserves actual R03 request and envelope and never assumes queue attempt equals provider ordinal", async () => {
+    const f = fixture(true),
+      h = harness();
+    const p = f.scope.policy;
+    const b = {
+      userId: f.scope.ownerId,
+      organizationId: f.scope.organizationId,
+      operationId: f.prepared.operation.operationId,
+      attemptId: f.prepared.operation.attempts[0].attemptId,
+      attemptOrdinal: 1,
+      surface: "qualitative" as const,
+      payloadSha256: f.prepared.operation.bindingSha256,
+      model: p.model,
+      promptPolicyVersion: p.promptVersion,
+      policyVersion: p.budgetPolicyVersion!,
+      reservedInputTokens: 20,
+      reservedOutputTokens: 1200,
+    };
+    const { userId, organizationId, ...request } = b;
+    const budget: InitialFeedbackBudgetClaim = {
+      p_user_id: userId,
+      p_organization_id: organizationId,
+      p_request: {
+        ...request,
+        reservedInputTokens: "20",
+        reservedOutputTokens: "1200",
+      },
+    };
+    const a = {
+      ...f.prepared.operation.attempts[0],
+      state: "dispatched",
+      claimedAt: "2026-11-15T00:00:00Z",
+      budgetAttemptId: b.attemptId,
+    };
+    const receipt = {
+      schemaVersion: "ai-budget/1.0.0",
+      ...b,
+      reservedInputTokens: "20",
+      reservedOutputTokens: "1200",
+      bindingSha256: hashAiBudgetBinding(b),
+      poolPolicyVersion: "unit-pool/1",
+      attemptLimit: 3,
+      period: "2026-11-01",
+      state: "dispatched",
+      inputMicrousdPerMillion: "1",
+      outputMicrousdPerMillion: "1",
+      reservedCostMicrousd: calculateAiBudgetCost({
+        inputTokens: 20,
+        outputTokens: 1200,
+        inputMicrousdPerMillion: "1",
+        outputMicrousdPerMillion: "1",
+      }),
+      actualInputTokens: null,
+      actualOutputTokens: null,
+      actualCostMicrousd: null,
+      replayed: false,
+      dispatchAllowed: true,
+      poolBlocked: false,
+    };
+    const claim = InitialFeedbackClaimSchema.parse({
+      schemaVersion: "initial-feedback-claim/1.0.0",
+      operation: { ...f.prepared.operation, attempts: [a] },
+      attempt: a,
+      dispatchAllowed: true,
+      replayed: false,
+      budget: { schemaVersion: "ai-budget/1.0.0", status: "ok", receipt },
+    });
+    h.rpc.mockImplementation(async (name) => ({
+      data:
+        name === "read_initial_feedback_operation_readiness"
+          ? ready()
+          : name === "prepare_initial_feedback"
+            ? f.prepared
+            : claim,
+      error: null,
+    }));
+    const repo = createInitialFeedbackOperationRepository(
+      { rpc: h.rpc },
+      f.scope,
+    );
+    const prepared = await repo.prepare();
+    const won = await repo.claim(prepared, budget);
+    expect(won.status).toBe("won");
+    expect(won.claim.budget).toEqual(claim.budget);
+    expect(h.rpc.mock.calls.at(-1)?.[1].p_budget).toEqual(budget);
+    expect(f.scope.lease.attempt).toBe(2);
+    expect(b.attemptOrdinal).toBe(1);
+    expect(
+      h.rpc.mock.calls.every(([name]) => !name.startsWith("ai_budget_")),
+    ).toBe(true);
+  });
+  it("rejects malformed known counters and foreign preparation handles without IO", async () => {
+    const h = harness();
+    const won = await winner(h);
+    const before = h.rpc.mock.calls.length;
+    await expect(
+      h.repo.settle(won.dispatch, {
+        usage: { inputTokens: "01", outputTokens: "7" },
+        errorCode: null,
+      }),
+    ).rejects.toMatchObject({ code: "invalid" });
+    await expect(
+      h.repo.claim(structuredClone(h.f.prepared)),
+    ).rejects.toMatchObject({ code: "invalid" });
+    expect(h.rpc).toHaveBeenCalledTimes(before);
+  });
+});

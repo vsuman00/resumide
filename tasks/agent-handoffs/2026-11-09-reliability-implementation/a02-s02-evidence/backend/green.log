@@ -1,0 +1,101 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/evidence-entry-associations.test.ts (66 tests | 4 failed) 355ms
+     ✓ adds two unverified candidates while preserving the characterized legacy gap 17ms
+     × supports ASCII structural casing in Experience without modifying values 8ms
+     × supports ASCII structural casing in WORK EXPERIENCE without modifying values 1ms
+     × supports ASCII structural casing in professional experience without modifying values 2ms
+     × supports ASCII structural casing in Employment History without modifying values 1ms
+     ✓ keeps observations unresolved outside exact supported heading "" 1ms
+     ✓ keeps observations unresolved outside exact supported heading "Work History" 2ms
+     ✓ keeps observations unresolved outside exact supported heading "Experience Overview" 2ms
+     ✓ keeps observations unresolved outside exact supported heading "WorK Experience" 1ms
+     ✓ clears employment eligibility after "Education" 1ms
+     ✓ clears employment eligibility after "Certifications" 1ms
+     ✓ clears employment eligibility after "Summary" 1ms
+     ✓ clears employment eligibility after "Unsupported section" 2ms
+     ✓ clears employment eligibility after "Built neutral tools" 1ms
+     ✓ clears employment eligibility after "Education: BSc Synthetic" 3ms
+     ✓ ends blocks at blanks without inheriting an incomplete employer 1ms
+     ✓ does not link across pages even when ordinals are adjacent 1ms
+     ✓ keeps repeated labels unresolved: "Employer: First Labs\nRole: Engineer\nRole: Analyst" 1ms
+     ✓ keeps repeated labels unresolved: "Employer: First Labs\nRole: Engineer\nDates: 2020 - 2021\nDates: 2022 - 2023" 1ms
+     ✓ keeps repeated labels unresolved: "Employer: First Labs\nRole: Engineer | Role: Analyst" 1ms
+     ✓ keeps repeated labels unresolved: "Employer: First Labs\nRole: Engineer | Role: Engineer" 0ms
+     ✓ requires Employer and Role, allows optional Dates, and starts afresh at Employer 1ms
+     ✓ preserves same-span group IDs and disjoint membership beside a multiline candidate 1ms
+     ✓ retains contact, education, certification and duplicate headers as observations 1ms
+     ✓ keeps valid empty evidence reviewable without fabricating absence 0ms
+     ✓ preserves current native/OCR disagreement without merging methods 4ms
+     ✓ does not carry native employment context into an OCR method/page 2ms
+     ✓ is deterministic, immutable and emits references without values or source text 3ms
+     ✓ rejects mismatched owned ownerId with no partial references 1ms
+     ✓ rejects mismatched owned analysisId with no partial references 1ms
+     ✓ rejects mismatched owned sourceId with no partial references 1ms
+     ✓ rejects mismatched owned inputSha256 with no partial references 1ms
+     ✓ rejects mismatched owned attemptId with no partial references 1ms
+     ✓ binds candidate identity to exact evidence ownerId 1ms
+     ✓ binds candidate identity to exact evidence analysisId 1ms
+     ✓ binds candidate identity to exact evidence sourceId 2ms
+     ✓ binds candidate identity to exact evidence inputSha256 2ms
+     ✓ binds candidate identity to exact evidence id 1ms
+     ✓ rejects forged replay score 1ms
+     ✓ rejects forged replay span 1ms
+     ✓ rejects forged replay value 1ms
+     ✓ rejects forged replay field state 1ms
+     ✓ rejects missing or malformed evidence null 1ms
+     ✓ rejects missing or malformed evidence undefined 1ms
+     ✓ rejects missing or malformed evidence {} 1ms
+     ✓ keeps replay-valid historical extractors unavailable and unchanged 3ms
+     ✓ rejects excessive 'projected spans' without partial authority 1ms
+     ✓ rejects excessive 'assertions' without partial authority 0ms
+     ✓ rejects excessive 'assertion references' without partial authority 0ms
+     ✓ rejects excessive 'field states' without partial authority 0ms
+     ✓ rejects excessive 'blockers' without partial authority 0ms
+     ✓ rejects excessive 'native assertions' without partial authority 0ms
+     ✓ rejects excessive 'native spans' without partial authority 0ms
+     ✓ rejects excessive 'native pages' without partial authority 0ms
+     ✓ rejects excessive 'native text' without partial authority 0ms
+     ✓ rejects excessive 'projected text' without partial authority 0ms
+     ✓ rejects excessive 'OCR pages' without partial authority 0ms
+     ✓ rejects excessive 'OCR words' without partial authority 0ms
+     ✓ rejects excessive 'OCR native pages' without partial authority 0ms
+     ✓ rejects excessive 'OCR selected pages' without partial authority 0ms
+     ✓ rejects excessive 'OCR request text' without partial authority 0ms
+     ✓ rejects excessive 'OCR page text' without partial authority 0ms
+     ✓ rejects excessive 'OCR word text' without partial authority 0ms
+     ✓ rejects excessive 'OCR combined text' without partial authority 0ms
+     ✓ retains the exact validated twenty-page aggregate native bound 169ms
+     ✓ retains the validated thousand-assertion boundary 98ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/evidence-entry-associations.test.ts > separate nonpersistable entry association review > supports ASCII structural casing in Experience without modifying values
+ FAIL  tests/unit/evidence-entry-associations.test.ts > separate nonpersistable entry association review > supports ASCII structural casing in WORK EXPERIENCE without modifying values
+ FAIL  tests/unit/evidence-entry-associations.test.ts > separate nonpersistable entry association review > supports ASCII structural casing in professional experience without modifying values
+ FAIL  tests/unit/evidence-entry-associations.test.ts > separate nonpersistable entry association review > supports ASCII structural casing in Employment History without modifying values
+AssertionError: expected [] to have a length of 1 but got +0
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ tests/unit/evidence-entry-associations.test.ts:209:29
+    207|       ]);
+    208|       const review = coverage(evidence);
+    209|       expect(review.groups).toHaveLength(1);
+       |                             ^
+    210|       const model = deriveEvidenceReviewTargets(evidence, owned(eviden…
+    211|       for (const value of review.groups[0].members) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 62 passed (66)
+   Start at  16:01:46
+   Duration  562ms (transform 88ms, setup 0ms, import 143ms, tests 355ms, environment 0ms)
+

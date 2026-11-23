@@ -1,0 +1,31 @@
+import hashlib,json,os,signal,subprocess,sys
+from pathlib import Path
+p=Path(__file__).parent
+phase=sys.argv[1]
+root=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats')
+node=Path('/Users/vaibhavsuman/.codex/tools/resumide-node22/v22.23.4-darwin-arm64/node')
+env={'HOME':os.environ['HOME'],'PATH':str(node.parent)+':/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin','LANG':'en_US.UTF-8','TZ':'Asia/Kolkata','RESUMIDE_PRIVATE_VERIFY':'aa7-owned-synthetic','AI_ENABLED':'false','OPENAI_API_KEY':'offline-no-live-key','OPENAI_BASE_URL':'https://api.openai.com/v1','SUPABASE_URL':'https://fixture.supabase.co','SUPABASE_PUBLISHABLE_KEY':'offline-publishable','SUPABASE_SECRET_KEY':'offline-secret','SUPABASE_RESUME_BUCKET':'resumes','APP_ORIGIN':'http://127.0.0.1:3110','NPM_CONFIG_USERCONFIG':str(p/'npmrc'),'NPM_CONFIG_GLOBALCONFIG':str(p/'global-npmrc'),'NO_COLOR':'1'}
+files=['app/lib/server/score-v2-repository.ts','tests/unit/score-snapshot-binding.test.ts','tests/unit/score-v2-route.test.ts','tests/fixtures/scoring-v2.ts','app/lib/server/score-v2-engine.ts','app/lib/server/score-v2-contract.ts','app/lib/server/job-requirement-repository.ts','app/lib/server/job-requirements.ts','app/lib/server/job-relations.ts','app/lib/server/job-aliases.ts','app/lib/server/job-requirement-admission.ts','app/lib/server/job-relation-unicode.ts','app/lib/server/config.ts','app/lib/server/canonical-repository.ts','app/lib/server/authoring-repository.ts','app/routes/analysis.score.tsx']
+hash_inputs=lambda:{f:hashlib.sha256((root/f).read_bytes()).hexdigest() for f in files}
+cmd=[str(node),'/opt/homebrew/lib/node_modules/npm/bin/npm-cli.js','test','--','tests/unit/score-snapshot-binding.test.ts']
+if phase=='red':cmd += ['-t','A09 score typed JD boundary rejects']
+elif phase.startswith('green'):cmd += ['tests/unit/score-v2-route.test.ts']
+else:raise ValueError('Unknown phase')
+record={'phase':phase,'command':cmd,'environment':'SEALED_NO_LIVE_CREDENTIALS_NO_DOTENV','node':subprocess.check_output([str(node),'--version'],env=env,text=True).strip(),'nodeSha256':hashlib.sha256(node.read_bytes()).hexdigest(),'sourceInputs':hash_inputs(),'databaseOperations':0,'providerOperations':0,'dockerOperations':0}
+log=p/(phase+'.log')
+with log.open('xb') as out:
+ child=subprocess.Popen(cmd,cwd=root,env=env,stdout=out,stderr=subprocess.STDOUT,start_new_session=True)
+ record['pid']=child.pid;record['processGroup']=child.pid
+ try:code=child.wait(timeout=60)
+ except subprocess.TimeoutExpired:
+  os.killpg(child.pid,signal.SIGTERM)
+  try:child.wait(timeout=5)
+  except subprocess.TimeoutExpired:os.killpg(child.pid,signal.SIGKILL);child.wait(timeout=5)
+  code=child.returncode;record['timedOut']=True
+record['exitCode']=code
+try:os.killpg(child.pid,0);record['processGroupAbsent']=False
+except ProcessLookupError:record['processGroupAbsent']=True
+record['logSha256']=hashlib.sha256(log.read_bytes()).hexdigest();record['sourceInputsAfter']=hash_inputs();record['sourceStable']=record['sourceInputs']==record['sourceInputsAfter']
+(p/(phase+'.json')).write_text(json.dumps(record,indent=2)+'\n')
+print(json.dumps({'phase':phase,'exitCode':code,'processGroupAbsent':record['processGroupAbsent'],'sourceStable':record['sourceStable'],'receipt':str(p/(phase+'.json'))}))
+print(log.read_text()[-5200:])

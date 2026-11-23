@@ -1,0 +1,20 @@
+{
+  "task": "CR-A02-S02",
+  "status": "SOURCE_REACHABILITY_CORRECTION_NO_POLICY_RELAXATION",
+  "at": "2026-11-13T11:08:04.506126+00:00",
+  "originalContractSha256": "82262e785486ff3cdd70f7a4863c8552bbea5530ad7c896bf13bc31f782ca953",
+  "originalAssumption": "Actual full native multiline group could be unplaced because the same page was selected for OCR",
+  "finding": "Unreachable under current validated policy: OCR selectedPages must exactly match pagesNeedingOcr (<8 nonwhitespace native UTF16 units); a supported native group requires an employment heading and Employer/Role labelled values, exceeding that floor. Document replay requires OCR request nativePageTexts exactly equal actual nativeSource pages.",
+  "source": {
+    "app/lib/server/ocr/selective.ts": "2d647df8cd51d36fd1fbd489cc7464d8ef3b8f098fc674743b871ea8a7f04325",
+    "app/lib/server/document-evidence.ts": "f4d16c019146924f2390fa764131e3c6b9f69c65531d90315f0a64645a244e67",
+    "app/lib/server/ocr/pdf-detection.ts": "4dce57465137393df13f7bdd2a027a2d061e0c5ac9eee4592d522db18eaf9bf0"
+  },
+  "review": "Backend and independent reviewer found the same incompatibility by source inspection before a forced fixture or policy change; Root verified cited source",
+  "correctedActualControls": [
+    "Attempted full-native/OCR shadow envelope fails actual OCR/document replay and whole preparation before legacy import; no claimed reachable unsafe_mapping case",
+    "Replay-valid sparse native Role:X beside OCR-selected page: preparing only OCR group preserves every original native fact/citation without reassignment"
+  ],
+  "defensiveTier": "Mocked internally-unplaced unsafe_mapping remains an explicit dependency-drift safety test, not actual current native/OCR grouped placement evidence",
+  "unchanged": "No production/threshold/schema weakening; original contract and all failed/source receipts preserved; no actual OCR engine, native PDF, DB/provider/Git/deployment action"
+}

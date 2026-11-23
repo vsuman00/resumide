@@ -1,3 +1,7 @@
+import {
+  requireBrowserTestTarget,
+  createBrowserTestAccount,
+} from "../scripts/browser-test-target";
 import { randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
@@ -13,6 +17,7 @@ test("owner confirms and corrects evidence by keyboard with CAS, privacy and no-
   test.setTimeout(90_000);
   if (!process.env.SUPABASE_URL) process.loadEnvFile(".env");
   const url = process.env.SUPABASE_URL!;
+  requireBrowserTestTarget(url);
   const admin = createClient(url, process.env.SUPABASE_SECRET_KEY!, {
     auth: { persistSession: false },
   });
@@ -26,15 +31,11 @@ test("owner confirms and corrects evidence by keyboard with CAS, privacy and no-
     if (error) throw new Error(stage);
   }
   async function login() {
-    const email = `aa014-browser-${randomUUID()}@example.test`,
-      password = randomUUID() + randomUUID();
-    const created = await admin.auth.admin.createUser({
+    const {
+      ownerId: id,
       email,
       password,
-      email_confirm: true,
-    });
-    check(created.error, "Synthetic user creation failed");
-    const id = created.data.user!.id;
+    } = await createBrowserTestAccount(url, admin.auth.admin, "aa014-browser");
     users.push(id);
     const cookies: { name: string; value: string }[] = [];
     const auth = createServerClient(

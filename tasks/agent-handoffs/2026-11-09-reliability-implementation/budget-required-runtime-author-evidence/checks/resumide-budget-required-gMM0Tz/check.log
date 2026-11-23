@@ -1,0 +1,868 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/build-assist-service.test.ts (33 tests | 6 failed) 1028ms
+     ✓ bounds declared input before admission and promptly handles an already-aborted stream 12ms
+     × requires the atomic monthly request reservation and content-free audit before provider work 2ms
+     × admits at most two active requests and releases both slots on cancellation 1005ms
+     ✓ fails closed for an unknown monthly usage value null 1ms
+     ✓ fails closed for an unknown monthly usage value false 0ms
+     ✓ fails closed for an unknown monthly usage value "" 0ms
+     ✓ authenticates before privileged admission 0ms
+     ✓ fails closed while LATEX_CONVERTER_ENABLED is disabled 0ms
+     ✓ fails closed while BUILD_AI_ASSIST_ENABLED is disabled 0ms
+     ✓ fails closed while AI_ENABLED is disabled 0ms
+     ✓ rejects method GET 0ms
+     ✓ rejects method PUT 0ms
+     ✓ rejects method DELETE 0ms
+     ✓ rejects untrusted Origin https://foreign.test 0ms
+     ✓ rejects untrusted Origin null 0ms
+     ✓ rejects untrusted Origin  0ms
+     ✓ rejects missing Origin, contradictory fetch metadata and non-JSON content 0ms
+     ✓ validates consent/hash/bounds before metadata or provider work {"consent":false} 0ms
+     ✓ validates consent/hash/bounds before metadata or provider work {"policyVersion":"old"} 0ms
+     ✓ validates consent/hash/bounds before metadata or provider work {"sourceHash":"0000000000000000000000000000000000000000000000000000000000000000"} 0ms
+     ✓ validates consent/hash/bounds before metadata or provider work {"startLine":0} 0ms
+     ✓ validates consent/hash/bounds before metadata or provider work {"extra":"forged"} 0ms
+     × uses independent user/global/month admission, content-free versioned consent and audit 0ms
+     ✓ requires an owned membership and fails closed if consent/audit persistence fails 0ms
+     ✓ fails closed for budget admission failures 0ms
+     ✓ fails closed for rate admission failures 0ms
+     ✓ fails closed for storage admission failures 0ms
+     × redacts safe provider failure timeout 0ms
+     × redacts safe provider failure cancelled 0ms
+     × redacts safe provider failure output_invalid 0ms
+     ✓ redacts safe provider failure provider_unavailable 0ms
+     ✓ never reflects an arbitrary provider exception 0ms
+   ✓ requires technical admission even with an injected Build executor 0ms
+ ❯ tests/unit/canonical-rewrite-repository.test.ts (29 tests | 10 failed) 896ms
+     × admits actual fresh reserved context with false preclaim dispatch permission 134ms
+     × replays the exact saved request before a failing fresh-head read, consent, rates or provider work 47ms
+     × never automatically reclaims a reserved replay or an ambiguous claim 43ms
+     × settles known usage before rejecting provider output without a content finish 38ms
+     × preserves the prior draft/run on final stale 40ms
+     × preserves the prior draft/run on final freshReadUnavailable 38ms
+     × preserves the prior draft/run on final finishFailure 36ms
+     × retains the exact operation after an ambiguous applied receipt without provider duplication 38ms
+     ✓ refuses foreign ownership and missing/staged readiness before provider access 62ms
+     ✓ keeps operations mandatory when budget is off and atomically wraps the existing budget claim when on 52ms
+     ✓ retains unknown budget holds and technical unknown usage without inventing zero 35ms
+     × records a definitive invalid plan after known usage was settled 34ms
+     ✓ preserves observed usage when malformed provider output and budget settlement both fail 33ms
+     ✓ preserves strict budget denial at reserve without provider dispatch 37ms
+     ✓ preserves strict budget denial at claim without provider dispatch 34ms
+     × rechecks prepare privacy even for an exact saved request 33ms
+     ✓ maps actual native SQLSTATE P0C01 without private body leakage 23ms
+     ✓ maps actual native SQLSTATE 42501 without private body leakage 23ms
+     ✓ maps actual native SQLSTATE 22023 without private body leakage 22ms
+     ✓ maps actual native SQLSTATE P0C03 without private body leakage 22ms
+     ✓ maps actual native SQLSTATE P0002 without private body leakage 24ms
+     ✓ preserves selected key, signal, schema, no-store and redirect controls at real SDK fetch 10ms
+     ✓ retains observed usage on provider refusal without admitting prose 1ms
+     ✓ preserves known usage on malformed output 1ms
+     ✓ preserves known usage on truncated output 1ms
+     ✓ never retries synthetic HTTP 429 1ms
+     ✓ never retries synthetic HTTP 503 0ms
+     ✓ propagates caller cancellation through the SDK signal without another attempt 0ms
+   ✓ refuses current source metadata before A12 typed claim and provider 34ms
+ ❯ tests/unit/canonical-rewrite-service.test.ts (40 tests | 2 failed) 1096ms
+     ✓ preserves exact valid request and microseconds from urlencoded 11ms
+     ✓ preserves exact valid request and microseconds from multipart 2ms
+     ✓ refuses duplicate form without service IO 1ms
+     ✓ refuses escaped duplicate JSON without service IO 0ms
+     ✓ refuses missing without service IO 1ms
+     ✓ refuses extra without service IO 0ms
+     ✓ refuses file without service IO 1ms
+     ✓ requires the exact native consent acknowledgement 0ms
+     ✓ rejects malformed UTF8 and both encoded and decoded byte overflows 3ms
+     ✓ settles stalled body deadline and releases reader when cancel resolve 2ms
+     ✓ settles stalled body deadline and releases reader when cancel reject 1ms
+     ✓ settles caller cancellation during a pending read and releases its reader 0ms
+     ✓ denies unknown or malformed counter null before dispatch 129ms
+     ✓ denies unknown or malformed counter false before dispatch 45ms
+     ✓ denies unknown or malformed counter  before dispatch 42ms
+     ✓ denies unknown or malformed counter   before dispatch 41ms
+     ✓ denies unknown or malformed counter 12 before dispatch 38ms
+     ✓ denies unknown or malformed counter -1 before dispatch 36ms
+     ✓ denies unknown or malformed counter 1.5 before dispatch 39ms
+     ✓ denies unknown or malformed counter NaN before dispatch 36ms
+     ✓ denies unknown or malformed counter Infinity before dispatch 38ms
+     × retains legitimate nonnegative numeric counter 0 40ms
+     × retains legitimate nonnegative numeric counter 12 35ms
+     ✓ preserves AI_BUDGET_EXHAUSTED without provider dispatch 38ms
+     ✓ preserves AI_BUDGET_BLOCKED without provider dispatch 34ms
+     ✓ preserves AI_BUDGET_DENIED without provider dispatch 34ms
+     ✓ preserves AI_BUDGET_DISABLED without provider dispatch 32ms
+     ✓ preserves AI_BUDGET_UNAVAILABLE without provider dispatch 34ms
+     ✓ refuses canonical known spend or unknown holds ignored by legacy counter '100000'/'0' 33ms
+     ✓ refuses canonical known spend or unknown holds ignored by legacy counter '0'/'1' 32ms
+   ✓ refuses foreign owner usage metadata through the actual caller 31ms
+   ✓ refuses foreign organization usage metadata through the actual caller 33ms
+   ✓ refuses foreign analysis usage metadata through the actual caller 33ms
+   ✓ refuses wrong usage profile usage metadata through the actual caller 34ms
+   ✓ refuses inconsistent component total usage metadata through the actual caller 32ms
+   ✓ refuses a prior-month usage snapshot instead of using it as this month's capacity 36ms
+   ✓ refuses old profile readiness metadata before counter/provider dispatch 23ms
+   ✓ refuses missing usage function hash readiness metadata before counter/provider dispatch 25ms
+   ✓ refuses initial feedback known spend before any canonical provider dispatch 36ms
+   ✓ uses the new shared counter even when hard R03 reservation is enabled 33ms
+ ❯ tests/unit/initial-feedback-service.test.ts (17 tests | 8 failed) 154ms
+     ✓ replays exact owned historical publication before authorization/quota/budget/provider 63ms
+     ✓ returns pending without constructing SDK or mutating another active attempt 2ms
+     ✓ AIoff creates honest deterministic-only with no consent/rate/quota/budget/SDK effects 4ms
+     ✓ fixed known Native claim refusal finishes pre_dispatch_unavailable without SDK 3ms
+     ✓ requires remaining quota to cover captured maximum output before dispatch 3ms
+     × budgetoff over-cap output stays accounted and never becomes assessed 7ms
+     × settles known usage before one actual compiler call on exact original text 4ms
+     × false claim has no SDK, technical settlement, finish or generic loser mutation 3ms
+     × malformed JSON with known usage preserves GenerationFailure and no fake observation 3ms
+     × refused output is charged and retained as explicit failure, never supported prose 2ms
+     × lost finish response is resolved through exact owned read before any storage_failed marker 2ms
+     ✓ shared unknown usage prevents dispatch with no old counter fallback 2ms
+     ✓ budgeton intercepts generic claim into actual atomic claim and debits only through R03 44ms
+     ✓ budgeton false claim never settles/releases/marks the winner or constructs transport 3ms
+     × missing observed usage remains a technical unknown hold, never zero or assessed 4ms
+     × lossless reference failure keeps full generation failure and known accounting, no fake support 2ms
+   ✓ refuses current source readiness before A13 typed claim or SDK fetch 3ms
+ ✓ tests/unit/build-assist-budget.test.ts (14 tests) 92ms
+ ✓ tests/unit/rewrite-budget.test.ts (12 tests) 43ms
+ ❯ tests/unit/qualitative-stage-outage.test.ts (10 tests | 3 failed) 30ms
+     ✓ does not call a model or publish historical scores for uncalibrated evidence 1ms
+     × persists a deterministic partial result after the first retryable failure 2ms
+     × different cited prose cannot change the deterministic baseline or store model ratings 0ms
+     ✓ never falls back to the legacy pool or dispatches when the enabled ledger denies 9ms
+     ✓ persists deterministic partial feedback on definitive AI_BUDGET_EXHAUSTED without provider dispatch 2ms
+     ✓ persists deterministic partial feedback on definitive AI_BUDGET_BLOCKED without provider dispatch 1ms
+     ✓ settles before product persistence and retains the charge when persistence fails 8ms
+     ✓ charges rejected known output but holds unknown provider usage before partial persistence 2ms
+     ✓ uses admitted logical ordinal and policy cap rather than the global job retry count 2ms
+     × dispatches nothing without current consent or an explicit configured policy 1ms
+ ❯ tests/unit/initial-feedback-stage.test.ts (14 tests | 4 failed) 5176ms
+     × publishes immutable original inputs before legacy reads and keeps the old transport isolated 48ms
+     ✓ replays an owned publication before consent, quota, rate, claim or SDK 17ms
+     ✓ fails pending safely on every queue replay without redispatch or completion 4ms
+     ✓ publishes AI-off deterministic output without fresh authorization or SDK 6ms
+     ✓ uses existing consent and never manufactures it 3ms
+     ✓ requires a real matching lease and respects cancellation before lookup 1ms
+     ✓ leaves the legacy branch selected when the flag is false 1ms
+     × uses the bounded worker failure path for unresolved accounting and never redispatches 16ms
+     × never dispatches when the once-only claim loses 3ms
+     ✓ uses the exact budget-on selected policy and both accounting paths 38ms
+     ✓ refuses an unselected Native policy before consent, quota or provider with no budget-off fallback 2ms
+     ✓ rejects malformed selected dependencies before scope lookup 1ms
+     × cancels the installed SDK attempt and retains unknown spend without legacy publication or redispatch 5005ms
+   ✓ never uses generic reserve for an admitted selected budget worker 30ms
+ ❯ tests/unit/rewrite-service.test.ts (11 tests | 7 failed) 5038ms
+   × persists a grounded proposal run and compare-and-swap draft without changing scores 17ms
+   ✓ requires technical budget admission before dispatch when the ledger is enabled 6ms
+   ✓ requires authentication, same origin and consent before provider access 1ms
+   ✓ denies a foreign analysis without exposing saved data 1ms
+   × denies disabled AI, missing JD, inactive source and exhausted budgets 2ms
+   × prevents repeated generation through the shared database limiter 1ms
+   × preserves previous draft on timeout, ungrounded output, receipt failure or stale write 1ms
+   ✓ rejects oversized and wrong-method requests 0ms
+   × rechecks active ownership, membership and deletion access before and after drafting 1ms
+   × propagates an HTTP caller abort to the actual attempt and preserves the previous draft 5003ms
+   × never labels a stale legacy run as current grounded support 5ms
+ ❯ tests/unit/provider-cancellation.test.ts (6 tests | 1 failed) 5051ms
+   ✓ rejects an already aborted worker signal before reads or provider dispatch 2ms
+   × propagates a worker lease or shutdown abort and rejects an ignoring provider's late result 5008ms
+   ✓ settles known cancelled usage without turning cancellation into partial feedback 21ms
+   ✓ keeps accounting but preserves the previous draft when the final source read observes disconnect 17ms
+   ✓ refuses a qualitative missing version or source admission before provider: false 2ms
+   ✓ refuses a qualitative missing version or source admission before provider: true 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 41 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/build-assist-service.test.ts > Build suggest server guards (provider mocked) > requires the atomic monthly request reservation and content-free audit before provider work
+AssertionError: expected 503 to be 429 // Object.is equality
+
+- Expected
++ Received
+
+- 429
++ 503
+
+ ❯ tests/unit/build-assist-service.test.ts:159:58
+    157|       }),
+    158|     );
+    159|     expect((await buildSuggestAction(request())).status).toBe(429);
+       |                                                          ^
+    160|     expect(mocks.execute).not.toHaveBeenCalled();
+    161|     expect(mocks.consent).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/41]⎯
+
+ FAIL  tests/unit/build-assist-service.test.ts > Build suggest server guards (provider mocked) > admits at most two active requests and releases both slots on cancellation
+AssertionError: expected [ 503, 503 ] to deeply equal [ 409, 409 ]
+
+- Expected
++ Received
+
+  [
+-   409,
+-   409,
++   503,
++   503,
+  ]
+
+ ❯ tests/unit/build-assist-service.test.ts:197:54
+    195|       controllers.forEach((controller) => controller.abort());
+    196|       const results = await Promise.all(pending);
+    197|       expect(results.map((result) => result.status)).toEqual([409, 409…
+       |                                                      ^
+    198|     }
+    199|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/41]⎯
+
+ FAIL  tests/unit/build-assist-service.test.ts > Build suggest server guards (provider mocked) > uses independent user/global/month admission, content-free versioned consent and audit
+AssertionError: expected 503 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 503
+
+ ❯ tests/unit/build-assist-service.test.ts:275:29
+    273|   it("uses independent user/global/month admission, content-free versi…
+    274|     const response = await buildSuggestAction(request());
+    275|     expect(response.status).toBe(200);
+       |                             ^
+    276|     expect(response.headers.get("Cache-Control")).toBe("private, no-st…
+    277|     expect(response.headers.get("X-Content-Type-Options")).toBe("nosni…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/41]⎯
+
+ FAIL  tests/unit/build-assist-service.test.ts > Build suggest server guards (provider mocked) > redacts safe provider failure timeout
+AssertionError: expected 503 to be 504 // Object.is equality
+
+- Expected
++ Received
+
+- 504
++ 503
+
+ ❯ tests/unit/build-assist-service.test.ts:364:29
+    362|     mocks.execute.mockRejectedValue(new BuildAssistError(code));
+    363|     const response = await buildSuggestAction(request());
+    364|     expect(response.status).toBe(
+       |                             ^
+    365|       code === "timeout"
+    366|         ? 504
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/41]⎯
+
+ FAIL  tests/unit/build-assist-service.test.ts > Build suggest server guards (provider mocked) > redacts safe provider failure cancelled
+AssertionError: expected 503 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 503
+
+ ❯ tests/unit/build-assist-service.test.ts:364:29
+    362|     mocks.execute.mockRejectedValue(new BuildAssistError(code));
+    363|     const response = await buildSuggestAction(request());
+    364|     expect(response.status).toBe(
+       |                             ^
+    365|       code === "timeout"
+    366|         ? 504
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/41]⎯
+
+ FAIL  tests/unit/build-assist-service.test.ts > Build suggest server guards (provider mocked) > redacts safe provider failure output_invalid
+AssertionError: expected 503 to be 422 // Object.is equality
+
+- Expected
++ Received
+
+- 422
++ 503
+
+ ❯ tests/unit/build-assist-service.test.ts:364:29
+    362|     mocks.execute.mockRejectedValue(new BuildAssistError(code));
+    363|     const response = await buildSuggestAction(request());
+    364|     expect(response.status).toBe(
+       |                             ^
+    365|       code === "timeout"
+    366|         ? 504
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/41]⎯
+
+ FAIL  tests/unit/canonical-rewrite-repository.test.ts > canonical rewrite durable repository with real builders and fake native boundaries > admits actual fresh reserved context with false preclaim dispatch permission
+AiBudgetError: AI budget admission is unavailable.
+ ❯ runCanonicalRewrite app/lib/server/canonical-rewrite-repository.ts:288:122
+    286|   if (!workspace.canGenerate)
+    287|     throw new CanonicalRewriteError("unavailable", "unavailable");
+    288|   if (!options.budget || typeof options.budget.policyVersion !== "stri…
+       |                                                                                                                          ^
+    289|   const budgetSourceScope = {
+    290|     userId: ownerId,
+ ❯ tests/unit/canonical-rewrite-repository.test.ts:406:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/41]⎯
+
+ FAIL  tests/unit/canonical-rewrite-repository.test.ts > canonical rewrite durable repository with real builders and fake native boundaries > replays the exact saved request before a failing fresh-head read, consent, rates or provider work
+AiBudgetError: AI budget admission is unavailable.
+ ❯ runCanonicalRewrite app/lib/server/canonical-rewrite-repository.ts:288:122
+    286|   if (!workspace.canGenerate)
+    287|     throw new CanonicalRewriteError("unavailable", "unavailable");
+    288|   if (!options.budget || typeof options.budget.policyVersion !== "stri…
+       |                                                                                                                          ^
+    289|   const budgetSourceScope = {
+    290|     userId: ownerId,
+ ❯ tests/unit/canonical-rewrite-repository.test.ts:428:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/41]⎯
+
+ FAIL  tests/unit/canonical-rewrite-repository.test.ts > canonical rewrite durable repository with real builders and fake native boundaries > never automatically reclaims a reserved replay or an ambiguous claim
+AssertionError: expected AiBudgetError: AI budget admission is una… { code: '…' } to match object { reason: 'unavailable' }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "reason": "unavailable",
++ AiBudgetError {
++   "message": "AI budget admission is unavailable.",
++   "code": "AI_BUDGET_DISABLED",
++   "name": "AiBudgetError",
+  }
+
+ ❯ tests/unit/canonical-rewrite-repository.test.ts:472:5
+    470|         f.options,
+    471|       ),
+    472|     ).rejects.toMatchObject({ reason: "unavailable" });
+       |     ^
+    473|     const calls = f.events.length;
+    474|     const retry = await runCanonicalRewrite(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/41]⎯
+
+ FAIL  tests/unit/canonical-rewrite-repository.test.ts > canonical rewrite durable repository with real builders and fake native boundaries > settles known usage before rejecting provider output without a content finish
+AssertionError: expected AiBudgetError: AI budget admission is una… { code: '…' } to match object { reason: 'unsupported_output' }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "reason": "unsupported_output",
++ AiBudgetError {
++   "message": "AI budget admission is unavailable.",
++   "code": "AI_BUDGET_DISABLED",
++   "name": "AiBudgetError",
+  }
+
+ ❯ tests/unit/canonical-rewrite-repository.test.ts:509:5
+    507|         f.options,
+    508|       ),
+    509|     ).rejects.toMatchObject({ reason: "unsupported_output" });
+       |     ^
+    510|     expect(f.events).toContain("settle_canonical_rewrite_attempt");
+    511|     expect(f.events).not.toContain("finish_canonical_rewrite");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/41]⎯
+
+ FAIL  tests/unit/canonical-rewrite-repository.test.ts > canonical rewrite durable repository with real builders and fake native boundaries > preserves the prior draft/run on final stale
+ FAIL  tests/unit/canonical-rewrite-repository.test.ts > canonical rewrite durable repository with real builders and fake native boundaries > preserves the prior draft/run on final freshReadUnavailable
+ FAIL  tests/unit/canonical-rewrite-repository.test.ts > canonical rewrite durable repository with real builders and fake native boundaries > preserves the prior draft/run on final finishFailure
+AssertionError: expected [ 'prepare_canonical_rewrite' ] to include 'settle_canonical_rewrite_attempt'
+ ❯ tests/unit/canonical-rewrite-repository.test.ts:538:24
+    536|       ).rejects.toBeInstanceOf(Error);
+    537|       expect(f.writes).toBe(0);
+    538|       expect(f.events).toContain("settle_canonical_rewrite_attempt");
+       |                        ^
+    539|       if (kind !== "finishFailure")
+    540|         expect(f.events).not.toContain("finish_canonical_rewrite");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/41]⎯
+
+ FAIL  tests/unit/canonical-rewrite-repository.test.ts > canonical rewrite durable repository with real builders and fake native boundaries > retains the exact operation after an ambiguous applied receipt without provider duplication
+AssertionError: expected AiBudgetError: AI budget admission is una… { code: '…' } to match object { reason: 'invalid_result', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "reason": "invalid_result",
+-   "recovery": "retry_exact",
++ AiBudgetError {
++   "message": "AI budget admission is unavailable.",
++   "code": "AI_BUDGET_DISABLED",
++   "name": "AiBudgetError",
+  }
+
+ ❯ tests/unit/canonical-rewrite-repository.test.ts:554:5
+    552|         f.options,
+    553|       ),
+    554|     ).rejects.toMatchObject({
+       |     ^
+    555|       reason: "invalid_result",
+    556|       recovery: "retry_exact",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/41]⎯
+
+ FAIL  tests/unit/canonical-rewrite-repository.test.ts > canonical rewrite durable repository with real builders and fake native boundaries > records a definitive invalid plan after known usage was settled
+AssertionError: expected AiBudgetError: AI budget admission is una… { code: '…' } to match object { reason: 'unsupported_output' }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "reason": "unsupported_output",
++ AiBudgetError {
++   "message": "AI budget admission is unavailable.",
++   "code": "AI_BUDGET_DISABLED",
++   "name": "AiBudgetError",
+  }
+
+ ❯ tests/unit/canonical-rewrite-repository.test.ts:694:5
+    692|         f.options,
+    693|       ),
+    694|     ).rejects.toMatchObject({ reason: "unsupported_output" });
+       |     ^
+    695|     const settlements = f.client.rpc.mock.calls
+    696|       .filter((c) => c[0] === "settle_canonical_rewrite_attempt")
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/41]⎯
+
+ FAIL  tests/unit/canonical-rewrite-repository.test.ts > canonical rewrite durable repository with real builders and fake native boundaries > rechecks prepare privacy even for an exact saved request
+AiBudgetError: AI budget admission is unavailable.
+ ❯ runCanonicalRewrite app/lib/server/canonical-rewrite-repository.ts:288:122
+    286|   if (!workspace.canGenerate)
+    287|     throw new CanonicalRewriteError("unavailable", "unavailable");
+    288|   if (!options.budget || typeof options.budget.policyVersion !== "stri…
+       |                                                                                                                          ^
+    289|   const budgetSourceScope = {
+    290|     userId: ownerId,
+ ❯ tests/unit/canonical-rewrite-repository.test.ts:760:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/41]⎯
+
+ FAIL  tests/unit/canonical-rewrite-service.test.ts > actual action organization usage admission > retains legitimate nonnegative numeric counter 0
+ FAIL  tests/unit/canonical-rewrite-service.test.ts > actual action organization usage admission > retains legitimate nonnegative numeric counter 12
+AssertionError: expected 503 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 503
+
+ ❯ tests/unit/canonical-rewrite-service.test.ts:538:31
+    536|       const f = await handlerFixture(counter),
+    537|         response = await f.response();
+    538|       expect(response.status).toBe(200);
+       |                               ^
+    539|       expect((await response.json()).kind).toBe("saved");
+    540|       expect(f.transport.execute).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/41]⎯
+
+ FAIL  tests/unit/initial-feedback-service.test.ts > initial feedback service, real compiler and installed SDK/fake fetch > budgetoff over-cap output stays accounted and never becomes assessed
+AssertionError: expected null to deeply equal { inputTokens: '11', …(1) }
+
+- Expected:
+{
+  "inputTokens": "11",
+  "outputTokens": "1201",
+}
+
++ Received:
+null
+
+ ❯ tests/unit/initial-feedback-service.test.ts:731:36
+    729|     expect(result.kind).toBe("published");
+    730|     expect(h.state.publication?.state).toBe("deterministic_only");
+    731|     expect(h.op.attempts[0].usage).toEqual({
+       |                                    ^
+    732|       inputTokens: "11",
+    733|       outputTokens: "1201",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/41]⎯
+
+ FAIL  tests/unit/initial-feedback-service.test.ts > initial feedback service, real compiler and installed SDK/fake fetch > settles known usage before one actual compiler call on exact original text
+AssertionError: expected 'deterministic_only' to be 'assessed' // Object.is equality
+
+Expected: "assessed"
+Received: "deterministic_only"
+
+ ❯ tests/unit/initial-feedback-service.test.ts:747:40
+    745|     const result = await h.run();
+    746|     expect(result.kind).toBe("published");
+    747|     expect(h.state.publication?.state).toBe("assessed");
+       |                                        ^
+    748|     expect(h.fetch).toHaveBeenCalledTimes(1);
+    749|     expect(spy).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/41]⎯
+
+ FAIL  tests/unit/initial-feedback-service.test.ts > initial feedback service, real compiler and installed SDK/fake fetch > false claim has no SDK, technical settlement, finish or generic loser mutation
+AssertionError: expected 'published' to be 'pending' // Object.is equality
+
+Expected: "pending"
+Received: "published"
+
+ ❯ tests/unit/initial-feedback-service.test.ts:761:34
+    759|     const h = harness();
+    760|     h.state.claimFalse = true;
+    761|     expect((await h.run()).kind).toBe("pending");
+       |                                  ^
+    762|     expect(h.fetch).not.toHaveBeenCalled();
+    763|     expect(h.events).not.toContain("settle_initial_feedback_attempt");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/41]⎯
+
+ FAIL  tests/unit/initial-feedback-service.test.ts > initial feedback service, real compiler and installed SDK/fake fetch > malformed JSON with known usage preserves GenerationFailure and no fake observation
+AssertionError: expected undefined to be 'malformed_json' // Object.is equality
+
+- Expected:
+"malformed_json"
+
++ Received:
+undefined
+
+ ❯ tests/unit/initial-feedback-service.test.ts:771:60
+    769|     const result = await h.run();
+    770|     expect(result.kind).toBe("published");
+    771|     expect(h.state.publication?.generationFailure?.reason).toBe(
+       |                                                            ^
+    772|       "malformed_json",
+    773|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/41]⎯
+
+ FAIL  tests/unit/initial-feedback-service.test.ts > initial feedback service, real compiler and installed SDK/fake fetch > refused output is charged and retained as explicit failure, never supported prose
+AssertionError: expected undefined to be 'refused' // Object.is equality
+
+- Expected:
+"refused"
+
++ Received:
+undefined
+
+ ❯ tests/unit/initial-feedback-service.test.ts:785:60
+    783|     h.state.refused = true;
+    784|     await h.run();
+    785|     expect(h.state.publication?.generationFailure?.reason).toBe("refus…
+       |                                                            ^
+    786|     expect(h.state.publication?.prose).toBe(null);
+    787|     expect(h.op.attempts[0].usage).toEqual({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/41]⎯
+
+ FAIL  tests/unit/initial-feedback-service.test.ts > initial feedback service, real compiler and installed SDK/fake fetch > lost finish response is resolved through exact owned read before any storage_failed marker
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ tests/unit/initial-feedback-service.test.ts:808:21
+    806|       ),
+    807|     ).toBe(false);
+    808|     expect(h.fetch).toHaveBeenCalledTimes(1);
+       |                     ^
+    809|   });
+    810|   it("shared unknown usage prevents dispatch with no old counter fallb…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/41]⎯
+
+ FAIL  tests/unit/initial-feedback-service.test.ts > initial feedback service, real compiler and installed SDK/fake fetch > missing observed usage remains a technical unknown hold, never zero or assessed
+AssertionError: expected 'reserved' to be 'held_unknown' // Object.is equality
+
+Expected: "held_unknown"
+Received: "reserved"
+
+ ❯ tests/unit/initial-feedback-service.test.ts:899:36
+    897|     await h.run();
+    898|     expect(h.op.attempts[0].usage).toBe(null);
+    899|     expect(h.op.attempts[0].state).toBe("held_unknown");
+       |                                    ^
+    900|     expect(h.state.publication?.state).toBe("deterministic_only");
+    901|     expect(h.state.publication?.recordedObservation).toBe(null);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/41]⎯
+
+ FAIL  tests/unit/initial-feedback-service.test.ts > initial feedback service, real compiler and installed SDK/fake fetch > lossless reference failure keeps full generation failure and known accounting, no fake support
+AssertionError: expected undefined to be 'source_reference_invalid' // Object.is equality
+
+- Expected:
+"source_reference_invalid"
+
++ Received:
+undefined
+
+ ❯ tests/unit/initial-feedback-service.test.ts:913:60
+    911|     ];
+    912|     await h.run();
+    913|     expect(h.state.publication?.generationFailure?.reason).toBe(
+       |                                                            ^
+    914|       "source_reference_invalid",
+    915|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/41]⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > publishes immutable original inputs before legacy reads and keeps the old transport isolated
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ tests/unit/initial-feedback-stage.test.ts:704:21
+    702|     await expect(h.run(old)).resolves.toBe(true);
+    703|     expect(old.execute).not.toHaveBeenCalled();
+    704|     expect(h.fetch).toHaveBeenCalledTimes(1);
+       |                     ^
+    705|     expect(h.state.publication?.state).toBe("assessed");
+    706|     expect(h.events).not.toContain("assert_analysis_stage_lease");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/41]⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > uses the bounded worker failure path for unresolved accounting and never redispatches
+AssertionError: promise resolved "true" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+true
+
+ ❯ tests/unit/initial-feedback-stage.test.ts:836:7
+    834|           });
+    835|         }),
+    836|       ).rejects.toThrow("Analysis job processing failed.");
+       |       ^
+    837|     expect(h.fetch).toHaveBeenCalledTimes(1);
+    838|     expect(queue.complete).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/41]⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > never dispatches when the once-only claim loses
+AssertionError: promise resolved "true" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+true
+
+ ❯ tests/unit/initial-feedback-stage.test.ts:855:25
+    853|     const h = harness();
+    854|     h.state.claimFalse = true;
+    855|     await expect(h.run()).rejects.toMatchObject({
+       |                         ^
+    856|       code: "INITIAL_FEEDBACK_PENDING",
+    857|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/41]⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > cancels the installed SDK attempt and retains unknown spend without legacy publication or redispatch
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/unit/initial-feedback-stage.test.ts:906:3
+    904|     expect(h.rpc).not.toHaveBeenCalled();
+    905|   });
+    906|   it("cancels the installed SDK attempt and retains unknown spend with…
+       |   ^
+    907|     const h = harness(),
+    908|       controller = new AbortController();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/41]⎯
+
+ FAIL  tests/unit/provider-cancellation.test.ts > propagates a worker lease or shutdown abort and rejects an ignoring provider's late result
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/unit/provider-cancellation.test.ts:234:1
+    232| });
+    233|
+    234| it("propagates a worker lease or shutdown abort and rejects an ignorin…
+       | ^
+    235|   const controller = new AbortController();
+    236|   let started!: () => void;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/41]⎯
+
+ FAIL  tests/unit/qualitative-stage-outage.test.ts > qualitative-stage provider outage > persists a deterministic partial result after the first retryable failure
+Error: Partial-result transition failed.
+ ❯ Module.processQualitativeStage app/lib/server/qualitative-stage.ts:268:13
+    266|       );
+    267|     if (transitionError || transitioned !== true) {
+    268|       throw new Error("Partial-result transition failed.");
+       |             ^
+    269|     }
+    270|     return false;
+ ❯ tests/unit/qualitative-stage-outage.test.ts:103:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/41]⎯
+
+ FAIL  tests/unit/qualitative-stage-outage.test.ts > AA044 persistence semantics > different cited prose cannot change the deterministic baseline or store model ratings
+Error: Partial-result transition failed.
+ ❯ Module.processQualitativeStage app/lib/server/qualitative-stage.ts:268:13
+    266|       );
+    267|     if (transitionError || transitioned !== true) {
+    268|       throw new Error("Partial-result transition failed.");
+       |             ^
+    269|     }
+    270|     return false;
+ ❯ tests/unit/qualitative-stage-outage.test.ts:166:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/41]⎯
+
+ FAIL  tests/unit/qualitative-stage-outage.test.ts > shared qualitative budget admission > dispatches nothing without current consent or an explicit configured policy
+AssertionError: promise resolved "false" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+false
+
+ ❯ tests/unit/qualitative-stage-outage.test.ts:384:7
+    382|       await expect(
+    383|         processQualitativeStage(analysisId, 1, { execute }),
+    384|       ).rejects.toMatchObject({
+       |       ^
+    385|         code: missing === "consent" ? "AI_BUDGET_DENIED" : "AI_BUDGET_…
+    386|       });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/41]⎯
+
+ FAIL  tests/unit/rewrite-service.test.ts > persists a grounded proposal run and compare-and-swap draft without changing scores
+AssertionError: expected 503 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 503
+
+ ❯ tests/unit/rewrite-service.test.ts:153:27
+    151|   const ai = client();
+    152|   const response = await rewriteAction(request(), id, ai);
+    153|   expect(response.status).toBe(200);
+       |                           ^
+    154|   expect(await response.json()).toMatchObject({ ok: true, bulletCount:…
+    155|   expect(ai.execute).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/41]⎯
+
+ FAIL  tests/unit/rewrite-service.test.ts > denies disabled AI, missing JD, inactive source and exhausted budgets
+AssertionError: expected 503 to be 429 // Object.is equality
+
+- Expected
++ Received
+
+- 429
++ 503
+
+ ❯ tests/unit/rewrite-service.test.ts:248:59
+    246|   analysis.resume_versions = { resumes: { status: "active" } };
+    247|   mocks.config.mockReturnValue({ ...config, AI_MONTHLY_TOKEN_LIMIT: 10…
+    248|   expect((await rewriteAction(request(), id, ai)).status).toBe(429);
+       |                                                           ^
+    249|   expect(ai.execute).not.toHaveBeenCalled();
+    250| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/41]⎯
+
+ FAIL  tests/unit/rewrite-service.test.ts > prevents repeated generation through the shared database limiter
+AssertionError: expected 503 to be 429 // Object.is equality
+
+- Expected
++ Received
+
+- 429
++ 503
+
+ ❯ tests/unit/rewrite-service.test.ts:255:27
+    253|   mocks.rpc.mockResolvedValue({ data: false, error: null });
+    254|   const response = await rewriteAction(request(), id, ai);
+    255|   expect(response.status).toBe(429);
+       |                           ^
+    256|   expect(response.headers.get("Retry-After")).toBeTruthy();
+    257|   expect(ai.execute).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/41]⎯
+
+ FAIL  tests/unit/rewrite-service.test.ts > preserves previous draft on timeout, ungrounded output, receipt failure or stale write
+AssertionError: expected 503 to be 422 // Object.is equality
+
+- Expected
++ Received
+
+- 422
++ 503
+
+ ❯ tests/unit/rewrite-service.test.ts:279:59
+    277|     usage: { inputTokens: 1, outputTokens: 1 },
+    278|   });
+    279|   expect((await rewriteAction(request(), id, ai)).status).toBe(422);
+       |                                                           ^
+    280|   expect(queries.some((q) => q.table === "writer_drafts")).toBe(false);
+    281|   runFailure = true;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/41]⎯
+
+ FAIL  tests/unit/rewrite-service.test.ts > rechecks active ownership, membership and deletion access before and after drafting
+AssertionError: expected 503 to be 404 // Object.is equality
+
+- Expected
++ Received
+
+- 404
++ 503
+
+ ❯ tests/unit/rewrite-service.test.ts:315:59
+    313|     .mockResolvedValueOnce({})
+    314|     .mockRejectedValueOnce(new CanonicalError(404, "Source unavailable…
+    315|   expect((await rewriteAction(request(), id, ai)).status).toBe(404);
+       |                                                           ^
+    316|   expect(ai.execute).toHaveBeenCalledTimes(1);
+    317|   expect(queries.some((q) => q.table === "writer_drafts")).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/41]⎯
+
+ FAIL  tests/unit/rewrite-service.test.ts > propagates an HTTP caller abort to the actual attempt and preserves the previous draft
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/unit/rewrite-service.test.ts:320:1
+    318| });
+    319|
+    320| it("propagates an HTTP caller abort to the actual attempt and preserve…
+       | ^
+    321|   const controller = new AbortController();
+    322|   const http = new Request(request(), { signal: controller.signal });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/41]⎯
+
+ FAIL  tests/unit/rewrite-service.test.ts > never labels a stale legacy run as current grounded support
+AssertionError: expected 503 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 503
+
+ ❯ tests/unit/rewrite-service.test.ts:350:27
+    348|   const ai = client();
+    349|   const response = await rewriteAction(request(), id, ai);
+    350|   expect(response.status).toBe(409);
+       |                           ^
+    351|   const body = await response.json();
+    352|   expect(body.code).toBe("stale_draft");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/41]⎯
+
+
+ Test Files  8 failed | 2 passed (10)
+      Tests  41 failed | 145 passed (186)
+   Start at  23:55:43
+   Duration  7.30s (transform 822ms, setup 0ms, import 1.86s, tests 18.60s, environment 0ms)
+
+JSON report written to /tmp/resumide-budget-required-gMM0Tz/tests.json

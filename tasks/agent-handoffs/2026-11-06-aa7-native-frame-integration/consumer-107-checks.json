@@ -1,0 +1,764 @@
+{
+  "tier": "neutral-source-prototype-only",
+  "consumerSHA256": "8399d3432cde87c92f55771f272bad82c42b26856f3b4096fc1f76bc88249da1",
+  "consumerStable": true,
+  "testSHA256": "8d36bb9de1fcf0cf900e0d8c08c05a255b05e165bab7c40aeef28ffc6386bd1d",
+  "testMethods": 6,
+  "cases": [
+    {
+      "label": "empty",
+      "inputBytes": 0,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "header-missing",
+      "inputBytes": 87,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "version",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "header-extra-field",
+      "inputBytes": 105,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "header-duplicate",
+      "inputBytes": 119,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "header-bom",
+      "inputBytes": 106,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "crlf-framing",
+      "inputBytes": 108,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "cr-only-framing",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "final-lf-missing",
+      "inputBytes": 102,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "trailing-lf",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "trailing-record",
+      "inputBytes": 105,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "trailing-bytes",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "unknown-record",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "word-before-page",
+      "inputBytes": 77,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "nested-page",
+      "inputBytes": 127,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "end-without-page",
+      "inputBytes": 22,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "open-page-at-final",
+      "inputBytes": 101,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "final-missing",
+      "inputBytes": 99,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "final-before-end",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "duplicate-final",
+      "inputBytes": 107,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "zero-pages",
+      "inputBytes": 20,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "count-mismatch",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "count-leading-zero",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "count-plus",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "count-float",
+      "inputBytes": 105,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "page-field-missing",
+      "inputBytes": 92,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "word-field-missing",
+      "inputBytes": 88,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "word-field-extra",
+      "inputBytes": 105,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "end-field-extra",
+      "inputBytes": 105,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "non-ascii-framing",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "text-exact-100000",
+      "inputBytes": 400089,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "text-over-100000",
+      "inputBytes": 200091,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "join-separator-counts",
+      "inputBytes": 200132,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "normalized-length-counts",
+      "inputBytes": 200091,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "ten-pages",
+      "inputBytes": 851,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "eleven-pages",
+      "inputBytes": 934,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "inspected-count-int-0",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "inspected-count-int-2",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "inspected-count-bool-True",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "inspected-count-str-1",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "inspected-count-float-1.0",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "transport-over-2MiB",
+      "inputBytes": 2097153,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "valid-frame-exact-2MiB",
+      "inputBytes": 2097152,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "valid-frame-one-byte-over-2MiB",
+      "inputBytes": 2097153,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "layout-before-empty-text",
+      "inputBytes": 89,
+      "passed": true,
+      "expectedCategory": "layout_overflow",
+      "actualCategory": "layout_overflow"
+    },
+    {
+      "label": "layout-before-final-text-cap",
+      "inputBytes": 200162,
+      "passed": true,
+      "expectedCategory": "layout_overflow",
+      "actualCategory": "layout_overflow"
+    },
+    {
+      "label": "malformed-before-layout",
+      "inputBytes": 91,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "invalid-word-text-before-layout",
+      "inputBytes": 162,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "layout-short-circuits-later-float",
+      "inputBytes": 399,
+      "passed": true,
+      "expectedCategory": "layout_overflow",
+      "actualCategory": "layout_overflow"
+    },
+    {
+      "label": "earlier-layout-before-later-page-float",
+      "inputBytes": 481,
+      "passed": true,
+      "expectedCategory": "layout_overflow",
+      "actualCategory": "layout_overflow"
+    },
+    {
+      "label": "signed-zero",
+      "inputBytes": 102,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "exact-negative-boundary",
+      "inputBytes": 105,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "xmin-outside",
+      "inputBytes": 102,
+      "passed": true,
+      "expectedCategory": "layout_overflow",
+      "actualCategory": "layout_overflow"
+    },
+    {
+      "label": "ymin-outside",
+      "inputBytes": 102,
+      "passed": true,
+      "expectedCategory": "layout_overflow",
+      "actualCategory": "layout_overflow"
+    },
+    {
+      "label": "xmax-outside",
+      "inputBytes": 102,
+      "passed": true,
+      "expectedCategory": "layout_overflow",
+      "actualCategory": "layout_overflow"
+    },
+    {
+      "label": "ymax-outside",
+      "inputBytes": 102,
+      "passed": true,
+      "expectedCategory": "layout_overflow",
+      "actualCategory": "layout_overflow"
+    },
+    {
+      "label": "no-new-reversed-edge-rule",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "absolute-rounding-counterexample",
+      "inputBytes": 105,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "absolute-edge-is-not-width",
+      "inputBytes": 105,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "rounding-counterexample-at-boundary",
+      "inputBytes": 105,
+      "passed": true,
+      "expectedCategory": "layout_overflow",
+      "actualCategory": "layout_overflow"
+    },
+    {
+      "label": "coordinate-token-0",
+      "inputBytes": 97,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-1",
+      "inputBytes": 97,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-2",
+      "inputBytes": 98,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-3",
+      "inputBytes": 97,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-4",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-5",
+      "inputBytes": 96,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-6",
+      "inputBytes": 102,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-7",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-8",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-9",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-10",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-11",
+      "inputBytes": 103,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-12",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "coordinate-token-13",
+      "inputBytes": 411,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "page-dimension-595.276000-0",
+      "inputBytes": 96,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "page-dimension-595.276000-1",
+      "inputBytes": 96,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "page-dimension-595.276000-2",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "page-dimension-595.276000-3",
+      "inputBytes": 102,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "page-dimension-841.890000-0",
+      "inputBytes": 96,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "page-dimension-841.890000-1",
+      "inputBytes": 96,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "page-dimension-841.890000-2",
+      "inputBytes": 104,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "page-dimension-841.890000-3",
+      "inputBytes": 102,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "word-order",
+      "inputBytes": 207,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "metacharacters-no-second-unescape",
+      "inputBytes": 149,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "unicode-no-normalization",
+      "inputBytes": 141,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "tabs-newlines-and-record-like-text",
+      "inputBytes": 113,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "xml-boundary-characters",
+      "inputBytes": 143,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "empty-words-preserved",
+      "inputBytes": 230,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "empty-pages-preserved",
+      "inputBytes": 254,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "eol-normalization-per-word",
+      "inputBytes": 195,
+      "passed": true,
+      "expectedCategory": "ok",
+      "actualCategory": "ok"
+    },
+    {
+      "label": "all-empty-document",
+      "inputBytes": 115,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "whitespace-document",
+      "inputBytes": 97,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "odd-hex",
+      "inputBytes": 90,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "bad-hex",
+      "inputBytes": 91,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "upper-hex",
+      "inputBytes": 91,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "hex-space",
+      "inputBytes": 94,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "invalid-utf8",
+      "inputBytes": 91,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "overlong-utf8",
+      "inputBytes": 93,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "surrogate-utf8",
+      "inputBytes": 95,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "beyond-unicode",
+      "inputBytes": 97,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "nul-rejected-not-truncated",
+      "inputBytes": 95,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "control-01",
+      "inputBytes": 91,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "control-vtab",
+      "inputBytes": 91,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "control-formfeed",
+      "inputBytes": 91,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "control-1f",
+      "inputBytes": 91,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "noncharacter-fffe",
+      "inputBytes": 95,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    },
+    {
+      "label": "noncharacter-ffff",
+      "inputBytes": 95,
+      "passed": true,
+      "expectedCategory": "output_invalid",
+      "actualCategory": "output_invalid"
+    }
+  ],
+  "passed": true,
+  "nativeExecution": false,
+  "containers": false,
+  "services": false,
+  "database": false,
+  "provider": false
+}

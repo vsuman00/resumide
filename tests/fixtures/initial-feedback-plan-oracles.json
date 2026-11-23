@@ -1,0 +1,246 @@
+{
+  "schemaVersion": "initial-feedback-meaning-oracles/1.0.0",
+  "provenance": {
+    "authorship": "AI-authored synthetic",
+    "author": "Codex (AI assistant)",
+    "authoredOn": "2026-11-15",
+    "sourceData": "Neutral invented examples and adaptations of existing repository synthetic tests; no real candidate or job data.",
+    "humanAdjudication": "NOT_PERFORMED",
+    "representativeValidity": "NOT_ESTABLISHED",
+    "compilerTuning": "NONE: expectations derive from source meaning and frozen existing constructs, not new compiler outputs."
+  },
+  "execution": {
+    "existingCore": "NOT_RUN_IN_THIS_TASK",
+    "newCompiler": "NOT_RUN",
+    "native": "UNTESTED"
+  },
+  "scope": {
+    "expectations": "Textual source preservation only, not independent factual truth, ownership, score improvement or hiring evidence.",
+    "decisionState": "allowedDecisionStates addresses the writing outcome or individual qualitative item, not a publication or native result.",
+    "protectedData": "Source, original and target values are exact test inputs; do not normalize or silently rewrite them.",
+    "authority": "Expected fields are independent test expectations and must never become caller-supplied proof flags.",
+    "beyondCopyOnly": true
+  },
+  "sourceReferences": {
+    "writingSupport": {
+      "path": "app/lib/server/writing-support.ts",
+      "sha256": "083a2b89769005a28eff9b963de8cf38b71ea554e74aa057423bbe9fc712dd67"
+    },
+    "qualitativeSupport": {
+      "path": "app/lib/server/qualitative-support.ts",
+      "sha256": "602ba4c5f2be916e85e891dbc9e168083db6e978bb821bce9404a66fa777f666"
+    },
+    "existingConstructTests": [
+      {
+        "path": "tests/unit/writing-support.test.ts",
+        "sha256": "ce6c53f1b65c3cd3e244e2a1e21ee3c898002bf585cd705e0ee79fd3f5ff4097"
+      },
+      {
+        "path": "tests/unit/qualitative-feedback-support.test.ts",
+        "sha256": "710a7b230ee5818833eeed584cc88803a0d07691cf768e0b188f9315b4d172b7"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "create-action-equivalence",
+      "theme": "useful equivalent action",
+      "type": "rewrite",
+      "source": "Built a dashboard.",
+      "original": "Built a dashboard.",
+      "target": "Created a dashboard.",
+      "expected": {
+        "factualSupport": "source_preserving",
+        "allowedDecisionStates": ["supported"],
+        "output": "retain",
+        "tipPresentation": null
+      },
+      "why": "The reviewed create-action substitution keeps the same implicit source subject and dashboard object. It adds no outcome, leadership, skill or performance claim."
+    },
+    {
+      "id": "independent-clause-order",
+      "theme": "independent clauses",
+      "type": "rewrite",
+      "source": "Built services; reduced latency by 20%.",
+      "original": "Built services; reduced latency by 20%.",
+      "target": "Reduced latency by 20%; built services.",
+      "expected": {
+        "factualSupport": "source_preserving",
+        "allowedDecisionStates": ["supported"],
+        "output": "retain",
+        "tipPresentation": null
+      },
+      "why": "Both complete independent clauses remain present. The 20% change stays attached to latency; the reordered text asserts no new causal relationship."
+    },
+    {
+      "id": "explicit-role-composition",
+      "theme": "explicit role composition",
+      "type": "summary",
+      "source": "Jordan Doe\nBackend Engineer at Acme\nImproved API latency by 40% at Acme.",
+      "original": null,
+      "target": "Backend engineer who improved API latency by 40% at Acme.",
+      "expected": {
+        "factualSupport": "source_preserving",
+        "allowedDecisionStates": ["supported"],
+        "output": "retain",
+        "tipPresentation": null
+      },
+      "why": "The source explicitly states the role and the same employer for the adjacent contribution. Composition preserves the API-latency metric and does not infer a title from proximity alone. Names are fictional synthetic fixtures."
+    },
+    {
+      "id": "guarded-response-time-reduction",
+      "theme": "guarded lower-is-better metric",
+      "type": "rewrite",
+      "source": "Improved response time by 10%.",
+      "original": "Improved response time by 10%.",
+      "target": "Reduced response time by 10%.",
+      "expected": {
+        "factualSupport": "source_preserving",
+        "allowedDecisionStates": ["supported"],
+        "output": "retain",
+        "tipPresentation": null
+      },
+      "why": "For this reviewed single positive response-time percentage, improvement denotes reduction. The exact 10% remains unchanged; this does not establish measured truth or generalize reduction to every improvement."
+    },
+    {
+      "id": "question-is-not-strength",
+      "theme": "non-presupposing question",
+      "type": "qualitative_tip",
+      "source": "Built a dashboard.",
+      "original": null,
+      "target": {
+        "type": "good",
+        "tip": "What outcome can you verify?",
+        "explanation": "Leave this unanswered if the information is unavailable.",
+        "quote": "Built a dashboard."
+      },
+      "expected": {
+        "factualSupport": "not_asserted",
+        "allowedDecisionStates": ["clarification_required"],
+        "output": "retain",
+        "tipPresentation": {
+          "kind": "clarification_question",
+          "type": "improve",
+          "countsAsStrength": false
+        }
+      },
+      "why": "The question requests evidence without asserting that an outcome occurred. Its requested good type must not turn it into a supported strength.",
+      "category": "content"
+    },
+    {
+      "id": "editorial-on-negative-source",
+      "theme": "useful nonfactual editorial",
+      "type": "qualitative_tip",
+      "source": "I did not lead a team.",
+      "original": null,
+      "target": {
+        "type": "good",
+        "tip": "Review the wording.",
+        "explanation": "Clarifies wording.",
+        "quote": "I did not lead a team."
+      },
+      "expected": {
+        "factualSupport": "not_asserted",
+        "allowedDecisionStates": ["supported"],
+        "output": "retain",
+        "tipPresentation": {
+          "kind": "editorial_observation",
+          "type": "improve",
+          "countsAsStrength": false
+        }
+      },
+      "why": "Generic wording guidance remains useful without treating a negative or unparsed quote as positive candidate evidence. It neither removes the negation nor claims leadership.",
+      "category": "content"
+    },
+    {
+      "id": "team-to-individual-actor",
+      "theme": "unsafe actor change",
+      "type": "rewrite",
+      "source": "We built services.",
+      "original": "We built services.",
+      "target": "I developed services.",
+      "expected": {
+        "factualSupport": "unsupported",
+        "allowedDecisionStates": ["rejected", "clarification_required"],
+        "output": "withhold",
+        "tipPresentation": null
+      },
+      "why": "Changing we to I promotes a shared actor into a sole-person claim. The create-action equivalence cannot authorize that actor change."
+    },
+    {
+      "id": "negative-to-positive-action",
+      "theme": "unsafe polarity change",
+      "type": "rewrite",
+      "source": "I did not lead a team.",
+      "original": "I did not lead a team.",
+      "target": "I led a team.",
+      "expected": {
+        "factualSupport": "unsupported",
+        "allowedDecisionStates": ["rejected", "clarification_required"],
+        "output": "withhold",
+        "tipPresentation": null
+      },
+      "why": "The proposal removes explicit negation and reverses the asserted action. Retaining the same team words does not preserve the source meaning."
+    },
+    {
+      "id": "cross-contribution-metric-transfer",
+      "theme": "unsafe metric transfer",
+      "type": "rewrite",
+      "source": "Built a dashboard.\nReduced queue latency by 15%.",
+      "original": "Built a dashboard.",
+      "target": "Built a dashboard that reduced queue latency by 15%.",
+      "expected": {
+        "factualSupport": "unsupported",
+        "allowedDecisionStates": ["rejected", "clarification_required"],
+        "output": "withhold",
+        "tipPresentation": null
+      },
+      "why": "The source does not say the dashboard caused the separate queue-latency change. The proposal transfers the 15% outcome to a different contribution and invents causality."
+    },
+    {
+      "id": "local-experiment-scope-removal",
+      "theme": "unsafe scope change",
+      "type": "rewrite",
+      "source": "Improved API latency by 40% in a local experiment at Acme.",
+      "original": "Improved API latency by 40% in a local experiment at Acme.",
+      "target": "Reduced API latency by 40% at Acme.",
+      "expected": {
+        "factualSupport": "unsupported",
+        "allowedDecisionStates": ["rejected", "clarification_required"],
+        "output": "withhold",
+        "tipPresentation": null
+      },
+      "why": "The proposal drops the local-experiment qualifier. A valid lower-is-better verb substitution does not permit broadening the setting or implying an unqualified operational result."
+    },
+    {
+      "id": "mixed-outcome-reduction",
+      "theme": "guarded direction falsifier",
+      "type": "rewrite",
+      "source": "Improved API latency and sales by 40%.",
+      "original": "Improved API latency and sales by 40%.",
+      "target": "Reduced API latency and sales by 40%.",
+      "expected": {
+        "factualSupport": "unsupported",
+        "allowedDecisionStates": ["rejected", "clarification_required"],
+        "output": "withhold",
+        "tipPresentation": null
+      },
+      "why": "The reviewed response-time/latency rule does not establish that lower sales is better or that one ambiguous percentage can be reassigned across mixed outcomes."
+    },
+    {
+      "id": "dependent-pronoun-reorder",
+      "theme": "independence falsifier",
+      "type": "rewrite",
+      "source": "Built services; reduced their latency by 20%.",
+      "original": "Built services; reduced their latency by 20%.",
+      "target": "Reduced their latency by 20%; built services.",
+      "expected": {
+        "factualSupport": "unsupported",
+        "allowedDecisionStates": ["rejected", "clarification_required"],
+        "output": "withhold",
+        "tipPresentation": null
+      },
+      "why": "Their depends on the services clause. Reversing the clauses loses an established antecedent order; the source must not be treated as independently reorderable merely because the words and metric remain."
+    }
+  ]
+}

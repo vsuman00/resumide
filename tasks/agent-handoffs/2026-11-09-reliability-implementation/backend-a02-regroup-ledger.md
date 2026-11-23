@@ -1,0 +1,42 @@
+# Whole-entry regroup metadata foundation
+
+Implemented the four-file backend allocation under contract `cbe84eb4cafbcaa7f8e5a8df54122ced1a9992d8779885dd1e64e93a8aec517a`. This is source preparation with synthetic source checks. SQL remains UNPARSED, UNAPPLIED and UNEXECUTED. No metadata row or checksum supplies regroup approval, authentication, valid placement or save authority.
+
+The forward migration adds exactly five versioned tables: regroup batches, groups, selected members, composition snapshots and typed composition links. All carry owned source scope with applicable composite root/source/analysis/attempt/base/result/fact/origin foreign keys. There are 95 new columns, 55 cascading foreign keys and ten immutable/privacy triggers. Result references support deferred insertion. RLS is enabled without policies, and all application table privileges remain revoked, including service-role privileges.
+
+The batch records original command bytes and immutable base/result metadata, with overflow-safe revision checks. Groups retain ordered affected entry IDs and the employer anchor; selected members may share an original entry or retain a bullet location. Carried content remains in canonical base/result bodies. A composition header identifies its creating operation separately from each link's approval origin. Typed XOR references bind each retained link to its original association-family or regroup-family group, batch and approval result version. No old approval is copied or implicitly renewed.
+
+One new private SQL STABLE invoker function exports complete owner-qualified new-table rows in deterministic order. Its execute privileges are revoked. The public stable workspace export appends these five arrays to the existing expression and retains the final 32 MiB limit. The old ten-array helper is byte-unchanged. Required arrays, full row fields and nullable XOR identities are paired with the separately allocated privacy-worker lane; an old server response must fail closed there.
+
+The guarded readiness transition checks the actual 69-routine predecessor `c2098f91ee32e4035ff30dd5db71c4d7e95944cef24e4b137c8c489841edd5db`. The successor has 70 routine records: only the existing workspace-export fingerprint changes, while the new exporter is added with execution denied. All other 68 routine records and existing checks remain. New catalog checks extend the existing totals to 160 columns, 76 foreign keys and 20 triggers across 20 checked stores. The grouped first-import writer remains denied.
+
+## Frozen source identities
+
+| Item                                                                     | SHA-256                                                            |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------ |
+| `supabase/migrations/20261113155247_entry_regroup_ledger_foundation.sql` | `1074ed342ca61260e7e0a88e1546fb4343ca5b64d612e2690530ae5ea35fe414` |
+| `tests/unit/entry-regroup-ledger.test.ts`                                | `2c7ad1a9a2d2c9fa5d7f8192e562da7ca88cb0534b57b0049108b9e316140f18` |
+| `scripts/verify-entry-regroup-ledger.sql`                                | `e6d26d73eb248ce40c482a24a7de272201477da351f9dcb5d68781c210762a94` |
+| New private exporter body                                                | `382041169c6481b5f05934af0ba6df37f09ee96547b11bc59baf7414bf8cd1b3` |
+| Public workspace-export body                                             | `a6c4c996690caabd60a1b396d426fcb328aca8f665b2c50d69faddd6192c439d` |
+| Readiness successor body                                                 | `c09803937360d27e8b9cd5d8cbe20177100560c6cea82c60891d43281f4e2f86` |
+
+The fourth owned file is this handoff. Exact final source copies and its hash are retained in the private packet.
+
+## Verification and corrections
+
+Packet: `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-regroup-ledger-wp17fvbb`.
+
+- `focused.json`: all 12 source-contract tests passed.
+- `types.json`: three roots, three source files, zero diagnostics.
+- `lint.json`: one test regex used two literal spaces; preserved failure. The equivalent `{2}` spelling repaired lint.
+- `focused-column-followup.json`: the affected column-reader test passed after that spelling change; 11 other tests were unselected. Original assertions were retained.
+- `lint-fixed.json` and `format-fixed.json`: final scoped checks passed.
+
+Each check used exact Node `v22.23.4` and sealed synthetic configuration with dotenv and AI disabled. Each recorded 727 unchanged inputs and confirmed process-group cleanup. Root owns the combined privacy/source gate and full checks. The prior regroup core/diff campaign was not rerun.
+
+Root source review found that recursive `keyvalue()` could visit scalars. Independent inspection of the [PostgreSQL 17 implementation](https://raw.githubusercontent.com/postgres/postgres/REL_17_STABLE/src/backend/utils/adt/jsonpath_exec.c) confirmed that the method raises an error for non-object inputs at lines 2662–2666. Both checks now filter recursive nodes to objects first, retaining the nested candidate-value-key ban. The original `4dc5403a` migration bytes are preserved. This is a reviewed source defect with a source correction; no unavailable native RED or SQL acceptance was claimed. Static guards and prepared positive scalar/nested-data and negative nested-key native cases cover the correction at their stated evidence tiers.
+
+The rollback-only verifier is an explicitly privileged metadata fixture. It prepares mixed-origin FK records, shared original-entry members, nullable exports, metadata refusals, immutable updates, privacy denial and source cascades. Its rows are deliberately not represented as valid old or new approvals. It invokes no semantic validator or save RPC and grants no writer permission. It remains unparsed and unexecuted.
+
+No old table or ten-array private helper was changed. Only the named guarded workspace-export and readiness bodies were updated. No canonical schema, producer, normalizer, prefix, validator, writer, route or flag was changed. Durable command parity, whole-group liveness, original-base replay/CAS, selected supersession, retained origins, TARGET restore, correction remapping, producer admission, consumer acknowledgement/retry and native/release acceptance remain open. No database, provider, real environment, dependency, Git or deployment action occurred.

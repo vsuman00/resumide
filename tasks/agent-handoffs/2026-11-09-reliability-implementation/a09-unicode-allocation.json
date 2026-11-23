@@ -1,0 +1,32 @@
+{
+  "task": "CR-A09-S03",
+  "owner": "a04_runtime",
+  "worktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats",
+  "files": {
+    "app/lib/server/job-relation-unicode.ts": null,
+    "scripts/generate-job-relation-unicode.mjs": null,
+    "tests/unit/job-relation-unicode.test.ts": null
+  },
+  "newHandoff": "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a09-unicode.md",
+  "maximumFiles": 4,
+  "runtime": {
+    "node": "v22.23.4",
+    "unicode": "17.0",
+    "icu": "78.3",
+    "v8": "12.4.254.21-node.57"
+  },
+  "exports": [
+    "JOB_RELATION_UNICODE_PROFILE",
+    "JOB_RELATION_UNICODE_SHA256",
+    "assertJobRelationUnicodeRuntime"
+  ],
+  "scope": "Generate immutable policy data for full Unicode scalars L/N/M identifier,cased,case-ignorable,regexwordiu,JSwhitespace/trim, defaultlower mappings and regexASCII casefolds; relevant finalSigma algorithm metadata. Data/provider mustnot depend onPGlocale. OneboundedNode22generation, deterministic--check, oraclecomparison tests againstnativeJS; no1Mpointscan onrequest. RejectNUL/lonesurrogate inusage; noNFC/NFKC. Pinprofileversion jd-unicode-profile/1.0.0/runtime/datahash/ruleidentity; TSandfutureSQL mustsamebytes.",
+  "consumer": "Backend imports exact profile/hash/runtimeassert; SQLsourceverifier later embeds identicaldata. SQLruntimeparity remains unexecuted, no claimnative fromdata tests.",
+  "budget": "Generator <=60s and boundedlogs, no stdoutdatasetdump, passiveownedprocess settlement; no dependencies/network/nativeDB.",
+  "status": "ALLOCATED_SOURCE_IMPLEMENTATION",
+  "at": "2026-11-10T19:35:39.183827+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "wire": "a09-storage-wire.json",
+  "wireSha256": "50e5e01773a8d011ac40f95e36ba1f5c57b7cca0fbd7d543f432245dbe48893d",
+  "exclusions": "No native SQL parsing/execution/hosted/realenv/key/provider/ownerdata/Docker/Git/deploy, no unrelated closed gate repeats"
+}

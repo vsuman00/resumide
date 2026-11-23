@@ -1,0 +1,13 @@
+# A11 readiness regression tests
+
+Owned scope: one new readiness route test, fixture/expectation updates in the three existing typed repository/HTTP tests, and this handoff. No application, UI, SQL or shared profile implementation was edited. Root's `a11-readiness-coordinator.json` governs the allocation.
+
+The genuine before-fix test calls the real authenticated resource, HTTP helper, owned reader and command producer using the shared synthetic builder. On repository `c0cb217c`, the missing readiness RPC fixture still produced HTTP 200/applied. The assertion `expect(response.status).toBe(503)` failed. Exact source/test snapshots and the nonzero receipt are preserved at `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a11-readiness-regressions-vvghjm5z/missing-red.json` and its log. This was a behavior failure, not a missing-import failure.
+
+The new nine-case route matrix covers missing, staged and drifted readiness; exact owned-proof → metadata → writer order; original historical command replay without rebasing; malformed commands and foreign owners before readiness; privacy refusal before replay; and fresh metadata on a later attempt. No readiness decoder or application unit is mocked. Only authentication/config/client factories and RPC responses are synthetic. Ready metadata uses the actual exported source profile and simulates a future authorized service grant; it does not establish native readiness or grant execution.
+
+One finite run passed 62 tests/four files: nine new cases plus all 53 existing cases. It used repository `f9380f63`, helper `17bb6707` and profile `7c9c575d`, with 756 source inputs stable. Root then approved the exact profile successor `26c3e7a0`, changing only catalog-body pins after a legacy linkage repair. Final scoped types on that successor passed with six roots, 69 sources and zero diagnostics; lint and formatting passed. No second full 62-case run was performed. Root owns final integrated verification.
+
+All 124 original assertions remain, with five additional order assertions. One exact HTTP expectation now includes the fresh metadata RPC before the unchanged writer arguments; this is the reviewed stronger protocol transition. Original baseline bytes and the assertion-preservation report are retained in the packet. Historical retries still retain original versions, captures and keys. Manual operations and previous preview/undo assertions remain unchanged.
+
+The private packet contains frozen file hashes, exact code snapshots as `.txt`, receipts/log hashes and process-group cleanup evidence. No database, SQL parser, browser, provider, service, real environment or Git operation ran. These tests establish source/fake-RPC behavior only; native acceptance and activation remain open.

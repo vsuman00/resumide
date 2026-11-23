@@ -1,0 +1,80 @@
+"""Replay the packaged schema and check the CR-A01 database lifecycle locally."""
+
+import pathlib
+import subprocess
+import sys
+import tempfile
+
+root = pathlib.Path.cwd()
+pg = pathlib.Path('/opt/homebrew/opt/postgresql@17/bin')
+logs = pathlib.Path(sys.argv[1])
+with tempfile.TemporaryDirectory(prefix='resumide-a01-pg-') as run_dir:
+    run = pathlib.Path(run_dir)
+    data = run / 'data'
+    env = {'HOME': str(run), 'PATH': '/usr/bin:/bin', 'LC_ALL': 'C'}
+
+    def call(tool, *args, **kwargs):
+        return subprocess.run([str(pg / tool), *map(str, args)], timeout=25, env=env, text=True, **kwargs)
+
+    def sql(**kwargs):
+        return call('psql', '-X', '-v', 'ON_ERROR_STOP=1', '-h', run, '-U', 'postgres', '-d', 'postgres', '-Atq', **kwargs)
+
+    def logged(name, source):
+        with (logs / name).open('w') as report:
+            return sql(input=source, stdout=report, stderr=report)
+
+    call('initdb', '-D', data, '--no-sync', '--encoding=UTF8', '--auth=trust', '-U', 'postgres', check=True, stdout=subprocess.DEVNULL)
+    try:
+        call('pg_ctl', '-w', '-D', data, '-l', run / 'server.log', '-o', f"-c listen_addresses='' -c unix_socket_directories={run} -c unix_socket_permissions=0700 -c statement_timeout=12000", 'start', check=True, stdout=subprocess.DEVNULL)
+        bootstrap = '''
+        create role anon;
+        create role authenticated;
+        create role service_role bypassrls;
+        create schema auth;
+        create schema storage;
+        create schema extensions;
+        create extension pgcrypto with schema extensions;
+        alter database postgres set search_path to public, extensions;
+        create table auth.users(id uuid primary key, email text);
+        create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+        create table storage.buckets(id text primary key,name text not null,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+        create table storage.objects(id uuid primary key);
+        create function extensions.jsonb_matches_schema(json,jsonb) returns boolean language plpgsql immutable as $$begin raise exception 'FIXTURE_JSON_SCHEMA_VALIDATION_NOT_AVAILABLE'; end;$$;
+        '''
+        assert logged('bootstrap.log', bootstrap).returncode == 0
+        assert logged('preflight.log', (root / 'scripts/verify-empty-supabase-target.sql').read_text()).returncode == 0
+        assert sql(input='show server_encoding;', capture_output=True, check=True).stdout.strip() == 'UTF8'
+        successor = run / 'successor'
+        subprocess.run(
+            [sys.executable, str(root / 'scripts/materialize-managed-schema-successor.py'), str(successor), '--worker-lifecycle'],
+            timeout=20, check=True,
+        )
+        migrations = sorted(successor.glob('*.sql'))
+        assert len(migrations) == 93
+        for order, path in enumerate(migrations, 1):
+            source = path.read_text()
+            if path.name.startswith('20261012054243_'):
+                line = 'create extension if not exists pg_jsonschema with schema extensions;'
+                assert source.count(line) == 1
+                source = source.replace(line, '-- The compatibility scaffold supplies an explicit fail-closed stand-in.')
+            name = f'{order:02}-{path.stem}.log'
+            result = logged(name, source)
+            if result.returncode:
+                print(f'STOP at operation {order}: {path.name}', flush=True)
+                print((logs / name).read_text()[-1500:], flush=True)
+                raise SystemExit(result.returncode)
+        readiness = logged('privacy-readiness.log',
+            'select private.owned_legacy_ai_usage_ready(), private.ai_budget_source_ready(), private.owned_ai_disposition_ready(), private.privacy_generation_ready();')
+        assert readiness.returncode == 0 and (logs / 'privacy-readiness.log').read_text().strip() == 't|t|t|t'
+        test_path = pathlib.Path(__file__).with_name('cr-a01-native-worker-lifecycle.sql.txt')
+        tested = logged('lifecycle.log', test_path.read_text())
+        print((logs / 'lifecycle.log').read_text(), flush=True)
+        if tested.returncode:
+            raise SystemExit(tested.returncode)
+        leftover = sql(input='select (select count(*) from auth.users), (select count(*) from public.analysis_jobs), (select count(*) from public.data_requests);',
+                       capture_output=True, check=True)
+        assert leftover.stdout.strip() == '0|0|0'
+        print('All 93 migrations, SQL lifecycle and post-rollback fixture counts passed.')
+    finally:
+        if (data / 'postmaster.pid').is_file():
+            call('pg_ctl', '-w', '-D', data, '-m', 'immediate', 'stop', check=True, stdout=subprocess.DEVNULL)

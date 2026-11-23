@@ -1,0 +1,424 @@
+import { createHash } from "node:crypto";
+import { DocumentEvidenceSchema } from "./document-evidence";
+import {
+  deriveEvidenceReviewTargets,
+  EVIDENCE_TARGET_MODEL_VERSION,
+  type EvidenceReviewTargets,
+  type OwnedEvidenceBinding,
+} from "./evidence-targets";
+
+export const ENTRY_ASSOCIATION_MODEL_VERSION =
+  "evidence-entry-associations/1.0.0" as const;
+
+type Observation = EvidenceReviewTargets["observations"][number];
+type Binding = EvidenceReviewTargets["binding"] & {
+  targetModelVersion: typeof EVIDENCE_TARGET_MODEL_VERSION;
+};
+export type EntryAssociationMember = {
+  observationId: string;
+  assertionId: string;
+  targetId: string;
+  field: Observation["field"];
+  citations: Observation["citations"];
+};
+export type EntryAssociationUnresolvedReason =
+  | "out_of_scope_field"
+  | "outside_supported_employment_section"
+  | "unsupported_labelled_layout"
+  | "missing_employer_anchor"
+  | "incomplete_labelled_block"
+  | "ambiguous_labelled_block"
+  | "unsupported_extractor";
+export type EntryAssociationGroup = {
+  id: string;
+  kind: "employment";
+  association: "explicit_labelled_multiline_candidate";
+  verified: false;
+  pageId: string;
+  method: "native_text" | "local_ocr";
+  observationIds: string[];
+  targetIds: string[];
+  members: EntryAssociationMember[];
+};
+type ReviewBase = {
+  modelVersion: typeof ENTRY_ASSOCIATION_MODEL_VERSION;
+  authority: "derived_review_only";
+  scoringEligible: false;
+  persistable: false;
+  qualificationAssessment: "not_assessed";
+  preservedGroupIds: string[];
+  groups: EntryAssociationGroup[];
+  unresolved: (EntryAssociationMember & {
+    reason: EntryAssociationUnresolvedReason;
+  })[];
+};
+export type EntryAssociationReview = ReviewBase &
+  (
+    | {
+        state: "review_required";
+        binding: Binding;
+        unavailableReason: null;
+      }
+    | {
+        state: "unavailable";
+        binding: Binding | null;
+        unavailableReason:
+          | "invalid_evidence"
+          | "binding_mismatch"
+          | "unsupported_extractor"
+          | "resource_limit";
+      }
+  );
+
+const flags = {
+  modelVersion: ENTRY_ASSOCIATION_MODEL_VERSION,
+  authority: "derived_review_only",
+  scoringEligible: false,
+  persistable: false,
+  qualificationAssessment: "not_assessed",
+} as const;
+const employmentHeadings = new Set([
+  "employment",
+  "experience",
+  "work experience",
+  "professional experience",
+  "employment history",
+]);
+const employmentFields = new Set(["employer", "role", "dates"]);
+const label = /^[\t ]*(Employer|Role|Dates):[\t ]*/i;
+const labels = /(?:^[\t ]*|[|;]\s*)(Employer|Role|Dates)\s*:/gi;
+
+function asciiLower(value: string) {
+  return value.replace(/[A-Z]/gu, (character) => character.toLowerCase());
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+function overBudget(raw: unknown) {
+  if (!record(raw)) return false;
+  const exceeds = (value: unknown, maximum: number) =>
+    Array.isArray(value) && value.length > maximum;
+  if (
+    exceeds(raw.spans, 20_000) ||
+    exceeds(raw.assertions, 1000) ||
+    exceeds(raw.fields, 8) ||
+    exceeds(raw.blockers, 6)
+  )
+    return true;
+  if (Array.isArray(raw.assertions))
+    for (const assertion of raw.assertions)
+      if (record(assertion) && exceeds(assertion.evidence, 20)) return true;
+  if (record(raw.ocrSource)) {
+    if (exceeds(raw.ocrSource.pages, 10)) return true;
+    let ocrUnits = 0;
+    let wordUnits = 0;
+    if (Array.isArray(raw.ocrSource.pages)) {
+      ocrUnits = Math.max(0, raw.ocrSource.pages.length - 1) * 2;
+      for (const page of raw.ocrSource.pages) {
+        if (!record(page)) continue;
+        if (exceeds(page.words, 10_000)) return true;
+        if (typeof page.text === "string") ocrUnits += page.text.length;
+        if (ocrUnits > 200_000) return true;
+        if (Array.isArray(page.words))
+          for (const word of page.words) {
+            if (record(word) && typeof word.text === "string")
+              wordUnits += word.text.length;
+            if (wordUnits > 200_000) return true;
+          }
+      }
+    }
+    const request = raw.ocrSource.request;
+    if (
+      record(request) &&
+      (exceeds(request.nativePageTexts, 20) ||
+        exceeds(request.selectedPages, 10))
+    )
+      return true;
+    if (record(request) && Array.isArray(request.nativePageTexts)) {
+      let nativeUnits = Math.max(0, request.nativePageTexts.length - 1) * 2;
+      for (const text of request.nativePageTexts) {
+        if (typeof text === "string") nativeUnits += text.length;
+        if (nativeUnits + ocrUnits > 200_000) return true;
+      }
+    }
+  }
+  // Native and OCR sources can contribute at most 500,000 + 200,000 units.
+  // Bound forged projected spans before the strict replay string comparison.
+  let projectedUnits = 0;
+  if (Array.isArray(raw.spans))
+    for (const span of raw.spans) {
+      if (record(span) && typeof span.text === "string")
+        projectedUnits += span.text.length;
+      if (projectedUnits > 700_000) return true;
+    }
+  if (!record(raw.nativeSource)) return false;
+  if (exceeds(raw.nativeSource.assertions, 3)) return true;
+  if (
+    Array.isArray(raw.nativeSource.spans) &&
+    raw.nativeSource.spans.length > 20_000
+  )
+    return true;
+  let nativeSpanUnits = 0;
+  if (Array.isArray(raw.nativeSource.spans))
+    for (const span of raw.nativeSource.spans) {
+      if (record(span) && typeof span.text === "string")
+        nativeSpanUnits += span.text.length;
+      if (nativeSpanUnits > 500_000) return true;
+    }
+  const pages = raw.nativeSource.pages;
+  if (!Array.isArray(pages)) return false;
+  if (pages.length > 20) return true;
+  let nativeUnits = Math.max(0, pages.length - 1) * 2;
+  for (const page of pages) {
+    if (record(page) && typeof page.text === "string")
+      nativeUnits += page.text.length;
+    if (nativeUnits > 500_000) return true;
+  }
+  return false;
+}
+function unavailable(
+  unavailableReason: Extract<
+    EntryAssociationReview,
+    { state: "unavailable" }
+  >["unavailableReason"],
+): EntryAssociationReview {
+  return {
+    ...flags,
+    state: "unavailable",
+    binding: null,
+    preservedGroupIds: [],
+    groups: [],
+    unresolved: [],
+    unavailableReason,
+  };
+}
+function member(observation: Observation): EntryAssociationMember {
+  return {
+    observationId: observation.id,
+    assertionId: observation.assertionId,
+    targetId: observation.targetId,
+    field: observation.field,
+    citations: observation.citations.map((citation) => ({ ...citation })),
+  };
+}
+
+/** Read-only candidates from replayed source; this cannot authenticate an actor,
+ * confirm relationships, materialize entries or authorize a write. */
+export function deriveEvidenceEntryAssociations(
+  raw: unknown,
+  owned: OwnedEvidenceBinding,
+): EntryAssociationReview {
+  if (overBudget(raw)) return unavailable("resource_limit");
+  const parsed = DocumentEvidenceSchema.safeParse(raw);
+  if (!parsed.success) return unavailable("invalid_evidence");
+  const evidence = parsed.data;
+  if (
+    !owned ||
+    evidence.ownerId !== owned.ownerId ||
+    evidence.analysisId !== owned.analysisId ||
+    evidence.sourceId !== owned.sourceId ||
+    evidence.inputSha256 !== owned.inputSha256 ||
+    evidence.id !== owned.attemptId
+  )
+    return unavailable("binding_mismatch");
+  const model = deriveEvidenceReviewTargets(evidence, owned);
+  const binding: Binding = {
+    ...model.binding,
+    targetModelVersion: EVIDENCE_TARGET_MODEL_VERSION,
+  };
+  const preservedGroupIds = model.groups.map((group) => group.id);
+  const preserved = new Set(
+    model.groups.flatMap((group) => group.observationIds),
+  );
+  const spanOrder = new Map(
+    evidence.spans.map((span, index) => [span.id, index]),
+  );
+  const observations = [...model.observations].sort((a, b) => {
+    const first = (value: Observation) =>
+      Math.min(...value.citations.map((cite) => spanOrder.get(cite.spanId)!));
+    return first(a) - first(b) || a.citations[0].start - b.citations[0].start;
+  });
+  if (evidence.fieldExtractorVersion !== "evidence-fields/1.0.1")
+    return {
+      ...flags,
+      state: "unavailable",
+      binding,
+      preservedGroupIds,
+      groups: [],
+      unresolved: observations
+        .filter((value) => !preserved.has(value.id))
+        .map((value) => ({
+          ...member(value),
+          reason: "unsupported_extractor",
+        })),
+      unavailableReason: "unsupported_extractor",
+    };
+
+  const bySpan = new Map<string, Map<string, Observation>>();
+  const reasons = new Map<string, EntryAssociationUnresolvedReason>();
+  for (const observation of observations) {
+    if (preserved.has(observation.id)) continue;
+    reasons.set(
+      observation.id,
+      employmentFields.has(observation.field)
+        ? "outside_supported_employment_section"
+        : "out_of_scope_field",
+    );
+    for (const citation of observation.citations) {
+      const values = bySpan.get(citation.spanId) ?? new Map();
+      values.set(observation.id, observation);
+      bySpan.set(citation.spanId, values);
+    }
+  }
+  const protectedSpans = new Map(
+    model.groups.map((group) => [group.spanId, group.kind]),
+  );
+  const buckets = new Map<string, typeof evidence.spans>();
+  for (const span of evidence.spans) {
+    const key = JSON.stringify([span.pageId, span.method]);
+    const spans = buckets.get(key) ?? [];
+    spans.push(span);
+    buckets.set(key, spans);
+  }
+  const groups: EntryAssociationGroup[] = [];
+  const assigned = new Set<string>();
+  for (const spans of buckets.values()) {
+    spans.sort(
+      (a, b) =>
+        a.start - b.start || spanOrder.get(a.id)! - spanOrder.get(b.id)!,
+    );
+    let inEmployment = false;
+    let block: { values: Observation[]; ambiguous: boolean } | null = null;
+    const flush = () => {
+      if (!block) return;
+      const values = block.values;
+      const fields = new Set(values.map((value) => value.field));
+      const ambiguous =
+        block.ambiguous || values.some((value) => assigned.has(value.id));
+      if (ambiguous || !fields.has("employer") || !fields.has("role")) {
+        for (const value of values)
+          reasons.set(
+            value.id,
+            ambiguous
+              ? "ambiguous_labelled_block"
+              : "incomplete_labelled_block",
+          );
+      } else {
+        const members = values.map(member);
+        const source = values[0].citations[0];
+        const digest = createHash("sha256")
+          .update(
+            JSON.stringify([
+              ENTRY_ASSOCIATION_MODEL_VERSION,
+              binding,
+              source.pageId,
+              source.method,
+              members,
+            ]),
+          )
+          .digest("hex");
+        groups.push({
+          id: `entry-association-${digest}`,
+          kind: "employment",
+          association: "explicit_labelled_multiline_candidate",
+          verified: false,
+          pageId: source.pageId,
+          method: source.method,
+          observationIds: values.map((value) => value.id),
+          targetIds: values.map((value) => value.targetId),
+          members,
+        });
+        for (const value of values) assigned.add(value.id);
+      }
+      block = null;
+    };
+    for (const span of spans) {
+      if (employmentHeadings.has(asciiLower(span.text.trim()))) {
+        flush();
+        inEmployment = true;
+        continue;
+      }
+      if (protectedSpans.has(span.id)) {
+        flush();
+        if (
+          protectedSpans.get(span.id) !== "employment" ||
+          [...(bySpan.get(span.id)?.values() ?? [])].some(
+            (value) => !employmentFields.has(value.field),
+          )
+        )
+          inEmployment = false;
+        continue;
+      }
+      if (!span.text.trim()) {
+        flush();
+        continue;
+      }
+      const values = [...(bySpan.get(span.id)?.values() ?? [])];
+      const relevant = values.filter((value) =>
+        employmentFields.has(value.field),
+      );
+      const prefix = label.exec(span.text);
+      if (!prefix) {
+        flush();
+        for (const value of relevant)
+          reasons.set(
+            value.id,
+            inEmployment
+              ? "unsupported_labelled_layout"
+              : "outside_supported_employment_section",
+          );
+        inEmployment = false;
+        continue;
+      }
+      if (!inEmployment) continue;
+      const field = prefix[1].toLowerCase();
+      if (field === "employer") flush();
+      const value = relevant[0];
+      const suffix = span.text.slice(prefix[0].length);
+      const start = Array.from(
+        span.text.slice(
+          0,
+          prefix[0].length + suffix.length - suffix.trimStart().length,
+        ),
+      ).length;
+      const end = Array.from(span.text.trimEnd()).length;
+      const exact =
+        values.length === 1 &&
+        relevant.length === 1 &&
+        value.field === field &&
+        value.citations.length === 1 &&
+        value.citations[0].spanId === span.id &&
+        value.citations[0].start === start &&
+        value.citations[0].end === end &&
+        value.value === suffix.trim() &&
+        [...span.text.matchAll(labels)].length === 1;
+      if (!exact) {
+        block ??= { values: [], ambiguous: true };
+        block.ambiguous = true;
+        block.values.push(...relevant);
+        continue;
+      }
+      if (!block && field !== "employer") {
+        reasons.set(value.id, "missing_employer_anchor");
+        continue;
+      }
+      block ??= { values: [], ambiguous: false };
+      if (block.values.some((prior) => prior.field === value.field))
+        block.ambiguous = true;
+      block.values.push(value);
+    }
+    flush();
+  }
+  return {
+    ...flags,
+    state: "review_required",
+    binding,
+    preservedGroupIds,
+    groups,
+    unresolved: observations
+      .filter((value) => !preserved.has(value.id) && !assigned.has(value.id))
+      .map((value) => ({ ...member(value), reason: reasons.get(value.id)! })),
+    unavailableReason: null,
+  };
+}

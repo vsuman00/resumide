@@ -1,0 +1,24 @@
+# AA7 exact-worker applicability proposal
+
+Status: review proposal, no finding accepted or suppressed. Scope is only the documented compiler entrypoint in exact worker `sha256:382927476a7d5b500351835b57cdf9006a2e229e431b7bfd734c19425be472bc` under its current policy, image, closure and privileges. The [JSON](AA7_SCOPED_NONAPPLICABILITY_PROPOSAL_20261106.json) binds advisory/source hashes, exact installed binaries, entrypoints, dependency observations and invalidation conditions. Eight CVE-specific proposals cover43 raw HIGH package matches; those43 remain in the947-match scanner report. Counts are not exploit counts.
+
+| Captured CVE | Affected function/precondition | Exact-worker evidence supporting review |
+| --- | --- | --- |
+| util76642 |Failed privileged mount helper still runs X-mount idmap/owner hooks |mount absent; no mount/libmount command route; libmount denied compiler reads and absent from fixed-consumer ldd graphs; no elevated caller |
+| util78408 |root nsenter --join-cgroup leaks privileged cgroup descriptor |nsenter0755 denied read/exec; never invoked; fixed supervisor closes descriptors and launcher closes3..63 |
+| util78409 |Restricted X-mount.subdir detached-tree resolution |No privileged mount/fstab entrypoint; same exact library, execution and privilege boundaries |
+| util78410 |Restricted bind-source redirection followed by privileged owner/mode hook |No privileged mount/fstab/post-hook entrypoint; affected library remains installed but is not an approved compiler input |
+| ncurses69720 |infocmp analyze_string stack overflow |Exact infocmp binary exists but is denied read/exec; no invocation or linked ncurses/tinfo consumer in fixed program graphs |
+| Perl9538 |Archive::Tar::_read_tar unbounded declared entry size |Affected Tar.pm is present and hashed; Perl/Tar.pm denied compiler access; supervisor has no Perl/archive-extraction route or libperl consumer |
+| xdg4055 |xdg-email Thunderbird mailto argument/header handling |No opener invocation; xdg-email/xdg-open denied compiler access; Thunderbird absent; worker inspects URI strings without opening them |
+| GnuPG24882 |Standalone tpm2daemon PKDECRYPT RSA/ECC handler |Primary Makefile/handler mapping identifies separate daemon; actual daemon paths and TPM/TSS packages absent; no permitted invocation |
+
+The util source records bind authenticated stock2.41.5 plus its original Debian quilt, matching the installed package cohort. Native candidate patch hashes and failed build tests are not represented as an installed fix. Retained primary advisories identify each function/precondition. Perl/xdg installed source markers are hashed. The ncurses function location comes from the captured vendor record, not a newly authenticated C source archive; this limitation remains explicit for review.
+
+Current production supervisor code has three fixed subprocess families: confined xetex, confined xdvipdfmx, and fixed pdftotext bbox parsing. Hostile TeX receives execution grants only for the two engines and reviewed loader; relevant utility binaries/modules and libmount are outside the read closure. The production argv drops capabilities and enforces no-new-privileges; current runtime evidence binds UID65532, network none, read-only root and no host mounts. The diagnostic auditor separately measured capabilities0/NNP1; that measurement is not relabelled as a new production probe.
+
+The corrected metadata worker returned exit0 with no stderr. It hashed91,759,891 bytes in bounded64KiB streams and recorded file sizes/digests, fixed-consumer ldd graphs, actual Python loaded files and package ownership. It had no network, host mounts, environment forwarding or candidate input; exact container absence was checked. The first diagnostic failed its16MiB reader cap on a dependency and remains preserved. Only metadata hashing changed; production/test limits did not. No additional runtime suite, scanner, exploit, build, database or provider ran.
+
+These proposals require coordinator review. ldd/maps alone do not prove a universal dynamic-import closure; they corroborate fixed source entrypoints and permissions. New commands, plugins, modules, packages, read/exec grants, privilege, host mounts, caller-supplied descriptors or another container entrypoint invalidate the conclusion. It does not cover Docker-host operators or software opening exported links on the candidate's machine.
+
+Lexical screening is not the boundary: macro indirection can create native decoder inputs or scratch assets. No PDF/image/font decoder CVE is dismissed because syntax or assets are unsupported. Python7210 remains materially relevant because the actual supervisor consumes Poppler XML through ElementTree.fromstring. This document grants no broad source-package waiver, post-compromise guarantee, security-owner approval or release acceptance.

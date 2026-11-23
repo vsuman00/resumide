@@ -1,0 +1,181 @@
+{
+  "status": "BOOTSTRAP_VERIFIED_AWAITING_CONFIRMED_TRIXIE_IMAGE",
+  "createdAt": "2026-11-06T06:21:12.662318+00:00",
+  "temporaryDirectory": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-full-security-dy2bu9ez",
+  "mode": "0o700",
+  "scanner": {
+    "version": "0.76.2",
+    "releaseUrl": "https://github.com/aquasecurity/trivy/releases/tag/v0.76.2",
+    "assetUrl": "https://github.com/aquasecurity/trivy/releases/download/v0.76.2/trivy_0.76.2_macOS-ARM64.tar.gz",
+    "assetSha256": "ae7ea358326960406b703c77b2ac490190797d80b306b5b50c2a27221da0a5b8",
+    "assetBytes": 49840394,
+    "binarySha256": "7a15c426f963473a485a4f315e21f8e2c881269d500bf0de35da13a4421fa108",
+    "checksumUrl": "https://github.com/aquasecurity/trivy/releases/download/v0.76.2/trivy_0.76.2_checksums.txt",
+    "checksumFileSha256": "802e4ac1418ed967cd3c4b901f4f71ca00b7363ede67778665a22d9f13f58c83"
+  },
+  "databaseRepositories": {
+    "db": "ghcr.io/aquasecurity/trivy-db@sha256:fb417a88061be7d8c246c61cd56e73c91040574fb8cb7b74c48f7a2ea5c2f92f",
+    "java-db": "ghcr.io/aquasecurity/trivy-java-db@sha256:a48270d8181f59baed801e34d73e0857558570c51c9a582eaa3999e897c210e4"
+  },
+  "scansExecuted": 0,
+  "imageArchivesCreated": false,
+  "candidateImageId": null,
+  "baselineImageId": "sha256:19d2a00a2a830173bf1fae07dddfcac7d54be3047e58b276af031d3cbd1018ac",
+  "privacy": "Public metadata/tool/bootstrap only; no image, SBOM or source upload. Cleared environment; no project credentials.",
+  "databaseBootstrap": [
+    {
+      "kind": "db",
+      "command": [
+        "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-full-security-dy2bu9ez/trivy",
+        "image",
+        "--cache-dir",
+        "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-full-security-dy2bu9ez/cache",
+        "--disable-telemetry",
+        "--skip-version-check",
+        "--download-db-only",
+        "--db-repository",
+        "ghcr.io/aquasecurity/trivy-db@sha256:fb417a88061be7d8c246c61cd56e73c91040574fb8cb7b74c48f7a2ea5c2f92f"
+      ],
+      "exitCode": 0,
+      "durationSeconds": 7.95,
+      "repository": "ghcr.io/aquasecurity/trivy-db@sha256:fb417a88061be7d8c246c61cd56e73c91040574fb8cb7b74c48f7a2ea5c2f92f"
+    },
+    {
+      "kind": "java-db",
+      "attempt": 1,
+      "repository": "ghcr.io/aquasecurity/trivy-java-db@sha256:a48270d8181f59baed801e34d73e0857558570c51c9a582eaa3999e897c210e4",
+      "exitCode": null,
+      "status": "HOST_TIMEOUT_KILLED",
+      "timeoutSeconds": 180,
+      "durationSeconds": 180,
+      "stderrPersisted": false
+    },
+    {
+      "kind": "java-db",
+      "attempt": 2,
+      "command": [
+        "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-full-security-dy2bu9ez/trivy",
+        "image",
+        "--cache-dir",
+        "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-full-security-dy2bu9ez/cache",
+        "--disable-telemetry",
+        "--skip-version-check",
+        "--download-java-db-only",
+        "--java-db-repository",
+        "ghcr.io/aquasecurity/trivy-java-db@sha256:a48270d8181f59baed801e34d73e0857558570c51c9a582eaa3999e897c210e4",
+        "--timeout",
+        "2m"
+      ],
+      "repository": "ghcr.io/aquasecurity/trivy-java-db@sha256:a48270d8181f59baed801e34d73e0857558570c51c9a582eaa3999e897c210e4",
+      "exitCode": 0,
+      "status": "EXITED",
+      "durationSeconds": 97.57,
+      "timeoutSeconds": 180
+    }
+  ],
+  "databases": {
+    "db": {
+      "metadata": {
+        "Version": 2,
+        "NextUpdate": "2026-11-07T01:07:43.832839854Z",
+        "UpdatedAt": "2026-11-06T01:07:43.832840315Z",
+        "DownloadedAt": "2026-11-06T06:21:44.116129Z"
+      },
+      "sha256": "acc7850179a48dbe868f97eb59ea186510800ade8ee815392fa2e7b26875c22d",
+      "bytes": 1686421504
+    },
+    "java-db": {
+      "metadata": {
+        "Version": 1,
+        "NextUpdate": "2026-11-09T01:10:43.741478889Z",
+        "UpdatedAt": "2026-11-06T01:10:43.741478979Z",
+        "DownloadedAt": "2026-11-06T06:26:52.59137Z"
+      },
+      "sha256": "7124b5d89aa910c1c79b7cbdd35903ab940762f6ebb27729e558fb197f9ae1db",
+      "bytes": 1572696064
+    }
+  },
+  "primaryRegistryManifests": {
+    "db": {
+      "repository": "ghcr.io/aquasecurity/trivy-db@sha256:fb417a88061be7d8c246c61cd56e73c91040574fb8cb7b74c48f7a2ea5c2f92f",
+      "manifestSha256": "sha256:fb417a88061be7d8c246c61cd56e73c91040574fb8cb7b74c48f7a2ea5c2f92f",
+      "manifest": {
+        "schemaVersion": 2,
+        "mediaType": "application/vnd.oci.image.manifest.v1+json",
+        "artifactType": "application/vnd.aquasec.trivy.config.v1+json",
+        "config": {
+          "mediaType": "application/vnd.oci.empty.v1+json",
+          "digest": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+          "size": 2,
+          "data": "e30="
+        },
+        "layers": [
+          {
+            "mediaType": "application/vnd.aquasec.trivy.db.layer.v1.tar+gzip",
+            "digest": "sha256:c367ecccf6a0367b915ef00b90c43e5958f9ecd9ee6118d2876af6deeca8523c",
+            "size": 138781380,
+            "annotations": {
+              "org.opencontainers.image.title": "db.tar.gz"
+            }
+          }
+        ],
+        "annotations": {
+          "org.opencontainers.image.created": "2026-11-06T01:16:23Z"
+        }
+      }
+    }
+  },
+  "networkDenialPreflight": {
+    "exitCode": 0,
+    "connectErrno": 1,
+    "networkDenyEnforced": true,
+    "profile": "(version 1)(allow default)(deny network*)"
+  },
+  "updatedAt": "2026-11-06T06:27:40.359005+00:00",
+  "sameActualDatabaseHashesAsPreviousComparison": true,
+  "primarySources": {
+    "latestToolMetadata": "https://api.github.com/repos/aquasecurity/trivy/releases/latest",
+    "toolLatestVerified": "v0.76.2",
+    "toolPublishedAt": "2026-11-05T12:50:25Z",
+    "mainDatabaseCurrentTag": "https://ghcr.io/v2/aquasecurity/trivy-db/manifests/2",
+    "javaDatabaseCurrentTag": "https://ghcr.io/v2/aquasecurity/trivy-java-db/manifests/1",
+    "currentTagManifestDigestsMatchPinned": true
+  },
+  "temporaryDirectoryBytes": 4253592457,
+  "temporaryDirectoryMode": "0o700",
+  "preservedEarlierEvidence": {
+    "AA7_IMAGE_CVE_COMPARE_20261106.json": {
+      "sha256": "ba81d966d3b68448731f5173b0352ad7c17c994404d5350468366fddb6ad8ea6",
+      "bytes": 23286788
+    },
+    "AA7_APPLICATION_AUDIT_RAW_20261106.json": {
+      "sha256": "570b288f9d89abc2c6cc0370d9f8eb3a9cbe71374ac364cb77f80649fc3e6c1f",
+      "bytes": 4439
+    },
+    "AA7_APPLICATION_AUDIT_FIXED_RAW_20261106.json": {
+      "sha256": "1450add76a6a435b99791cb26919768adb2cf78aba952156015ebc25dcb0ec27",
+      "bytes": 366
+    },
+    "AA7_APPLICATION_PRODUCTION_AUDIT_FIXED_RAW_20261106.json": {
+      "sha256": "1450add76a6a435b99791cb26919768adb2cf78aba952156015ebc25dcb0ec27",
+      "bytes": 366
+    }
+  },
+  "plannedScanPolicy": {
+    "severity": "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+    "pkgTypes": "os,library",
+    "scanners": "vuln",
+    "ignoreFile": "",
+    "config": "",
+    "includeUnfixed": true,
+    "listAllPackages": true,
+    "showSuppressed": true,
+    "offlineScan": true,
+    "allDatabaseCheckVexUpdatesSkipped": true,
+    "telemetryAndVersionChecksDisabled": true,
+    "enforcedNetworkDenial": true,
+    "identityBinding": "requested index digest -> selected linux/arm64 manifest -> config -> layer blobs and rootfs diff IDs -> Trivy config/layers"
+  },
+  "confirmedCandidateImageId": "sha256:98907d4d7472231fd81e719e71f6cba23db54db215c35d906eeab87b3c39692e",
+  "coordinatorConfirmedArchiveScanAuthorized": true
+}

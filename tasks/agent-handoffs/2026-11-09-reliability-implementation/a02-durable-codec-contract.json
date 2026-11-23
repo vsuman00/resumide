@@ -1,0 +1,192 @@
+{
+  "task": "CR-A02-S02",
+  "status": "DURABLE_FRAMING_FOUNDATION_FROZEN_NO_WRITER_ADMISSION",
+  "at": "2026-11-13T11:37:03.021101+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "selectedOperation": {
+    "schemaVersion": "grouped-original-command/1.0.0",
+    "operation": "approve_and_import_grouped_original",
+    "decision": "One immutable owner relationship-approval BATCH/revision and mappings commits atomically with first canonical version; failure leaves neither. No separate decide/reject API or preexisting accepted-decision references in this v1. Unselected is undecided/retain_original, never rejection or missing qualification.",
+    "newIds": "Approval batch/result version/member UUIDs allocated after prior replay lookup; exclude from submitted semantic bytes."
+  },
+  "browserCommand": {
+    "strictKeys": [
+      "schemaVersion",
+      "operation",
+      "binding",
+      "expected",
+      "selectedGroupIds",
+      "acknowledgement",
+      "unselectedDisposition",
+      "previewHash",
+      "idempotencyKey"
+    ],
+    "selectedGroupIds": "1..32 distinct exact current entry-association-<64 lower hex> helper lookup IDs, max100 code units; no source members, canonical body, values or authoritative DTO accepted from browser",
+    "acknowledgement": true,
+    "acknowledgementPolicy": "relationship_only_not_fact_confirmation (fixed operation meaning, included in normal form/bytes)",
+    "unselectedDisposition": "retain_original",
+    "previewHash": "64 lowercase hex, server-derived prospective submitted-semantics hash; not authority or a signature",
+    "idempotencyKey": "lowercase UUID lookup identity; separate from semantic bytes",
+    "previewRequest": "Same strict schema minus acknowledgement,previewHash,idempotencyKey. Preview prepares prospective approval semantics; it does NOT record a decision."
+  },
+  "bindingFieldOrder": [
+    "ownerId",
+    "organizationId",
+    "resumeId",
+    "analysisId",
+    "sourceId",
+    "attemptId",
+    "inputSha256",
+    "evidenceSchemaVersion",
+    "fieldExtractorVersion",
+    "targetModelVersion",
+    "associationModelVersion",
+    "producerVersion",
+    "admissionPolicyVersion",
+    "structuralTextProfileVersion",
+    "correctionProjectionModelVersion",
+    "correctionAdmissionPolicyVersion",
+    "effectiveLocale"
+  ],
+  "bindingVersions": {
+    "evidenceSchemaVersion": "evidence/2.0.0",
+    "fieldExtractorVersion": "evidence-fields/1.0.1",
+    "targetModelVersion": "evidence-targets/1.0.0",
+    "associationModelVersion": "evidence-entry-associations/1.0.0",
+    "producerVersion": "canonical-engine/1.0.3",
+    "admissionPolicyVersion": "grouped-original-admission/1.0.0",
+    "structuralTextProfileVersion": "a02-structural-text/1.0.0",
+    "correctionProjectionModelVersion": "canonical-corrections/1.0.1",
+    "correctionAdmissionPolicyVersion": "candidate-correction-admission/1.0.0"
+  },
+  "bindingRules": "Scope UUIDs lowercase; SHA lower hex64; effectiveLocale uses existing canonical locale syntax and is ORIGINAL submitted output locale. Normalization matches live-owned source/org/resume/analysis/attempt/hash and rederived model versions, but never substitutes or checks TODAY locale/head/revisions before prior replay. Fresh SQL admission handles those current preconditions after prior-key comparison.",
+  "expectedFieldOrder": [
+    "reviewRevision",
+    "reviewHeadId",
+    "assignmentRevision",
+    "assignmentHeadId",
+    "associationRevision",
+    "associationHeadId",
+    "canonicalHeadId"
+  ],
+  "expectedRules": "Each revision safe integer0..2147483647; matching head lowercaseUUID/null with revision0 iffnull. canonicalHeadId literalnull. Values are original captured prefix identity; normalizer preserves them, does not assert actual current prefix or grant fresh CAS. Database validates complete contiguous stored prefixes and current source/privacy.",
+  "api": {
+    "commandsModule": "app/lib/server/grouped-import-commands.ts",
+    "codecModule": "app/lib/server/grouped-import-command-codec.ts",
+    "schemaExports": [
+      "GroupedOriginalCommandSchema",
+      "GroupedOriginalPreviewRequestSchema"
+    ],
+    "functions": [
+      "prepareGroupedOriginalCommand(rawEvidence,ownedContext,rawPreviewRequest)",
+      "normalizeGroupedOriginalCommand(rawEvidence,ownedContext,rawCommitCommand)"
+    ],
+    "ownedContext": "OwnedEvidenceBinding plus resumeId,organizationId (no fresh head/revision/locale grant). Caller must come from actual auth/owned replay boundary.",
+    "result": "prepared or unavailable fixed metadata-only reason; authority derived_review_only,persistable:false,scoringEligible:false,requiresDurableAdmission:true. Prepared carries normalForm, semanticAtoms, previewHash and source-ordered diagnostic selectedGroupIds; commit result also retains parsed original key/command. A failed preparation has no partial normal form."
+  },
+  "normalizer": [
+    "Preflight bounded known arrays/strings/keys before strict parsing/serialization. Validate complete browser schema, lower UUIDs and zero/head pairs; extra keys reject.",
+    "Use actual frozen deriveEvidenceEntryAssociations on raw evidence and owned binding; require review_required and exact source/model context; reject duplicate/unknown selections, no empty fallback.",
+    "Resolve browser lookup IDs ONLY through actual rederived groups. Normalize selected groups and members to frozen helper/source order. No values in normal form or errors.",
+    "Convert exact current members to new structural source selections: group pageId/method; ordered member assertionId/field; one full citation attemptId/spanId/pageId/method/start/end/pageStart/pageEnd, exact derived offsets and owned attempt. No opaque observation/target/group IDs in SQL-authoritative structural normal form/atoms. Preserve those old IDs unchanged for UI lookup only.",
+    "Exactly2..3 members/group, exactly1citation/member, at most32 groups; reject overlap/repeated assertions/references. No global dedup, normalization or relationship inference outside frozen model.",
+    "Hash fixed-order semantic atoms under dedicated domain. Commit previewHash must match rederived prospective semantics; acknowledgement must be true. Original submitted prefixes/locale retained even when current runtime state would differ; this pure helper cannot resolve replay or authorize writes."
+  ],
+  "semanticAtoms": {
+    "order": [
+      "schemaVersion",
+      "operation",
+      "all binding fields in bindingFieldOrder",
+      "all expected fields in expectedFieldOrder (integers canonical decimal, null explicit)",
+      "relationship_only_not_fact_confirmation",
+      "1 (prospective actual acknowledgement)",
+      "retain_original",
+      "selectionCount",
+      "for each source-ordered group:pageId,method,memberCount",
+      "for each source-ordered member:assertionId,field,citationCount",
+      "for its one citation:attemptId,spanId,pageId,method,start,end,pageStart,pageEnd"
+    ],
+    "excluded": [
+      "idempotencyKey",
+      "previewHash",
+      "UI opaque IDs",
+      "source/fact values or raw text",
+      "generated canonical/batch/member IDs",
+      "timestamps/requestId",
+      "TODAY revisions/head/locale replacing submitted capture"
+    ]
+  },
+  "codec": {
+    "version": "a02-command-bytes/1.0.0",
+    "header": "A02OP1\\n (ASCII LF)",
+    "headerHex": "4130324f50310a",
+    "maximumAtoms": 2048,
+    "maximumBytes": 131072,
+    "framing": "For each string: ASCII T + canonical UTF8 byte length + : + exact UTF8 bytes + ;. Null:N;. Reject nonstring/non-null, NUL and unpaired JS surrogates; never Unicode-normalize. Count header/prefix/delimiters in bound. Hash SHA256 lowercasehex. Do not change C02OP1 or old limits.",
+    "exports": [
+      "GROUPED_IMPORT_CODEC_VERSION",
+      "encodeGroupedImportCommandAtoms",
+      "hashGroupedImportCommandAtoms"
+    ]
+  },
+  "resourceBounds": {
+    "browserEncodedFormLimitForLaterRoute": 16384,
+    "normalizedUtf8Bytes": 131072,
+    "groups": 32,
+    "membersPerGroup": [
+      2,
+      3
+    ],
+    "citationsPerMember": 1,
+    "identifierCodeUnits": 200,
+    "sourceEvidence": "Existing frozen helper preflight/replay limits; no new lower original-schema cap"
+  },
+  "structuralTextProfile": {
+    "version": "a02-structural-text/1.0.0",
+    "case": "ASCII-only A-Z -> a-z, no locale case inference",
+    "whiteSpaceCodepointsHex": [
+      "0009",
+      "000A",
+      "000B",
+      "000C",
+      "000D",
+      "0020",
+      "00A0",
+      "1680",
+      "2000",
+      "2001",
+      "2002",
+      "2003",
+      "2004",
+      "2005",
+      "2006",
+      "2007",
+      "2008",
+      "2009",
+      "200A",
+      "2028",
+      "2029",
+      "202F",
+      "205F",
+      "3000",
+      "FEFF"
+    ],
+    "rules": "Freeze actual current helper headings/labels, mixed/unknown label barriers, blank ends block but retains section, same-span exclusions, page/method/source ordering, no crosspage/proximity/tenure. Later SQL must independently implement same profile, not assume lower/btrim/POSIX whitespace equals JS. This leaf only reuses the actual helper and binds profile version."
+  },
+  "sqlFoundation": {
+    "migration": "supabase/migrations/20261113113504_grouped_import_structural_codec.sql",
+    "functions": [
+      "private.grouped_import_command_bytes(text[])",
+      "private.grouped_import_command_sha256(text[])"
+    ],
+    "scope": "Only low-level framing/hash, immutable security invoker search_path empty, revoke all execute from public,anon,authenticated,service_role. No new table/publicRPC/grant/backfill/shape/readiness changes. No command/ownership/replay normalization claim. Wrap foundation in one migration transaction.",
+    "evidence": "SQL source/contract only, UNPARSED/UNAPPLIED/UNEXECUTED; JS goldens do not claim native PostgreSQL parity."
+  },
+  "nextWriterContract": {
+    "input": "Authenticated server constructs raw1.0.1 base through frozen importer once; browser cannot submit canonical content. SQL validates source grounding, every stored assertion exactly once, graph and selected associations, computes only approved placement delta itself and preserves every unselected BASE datum. Do not claim SQL independently reproduces entire arbitrary legacy importer. Full source-to-consumer completeness is a separate required gate.",
+    "atomicity": "Owner/privacy/source/readiness authority then exact original submitted command replay; fresh null-head/review/assignment/association/locale CAS and correction_original_import_allowed after replay; immutable batch/proof/version/snapshot/audit in one transaction.",
+    "compatibility": "Guarded new catalog profile, historical37 manifest preserved. Shape widening must pair with legacy1.0.3 import/retag bypass denial; normal edits, rollback target snapshot and private1.0.2 add must remain readable. Existing correction metadata and new relationship records need explicit export/restore/privacy/readiness integration BEFORE writer activation. Deterministic relationship acknowledgement is not qualitative_ai consent."
+  },
+  "tests": "Characterize healthy C02 framing unchanged; this is a new protocol, no fabricated missing-module RED. Actual helper/source fixtures for source-order/Unicode/exact binding/duplicate/extra/stale selector, captures/locale preserved for replay, commit preview/ack binding, no raw values/opaque IDs in bytes; canonical byte goldens/null/UTF8/limits/invalid text. SQL source checks only and no native parity claim.",
+  "nonGoals": "No current repository/route/producer/helper/schema/C02 codec/migration edits, no new durable history table/RPC/readiness or actual approval. No source thresholds lowered. No env/key/provider/real-data/SQL parsing or execution/DB/Docker/Git/deps/deploy action."
+}

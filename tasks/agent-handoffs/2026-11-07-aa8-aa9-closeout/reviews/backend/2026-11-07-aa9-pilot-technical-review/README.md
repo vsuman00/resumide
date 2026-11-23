@@ -1,0 +1,11 @@
+# Pilot evidence independent technical review
+
+Reviewer: backend AI subagent, separate from the pilot implementation author. Review only; no vendor, source execution, database, provider or duplicate test run. Reviewed the integrated ROOT module, all test cases and feature design under ADR-0018.
+
+Result: PASS for the implemented assessment contract. No concrete blocking defect found. This is AI-assisted technical source review, not independent-human research, legal approval or an observed pilot.
+
+The review checked strict input/version boundaries, prohibited capabilities, source scope, time/expiry/revocation checks, protocol and frozen bundle hashes, trusted in-process receipt lookup and content-free failures. Receipt snapshots prevent a reference changing within one assessment. Readiness remains separate for owner-approved engineering, protocol approval, repeated vendor observations and advisory evidence. Prerelease mode requires an exact-bundle technical review while allowing AI provenance; it does not depend on an external reviewer team or partner.
+
+Future external evidence requires the independently authorized upstream gates, named environment and rights, exact execution receipt, repeatable separately evidenced attempts, all outcome metrics and protocol criteria, every operational control, notice before use and human decisions with rationale. Additional invalid notice/decision rows are checked rather than ignored. Independent external review excludes protocol author, operator and decision reviewers. Repeatable vendor rejections remain visible errors and do not become a compatibility guarantee. Synthetic input cannot become observed external evidence merely through its JSON flags.
+
+The source and 26 author-reported passing focused tests cover the positive trusted-context branch and negative authority, stale/revoked/hash drift, non-repeatability, missing controls/metrics and unsafe-capability branches. I read those tests without rerunning them. The design correctly identifies that this module assesses evidence; actual notice delivery, correction/appeal transitions, stop/rollback and vendor calls require the separately assigned operational workflow. That implementation boundary is explicit, not an unreported completed feature.

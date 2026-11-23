@@ -1,0 +1,86 @@
+name: Isolated LaTeX compiler
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_runtime:
+        type: boolean
+        default: false
+        description: Test the reviewed ARM64 compiler artifact
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test -- tests/unit/latex-ci-image.test.ts
+      - run: npm run check:latex:source
+      - run: npm run test:latex
+      - run: npm run check:build-ai:source
+      - run: npm run test:build-ai
+
+  synthetic-runtime:
+    if: ${{ inputs.run_runtime && github.ref_type == 'branch' && github.ref_protected }}
+    runs-on: ubuntu-24.04-arm
+    needs: synthetic-source
+    timeout-minutes: 20
+    environment: reviewed-latex-runtime
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Admit the exact reviewed compiler artifact
+        env:
+          LATEX_CI_ARTIFACT_AUTHORIZATION: ${{ vars.LATEX_CI_ARTIFACT_AUTHORIZATION }}
+          LATEX_CI_IMAGE_REF: ${{ vars.LATEX_CI_IMAGE_REF }}
+          LATEX_CI_IMAGE_ID: ${{ vars.LATEX_CI_IMAGE_ID }}
+          LATEX_CI_READ_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/admit-latex-ci-image.sh
+      - name: Prove real confinement and safe failures
+        run: npm run --silent verify:latex -- "$LATEX_TEST_IMAGE" > latex-runtime-receipt.json
+      - name: Benchmark synthetic examples
+        run: npm run --silent benchmark:latex -- "$LATEX_TEST_IMAGE" > latex-benchmark-receipt.json
+      - name: Verify rollback and fresh process recovery
+        run: npm run --silent verify:latex:rollback -- "$LATEX_TEST_IMAGE" > latex-rollback-receipt.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: synthetic-latex-receipts
+          path: latex-*-receipt.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+  runtime-gate:
+    if: ${{ !cancelled() && inputs.run_runtime }}
+    runs-on: ubuntu-latest
+    needs: synthetic-runtime
+    permissions: {}
+    steps:
+      - name: Report exact compiler verification
+        env:
+          RUNTIME_RESULT: ${{ needs.synthetic-runtime.result }}
+        run: |
+          case "$RUNTIME_RESULT" in
+            success) echo 'Exact compiler runtime checks passed.' ;;
+            skipped) echo 'Compiler runtime checks are unavailable. Use a reviewed protected branch.'; exit 2 ;;
+            *) echo 'Compiler runtime checks failed. See the synthetic runtime job.'; exit 1 ;;
+          esac

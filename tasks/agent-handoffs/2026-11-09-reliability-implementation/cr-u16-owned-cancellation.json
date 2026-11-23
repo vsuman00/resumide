@@ -1,0 +1,77 @@
+{
+  "id": "CR-U16-S04",
+  "relatedTask": "CR-R10",
+  "status": "VERIFIED_LOCAL_OWNED_CANCELLATION",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated worktree, synthetic inputs only",
+  "sources": {
+    "supabase/migrations/20261122060000_owned_analysis_cancellation.sql": "1f9f16526dfc2cec1accaeb335dcf14f8a5fb150dda717ee1d8e12e2873fbd8e",
+    "scripts/verify-local-owned-cancellation.py": "6fa3b9a2fae2bce840884048a920ea4d483a3dde852f6de3c5edd2e2ff62a0f8",
+    "app/routes/api.analysis-cancel.ts": "f230055a1bb997d91f654c7c020c7a244e77ca67da8acc1cecc29964217dc607",
+    "app/routes/analysis.tsx": "1a3d94322d75b42dbe00c5a490284e88a73baf84d0ec9e05b7d34a5e09968438",
+    "tests/unit/analysis-cancel.test.ts": "59bb5d15fb098eb5c4f649613caa3cde9c40759a12e3369d7e9d6e37f0fd34d7"
+  },
+  "baselineUnitFailures": 5,
+  "focusedTests": {
+    "exitCode": 0,
+    "files": 5,
+    "passed": 87
+  },
+  "typecheck": {
+    "exitCode": 0
+  },
+  "lint": {
+    "exitCode": 0,
+    "errors": 0,
+    "existingHookWarnings": 4
+  },
+  "webBuild": {
+    "exitCode": 0,
+    "logSha256": "560cad39eb76c3eea7201264a9b38585da573a7a041fdb9f57dac6b779649b07"
+  },
+  "workerBuild": {
+    "exitCode": 0,
+    "logSha256": "3743fa119b53ef0023a96ffdac4713d0b664a708b65bbb392c017211fffae077"
+  },
+  "native": {
+    "postgresMajor": 17,
+    "transport": "Disposable PostgreSQL Unix socket",
+    "baseOperations": 100,
+    "baseOrderedDigest": "4e253744226912aab1c9411cb03e528f8fbdaa10984aa5933a88ff380601293a",
+    "additionalMigration": "supabase/migrations/20261122060000_owned_analysis_cancellation.sql",
+    "additionalMigrationSha256": "1f9f16526dfc2cec1accaeb335dcf14f8a5fb150dda717ee1d8e12e2873fbd8e",
+    "exitCode": 0,
+    "cases": {
+      "previousRoutineCancelledAfterMembershipRevocation": true,
+      "ownedCancellationAndReplay": true,
+      "roleGrants": true,
+      "foreignOwnerDenied": true,
+      "revokedMembershipDenied": true,
+      "deletedSourceDenied": true,
+      "liveLeasePreserved": true,
+      "deletionLockContentionRetried": true,
+      "committedDeletionDenied": true
+    }
+  },
+  "browser": {
+    "engine": "Chromium",
+    "app": "Built SSR on loopback",
+    "backend": "Simulated Supabase Auth and Data API",
+    "scriptSha256": "dde57eb956d9c52e52e5f0cf9d378d3db8db991905e7f1cadcbe1059d84d42d5",
+    "reportSha256": "76b525320df867ad77025a1d01a583e30e29ab9e1bfcdbf8806dac2845c9463b",
+    "result": {
+      "ownedCancel": 200,
+      "started": 409,
+      "revoked": 404,
+      "staleControlsRemoved": true,
+      "privateDenialHeaders": true,
+      "ownedRpcCalls": 3,
+      "externalRequests": 0
+    }
+  },
+  "managedMigrationApplied": false,
+  "remaining": [
+    "Review and admit the additional migration for an isolated managed target",
+    "Verify cancellation in the managed browser and leased worker journey"
+  ]
+}

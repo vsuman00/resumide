@@ -1,0 +1,100 @@
+{
+  "status": "PASS_ROOT_RECONCILED_SOURCE_ONLY_CURRENT_CANDIDATE",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "firstReceipt": "owned-ai-disposition-integrated-c2395b02-d133-4f77-8d41-24285aebcd76.json",
+  "followupReceipt": "owned-ai-disposition-followup-709c8188-ae86-4bec-b7b4-08ef20054f53.json",
+  "verifiedCurrentUniqueTests": 5332,
+  "verifiedCurrentUniqueTestFiles": 269,
+  "carriedUnchangedTests": 5048,
+  "carriedUnchangedFiles": 255,
+  "freshFollowupTests": 284,
+  "freshFollowupFiles": 14,
+  "firstFailedCases": 120,
+  "currentFailures": 0,
+  "currentSkipped": 0,
+  "originalCasesPreserved": true,
+  "reviewedCaseRenames": {
+    "authorizes canonical in two query waves without a separate parent request": "starts canonical authority during the source-read wave without a separate parent request",
+    "authorizes requirements in two query waves without a separate parent request": "starts requirements authority during the source-read wave without a separate parent request",
+    "handles a rejected speculative data_requests read without replacing a foreign-source failure": "handles a rejected speculative read_candidate_privacy_access read without replacing a foreign-source failure"
+  },
+  "caseRenameReason": "Actual authority RPC replaces status-only REST. Inspected original overlap, failure/source precedence, no extra parent/history reads and no-write assertions remain.",
+  "productionChangesAfterFirstBulk": [],
+  "amendedTestFiles": [
+    "tests/components/CanonicalEntryRegroupReview.test.tsx",
+    "tests/components/Privacy.test.tsx",
+    "tests/unit/canonical-correction-repository.test.ts",
+    "tests/unit/canonical-rewrite-score.test.ts",
+    "tests/unit/job-requirement-admission-repository.test.ts",
+    "tests/unit/legacy-scoring-input-sql.test.ts",
+    "tests/unit/owned-ai-usage-sql.test.ts",
+    "tests/unit/privacy.test.ts",
+    "tests/unit/repository-read-scheduling.test.ts",
+    "tests/unit/typed-authoring-declaration-score.test.ts",
+    "tests/unit/typed-authoring-http-route.test.ts",
+    "tests/unit/typed-authoring-score-route.test.ts",
+    "tests/unit/typed-score-repository.test.ts"
+  ],
+  "sourceInputsFirst": 917,
+  "sourceInputsFollowup": 929,
+  "allocatedFilesBound": 46,
+  "rootGroupsAbsent": [
+    20918,
+    24601,
+    24628,
+    24692,
+    24720,
+    24741,
+    24785
+  ],
+  "fullStaticAndBuildCommands": [
+    {
+      "label": "typecheck",
+      "command": "/opt/homebrew/bin/npm",
+      "args": [
+        "run",
+        "typecheck"
+      ]
+    },
+    {
+      "label": "lint",
+      "command": "/opt/homebrew/bin/npm",
+      "args": [
+        "run",
+        "lint"
+      ]
+    },
+    {
+      "label": "build",
+      "command": "/opt/homebrew/bin/npm",
+      "args": [
+        "run",
+        "build"
+      ]
+    },
+    {
+      "label": "build:worker",
+      "command": "/opt/homebrew/bin/npm",
+      "args": [
+        "run",
+        "build:worker"
+      ]
+    }
+  ],
+  "artifacts": {
+    "build/server/index.js": {
+      "bytes": 853,
+      "sha256": "040aee1ecbcec0d9d152f0251ac84d130c36f30067056494aaad06e621df5dbf"
+    },
+    "build/worker/analysis.mjs": {
+      "bytes": 326735,
+      "sha256": "bd734c4a27b876d4678c4ea354174d7a27d9e744e1febe192a4df3bb146e6efe"
+    }
+  },
+  "sqlParsing": "NOT_RUN",
+  "sqlExecution": "NOT_RUN",
+  "browser": "NOT_RUN",
+  "servicesProvidersDocker": "NOT_RUN",
+  "activation": false,
+  "remaining": "Full30day expiry/purge, source registration, foreign-actor/Auth/org/export artifact/restore closure, inheritedR17 storage coverage, Native/actual/representative/release acceptance."
+}

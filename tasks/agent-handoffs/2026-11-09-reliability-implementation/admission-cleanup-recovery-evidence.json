@@ -1,0 +1,56 @@
+{
+  "task": "CR-R17-S04",
+  "checkedDate": "2026-11-21",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "checkout": "dirty integration worktree",
+  "evidenceTier": "LOCAL_PRIVACY_WORKER_SDK_AND_NATIVE_PG17",
+  "sourceSha256": {
+    "app/lib/server/privacy-worker.ts": "c3d83eb37497b64ea91d748022b154b6c7b7739b7fff64c7bbf8b19db752fb09",
+    "app/lib/server/storage.ts": "d8c4536ea18f7cf8a7b004c1b34c1dfa7f7f192180a46660f39a8d7d9336da67",
+    "tests/unit/privacy-claim-fence.test.ts": "51403d1ed1e64f650dc568cc67f0f817c02721a257b09724e7386be6d06699a3",
+    "supabase/migrations/20261121203700_analysis_admission_cleanup_recovery.sql": "5df9e7ed5ad8d538e5d1695c726d72efaedb69b17423d0f4136069ec4751282d",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-cleanup-recovery-native-fixture.py.txt": "646c561c65735786eff003f9036388a0616ba2799e67e29de99cda9fa89ac7ec"
+  },
+  "before": {
+    "failed": 4,
+    "passed": 19,
+    "logSha256": "81f042169f99632bf9865fd73cf7f41519151418e5e6f1148f6a705b28f33e14"
+  },
+  "after": {
+    "focusedCases": 102,
+    "focusedFiles": 4,
+    "unit": [
+      {
+        "passed": 6781,
+        "files": 322,
+        "sha256": "d54ee0bc0ef110e1b98575c579111b7dd792819cd2ffcee80de69fe08c1c5c6f"
+      },
+      {
+        "passed": 3,
+        "files": 1,
+        "sha256": "65182d605b8665bae975ed4b4e9c4f514b47943f9c36d4a3c3d16c340cac9ac1"
+      }
+    ]
+  },
+  "statics": {
+    "commands": ["format:check", "typecheck", "lint", "build", "build:worker"],
+    "exitCode": 0,
+    "lintWarnings": 4,
+    "logSha256": "89ef09b79948ee5014813b39ac33948883b96761ea98590d4df28cf488782254"
+  },
+  "native": {
+    "result": "PASS: bounded exact recovery, expired and reclaimed attempts, idempotent receipt, seven excluded controls, and account hold.",
+    "eligible": 7,
+    "excludedControls": 7,
+    "limit": 4,
+    "catalogueReadiness": "fixture substitute",
+    "storageResponses": "synthetic SDK transport"
+  },
+  "migrationInventory": "managed-schema-inventory-85.json",
+  "notRun": [
+    "managed migration replay",
+    "live Storage cleanup",
+    "account-wide retirement",
+    "deployment"
+  ]
+}

@@ -1,0 +1,107 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/jd-clause-order-mutation-repository.test.ts (30 tests | 3 failed) 365ms
+   ✓ disabled feature does no read, proof, readiness or write work 57ms
+   ✓ releases actual owned proposals only after metadata and a matching final owned reread 42ms
+   ✓ returns null for real readiness refusal false without releasing proposals 10ms
+   ✓ returns null for real readiness refusal drift without releasing proposals 7ms
+   ✓ keeps explicitly selected historical pairs unavailable rather than forging their heads 6ms
+   ✓ returns null for unsupported/no-supported real producer context {"confirm":false} 4ms
+   ✓ returns null for unsupported/no-supported real producer context {"jdText":"Requirements\nPython required"} 5ms
+   ✓ returns null for unsupported/no-supported real producer context {"pageCount":null} 6ms
+   ✓ returns null for unsupported/no-supported real producer context {"header":"Candidate Name\nExperience\nSoftware Engineer at Orchard Labs"} 6ms
+   × preserves honest five-proposal bounded plan counts and truncation 53ms
+   ✓ withholds every proposal after a final head change 8ms
+   ✓ withholds every proposal after a final source change 6ms
+   ✓ withholds every proposal after a final pair change 7ms
+   ✓ withholds every proposal after a final privacy change 6ms
+   ✓ rejects missing pinned selection and cross-owner access 4ms
+   × dispatches exact ORIGINAL accept after later heads move through the supplied RPC 16ms
+   × dispatches exact ORIGINAL reject after later heads move through the supplied RPC 14ms
+   ✓ denies wrong request correlation before any RPC 7ms
+   ✓ denies wrong owner correlation before any RPC 7ms
+   ✓ denies wrong analysis correlation before any RPC 7ms
+   ✓ rejects rehashed forged support before readiness or dispatch 12ms
+   ✓ does not regenerate or retry an action after not-ready 11ms
+   ✓ does not regenerate or retry an action after rpc-error 10ms
+   ✓ does not regenerate or retry an action after throw 10ms
+   ✓ does not regenerate or retry an action after conflict 9ms
+   ✓ does not regenerate or retry an action after malformed 10ms
+   ✓ does not regenerate or retry an action after tampered 10ms
+   ✓ does not regenerate or retry an action after extra-conflict 10ms
+   ✓ bounds a hanging owned read to five seconds and aborts the SDK 4ms
+   ✓ caller cancellation prevents workspace publication and cancels underlying SDK 3ms
+ ✓ tests/unit/jd-clause-order-readiness.test.ts (23 tests) 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/jd-clause-order-mutation-repository.test.ts > preserves honest five-proposal bounded plan counts and truncation
+AssertionError: expected 13 to be 5 // Object.is equality
+
+- Expected
++ Received
+
+- 5
++ 13
+
+ ❯ tests/unit/jd-clause-order-mutation-repository.test.ts:71:79
+     69|  const {f,selection}=await fixture({jdText:"Requirements\n"+Array(8).f…
+     70|  const result=await loadJdClauseOrderWorkspace(store.client,f.owned.an…
+     71|  expect(result?.proposals).toHaveLength(5);expect(result?.inspectedPai…
+       |                                                                               ^
+     72| });
+     73| it.each(["head","source","pair","privacy"])("withholds every proposal …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/unit/jd-clause-order-mutation-repository.test.ts > dispatches exact ORIGINAL accept after later heads move through the supplied RPC
+AssertionError: expected undefined to deeply equal { …(2) }
+
+- Expected:
+{
+  "canonicalVersionId": "7874662a-652d-4684-b713-fe0739e0fde6",
+  "requirementVersionId": "4d7563d7-5cda-45ea-a0d7-402e6e8f7562",
+}
+
++ Received:
+undefined
+
+ ❯ tests/unit/jd-clause-order-mutation-repository.test.ts:95:40
+     93|  const result=await applyJdClauseOrderAction(store.client,f.owned.anal…
+     94|  expect(result.action).toBe(operation);expect(store.calls.map(c=>c.nam…
+     95|  expect(store.calls[0].args.p_options).toEqual({canonicalVersionId:f.c…
+       |                                        ^
+     96|  expect(store.calls[2].args).toEqual({p_user_id:f.owned.ownerId,p_anal…
+     97| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/unit/jd-clause-order-mutation-repository.test.ts > dispatches exact ORIGINAL reject after later heads move through the supplied RPC
+AssertionError: expected undefined to deeply equal { …(2) }
+
+- Expected:
+{
+  "canonicalVersionId": "48d1cc91-119c-4dce-be3f-ae7dac67bcf2",
+  "requirementVersionId": "1b0a3de6-cbed-404c-99a9-55e33691571c",
+}
+
++ Received:
+undefined
+
+ ❯ tests/unit/jd-clause-order-mutation-repository.test.ts:95:40
+     93|  const result=await applyJdClauseOrderAction(store.client,f.owned.anal…
+     94|  expect(result.action).toBe(operation);expect(store.calls.map(c=>c.nam…
+     95|  expect(store.calls[0].args.p_options).toEqual({canonicalVersionId:f.c…
+       |                                        ^
+     96|  expect(store.calls[2].args).toEqual({p_user_id:f.owned.ownerId,p_anal…
+     97| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  3 failed | 50 passed (53)
+   Start at  04:46:42
+   Duration  1.05s (transform 304ms, setup 0ms, import 535ms, tests 374ms, environment 0ms)
+

@@ -1,0 +1,138 @@
+{
+  "id": "CR-A05-S07",
+  "status": "VERIFIED_DEVELOPMENT_CODEPOINT_SUBSTITUTION_ONLY",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "dirty integrated worktree, original synthetic development only",
+  "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+  "source": {
+    "id": "print-reliability-dev-copper-workplace-clean-v1",
+    "sourceSha256": "2d9f6735c05e66bf569fcb916668c817d66f12eb633c7ea4f27c90f556b161f1",
+    "family": "reliability-dev-copper-workplace",
+    "segment": "clean",
+    "labelsSha256": "e2d828994a3760e9e4605102395f8d340359f521f04273c279d2d32726c340d5"
+  },
+  "probeSourceSha256": "4d0ed46576f0785952759d496ba11af72a30ace20be5e0d7c5ad5b486bd03a7b",
+  "candidateParserSources": [
+    {
+      "path": "app/lib/server/evidence-fields.ts",
+      "sha256": "b9635ccb12c641fd79d6ab95f04c87f09fadbf0c4678d5afc0f341af7b1c1d15"
+    },
+    {
+      "path": "app/lib/server/parsing/contact.ts",
+      "sha256": "41c7c81b820b64a1dde2fb59bceaa9b080e4399f2aa10f6a3179ee04fdccd34e"
+    },
+    {
+      "path": "app/lib/server/parsing/dates.ts",
+      "sha256": "eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72"
+    },
+    {
+      "path": "app/lib/server/parsing/sections.ts",
+      "sha256": "e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1"
+    }
+  ],
+  "modelRuns": {
+    "fast": {
+      "exitCode": 0,
+      "completedAt": "2026-11-21T22:56:05.977Z",
+      "reportSha256": "e20bffc8f2eab7202a62ddc3ee1ed8e86c33391edb90de4a7dcefdf7091ca2a1",
+      "preExecutionReceiptSha256": "230c7e29c3434a33dba482b741d47bb57bb2e1dd91bbf80ff5215f7b6f4cd499",
+      "config": {
+        "psm": 3,
+        "maxDpi": 150
+      },
+      "versions": {
+        "engine": "tesseract-5.3.0-2",
+        "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+        "languageData": "sha256:7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+      },
+      "probe": {
+        "status": "synthetic_line_codepoint_probe",
+        "page": 1,
+        "referenceLines": 12,
+        "observedLines": 12,
+        "substitutions": [
+          {
+            "line": 6,
+            "codePointOffset": 47,
+            "expected": "U+2013",
+            "observed": "U+002D"
+          }
+        ]
+      },
+      "transcription": {
+        "errors": 1,
+        "referenceCharacters": 391,
+        "characterErrorRate": 0.0025575447570332483,
+        "pageCoverage": 1,
+        "orderedLineAgreement": 0.9166666666666666,
+        "referenceLines": 12,
+        "exactPositionLines": 11,
+        "positionLineDenominator": 12,
+        "exactPositionLineAgreement": 0.9166666666666666
+      },
+      "fields": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "ungroundedPredictions": 0,
+        "precision": 1,
+        "recall": 1
+      }
+    },
+    "best": {
+      "exitCode": 0,
+      "completedAt": "2026-11-21T22:56:21.984Z",
+      "reportSha256": "47ac905e7f209c4c4acebe9e114537d393426a3ad5b236545d6ac5414f9a4e18",
+      "preExecutionReceiptSha256": "a907cb33f2acf08d6c771b71c47e49f1a65823379644c3924c81d47a68c7823b",
+      "config": {
+        "psm": 3,
+        "maxDpi": 150,
+        "model": "best"
+      },
+      "versions": {
+        "engine": "tesseract-5.3.0-2/lstm-best",
+        "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+        "languageData": "sha256:8280aed0782fe27257a68ea10fe7ef324ca0f8d85bd2fd145d1c2b560bcb66ba"
+      },
+      "probe": {
+        "status": "synthetic_line_codepoint_probe",
+        "page": 1,
+        "referenceLines": 12,
+        "observedLines": 12,
+        "substitutions": [
+          {
+            "line": 6,
+            "codePointOffset": 47,
+            "expected": "U+2013",
+            "observed": "U+002D"
+          }
+        ]
+      },
+      "transcription": {
+        "errors": 1,
+        "referenceCharacters": 391,
+        "characterErrorRate": 0.0025575447570332483,
+        "pageCoverage": 1,
+        "orderedLineAgreement": 0.9166666666666666,
+        "referenceLines": 12,
+        "exactPositionLines": 11,
+        "positionLineDenominator": 12,
+        "exactPositionLineAgreement": 0.9166666666666666
+      },
+      "fields": {
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "ungroundedPredictions": 0,
+        "precision": 1,
+        "recall": 1
+      }
+    }
+  },
+  "recognitionExecutions": 2,
+  "verifiedOwnedCleanup": true,
+  "productionChange": false,
+  "thresholdChange": false,
+  "calibrationExecuted": false,
+  "lockedRecognitionExecuted": false
+}

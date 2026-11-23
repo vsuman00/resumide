@@ -1,0 +1,102 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/owned-legacy-ai-usage-export.test.ts (62 tests | 2 failed) 67ms
+   × reads exact private-independent metadata and complete owner data once 6ms
+   ✓ accepts both real cause shapes, max counters and exact microseconds without due-row filtering 0ms
+   ✓ refuses malformed or denied current metadata 0 without data fallback 1ms
+   ✓ refuses malformed or denied current metadata 1 without data fallback 0ms
+   ✓ refuses malformed or denied current metadata 2 without data fallback 0ms
+   ✓ refuses malformed or denied current metadata 3 without data fallback 0ms
+   ✓ refuses malformed or denied current metadata 4 without data fallback 0ms
+   ✓ refuses malformed or denied current metadata 5 without data fallback 0ms
+   ✓ refuses malformed or denied current metadata 6 without data fallback 0ms
+   ✓ refuses malformed or denied current metadata 7 without data fallback 1ms
+   ✓ refuses malformed or denied current metadata 8 without data fallback 0ms
+   ✓ refuses malformed or denied current metadata 9 without data fallback 0ms
+   ✓ refuses malformed or denied current metadata 10 without data fallback 0ms
+   ✓ rejects missing record key runId 0ms
+   ✓ rejects missing record key ownerId 0ms
+   ✓ rejects missing record key organizationId 0ms
+   ✓ rejects missing record key analysisId 0ms
+   ✓ rejects missing record key resumeId 0ms
+   ✓ rejects missing record key resumeVersionId 0ms
+   ✓ rejects missing record key runCreatedAt 0ms
+   ✓ rejects missing record key originalMonth 0ms
+   ✓ rejects missing record key inputTokens 0ms
+   ✓ rejects missing record key outputTokens 0ms
+   ✓ rejects missing record key classification 0ms
+   ✓ rejects missing record key firstCause 0ms
+   ✓ rejects missing record key deletionRequestId 0ms
+   ✓ rejects missing record key retentionItemId 0ms
+   ✓ rejects missing record key preparedAt 0ms
+   ✓ rejects missing record key expiresAt 0ms
+   ✓ rejects missing record key effectiveExpiresAt 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 0 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 1 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 2 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 3 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 4 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 5 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 6 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 7 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 8 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 9 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 10 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 11 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 12 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 13 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 14 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 15 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 16 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 17 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 18 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 19 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 20 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 21 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 22 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 23 0ms
+   ✓ refuses invalid counter/month/cause/clock or row shape 24 0ms
+   ✓ refuses wrong owner/envelope/duplicates and whole-export limits without truncation 51ms
+   ✓ rejects bad owner/profile/deadline and pre-cancellation before RPC 1ms
+   ✓ sanitizes missing/denied/throwing read_owned_legacy_ai_usage_readiness replies 0ms
+   ✓ sanitizes missing/denied/throwing export_owned_legacy_ai_usage_records replies 0ms
+   ✓ bounds hung read_owned_legacy_ai_usage_readiness with abort and no late publication 1ms
+   ✓ bounds hung export_owned_legacy_ai_usage_records with abort and no late publication 0ms
+   × shares one elapsed deadline and observes cancellation even when the RPC ignores it 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/owned-legacy-ai-usage-export.test.ts > reads exact private-independent metadata and complete owner data once
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/unit/owned-legacy-ai-usage-export.test.ts:21:55
+     19|  const client=db(data);expect(await readOwnedLegacyAiUsageExport(clien…
+     20|  expect(client.rpc.mock.calls).toEqual([["read_owned_legacy_ai_usage_r…
+     21|  expect(client.signals.every(signal=>signal.aborted)).toBe(true);
+       |                                                       ^
+     22|  expect(validateOwnedLegacyAiUsageExport({...envelope(),records:[]},ow…
+     23| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/unit/owned-legacy-ai-usage-export.test.ts > shares one elapsed deadline and observes cancellation even when the RPC ignores it
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ tests/unit/owned-legacy-ai-usage-export.test.ts:71:293
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 60 passed (62)
+   Start at  22:57:57
+   Duration  194ms (transform 34ms, setup 0ms, import 70ms, tests 67ms, environment 0ms)
+
+JSON report written to /tmp/resumide-usage-retention-v8hkQM/tests.json

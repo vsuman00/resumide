@@ -146,6 +146,17 @@ textarea {
   outline-offset: 3px;
 }
 
+/* Native popup menus need their own opaque pair; transparent option backgrounds
+   can fall back to a light OS surface while inheriting dark-theme text. */
+select {
+  color-scheme: inherit;
+}
+select option,
+select optgroup {
+  color: var(--ink);
+  background-color: var(--surface-raised);
+}
+
 .skip-link {
   position: fixed;
   top: 12px;
@@ -3756,7 +3767,7 @@ form {
   }
 
   .latest-analysis-score > span {
-    color: var(--ink-faint);
+    color: var(--ink-muted);
     font-family: var(--font-data);
     font-size: 10px;
     font-weight: 600;
@@ -3835,7 +3846,7 @@ form {
     min-height: 24px;
     padding: 2px 8px;
     border-radius: 99px;
-    color: var(--warning);
+    color: var(--ink-strong);
     background: color-mix(in srgb, var(--warning) 13%, var(--surface));
     font-size: 12px;
     font-weight: 700;
@@ -3844,14 +3855,12 @@ form {
   }
 
   .history-status.is-completed {
-    color: var(--success);
     background: color-mix(in srgb, var(--success) 13%, var(--surface));
   }
 
   .history-status.is-failed,
   .history-status.is-rejected,
   .history-status.is-cancelled {
-    color: var(--danger);
     background: color-mix(in srgb, var(--danger) 12%, var(--surface));
   }
 
@@ -4147,12 +4156,12 @@ form {
   }
 
   .auth-form-panel h1 {
-    margin: -8px 0 0;
+    margin: 0;
   }
 
   .auth-form-intro,
   .auth-helper-copy,
-  .auth-success-state > p:not(.workspace-eyebrow) {
+  .auth-success-state > p {
     max-width: 42ch;
     margin: 0;
     color: var(--ink-muted);
@@ -4441,29 +4450,31 @@ form {
     line-height: 21px;
   }
 
-  .privacy-dialog-backdrop {
-    position: fixed;
-    z-index: 100;
-    inset: 0;
-    display: grid;
-    place-items: center;
-    padding: 24px;
+  .privacy-dialog::backdrop {
     background: rgb(var(--shadow-color) / 48%);
   }
 
   .privacy-dialog {
-    display: grid;
     gap: 16px;
-    width: min(100%, 480px);
+    inset: 0;
+    width: min(calc(100% - 48px), 480px);
+    max-height: calc(100dvh - 48px);
+    margin: auto;
     padding: 28px;
+    overflow: auto;
+    overscroll-behavior: contain;
     border: 1px solid var(--border-strong);
     border-radius: 12px;
     background: var(--surface-raised);
     box-shadow: 0 22px 54px rgb(var(--shadow-color) / 28%);
   }
 
+  .privacy-dialog[open] {
+    display: grid;
+  }
+
   .privacy-dialog h2 {
-    margin: -8px 0 0;
+    margin: 0;
     color: var(--ink-strong);
     font-family: var(--font-display);
     font-size: 26px;
@@ -4471,7 +4482,7 @@ form {
     line-height: 33px;
   }
 
-  .privacy-dialog > p:not(.workspace-eyebrow) {
+  .privacy-dialog > p {
     margin: 0;
     color: var(--ink-muted);
     font-size: 14px;
@@ -4495,7 +4506,7 @@ form {
     padding: 8px 12px;
     border: 1px solid var(--danger);
     border-radius: 8px;
-    color: white;
+    color: var(--surface-raised);
     background: var(--danger);
     cursor: pointer;
     font-size: 14px;
@@ -5997,12 +6008,10 @@ form {
     align-items: flex-start;
   }
 
-  .privacy-dialog-backdrop {
-    align-items: end;
-    padding: 16px;
-  }
-
   .privacy-dialog {
+    width: min(calc(100% - 32px), 480px);
+    max-height: calc(100dvh - 32px);
+    margin: auto auto 16px;
     padding: 24px;
   }
 
@@ -6246,7 +6255,11 @@ form {
 .result-report-link {
   display: inline-flex;
   width: fit-content;
+  height: 44px;
   min-height: 44px;
+  align-self: start;
+  justify-self: start;
+  white-space: nowrap;
   align-items: center;
   padding: 8px 12px;
   border: 1px solid var(--border-strong);
@@ -6307,6 +6320,37 @@ form {
 .account-card form {
   width: fit-content;
   gap: 0;
+}
+
+.canonical-correction-card {
+  grid-template-columns: minmax(0, 1fr);
+  overflow-wrap: anywhere;
+}
+
+.canonical-correction-card form {
+  width: 100%;
+  gap: 12px;
+}
+
+.canonical-correction-card select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+}
+
+.canonical-correction-acknowledgement {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.canonical-correction-acknowledgement input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 4px 0 0;
+  padding: 0;
 }
 
 @media (max-width: 640px) {
@@ -6581,3 +6625,44 @@ form {
 .upload-drop-scene {
   overflow: visible;
 }
+
+@media (min-width: 641px) and (max-width: 1023px) {
+  .public-nav,
+  .public-account-action {
+    display: none;
+  }
+  .public-mobile-menu {
+    display: block;
+  }
+}
+
+.result-score-value.is-uncalibrated,
+.result-category-value.is-uncalibrated {
+  color: var(--ink-strong);
+}
+.ats-score-status.is-uncalibrated,
+.result-category-band.is-uncalibrated,
+.detail-score-badge.is-uncalibrated {
+  color: var(--ink-muted);
+  border-color: var(--border);
+  background: var(--surface);
+}
+.rewrite-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.rewrite-empty-state > p:not(.workspace-eyebrow) {
+  max-width: 64ch;
+  color: var(--ink-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.rewrite-generator { padding: 24px; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-raised); }
+.rewrite-generator h2 { font-size: 24px; margin-bottom: 12px; }
+.rewrite-generator p { color: var(--ink-muted); line-height: 1.6; max-width: 70ch; }
+.rewrite-generator form { display: grid; gap: 16px; margin-block: 16px; }
+.rewrite-consent { display: flex; align-items: start; gap: 10px; font-size: 14px; line-height: 1.5; }
+.rewrite-consent input { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 2px; }
+.rewrite-generator [role="status"] { font-size: 14px; color: var(--evidence); }

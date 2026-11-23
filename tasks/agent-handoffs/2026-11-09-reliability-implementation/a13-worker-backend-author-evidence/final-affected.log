@@ -1,0 +1,53 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ✓ tests/unit/initial-feedback-service.test.ts (16 tests) 143ms
+ ❯ tests/unit/initial-feedback-stage.test.ts (13 tests | 1 failed) 127ms
+     ✓ publishes immutable original inputs before legacy reads and keeps the old transport isolated 72ms
+     ✓ replays an owned publication before consent, quota, rate, claim or SDK 16ms
+     ✓ fails pending safely on every queue replay without redispatch or completion 2ms
+     ✓ publishes AI-off deterministic output without fresh authorization or SDK 4ms
+     ✓ uses existing consent and never manufactures it 3ms
+     ✓ requires a real matching lease and respects cancellation before lookup 1ms
+     ✓ leaves the legacy branch selected when the flag is false 1ms
+     ✓ uses the bounded worker failure path for unresolved accounting and never redispatches 8ms
+     ✓ never dispatches when the once-only claim loses 2ms
+     ✓ uses the exact budget-on selected policy and both accounting paths 10ms
+     ✓ refuses an unselected Native policy before consent, quota or provider with no budget-off fallback 1ms
+     ✓ rejects malformed selected dependencies before scope lookup 1ms
+     × cancels the installed SDK attempt and retains unknown spend without legacy publication or redispatch 4ms
+ ✓ tests/unit/analysis-worker-fence.test.ts (13 tests) 48ms
+ ✓ tests/unit/writer-worker-transport.test.ts (1 test) 20ms
+ ✓ tests/unit/qualitative-stage.test.ts (10 tests) 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > cancels the installed SDK attempt and retains unknown spend without legacy publication or redispatch
+AssertionError: expected AnalysisStageFenceError: Analysis stage c… { code: '…' } to match object { code: 'cancelled' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "code": "cancelled",
++ AnalysisStageFenceError {
++   "code": "ANALYSIS_CANCELLED",
+  }
+
+ ❯ tests/unit/initial-feedback-stage.test.ts:897:25
+    895|     await fetched;
+    896|     controller.abort();
+    897|     await expect(running).rejects.toMatchObject({ code: "cancelled" });
+       |                         ^
+    898|     expect(h.op.attempts[0]).toMatchObject({
+    899|       state: "held_unknown",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 52 passed (53)
+   Start at  12:13:03
+   Duration  1.19s (transform 218ms, setup 0ms, import 567ms, tests 346ms, environment 0ms)
+

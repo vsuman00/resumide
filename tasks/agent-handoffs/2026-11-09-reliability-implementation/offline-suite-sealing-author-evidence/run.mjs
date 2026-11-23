@@ -1,0 +1,27 @@
+import {readFileSync,writeFileSync,openSync,closeSync,statSync} from 'node:fs';
+import {dirname,join} from 'node:path';
+import {createHash} from 'node:crypto';
+import {runCommand} from '/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/scripts/verify-private-aa7.mjs';
+import {sourceHashes} from './source-hashes.mjs';
+const root='/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats';
+const dir=dirname(new URL(import.meta.url).pathname),label=process.argv[2];
+if(!/^[a-z0-9-]+$/.test(label))throw Error('INVALID_RECEIPT_LABEL');
+process.umask(0o077);if(process.version!=='v22.23.4')throw Error('WRONG_NODE_VERSION');
+const env={HOME:"/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-offline-suite-seal-zjgqr5dy/home",PATH:dirname(process.execPath)+':/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin',LANG:'en_US.UTF-8',TZ:'Asia/Kolkata',RESUMIDE_PRIVATE_VERIFY:'aa7-owned-synthetic',AI_ENABLED:'false',OPENAI_API_KEY:'offline-no-live-key',OPENAI_BASE_URL:'https://api.openai.com/v1',SUPABASE_URL:'https://fixture.supabase.co',SUPABASE_PUBLISHABLE_KEY:'offline-publishable',SUPABASE_SECRET_KEY:'offline-secret',SUPABASE_RESUME_BUCKET:'resumes',APP_ORIGIN:'http://127.0.0.1:3110',NO_COLOR:'1'};
+const before=sourceHashes(root,env),log=join(dir,label+'.log'),receiptPath=join(dir,label+'.json');
+const fd=openSync(log,'wx',0o600);
+const command=JSON.parse(readFileSync(join(dir,'commands.json'),'utf8'))[label];if(!command)throw Error('UNKNOWN_COMMAND');const args=command.args;
+const receipt={status:'RUNNING',node:process.version,args,sourceHashes:before,sourceInputs:Object.keys(before).length,startedAt:new Date().toISOString(),environment:'SEALED_NO_DOTENV_NO_LIVE_CREDENTIALS',providerRequests:0,databaseOperations:0,dockerOperations:0,compilerRuns:0,log:log};
+const save=()=>writeFileSync(receiptPath,JSON.stringify(receipt,null,2)+'\n',{mode:0o600});save();
+let timedOut=false,overLimit=false,lastResort;
+function stop(reason){if(receipt.stopReason)return;receipt.stopReason=reason;save();process.kill(process.pid,'SIGTERM');lastResort=setTimeout(()=>{receipt.status='UNKNOWN';save();process.exit(1);},10000);}
+const deadline=setTimeout(()=>{timedOut=true;stop('DEADLINE');},60000);
+const watcher=setInterval(()=>{if(statSync(log).size>8*1024*1024){overLimit=true;stop('LOG_CAP');}},200);
+const result=await runCommand(process.execPath,args,{cwd:root,env,logFd:fd,onStart:identity=>{receipt.process=identity;save();}});
+clearTimeout(deadline);clearTimeout(lastResort);clearInterval(watcher);closeSync(fd);
+const after=sourceHashes(root,env),bytes=readFileSync(log);
+receipt.changedSourceInputs=[...new Set([...Object.keys(before),...Object.keys(after)])].filter(k=>before[k]!==after[k]);
+Object.assign(receipt,{finishedAt:new Date().toISOString(),timedOut,overLimit,result,logSha256:createHash('sha256').update(bytes).digest('hex')});
+receipt.status=result.code===command.expectedExit&&result.groupCleanupConfirmed&&!timedOut&&!overLimit&&(command.allowedChanges ? receipt.changedSourceInputs.every(x=>command.allowedChanges.includes(x)) : !receipt.changedSourceInputs.length)?(command.expectedExit===0?'PASS':'EXPECTED_RED'):'FAILED_OR_INCOMPLETE';save();
+process.stdout.write(bytes.toString('utf8').slice(-9000));process.stdout.write(JSON.stringify({receipt:receiptPath,status:receipt.status,sourceInputs:receipt.sourceInputs,changedSourceInputs:receipt.changedSourceInputs,process:receipt.process,result})+'\n');
+process.exit(['PASS','EXPECTED_RED'].includes(receipt.status)?0:1);

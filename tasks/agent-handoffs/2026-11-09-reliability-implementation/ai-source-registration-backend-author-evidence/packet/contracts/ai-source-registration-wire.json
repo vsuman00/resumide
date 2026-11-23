@@ -1,0 +1,58 @@
+{
+  "status": "FROZEN",
+  "schemaVersion": "ai-source-registration-wire/1",
+  "profile": {
+    "schemaVersion": "ai-budget-source-readiness/1.0.0",
+    "profileVersion": "ai-budget-source-profile/1.0.0",
+    "pins": [
+      "checkerSha256",
+      "reserveSha256",
+      "exportSha256",
+      "metadataSha256"
+    ]
+  },
+  "metadataRpc": "read_ai_budget_source_readiness",
+  "metadataExactKeys": [
+    "schemaVersion",
+    "profileVersion",
+    "checkerSha256",
+    "reserveSha256",
+    "exportSha256",
+    "metadataSha256",
+    "schemaReady",
+    "reserveExecutable",
+    "exportExecutable"
+  ],
+  "capabilities": "schemaReady and requested capability must be literal true; reserve/export independent; no fallback; data EXECUTE denied initially",
+  "exportRpc": "export_owned_ai_budget_sources",
+  "exportArguments": [
+    "p_user_id"
+  ],
+  "exportExactKeys": [
+    "schemaVersion",
+    "ownerId",
+    "sources"
+  ],
+  "exportSchemaVersion": "owned-ai-budget-sources/1.0.0",
+  "sourceExactKeys": [
+    "operationId",
+    "ownerId",
+    "organizationId",
+    "kind",
+    "analysisId",
+    "resumeId",
+    "resumeVersionId",
+    "requestNonce",
+    "bindingSha256",
+    "registeredAt"
+  ],
+  "sourceKind": "legacy_rewrite",
+  "timestamp": "canonical UTC with six fractional digits",
+  "uuid": "canonical lowercase",
+  "nonce": "exact printable ASCII 1..128; no trim",
+  "limits": {
+    "maxRows": 4096,
+    "maxUtf8Bytes": 33554432
+  },
+  "coverage": "full owner set across orgs, fail unavailable if cap exceeded; no pagination or silent omission. Each row operation ID recomputable from frozen OP2 tuple. Immutable personal relation, no cascading FK deletion. Existing immutable first retirement/account disposition clock applies; never registeredAt as deadline."
+}

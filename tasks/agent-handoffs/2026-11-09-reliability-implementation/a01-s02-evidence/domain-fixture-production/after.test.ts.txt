@@ -1,0 +1,966 @@
+import { describe, expect, it } from "vitest";
+import { buildNativeEvidence } from "../../app/lib/server/native-evidence";
+import { reconcileDocumentEvidence } from "../../app/lib/server/document-evidence";
+import { deriveEvidenceReviewTargets } from "../../app/lib/server/evidence-targets";
+import { deriveNativePageDiagnostics } from "../../app/lib/server/ocr/pdf-detection";
+import {
+  importCanonicalEvidence,
+  reviseCanonical,
+} from "../../app/lib/server/canonical-content";
+import { CanonicalResumeDraftSchema } from "../../app/lib/server/canonical-resume-schema";
+import {
+  CANONICAL_CORRECTION_PROJECTION_VERSION,
+  projectCanonicalCorrections,
+  projectCanonicalCorrectionSourceChoices,
+  type CanonicalCorrectionProjectionInput,
+} from "../../app/lib/server/canonical-corrections";
+
+type Review = CanonicalCorrectionProjectionInput["review"];
+type Event = Review["corrections"][number];
+const id = (n: number) =>
+  `10000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+function fixture(
+  text = "Employer: Synthetic Labs",
+  initialImport = false,
+): CanonicalCorrectionProjectionInput {
+  const evidence = reconcileDocumentEvidence(
+    {
+      id: id(1),
+      ownerId: id(2),
+      analysisId: id(3),
+      sourceId: id(4),
+      inputSha256: "a".repeat(64),
+      createdAt: "2026-10-11T00:00:00.000Z",
+      retentionPolicyId: "synthetic/1.0.0",
+    },
+    buildNativeEvidence([text]),
+  );
+  const source = {
+    ownerId: id(2),
+    analysisId: id(3),
+    sourceId: id(4),
+    inputSha256: "a".repeat(64),
+    attemptId: id(1),
+  };
+  const targets = deriveEvidenceReviewTargets(evidence, source);
+  const canonical = initialImport
+    ? null
+    : importCanonicalEvidence(evidence, {
+        resumeId: id(5),
+        organizationId: id(6),
+        ownerId: id(2),
+      });
+  const review: Review = {
+    analysisId: id(3),
+    attemptId: id(1),
+    attemptNumber: 1,
+    evidence,
+    corrections: [],
+    revision: 0,
+    scoringEligible: false,
+    nativePageDiagnostics: deriveNativePageDiagnostics(evidence.nativeSource),
+    targets,
+  };
+  return {
+    review,
+    ownedContext: { ...source, resumeId: id(5), organizationId: id(6) },
+    expectedBinding: {
+      ...targets.binding,
+      resumeId: id(5),
+      organizationId: id(6),
+      targetModelVersion: targets.modelVersion,
+      projectionModelVersion: CANONICAL_CORRECTION_PROJECTION_VERSION,
+      reviewRevision: 0,
+      canonicalHeadId: canonical?.versionId ?? null,
+    },
+    canonicalSnapshot: canonical
+      ? {
+          sourceId: id(4),
+          headId: canonical.versionId,
+          current: canonical,
+          ancestors: [],
+        }
+      : null,
+    selections: [],
+  };
+}
+function event(overrides: Partial<Event> = {}): Event {
+  return {
+    id: id(20),
+    attempt_id: id(1),
+    analysis_id: id(3),
+    owner_id: id(2),
+    actor_id: id(2),
+    revision: 1,
+    expected_revision: 0,
+    field: "employer",
+    operation: "correct",
+    value: "Candidate supplied employer",
+    candidate_id: null,
+    created_at: "2026-10-11T00:00:00.000Z",
+    ...overrides,
+  };
+}
+function history(input: CanonicalCorrectionProjectionInput, events: Event[]) {
+  input.review.corrections = events;
+  input.review.revision = events.length;
+  input.expectedBinding.reviewRevision = events.length;
+  return input;
+}
+function attest(input: CanonicalCorrectionProjectionInput) {
+  input.review.historyAttestation = {
+    schemaVersion: "evidence-review-history/1.0.0",
+    state: "complete_captured_prefix",
+    binding: {
+      ...input.review.targets.binding,
+      targetModelVersion: input.review.targets.modelVersion,
+    },
+    highWaterRevision: input.review.revision,
+    highWaterEventId: input.review.corrections.at(-1)?.id ?? null,
+    receivedCount: input.review.corrections.length,
+    pageCount: Math.ceil(input.review.corrections.length / 100),
+  };
+  return input;
+}
+function sourceTarget(
+  input: CanonicalCorrectionProjectionInput,
+  value: string,
+) {
+  return input.review.targets.observations.find((item) => item.value === value)!
+    .targetId;
+}
+function setCurrent(
+  input: CanonicalCorrectionProjectionInput,
+  current: NonNullable<typeof input.canonicalSnapshot>["current"],
+  ancestors: NonNullable<typeof input.canonicalSnapshot>["ancestors"],
+) {
+  input.canonicalSnapshot = {
+    sourceId: id(4),
+    headId: current.versionId,
+    current,
+    ancestors,
+  };
+  input.expectedBinding.canonicalHeadId = current.versionId;
+}
+function freeze(value: unknown) {
+  if (value && typeof value === "object" && !Object.isFrozen(value)) {
+    Object.values(value).forEach(freeze);
+    Object.freeze(value);
+  }
+}
+
+describe("read-only candidate correction projection", () => {
+  it.each([0, 1, 2])(
+    "reports completeness only for a matching versioned captured prefix of %i events",
+    (count) => {
+      const input = fixture();
+      history(
+        input,
+        Array.from({ length: count }, (_, index) =>
+          event({
+            id: id(20 + index),
+            revision: index + 1,
+            expected_revision: index,
+          }),
+        ),
+      );
+      attest(input);
+      const result = projectCanonicalCorrections(input);
+      expect(result.modelVersion).toBe("canonical-corrections/1.0.1");
+      expect(result.historyCompleteness).toBe("complete_captured_prefix");
+      expect(result.historyAttestation).toEqual(
+        input.review.historyAttestation,
+      );
+      expect(result.latestScope).toBe("captured_contiguous_prefix_per_target");
+      expect(result.authority).toBe("review_projection_only");
+      expect(result.materialized).toBe(false);
+      expect(
+        result.items.every(
+          (item) => item.canonicalConfirmationGranted === false,
+        ),
+      ).toBe(true);
+    },
+  );
+  it.each([
+    "schema",
+    "state",
+    "owner",
+    "analysis",
+    "source",
+    "hash",
+    "attempt",
+    "target_model",
+    "extractor",
+    "head_revision",
+    "head_id",
+    "count",
+    "pages",
+    "extra",
+    "null",
+  ])("rejects an invalid supplied completeness attestation: %s", (mutation) => {
+    const input = attest(history(fixture(), [event()]));
+    const proof = input.review.historyAttestation!;
+    if (mutation === "schema")
+      Object.assign(proof, { schemaVersion: "unreviewed-history/9" });
+    if (mutation === "state") Object.assign(proof, { state: "partial" });
+    if (mutation === "owner") proof.binding.ownerId = id(99);
+    if (mutation === "analysis") proof.binding.analysisId = id(99);
+    if (mutation === "source") proof.binding.sourceId = id(99);
+    if (mutation === "hash") proof.binding.inputSha256 = "b".repeat(64);
+    if (mutation === "attempt") proof.binding.attemptId = id(99);
+    if (mutation === "target_model")
+      Object.assign(proof.binding, {
+        targetModelVersion: "unreviewed-target/9",
+      });
+    if (mutation === "extractor") proof.binding.fieldExtractorVersion = null;
+    if (mutation === "head_revision") proof.highWaterRevision = 2;
+    if (mutation === "head_id") proof.highWaterEventId = id(99);
+    if (mutation === "count") proof.receivedCount = 0;
+    if (mutation === "pages") proof.pageCount = 0;
+    if (mutation === "extra") Object.assign(proof, { writeAuthority: true });
+    if (mutation === "null")
+      Object.assign(input.review, { historyAttestation: null });
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_HISTORY_ATTESTATION_INVALID",
+    );
+  });
+  it("does not accept a dropped contiguous suffix with the old attestation", () => {
+    const input = attest(
+      history(fixture(), [
+        event(),
+        event({ id: id(21), revision: 2, expected_revision: 1 }),
+      ]),
+    );
+    history(input, [input.review.corrections[0]]);
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_HISTORY_ATTESTATION_INVALID",
+    );
+  });
+  it("retains legacy preview support without inferring completeness and rejects an expected old model version", () => {
+    const input = history(fixture(), [event()]);
+    const result = projectCanonicalCorrections(input);
+    expect(result.historyCompleteness).toBe("not_attested_by_read_model");
+    expect(result.historyAttestation).toBeNull();
+    expect(result.latestScope).toBe("supplied_contiguous_history_per_target");
+    Object.assign(input.expectedBinding, {
+      projectionModelVersion: "canonical-corrections/1.0.0",
+    });
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_PROJECTION_BINDING_MISMATCH",
+    );
+  });
+  it("maps a unique source target with separate unconfirmed event provenance and no citation inheritance", () => {
+    const input = history(fixture(), [event()]);
+    const before = JSON.stringify(input);
+    freeze(input);
+    const projection = projectCanonicalCorrections(input);
+    expect(projection).toMatchObject({
+      authority: "review_projection_only",
+      materialized: false,
+      scoringEligible: false,
+    });
+    expect(projection.binding).toEqual(input.expectedBinding);
+    expect(projection.historyCompleteness).toBe("not_attested_by_read_model");
+    expect(projection.latestScope).toBe(
+      "supplied_contiguous_history_per_target",
+    );
+    const item = projection.items[0];
+    expect(item.state).toBe("mapped");
+    expect(item.currentValue).toBe("Synthetic Labs");
+    expect(item.proposedFact).toMatchObject({
+      value: event().value,
+      state: "unconfirmed",
+      confirmation: null,
+      sources: [],
+      provenance: {
+        kind: "candidate_authored_evidence_correction",
+        eventId: id(20),
+        actorId: id(2),
+        revision: 1,
+        attemptId: id(1),
+        targetId: sourceTarget(input, "Synthetic Labs"),
+      },
+    });
+    expect(item.originalCitations.length).toBeGreaterThan(0);
+    expect(item.canonicalTarget?.factId).toBe(
+      input.canonicalSnapshot!.current.facts.find(
+        (fact) => fact.type === "employer",
+      )!.id,
+    );
+    expect(item.requiresExplicitReview).toBe(true);
+    expect(item.canonicalConfirmationGranted).toBe(false);
+    expect(JSON.stringify(input)).toBe(before);
+  });
+  it("can preview an initial import without claiming a canonical version was materialized", () => {
+    const input = history(fixture("Employer: Synthetic Labs", true), [event()]);
+    const item = projectCanonicalCorrections(input).items[0];
+    expect(item.state).toBe("mapped");
+    expect(item.canonicalResolution).toMatchObject({ state: "initial_import" });
+    expect(item.canonicalTarget).toBeNull();
+    expect(item.proposedFact?.state).toBe("unconfirmed");
+  });
+  it("keeps an exact evidence-candidate confirmation separate from canonical confirmation", () => {
+    const input = fixture();
+    const assertion = input.review.evidence.assertions.find(
+      (item) => item.field === "employer",
+    )!;
+    history(input, [
+      event({
+        operation: "confirm",
+        candidate_id: assertion.id,
+        value: assertion.value,
+      }),
+    ]);
+    const item = projectCanonicalCorrections(input).items[0];
+    expect(item.effect).toBe("evidence_review_only");
+    expect(item.proposedFact).toBeNull();
+    expect(item.canonicalConfirmationGranted).toBe(false);
+    expect(
+      input.canonicalSnapshot!.current.facts.every(
+        (fact) => fact.state === "unconfirmed",
+      ),
+    ).toBe(true);
+  });
+  it.each([
+    { candidate_id: "unknown" },
+    { value: "Altered candidate value" },
+    { field: "role" as const },
+  ])("rejects a forged active candidate confirmation: %j", (change) => {
+    const input = fixture();
+    const assertion = input.review.evidence.assertions[0];
+    history(input, [
+      event({
+        operation: "confirm",
+        candidate_id: assertion.id,
+        value: assertion.value,
+        ...change,
+      }),
+    ]);
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_EVENT_INVALID",
+    );
+  });
+  it("requires a choice among employers even when a correction value equals one source value", () => {
+    const input = history(
+      fixture("Employer: Northwind Labs\nEmployer: Cedar Labs"),
+      [event({ value: "Cedar Labs" })],
+    );
+    const item = projectCanonicalCorrections(input).items[0];
+    expect(item.state).toBe("ambiguous");
+    expect(item.sourceChoices).toHaveLength(2);
+    expect(item.sourceTargetId).toBeNull();
+    expect(item.canonicalTarget).toBeNull();
+    expect(item.proposedFact?.sources).toEqual([]);
+    input.selections = [
+      {
+        eventId: id(20),
+        sourceTargetId: sourceTarget(input, "Northwind Labs"),
+      },
+    ];
+    const selected = projectCanonicalCorrections(input).items[0];
+    expect(selected.state).toBe("mapped");
+    expect(selected.currentValue).toBe("Northwind Labs");
+  });
+  it("requires reviewed addition for an unobserved optional certification", () => {
+    const input = history(fixture(), [
+      event({
+        field: "certification",
+        value: "Candidate supplied certificate",
+      }),
+    ]);
+    const item = projectCanonicalCorrections(input).items[0];
+    expect(item.state).toBe("requires_add");
+    expect(item.sourceChoices).toEqual([]);
+    expect(item.proposedFact?.provenance.targetId).toBeNull();
+    expect(item.originalCitations).toEqual([]);
+  });
+  it("retains inactive-attempt events as stale history without current-source provenance or choices", () => {
+    const input = history(fixture(), [event({ attempt_id: id(80) })]);
+    const item = projectCanonicalCorrections(input).items[0];
+    expect(item.state).toBe("stale");
+    expect(item.event.attempt_id).toBe(id(80));
+    expect(item.sourceChoices).toEqual([]);
+    expect(item.proposedFact).toBeNull();
+  });
+  it("selects the latest event per assigned target rather than globally per field", () => {
+    const input = history(
+      fixture("Employer: Northwind Labs\nEmployer: Cedar Labs"),
+      [
+        event(),
+        event({
+          id: id(21),
+          revision: 2,
+          expected_revision: 1,
+          value: "Second candidate employer",
+        }),
+      ],
+    );
+    input.selections = [
+      {
+        eventId: id(20),
+        sourceTargetId: sourceTarget(input, "Northwind Labs"),
+      },
+      { eventId: id(21), sourceTargetId: sourceTarget(input, "Cedar Labs") },
+    ];
+    expect(
+      projectCanonicalCorrections(input).items.map((item) => item.state),
+    ).toEqual(["mapped", "mapped"]);
+    input.selections[1].sourceTargetId = input.selections[0].sourceTargetId;
+    expect(
+      projectCanonicalCorrections(input).items.map((item) => item.state),
+    ).toEqual(["superseded", "mapped"]);
+  });
+  it("keeps newer unresolved ambiguity visible and blocks an older potentially affected event", () => {
+    const input = history(
+      fixture("Employer: Northwind Labs\nEmployer: Cedar Labs"),
+      [
+        event(),
+        event({
+          id: id(21),
+          revision: 2,
+          expected_revision: 1,
+          value: "Latest unassigned employer",
+        }),
+      ],
+    );
+    input.selections = [
+      {
+        eventId: id(20),
+        sourceTargetId: sourceTarget(input, "Northwind Labs"),
+      },
+    ];
+    const items = projectCanonicalCorrections(input).items;
+    expect(items.map((item) => item.state)).toEqual([
+      "blocked_by_newer_ambiguity",
+      "ambiguous",
+    ]);
+    expect(items[0].blockedByEventIds).toEqual([id(21)]);
+    expect(items[1].event.value).toBe("Latest unassigned employer");
+    input.selections!.push({
+      eventId: id(21),
+      sourceTargetId: sourceTarget(input, "Cedar Labs"),
+    });
+    expect(
+      projectCanonicalCorrections(input).items.map((item) => item.state),
+    ).toEqual(["mapped", "mapped"]);
+  });
+  it("does not map a manual edit without the needed owned origin chain, even when text happens to match", () => {
+    const input = history(fixture(), [event()]);
+    const original = input.canonicalSnapshot!.current;
+    const fact = original.facts.find((item) => item.type === "employer")!;
+    const edited = reviseCanonical(original, {
+      operation: "edit",
+      factId: fact.id,
+      value: "Synthetic Labs",
+    });
+    setCurrent(input, edited, []);
+    const item = projectCanonicalCorrections(input).items[0];
+    expect(item.state).toBe("unmapped");
+    expect(item.canonicalTarget).toBeNull();
+    expect(item.canonicalResolution.reason).toBe(
+      "canonical_lineage_incomplete",
+    );
+    expect(item.canonicalChoices).toEqual([]);
+  });
+  it("maps exact citations on the current owned head without requiring unrelated earlier history", () => {
+    const input = history(fixture(), [event()]);
+    const original = input.canonicalSnapshot!.current;
+    const fact = original.facts.find((item) => item.type === "employer")!;
+    const confirmed = reviseCanonical(original, {
+      operation: "confirm",
+      factId: fact.id,
+    });
+    setCurrent(input, confirmed, []);
+    expect(projectCanonicalCorrections(input).items[0]).toMatchObject({
+      state: "mapped",
+      canonicalTarget: { mappedThrough: "current_citations", factId: fact.id },
+    });
+  });
+  it("recovers an edited fact through the gapless owned origin prefix without requiring older roots", () => {
+    const input = history(fixture(), [event()]);
+    const original = input.canonicalSnapshot!.current;
+    const fact = original.facts.find((item) => item.type === "employer")!;
+    const origin = reviseCanonical(original, {
+      operation: "confirm",
+      factId: fact.id,
+    });
+    const edited = reviseCanonical(origin, {
+      operation: "edit",
+      factId: fact.id,
+      value: "Candidate manual value",
+    });
+    setCurrent(input, edited, [origin]);
+    expect(projectCanonicalCorrections(input).items[0]).toMatchObject({
+      state: "mapped",
+      canonicalTarget: {
+        mappedThrough: "owned_ancestor_chain",
+        factId: fact.id,
+      },
+    });
+  });
+  it("uses exact source citations and stable fact identity through a full owned edit chain", () => {
+    const input = history(fixture(), [event()]);
+    const original = input.canonicalSnapshot!.current;
+    const fact = original.facts.find((item) => item.type === "employer")!;
+    const first = reviseCanonical(original, {
+      operation: "edit",
+      factId: fact.id,
+      value: "Candidate manual edit",
+    });
+    const second = reviseCanonical(first, {
+      operation: "edit",
+      factId: fact.id,
+      value: "Latest manual edit",
+    });
+    setCurrent(input, second, [first, original]);
+    const item = projectCanonicalCorrections(input).items[0];
+    expect(item.state).toBe("mapped");
+    expect(item.currentValue).toBe("Latest manual edit");
+    expect(item.canonicalTarget).toMatchObject({
+      factId: fact.id,
+      mappedThrough: "owned_ancestor_chain",
+    });
+    expect(item.proposedFact?.sources).toEqual([]);
+  });
+  it("does not infer a stable fact ID from a value-only, source-free canonical record", () => {
+    const input = history(fixture(), [event()]);
+    const fact = input.canonicalSnapshot!.current.facts.find(
+      (item) => item.type === "employer",
+    )!;
+    fact.sources = [];
+    const item = projectCanonicalCorrections(input).items[0];
+    expect(item.state).toBe("unmapped");
+    expect(item.canonicalTarget).toBeNull();
+    expect(item.canonicalResolution.reason).toBe("canonical_origin_not_proven");
+  });
+  it("marks equal text as pending provenance-only review without applying it or carrying confirmation", () => {
+    const input = fixture();
+    const original = input.canonicalSnapshot!.current;
+    const fact = original.facts.find((item) => item.type === "employer")!;
+    const confirmed = reviseCanonical(original, {
+      operation: "confirm",
+      factId: fact.id,
+    });
+    setCurrent(input, confirmed, [original]);
+    history(input, [event({ value: fact.value })]);
+    const item = projectCanonicalCorrections(input).items[0];
+    expect(item.state).toBe("unchanged_provenance");
+    expect(item.proposedFact).toMatchObject({
+      state: "unconfirmed",
+      confirmation: null,
+      sources: [],
+    });
+    expect(item.canonicalConfirmationGranted).toBe(false);
+    expect(
+      input.canonicalSnapshot!.current.facts.find((item) => item.id === fact.id)
+        ?.state,
+    ).toBe("candidate_confirmed");
+  });
+  it("does not choose among duplicate canonical citation targets without an explicit choice", () => {
+    const input = history(fixture(), [event()]);
+    const doc = input.canonicalSnapshot!.current;
+    const first = doc.facts.find((item) => item.type === "employer")!;
+    const duplicate = { ...structuredClone(first), id: id(90) };
+    doc.facts.push(duplicate);
+    doc.sections[0].entries.push({
+      id: id(91),
+      factIds: [duplicate.id],
+      bullets: [],
+    });
+    expect(CanonicalResumeDraftSchema.safeParse(doc).success).toBe(true);
+    expect(projectCanonicalCorrections(input).items[0].state).toBe("ambiguous");
+    input.selections = [
+      {
+        eventId: id(20),
+        sourceTargetId: sourceTarget(input, "Synthetic Labs"),
+        canonicalFactId: duplicate.id,
+      },
+    ];
+    expect(
+      projectCanonicalCorrections(input).items[0].canonicalTarget?.factId,
+    ).toBe(duplicate.id);
+  });
+  it("keeps a non-contact fact reused by multiple entries unresolved", () => {
+    const input = history(fixture(), [event()]);
+    const doc = input.canonicalSnapshot!.current;
+    const fact = doc.facts.find((item) => item.type === "employer")!;
+    doc.sections[0].entries.push({
+      id: id(91),
+      factIds: [fact.id],
+      bullets: [],
+    });
+    const item = projectCanonicalCorrections(input).items[0];
+    expect(item.state).toBe("unmapped");
+    expect(item.canonicalResolution.reason).toBe(
+      "shared_canonical_fact_requires_review",
+    );
+  });
+  it.each([
+    "ownerId",
+    "analysisId",
+    "sourceId",
+    "attemptId",
+    "inputSha256",
+    "targetModelVersion",
+    "fieldExtractorVersion",
+    "reviewRevision",
+    "canonicalHeadId",
+  ] as const)(
+    "rejects a stale/foreign expected %s before producing choices",
+    (field) => {
+      const input = history(fixture(), [event()]);
+      Object.assign(input.expectedBinding, {
+        [field]: field === "reviewRevision" ? 9 : "mismatch",
+      });
+      expect(() => projectCanonicalCorrections(input)).toThrow(
+        "CORRECTION_PROJECTION_BINDING_MISMATCH",
+      );
+    },
+  );
+  it.each([
+    { actor_id: id(99) },
+    { owner_id: id(99) },
+    { analysis_id: id(99) },
+    { revision: 2 },
+    { expected_revision: 1 },
+    { operation: "correct" as const, candidate_id: "assertion-1" },
+  ])("rejects invalid history before target choices: %j", (change) => {
+    expect(() =>
+      projectCanonicalCorrections(history(fixture(), [event(change)])),
+    ).toThrow("CORRECTION_EVENT_INVALID");
+  });
+  it("rejects duplicate history IDs, review revision mismatch and forged source/target projections", () => {
+    const input = history(fixture(), [
+      event(),
+      event({ revision: 2, expected_revision: 1 }),
+    ]);
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_EVENT_INVALID",
+    );
+    history(input, [event()]);
+    input.review.revision = 2;
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_EVENT_INVALID",
+    );
+    history(input, [event()]);
+    input.review.targets.targets[0].id = "forged-target";
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_PROJECTION_SOURCE_INVALID",
+    );
+  });
+  it.each([
+    "ownerId",
+    "analysisId",
+    "sourceId",
+    "attemptId",
+    "inputSha256",
+  ] as const)(
+    "rejects a different server source context %s before choices",
+    (field) => {
+      const input = history(fixture(), [event()]);
+      Object.assign(input.ownedContext, {
+        [field]: field === "inputSha256" ? "b".repeat(64) : id(99),
+      });
+      expect(() => projectCanonicalCorrections(input)).toThrow(
+        "CORRECTION_PROJECTION_SOURCE_INVALID",
+      );
+    },
+  );
+  it("rejects a critical canonical value that contradicts its exact original citation", () => {
+    const input = history(fixture(), [event()]);
+    input.canonicalSnapshot!.current.facts.find(
+      (fact) => fact.type === "employer",
+    )!.value = "Changed without replacing citation";
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_CANONICAL_SOURCE_INVALID",
+    );
+  });
+  it.each([
+    "ownerId",
+    "organizationId",
+    "resumeId",
+    "analysisId",
+    "inputSha256",
+    "sourceEvidenceVersionId",
+  ] as const)(
+    "rejects foreign canonical %s before exposing choices",
+    (field) => {
+      const input = history(fixture(), [event()]);
+      Object.assign(input.canonicalSnapshot!.current, {
+        [field]: field === "inputSha256" ? "b".repeat(64) : id(99),
+      });
+      expect(() => projectCanonicalCorrections(input)).toThrow(
+        "CORRECTION_CANONICAL_BINDING_MISMATCH",
+      );
+    },
+  );
+  it("rejects inconsistent source/head wrappers and ancestor chains", () => {
+    const input = history(fixture(), [event()]);
+    input.canonicalSnapshot!.sourceId = id(99);
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_CANONICAL_BINDING_MISMATCH",
+    );
+    input.canonicalSnapshot!.sourceId = id(4);
+    input.canonicalSnapshot!.headId = id(99);
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_CANONICAL_BINDING_MISMATCH",
+    );
+    const original = input.canonicalSnapshot!.current;
+    const changed = reviseCanonical(original, {
+      operation: "edit",
+      factId: original.facts[0].id,
+      value: "Manual value",
+    });
+    const unrelated = fixture().canonicalSnapshot!.current;
+    setCurrent(input, changed, [unrelated]);
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_CANONICAL_LINEAGE_INVALID",
+    );
+    setCurrent(input, changed, [original, original]);
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_CANONICAL_LINEAGE_INVALID",
+    );
+  });
+  it("rejects an individually schema-valid source-origin prefix with a known parent cycle", () => {
+    const input = history(fixture(), [event()]);
+    const origin = input.canonicalSnapshot!.current;
+    const fact = origin.facts.find((value) => value.type === "employer")!;
+    const current = reviseCanonical(origin, {
+      operation: "edit",
+      factId: fact.id,
+      value: "Candidate manual value",
+    });
+    origin.parentVersionId = current.versionId;
+    expect(CanonicalResumeDraftSchema.safeParse(origin).success).toBe(true);
+    expect(CanonicalResumeDraftSchema.safeParse(current).success).toBe(true);
+    setCurrent(input, current, [origin]);
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_CANONICAL_LINEAGE_INVALID",
+    );
+  });
+  it.each([
+    { selections: [{ eventId: id(99), sourceTargetId: "unknown" }] },
+    { selections: [{ eventId: id(20), sourceTargetId: "foreign-target" }] },
+    {
+      selections: [
+        { eventId: id(20), sourceTargetId: "unknown" },
+        { eventId: id(20), sourceTargetId: "unknown" },
+      ],
+    },
+  ])("rejects unknown or duplicate selections: %j", ({ selections }) => {
+    const input = history(fixture(), [event()]);
+    input.selections = selections;
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_SELECTION_INVALID",
+    );
+  });
+  it("rejects an arbitrary canonical fact choice even if it belongs to the same owned version", () => {
+    const input = history(
+      fixture("Employer: Synthetic Labs\nRole: Backend Engineer"),
+      [event()],
+    );
+    input.selections = [
+      {
+        eventId: id(20),
+        sourceTargetId: sourceTarget(input, "Synthetic Labs"),
+        canonicalFactId: input.canonicalSnapshot!.current.facts.find(
+          (fact) => fact.type === "role",
+        )!.id,
+      },
+    ];
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_SELECTION_INVALID",
+    );
+  });
+  it("rejects resource overflows instead of truncating the projection/history", () => {
+    const input = fixture();
+    history(
+      input,
+      Array.from({ length: 1001 }, (_, index) =>
+        event({
+          id: id(index + 100),
+          revision: index + 1,
+          expected_revision: index,
+        }),
+      ),
+    );
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_PROJECTION_LIMIT",
+    );
+    history(input, [event()]);
+    input.canonicalSnapshot!.ancestors = Array(65).fill(
+      input.canonicalSnapshot!.current,
+    );
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_PROJECTION_LIMIT",
+    );
+  });
+  it("counts large but structurally valid prior-value history in the projection text budget", () => {
+    const input = history(fixture(), [event()]);
+    const doc = input.canonicalSnapshot!.current;
+    doc.changes = Array.from({ length: 1000 }, (_, index) => ({
+      id: id(index + 10_000),
+      actorId: doc.ownerId,
+      action: "edit" as const,
+      targetId: doc.versionId,
+      priorValue: "x".repeat(2000),
+      createdAt: doc.createdAt,
+    }));
+    expect(CanonicalResumeDraftSchema.safeParse(doc).success).toBe(true);
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_PROJECTION_LIMIT",
+    );
+  });
+  it("rejects a valid zero-event snapshot before expanding over-budget canonical locations", () => {
+    const input = fixture(
+      "Employer: Synthetic Labs\nRole: Backend Engineer\nDates: 2020 - 2021\nEducation: BSc Computing",
+    );
+    const doc = input.canonicalSnapshot!.current;
+    const factIds = doc.facts.slice(0, 4).map((fact) => fact.id);
+    expect(factIds).toHaveLength(4);
+    doc.sections.push({
+      id: id(1_000_000),
+      type: "projects",
+      title: "Synthetic index control",
+      factIds: [],
+      entries: Array.from({ length: 100 }, (_, entryIndex) => ({
+        id: id(1_000_001 + entryIndex),
+        factIds: [],
+        bullets: Array.from({ length: 60 }, (_, bulletIndex) => ({
+          id: id(2_000_000 + entryIndex * 60 + bulletIndex),
+          text: "x",
+          factIds: [...factIds],
+        })),
+      })),
+    });
+    expect(CanonicalResumeDraftSchema.safeParse(doc).success).toBe(true);
+    expect(input.review.corrections).toEqual([]);
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_PROJECTION_LIMIT",
+    );
+  });
+  it("bounds repeated ambiguous choice expansion before constructing the projected graph", () => {
+    const input = fixture(
+      Array.from(
+        { length: 201 },
+        (_, index) => `Employer: Synthetic Labs ${index}`,
+      ).join("\n"),
+      true,
+    );
+    history(
+      input,
+      Array.from({ length: 100 }, (_, index) =>
+        event({
+          id: id(index + 100),
+          revision: index + 1,
+          expected_revision: index,
+        }),
+      ),
+    );
+    expect(() => projectCanonicalCorrections(input)).toThrow(
+      "CORRECTION_PROJECTION_LIMIT",
+    );
+  });
+});
+
+describe("batch canonical choices retain exact source correlation", () => {
+  it("keeps two same-field source assertions paired with their own canonical facts", () => {
+    const input = history(
+      fixture("Employer: Synthetic North Labs\nEmployer: Synthetic South Labs"),
+      [event()],
+    );
+    const legacy = projectCanonicalCorrections(input);
+    expect(legacy.items[0].state).toBe("ambiguous");
+    expect(legacy.items[0].canonicalChoices).toEqual([]);
+    const batch = projectCanonicalCorrectionSourceChoices(input);
+    expect(batch.projection).toEqual(legacy);
+    for (const observation of input.review.targets.observations.filter(
+      (row) => row.field === "employer",
+    )) {
+      const fact = input.canonicalSnapshot!.current.facts.find(
+        (fact) => fact.type === "employer" && fact.value === observation.value,
+      )!;
+      expect(
+        batch.choicesBySourceTarget.get(observation.targetId),
+      ).toMatchObject([
+        {
+          factId: fact.id,
+          currentValue: observation.value,
+          mappedThrough: "current_citations",
+          originVersionId: null,
+          originFactId: null,
+        },
+      ]);
+    }
+    expect(batch.projection.modelVersion).toBe("canonical-corrections/1.0.1");
+  });
+
+  it("does not share the selected assertion's choices with an unselected same-field assertion", () => {
+    const input = history(
+      fixture("Employer: Synthetic North Labs\nEmployer: Synthetic South Labs"),
+      [event()],
+    );
+    const first = input.review.targets.observations.find(
+      (row) => row.field === "employer",
+    )!;
+    input.selections = [{ eventId: id(20), sourceTargetId: first.targetId }];
+    const batch = projectCanonicalCorrectionSourceChoices(input);
+    expect(batch.projection).toEqual(projectCanonicalCorrections(input));
+    const ids = input.review.targets.observations
+      .filter((row) => row.field === "employer")
+      .map((row) => batch.choicesBySourceTarget.get(row.targetId)![0].factId);
+    expect(new Set(ids).size).toBe(2);
+    expect(batch.projection.items[0].canonicalTarget!.factId).toBe(ids[0]);
+  });
+
+  it("returns exact owned origin IDs without changing the historical projection shape", () => {
+    const input = history(fixture(), [event()]);
+    const original = input.canonicalSnapshot!.current;
+    const fact = original.facts.find((fact) => fact.type === "employer")!;
+    const edited = reviseCanonical(original, {
+      operation: "edit",
+      factId: fact.id,
+      value: "Candidate manual value",
+    });
+    setCurrent(input, edited, [original]);
+    const batch = projectCanonicalCorrectionSourceChoices(input);
+    const target = input.review.targets.observations.find(
+      (row) => row.field === "employer",
+    )!.targetId;
+    expect(batch.choicesBySourceTarget.get(target)).toMatchObject([
+      {
+        factId: fact.id,
+        mappedThrough: "owned_ancestor_chain",
+        originVersionId: original.versionId,
+        originFactId: fact.id,
+      },
+    ]);
+    expect(batch.projection).toEqual(projectCanonicalCorrections(input));
+    expect(
+      Object.hasOwn(
+        batch.projection.items[0].canonicalChoices[0],
+        "originVersionId",
+      ),
+    ).toBe(false);
+  });
+
+  it("uses the same exact binding and canonical ownership admission", () => {
+    const input = history(fixture(), [event()]);
+    input.expectedBinding.sourceId = id(99);
+    expect(() => projectCanonicalCorrectionSourceChoices(input)).toThrow(
+      "CORRECTION_PROJECTION_BINDING_MISMATCH",
+    );
+    input.expectedBinding.sourceId = id(4);
+    input.canonicalSnapshot!.current.ownerId = id(99);
+    expect(() => projectCanonicalCorrectionSourceChoices(input)).toThrow(
+      "CORRECTION_CANONICAL_BINDING_MISMATCH",
+    );
+  });
+
+  it("retains initial-import empty canonical choices without inventing stable facts", () => {
+    const input = history(fixture("Employer: Synthetic Labs", true), [event()]);
+    const batch = projectCanonicalCorrectionSourceChoices(input);
+    expect([...batch.choicesBySourceTarget.values()]).toEqual([[]]);
+    expect(batch.projection).toEqual(projectCanonicalCorrections(input));
+  });
+});

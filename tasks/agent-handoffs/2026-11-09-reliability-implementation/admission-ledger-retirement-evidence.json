@@ -1,0 +1,71 @@
+{
+  "task": "CR-R17-S11",
+  "checkedDate": "2026-11-21",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "checkout": "dirty integration worktree",
+  "inputSha256": {
+    "app/lib/server/privacy-worker.ts": "3ec638e267f6cfcff7c422fc876cd0d2574abef1fc6a47a01c8c67c9dcd48fb8",
+    "tests/unit/privacy-claim-fence.test.ts": "94823a283917bffa128cf330aa5628fde1b1bbddae420d224aa1a5c390c17e9a",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-ledger-retirement-native-fixture.py.txt": "1a79f69b9304edef61d16225284a01814c27f319157a06f0d2a30e347ba9b5b0",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-deletion-handoff-native-fixture.py.txt": "845fc7e1f92be2d6c7304a625d0f873e5c7ee04151cda6e5a643857bba16626b",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-cleanup-recovery-native-fixture.py.txt": "646c561c65735786eff003f9036388a0616ba2799e67e29de99cda9fa89ac7ec",
+    "supabase/migrations/20260911130000_durable_privacy_deletion_plan.sql": "b66a8d16dffa70306083d22e48ba4ebb44ca01ce6341cc8582ce26ea149634df",
+    "supabase/migrations/20261109164851_correction_ledger_foundation.sql": "6105eb84b49c9802a5b3065f72f24532f41387ed1ed8695ae3e5bf656697f999",
+    "supabase/migrations/20261110080809_analysis_admission_binding.sql": "50df6fadf38bd7aad61296d5f641a3bac4c03374b9594afa34025df6119ff9a3",
+    "supabase/migrations/20261110080810_lease_fencing_and_verification_scope.sql": "1c85475124f8d1093c0cae280af8f2f8e272abae908b6e62e9126cef51b669b2",
+    "supabase/migrations/20261110085512_privacy_write_barrier.sql": "ef62285882a13d9c4e8813161fd55f80333faedda45e7f4f3fb52b22997a0417",
+    "supabase/migrations/20261115131621_owned_ai_disposition_clocks.sql": "19e3d3c7f3d5dd996a13d504e3f675dc8c8957ec2c311f4bdea282a433abda11",
+    "supabase/migrations/20261116075250_privacy_export_generation.sql": "17de23bf5bc6d167038f82468ca8609c455a413f93ee2c3800e6c681e991d910",
+    "supabase/migrations/20261121091814_analysis_admission_privacy_guard.sql": "59a38603a0634148c3f412b80a8b29401671c7a2e606a94206e535af1bddc5f4",
+    "supabase/migrations/20261121130718_analysis_admission_upload_transport.sql": "fa348172dafe1abf2965c113ed484975347b208a280bfad2cd48fb3f497592b8",
+    "supabase/migrations/20261121132235_analysis_admission_retirement_capture.sql": "a0a38cbc3424c26ab94db9f3d71b45b175988829e3ee1c4508f3f14155a4fe59",
+    "supabase/migrations/20261121203700_analysis_admission_cleanup_recovery.sql": "5df9e7ed5ad8d538e5d1695c726d72efaedb69b17423d0f4136069ec4751282d",
+    "supabase/migrations/20261121205500_analysis_admission_cleanup_progress.sql": "8fc91e54c9d62db907244f8c97b1ae3e1a2bac3e8f999840d3ac62c98a071b8e",
+    "supabase/migrations/20261121211200_analysis_admission_cleanup_receipts.sql": "d6a472d13bd041af2850f33de911dc2fbd3c070c0bebac19dca769e724f0ae73",
+    "supabase/migrations/20261121212400_analysis_admission_adopted_source_bindings.sql": "69aae4718c4595687b56e2474b73931e1d438a10b00743b1f640ab32a3ee28ab",
+    "supabase/migrations/20261121214800_analysis_admission_deletion_handoff.sql": "cee5fa7398f756528dec907d2b6c708b19509ded12c76abed085c8957d9e0c38",
+    "supabase/migrations/20261121220100_analysis_admission_ledger_retirement.sql": "df7be2a7eeba924b58398b385ddfff843046093e5687a85141a402cb3b542f79"
+  },
+  "before": {
+    "nativeDetected": "A verified adopted plan still could not retire its ledger",
+    "nativeLogSha256": "2a587b17697295e652b660e57d65a6e192c4f7a888797adff34fc094c0a9d49e",
+    "applicationDetected": "Worker still held completion after verifying the adopted receipt.",
+    "applicationFailedCases": 1,
+    "applicationPassedCases": 39,
+    "applicationLogSha256": "9799b397885041266ad3e2182fef15fa566cbc6f25b5fd596f7d77f50287bb15"
+  },
+  "native": {
+    "result": "PASS: exact ledger retirement, historical capture cleanup, foreign and stale refusal, atomic rollback, sealed completion and durable owner hold.",
+    "scope": "Actual sealed preparation and completion bodies and retirement SQL. Synthetic supporting relations, accounting adapters and recorded Storage outcomes.",
+    "logSha256": "258a589803ca1a63b970ff2ccd94df601f6609718f14ac7e0d2a894cec70d18f"
+  },
+  "after": {
+    "focusedCases": 132,
+    "focusedFiles": 5,
+    "unit": [
+      {
+        "passed": 6799,
+        "files": 322,
+        "sha256": "e3fc11b107bf9ee6a5d130e6220030a095e6ce0d00bd233326bbf675017848c6"
+      },
+      {
+        "passed": 3,
+        "files": 1,
+        "sha256": "3eedd7a5ec01ab214df3d465c907aeaff7d380252f05b3dfe572828c69554302"
+      }
+    ]
+  },
+  "statics": {
+    "commands": ["format:check", "typecheck", "lint", "build", "build:worker"],
+    "exitCode": 0,
+    "lintWarnings": 4,
+    "logSha256": "28bb38aa7decc743d88c0d0059afab958e486687a5abc9552b8c8421c1fb5dfb"
+  },
+  "migrationInventory": "managed-schema-inventory-91.json",
+  "notRun": [
+    "full managed migration replay",
+    "real Supabase Storage retirement and worker recovery",
+    "whole-account erasure",
+    "deployment"
+  ]
+}

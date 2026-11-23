@@ -1,0 +1,25 @@
+CR-A14 writing-observation comparison UI is implemented in the five allocated files. Broader useful JD-specific drafting remains open. This is Source/DOM evidence, not actual Native, consumer, provider, usefulness, calibration or release acceptance.
+
+The shared comparison panel distinguishes projected text from selected saved records. It shows word counts and their text-only difference, before/after warnings plus new/resolved warnings, actual fact state and recorded reference/confirmation counts. Absent facts remain absent rather than becoming zero-count facts. Projected wording explicitly has no saved after-version, references or confirmation, even when text is unchanged. Record-only confirmation changes are not described as wording improvement. Saved references/revisions follow the provided owned model in either comparison direction; no chronology or accepted-suggestion inference is made. Diagnostic rows stay bounded at fifty, with total/remaining counts and the original complete fact comparison retained.
+
+The canonical route adds only an import and conditional mount from actual model.writingComparison inside its existing comparison section. It derives no record identity from URL values. The backend-owned reader will be integrated by Root before type verification. DOM saved fixtures test the frozen wire presentation; they do not prove database ownership or authority. The projected legacy mount calls the real browser-safe helper with the bound patch base version, actual current fact and proposed value. Its existing full before/after, raw warnings, provenance display, FormData/acknowledgement/accept/reject/clarification/undo/retry/CAS/proof controls are unchanged. Type-only imports preserve client/server boundaries.
+
+Word counts/warnings are explicitly observations, not quality/ATS/JD scores or factual verification. Confirmation remains a candidate declaration; recorded references may be historical. Score/delta remain unavailable and qualification credit unassessed. No JD coverage change, automatic edit, qualification invention, flag activation or write protocol was added.
+
+Evidence: `/private/tmp/resumide-writing-comparison-frontend-2qsquby8`.
+
+- Genuine actual-workspace baseline: three missing-observation failures / one existing acknowledgement pass. The new standalone baseline retained the existing unavailable-number presentation and produced eight missing-observation failures / one no-control pass. Neither RED was a missing-module/import failure. Both failed receipts and baseline snapshots are preserved.
+- Initial GREEN: nine standalone presentation cases and four actual projected-workspace cases passed, with zero pending. Cases cover new/resolved warnings, source/confirmation changes, record-only/add/remove/no-change/same/reverse comparisons, fifty-row/remaining counts, accessible unique labels, full wording and unchanged approval fields.
+- Final helper dependency successor: four actual projected-workspace cases passed against a386612633bea3ba9e171ed0c9f0f0867b3c74b196f00236de0485b3c27aa076. Standalone tests import helper types only and their nine cases carry on unchanged bytes. Thirteen unique cases across two DOM files are represented by these final receipts; historical runs are not added to the unique count.
+- Scoped installed ESLint and Prettier passed for all five files in their two bounded groups. Owned UI/test bytes stayed unchanged across the final dependency refresh. All eleven child groups were cleaned and independently absent. Final run inputs were stable; only allocated files and the authorized readonly helper changed across the task.
+
+The supervisor uses pinned Node v22.23.4, frozen runCommand/sourceHashes, sealed synthetic environment and empty HOME/npmrc. Every child has OS network denial, Root/worktree dotenv-read denial including suffix variants, common Git directory and both .git-pointer write denial, 120-second timeout and 8-MiB log bound. No full suite/typecheck/build, actual browser, Native/parser/database/provider/service, actual resume/JD/PII, dependency installation, workspace Git mutation or deployment ran. Root owns shared docs/context and integrated verification. The text-cleaning self-contained pass found no Unicode artifacts and low prose density; no authorship/detector guarantee is claimed.
+
+Final source SHA-256:
+- `app/components/WritingDiagnosticComparison.tsx`: `efc80c54a37e6b1727c6fd0fd11d6e98d9ef6191a3e506b1484f803af7d62777`
+- `app/components/AuthoringWorkspace.tsx`: `aa29a893ba52b072d05098d6bdd0808febc53342d574970592d4a1ad2b3d90e0`
+- `app/routes/analysis.canonical.tsx`: `154abc16d7ec8feb90e5c5ecf3691a3c91718e47e60902ae7eec0deeb9d1a37e`
+- `tests/components/WritingDiagnosticComparison.test.tsx`: `b159467d76fdc9e41167a9a55039881f70b902ec740299f1a5db305bcf19bb67`
+- `tests/components/AuthoringWritingComparison.test.tsx`: `ab7825a91e9a36148282b21fba2df5d8142a86a93a787c5d05b90c269fbb94d1`
+
+Frozen contract SHA-256: `0be6c60822625124d88cfda07cfac96c9351c025d85fc4d71dc84a51926d468f`. Pre/postimages, exact contracts/commands/log hashes, failed receipts and lifecycle completion are preserved in the release packet.

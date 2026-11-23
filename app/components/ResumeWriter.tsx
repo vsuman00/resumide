@@ -1,16 +1,27 @@
 import { useState } from "react";
 
-const ResumeWriter = ({ writer }: { writer?: ResumeWriter }) => {
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+const ResumeWriter = ({
+  writer,
+  unavailable = false,
+}: {
+  writer?: ResumeWriter;
+  unavailable?: boolean;
+}) => {
+  const [copied, setCopied] = useState<{
+    key: string;
+    text: string;
+  } | null>(null);
   const [copyError, setCopyError] = useState("");
 
   const copySuggestion = async (key: string, text: string) => {
+    setCopied(null);
+    setCopyError("");
     try {
       if (!navigator.clipboard) {
         throw new Error("Copy is not available in this browser.");
       }
       await navigator.clipboard.writeText(text);
-      setCopiedKey(key);
+      setCopied({ key, text });
       setCopyError("");
     } catch (error) {
       setCopyError(
@@ -27,12 +38,25 @@ const ResumeWriter = ({ writer }: { writer?: ResumeWriter }) => {
         className="rewrite-empty-state"
         aria-labelledby="rewrite-heading"
       >
-        <p className="workspace-eyebrow">Grounded suggestions</p>
-        <h2 id="rewrite-heading">No rewrite is available yet</h2>
+        <p className="workspace-eyebrow">Writing drafts</p>
+        <h2 id="rewrite-heading">
+          {unavailable
+            ? "Writing generation did not complete"
+            : "No rewrite was saved"}
+        </h2>
         <p>
-          The available evidence did not support a safe wording suggestion for
-          this analysis.
+          {unavailable
+            ? "Writing could not be completed for this analysis. You can retry with Generate suggestions above."
+            : "No suggestions are saved for this analysis yet. Use Generate suggestions above to try with this saved resume and job description."}
         </p>
+        <div className="rewrite-empty-actions">
+          <a href="#overview" className="back-button w-fit">
+            Review available feedback
+          </a>
+          <a href="/upload" className="back-button w-fit">
+            Start a new analysis
+          </a>
+        </div>
       </section>
     );
   }
@@ -41,14 +65,29 @@ const ResumeWriter = ({ writer }: { writer?: ResumeWriter }) => {
     <section className="rewrite-diff" aria-labelledby="rewrite-heading">
       <div className="result-section-heading">
         <div>
-          <p className="workspace-eyebrow">Grounded suggestions</p>
-          <h2 id="rewrite-heading">Rewrite with evidence</h2>
+          <p className="workspace-eyebrow">Writing drafts</p>
+          <h2 id="rewrite-heading">Review writing drafts</h2>
         </div>
       </div>
       <p className="rewrite-intro">
-        These suggestions are grounded in the uploaded resume evidence. Review
-        every suggestion for accuracy before using it.
+        These saved writing drafts still need review. Compare them with the
+        original text and check every fact before using them.
       </p>
+      <p className="rewrite-intro">
+        This saved legacy draft has no canonical resume or job-requirement
+        version binding. Its source support and relationship to the current
+        versions are unknown.
+      </p>
+      <p id="rewrite-copy-note" className="rewrite-intro">
+        Copy a draft to your clipboard. Review and save resume edits in the
+        resume workspace, where you confirm the facts.
+      </p>
+      {unavailable ? (
+        <p role="status">
+          Writing generation did not complete. Your saved drafts remain
+          available to review.
+        </p>
+      ) : null}
       {copyError ? (
         <p className="field-error" role="alert">
           {copyError}
@@ -65,9 +104,12 @@ const ResumeWriter = ({ writer }: { writer?: ResumeWriter }) => {
             <button
               type="button"
               className="rewrite-copy-button"
+              aria-describedby="rewrite-copy-note"
               onClick={() => copySuggestion("summary", writer.summary!)}
             >
-              {copiedKey === "summary" ? "Copied" : "Copy"}
+              {copied?.key === "summary" && copied.text === writer.summary
+                ? "Copied"
+                : "Copy"}
             </button>
           </div>
           <p>{writer.summary}</p>
@@ -94,9 +136,12 @@ const ResumeWriter = ({ writer }: { writer?: ResumeWriter }) => {
                     <button
                       type="button"
                       className="rewrite-copy-button"
+                      aria-describedby="rewrite-copy-note"
                       onClick={() => copySuggestion(key, bullet.rewrite)}
                     >
-                      {copiedKey === key ? "Copied" : "Copy"}
+                      {copied?.key === key && copied.text === bullet.rewrite
+                        ? "Copied"
+                        : "Copy"}
                     </button>
                   </div>
                   <p>{bullet.rewrite}</p>

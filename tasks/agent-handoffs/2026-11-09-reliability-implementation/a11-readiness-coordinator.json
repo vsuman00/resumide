@@ -1,0 +1,84 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE",
+  "task": "CR-A11 native readiness source and legacy bypass closure",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "predecessorReceipt": "a11-http-integrated-5f9d707a-f97f-4178-bbca-a4c7e639dd4f.json",
+  "predecessorInputs": 798,
+  "changedAtAdmission": [],
+  "migration": "supabase/migrations/20261114170229_typed_authoring_readiness.sql",
+  "rpc": "public.read_typed_authoring_readiness() -> jsonb; args{}; service-only catalog metadata",
+  "schema": {
+    "schemaVersion": "typed-authoring-readiness/1.0.0",
+    "profileVersion": "typed-authoring-readiness-profile/1.0.0",
+    "schemaReady": "boolean",
+    "writerExecutable": "boolean",
+    "canonicalReadinessSha256": "actual64hex",
+    "typedReadinessSha256": "actual64hex",
+    "writerSha256": "actual64hex",
+    "readerSha256": "actual64hex"
+  },
+  "closure": "Retain all base138 checks and renew only changed legacybodySHA. Separate typedchecker extends newroutines/metadataRPC exactbodies/attrs/grants, externally pinned to avoidselfhashcycles. No oldmigration rewritten.",
+  "grants": "Writer remains DENIED. Integrity allows onlyowner+optionalserviceEXECUTE forwriter; effectivewriterExecute is separate and notapproval. Helpersdenyall app roles; metadataRPCservice-onlyread. No PUBLIC/anon/auth/othergrants/options.",
+  "nodeOrder": "Parse/hash/requestowner correlation ->actualowned ORIGINALcontext and commandproof ->bounded strictfreshnative readiness ->exactcapability apply. No caching, no headcurrentrebase.",
+  "nativeOrder": "Fresh owner/privacy admission ->exactownedpriorreplay ->fresh readiness/typed-JD legacydenial and CAS ->writes. Preserve manualops andoldreplay.",
+  "ownership": {
+    "runtime": [
+      "supabase/migrations/20261114170229_typed_authoring_readiness.sql",
+      "app/lib/server/typed-authoring-readiness-profile.ts",
+      "scripts/verify-typed-authoring-readiness.sql",
+      "runtime-a11-readiness.md"
+    ],
+    "backend": [
+      "app/lib/server/typed-authoring-readiness.ts",
+      "tests/unit/typed-authoring-readiness.test.ts",
+      "app/lib/server/typed-authoring-repository.ts",
+      "backend-a11-readiness.md"
+    ],
+    "frontend": [
+      "tests/unit/typed-authoring-readiness-route.test.ts",
+      "tests/unit/typed-authoring-repository.test.ts",
+      "tests/unit/typed-authoring-http-route.test.ts",
+      "tests/unit/typed-authoring-http.test.ts",
+      "frontend-a11-readiness.md"
+    ],
+    "root": [
+      "Sharedprofile/ordering/contractreview",
+      "CONTEXT.md and canonicalplans",
+      "sourceintegration and combinedgate"
+    ]
+  },
+  "boundary": "Source/synthetic/fakeRPC only. No SQLparse/execution/advisors/DB/hostedwrites/services/browser/compiler/Docker/providers/env/keys/PII/dependencies/Git/deployment. Native and representative acceptance remain open. Frozen priorproofs preserved; no flag/threshold/production activation.",
+  "worktrees": {
+    "backend": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats",
+    "frontend": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats",
+    "runtime": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats"
+  },
+  "acceptance": [
+    "Strict fresh zero-argument metadata read after original owned-command proof and before exact writer dispatch",
+    "Missing, denied, malformed, drifted or timed-out metadata never reaches writer",
+    "Exact historical retries preserve captured versions; absent capability performs no IO",
+    "Legacy fresh typed-JD decisions denied after owned exact replay, manual actions preserved",
+    "Current native writer remains denied; default feature flags unchanged",
+    "Affected synthetic tests, full typecheck, lint and web/worker builds pass on integrated source",
+    "SQL source review only; parsing, native execution and representative acceptance remain open"
+  ],
+  "resume": {
+    "previousTurn": "NO_PROGRESS_STATUS_ONLY",
+    "predecessorInputsRechecked": 798,
+    "changedPredecessorInputs": [],
+    "liveAgentAssignments": "Three existing lanes restarted for implementation; no process restart inferred from a stale handle"
+  },
+  "integratedFiles": {
+    "app/lib/server/typed-authoring-readiness.ts": "17bb670738a38021b965668b8cd54a2c482a098d490ce651885d54f114155cc8",
+    "tests/unit/typed-authoring-readiness.test.ts": "7e807c953068858fd40400b4e8202d2901ce18f68f7592841ee271cc3a5dc244",
+    "app/lib/server/typed-authoring-repository.ts": "f9380f63d17e5dfe6c0d4290331cd1c3bf0504b5235256d096a69cf31a3d8ada",
+    "tests/unit/typed-authoring-readiness-route.test.ts": "c207acd15999a4741986f5be6f9e7bb2d10cd616bf1161cc2609807998d3fc6b",
+    "tests/unit/typed-authoring-repository.test.ts": "9c2bac8f0858568274baceede5a8d461fd5e9fc3835ce7fbc07285ca64975c9f",
+    "tests/unit/typed-authoring-http-route.test.ts": "6b738bcb5d9f8db6287225831300a53e4539eb62893ca0df9c739a15e7890d78",
+    "tests/unit/typed-authoring-http.test.ts": "d1cc1fff3af856c126fb04594e38dc8fca2d0a888b55cb856b7433f9ca541306",
+    "supabase/migrations/20261114170229_typed_authoring_readiness.sql": "217d9c1a2b8b326d42d550adab32fab59a29b73ba3cd2c3957e8352a4ea4673f",
+    "app/lib/server/typed-authoring-readiness-profile.ts": "26c3e7a0bbae85bac840b70cb3045c5f734ac231f6a9c647256b14453cb1be41",
+    "scripts/verify-typed-authoring-readiness.sql": "e6d574b313e7d9762920ad703fc539f61452ab1b759db12aadeffe9cd56af9fe"
+  },
+  "controller": "a11-readiness-integrated-controller.mjs"
+}

@@ -1,0 +1,71 @@
+{
+  "id": "CR-U19-S03",
+  "status": "VERIFIED_LOCAL_CORRECTION_REVIEW_A11Y",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated SSR build, synthetic Auth and Storage, and disposable PostgreSQL 17 via service-role table reads and RPCs",
+  "sources": {
+    "app/routes/analysis.evidence.tsx": "b24488f5a817ee14e19bef4d79d1819adc1848636c707d6c84435b8e86b3b682",
+    "app/routes/analysis.canonical.tsx": "84cfb30b605ef6317e9471617b4a3f913772a7c782a2b06f43e20b0e9a6ed71e",
+    "app/components/CanonicalCorrectionReview.tsx": "8a0d33c7244c8a24d7ebcc3bbfce589867fd721084bc89f2d2082d675e16c3f1",
+    "app/app.css": "c73381d8047667ecc99bdd41e9920b9448ff4580cbee3e424514d7b255471969",
+    "scripts/verify-local-correction-browser.ts": "c378dcc99c419a3b02579cd9fcbef9521ac9d8cda83ae5ca11bcbc392cf79ae2",
+    "scripts/verify-local-correction-journey.py": "9a756c17fe34b5dedb182bf7cfa18ab81727fbf498c18922de3b6f143b553cf8",
+    "scripts/verify-local-correction-journey.ts": "5ec7e2ce46543db363183faee988bad71de2454a0e48f347204b28f15e7afeb2",
+    "scripts/local-fixture-browser.ts": "372fa419ba68e5c15b742dbb4acd267a0359b67c1b8eb8b9ea5319a5c36e22f4",
+    "package-lock.json": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41"
+  },
+  "baseline": {
+    "missingFeedbackFocus": [
+      "evidence saved",
+      "target saved",
+      "correction applied"
+    ],
+    "targetOverflowAt390CssPixels": true,
+    "logSha256": "b9b404b8cdc9f47ee903b0e7b80be0d001e889fe89255c7ba04e121875271a9f",
+    "keyboardFixtureAttemptLogSha256": "c50227da1567f4407d1091f99a8baac901fffd34961b1949ca90da25a26bca89"
+  },
+  "focusedTests": {
+    "passed": 290,
+    "files": 6,
+    "logSha256": "3baff538852418eed22631de0ca883dee660dd9b9843718b9b6f3459a9a3b787",
+    "intermediateContractRegressionLogSha256": "8112e16aafcd7e983e5b2223d37e43075939cc13877b77dc2b1bddd3c5f2e544"
+  },
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed with four existing warnings",
+    "fixtureLint": "passed",
+    "webBuildLogSha256": "5df4f30f179e6fa541444df5bfdcc30d72f1aedf37a7e2e461f2f09be752549a",
+    "workerBuildLogSha256": "0ca9e18164cf17000fafb2d5c2114ccf72e7f0e214839c18f94d02bc7b614473",
+    "stylesheetFormatting": "Pre-existing differences in rewrite styles"
+  },
+  "browser": {
+    "viewports": [
+      {
+        "width": 390,
+        "height": 740
+      },
+      {
+        "width": 320,
+        "height": 640
+      }
+    ],
+    "scopedAxe": "Saved evidence corrections section in dark theme at 390 CSS pixels",
+    "schemaOperations": 100,
+    "orderedDigest": "4e253744226912aab1c9411cb03e528f8fbdaa10984aa5933a88ff380601293a",
+    "logSha256": "9a1214572254e61af529be1e2a29a846ece8a8b47522e413c313dfa68c59afec",
+    "result": {
+      "browser": "Chromium",
+      "keyboardCorrectionSavedAndApplied": true,
+      "threeFeedbackMessagesFocused": true,
+      "targetAndControlsFitNarrowWidths": true,
+      "selectedTargetLabelVisible": true,
+      "forcedColorsAndReducedMotion": true,
+      "correctionReviewBlockingAxeViolations": 0,
+      "postgresServiceRole": true,
+      "pdfAndDocxContentChecked": true
+    }
+  },
+  "manualScreenReaderVerified": false,
+  "browserZoomVerified": false,
+  "managedSupabaseVerified": false
+}

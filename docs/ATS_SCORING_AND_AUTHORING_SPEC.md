@@ -6,6 +6,10 @@ Research basis: [`ATS_SCORING_AND_AUTHORING_RESEARCH.md`](ATS_SCORING_AND_AUTHOR
 
 AA0 accepted contract: [`ADR-0009`](decisions/0009-aa0-truth-contract-and-evaluation-design.md), candidate 1 at `e629a2882b3cc14a63771ae400f4f67a7e4f3f62`, explicitly approved by the workspace owner on 2026-10-04. It freezes score semantics, logical contracts, annotation/governance design, local-only OCR evaluation and software engineering / English / India scope. Runtime implementation, calibration and release validity remain separately verified gates; historical proposal text below must be read with this accepted decision.
 
+## Current capability and repair contract
+
+The [supported-capability contract](design/SUPPORTED_CAPABILITIES.md) separates current advertised surfaces, actual engineering evidence and required reliability repairs. The consumer upload is PDF-only; canonical outputs are PDF/DOCX. The owner-approved standalone Build workflow converts supported single-file LaTeX to visual PDF under [ADR-0016](decisions/0016-standalone-latex-converter.md), separately from canonical rendering and analyzer state. Earlier export objectives below must be read with that accepted amendment. Core native/scanned/mixed repair targets, immutable evidence, confirmation/provenance, numerical withholding and every existing quality/release floor remain unchanged. All current services remain free of commercial charges; pricing and deployment stay deferred. This clarification grants no new support, passed gate or activation.
+
 ## 1. Objective
 
 Build a candidate-first workflow that can:
@@ -99,6 +103,8 @@ Requirement states:
 - `not_evidenced`: no supporting resume fact exists.
 - `not_applicable`: excluded by an approved clarification.
 - `not_evaluated`: evidence or classifier confidence is insufficient.
+
+These evaluated-state definitions and retained evaluation labels are unchanged. In regenerated candidate observations, `score-v2/1.0.2` acknowledges an exact owner/value declaration separately from source proof. A declared uncited candidate or a declared skill with unknown proficiency remains `not_evaluated` with its remaining-evidence explanation; it is not asked to repeat the same confirmation. Older producers used `candidate_confirmation_required` more broadly for missing verified evidence, and their retained envelopes/receipts keep that recorded meaning. The new diagnostic producer neither grants citations nor activates numerical alignment.
 
 Rules:
 
@@ -273,6 +279,8 @@ LaTeX-specific controls:
 - A4 and US Letter variants.
 - Template suitability by candidate profile rather than one fixed technology/student structure.
 - Tagged/accessibility support evaluated before an accessible-PDF claim.
+
+**Standalone converter scope (owner approved 2026-10-30):** ADR-0016/E-007 permits an independent LaTeX editor→PDF preview/download page. It consumes supported user source rather than canonical resume data and never calls the analyzer or creates `artifact-verification/1.0.0` records. Source/PDF are transient. Known synthetic recovery checks and output safety do not establish canonical truth, ATS compatibility or accessibility certification. This separate category does not change existing canonical renderer/verified-artifact contracts or their release floors.
 
 ## 13. Data additions
 

@@ -1,0 +1,86 @@
+from pathlib import Path
+import re,json,hashlib
+root=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats');packet=Path(__file__).parent
+sha=lambda s:hashlib.sha256(s.encode()).hexdigest()
+old=(root/'supabase/migrations/20261113131538_grouped_original_admission.sql').read_text()
+oldbody=re.search(r'as \$a02_ready\$(.*?)\$a02_ready\$;',old,re.S).group(1)
+assert sha(oldbody)=='07d338cc1cbd2c79df76dcbc21bd814b3612c43a0e748531f574974b55c25958'
+body='''
+declare scope jsonb; evidence public.document_evidence_attempts%rowtype; result jsonb; ready boolean; permitted boolean;
+begin
+  if p_user_id is null or p_analysis_id is null then perform private.correction_fail('not_found'); end if;
+  -- Same owner/privacy/source locks and captured prefixes as the atomic writer.
+  scope:=private.grouped_original_scope(p_user_id,p_analysis_id);
+  select * into strict evidence from public.document_evidence_attempts
+    where id=(scope->>'attemptId')::uuid and owner_id=p_user_id
+      and organization_id=(scope->>'organizationId')::uuid and analysis_id=p_analysis_id
+      and resume_version_id=(scope->>'sourceId')::uuid and input_sha256=scope->>'inputSha256' for share;
+  ready:=private.canonical_correction_write_ready();
+  permitted:=ready and has_function_privilege('service_role','public.import_canonical_grouped_original(uuid,uuid,jsonb,jsonb,text)','EXECUTE');
+  result:=jsonb_build_object('schemaVersion','grouped-original-read/1.0.0','status','available',
+    'compatibilityReady',ready,'canCommit',permitted,
+    'freshImportAllowed',scope->'headId'='null'::jsonb and private.correction_original_import_allowed(scope),
+    'scoringEligible',false,'source',jsonb_build_object(
+      'ownerId',scope->'ownerId','organizationId',scope->'organizationId','resumeId',scope->'resumeId',
+      'analysisId',scope->'analysisId','sourceId',scope->'sourceId','attemptId',scope->'attemptId','inputSha256',scope->'inputSha256'),
+    'captured',jsonb_build_object('reviewRevision',scope->'reviewRevision','reviewHeadId',scope->'reviewHeadId',
+      'assignmentRevision',scope->'assignmentRevision','assignmentHeadId',scope->'assignmentHeadId',
+      'associationRevision',scope->'associationRevision','associationHeadId',scope->'associationHeadId','canonicalHeadId',scope->'headId'),
+    'attempt',jsonb_build_object('id',evidence.id,'attemptNumber',evidence.attempt_number,'envelope',evidence.envelope));
+  if octet_length(convert_to(result::text,'UTF8'))>16777216 then perform private.correction_fail('unavailable'); end if;
+  return result;
+exception when insufficient_privilege then
+  return jsonb_build_object('schemaVersion','grouped-original-read/1.0.0','status','not_found','scoringEligible',false);
+when others then
+  return jsonb_build_object('schemaVersion','grouped-original-read/1.0.0','status','unavailable','scoringEligible',false);
+end;
+'''
+oldliteral=re.search(r'\$catalog_manifest\$(.*?)\$catalog_manifest\$',oldbody,re.S).group(1)
+manifest=json.loads(oldliteral);assert len(manifest)==68
+manifest.append({'signature':'public.read_grouped_original_workspace(uuid,uuid)','sha256':sha(body),'definer':True,'volatility':'v','resultType':'jsonb','strict':False,'language':'plpgsql','serviceExecute':True})
+newliteral=json.dumps(manifest,indent=2)
+newbody=oldbody.replace(oldliteral,newliteral);assert sha(newbody)!=sha(oldbody)
+# Exact source transform, no SQL parser, no SQL execution.
+sql='''-- Source-only forward read admission. The grouped writer remains EXECUTE-revoked.
+begin;
+create function public.read_grouped_original_workspace(p_user_id uuid,p_analysis_id uuid) returns jsonb
+language plpgsql volatile security definer set search_path='' as $a02_read$'''+body+'''$a02_read$;
+revoke all on function public.read_grouped_original_workspace(uuid,uuid) from public,anon,authenticated,service_role;
+grant execute on function public.read_grouped_original_workspace(uuid,uuid) to service_role;
+
+-- Guard the full predecessor; preserve its table/column/FK/trigger and ACL checks.
+do $a02_read_profile$
+declare routine pg_catalog.pg_proc%rowtype; source text; definition text; next_source text;
+  predecessor text:='''+"'"+sha(oldbody)+"'"+''';
+  postimage text:='''+"'"+sha(newbody)+"'"+''';
+  old_manifest text:=$a02_old_manifest$'''+oldliteral+'''$a02_old_manifest$;
+  new_manifest text:=$a02_new_manifest$'''+newliteral+'''$a02_new_manifest$;
+begin
+  select * into strict routine from pg_catalog.pg_proc where oid=to_regprocedure('private.canonical_correction_write_ready()');
+  if encode(extensions.digest(convert_to(routine.prosrc,'UTF8'),'sha256'),'hex') is distinct from predecessor
+    or routine.prosecdef or routine.provolatile<>'s' or routine.proisstrict or routine.proretset
+    or routine.prorettype<>'boolean'::regtype or routine.prokind<>'f'
+    or routine.prolang<>(select oid from pg_catalog.pg_language where lanname='plpgsql')
+    or routine.proconfig is distinct from array['search_path=""']
+    or exists(select 1 from aclexplode(coalesce(routine.proacl,acldefault('f',routine.proowner))) where grantee=0 and privilege_type='EXECUTE')
+    or has_function_privilege('anon',routine.oid,'EXECUTE') or has_function_privilege('authenticated',routine.oid,'EXECUTE')
+    or has_function_privilege('service_role',routine.oid,'EXECUTE') then
+    raise exception 'A02_READ_PROFILE_PREDECESSOR_DRIFT' using errcode='23514'; end if;
+  source:=routine.prosrc;
+  if (length(source)-length(replace(source,old_manifest,'')))/length(old_manifest)<>1 then
+    raise exception 'A02_READ_PROFILE_CONTEXT_DRIFT' using errcode='23514'; end if;
+  next_source:=replace(source,old_manifest,new_manifest);
+  if encode(extensions.digest(convert_to(next_source,'UTF8'),'sha256'),'hex') is distinct from postimage then
+    raise exception 'A02_READ_PROFILE_POSTIMAGE_DRIFT' using errcode='23514'; end if;
+  definition:=pg_get_functiondef(routine.oid);
+  if (length(definition)-length(replace(definition,source,'')))/length(source)<>1 then
+    raise exception 'A02_READ_PROFILE_DEFINITION_DRIFT' using errcode='23514'; end if;
+  execute replace(definition,source,next_source);
+end;
+$a02_read_profile$;
+commit;
+'''
+(root/'supabase/migrations/20261113142537_grouped_original_workspace_read.sql').write_text(sql)
+(packet/'readiness-successor-sha256.txt').write_text(sha(newbody)+'\n')
+(packet/'read-profile-data.json').write_text(json.dumps({'readBodySha256':sha(body),'readinessPredecessor':sha(oldbody),'readinessSuccessor':sha(newbody),'count':len(manifest)},indent=2)+'\n')
+print(json.dumps({'migration':sha(sql),'readBody':sha(body),'readiness':sha(newbody),'count':len(manifest)}))

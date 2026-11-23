@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   data,
   redirect,
@@ -13,6 +14,31 @@ import AuthoringWorkspace, {
 } from "~/components/AuthoringWorkspace";
 import { loadAuthoring } from "~/lib/server/authoring-repository";
 import WorkspaceShell from "~/components/WorkspaceShell";
+import RequirementCoverageReview from "~/components/RequirementCoverageReview";
+import TypedAuthoringBridge from "~/components/TypedAuthoringBridge";
+import CanonicalRewritePanel from "~/components/CanonicalRewritePanel";
+import ScoreAdmissionNotice from "~/components/ScoreAdmissionNotice";
+import JdRecommendations from "~/components/JdRecommendations";
+import JdClauseOrderBridge from "~/components/JdClauseOrderBridge";
+import { loadJdClauseOrderWorkspace } from "~/lib/server/jd-clause-order-repository";
+import {
+  validateClauseOrderWorkspace,
+  sameClauseOrderValue,
+  type JdClauseOrderWorkspace,
+} from "~/lib/jd-clause-order-decisions";
+import { JdClauseOrderPlanReview } from "~/components/JdClauseOrderReview";
+import { JdClauseOrderPlanSchema } from "~/lib/server/jd-clause-order-drafting";
+import {
+  loadCanonicalRewriteWorkspaceState,
+  CanonicalRewriteWorkspaceStateSchema,
+  type CanonicalRewriteWorkspaceState,
+} from "~/lib/server/canonical-rewrite-workspace";
+import type { CanonicalRewriteWorkspace } from "~/lib/server/canonical-rewrite-contract";
+import { loadTypedAuthoringWorkspace } from "~/lib/server/typed-authoring-repository";
+import {
+  TypedAuthoringWorkspaceSchema,
+  type TypedAuthoringWorkspace,
+} from "~/lib/server/typed-authoring-protocol";
 import { getServerConfig } from "~/lib/server/config";
 import { getAuthenticatedUser } from "~/lib/server/auth";
 import {
@@ -45,6 +71,60 @@ export const headers: HeadersFunction = ({
   return h;
 };
 export const meta = () => [{ title: "Scoring diagnostics | Resumide" }];
+function ownedClauseOrderPlan(
+  model: Awaited<ReturnType<typeof loadScoreDiagnostics>>,
+  ownerId: string,
+  analysisId: string,
+) {
+  if (model.jdClauseOrderPlan === undefined) return undefined;
+  const parsed = JdClauseOrderPlanSchema.safeParse(model.jdClauseOrderPlan);
+  const coverage = model.typedCoverage;
+  if (!parsed.success || coverage?.state !== "available" || !model.requirements)
+    throw new CanonicalError(
+      503,
+      "JD drafting previews are unavailable. Reload before continuing.",
+    );
+  const plan = parsed.data,
+    binding = plan.binding,
+    owned = coverage.binding,
+    score = model.diagnostics.score;
+  if (
+    model.analysisId !== analysisId ||
+    binding.source.analysisId !== analysisId ||
+    binding.source.ownerId !== ownerId ||
+    score.ownerId !== ownerId ||
+    score.analysisId !== analysisId ||
+    score.organizationId !== binding.source.organizationId ||
+    binding.source.attemptId !== owned.attemptId ||
+    score.evidenceVersionId !== owned.attemptId ||
+    JSON.stringify(binding.source) !== JSON.stringify(owned.source) ||
+    JSON.stringify(binding.canonical) !== JSON.stringify(owned.canonical) ||
+    JSON.stringify(binding.requirements) !==
+      JSON.stringify(owned.requirements) ||
+    binding.profilesSha256 !==
+      createHash("sha256")
+        .update(JSON.stringify(owned.profiles))
+        .digest("hex") ||
+    binding.canonical.versionId !== model.canonical.versionId ||
+    binding.canonical.revision !== model.canonical.revision ||
+    score.canonicalVersionId !== model.canonical.versionId ||
+    binding.requirements.versionId !== model.requirements.versionId ||
+    binding.requirements.revision !== model.requirements.revision ||
+    score.requirementVersionId !== model.requirements.versionId ||
+    binding.heads.canonicalHeadId !== model.canonical.headId ||
+    binding.heads.requirementHeadId !== model.requirements.headId ||
+    (!model.historical &&
+      (binding.heads.canonicalHeadRevision !== model.canonical.revision ||
+        binding.heads.requirementHeadRevision !==
+          model.requirements.revision)) ||
+    (plan.reason === "historical_inputs") !== model.historical
+  )
+    throw new CanonicalError(
+      503,
+      "JD drafting previews are unavailable. Reload before continuing.",
+    );
+  return plan;
+}
 export async function loader({ request, params }: Args) {
   const h = privateHeaders();
   try {
@@ -60,7 +140,10 @@ export async function loader({ request, params }: Args) {
       );
     const options: Record<string, string> = {};
     let focus: string | undefined;
-    for (const [key, value] of new URL(request.url).searchParams) {
+    const url = new URL(request.url);
+    for (const [key, value] of url.searchParams) {
+      // React Router retains its route selector on targeted data requests.
+      if (key === "_routes" && url.pathname.endsWith(".data")) continue;
       if (key === "focus" && getServerConfig().AUTHORING_ENABLED) {
         if (focus !== undefined)
           throw new CanonicalError(422, "Choose one contribution.");
@@ -82,20 +165,220 @@ export async function loader({ request, params }: Args) {
         );
       options[key] = value;
     }
+    const authoringEnabled = getServerConfig().AUTHORING_ENABLED;
     const client = createSupabaseAdminClient();
     const model = await loadScoreDiagnostics(
       client,
       params.id ?? "",
       user.id,
       options,
+      undefined,
+      { clauseOrderPreview: authoringEnabled },
     );
-    const authoring = getServerConfig().AUTHORING_ENABLED
-      ? await loadAuthoring(client, params.id ?? "", user.id, model, focus)
-      : null;
+    const safeModel = { ...model };
+    delete safeModel.jdClauseOrderPlan;
+    if (authoringEnabled) {
+      const plan = ownedClauseOrderPlan(model, user.id, params.id ?? "");
+      if (plan) safeModel.jdClauseOrderPlan = plan;
+    }
+    const clauseOrderPlan = safeModel.jdClauseOrderPlan;
+    const clauseOrderSource =
+      authoringEnabled &&
+      getServerConfig().TYPED_AUTHORING_ENABLED &&
+      clauseOrderPlan
+        ? clauseOrderPlan.binding.source
+        : null;
+    let clauseOrderWorkspace: JdClauseOrderWorkspace | null = null;
+    if (
+      clauseOrderSource &&
+      clauseOrderPlan?.state === "available" &&
+      !model.historical &&
+      model.requirements &&
+      model.canonical.versionId === model.canonical.headId &&
+      model.requirements.versionId === model.requirements.headId
+    ) {
+      try {
+        const candidate = await loadJdClauseOrderWorkspace(
+          client,
+          params.id ?? "",
+          user.id,
+          {
+            canonicalVersionId: model.canonical.versionId,
+            requirementVersionId: model.requirements.versionId,
+          },
+          { enabled: true, signal: request.signal },
+        );
+        if (candidate) {
+          const workspace = await validateClauseOrderWorkspace(candidate);
+          if (sameClauseOrderValue(workspace.binding, clauseOrderPlan.binding))
+            clauseOrderWorkspace = workspace;
+        }
+      } catch {
+        // A failed or mismatched writer read grants no decision capability; owned diagnostics remain available.
+        clauseOrderWorkspace = null;
+      }
+    }
+    const authoring =
+      getServerConfig().AUTHORING_ENABLED && !model.typedCoverage
+        ? await loadAuthoring(client, params.id ?? "", user.id, model, focus)
+        : null;
+    let typedAuthoring: TypedAuthoringWorkspace | null = null;
+    const typedBinding = model.typedCoverage?.binding;
+    const typedScore = model.diagnostics.score;
+    if (
+      getServerConfig().AUTHORING_ENABLED &&
+      getServerConfig().TYPED_AUTHORING_ENABLED &&
+      model.typedCoverage &&
+      typedBinding &&
+      model.requirements &&
+      !model.historical &&
+      model.analysisId === params.id &&
+      typedBinding.source.analysisId === model.analysisId &&
+      typedBinding.source.ownerId === user.id &&
+      model.canonical.versionId === model.canonical.headId &&
+      model.requirements.versionId === model.requirements.headId &&
+      typedBinding.canonical.versionId === model.canonical.versionId &&
+      typedBinding.canonical.revision === model.canonical.revision &&
+      typedBinding.requirements.versionId === model.requirements.versionId &&
+      typedBinding.requirements.revision === model.requirements.revision &&
+      typedScore.canonicalVersionId === model.canonical.versionId &&
+      typedScore.requirementVersionId === model.requirements.versionId &&
+      typedScore.ownerId === user.id &&
+      typedScore.organizationId === typedBinding.source.organizationId &&
+      typedScore.analysisId === model.analysisId &&
+      typedScore.evidenceVersionId === typedBinding.attemptId
+    ) {
+      try {
+        const parsed = TypedAuthoringWorkspaceSchema.safeParse(
+          await loadTypedAuthoringWorkspace(client, params.id ?? "", user.id, {
+            canonicalVersionId: model.canonical.versionId,
+            requirementVersionId: model.requirements.versionId,
+          }),
+        );
+        if (parsed.success) {
+          const workspace = parsed.data,
+            binding = workspace.binding,
+            coverage = model.typedCoverage.binding,
+            score = model.diagnostics.score;
+          if (
+            binding.source.ownerId === user.id &&
+            binding.source.analysisId === model.analysisId &&
+            model.analysisId === params.id &&
+            JSON.stringify(binding.source) ===
+              JSON.stringify(coverage.source) &&
+            JSON.stringify(binding.canonical) ===
+              JSON.stringify(coverage.canonical) &&
+            JSON.stringify(binding.requirements) ===
+              JSON.stringify(coverage.requirements) &&
+            binding.canonical.versionId === model.canonical.versionId &&
+            binding.canonical.revision === model.canonical.revision &&
+            binding.requirements.versionId === model.requirements?.versionId &&
+            binding.requirements.revision === model.requirements.revision &&
+            binding.heads.canonicalHeadId === model.canonical.headId &&
+            binding.heads.canonicalHeadRevision === model.canonical.revision &&
+            binding.heads.requirementHeadId === model.requirements.headId &&
+            binding.heads.requirementHeadRevision ===
+              model.requirements.revision &&
+            score.canonicalVersionId === binding.canonical.versionId &&
+            score.requirementVersionId === binding.requirements.versionId &&
+            score.ownerId === user.id &&
+            score.organizationId === binding.source.organizationId &&
+            score.analysisId === model.analysisId &&
+            workspace.diagnosticDigest === score.inputSha256 &&
+            workspace.coverageDigest === model.typedCoverage.digest
+          )
+            typedAuthoring = workspace;
+        }
+      } catch {
+        // Diagnostics remain readable when a fresh owned authoring read cannot be admitted.
+        typedAuthoring = null;
+      }
+    }
+    const rewriteEnabled = Boolean(
+      getServerConfig().CANONICAL_REWRITE_ENABLED &&
+      getServerConfig().AUTHORING_ENABLED,
+    );
+    let canonicalRewrite: CanonicalRewriteWorkspace | null = null;
+    let canonicalRewriteInitialization: Extract<
+      CanonicalRewriteWorkspaceState,
+      { status: "initialization_required" }
+    > | null = null;
+    if (
+      rewriteEnabled &&
+      typedBinding &&
+      model.requirements &&
+      typedBinding.source.ownerId === user.id &&
+      typedBinding.source.analysisId === model.analysisId &&
+      model.analysisId === params.id
+    ) {
+      try {
+        const parsed = CanonicalRewriteWorkspaceStateSchema.safeParse(
+          await loadCanonicalRewriteWorkspaceState(
+            client,
+            model.analysisId,
+            user.id,
+            {
+              canonicalVersionId: model.canonical.versionId,
+              requirementVersionId: model.requirements.versionId,
+            },
+          ),
+        );
+        if (parsed.success) {
+          const state = parsed.data;
+          const binding =
+            state.status === "available"
+              ? state.workspace.binding.authoring
+              : state.binding;
+          if (
+            JSON.stringify(binding.source) ===
+              JSON.stringify(typedBinding.source) &&
+            JSON.stringify(binding.canonical) ===
+              JSON.stringify(typedBinding.canonical) &&
+            JSON.stringify(binding.requirements) ===
+              JSON.stringify(typedBinding.requirements) &&
+            binding.canonical.versionId === model.canonical.versionId &&
+            binding.canonical.revision === model.canonical.revision &&
+            binding.requirements.versionId === model.requirements.versionId &&
+            binding.requirements.revision === model.requirements.revision &&
+            typedScore.canonicalVersionId === binding.canonical.versionId &&
+            typedScore.requirementVersionId ===
+              binding.requirements.versionId &&
+            typedScore.ownerId === user.id &&
+            typedScore.organizationId === binding.source.organizationId &&
+            typedScore.evidenceVersionId === binding.source.attemptId
+          ) {
+            if (state.status === "available") {
+              canonicalRewrite =
+                model.historical || !getServerConfig().AI_ENABLED
+                  ? { ...state.workspace, canGenerate: false }
+                  : state.workspace;
+            } else {
+              canonicalRewriteInitialization = {
+                ...state,
+                canInitialize: state.canInitialize && !model.historical,
+              };
+            }
+          }
+        }
+      } catch {
+        // Prior drafts remain owned by the rewrite read model; a failed read supplies no substitute.
+        canonicalRewrite = null;
+      }
+    }
     return data(
       {
-        ...model,
+        ...safeModel,
+        ...(clauseOrderSource
+          ? {
+              jdClauseOrderSource: clauseOrderSource,
+              jdClauseOrderWorkspace: clauseOrderWorkspace,
+            }
+          : {}),
         authoring,
+        typedAuthoring,
+        rewriteEnabled,
+        canonicalRewrite,
+        canonicalRewriteInitialization,
         artifactEnabled: getServerConfig().ARTIFACT_RENDERING_ENABLED,
       },
       { headers: h },
@@ -135,11 +418,21 @@ export default function ScoreDiagnostics() {
     d = model.diagnostics;
   const feedback = useActionData<AuthoringFeedback>();
   const base = `/analysis/${model.analysisId}`;
+  const canonicalTarget = `${base}/canonical?version=${encodeURIComponent(model.canonical.versionId)}`;
+  const requirementsTarget = `${base}/requirements${model.requirements ? `?version=${encodeURIComponent(model.requirements.versionId)}` : ""}`;
+  const evidenceTargets = {
+    evidence: `${base}/evidence`,
+    canonical: canonicalTarget,
+    requirements: requirementsTarget,
+  };
+  const canExport =
+    model.artifactEnabled &&
+    model.canonical.versionId === model.canonical.headId;
   return (
     <WorkspaceShell
       eyebrow="Evidence review"
       title="Review scoring diagnostics"
-      description="Review recovered evidence and missing information before using a score."
+      description="Inspect recovered evidence, job requirements, and the checks that keep numerical scores unavailable."
     >
       <div style={{ overflowWrap: "anywhere" }}>
         {model.authoring && (
@@ -152,23 +445,74 @@ export default function ScoreDiagnostics() {
         <nav aria-label="Evidence workspace">
           <Link to={`${base}/evidence`}>Review source evidence</Link>
           {" · "}
-          <Link to={`${base}/canonical`}>Review structured resume</Link>
+          <Link to={canonicalTarget}>Review structured resume</Link>
           {" · "}
-          <Link to={`${base}/requirements`}>Review job requirements</Link>
-          {model.artifactEnabled && " · "}
-          {model.artifactEnabled && (
-            <Link to={`${base}/export`}>Preview and export resume</Link>
+          <Link to={requirementsTarget}>Review job requirements</Link>
+          {canExport && " · "}
+          {canExport && (
+            <Link
+              to={`${base}/export?version=${encodeURIComponent(model.canonical.versionId)}`}
+            >
+              Preview and export resume
+            </Link>
           )}
         </nav>
-        <p>
-          Numeric scores are unavailable while evidence and scoring calibration
-          need review. These diagnostics do not predict employer acceptance.
-        </p>
+        <ScoreAdmissionNotice
+          dimensions={d.score.dimensions}
+          readiness={d.readiness}
+          base={base}
+          canonicalVersionId={model.canonical.versionId}
+          requirementVersionId={model.requirements?.versionId}
+        />
         {model.historical && (
           <p role="status">
-            Historical input versions. Changes to the current resume do not
-            update this view.
+            Historical input versions. This view includes an older resume or job
+            requirements version. Open these input versions to revisit the same
+            pair.
           </p>
+        )}
+        {model.jdRecommendations && (
+          <JdRecommendations plan={model.jdRecommendations} base={base} />
+        )}
+        {model.jdClauseOrderSource ? (
+          <JdClauseOrderBridge
+            analysisId={model.analysisId}
+            source={model.jdClauseOrderSource}
+            workspace={model.jdClauseOrderWorkspace ?? null}
+            previewPlan={model.jdClauseOrderPlan ?? null}
+          />
+        ) : model.jdClauseOrderPlan ? (
+          <JdClauseOrderPlanReview plan={model.jdClauseOrderPlan} />
+        ) : null}
+        {model.typedCoverage && (
+          <>
+            {model.typedAuthoring ? (
+              <TypedAuthoringBridge
+                analysisId={model.analysisId}
+                workspace={model.typedAuthoring}
+              />
+            ) : (
+              <p role="status">
+                {model.jdClauseOrderSource
+                  ? "Equivalent-action-word authoring is unavailable for this view. The JD-focused clause-order review is separate."
+                  : model.jdClauseOrderPlan?.drafts.length
+                    ? "Reviewed saving is unavailable for these projected previews. They have not been saved. You can still review and edit your structured resume independently."
+                    : "Proposals are paused for typed job requirements while their version and evidence bindings are completed. You can still review and edit your structured resume independently."}
+              </p>
+            )}
+            <RequirementCoverageReview
+              coverage={model.typedCoverage}
+              analysisId={model.analysisId}
+            />
+          </>
+        )}
+        {model.rewriteEnabled && (
+          <CanonicalRewritePanel
+            analysisId={model.analysisId}
+            workspace={model.canonicalRewrite}
+            initialization={model.canonicalRewriteInitialization}
+            ownerId={model.diagnostics.score.ownerId}
+          />
         )}
         <section aria-label="Score dimensions">
           {d.score.dimensions.map((dimension) => (
@@ -182,10 +526,20 @@ export default function ScoreDiagnostics() {
         <section>
           <h2>Evidence readiness</h2>
           <p>
-            {words(d.readiness.state)}. Recovered text appears on{" "}
-            {Math.round(d.readiness.observedPageCoverage * 100)}% of the
-            declared or retained pages. This is an observation, not confidence
-            in accuracy.
+            {words(d.readiness.state)}.{" "}
+            {d.readiness.observedPageCoverage === null ? (
+              <>
+                The original page count is unknown; page coverage is
+                unavailable.
+              </>
+            ) : (
+              <>
+                Recovered text appears on{" "}
+                {Math.round(d.readiness.observedPageCoverage * 100)}% of the
+                declared or retained pages.
+              </>
+            )}{" "}
+            This is an observation, not confidence in accuracy.
           </p>
           <ul>
             {d.readiness.blockers.map((b) => (
@@ -207,11 +561,7 @@ export default function ScoreDiagnostics() {
             {d.improvements.map((i) => (
               <li key={i.id}>
                 {i.reason}{" "}
-                <Link
-                  to={`${base}/${i.target === "canonical" ? "canonical" : i.target === "requirements" ? "requirements" : "evidence"}`}
-                >
-                  Review this evidence
-                </Link>
+                <Link to={evidenceTargets[i.target]}>Review this evidence</Link>
               </li>
             ))}
           </ol>

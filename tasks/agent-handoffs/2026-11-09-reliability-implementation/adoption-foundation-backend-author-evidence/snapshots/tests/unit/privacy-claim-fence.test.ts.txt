@@ -1,0 +1,119 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({ rpc: vi.fn() }));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseAdminClient: () => ({ rpc: mocks.rpc }),
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getServerConfig: () => ({ PRIVACY_MAX_ATTEMPTS: 3 }),
+}));
+import {
+  SupabasePrivacyRequestRepository,
+  processPrivacyRequest,
+  type PrivacyRequest,
+} from "../../app/lib/server/privacy-worker";
+const request: PrivacyRequest = {
+  id: "00000000-0000-4000-8000-000000000001",
+  userId: "00000000-0000-4000-8000-000000000002",
+  organizationId: "00000000-0000-4000-8000-000000000003",
+  workerId: "same-worker",
+  attempt: 2,
+  kind: "deletion",
+};
+beforeEach(() => {
+  vi.resetAllMocks();
+  mocks.rpc.mockImplementation(async (name: string) => ({
+    data: name === "prepare_deletion_request" ? { storageObjects: [] } : true,
+    error: null,
+  }));
+});
+describe("actual privacy repository claim fencing", () => {
+  it("sends actual attempt to deletion preparation", async () => {
+    await new SupabasePrivacyRequestRepository().prepareDeletion(request);
+    expect(mocks.rpc).toHaveBeenCalledWith("prepare_deletion_request", {
+      p_request_id: request.id,
+      p_worker_id: request.workerId,
+      p_attempt: 2,
+    });
+  });
+  it("sends actual attempt to completion", async () => {
+    await new SupabasePrivacyRequestRepository().complete(request, {
+      deleted: true,
+    });
+    expect(mocks.rpc).toHaveBeenCalledWith("complete_privacy_request", {
+      p_request_id: request.id,
+      p_worker_id: request.workerId,
+      p_attempt: 2,
+      p_manifest: { deleted: true },
+    });
+  });
+  it("sends actual attempt to failure bookkeeping", async () => {
+    await new SupabasePrivacyRequestRepository().fail(request, "EXPORT_FAILED");
+    expect(mocks.rpc).toHaveBeenCalledWith("fail_privacy_request", {
+      p_request_id: request.id,
+      p_worker_id: request.workerId,
+      p_attempt: 2,
+      p_error_code: "EXPORT_FAILED",
+      p_max_attempts: 3,
+    });
+  });
+  it("keeps the old attempt when the same worker has reclaimed another attempt", async () => {
+    mocks.rpc.mockImplementation(
+      async (_name: string, args: { p_attempt: number }) => ({
+        data: args.p_attempt === 3,
+        error: null,
+      }),
+    );
+    const repo = new SupabasePrivacyRequestRepository();
+    expect(await repo.complete(request, { stale: true })).toBe(false);
+    expect(
+      await repo.complete({ ...request, attempt: 3 }, { fresh: true }),
+    ).toBe(true);
+    expect(
+      mocks.rpc.mock.calls.map(
+        (call) => (call[1] as { p_attempt: number }).p_attempt,
+      ),
+    ).toEqual([2, 3]);
+  });
+  it("throws on a refused completion and rebuilds rather than reusing a stale manifest on a fresh claim", async () => {
+    const build = vi
+      .fn()
+      .mockResolvedValueOnce({ old: true })
+      .mockResolvedValueOnce({ fresh: true });
+    const complete = vi
+      .fn()
+      .mockResolvedValueOnce(false)
+      .mockResolvedValueOnce(true);
+    const repository = {
+      claim: vi.fn(),
+      buildExportManifest: build,
+      prepareDeletion: vi.fn(),
+      complete,
+      fail: vi.fn(),
+    };
+    const exportRequest = { ...request, kind: "export" as const };
+    await expect(
+      processPrivacyRequest(repository, vi.fn(), exportRequest),
+    ).rejects.toThrow("Privacy request completion failed.");
+    await processPrivacyRequest(repository, vi.fn(), {
+      ...exportRequest,
+      attempt: 3,
+    });
+    expect(build).toHaveBeenCalledTimes(2);
+    expect(complete.mock.calls.map((call) => call[1])).toEqual([
+      { old: true },
+      { fresh: true },
+    ]);
+  });
+  it("does not treat error or nontrue acknowledgement as completion", async () => {
+    const repo = new SupabasePrivacyRequestRepository();
+    mocks.rpc.mockResolvedValueOnce({
+      data: null,
+      error: { message: "private" },
+    });
+    await expect(repo.complete(request, { deleted: true })).rejects.toThrow(
+      "Privacy request completion failed.",
+    );
+    mocks.rpc.mockResolvedValueOnce({ data: null, error: null });
+    expect(await repo.complete(request, { deleted: true })).toBe(false);
+  });
+});

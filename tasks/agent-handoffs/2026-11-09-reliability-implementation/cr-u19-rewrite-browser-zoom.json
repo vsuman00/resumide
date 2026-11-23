@@ -1,0 +1,37 @@
+{
+  "id": "CR-U19-S14",
+  "status": "VERIFIED_LOCAL_REWRITE_BROWSER_ZOOM",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR on loopback with simulated Supabase Auth, Data API and clipboard and disposable PostgreSQL 17.11",
+  "sources": {
+    "app/components/CanonicalRewritePanel.tsx": "40273b29eddb4bbc53455d79aae688a0345abd92dcfc3f1bae799942a63bd2d6",
+    "scripts/verify-local-rewrite-workspace-browser.ts": "ee3eadc74a1bb1520c0e28dd29b13575b2887259669bd3706b8609a393946e6b",
+    "scripts/verify-local-typed-score-browser.ts": "2f3dbf0ef59c13822956e6012b8e45b09466965a453a2c8ad11b2e42b9daf8f6",
+    "scripts/verify-local-typed-score.py": "adaab955077c485c17c9cef858041555d11a6070db5889a8e5353765a0469897",
+    "scripts/local-fixture-browser.ts": "e8f78771b4545f1ec7cdf4145a9412f0c94f01f46e44f2f5a2e36d427a177609"
+  },
+  "browser": {
+    "version": "Chromium 153.0.8010.12",
+    "command": "scripts/verify-local-typed-score.py --browser --browser-zoom --rewrite",
+    "pageZoomPercent": 200,
+    "effectiveViewportWidthsCssPx": [390, 320],
+    "schemaOperations": 100,
+    "orderedDigest": "4e253744226912aab1c9411cb03e528f8fbdaa10984aa5933a88ff380601293a",
+    "ssrEntrySha256": "f7e375ecbf001800a49c24a580fa5fc9a6c513556f3ca4a3ead8d4358d003503",
+    "logSha256": "143384789538513ad595520b1c22264454c5e4e334c206473f6e30e7f9419bf3",
+    "result": {
+      "emptyWorkspaceAt390": true,
+      "currentAndHistoricalDraftsAt320": true,
+      "summaryCopyControlFitsAt320": true,
+      "focusPreservedAfterClipboardDenialAndSuccess": true,
+      "tabReachedBulletCopy": true,
+      "copiedTextMatchedSavedSummaryAndBullet": true,
+      "workspaceSeriousOrCriticalAxeViolations": 0,
+      "draftAndCanonicalInventoryUnchanged": true,
+      "setupAndGenerationDisabled": true
+    }
+  },
+  "manualScreenReaderVerified": false,
+  "systemClipboardVerified": false,
+  "managedSupabaseVerified": false
+}

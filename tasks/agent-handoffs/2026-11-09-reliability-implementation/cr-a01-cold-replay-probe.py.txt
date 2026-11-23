@@ -1,0 +1,106 @@
+import hashlib
+import pathlib
+import re
+import subprocess
+import sys
+import tempfile
+
+root = pathlib.Path.cwd()
+pg = pathlib.Path('/opt/homebrew/opt/postgresql@17/bin')
+logs = pathlib.Path(sys.argv[1])
+old_comparison = ">=case when p_boundary='alias' then 300 else 1000 end then"
+new_comparison = ">=(case when p_boundary='alias' then 300 else 1000 end) then"
+old_hash = '4527bd4ce30bda237682292402619aba2d564c2548857e5b70aec39c8f760263'
+new_hash = None
+with tempfile.TemporaryDirectory(prefix='resumide-a01-pg-') as run_dir:
+    run = pathlib.Path(run_dir)
+    data = run / 'data'
+    env = {'HOME': str(run), 'PATH': '/usr/bin:/bin', 'LC_ALL': 'C'}
+
+    def call(tool, *args, **kwargs):
+        return subprocess.run([str(pg / tool), *map(str, args)], timeout=25, env=env, text=True, **kwargs)
+
+    def sql(**kwargs):
+        return call('psql', '-X', '-v', 'ON_ERROR_STOP=1', '-h', run, '-U', 'postgres', '-d', 'postgres', '-Atq', **kwargs)
+
+    def logged(name, source):
+        with (logs / name).open('w') as report:
+            return sql(input=source, stdout=report, stderr=report)
+
+    call('initdb', '-D', data, '--no-sync', '--auth=trust', '-U', 'postgres', check=True, stdout=subprocess.DEVNULL)
+    try:
+        call('pg_ctl', '-w', '-D', data, '-l', run / 'server.log', '-o', f"-c listen_addresses='' -c unix_socket_directories={run} -c unix_socket_permissions=0700 -c statement_timeout=12000", 'start', check=True, stdout=subprocess.DEVNULL)
+        bootstrap = '''
+        create role anon;
+        create role authenticated;
+        create role service_role bypassrls;
+        create schema auth;
+        create schema storage;
+        create schema extensions;
+        create extension pgcrypto with schema extensions;
+        alter database postgres set search_path to public, extensions;
+        create table auth.users(id uuid primary key, email text);
+        create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+        create table storage.buckets(id text primary key,name text not null,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+        create table storage.objects(id uuid primary key);
+        create function extensions.jsonb_matches_schema(json,jsonb) returns boolean language plpgsql immutable as $$begin raise exception 'FIXTURE_JSON_SCHEMA_VALIDATION_NOT_AVAILABLE'; end;$$;
+        '''
+        assert logged('bootstrap.log', bootstrap).returncode == 0
+        assert logged('preflight.log', (root / 'scripts/verify-empty-supabase-target.sql').read_text()).returncode == 0
+        for order, path in enumerate(sorted((root / 'supabase/migrations').glob('*.sql')), 1):
+            source = path.read_text()
+            if path.name.startswith('20261012054243_'):
+                line = 'create extension if not exists pg_jsonschema with schema extensions;'
+                assert source.count(line) == 1
+                source = source.replace(line, '-- The compatibility scaffold supplies an explicit fail-closed stand-in.')
+            if path.name.startswith('20261111010000_'):
+                assert source.count(old_comparison) == 1
+                body = re.search(r'create function private\.jd_relation_literals\(.*?as \$\$(.*?)\$\$;', source, re.S)[1]
+                assert hashlib.sha256(body.encode()).hexdigest() == old_hash
+                new_hash = hashlib.sha256(body.replace(old_comparison, new_comparison).encode()).hexdigest()
+                print(f'JD literal body corrected hash: {new_hash}', flush=True)
+                source = source.replace(old_comparison, new_comparison)
+            if path.name.startswith('20261114104337_'):
+                assert new_hash and source.count(old_hash) == 1
+                source = source.replace(old_hash, new_hash)
+            if path.name.startswith('20261113180050_'):
+                marker = 'begin;\n\n'
+                assert source.count(marker) == 1
+                source = source.replace(marker, marker + "-- Match the sealed readiness profile before checking it.\nrevoke delete on public.canonical_resume_versions, public.resume_facts, public.canonical_resume_heads, public.change_events, public.authoring_events from service_role;\n\n")
+            name = f'{order:02}-{path.stem}.log'
+            result = logged(name, source)
+            if result.returncode:
+                print(f'STOP at operation {order}: {path.name}', flush=True)
+                print((logs / name).read_text()[-1500:], flush=True)
+                raise SystemExit(result.returncode)
+            if path.name.startswith('20261111010000_'):
+                probe = '''
+                do $check$ begin
+                  assert jsonb_array_length(private.jd_relation_literals(repeat('Git ',300),'git','alias'))=300;
+                  assert jsonb_array_length(private.jd_relation_literals(repeat('Git ',1000),'git','ln'))=1000;
+                  begin
+                    perform private.jd_relation_literals(repeat('Git ',301),'git','alias');
+                    raise exception 'Expected alias bound';
+                  exception when sqlstate '22023' then
+                    assert sqlerrm='JD literal work limit';
+                  end;
+                  begin
+                    perform private.jd_relation_literals(repeat('Git ',1001),'git','ln');
+                    raise exception 'Expected literal bound';
+                  exception when sqlstate '22023' then
+                    assert sqlerrm='JD literal work limit';
+                  end;
+                end $check$;
+                select '300/301 and 1000/1001 work limits passed';
+                '''
+                result = logged('literal-limits.log', probe)
+                print((logs / 'literal-limits.log').read_text(), flush=True)
+                if result.returncode:
+                    raise SystemExit(result.returncode)
+        result = logged('postflight.log', "select private.document_page_count_ready(), private.privacy_generation_ready(), to_regprocedure('public.complete_deletion_request_with_admission_retirement(uuid,text,integer)') is not null;")
+        print('Reached migration 91:', (logs / 'postflight.log').read_text().strip(), flush=True)
+        if result.returncode:
+            raise SystemExit(result.returncode)
+    finally:
+        if (data / 'postmaster.pid').is_file():
+            call('pg_ctl', '-w', '-D', data, '-m', 'immediate', 'stop', check=True, stdout=subprocess.DEVNULL)

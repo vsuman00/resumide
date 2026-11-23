@@ -3,6 +3,7 @@ import { execFile } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { promisify } from "node:util";
 import { createLocalContainerOcrAdapter } from "../app/lib/server/ocr/local-container";
+import { prepareLocalOcrReview } from "../app/lib/server/ocr/local-review-admission";
 import { TEXT_FUSION_VERSIONS } from "../app/lib/server/ocr/profiles";
 import {
   detectPdfTextProfile,
@@ -156,25 +157,74 @@ for (const kind of ["scanned", "mixed", "native"] as const) {
     maxCharacters: 100_000,
   });
   const profile = detectPdfTextProfile(native);
-  const request: SelectiveOcrRequest = {
-    schemaVersion: "selective-ocr-request-v1",
-    attemptId: randomUUID(),
+  const binding = {
     ownerId: randomUUID(),
     analysisId: randomUUID(),
     sourceId: randomUUID(),
-    createdAt: new Date().toISOString(),
-    retentionPolicyId: "synthetic-local-30d/1.0.0",
     sourceSha256: fixture.manifest.sourceSha256,
+  };
+  const adapter = createLocalContainerOcrAdapter({
+    bytes: fixture.bytes,
+    imageId,
+    evaluationConfig,
+  });
+  const worker = { imageId, region: "local-test", ...adapter.versions };
+  const retentionPolicyId = "synthetic-local-30d/1.0.0";
+  const now = new Date();
+  const admission = prepareLocalOcrReview(binding, {
+    enabled: true,
+    now,
+    source: {
+      ...binding,
+      kind: "synthetic_fixture",
+      state: "active",
+      retentionPolicyId,
+      uploadBytes: fixture.bytes.byteLength,
+      nativePageTexts: native.pageTexts,
+    },
+    grant: {
+      ...binding,
+      purpose: "local_document_evidence_review",
+      scope: "synthetic_engineering",
+      allowThirdPartyProcessing: false,
+      retentionPolicyId,
+      worker,
+      expiresAt: new Date(now.getTime() + 15_000).toISOString(),
+      allocation: {
+        maxUploadBytes: 10 * 1024 * 1024,
+        maxPages: 10,
+        maxWallTimeMs: 10_000,
+        maxCharacters: 100_000,
+      },
+    },
+    worker,
+  });
+  if (admission.status === "denied") {
+    assert.equal(kind, "native");
+    assert.equal(admission.reason, "ocr_not_needed");
+  } else {
+    assert.notEqual(kind, "native");
+    assert.equal(admission.scope.scoringEligible, false);
+  }
+  const request: SelectiveOcrRequest = {
+    schemaVersion: "selective-ocr-request-v1",
+    attemptId: randomUUID(),
+    ...binding,
+    createdAt: now.toISOString(),
+    retentionPolicyId,
     nativePageTexts: native.pageTexts,
     limits: { maxCharacters: 100_000, maxPages: 10 },
-    selectedPages: profile.pagesNeedingOcr.map((pageNumber) => ({
-      pageNumber,
-      pageId: `page-${pageNumber}`,
-    })),
+    selectedPages:
+      admission.status === "ready_for_synthetic_review"
+        ? admission.scope.selectedPages
+        : [],
     remainingDeadlineMs: 15_000,
     allocation: {
       id: "owner-approved-synthetic-local-2026-10-04",
-      maxWallTimeMs: 10_000,
+      maxWallTimeMs:
+        admission.status === "ready_for_synthetic_review"
+          ? admission.scope.maxWallTimeMs
+          : 10_000,
       maxPages: 10,
       externalApiFeeMicros: 0,
     },
@@ -190,11 +240,7 @@ for (const kind of ["scanned", "mixed", "native"] as const) {
   const controller = new AbortController();
   const pending = runSelectiveLocalOcr(
     request,
-    createLocalContainerOcrAdapter({
-      bytes: fixture.bytes,
-      imageId,
-      evaluationConfig,
-    }),
+    adapter,
     controller.signal,
   ).finally(() => {
     finished = true;
@@ -217,6 +263,7 @@ for (const kind of ["scanned", "mixed", "native"] as const) {
       kind,
       sourceSha256: fixture.manifest.sourceSha256,
       status: outcome.status,
+      reviewAdmission: "ocr_not_needed",
       selectedPages: [],
       wallMs: performance.now() - started,
     });
@@ -256,6 +303,7 @@ for (const kind of ["scanned", "mixed", "native"] as const) {
     kind,
     sourceSha256: fixture.manifest.sourceSha256,
     status: outcome.status,
+    reviewAdmission: admission.status,
     selectedPages: profile.pagesNeedingOcr,
     wallMs: performance.now() - started,
     engineDurationMs: outcome.durationMs,

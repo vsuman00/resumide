@@ -1,0 +1,11 @@
+// Source pins; actual PostgreSQL catalogue and transaction validation remain required.
+export const DOCUMENT_PAGE_COUNT_READINESS_PROFILE = Object.freeze({
+  schemaVersion: "document-page-count-readiness/1.0.0",
+  profileVersion: "document-page-count-native/1.0.0",
+  checkerSha256:
+    "df95369c54acc48f5165f8f23c4d233fa2547fa34074b87ea5d665f709369cb2",
+  writerSha256:
+    "ed3c838c81a29bd131ebf543aad7cbc140ffb3ced09de76b18ba77a850dc4a54",
+  metadataSha256:
+    "88bc5d232d91e29000241223fabb32f1badcbcff71ad01d99deeb92ffeb6773b",
+} as const);

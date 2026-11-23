@@ -1,0 +1,53 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/restore-floor.test.ts (27 tests | 1 failed | 26 skipped) 3ms
+     × rejects personal fields in the five-field owner-free state 2ms
+     ↓ does not initialize missing state and bootstraps only explicitly in quarantine
+     ↓ persists strictly increasing global floor, revision and fencing tokens
+     ↓ refuses stale CAS across two controllers and never lowers or reuses a generation
+     ↓ never steals a crash-left or symlink lock
+     ↓ rejects symlink journals, hardlinks, directories and loose permissions
+     ↓ rejects an unsafe or aliased volume path
+     ↓ rejects malformed, noncanonical or torn journal 0
+     ↓ rejects malformed, noncanonical or torn journal 1
+     ↓ rejects malformed, noncanonical or torn journal 2
+     ↓ rejects malformed, noncanonical or torn journal 3
+     ↓ rejects malformed, noncanonical or torn journal 4
+     ↓ rejects malformed, noncanonical or torn journal 5
+     ↓ rejects malformed, noncanonical or torn journal 6
+     ↓ rejects invalid bounded counter "-1"
+     ↓ rejects invalid bounded counter "01"
+     ↓ rejects invalid bounded counter "1.0"
+     ↓ rejects invalid bounded counter "9223372036854775808"
+     ↓ rejects invalid bounded counter "11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+     ↓ rejects invalid bounded counter 1
+     ↓ rejects invalid bounded counter null
+     ↓ rejects skipped revisions, backwards fences and oversized storage
+     ↓ acknowledges file and directory fsync before mutation success
+     ↓ keeps uncertain file fsync failure locked instead of reporting success
+     ↓ keeps a partial append locked and unavailable
+     ↓ fails closed if directory durability acknowledgement is lost after append
+     ↓ checks cancellation and finite timeout before mutation
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/restore-floor.test.ts > independent restore floor journal > rejects personal fields in the five-field owner-free state
+AssertionError: expected [Function] to throw an error
+ ❯ tests/unit/restore-floor.test.ts:16:75
+     14| describe("independent restore floor journal",()=>{
+     15|   it("rejects personal fields in the five-field owner-free state",()=>{
+     16|     expect(()=>decodeRestoreFloor({...initial,ownerId:"never-retained"…
+       |                                                                           ^
+     17|   });
+     18|   it("does not initialize missing state and bootstraps only explicitly…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 26 skipped (27)
+   Start at  13:28:31
+   Duration  117ms (transform 30ms, setup 0ms, import 40ms, tests 3ms, environment 0ms)
+
+JSON report written to /tmp/resumide-restore-floor-qOAPOd/tests.json

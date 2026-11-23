@@ -1,0 +1,32 @@
+  it.each(["current", "historical"] as const)(
+    "rejects a %s stored v2 row before the legacy engine",
+    async (selection) => {
+      const scenario = scoreReadScenario();
+      if (selection === "historical") {
+        if (!scenario.requirements) throw Error("Expected a stored JD.");
+        scenario.requirements.headId = other;
+      }
+      const before = JSON.stringify(scenario.document);
+      const build = vi.spyOn(scoreEngine, "buildScoreDiagnostics");
+      const error = await scenario
+        .read({ requirements: scenario.document.id })
+        .then(
+          () => null,
+          (failure: unknown) => failure,
+        );
+      expect.soft(error).toMatchObject({
+        status: 503,
+        message: typedUnavailable,
+      });
+      expect(build.mock.calls.length).toBe(0);
+      expect(readers.requirements).toHaveBeenCalledWith(
+        scenario.client,
+        scenario.input.canonical.analysisId,
+        scenario.input.canonical.ownerId,
+        { versionId: scenario.document.id },
+      );
+      expect(JSON.stringify(scenario.document)).toBe(before);
+      expect(scenario.client.rpc).not.toHaveBeenCalled();
+    },
+  );
+

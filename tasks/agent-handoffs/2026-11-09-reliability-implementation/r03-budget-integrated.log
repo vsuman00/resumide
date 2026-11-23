@@ -1,0 +1,138 @@
+
+> test
+> vitest run tests/unit/ai-budget.test.ts
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats
+
+ ✓ tests/unit/ai-budget.test.ts (29 tests) 16ms
+
+ Test Files  1 passed (1)
+      Tests  29 passed (29)
+   Start at  12:35:07
+   Duration  150ms (transform 31ms, setup 0ms, import 67ms, tests 16ms, environment 0ms)
+
+
+> typecheck
+> react-router typegen && tsc
+
+
+> lint
+> eslint app/routes app/lib/server app/lib/native-layout-schema.ts app/lib/native-layout-structure.ts tests e2e app/components scripts/verify-local-ocr.ts vite.worker.config.ts scripts/check-container.mjs
+
+
+> build
+> react-router build
+
+Using Vite Environment API (experimental)
+vite v6.4.5 building for production...
+transforming...
+node_modules/zod/v4/core/util.js (400:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/regexes.js (74:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 266 modules transformed.
+Generated an empty chunk: "auth.callback".
+Generated an empty chunk: "auth.logout".
+Generated an empty chunk: "latex.compile".
+Generated an empty chunk: "build.suggest".
+Generated an empty chunk: "latex.legacy".
+Generated an empty chunk: "latex.compile-legacy".
+Generated an empty chunk: "resume.rewrite".
+Generated an empty chunk: "analysis.source".
+Generated an empty chunk: "analysis.artifact".
+Generated an empty chunk: "api.analyze".
+Generated an empty chunk: "api.analysis-status".
+Generated an empty chunk: "api.analysis-cancel".
+Generated an empty chunk: "api.telemetry".
+Generated an empty chunk: "api.privacy-export".
+Generated an empty chunk: "api.not-found".
+Generated an empty chunk: "metrics".
+Generated an empty chunk: "healthz".
+Generated an empty chunk: "readyz".
+Generated an empty chunk: "chrome-devtools".
+rendering chunks...
+computing gzip size...
+build/client/.vite/manifest.json                        13.83 kB │ gzip:   1.53 kB
+build/client/assets/WorkspaceShell-Cp2OACIv.css          0.29 kB │ gzip:   0.19 kB
+build/client/assets/SiteNavigation-CekEXlv7.css          2.70 kB │ gzip:   0.94 kB
+build/client/assets/resume-Bnjh1IjJ.css                  3.28 kB │ gzip:   1.05 kB
+build/client/assets/latex-CACerNXU.css                  12.38 kB │ gzip:   3.08 kB
+build/client/assets/root-BDJLKGZi.css                  141.80 kB │ gzip:  24.12 kB
+build/client/assets/auth.callback-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/auth.logout-l0sNRNKZ.js              0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.compile-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/build.suggest-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.legacy-l0sNRNKZ.js             0.00 kB │ gzip:   0.02 kB
+build/client/assets/latex.compile-legacy-l0sNRNKZ.js     0.00 kB │ gzip:   0.02 kB
+build/client/assets/resume.rewrite-l0sNRNKZ.js           0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.source-l0sNRNKZ.js          0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.artifact-l0sNRNKZ.js        0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analyze-l0sNRNKZ.js              0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analysis-status-l0sNRNKZ.js      0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.analysis-cancel-l0sNRNKZ.js      0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.telemetry-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.privacy-export-l0sNRNKZ.js       0.00 kB │ gzip:   0.02 kB
+build/client/assets/api.not-found-l0sNRNKZ.js            0.00 kB │ gzip:   0.02 kB
+build/client/assets/metrics-l0sNRNKZ.js                  0.00 kB │ gzip:   0.02 kB
+build/client/assets/healthz-l0sNRNKZ.js                  0.00 kB │ gzip:   0.02 kB
+build/client/assets/readyz-l0sNRNKZ.js                   0.00 kB │ gzip:   0.02 kB
+build/client/assets/chrome-devtools-l0sNRNKZ.js          0.00 kB │ gzip:   0.02 kB
+build/client/assets/analysis.score-8NGFUkKP.js           0.25 kB │ gzip:   0.20 kB
+build/client/assets/analyses-CUbz12ER.js                 0.34 kB │ gzip:   0.26 kB
+build/client/assets/PublicShell-26rMaOTU.js              0.67 kB │ gzip:   0.36 kB
+build/client/assets/WorkspaceShell-CBi4vyzo.js           0.78 kB │ gzip:   0.36 kB
+build/client/assets/store-DL7ZpJ9l.js                    0.79 kB │ gzip:   0.48 kB
+build/client/assets/preload-helper-ckwbz45p.js           1.14 kB │ gzip:   0.66 kB
+build/client/assets/account-C0sJEUiL.js                  2.11 kB │ gzip:   0.93 kB
+build/client/assets/EvidenceScene3D-C1MTRLDB.js          2.41 kB │ gzip:   0.93 kB
+build/client/assets/root-CJEiFnRP.js                     3.32 kB │ gzip:   1.63 kB
+build/client/assets/analysis.requirements-Dr6yyKrC.js    3.33 kB │ gzip:   1.46 kB
+build/client/assets/auth-DjeZoUqy.js                     3.41 kB │ gzip:   1.35 kB
+build/client/assets/analysis.export-DOp1547T.js          3.64 kB │ gzip:   1.55 kB
+build/client/assets/index-CMdmomBl.js                    3.92 kB │ gzip:   1.54 kB
+build/client/assets/SiteNavigation-DcJlVsJa.js           4.28 kB │ gzip:   1.80 kB
+build/client/assets/analysis.evidence-S6Tq5KPt.js        5.66 kB │ gzip:   2.01 kB
+build/client/assets/analysis.canonical-s7H4Ax4v.js       6.07 kB │ gzip:   1.91 kB
+build/client/assets/privacy-CTeutEOX.js                  6.82 kB │ gzip:   2.22 kB
+build/client/assets/analysis-OvfTLToQ.js                 8.53 kB │ gzip:   2.89 kB
+build/client/assets/home-Dv0bMP9g.js                     9.22 kB │ gzip:   2.82 kB
+build/client/assets/analysis.author-BD2SsbiO.js         17.95 kB │ gzip:   5.53 kB
+build/client/assets/latex-CoYBQ_Ds.js                   34.22 kB │ gzip:  11.52 kB
+build/client/assets/upload-B-U9Esmv.js                  70.39 kB │ gzip:  20.46 kB
+build/client/assets/chunk-BV7QT456-BdP_oTIi.js         133.72 kB │ gzip:  44.97 kB
+build/client/assets/resume-CLbrxyt6.js                 134.06 kB │ gzip:  39.48 kB
+build/client/assets/entry.client-BbqgV4JK.js           179.94 kB │ gzip:  57.23 kB
+build/client/assets/pdf-DCt7qnim.js                    390.14 kB │ gzip: 115.82 kB
+✓ built in 1.68s
+vite v6.4.5 building SSR bundle for production...
+transforming...
+✓ 149 modules transformed.
+rendering chunks...
+build/server/.vite/manifest.json                 0.23 kB
+build/server/assets/server-build-nzSdUMcH.css  160.45 kB
+build/server/index.js                          729.26 kB
+
+✓ 1 asset cleaned from React Router server build.
+build/server/assets/server-build-nzSdUMcH.css
+
+✓ built in 409ms
+
+> build:worker
+> vite build --config vite.worker.config.ts
+
+vite v6.4.5 building for production...
+transforming...
+✓ 50 modules transformed.
+rendering chunks...
+computing gzip size...
+build/worker/analysis.mjs  139.75 kB │ gzip: 41.62 kB
+✓ built in 159ms

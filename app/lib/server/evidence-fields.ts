@@ -27,6 +27,15 @@ export type EvidenceFieldCandidate = {
   state: "review_required";
   confidence: { kind: "uncalibrated"; value: null };
 };
+export const MIXED_OCR_FIELD_PROFILE = "mixed-ocr-review/1.0.0";
+export const MIXED_OCR_FIELD_PROFILE_V2 = "mixed-ocr-review/1.0.1";
+export const MIXED_OCR_FIELD_PROFILE_V3 = "mixed-ocr-review/1.0.2";
+export const MIXED_OCR_FIELD_PROFILE_V4 = "mixed-ocr-review/1.0.3";
+type OcrFieldProfile =
+  | typeof MIXED_OCR_FIELD_PROFILE
+  | typeof MIXED_OCR_FIELD_PROFILE_V2
+  | typeof MIXED_OCR_FIELD_PROFILE_V3
+  | typeof MIXED_OCR_FIELD_PROFILE_V4;
 
 const ROLE_WORD =
   /\b(?:engineer|developer|architect|designer|analyst|manager|consultant|administrator|specialist|scientist|lead|director|tester|technician|officer|coordinator|researcher|fellow|intern|programmer|product owner|SRE|SDE|SDET)\b/iu;
@@ -98,10 +107,11 @@ const properNameHeader = (line: string) =>
   /^[\p{Lu}\d][\p{L}\p{N}&'’.-]*(?:\s+(?:[\p{Lu}\d][\p{L}\p{N}&'’.-]*|and|of|the|&))*$/u.test(
     line.trim(),
   );
-const organizationHeading = (line: string) =>
+const organizationHeading = (line: string, allowNamedLab = false) =>
   companyHeader(line) &&
   properNameHeader(line) &&
   (COMPANY_END.test(line.trim()) ||
+    (allowNamedLab && /\S\s+Lab$/iu.test(line.trim())) ||
     /\b(?:Digital|Analytics|Software|Research|Partners|Services|Group|Ventures|Collective|Consulting|Enterprises|Network|Organization|Guild)$/iu.test(
       line.trim(),
     ));
@@ -142,11 +152,30 @@ const fieldSection = (line: string) =>
           )
         ? "certifications"
         : null);
+const localEmploymentHeading = (line: string) =>
+  /^(?:employment details|industry placements)$/u.test(normalizeHeading(line));
+
+function workplaceEmployer(line: string, allowNamedLab: boolean) {
+  const cells = line.split("|").map((cell) => cell.trim());
+  if (cells.length !== 4) return null;
+  const [first, second, workplace, period] = cells;
+  if (
+    !/^(?:remote|hybrid|on[- ]site)$/iu.test(workplace) ||
+    !extractDateStrings(period).includes(period)
+  )
+    return null;
+  if (roleHeader(first) && organizationHeading(second, allowNamedLab))
+    return second;
+  if (roleHeader(second) && organizationHeading(first, allowNamedLab))
+    return first;
+  return null;
+}
 
 /** Proposes grounded candidates, never verified facts. No model, truth labels,
  * normalized replacement text or calibrated probability enters this parser. */
 export function extractEvidenceFields(
   spans: readonly FieldSourceSpan[],
+  profile?: OcrFieldProfile,
 ): EvidenceFieldCandidate[] {
   const candidates: EvidenceFieldCandidate[] = [];
   const add = (
@@ -180,12 +209,22 @@ export function extractEvidenceFields(
   };
   // Parse contacts independently per extraction method so disagreements survive.
   for (const method of ["native_text", "local_ocr"] as const) {
+    const workplaceOcr =
+      (profile === MIXED_OCR_FIELD_PROFILE_V3 ||
+        profile === MIXED_OCR_FIELD_PROFILE_V4) &&
+      method === "local_ocr";
+    const revisedOcr =
+      workplaceOcr ||
+      (profile === MIXED_OCR_FIELD_PROFILE_V2 && method === "local_ocr");
+    const sectionType = (line: string) =>
+      fieldSection(line) ??
+      (revisedOcr && localEmploymentHeading(line) ? "experience" : null);
     const source = spans.filter(
       (span) => span.method === method && span.text.trim(),
     );
     const contactEnd = source.findIndex(
       (span) =>
-        fieldSection(span.text.trim()) ||
+        sectionType(span.text.trim()) ||
         Array.from(span.text.matchAll(LABEL_PATTERN)).some(
           (label) =>
             !["name", "email", "phone"].includes(
@@ -223,16 +262,24 @@ export function extractEvidenceFields(
     let section: string | null = null;
     let sectionStart = -1;
     let certificationSeen = false;
+    let localEmploymentPage: string | undefined;
     for (const [index, span] of source.entries()) {
+      if (localEmploymentPage && localEmploymentPage !== span.pageId) {
+        section = null;
+        sectionStart = -1;
+        localEmploymentPage = undefined;
+      }
       const line = span.text.trim();
       const parts = line.split(/\s+(?:and|&)\s+|\s*\/\s*/iu).map(fieldSection);
       const heading =
-        fieldSection(line) ??
+        sectionType(line) ??
         (parts.includes("experience") ? "experience" : null);
       if (heading) {
         section = heading;
         sectionStart = index;
         certificationSeen = false;
+        localEmploymentPage =
+          revisedOcr && localEmploymentHeading(line) ? span.pageId : undefined;
       }
       const labels = Array.from(line.matchAll(LABEL_PATTERN));
       const labelled = labels.length > 0;
@@ -277,7 +324,7 @@ export function extractEvidenceFields(
           !value &&
           labels.length === 1 &&
           next?.pageId === span.pageId &&
-          !fieldSection(next.text.trim()) &&
+          !sectionType(next.text.trim()) &&
           !Array.from(next.text.matchAll(LABEL_PATTERN)).length
         ) {
           value = next.text.trim();
@@ -380,7 +427,8 @@ export function extractEvidenceFields(
         labelledRole &&
         followingDates?.pageId === following?.pageId &&
         (following?.pageId === span.pageId ||
-          (index === sectionStart + 1 &&
+          (!profile &&
+            index === sectionStart + 1 &&
             source[sectionStart].pageId === span.pageId)) &&
         extractDateStrings(followingDates.text).length &&
         Array.from(followingDates.text.matchAll(LABEL_PATTERN)).some(
@@ -398,6 +446,25 @@ export function extractEvidenceFields(
         !extractDateStrings(line).length
       )
         add("employer", line, span);
+      // A split OCR heading may supply an employer for review from this page.
+      // The next page supplies no role, dates, relationship or citation.
+      if (
+        profile &&
+        method === "local_ocr" &&
+        section === "experience" &&
+        index === sectionStart + 1 &&
+        source[sectionStart].pageId === span.pageId &&
+        following &&
+        following.pageId !== span.pageId &&
+        !heading &&
+        !labelled &&
+        companyHeader(line) &&
+        properNameHeader(line) &&
+        !extractDateStrings(line).length
+      ) {
+        const name = line.replace(/\s+(?:lab|laborator(?:y|ies))$/iu, "");
+        if (name !== line && !fieldSection(name)) add("employer", line, span);
+      }
       if (
         section === "experience" &&
         !heading &&
@@ -474,7 +541,10 @@ export function extractEvidenceFields(
           header = header.replace(`(${date})`, "").replace(date, "");
         }
         header = header.replace(/^[\s|,;–—-]+|[\s|,;–—-]+$/gu, "");
-        const explicitSeparator = /[|•]|\s+[-–—]\s+|\s+at\s+/iu.test(header);
+        const separator = revisedOcr
+          ? /\s*[|•·]\s*|\s+(?:[-–—@]|at)\s+/iu
+          : /\s*[|•]\s*|\s+(?:[-–—]|at)\s+/iu;
+        const explicitSeparator = separator.test(header);
         const companyComma = header
           .split(/\s*,\s*/u)
           .some((part) => COMPANY_END.test(part));
@@ -485,7 +555,7 @@ export function extractEvidenceFields(
           roleHeader(commaParts[1]);
         const segments = (
           explicitSeparator
-            ? header.split(/\s*[|•]\s*|\s+[-–—]\s+|\s+at\s+/iu)
+            ? header.split(separator)
             : dates.length || companyComma || companyFirst
               ? header.split(/\s*,\s*|\s+[–—]\s+/u)
               : [header]
@@ -496,6 +566,12 @@ export function extractEvidenceFields(
         );
         const role = roleSegments.length === 1 ? roleSegments[0] : header;
         add("role", role, span);
+        if (workplaceOcr && source[sectionStart]?.pageId === span.pageId)
+          add(
+            "employer",
+            workplaceEmployer(line, profile === MIXED_OCR_FIELD_PROFILE_V4),
+            span,
+          );
         if (
           segments.length === 2 &&
           roleSegments.length === 1 &&
@@ -516,7 +592,7 @@ export function extractEvidenceFields(
           if (
             adjacent &&
             adjacent.pageId === span.pageId &&
-            !fieldSection(adjacent.text.trim()) &&
+            !sectionType(adjacent.text.trim()) &&
             !/\b(?:experience|employment|projects|engineer|developer|manager|architect|certificat(?:e|ion))\b/iu.test(
               adjacent.text,
             ) &&

@@ -1,0 +1,1342 @@
+/** @vitest-environment jsdom */
+
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  createMemoryRouter,
+  createStaticHandler,
+  createStaticRouter,
+  data,
+  RouterProvider,
+  StaticRouterProvider,
+} from "react-router";
+import { renderToString } from "react-dom/server";
+import { getAuthenticatedUser } from "~/lib/server/auth";
+import {
+  CanonicalError,
+  mutateCanonical,
+} from "~/lib/server/canonical-repository";
+import type { CanonicalEntryRegroupWorkspace } from "~/lib/server/canonical-entry-regroup-repository";
+import type { CanonicalCommand } from "~/lib/server/canonical-repository";
+import type {
+  CanonicalCorrectionCommand,
+  CanonicalCorrectionWorkspace,
+  CanonicalCorrectionWorkspaceItem,
+} from "~/lib/server/canonical-correction-commands";
+
+vi.mock("~/lib/server/auth", () => ({ getAuthenticatedUser: vi.fn() }));
+vi.mock("~/lib/server/config", () => ({
+  getServerConfig: () => ({
+    APP_ORIGIN: "https://fixture.test",
+    CANONICAL_AUTHORING_ENABLED: true,
+    CANONICAL_CORRECTIONS_ENABLED: true,
+    EVIDENCE_REVIEW_ENABLED: true,
+    SCORING_V2_ENABLED: false,
+  }),
+}));
+vi.mock("~/lib/server/supabase", () => ({
+  createSupabaseAdminClient: vi.fn(),
+  createSupabaseServerClient: vi.fn(),
+}));
+vi.mock("~/lib/server/canonical-repository", async (original) => ({
+  ...(await original<typeof import("~/lib/server/canonical-repository")>()),
+  loadCanonicalCorrectionWorkspace: vi.fn(),
+  mutateCanonical: vi.fn(),
+}));
+
+import CanonicalResume from "~/routes/analysis.canonical";
+import * as canonicalRoute from "~/routes/analysis.canonical";
+
+const id = (n: number) =>
+  `10000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+type Model = CanonicalCorrectionWorkspace & {
+  groupedOwnerId: string;
+  entryRegroup: Extract<
+    CanonicalEntryRegroupWorkspace,
+    { state: "unavailable" }
+  >;
+  scoringDiagnosticsEnabled: boolean;
+  artifactEnabled: boolean;
+  formKey: string;
+  factKeys: Record<string, { edit: string; confirm: string }>;
+  restoreKey: string;
+  retainedKeys: Record<string, string>;
+};
+const nativeContainers: HTMLElement[] = [];
+
+function fixture(): Model {
+  const binding: Model["corrections"]["binding"] = {
+    ownerId: id(1),
+    organizationId: id(2),
+    resumeId: id(3),
+    analysisId: id(4),
+    sourceId: id(5),
+    attemptId: id(6),
+    inputSha256: "a".repeat(64),
+    evidenceSchemaVersion: "evidence/2.0.0",
+    fieldExtractorVersion: "evidence-fields/test",
+    targetModelVersion: "evidence-targets/1.0.0",
+    projectionModelVersion: "canonical-corrections/1.0.1",
+    admissionPolicyVersion: "candidate-correction-admission/1.0.0",
+    reviewRevision: 1,
+    assignmentRevision: 0,
+    canonicalHeadId: id(7),
+  };
+  const event: CanonicalCorrectionWorkspaceItem["event"] = {
+    id: id(12),
+    attempt_id: id(6),
+    analysis_id: id(4),
+    owner_id: id(1),
+    actor_id: id(1),
+    revision: 1,
+    expected_revision: 0,
+    field: "employer",
+    operation: "correct",
+    value: "Harbor Labs",
+    candidate_id: null,
+    created_at: "2026-11-10T00:00:00Z",
+  };
+  const location = {
+    kind: "entry" as const,
+    sectionId: id(9),
+    entryId: id(10),
+    bulletId: null,
+    newSectionType: null,
+    newSectionTitle: null,
+  };
+  const item: CanonicalCorrectionWorkspaceItem = {
+    event,
+    projectionState: "mapped",
+    state: "needs_assignment",
+    currentValue: "Cedar Labs",
+    proposedValue: "Harbor Labs",
+    sourceChoices: [
+      {
+        targetId: "source-target-employer",
+        assertionId: "employer-assertion",
+        field: "employer",
+        label: "Employer in source",
+        quote: "Employer: Cedar Labs",
+        references: [
+          {
+            pageId: "page-1",
+            method: "native_text",
+            spanId: "employer-span",
+            start: 10,
+            end: 20,
+          },
+        ],
+      },
+    ],
+    assignmentOptions: [
+      {
+        id: "choose-cedar",
+        label: "Experience: Cedar Labs — employer",
+        selector: {
+          eventId: event.id,
+          targetKind: "observed_assertion",
+          assertionId: "employer-assertion",
+          opaqueTargetId: "source-target-employer",
+          mappingMode: "existing",
+          baseVersionId: id(7),
+          factId: id(8),
+          mappingProofKind: "current_citations",
+          originVersionId: null,
+          originFactId: null,
+          location,
+          supersedesAssignmentId: null,
+        },
+      },
+    ],
+    placementOptions: [
+      {
+        id: "new-experience-entry",
+        label: "New entry in Experience",
+        location: { ...location, kind: "new_entry", entryId: null },
+      },
+    ],
+    assignment: null,
+    applications: [],
+    priorApplicationId: null,
+    actionKeys: { assign: id(21), apply: id(22), add: id(23), reapply: id(24) },
+    confirmationGranted: false,
+  };
+  return {
+    analysisId: id(4),
+    resumeId: id(3),
+    groupedOwnerId: id(1),
+    entryRegroup: {
+      schemaVersion: "entry-regroup-workspace/1.0.0",
+      state: "unavailable",
+      reason: "unavailable",
+      scoringEligible: false,
+    },
+    headId: id(7),
+    history: [],
+    nextOffset: null,
+    comparison: null,
+    scoringEligible: false,
+    current: {
+      revision: 1,
+      sourceId: id(5),
+      document: {
+        schemaVersion: "canonical-resume/1.0.0",
+        producerVersion: "canonical-engine/1.0.1",
+        analysisId: id(4),
+        inputSha256: binding.inputSha256,
+        retentionPolicyId: "synthetic/1",
+        resumeId: id(3),
+        versionId: id(7),
+        parentVersionId: null,
+        ownerId: id(1),
+        organizationId: id(2),
+        locale: "en-IN",
+        createdAt: "2026-11-10T00:00:00Z",
+        state: "review_required",
+        sourceEvidenceVersionId: id(6),
+        contactFactIds: [],
+        facts: [
+          {
+            id: id(8),
+            type: "employer",
+            value: "Cedar Labs",
+            state: "unconfirmed",
+            confirmation: null,
+            sources: [
+              { attemptId: id(6), spanId: "employer-span", start: 10, end: 20 },
+            ],
+          },
+        ],
+        sections: [
+          {
+            id: id(9),
+            type: "experience",
+            title: "Experience",
+            factIds: [],
+            entries: [{ id: id(10), factIds: [id(8)], bullets: [] }],
+          },
+        ],
+        changes: [],
+      },
+    },
+    corrections: {
+      schemaVersion: "canonical-correction-workspace/1.0.0",
+      writeReady: true,
+      binding,
+      items: [item],
+      projection: {
+        modelVersion: "canonical-corrections/1.0.1",
+        authority: "review_projection_only",
+        materialized: false,
+        scoringEligible: false,
+        binding,
+        history: [event],
+        items: [],
+        historyCompleteness: "not_attested_by_read_model",
+        historyAttestation: null,
+        latestScope: "supplied_contiguous_history_per_target",
+      },
+      snapshot: {
+        state: "recorded",
+        originKind: "import",
+        restoredFromVersionId: null,
+        activeApplicationIds: [],
+      },
+    },
+    scoringDiagnosticsEnabled: false,
+    artifactEnabled: true,
+    formKey: id(25),
+    restoreKey: id(26),
+    retainedKeys: {
+      [`edit:${id(8)}`]: id(25),
+      [`rename_section:${id(9)}`]: id(29),
+    },
+    factKeys: { [id(8)]: { edit: id(27), confirm: id(28) } },
+  };
+}
+
+async function mount(
+  model: Model,
+  onCommand: (
+    command: CanonicalCorrectionCommand,
+  ) => Promise<unknown> | unknown = () =>
+    data({ error: "Reload latest version.", success: null }, { status: 409 }),
+) {
+  const commands: CanonicalCorrectionCommand[] = [];
+  const forms: FormData[] = [];
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/analysis/:id/canonical",
+        Component: CanonicalResume,
+        loader: () => model,
+        action: async ({ request }) => {
+          const form = await request.formData();
+          forms.push(form);
+          const command = JSON.parse(
+            String(form.get("command")),
+          ) as CanonicalCorrectionCommand;
+          commands.push(command);
+          return onCommand(command);
+        },
+      },
+    ],
+    { initialEntries: [`/analysis/${id(4)}/canonical`] },
+  );
+  render(<RouterProvider router={router} />);
+  await screen.findByRole("heading", { name: "Review your resume facts" });
+  return { router, commands, forms };
+}
+
+async function reviewRegion() {
+  return screen.findByRole("region", { name: "Saved evidence corrections" });
+}
+
+function ready(model: Model) {
+  const item = model.corrections.items[0];
+  item.state = "ready_to_apply";
+  item.assignment = {
+    id: id(30),
+    revision: 1,
+    baseVersionId: id(7),
+    mappingMode: "existing",
+    label: "Experience: Cedar Labs — employer",
+  };
+  model.corrections.binding.assignmentRevision = 1;
+  return item;
+}
+
+function acknowledge(region: HTMLElement) {
+  fireEvent.click(within(region).getByRole("checkbox", { name: /I reviewed/ }));
+}
+
+type RetainedSubmission = Extract<
+  CanonicalCommand,
+  { operation: "edit" | "rename_section" }
+>;
+function submittedDraft(
+  model: Model,
+  operation: RetainedSubmission["operation"],
+): RetainedSubmission {
+  const common = {
+    expectedVersionId: model.headId!,
+    idempotencyKey: id(80),
+    value: "Retained & <strong>candidate draft</strong>",
+  };
+  return operation === "edit"
+    ? { ...common, operation, factId: id(8) }
+    : { ...common, operation, sectionId: id(9) };
+}
+function mockDraftRejection() {
+  vi.mocked(getAuthenticatedUser).mockResolvedValue({
+    id: id(1),
+    aud: "authenticated",
+    app_metadata: {},
+    user_metadata: {},
+    created_at: "2026-11-10T00:00:00Z",
+  });
+  vi.mocked(mutateCanonical).mockRejectedValue(
+    new CanonicalError(409, "Review the latest saved version."),
+  );
+}
+async function nativeDraftResponse(
+  model: Model,
+  submitted: RetainedSubmission,
+) {
+  mockDraftRejection();
+  const routes = [
+    {
+      id: "canonical",
+      path: "/analysis/:id/canonical",
+      Component: CanonicalResume,
+      loader: () => model,
+      action: canonicalRoute.action,
+    },
+  ];
+  const handler = createStaticHandler(routes);
+  const context = await handler.query(
+    new Request(`https://fixture.test/analysis/${model.analysisId}/canonical`, {
+      method: "POST",
+      headers: { Origin: "https://fixture.test" },
+      body: new URLSearchParams(submitted),
+    }),
+  );
+  if (context instanceof Response)
+    throw new Error("Expected a rendered action response.");
+  const router = createStaticRouter(handler.dataRoutes, context);
+  const html = renderToString(
+    <StaticRouterProvider router={router} context={context} hydrate={false} />,
+  );
+  const container = document.createElement("div");
+  container.innerHTML = html;
+  document.body.append(container);
+  nativeContainers.push(container);
+  return { container, context, html };
+}
+
+afterEach(cleanup);
+afterEach(() => {
+  for (const container of nativeContainers.splice(0)) container.remove();
+});
+
+type LifecycleCommand =
+  RetainedSubmission | Extract<CanonicalCommand, { operation: "confirm" }>;
+async function mountResolutionLifecycle() {
+  const model = fixture();
+  const doc = model.current!.document;
+  doc.facts.push({
+    ...structuredClone(doc.facts[0]),
+    id: id(108),
+    value: "Second employer",
+  });
+  doc.sections.push({
+    ...structuredClone(doc.sections[0]),
+    id: id(109),
+    title: "Other experience",
+    entries: [],
+  });
+  model.factKeys[id(108)] = { edit: id(127), confirm: id(128) };
+  mockDraftRejection();
+  let revision = 1;
+  let loads = 0;
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/analysis/:id/canonical",
+        Component: CanonicalResume,
+        shouldRevalidate: canonicalRoute.shouldRevalidate,
+        loader: () => {
+          model.formKey = id(200 + ++loads);
+          model.retainedKeys = Object.fromEntries([
+            ...model.current!.document.facts.map((fact, index) => [
+              `edit:${fact.id}`,
+              id(500 + loads * 10 + index),
+            ]),
+            ...model.current!.document.sections.map((section, index) => [
+              `rename_section:${section.id}`,
+              id(505 + loads * 10 + index),
+            ]),
+          ]);
+          return structuredClone(model);
+        },
+        action: async ({ request, params }) =>
+          canonicalRoute.action({
+            request: new Request(
+              new URL(new URL(request.url).pathname, "https://fixture.test"),
+              {
+                method: "POST",
+                headers: {
+                  Origin: "https://fixture.test",
+                  "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: await request.text(),
+              },
+            ),
+            params,
+          }),
+      },
+    ],
+    { initialEntries: [`/analysis/${model.analysisId}/canonical`] },
+  );
+  render(<RouterProvider router={router} />);
+  await screen.findByRole("textbox", { name: "Correct employer: Cedar Labs" });
+  const perform = async (
+    command: LifecycleCommand,
+    outcome: "success" | "failure",
+  ) => {
+    vi.mocked(mutateCanonical).mockImplementationOnce(async () => {
+      if (outcome === "failure")
+        throw new CanonicalError(409, "Review the latest saved version.");
+      model.headId = id(300 + ++revision);
+      model.current!.document.versionId = model.headId;
+      model.current!.revision = revision;
+      model.corrections.binding.canonicalHeadId = model.headId;
+      if (command.operation === "edit")
+        model.current!.document.facts.find(
+          (f) => f.id === command.factId,
+        )!.value = command.value;
+      if (command.operation === "rename_section")
+        model.current!.document.sections.find(
+          (section) => section.id === command.sectionId,
+        )!.title = command.value;
+      return {
+        status: "applied" as const,
+        versionId: model.headId,
+        revision,
+        idempotent: false,
+        scoringEligible: false as const,
+      };
+    });
+    await act(async () => {
+      const formData = new FormData();
+      for (const [key, value] of Object.entries(command))
+        formData.set(key, value);
+      await router.navigate(`/analysis/${model.analysisId}/canonical`, {
+        formMethod: "post",
+        formEncType: "application/x-www-form-urlencoded",
+        formData,
+      });
+    });
+    await waitFor(() => expect(router.state.navigation.state).toBe("idle"));
+  };
+  const values = () =>
+    screen
+      .getAllByRole("region", { name: "Retained correction" })
+      .map(
+        (region) =>
+          within(region).getByLabelText("Your retained correction").textContent,
+      );
+  return { model, router, perform, values };
+}
+
+describe("candidate correction review", () => {
+  it("offers export for the exact confirmed current version without relying on scoring", async () => {
+    const model = fixture();
+    const fact = model.current!.document.facts[0];
+    fact.value = "Harbor Labs";
+    fact.sources = [];
+    fact.state = "candidate_confirmed";
+    fact.confirmation = {
+      actorId: model.current!.document.ownerId,
+      confirmedAt: model.current!.document.createdAt,
+      value: fact.value,
+    };
+    await mount(model);
+    expect(
+      screen
+        .getByRole("link", { name: "Preview and export this version" })
+        .getAttribute("href"),
+    ).toBe(`/analysis/${id(4)}/export?version=${id(7)}`);
+  });
+
+  it.each(["unconfirmed", "historical", "disabled"] as const)(
+    "does not offer export when the viewed version is %s",
+    async (state) => {
+      const model = fixture();
+      const fact = model.current!.document.facts[0];
+      if (state !== "unconfirmed") {
+        fact.state = "candidate_confirmed";
+        fact.confirmation = {
+          actorId: model.current!.document.ownerId,
+          confirmedAt: model.current!.document.createdAt,
+          value: fact.value,
+        };
+      }
+      if (state === "historical") model.headId = id(30);
+      if (state === "disabled") model.artifactEnabled = false;
+      await mount(model);
+      expect(
+        screen.queryByRole("link", { name: "Preview and export this version" }),
+      ).toBeNull();
+    },
+  );
+
+  it.each(["edit", "rename_section"] as const)(
+    "U03 draft retains a validated %s in a native server-rendered rejected response",
+    async (operation) => {
+      const model = fixture();
+      if (operation === "rename_section") {
+        model.retainedKeys[`edit:${id(8)}`] = id(29);
+        model.retainedKeys[`rename_section:${id(9)}`] = model.formKey;
+      }
+      const submitted = submittedDraft(model, operation);
+      const { container, context, html } = await nativeDraftResponse(
+        model,
+        submitted,
+      );
+      expect(context.statusCode).toBe(409);
+      const region = within(container).getByRole("region", {
+        name: "Retained correction",
+      });
+      expect(
+        within(region).getByLabelText("Your retained correction").textContent,
+      ).toBe(submitted.value);
+      const retry = within(region)
+        .getByRole("button", { name: "Retry this exact correction" })
+        .closest("form")!;
+      expect(Object.fromEntries(new FormData(retry))).toEqual(submitted);
+      const review = within(region)
+        .getByRole("button", { name: "Save reviewed correction" })
+        .closest("form")!;
+      expect(Object.fromEntries(new FormData(review))).toEqual({
+        ...submitted,
+        expectedVersionId: model.headId,
+        idempotencyKey: model.formKey,
+      });
+      expect(
+        (within(review).getByRole("checkbox") as HTMLInputElement).required,
+      ).toBe(true);
+      expect(
+        within(review)
+          .getByRole("button", { name: "Save reviewed correction" })
+          .hasAttribute("disabled"),
+      ).toBe(false);
+      expect(region.querySelector("strong")).toBeNull();
+      expect(html).toContain("&lt;strong&gt;candidate draft&lt;/strong&gt;");
+    },
+  );
+  it("U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery", async () => {
+    const initial = fixture();
+    const oldVersion = initial.headId!;
+    let loads = 0;
+    const requests: URL[] = [];
+    mockDraftRejection();
+    const router = createMemoryRouter(
+      [
+        {
+          path: "/analysis/:id/canonical",
+          Component: CanonicalResume,
+          shouldRevalidate: canonicalRoute.shouldRevalidate,
+          loader: ({ request }) => {
+            loads++;
+            if (loads === 1) return initial;
+            const model = structuredClone(initial);
+            model.headId = id(70 + loads);
+            model.current!.document.versionId = model.headId;
+            model.current!.document.parentVersionId = oldVersion;
+            model.current!.document.facts[0].value =
+              "Concurrent saved employer";
+            model.current!.document.facts[0].sources = [];
+            model.formKey = id(90 + loads);
+            model.retainedKeys = {
+              [`edit:${id(8)}`]: model.formKey,
+              [`rename_section:${id(9)}`]: id(190 + loads),
+            };
+            model.corrections.binding.canonicalHeadId = model.headId;
+            if (loads >= 4) {
+              model.current!.sourceId = id(120);
+              model.corrections.binding.sourceId = id(120);
+            }
+            const selected = new URL(request.url).searchParams.get("version");
+            if (selected === oldVersion) model.current = initial.current;
+            return model;
+          },
+          action: async ({ request, params }) => {
+            const incoming = new URL(request.url);
+            requests.push(incoming);
+            const target = new URL(
+              incoming.pathname + incoming.search,
+              "https://fixture.test",
+            );
+            return canonicalRoute.action({
+              request: new Request(target, {
+                method: "POST",
+                headers: {
+                  Origin: "https://fixture.test",
+                  "Content-Type": "application/x-www-form-urlencoded",
+                },
+                body: await request.text(),
+              }),
+              params,
+            });
+          },
+        },
+      ],
+      {
+        initialEntries: [
+          `/analysis/${initial.analysisId}/canonical?version=${oldVersion}`,
+        ],
+      },
+    );
+    render(<RouterProvider router={router} />);
+    const input = await screen.findByRole("textbox", {
+      name: "Correct employer: Cedar Labs",
+    });
+    fireEvent.change(input, {
+      target: { value: "My retained employer correction" },
+    });
+    const submitted = Object.fromEntries(new FormData(input.closest("form")!));
+    fireEvent.submit(input.closest("form")!);
+    await screen.findByRole("alert");
+    await waitFor(() => expect(loads).toBe(2));
+    expect(requests[0].search).toBe("");
+    const region = screen.getByRole("region", { name: "Retained correction" });
+    expect(
+      within(region).getByLabelText("Your retained correction").textContent,
+    ).toBe(submitted.value);
+    const retry = within(region)
+      .getByRole("button", { name: "Retry this exact correction" })
+      .closest("form")!;
+    expect(Object.fromEntries(new FormData(retry))).toEqual(submitted);
+    const review = within(region)
+      .getByRole("button", { name: "Save reviewed correction" })
+      .closest("form")!;
+    expect(
+      within(region).getByText("Concurrent saved employer", { exact: true }),
+    ).toBeTruthy();
+    const checkbox = within(review).getByRole("checkbox") as HTMLInputElement;
+    expect(checkbox.required).toBe(true);
+    expect(checkbox.checked).toBe(false);
+    expect(new FormData(review).get("expectedVersionId")).toBe(id(72));
+    expect(new FormData(review).get("idempotencyKey")).toBe(id(92));
+    expect(new FormData(review).get("value")).toBe(submitted.value);
+    expect(new FormData(review).get("factId")).toBe(submitted.factId);
+    fireEvent.click(checkbox);
+    await act(async () => {
+      await router.revalidate();
+    });
+    await waitFor(() => {
+      const currentReview = within(region)
+        .getByRole("button", { name: "Save reviewed correction" })
+        .closest("form")!;
+      expect(new FormData(currentReview).get("expectedVersionId")).toBe(id(73));
+    });
+    const renewed = within(region)
+      .getByRole("button", { name: "Save reviewed correction" })
+      .closest("form")!;
+    const renewedCheckbox = within(renewed).getByRole(
+      "checkbox",
+    ) as HTMLInputElement;
+    expect(renewedCheckbox.checked).toBe(false);
+    fireEvent.click(renewedCheckbox);
+    fireEvent(window, new PageTransitionEvent("pageshow", { persisted: true }));
+    expect(renewedCheckbox.checked).toBe(false);
+    renewedCheckbox.checked = true;
+    fireEvent(window, new PageTransitionEvent("pageshow", { persisted: true }));
+    expect(renewedCheckbox.checked).toBe(false);
+    expect(
+      within(region).getByLabelText("Your retained correction").textContent,
+    ).toBe(submitted.value);
+    await act(async () => {
+      await router.revalidate();
+    });
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("region", { name: "Retained correction" }),
+      ).toBeNull(),
+    );
+    expect(
+      screen.queryByText(submitted.value as string, { exact: true }),
+    ).toBeNull();
+  });
+  it.each([undefined, "not-a-uuid"])(
+    "U03 key withholds a fresh review when the target key is %s",
+    async (invalidKey) => {
+      const model = fixture();
+      Object.assign(model, {
+        retainedKeys:
+          invalidKey === undefined ? {} : { [`edit:${id(8)}`]: invalidKey },
+      });
+      const submitted = submittedDraft(model, "edit");
+      const { container } = await nativeDraftResponse(model, submitted);
+      const region = within(container).getByRole("region", {
+        name: "Retained correction",
+      });
+      expect(
+        within(region).getByLabelText("Your retained correction").textContent,
+      ).toBe(submitted.value);
+      expect(
+        within(region).queryByRole("button", {
+          name: "Save reviewed correction",
+        }),
+      ).toBeNull();
+      const exact = within(region)
+        .getByRole("button", { name: "Retry this exact correction" })
+        .closest("form")!;
+      expect(Object.fromEntries(new FormData(exact))).toEqual(submitted);
+    },
+  );
+  it("U03 resolution retains a rejected edit through unrelated successful and failed actions", async () => {
+    const { model, perform, values } = await mountResolutionLifecycle();
+    const a = submittedDraft(model, "edit");
+    await perform(a, "failure");
+    expect(values()).toEqual([a.value]);
+    const firstReviewKey = new FormData(
+      screen
+        .getByRole("button", { name: "Save reviewed correction" })
+        .closest("form")!,
+    ).get("idempotencyKey");
+    await perform(
+      {
+        operation: "confirm",
+        factId: id(108),
+        expectedVersionId: model.headId!,
+        idempotencyKey: id(180),
+      },
+      "success",
+    );
+    expect(values()).toEqual([a.value]);
+    const refreshedReviewKey = new FormData(
+      screen
+        .getByRole("button", { name: "Save reviewed correction" })
+        .closest("form")!,
+    ).get("idempotencyKey");
+    expect(refreshedReviewKey).not.toBe(firstReviewKey);
+    await perform(
+      {
+        operation: "confirm",
+        factId: id(108),
+        expectedVersionId: model.headId!,
+        idempotencyKey: id(181),
+      },
+      "failure",
+    );
+    expect(values()).toEqual([a.value]);
+    await perform(
+      {
+        ...a,
+        expectedVersionId: model.headId!,
+        idempotencyKey: id(186),
+        value: "Other saved value for this target",
+      } as Extract<RetainedSubmission, { operation: "edit" }>,
+      "success",
+    );
+    expect(values()).toEqual([a.value]);
+    const b = {
+      ...a,
+      factId: id(108),
+      expectedVersionId: model.headId!,
+      idempotencyKey: id(182),
+      value: "Other retained correction",
+    } as Extract<RetainedSubmission, { operation: "edit" }>;
+    await perform(b, "failure");
+    expect(values()).toEqual([a.value, b.value]);
+    const panels = screen.getAllByRole("region", {
+      name: "Retained correction",
+    });
+    for (const [index, command] of [a, b].entries()) {
+      const exact = within(panels[index])
+        .getByRole("button", { name: "Retry this exact correction" })
+        .closest("form")!;
+      expect(Object.fromEntries(new FormData(exact))).toEqual(command);
+    }
+    const reviewKeys = panels.map((panel) =>
+      new FormData(
+        within(panel)
+          .getByRole("button", { name: "Save reviewed correction" })
+          .closest("form")!,
+      ).get("idempotencyKey"),
+    );
+    expect(new Set(reviewKeys).size).toBe(2);
+    const revisedB = {
+      ...b,
+      idempotencyKey: id(183),
+      value: "Revised other correction",
+    };
+    await perform(revisedB, "failure");
+    expect(values()).toEqual([a.value, revisedB.value]);
+    await perform(revisedB, "success");
+    expect(values()).toEqual([a.value]);
+    const region = screen.getByRole("region", { name: "Retained correction" });
+    const review = within(region)
+      .getByRole("button", { name: "Save reviewed correction" })
+      .closest("form")!;
+    const reviewed = Object.fromEntries(new FormData(review));
+    expect(reviewed.idempotencyKey).not.toBe(a.idempotencyKey);
+    await perform(
+      reviewed as Extract<RetainedSubmission, { operation: "edit" }>,
+      "success",
+    );
+    expect(
+      screen.queryByRole("region", { name: "Retained correction" }),
+    ).toBeNull();
+  });
+  it("U03 resolution preserves separate rejected targets until their own exact successful save", async () => {
+    const { model, perform, values } = await mountResolutionLifecycle();
+    const a = submittedDraft(model, "rename_section");
+    await perform(a, "failure");
+    const b = {
+      ...a,
+      sectionId: id(109),
+      idempotencyKey: id(184),
+      value: "Other retained title",
+    } as Extract<RetainedSubmission, { operation: "rename_section" }>;
+    await perform(b, "failure");
+    expect(values()).toEqual([a.value, b.value]);
+    await perform(
+      {
+        operation: "edit",
+        factId: id(8),
+        expectedVersionId: model.headId!,
+        idempotencyKey: id(185),
+        value: a.value,
+      },
+      "success",
+    );
+    expect(values()).toEqual([a.value, b.value]);
+    await perform(b, "success");
+    expect(values()).toEqual([a.value]);
+    await perform(a, "success");
+    expect(
+      screen.queryByRole("region", { name: "Retained correction" }),
+    ).toBeNull();
+  });
+  it.each(["historical", "missing_target"] as const)(
+    "U03 draft retains text without permitting a %s recovery or inferred replacement target",
+    async (state) => {
+      const initial = fixture();
+      const submitted = submittedDraft(initial, "edit");
+      const model = structuredClone(initial);
+      model.headId = id(70);
+      if (state === "missing_target") {
+        model.current!.document.versionId = model.headId;
+        model.current!.document.parentVersionId = initial.headId;
+        model.current!.document.facts = [];
+        model.current!.document.sections = [];
+      }
+      const { container } = await nativeDraftResponse(model, submitted);
+      const region = within(container).getByRole("region", {
+        name: "Retained correction",
+      });
+      expect(
+        within(region).getByLabelText("Your retained correction").textContent,
+      ).toBe(submitted.value);
+      expect(
+        within(region)
+          .getByRole("button", { name: "Retry this exact correction" })
+          .hasAttribute("disabled"),
+      ).toBe(true);
+      expect(
+        within(region).queryByRole("button", {
+          name: "Save reviewed correction",
+        }),
+      ).toBeNull();
+    },
+  );
+  it("imports a saved correction through the reviewed path and leaves its fact unconfirmed", async () => {
+    const model = fixture();
+    const imported = model.current!;
+    const item = ready(model);
+    model.current = null;
+    model.headId = null;
+    model.corrections.binding.canonicalHeadId = null;
+    item.assignment = {
+      id: id(30),
+      revision: 1,
+      baseVersionId: null,
+      mappingMode: "imported_assertion",
+      label: "Imported source employer: Cedar Labs",
+    };
+    const { commands } = await mount(model, () => {
+      imported.document.facts[0] = {
+        ...imported.document.facts[0],
+        value: "Harbor Labs",
+        state: "unconfirmed",
+        sources: [],
+        confirmation: null,
+      };
+      model.current = imported;
+      model.headId = imported.document.versionId;
+      model.corrections.binding.canonicalHeadId = model.headId;
+      item.state = "applied";
+      return { success: "Corrected version saved for review.", error: null };
+    });
+    expect(
+      screen.queryByRole("button", { name: "Import resume for review" }),
+    ).toBeNull();
+    const region = await reviewRegion();
+    acknowledge(region);
+    fireEvent.click(
+      within(region).getByRole("button", { name: "Apply correction" }),
+    );
+    await waitFor(() => expect(commands).toHaveLength(1));
+    expect(commands[0]).toMatchObject({
+      kind: "apply",
+      expectedVersionId: null,
+      selectors: [{ assignmentId: id(30), priorApplicationId: null }],
+    });
+    expect(
+      await screen.findByRole("button", {
+        name: "Confirm employer: Harbor Labs",
+      }),
+    ).toBeTruthy();
+    expect(imported.document.facts[0]).toMatchObject({
+      value: "Harbor Labs",
+      state: "unconfirmed",
+      sources: [],
+      confirmation: null,
+    });
+  });
+
+  it("shows the exact diff and provenance, applies without retyping, and retains the operation key after a retryable failure", async () => {
+    const model = fixture();
+    ready(model);
+    const { router, commands, forms } = await mount(model, () =>
+      data(
+        { error: "Try the same submission again.", success: null },
+        { status: 503 },
+      ),
+    );
+    const region = await reviewRegion();
+    expect(
+      within(region).getByText("Cedar Labs", { exact: true }),
+    ).toBeTruthy();
+    expect(
+      within(region).getByText("Harbor Labs", { exact: true }),
+    ).toBeTruthy();
+    expect(
+      within(region).getByText("Experience: Cedar Labs — employer", {
+        exact: true,
+      }),
+    ).toBeTruthy();
+    expect(within(region).getByText(/Your saved correction/)).toBeTruthy();
+    expect(
+      within(region).getByText("Employer: Cedar Labs", { exact: true }),
+    ).toBeTruthy();
+    expect(within(region).queryByDisplayValue("Harbor Labs")).toBeNull();
+    expect(
+      within(region).getByText(/Confirm the new fact separately/),
+    ).toBeTruthy();
+    const button = within(region).getByRole("button", {
+      name: "Apply correction",
+    });
+    expect(button.hasAttribute("disabled")).toBe(true);
+    acknowledge(region);
+    fireEvent.click(button);
+    await screen.findByRole("alert");
+    expect(commands).toHaveLength(1);
+    expect(commands[0]).toMatchObject({
+      kind: "apply",
+      idempotencyKey: id(22),
+      expectedVersionId: id(7),
+      expectedReviewRevision: 1,
+      expectedAssignmentRevision: 1,
+      acknowledgement: true,
+      selectors: [{ assignmentId: id(30), priorApplicationId: null }],
+    });
+    expect([...forms[0].keys()].sort()).toEqual(["command", "operation"]);
+    expect(forms[0].get("operation")).toBe("correction");
+    expect(Object.keys(commands[0])).not.toContain("value");
+    expect(Object.keys(commands[0])).not.toContain("ownerId");
+    model.corrections.items[0].actionKeys.apply = id(99);
+    await act(async () => {
+      await router.revalidate();
+    });
+    await waitFor(() => expect(button.hasAttribute("disabled")).toBe(false));
+    fireEvent.click(button);
+    await waitFor(() => expect(commands).toHaveLength(2));
+    expect(commands[1]).toEqual(commands[0]);
+    expect(model.current?.document.facts[0].value).toBe("Cedar Labs");
+  });
+
+  it("requires an explicit employer target and acknowledgement before assignment", async () => {
+    const model = fixture();
+    const item = model.corrections.items[0];
+    item.assignmentOptions.push({
+      id: "choose-other",
+      label: "Experience: Willow Systems — employer",
+      selector: {
+        ...item.assignmentOptions[0].selector,
+        factId: id(45),
+        location: {
+          ...item.assignmentOptions[0].selector.location,
+          entryId: id(46),
+        },
+      },
+    });
+    const { commands } = await mount(model);
+    const region = await reviewRegion();
+    const button = within(region).getByRole("button", {
+      name: "Save correction target",
+    });
+    expect(button.hasAttribute("disabled")).toBe(true);
+    const select = within(region).getByLabelText(
+      "Choose the source and resume target",
+    );
+    fireEvent.change(select, { target: { value: "choose-other" } });
+    expect(button.hasAttribute("disabled")).toBe(true);
+    acknowledge(region);
+    fireEvent.click(button);
+    await waitFor(() => expect(commands).toHaveLength(1));
+    expect(commands[0]).toMatchObject({
+      kind: "assign",
+      selectors: [item.assignmentOptions[1].selector],
+    });
+    expect(
+      within(region).queryByRole("button", { name: "Apply correction" }),
+    ).toBeNull();
+    expect(region.textContent).not.toContain(id(45));
+  });
+
+  it("reviews an absent-field placement before assigning and then adding an unconfirmed fact", async () => {
+    const model = fixture();
+    const item = model.corrections.items[0];
+    item.state = "requires_add";
+    item.currentValue = null;
+    item.assignmentOptions[0] = {
+      ...item.assignmentOptions[0],
+      label: "Add the saved employer correction",
+      selector: {
+        ...item.assignmentOptions[0].selector,
+        targetKind: "unobserved_field",
+        assertionId: null,
+        mappingMode: "add",
+        baseVersionId: null,
+        factId: null,
+        mappingProofKind: "explicit_candidate_add",
+      },
+    };
+    const { commands } = await mount(model, (command) => {
+      if (command.kind === "assign") {
+        item.assignment = {
+          id: id(30),
+          revision: 1,
+          baseVersionId: null,
+          mappingMode: "add",
+          label: "New entry in Experience",
+        };
+        item.state = "ready_to_apply";
+        model.corrections.binding.assignmentRevision = 1;
+      } else {
+        model.current!.document.facts[0] = {
+          ...model.current!.document.facts[0],
+          value: "Harbor Labs",
+          state: "unconfirmed",
+          sources: [],
+          confirmation: null,
+        };
+        item.state = "applied";
+      }
+      return { success: "Saved for review.", error: null };
+    });
+    let region = await reviewRegion();
+    fireEvent.change(
+      within(region).getByLabelText("Choose the source and resume target"),
+      { target: { value: "choose-cedar" } },
+    );
+    const button = within(region).getByRole("button", {
+      name: "Save correction target",
+    });
+    acknowledge(region);
+    expect(button.hasAttribute("disabled")).toBe(true);
+    fireEvent.change(
+      within(region).getByLabelText("Choose where to add the fact"),
+      { target: { value: "new-experience-entry" } },
+    );
+    expect(button.hasAttribute("disabled")).toBe(true);
+    acknowledge(region);
+    fireEvent.click(button);
+    await waitFor(() => expect(commands).toHaveLength(1));
+    expect(commands[0]).toMatchObject({
+      kind: "assign",
+      selectors: [
+        { mappingMode: "add", location: item.placementOptions[0].location },
+      ],
+    });
+    region = await reviewRegion();
+    const add = await within(region).findByRole("button", {
+      name: "Add correction as a fact",
+    });
+    expect(add.hasAttribute("disabled")).toBe(true);
+    acknowledge(region);
+    fireEvent.click(add);
+    await waitFor(() => expect(commands).toHaveLength(2));
+    expect(commands[1]).toMatchObject({
+      kind: "add",
+      acknowledgement: true,
+      selectors: [{ assignmentId: id(30), priorApplicationId: null }],
+    });
+    expect(
+      await screen.findByRole("button", {
+        name: "Confirm employer: Harbor Labs",
+      }),
+    ).toBeTruthy();
+    expect(model.current!.document.facts[0]).toMatchObject({
+      state: "unconfirmed",
+      confirmation: null,
+      sources: [],
+    });
+  });
+
+  it("shows undo provenance and requires fresh assignment before explicit reapply", async () => {
+    const model = fixture();
+    const item = ready(model);
+    item.state = "needs_reassignment";
+    item.priorApplicationId = id(40);
+    item.assignmentOptions[0].selector.supersedesAssignmentId = id(30);
+    item.applications = [
+      {
+        id: id(40),
+        assignmentId: id(30),
+        resultVersionId: id(41),
+        resultFactId: id(8),
+        active: false,
+      },
+    ];
+    model.corrections.snapshot.originKind = "rollback";
+    model.corrections.snapshot.restoredFromVersionId = id(42);
+    const { commands } = await mount(model, (command) => {
+      if (command.kind === "assign") {
+        item.assignment = { ...item.assignment!, id: id(31), revision: 2 };
+        item.state = "needs_reapply";
+        model.corrections.binding.assignmentRevision = 2;
+      }
+      return { success: "Target saved.", error: null };
+    });
+    let region = await reviewRegion();
+    expect(
+      within(region).getByText(/Restored versions keep the correction history/),
+    ).toBeTruthy();
+    expect(within(region).getByText(/Choose the target again/)).toBeTruthy();
+    expect(
+      within(region).queryByRole("button", { name: "Reapply correction" }),
+    ).toBeNull();
+    fireEvent.change(
+      within(region).getByLabelText("Choose the source and resume target"),
+      { target: { value: "choose-cedar" } },
+    );
+    acknowledge(region);
+    fireEvent.click(
+      within(region).getByRole("button", { name: "Save correction target" }),
+    );
+    await waitFor(() => expect(commands).toHaveLength(1));
+    region = await reviewRegion();
+    const reapply = await within(region).findByRole("button", {
+      name: "Reapply correction",
+    });
+    expect(reapply.hasAttribute("disabled")).toBe(true);
+    acknowledge(region);
+    fireEvent.click(reapply);
+    await waitFor(() => expect(commands).toHaveLength(2));
+    expect(commands[0]).toMatchObject({
+      kind: "assign",
+      selectors: [{ supersedesAssignmentId: id(30) }],
+    });
+    expect(commands[1]).toMatchObject({
+      kind: "reapply",
+      expectedAssignmentRevision: 2,
+      selectors: [{ assignmentId: id(31), priorApplicationId: id(40) }],
+    });
+  });
+
+  it("keeps previews available and mutations unavailable when authoritative write readiness is false", async () => {
+    const model = fixture();
+    ready(model);
+    model.corrections.writeReady = false;
+    const { commands } = await mount(model);
+    const region = await reviewRegion();
+    expect(
+      within(region).getByText(/Applying them is temporarily unavailable/),
+    ).toBeTruthy();
+    expect(
+      within(region).getByText("Harbor Labs", { exact: true }),
+    ).toBeTruthy();
+    expect(
+      within(region)
+        .getByRole("button", { name: "Apply correction" })
+        .hasAttribute("disabled"),
+    ).toBe(true);
+    expect(
+      within(region).getByRole("link", { name: "Reload correction review" }),
+    ).toBeTruthy();
+    expect(commands).toEqual([]);
+  });
+
+  it("keeps original import unavailable until correction write readiness returns", async () => {
+    const model: Omit<Model, "corrections"> & {
+      corrections?: Model["corrections"];
+    } = fixture();
+    model.current = null;
+    model.headId = null;
+    model.corrections!.binding.canonicalHeadId = null;
+    model.corrections!.items = [];
+    model.corrections!.writeReady = false;
+    const action = vi.fn(() => ({ success: "Saved for review.", error: null }));
+    const router = createMemoryRouter([
+      {
+        path: "/",
+        Component: CanonicalResume,
+        loader: () => model,
+        action,
+      },
+    ]);
+    render(<RouterProvider router={router} />);
+    const button = await screen.findByRole("button", {
+      name: "Import resume for review",
+    });
+    expect(button.hasAttribute("disabled")).toBe(true);
+    fireEvent.click(button);
+    expect(action).not.toHaveBeenCalled();
+
+    model.corrections!.writeReady = true;
+    await act(async () => {
+      await router.revalidate();
+    });
+    await waitFor(() => expect(button.hasAttribute("disabled")).toBe(false));
+
+    delete model.corrections;
+    await act(async () => {
+      await router.revalidate();
+    });
+    expect(button.hasAttribute("disabled")).toBe(false);
+    expect(
+      screen.queryByRole("region", { name: "Saved evidence corrections" }),
+    ).toBeNull();
+  });
+
+  it("does not apply into a historical selected version or expose technical identifiers as labels", async () => {
+    const model = fixture();
+    ready(model);
+    model.current!.document.versionId = id(50);
+    await mount(model);
+    const region = await reviewRegion();
+    expect(
+      within(region).getByText(/Open the latest version to apply a correction/),
+    ).toBeTruthy();
+    expect(
+      within(region)
+        .getByRole("button", { name: "Apply correction" })
+        .hasAttribute("disabled"),
+    ).toBe(true);
+    expect(region.textContent).not.toContain(id(1));
+    expect(region.textContent).not.toContain(id(30));
+  });
+
+  it("disables correction controls while a submission is pending", async () => {
+    const model = fixture();
+    ready(model);
+    let release: ((value: unknown) => void) | undefined;
+    const pending = new Promise((resolve) => {
+      release = resolve;
+    });
+    const { commands } = await mount(model, () => pending);
+    const region = await reviewRegion();
+    acknowledge(region);
+    fireEvent.click(
+      within(region).getByRole("button", { name: "Apply correction" }),
+    );
+    await waitFor(() => expect(commands).toHaveLength(1));
+    expect(
+      within(region)
+        .getByRole("button", { name: "Apply correction" })
+        .hasAttribute("disabled"),
+    ).toBe(true);
+    expect(within(region).getByRole("checkbox").hasAttribute("disabled")).toBe(
+      true,
+    );
+    release?.({ error: "Try again.", success: null });
+    await waitFor(() =>
+      expect(
+        within(region).getByRole("checkbox").hasAttribute("disabled"),
+      ).toBe(false),
+    );
+  });
+
+  it("preserves the legacy workspace when correction review data is absent", async () => {
+    const model = fixture();
+    const legacy: Omit<Model, "corrections"> & {
+      corrections?: Model["corrections"];
+    } = { ...model };
+    delete legacy.corrections;
+    const router = createMemoryRouter([
+      { path: "/", Component: CanonicalResume, loader: () => legacy },
+    ]);
+    render(<RouterProvider router={router} />);
+    expect(
+      await screen.findByRole("button", {
+        name: "Confirm employer: Cedar Labs",
+      }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("region", { name: "Saved evidence corrections" }),
+    ).toBeNull();
+  });
+});

@@ -1,0 +1,63 @@
+{
+  "status": "PASS_INTEGRATED_SOURCE_SYNTHETIC_ONLY",
+  "receipt": "a12-compat-a13-core-integrated-baa52dca-78e8-4ea3-84db-43cf1e64e3cf.json",
+  "summary": {
+    "testFilesPassed": 12,
+    "testsPassed": 218
+  },
+  "sourceInputs": 851,
+  "sourceDrift": [],
+  "allSourceLogArtifactsRehashed": true,
+  "controllerAbsent": true,
+  "ownedGroupsAbsent": [
+    396,
+    529,
+    1169,
+    1372,
+    1671
+  ],
+  "changedPriorInputs": [
+    "app/lib/server/canonical-rewrite-contract.ts",
+    "app/lib/server/canonical-rewrite-readiness-profile.ts",
+    "app/lib/server/canonical-rewrite-service.ts",
+    "app/lib/server/qualitative-ai.ts",
+    "app/lib/server/qualitative-prose.ts",
+    "tests/unit/canonical-rewrite-contract.test.ts",
+    "tests/unit/canonical-rewrite-route.test.ts",
+    "tests/unit/canonical-rewrite-service.test.ts"
+  ],
+  "unchangedCommonInputs": 829,
+  "newInputs": [
+    "app/lib/server/canonical-rewrite-usage.ts",
+    "app/lib/server/qualitative-support.ts",
+    "scripts/verify-canonical-rewrite-compatibility.sql",
+    "supabase/migrations/20261114192207_canonical_rewrite_compatibility.sql",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-compat-a13-core-integrated-controller.mjs",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-compatibility-coordinator.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-compatibility-integration.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-compatibility-scaffold.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-compatibility-source-review.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a13-feedback-coordinator.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a13-feedback-core-integration.json",
+    "tests/unit/canonical-rewrite-usage.test.ts",
+    "tests/unit/qualitative-feedback-support.test.ts",
+    "tests/unit/qualitative-support.test.ts"
+  ],
+  "noLongerCapturedInputs": [
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-integrated-controller.mjs"
+  ],
+  "checks": [
+    "npm test -- tests/unit/canonical-rewrite-usage.test.ts tests/unit/canonical-rewrite-contract.test.ts tests/unit/canonical-rewrite-repository.test.ts tests/unit/canonical-rewrite-service.test.ts tests/unit/canonical-rewrite-route.test.ts tests/unit/canonical-rewrite-score.test.ts tests/unit/qualitative-support.test.ts tests/unit/qualitative-feedback-support.test.ts tests/unit/qualitative-prose.test.ts tests/unit/qualitative-ai.test.ts tests/unit/qualitative-stage.test.ts tests/unit/qualitative-stage-outage.test.ts",
+    "npm run typecheck",
+    "npm run lint",
+    "npm run build",
+    "npm run build:worker"
+  ],
+  "nativeSql": "UNPARSED_UNEXECUTED",
+  "providersBrowserServices": "NOT_RUN",
+  "activation": false,
+  "goal": "Full64-task scope remains incomplete; user resumed implementation; goaltracker stillpaused and cannot be changed by this tool.",
+  "postDocumentationSourceBindingsUnchanged": true,
+  "localLinksChecked": 71,
+  "prose": "a12-compat-a13-core-prose-checks.json"
+}

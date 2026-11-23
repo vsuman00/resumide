@@ -1,0 +1,15 @@
+--- before/tests/components/AuthoringRecommendationReview.test.tsx
++++ after/tests/components/AuthoringRecommendationReview.test.tsx
+@@ -131,7 +131,11 @@
+ it("shows exact unchanged source fact binding and recorded provenance without upgrading historical references", async () => {
+   const f = fixture("action_scope_result", true, true);
+   const { article } = await show(f);
+-  const view = within(article);
++  const view = within(
++    within(article)
++      .getByText("Unchanged fact binding and recorded provenance")
++      .closest("details")!,
++  );
+   expect(view.getByText(f.fact.id, { exact: false })).toBeTruthy();
+   expect(
+     view.getByText(/Recorded provenance may describe earlier wording/u),

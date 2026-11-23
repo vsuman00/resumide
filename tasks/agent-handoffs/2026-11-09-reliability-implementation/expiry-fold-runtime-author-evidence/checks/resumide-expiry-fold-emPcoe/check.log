@@ -1,0 +1,51 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ✓ tests/unit/owned-ai-expiry.test.ts (61 tests) 16ms
+ ❯ tests/unit/owned-ai-expiry-cli.test.ts (24 tests | 1 failed) 5157ms
+   × requires explicit exact one-shot arguments 0 before client creation 3ms
+   ✓ requires explicit exact one-shot arguments 1 before client creation 30ms
+   ✓ requires explicit exact one-shot arguments 2 before client creation 1ms
+   ✓ requires explicit exact one-shot arguments 3 before client creation 1ms
+   ✓ requires explicit exact one-shot arguments 4 before client creation 1ms
+   ✓ requires explicit exact one-shot arguments 5 before client creation 0ms
+   ✓ requires explicit exact one-shot arguments 6 before client creation 0ms
+   ✓ requires explicit exact one-shot arguments 7 before client creation 0ms
+   ✓ requires explicit exact one-shot arguments 8 before client creation 1ms
+   ✓ requires explicit exact one-shot arguments 9 before client creation 1ms
+   ✓ executes one actual client sweep with current backend pins and default limit 3ms
+   ✓ forwards exact bounded limit 1 once 1ms
+   ✓ forwards exact bounded limit 100 once 1ms
+   ✓ refuses denied metadata without a sweep or profile leakage 1ms
+   ✓ prints only validated counts and fails visibly on incomplete cleanup 0 1ms
+   ✓ prints only validated counts and fails visibly on incomplete cleanup 1 1ms
+   ✓ never retries or prints private data after an uncertain malformed sweep 1ms
+   ✓ never retries or prints private data after an uncertain denied sweep 0ms
+   ✓ never retries or prints private data after an uncertain thrown sweep 1ms
+   ✓ sanitizes client construction failure without any RPC 1ms
+   ✓ propagates SIGINT cancellation and refuses a late commit response without retry 53ms
+   ✓ propagates SIGTERM cancellation and refuses a late commit response without retry 51ms
+   ✓ bounds one hung destructive call without a hidden retry  5003ms
+   ✓ does not print invented counts from a client-construction exception 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/owned-ai-expiry-cli.test.ts > requires explicit exact one-shot arguments 0 before client creation
+TypeError: args is not iterable
+ ❯ tests/unit/owned-ai-expiry-cli.test.ts:90:45
+     88|   "requires explicit exact one-shot arguments %# before client creatio…
+     89|   async (args) => {
+     90|     process.argv = [...argv.slice(0, 2), ...args];
+       |                                             ^
+     91|     await load();
+     92|     expect(process.exitCode).toBe(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 84 passed (85)
+   Start at  00:50:53
+   Duration  5.27s (transform 90ms, setup 0ms, import 126ms, tests 5.17s, environment 0ms)
+
+JSON report written to /tmp/resumide-expiry-fold-emPcoe/tests.json

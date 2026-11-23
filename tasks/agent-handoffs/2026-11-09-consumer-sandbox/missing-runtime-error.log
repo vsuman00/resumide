@@ -1,0 +1,39 @@
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
++ actual - expected
+
+  Comparison {
++   code: 'cleanup_failed'
+-   code: 'runtime_unavailable'
+  }
+
+    at /Users/vaibhavsuman/.codex/worktrees/aa7-20261030-sandbox/resume_ats/tasks/agent-handoffs/2026-11-09-consumer-sandbox/missing-runtime.ts:7:1
+    at ViteNodeRunner.runModule (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:397:4)
+    at ViteNodeRunner.directRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:375:3)
+    at ViteNodeRunner.cachedRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:189:11)
+    at ViteNodeRunner.executeFile (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:162:10)
+    at CAC.run (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/cli.mjs:102:28) {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: LatexSandboxError: The compiler is unavailable while cleanup is checked.
+      at compileLatex (/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/latex-sandbox.ts:263:13)
+      at processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at waitForActual (node:assert:644:5)
+      at Function.rejects (node:assert:767:25)
+      at /Users/vaibhavsuman/.codex/worktrees/aa7-20261030-sandbox/resume_ats/tasks/agent-handoffs/2026-11-09-consumer-sandbox/missing-runtime.ts:7:1
+      at ViteNodeRunner.runModule (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:397:4)
+      at ViteNodeRunner.directRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:375:3)
+      at ViteNodeRunner.cachedRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:189:11)
+      at ViteNodeRunner.executeFile (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:162:10)
+      at CAC.run (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/cli.mjs:102:28) {
+    code: 'cleanup_failed'
+  },
+  expected: { code: 'runtime_unavailable' },
+  operator: 'rejects',
+  diff: 'simple'
+}
+
+Node.js v22.23.4

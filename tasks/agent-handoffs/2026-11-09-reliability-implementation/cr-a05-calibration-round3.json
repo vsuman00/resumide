@@ -1,0 +1,576 @@
+{
+  "registrationSha256": "102a18b42079bc3ea1833b1fe13cbf84b0bcbc3092fb71879c76a5446e822f82",
+  "datasetVersion": "ocr-reliability-calibration-round3/1.0.0",
+  "startedAt": "2026-11-22T00:08:33.255Z",
+  "partition": "calibration",
+  "scoringEligible": false,
+  "status": "completed",
+  "recognitionExecutions": 15,
+  "ownedWorkerCleanupVerified": true,
+  "lockedRecognitionExecuted": false,
+  "benchmark": {
+    "schemaVersion": "extraction-report/1.0.0",
+    "fieldEvaluatorVersion": "whitespace-grounded-fields/1.0.0",
+    "mode": "engineering",
+    "partition": "calibration",
+    "manifestLock": "2d2440cf7311b48487c5a876df6564892ff8ea8337c5266b9f5346d1feb103dc",
+    "datasetVersion": "ocr-reliability-calibration-round3/1.0.0",
+    "producerVersion": "mixed-ocr-review/1.0.3",
+    "providerVersion": "tesseract-5.3.0-2/glyph-box-development-4/poppler-22.12.0-2+deb12u3/dpi-150",
+    "configurationHash": "6513dc3ad0a9423fefd140e30af30f9d596a462064418292bd2b652c8b0c4989",
+    "normalizationPolicy": "unicode-codepoint-whitespace-v1",
+    "segments": [
+      {
+        "id": "clean",
+        "scan": "clean",
+        "layout": "single-column",
+        "documents": 5,
+        "sourceFamilies": 5,
+        "metrics": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": 0.002002002002002002,
+          "fieldPrecision": 1,
+          "fieldRecall": 1,
+          "pageCoverage": 0.9979868799637345,
+          "orderedLineAgreement": 0.9454545454545454
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": [
+            0.000493339911198816,
+            0.0035551041137633316
+          ],
+          "fieldPrecision": [
+            1,
+            1
+          ],
+          "fieldRecall": [
+            1,
+            1
+          ],
+          "pageCoverage": [
+            0.9964468259960311,
+            0.9995249406175771
+          ],
+          "orderedLineAgreement": [
+            0.9056603773584906,
+            0.9824561403508771
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 617.3875830000006,
+          "p95": 653.6187920000002
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": [
+          "orderedLineAgreement"
+        ]
+      },
+      {
+        "id": "challenging",
+        "scan": "challenging",
+        "layout": "single-column",
+        "documents": 5,
+        "sourceFamilies": 5,
+        "metrics": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": 0.002002002002002002,
+          "fieldPrecision": 0.975,
+          "fieldRecall": 0.975,
+          "pageCoverage": 0.9979682114492748,
+          "orderedLineAgreement": 0.9272727272727272
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": null,
+          "ocrCharacterErrorRate": [
+            0.0004894762604013706,
+            0.0035842293906810036
+          ],
+          "fieldPrecision": [
+            0.925,
+            1
+          ],
+          "fieldRecall": [
+            0.925,
+            1
+          ],
+          "pageCoverage": [
+            0.9964402012360809,
+            0.9994962216624685
+          ],
+          "orderedLineAgreement": [
+            0.8703703703703703,
+            0.9830508474576272
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 559.4300000000003,
+          "p95": 617.0694999999996
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": [
+          "fieldPrecision",
+          "fieldRecall",
+          "orderedLineAgreement"
+        ]
+      },
+      {
+        "id": "mixed",
+        "scan": "clean",
+        "layout": "single-column",
+        "documents": 5,
+        "sourceFamilies": 5,
+        "metrics": {
+          "nativeCharacterAccuracy": 1,
+          "ocrCharacterErrorRate": 0.0010035122930255895,
+          "fieldPrecision": 1,
+          "fieldRecall": 1,
+          "pageCoverage": 0.9994249689089185,
+          "orderedLineAgreement": 0.9714285714285714
+        },
+        "confidenceIntervals95": {
+          "nativeCharacterAccuracy": [
+            1,
+            1
+          ],
+          "ocrCharacterErrorRate": [
+            0,
+            0.002053388090349076
+          ],
+          "fieldPrecision": [
+            1,
+            1
+          ],
+          "fieldRecall": [
+            1,
+            1
+          ],
+          "pageCoverage": [
+            0.9988019159494169,
+            1
+          ],
+          "orderedLineAgreement": [
+            0.9411764705882353,
+            1
+          ]
+        },
+        "intervalReason": "null_metrics_have_undefined_bootstrap_denominators",
+        "bootstrap": {
+          "unit": "source_family",
+          "resamples": 10000,
+          "seed": 20261011
+        },
+        "failureRate": 0,
+        "abstentionRate": 0,
+        "latencyMs": {
+          "p50": 824.9080830000003,
+          "p95": 880.8747079999994
+        },
+        "apiFeeMicros": 0,
+        "computeCostMicros": null,
+        "thresholdFailures": [
+          "orderedLineAgreement"
+        ]
+      }
+    ],
+    "failures": [
+      "segment:clean:orderedLineAgreement",
+      "segment:challenging:fieldPrecision",
+      "segment:challenging:fieldRecall",
+      "segment:challenging:orderedLineAgreement",
+      "segment:mixed:orderedLineAgreement"
+    ],
+    "releaseBlockers": [
+      "synthetic_corpus_not_representative",
+      "locked_partition_required",
+      "missing_calibratedPolicy",
+      "missing_representativeCorpusReceipt",
+      "missing_approvedThresholdsReceipt",
+      "missing_sampleSizeJustificationReceipt",
+      "independent_human_validation_missing"
+    ],
+    "engineeringPassed": false,
+    "releasePassed": false,
+    "exitCode": 1
+  },
+  "documents": [
+    {
+      "id": "print-reliability-calibration-r3-driftwood-quality-clean-v1",
+      "family": "reliability-calibration-r3-driftwood-quality",
+      "segment": "clean",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 0,
+        "ocrErrors": 0,
+        "ocrCharacters": 402,
+        "coveredPages": 1,
+        "referencePages": 1,
+        "orderedLines": 10,
+        "lineDenominator": 10,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 653.6187920000002,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-driftwood-quality-challenging-v1",
+      "family": "reliability-calibration-r3-driftwood-quality",
+      "segment": "challenging",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 0,
+        "ocrErrors": 0,
+        "ocrCharacters": 402,
+        "coveredPages": 1,
+        "referencePages": 1,
+        "orderedLines": 10,
+        "lineDenominator": 10,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 548.3117080000002,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-driftwood-quality-mixed-v1",
+      "family": "reliability-calibration-r3-driftwood-quality",
+      "segment": "mixed",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 88,
+        "ocrErrors": 0,
+        "ocrCharacters": 401,
+        "coveredPages": 3,
+        "referencePages": 3,
+        "orderedLines": 13,
+        "lineDenominator": 13,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 823.4103749999999,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-harbor-data-clean-v1",
+      "family": "reliability-calibration-r3-harbor-data",
+      "segment": "clean",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 0,
+        "ocrErrors": 0,
+        "ocrCharacters": 401,
+        "coveredPages": 1,
+        "referencePages": 1,
+        "orderedLines": 12,
+        "lineDenominator": 12,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 612.7628339999997,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-harbor-data-challenging-v1",
+      "family": "reliability-calibration-r3-harbor-data",
+      "segment": "challenging",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 0,
+        "ocrErrors": 2,
+        "ocrCharacters": 401,
+        "coveredPages": 0.9950124688279302,
+        "referencePages": 1,
+        "orderedLines": 10,
+        "lineDenominator": 12,
+        "truePositive": 7,
+        "falsePositive": 1,
+        "falseNegative": 1
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 533.1035000000002,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-harbor-data-mixed-v1",
+      "family": "reliability-calibration-r3-harbor-data",
+      "segment": "mixed",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 88,
+        "ocrErrors": 0,
+        "ocrCharacters": 400,
+        "coveredPages": 3,
+        "referencePages": 3,
+        "orderedLines": 15,
+        "lineDenominator": 15,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 880.8747079999994,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-glasshouse-tooling-clean-v1",
+      "family": "reliability-calibration-r3-glasshouse-tooling",
+      "segment": "clean",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 0,
+        "ocrErrors": 2,
+        "ocrCharacters": 397,
+        "coveredPages": 0.9949622166246851,
+        "referencePages": 1,
+        "orderedLines": 9,
+        "lineDenominator": 10,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 617.3875830000006,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-glasshouse-tooling-challenging-v1",
+      "family": "reliability-calibration-r3-glasshouse-tooling",
+      "segment": "challenging",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 0,
+        "ocrErrors": 1,
+        "ocrCharacters": 397,
+        "coveredPages": 0.9974811083123426,
+        "referencePages": 1,
+        "orderedLines": 9,
+        "lineDenominator": 10,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 611.2385000000004,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-glasshouse-tooling-mixed-v1",
+      "family": "reliability-calibration-r3-glasshouse-tooling",
+      "segment": "mixed",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 88,
+        "ocrErrors": 0,
+        "ocrCharacters": 396,
+        "coveredPages": 3,
+        "referencePages": 3,
+        "orderedLines": 13,
+        "lineDenominator": 13,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 846.4223749999992,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-bedrock-observability-clean-v1",
+      "family": "reliability-calibration-r3-bedrock-observability",
+      "segment": "clean",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 0,
+        "ocrErrors": 1,
+        "ocrCharacters": 421,
+        "coveredPages": 0.997624703087886,
+        "referencePages": 1,
+        "orderedLines": 12,
+        "lineDenominator": 13,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 636.906583,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-bedrock-observability-challenging-v1",
+      "family": "reliability-calibration-r3-bedrock-observability",
+      "segment": "challenging",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 0,
+        "ocrErrors": 0,
+        "ocrCharacters": 421,
+        "coveredPages": 1,
+        "referencePages": 1,
+        "orderedLines": 13,
+        "lineDenominator": 13,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 617.0694999999996,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-bedrock-observability-mixed-v1",
+      "family": "reliability-calibration-r3-bedrock-observability",
+      "segment": "mixed",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 88,
+        "ocrErrors": 1,
+        "ocrCharacters": 420,
+        "coveredPages": 2.9960474308300395,
+        "referencePages": 3,
+        "orderedLines": 15,
+        "lineDenominator": 16,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 824.9080830000003,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-sparrow-platform-clean-v1",
+      "family": "reliability-calibration-r3-sparrow-platform",
+      "segment": "clean",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 0,
+        "ocrErrors": 1,
+        "ocrCharacters": 377,
+        "coveredPages": 0.9973474801061007,
+        "referencePages": 1,
+        "orderedLines": 9,
+        "lineDenominator": 10,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 556.3327079999999,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-sparrow-platform-challenging-v1",
+      "family": "reliability-calibration-r3-sparrow-platform",
+      "segment": "challenging",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 0,
+        "ocrErrors": 1,
+        "ocrCharacters": 377,
+        "coveredPages": 0.9973474801061007,
+        "referencePages": 1,
+        "orderedLines": 9,
+        "lineDenominator": 10,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 559.4300000000003,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    },
+    {
+      "id": "print-reliability-calibration-r3-sparrow-platform-mixed-v1",
+      "family": "reliability-calibration-r3-sparrow-platform",
+      "segment": "mixed",
+      "counts": {
+        "nativeErrors": 0,
+        "nativeCharacters": 88,
+        "ocrErrors": 1,
+        "ocrCharacters": 376,
+        "coveredPages": 2.9953271028037385,
+        "referencePages": 3,
+        "orderedLines": 12,
+        "lineDenominator": 13,
+        "truePositive": 8,
+        "falsePositive": 0,
+        "falseNegative": 0
+      },
+      "invalidPages": false,
+      "unsafeScore": false,
+      "status": "review_required",
+      "wallMs": 775.6200000000008,
+      "apiFeeMicros": 0,
+      "computeCostMicros": null
+    }
+  ]
+}

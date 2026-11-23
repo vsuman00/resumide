@@ -1,0 +1,630 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { assertWorkerSchemaReady } from "../../app/lib/server/worker-readiness";
+import { LEGACY_SCORING_INPUT_PROFILE } from "../../app/lib/server/legacy-scoring-input-profile";
+import {
+  INITIAL_FEEDBACK_PROFILE,
+  OWNED_AI_RETIREMENT_PROFILE,
+} from "../../app/lib/server/initial-feedback-profile";
+import { INITIAL_FEEDBACK_CAPABILITIES } from "../../app/lib/server/initial-feedback-operation-contract";
+import { OWNED_AI_BUDGET_EXPORT_PROFILE } from "../../app/lib/server/owned-ai-budget-export-profile";
+
+type Result = { data?: unknown; error: unknown };
+const selectedOptions = {
+  analysisFencingEnabled: true,
+  aiEnabled: true,
+  aiBudgetEnabled: true,
+  model: "synthetic-model",
+  aiBudgetPolicyVersion: "synthetic-policy/1",
+};
+const ready = (fencing = true, aiBudget = true) => ({
+  schemaVersion: "worker-schema-readiness/1.0.0",
+  selected: { fencing, aiBudget },
+  ready: true,
+  failures: [],
+});
+function query(result: Result | Promise<Result>, ignoreAbort = false) {
+  let signal: AbortSignal | undefined;
+  const aborted = vi.fn();
+  const chain = {
+    select: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    abortSignal: vi.fn((value: AbortSignal) => {
+      signal = value;
+      return chain;
+    }),
+    aborted,
+    then: (
+      resolve: (value: Result) => unknown,
+      reject?: (error: unknown) => unknown,
+    ) => {
+      const work = new Promise<Result>((done, fail) => {
+        const cancel = () => {
+          aborted();
+          fail(new Error("synthetic-query-aborted"));
+        };
+        if (!ignoreAbort && signal?.aborted) cancel();
+        else if (!ignoreAbort)
+          signal?.addEventListener("abort", cancel, { once: true });
+        void Promise.resolve(result).then(
+          (value) => {
+            signal?.removeEventListener("abort", cancel);
+            done(value);
+          },
+          (error: unknown) => {
+            signal?.removeEventListener("abort", cancel);
+            fail(error);
+          },
+        );
+      });
+      return work.then(resolve, reject);
+    },
+  };
+  return chain;
+}
+function clientFor(data: unknown = ready()) {
+  const table = query({ data: [], error: null });
+  const probe = query({ data, error: null });
+  return {
+    table,
+    probe,
+    client: { from: vi.fn(() => table), rpc: vi.fn(() => probe) },
+  };
+}
+afterEach(() => vi.useRealTimers());
+
+describe("worker schema readiness", () => {
+  it.each([false,true])("blocks review extraction without the atomic page-count capability (fencing=%s)",async(fencing)=>{
+    const fixture=clientFor(ready(fencing,false));
+    const options={evidenceReviewEnabled:true,analysisFencingEnabled:fencing};
+    await expect(assertWorkerSchemaReady(fixture.client as never,options)).rejects.toMatchObject({code:expect.stringMatching(/^WORKER_SCHEMA_/u)});
+  });
+
+  it("blocks selected initial feedback without its metadata capabilities", async () => {
+    const fixture = clientFor();
+    const options = {
+      ...selectedOptions,
+      initialFeedbackEnabled: true,
+      legacyScoringInputEnabled: true,
+    };
+    await expect(
+      assertWorkerSchemaReady(fixture.client as never, options),
+    ).rejects.toMatchObject({ code: "WORKER_SCHEMA_INVALID" });
+  });
+  it("checks score and correction storage before claiming work", async () => {
+    const table = query({ error: null });
+    const client = { from: vi.fn(() => table) };
+    await assertWorkerSchemaReady(client as never);
+    expect(client.from.mock.calls).toEqual([
+      ["document_evidence_attempts"],
+      ["evidence_corrections"],
+    ]);
+    expect(table.limit).toHaveBeenCalledWith(0);
+  });
+  it("stops on missing storage without exposing provider error content", async () => {
+    const table = query({ error: { message: "private-provider-detail" } });
+    const client = { from: vi.fn(() => table) };
+    await expect(assertWorkerSchemaReady(client as never)).rejects.toThrow(
+      "migration 20261011140000",
+    );
+    expect(client.from).toHaveBeenCalledTimes(1);
+  });
+  it("stops enabled capabilities when the required read-only RPC is missing", async () => {
+    const table = query({ error: null });
+    const probe = query({
+      data: null,
+      error: { code: "42883", message: "synthetic-private-missing-RPC" },
+    });
+    const client = { from: vi.fn(() => table), rpc: vi.fn(() => probe) };
+    await expect(
+      assertWorkerSchemaReady(client as never, selectedOptions),
+    ).rejects.toThrow();
+    expect(client.rpc).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { fencing: true, budget: false },
+    { fencing: false, budget: true },
+    { fencing: true, budget: true },
+  ])(
+    "checks only the selected capability metadata: %j",
+    async ({ fencing, budget }) => {
+      const fixture = clientFor(ready(fencing, budget));
+      await assertWorkerSchemaReady(fixture.client as never, {
+        ...selectedOptions,
+        analysisFencingEnabled: fencing,
+        aiBudgetEnabled: budget,
+      });
+      expect(fixture.client.rpc).toHaveBeenCalledExactlyOnceWith(
+        "worker_schema_readiness",
+        {
+          p_fencing: fencing,
+          p_ai_budget: budget,
+          p_model: budget ? "synthetic-model" : null,
+          p_policy_version: budget ? "synthetic-policy/1" : null,
+        },
+      );
+      expect(fixture.client.from).toHaveBeenCalledTimes(2);
+      expect(fixture.probe.abortSignal).toHaveBeenCalledWith(
+        expect.any(AbortSignal),
+      );
+    },
+  );
+  it("keeps disabled AI budget in legacy table-only readiness", async () => {
+    const fixture = clientFor();
+    await assertWorkerSchemaReady(fixture.client as never, {
+      ...selectedOptions,
+      analysisFencingEnabled: false,
+      aiEnabled: false,
+    });
+    expect(fixture.client.from).toHaveBeenCalledTimes(2);
+    expect(fixture.client.rpc).not.toHaveBeenCalled();
+  });
+  it.each([
+    null,
+    { ...ready(), schemaVersion: "worker-schema-readiness/wrong" },
+    { ...ready(), selected: { fencing: false, aiBudget: true } },
+    { ...ready(), ready: false, failures: ["SCHEMA_MISSING"] },
+    { ...ready(), failures: ["ACCESS_INVALID"] },
+    { ...ready(), ready: false, failures: ["synthetic-private-SQL-label"] },
+  ])(
+    "rejects missing, invalid, mismatched or unready capability metadata %#",
+    async (data) => {
+      const fixture = clientFor(data);
+      await expect(
+        assertWorkerSchemaReady(fixture.client as never, selectedOptions),
+      ).rejects.toMatchObject({
+        code: expect.stringMatching(
+          /^WORKER_SCHEMA_(UNAVAILABLE|INVALID|CAPABILITY_MISSING)$/,
+        ),
+      });
+      expect(fixture.client.rpc).toHaveBeenCalledTimes(1);
+    },
+  );
+  it("does not issue any query when startup is already aborted", async () => {
+    const fixture = clientFor();
+    const controller = new AbortController();
+    controller.abort();
+    await expect(
+      assertWorkerSchemaReady(fixture.client as never, {
+        ...selectedOptions,
+        signal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ code: "WORKER_STARTUP_CANCELLED" });
+    expect(fixture.client.from).not.toHaveBeenCalled();
+    expect(fixture.client.rpc).not.toHaveBeenCalled();
+  });
+  it("bounds a missing probe response and aborts its actual query signal", async () => {
+    vi.useFakeTimers();
+    const fixture = clientFor();
+    const probe = query(new Promise<Result>(() => {}));
+    fixture.client.rpc.mockReturnValue(probe);
+    const checking = assertWorkerSchemaReady(fixture.client as never, {
+      ...selectedOptions,
+      timeoutMs: 20,
+    });
+    const outcome = checking.catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(20);
+    expect(await outcome).toMatchObject({ code: "WORKER_STARTUP_TIMEOUT" });
+    expect(probe.abortSignal.mock.calls[0][0].aborted).toBe(true);
+    expect(probe.aborted).toHaveBeenCalledTimes(1);
+    expect(fixture.client.rpc).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("cannot accept a late success from a query that ignores cancellation", async () => {
+    vi.useFakeTimers();
+    const fixture = clientFor();
+    let resolve!: (value: Result) => void;
+    const late = new Promise<Result>((done) => {
+      resolve = done;
+    });
+    const probe = query(late, true);
+    fixture.client.rpc.mockReturnValue(probe);
+    const checking = assertWorkerSchemaReady(fixture.client as never, {
+      ...selectedOptions,
+      timeoutMs: 20,
+    });
+    const outcome = checking.catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(20);
+    expect(await outcome).toMatchObject({ code: "WORKER_STARTUP_TIMEOUT" });
+    resolve({ data: ready(), error: null });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(await outcome).toMatchObject({ code: "WORKER_STARTUP_TIMEOUT" });
+    expect(probe.abortSignal.mock.calls[0][0].aborted).toBe(true);
+    expect(fixture.client.rpc).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+const feedbackOptions = {
+  ...selectedOptions,
+  initialFeedbackEnabled: true,
+  legacyScoringInputEnabled: true,
+};
+function feedbackMetadata(): Record<string, Record<string, unknown>> {
+  return {
+    worker_schema_readiness: ready(),
+    read_legacy_scoring_readiness: {
+      ...LEGACY_SCORING_INPUT_PROFILE,
+      schemaReady: true,
+      writerExecutable: true,
+    },
+    read_initial_feedback_readiness: {
+      ...INITIAL_FEEDBACK_PROFILE,
+      schemaReady: true,
+      ...Object.fromEntries(
+        INITIAL_FEEDBACK_CAPABILITIES.map((key) => [key, true]),
+      ),
+    },
+    read_owned_ai_retirement_readiness: {
+      ...OWNED_AI_RETIREMENT_PROFILE,
+      schemaReady: true,
+      exportExecutable: true,
+    },
+    read_owned_ai_budget_export_readiness: {
+      ...OWNED_AI_BUDGET_EXPORT_PROFILE,
+      schemaReady: true,
+      exportExecutable: true,
+    },
+  };
+}
+function feedbackClient(
+  metadata: Record<string, unknown> = feedbackMetadata(),
+) {
+  const probes = new Map<string, ReturnType<typeof query>>();
+  return {
+    probes,
+    client: {
+      from: vi.fn(() => query({ data: [], error: null })),
+      rpc: vi.fn((name: string) => {
+        const probe = query({ data: metadata[name], error: null });
+        probes.set(name, probe);
+        return probe;
+      }),
+    },
+  };
+}
+const metadataNames = Object.keys(feedbackMetadata()).filter(
+  (name) => name !== "worker_schema_readiness",
+);
+describe("owned initial feedback startup metadata", () => {
+  it("keeps an explicitly disabled feature on the unchanged worker metadata wire", async () => {
+    const fixture = clientFor();
+    await assertWorkerSchemaReady(fixture.client as never, {
+      ...feedbackOptions,
+      initialFeedbackEnabled: false,
+    });
+    expect(fixture.client.rpc).toHaveBeenCalledExactlyOnceWith(
+      "worker_schema_readiness",
+      {
+        p_fencing: true,
+        p_ai_budget: true,
+        p_model: "synthetic-model",
+        p_policy_version: "synthetic-policy/1",
+      },
+    );
+  });
+  it("checks exact actual metadata and every private capability without data RPCs", async () => {
+    const fixture = feedbackClient();
+    await assertWorkerSchemaReady(fixture.client as never, feedbackOptions);
+    expect(fixture.client.rpc.mock.calls).toEqual([
+      [
+        "worker_schema_readiness",
+        {
+          p_fencing: true,
+          p_ai_budget: true,
+          p_model: "synthetic-model",
+          p_policy_version: "synthetic-policy/1",
+        },
+      ],
+      ...metadataNames.map((name) => [name, {}]),
+    ]);
+    expect(fixture.client.from.mock.calls).toEqual([
+      ["document_evidence_attempts"],
+      ["evidence_corrections"],
+    ]);
+    const signals = [...fixture.probes.values()].map(
+      (probe) => probe.abortSignal.mock.calls[0][0],
+    );
+    expect(new Set(signals).size).toBe(1);
+  });
+  it("requires private exports even with AI generation disabled", async () => {
+    const metadata = feedbackMetadata();
+    metadata.worker_schema_readiness = ready(true, false);
+    metadata.read_owned_ai_budget_export_readiness.exportExecutable = false;
+    const fixture = feedbackClient(metadata);
+    await expect(
+      assertWorkerSchemaReady(fixture.client as never, {
+        ...feedbackOptions,
+        aiEnabled: false,
+      }),
+    ).rejects.toMatchObject({ code: "WORKER_SCHEMA_CAPABILITY_MISSING" });
+    expect(fixture.client.rpc).toHaveBeenCalledWith(
+      "read_owned_ai_budget_export_readiness",
+      {},
+    );
+  });
+  it.each([
+    { legacyScoringInputEnabled: false },
+    { legacyScoringInputEnabled: undefined },
+    { analysisFencingEnabled: false },
+    { initialFeedbackEnabled: "true" },
+    { legacyScoringInputEnabled: "true" },
+  ])(
+    "rejects invalid selected dependencies before any read: %j",
+    async (override) => {
+      const fixture = feedbackClient();
+      await expect(
+        assertWorkerSchemaReady(
+          fixture.client as never,
+          { ...feedbackOptions, ...override } as never,
+        ),
+      ).rejects.toMatchObject({ code: "WORKER_SCHEMA_INVALID" });
+      expect(fixture.client.from).not.toHaveBeenCalled();
+      expect(fixture.client.rpc).not.toHaveBeenCalled();
+    },
+  );
+  it.each(
+    metadataNames.flatMap((name) =>
+      Object.entries(feedbackMetadata()[name]).map(([key, value]) => ({
+        name,
+        key,
+        value,
+      })),
+    ),
+  )(
+    "rejects wrong profile or denied capability $name.$key",
+    async ({ name, key, value }) => {
+      const metadata = feedbackMetadata();
+      metadata[name][key] =
+        typeof value === "boolean" ? false : "incorrect-source-pin";
+      const fixture = feedbackClient(metadata);
+      await expect(
+        assertWorkerSchemaReady(fixture.client as never, feedbackOptions),
+      ).rejects.toMatchObject({
+        code: expect.stringMatching(
+          /^WORKER_SCHEMA_(INVALID|CAPABILITY_MISSING)$/,
+        ),
+      });
+    },
+  );
+  it.each(
+    metadataNames.flatMap((name) =>
+      [
+        null,
+        {},
+        { ...feedbackMetadata()[name], unexpected: true },
+        Object.fromEntries(Object.entries(feedbackMetadata()[name]).slice(1)),
+      ].map((data) => ({ name, data })),
+    ),
+  )(
+    "rejects malformed, missing and open metadata wire $name %#",
+    async ({ name, data }) => {
+      const fixture = feedbackClient({ ...feedbackMetadata(), [name]: data });
+      await expect(
+        assertWorkerSchemaReady(fixture.client as never, feedbackOptions),
+      ).rejects.toMatchObject({ code: "WORKER_SCHEMA_INVALID" });
+    },
+  );
+  it.each(metadataNames)(
+    "rejects unavailable metadata %s without exposing details",
+    async (name) => {
+      const fixture = feedbackClient();
+      const original = fixture.client.rpc.getMockImplementation()!;
+      fixture.client.rpc.mockImplementation((called) =>
+        called === name
+          ? query({
+              data: null,
+              error: { message: "synthetic-private-metadata-detail" },
+            })
+          : original(called),
+      );
+      await expect(
+        assertWorkerSchemaReady(fixture.client as never, feedbackOptions),
+      ).rejects.toMatchObject({
+        code: "WORKER_SCHEMA_UNAVAILABLE",
+        message: expect.not.stringContaining("synthetic-private"),
+      });
+    },
+  );
+  it.each(["deadline", "cancel"])(
+    "shares the original bounded deadline and abort across metadata: %s",
+    async (cause) => {
+      vi.useFakeTimers();
+      const fixture = feedbackClient();
+      const original = fixture.client.rpc.getMockImplementation()!;
+      const pending = query(new Promise<Result>(() => {}));
+      fixture.client.rpc.mockImplementation((name) =>
+        name === "read_initial_feedback_readiness" ? pending : original(name),
+      );
+      const controller = new AbortController();
+      const checking = assertWorkerSchemaReady(fixture.client as never, {
+        ...feedbackOptions,
+        timeoutMs: 20,
+        signal: controller.signal,
+      });
+      const outcome = checking.catch((error: unknown) => error);
+      await vi.advanceTimersByTimeAsync(10);
+      expect(pending.abortSignal).toHaveBeenCalledTimes(1);
+      if (cause === "cancel") controller.abort();
+      else await vi.advanceTimersByTimeAsync(10);
+      expect(await outcome).toMatchObject({
+        code:
+          cause === "cancel"
+            ? "WORKER_STARTUP_CANCELLED"
+            : "WORKER_STARTUP_TIMEOUT",
+      });
+      expect(pending.abortSignal.mock.calls[0][0].aborted).toBe(true);
+      expect(pending.aborted).toHaveBeenCalledTimes(1);
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+  it("does not give later metadata requests a fresh timeout allowance", async () => {
+    vi.useFakeTimers();
+    const fixture = feedbackClient();
+    const original = fixture.client.rpc.getMockImplementation()!;
+    const base = query(
+      new Promise<Result>((resolve) =>
+        setTimeout(() => resolve({ data: ready(), error: null }), 15),
+      ),
+    );
+    const pending = query(new Promise<Result>(() => {}));
+    fixture.client.rpc.mockImplementation((name) =>
+      name === "worker_schema_readiness"
+        ? base
+        : name === "read_initial_feedback_readiness"
+          ? pending
+          : original(name),
+    );
+    const checking = assertWorkerSchemaReady(fixture.client as never, {
+      ...feedbackOptions,
+      timeoutMs: 20,
+    });
+    const outcome = checking.catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(20);
+    expect(await outcome).toMatchObject({ code: "WORKER_STARTUP_TIMEOUT" });
+    expect(pending.aborted).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+it.each(
+  (["loop", "once"] as const).flatMap((mode) =>
+    [
+      "success",
+      "dependency",
+      "hash",
+      "acl",
+      "malformed",
+      "missing",
+      "timeout",
+      "cancel",
+    ].map((failure) => ({ mode, failure })),
+  ),
+)(
+  "actual $mode CLI blocks queue construction and claim on selected metadata failure: $failure",
+  async ({ mode, failure }) => {
+    vi.resetModules();
+    const metadata = feedbackMetadata();
+    if (failure === "hash")
+      metadata.read_legacy_scoring_readiness.checkerSha256 = "0".repeat(64);
+    if (failure === "acl")
+      metadata.read_owned_ai_retirement_readiness.exportExecutable = false;
+    if (failure === "malformed")
+      metadata.read_initial_feedback_readiness.unexpected = true;
+    const fixture = feedbackClient(metadata);
+    const original = fixture.client.rpc.getMockImplementation()!;
+    if (failure === "missing")
+      fixture.client.rpc.mockImplementation((name) =>
+        name === "read_owned_ai_budget_export_readiness"
+          ? query({
+              data: null,
+              error: { message: "synthetic-private-RPC-detail" },
+            })
+          : original(name),
+      );
+    if (failure === "timeout" || failure === "cancel")
+      fixture.client.rpc.mockImplementation((name) =>
+        name === "read_initial_feedback_readiness"
+          ? query(new Promise<Result>(() => {}))
+          : original(name),
+      );
+    const construct = vi.fn(),
+      claim = vi.fn(),
+      cycle = vi.fn().mockResolvedValue(false),
+      loop = vi.fn().mockResolvedValue(undefined);
+    const listeners = new Set(process.listeners("SIGTERM"));
+    const exitCode = process.exitCode;
+    const stderr = vi
+      .spyOn(process.stderr, "write")
+      .mockImplementation(() => true);
+    const stdout = vi
+      .spyOn(process.stdout, "write")
+      .mockImplementation(() => true);
+    vi.doMock("../../app/lib/server/config", () => ({
+      getServerConfig: () => ({
+        INITIAL_FEEDBACK_ENABLED: true,
+        LEGACY_SCORING_INPUT_ENABLED: failure !== "dependency",
+        ANALYSIS_FENCING_ENABLED: true,
+        AI_ENABLED: true,
+        AI_BUDGET_ENABLED: true,
+        AI_BUDGET_POLICY_VERSION: "synthetic-policy/1",
+        OPENAI_MODEL: "synthetic-model",
+        READINESS_TIMEOUT_MS: failure === "timeout" ? 20 : 500,
+        SHUTDOWN_TIMEOUT_MS: 1000,
+      }),
+    }));
+    vi.doMock("../../app/lib/server/supabase", () => ({
+      createSupabaseAdminClient: () => fixture.client,
+    }));
+    vi.doMock("../../app/lib/server/analysis-worker", () => ({
+      processQueuedAnalysis: vi.fn(),
+    }));
+    vi.doMock("../../app/lib/server/jobs", () => ({
+      AnalysisJobQueue: class {
+        claim = claim;
+        constructor() {
+          construct();
+        }
+      },
+    }));
+    vi.doMock("../../app/lib/server/worker-runner", () => ({
+      runWorkerLoop: loop,
+      runWorkerCycle: cycle,
+    }));
+    try {
+      const loading =
+        mode === "loop"
+          ? import("../../scripts/run-worker")
+          : import("../../scripts/run-worker-once");
+      if (failure === "cancel") {
+        await vi.waitFor(() =>
+          expect(fixture.client.rpc).toHaveBeenCalledWith(
+            "read_initial_feedback_readiness",
+            {},
+          ),
+        );
+        const shutdown = process
+          .listeners("SIGTERM")
+          .find((listener) => !listeners.has(listener));
+        expect(shutdown).toBeDefined();
+        shutdown?.("SIGTERM");
+      }
+      await loading;
+      expect(claim).not.toHaveBeenCalled();
+      if (failure === "success") {
+        expect(construct).toHaveBeenCalledTimes(1);
+        expect(mode === "loop" ? loop : cycle).toHaveBeenCalledTimes(1);
+        expect(fixture.client.rpc.mock.calls.map(([name]) => name)).toEqual([
+          "worker_schema_readiness",
+          ...metadataNames,
+        ]);
+      } else {
+        expect(construct).not.toHaveBeenCalled();
+        expect(cycle).not.toHaveBeenCalled();
+        expect(loop).not.toHaveBeenCalled();
+        if (failure !== "cancel") expect(process.exitCode).toBe(1);
+      }
+      expect(JSON.stringify(stderr.mock.calls)).not.toContain(
+        "synthetic-private",
+      );
+      expect(
+        process
+          .listeners("SIGTERM")
+          .filter((listener) => !listeners.has(listener)),
+      ).toEqual([]);
+    } finally {
+      process.exitCode = exitCode;
+      stderr.mockRestore();
+      stdout.mockRestore();
+      for (const path of [
+        "../../app/lib/server/config",
+        "../../app/lib/server/supabase",
+        "../../app/lib/server/analysis-worker",
+        "../../app/lib/server/jobs",
+        "../../app/lib/server/worker-runner",
+      ])
+        vi.doUnmock(path);
+      vi.resetModules();
+    }
+  },
+);

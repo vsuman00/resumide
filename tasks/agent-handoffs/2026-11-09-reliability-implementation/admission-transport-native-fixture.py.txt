@@ -1,0 +1,169 @@
+from pathlib import Path
+import select
+import subprocess
+import tempfile
+root=Path.cwd(); migrations=root/'supabase/migrations'
+fixed=migrations/'20261121091814_analysis_admission_privacy_guard.sql'
+def source(pattern): return next(migrations.glob(pattern)).read_text()
+def between(text, start, end): return text[text.index(start):text.index(end,text.index(start))]
+old=source('20261116075250*')
+parts=["""create role anon; create role authenticated; create role service_role;
+create schema auth; create schema private; create schema extensions;
+create extension pgcrypto with schema extensions;
+create table auth.users(id uuid primary key);
+create table public.organizations(id uuid primary key,owner_id uuid);
+create table public.analyses(owner_id uuid); create table public.jobs(owner_id uuid);
+create table public.resumes(owner_id uuid); create table public.consents(user_id uuid,organization_id uuid,purpose text,policy_version text);
+create table public.memberships(user_id uuid,organization_id uuid,role text); create table public.profiles(id uuid);
+create table public.resume_versions(owner_id uuid,storage_key text,checksum text,bytes integer);
+create table private.owned_ai_deletion_dispositions(owner_id uuid primary key,first_request_id uuid,prepared_at timestamptz,expires_at timestamptz,phase text);
+create function private.privacy_generation_ready() returns boolean language sql as 'select true';
+create function private.privacy_generation_current() returns bigint language sql as 'select 0::bigint';
+create function private.privacy_generation_advance(uuid) returns void language plpgsql as 'begin return; end';
+create function private.capture_owned_ai_operation_dispositions(uuid,uuid,uuid,uuid) returns void language plpgsql as 'begin return; end';
+create function private.capture_owned_legacy_ai_usage(uuid,uuid,uuid,uuid) returns void language plpgsql as 'begin return; end';
+create function private.retire_initial_feedback_publications(uuid,uuid,uuid,uuid) returns void language plpgsql as 'begin return; end';
+""",between(source('20260909130000*'),'create table public.data_requests','create trigger consents_set_updated_at'),
+between(source('20260911110000*'),'alter table public.data_requests','create trigger privacy_request_steps_set_updated_at'),
+between(source('20260911110000*'),'create or replace function private.initialize_privacy_request_steps','for each row execute function private.initialize_privacy_request_steps();')+'for each row execute function private.initialize_privacy_request_steps();',
+between(source('20260911130000*'),'create table private.privacy_deletion_plans','revoke all on private.privacy_deletion_plans'),
+between(source('20261110080809*'),'create table private.analysis_admission_operations','create function private.analysis_admission_denied'),
+between(source('20261109164851*'),'create function private.candidate_owner_lock_keys','-- A false try-lock'),
+between(source('20261110085512*'),'create function private.candidate_write_blocked','create function private.guard_candidate_privacy_write'),
+between(source('20261110080809*'),'create function private.analysis_admission_denied','create function public.finalize_analysis_admission'),
+"alter table public.data_requests add column privacy_generation bigint;",
+between(old,'create function private.privacy_generation_claim','-- Close broad table'),
+between(old,'create function public.prepare_deletion_request','create function private.privacy_generation_catalogue'),
+"grant usage on schema private to service_role; grant all on public.privacy_request_steps to service_role; grant update(status) on public.privacy_request_steps to authenticated;"]
+seed="""insert into auth.users select ('10000000-0000-4000-8000-00000000000'||n)::uuid from generate_series(1,3)n;
+insert into public.organizations values('20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000002'),('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001');
+insert into public.memberships values('10000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000001','owner');
+insert into public.consents values('10000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000001','qualitative_ai','candidate-ai-v1');
+insert into private.analysis_admission_operations(id,organization_id,owner_id,idempotency_key,binding_sha256)
+select ('30000000-0000-4000-8000-00000000000'||n)::uuid,('20000000-0000-4000-8000-00000000000'||case when n=2 then 2 else 1 end)::uuid,
+('10000000-0000-4000-8000-00000000000'||case when n=3 then 2 else 1 end)::uuid,gen_random_uuid(),repeat('a',64) from generate_series(1,3)n;
+insert into private.analysis_admission_uploads(id,operation_id,analysis_id,resume_id,version_id,job_id,storage_key)
+select ('40000000-0000-4000-8000-00000000000'||n)::uuid,('30000000-0000-4000-8000-00000000000'||n)::uuid,gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),'fixture-'||n from generate_series(1,3)n;
+update private.analysis_admission_uploads set state='adopted' where id='40000000-0000-4000-8000-000000000001';
+update private.analysis_admission_operations set adopted_upload_id='40000000-0000-4000-8000-000000000001' where id='30000000-0000-4000-8000-000000000001';
+insert into public.analyses values('10000000-0000-4000-8000-000000000001');
+insert into public.data_requests(id,user_id,organization_id,kind,status,privacy_generation,lease_owner,lease_expires_at,attempt_count) values
+('50000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','deletion','processing',0,'fixture',now()+interval '10 minutes',2),
+('50000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000003','20000000-0000-4000-8000-000000000001','deletion','processing',0,'fixture',now()+interval '10 minutes',2),
+('50000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000001','export','processing',0,'fixture',now()+interval '10 minutes',2);
+insert into private.privacy_deletion_plans(request_id,storage_objects) values ('50000000-0000-4000-8000-000000000001','[]');
+"""
+pre="""do $$begin
+  begin perform public.prepare_deletion_request('50000000-0000-4000-8000-000000000001','fixture',2);
+    raise exception 'REGRESSION: preparation erased content despite retained upload history';
+  exception when sqlstate 'P0A01' then null;end;
+end;$$;"""
+post=pre+"""do $$
+declare deletion uuid:='50000000-0000-4000-8000-000000000001'; clean uuid:='50000000-0000-4000-8000-000000000002'; exp uuid:='50000000-0000-4000-8000-000000000003'; receipt jsonb;
+begin
+ assert (select count(*)=1 from public.analyses);
+ begin perform public.complete_privacy_request(deletion,'fixture',2,'{"deleted":true}'); raise exception 'completion bypass';
+ exception when sqlstate 'P0A01' then null;end;
+ assert (select status='processing' and lease_owner='fixture' from public.data_requests where id=deletion);
+ assert exists(select from private.privacy_deletion_plans where request_id=deletion);
+ assert (select bool_and(status='queued') from public.privacy_request_steps where request_id=deletion);
+ delete from private.privacy_deletion_plans where request_id=deletion;
+ begin perform public.prepare_deletion_request(deletion,'fixture',2); raise exception 'new plan bypass';
+ exception when sqlstate 'P0A01' then null;end;
+ assert not exists(select from private.privacy_deletion_plans where request_id=deletion);
+ assert (select count(*)=1 from public.analyses);
+ begin insert into private.analysis_admission_uploads values(gen_random_uuid(),'30000000-0000-4000-8000-000000000002',gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),'blocked','prepared',now());
+ raise exception 'intake bypass'; exception when insufficient_privilege then null;end;
+ assert public.complete_privacy_request(deletion,'fixture',1,'{"deleted":true}') is false;
+ assert public.prepare_deletion_request(clean,'fixture',2)->'storageObjects'='[]';
+ assert public.complete_privacy_request(clean,'fixture',2,'{"deleted":true}');
+ begin perform public.complete_privacy_request(exp,'fixture',2,'{"invalid":true}');raise exception 'invalid accepted';
+ exception when check_violation then null;end;
+ assert (select status='processing' from public.data_requests where id=exp);
+ assert public.complete_privacy_request(exp,'fixture',2,'{"version":"resumide-export-v1","account":{"id":"10000000-0000-4000-8000-000000000002"},"records":{"existing":[1],"analysisAdmissionOperations":["untrusted"]}}');
+ select result_manifest->'records' into receipt from public.data_requests where id=exp;
+ assert receipt->'existing'='[1]';
+ assert jsonb_array_length(receipt->'analysisAdmissionOperations')=1;
+ assert jsonb_array_length(receipt->'analysisAdmissionUploads')=1;
+ assert receipt#>>'{analysisAdmissionOperations,0,id}'='30000000-0000-4000-8000-000000000003';
+ assert receipt#>>'{analysisAdmissionUploads,0,operationId}'='30000000-0000-4000-8000-000000000003';
+ assert not has_table_privilege('service_role','public.privacy_request_steps','UPDATE');
+ assert not has_any_column_privilege('authenticated','public.privacy_request_steps','UPDATE');
+ assert not has_function_privilege('service_role','private.analysis_admission_export_records(uuid)','EXECUTE');
+ assert public.fail_privacy_request(deletion,'fixture',2,'ADMISSION_RETIREMENT_REQUIRED',3);
+ assert (select status='queued' and last_error_code='ADMISSION_RETIREMENT_REQUIRED' from public.data_requests where id=deletion);
+end;$$;"""
+with tempfile.TemporaryDirectory(prefix='resumide-admission-pg-') as tmp:
+ env={'PATH':'/opt/homebrew/bin:/usr/bin:/bin','HOME':tmp,'LC_ALL':'C'}
+ def run(*argv,**kw): return subprocess.run(argv,env=env,text=True,timeout=18,**kw)
+ run('initdb','-D',tmp+'/data','--no-sync','--auth=trust','-U','fixture_owner',check=True,stdout=subprocess.DEVNULL)
+ run('pg_ctl','-w','-D',tmp+'/data','-l',tmp+'/fixture.log','-o',f"-c listen_addresses='' -c unix_socket_directories={tmp} -c unix_socket_permissions=0700",'start',check=True,stdout=subprocess.DEVNULL)
+ def sql(s,check=True): return run('psql','-X','-v','ON_ERROR_STOP=1','-h',tmp,'-U','fixture_owner','-d','postgres','-Atq',input=s,capture_output=True,check=check)
+ try:
+  init=sql('\n'.join(parts)+'\n'+seed,False);assert init.returncode==0,init.stderr
+  before=sql(pre,False);assert before.returncode!=0 and 'REGRESSION: preparation erased content despite retained upload history' in before.stderr,before.stderr
+  print('Baseline reproduced: preparation reached content DELETE with retained history',flush=True)
+  applied=sql(fixed.read_text(),False);assert applied.returncode==0,applied.stderr
+  checks=sql(post,False);assert checks.returncode==0,checks.stderr
+  def check_contention(held, contested, expected):
+   with subprocess.Popen(['psql','-X','-v','ON_ERROR_STOP=1','-h',tmp,'-U','fixture_owner','-d','postgres','-Atq'],env=env,text=True,bufsize=1,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE) as locker:
+    try:
+     locker.stdin.write("begin; " + held + "\n\\gset fixture_\n\\echo LOCK_HELD\n")
+     locker.stdin.flush()
+     for _ in range(3):
+      assert select.select([locker.stdout],[],[],4)[0], 'owner-lock fixture timeout'
+      if locker.stdout.readline().strip()=='LOCK_HELD': break
+     else: raise AssertionError('owner lock was not established')
+     checked=sql('\\set VERBOSITY verbose\n'+contested,False)
+     assert checked.returncode!=0 and expected in checked.stderr,checked.stderr
+    finally:
+     if locker.poll() is None:
+      locker.stdin.write("rollback;\n\\q\n")
+      locker.stdin.flush()
+      locker.wait(timeout=4)
+   assert locker.returncode==0
+  owner="'10000000-0000-4000-8000-000000000002'::uuid"
+  check_contention("select private.try_lock_candidate_owners(array["+owner+"])" ,"insert into private.analysis_admission_uploads values(gen_random_uuid(),'30000000-0000-4000-8000-000000000003',gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),'contended','prepared',now());",'42501')
+  check_contention("select pg_advisory_xact_lock_shared((private.candidate_owner_lock_keys(array["+owner+"]))[1])", "select private.assert_analysis_admission_deletion_clear("+owner+");",'55P03')
+  assert sql("select count(*) from private.analysis_admission_uploads where storage_key='contended';").stdout.strip()=='0'
+  transport=sql((migrations/'20261121130718_analysis_admission_upload_transport.sql').read_text(),False)
+  assert transport.returncode==0,transport.stderr
+  checked=sql("""do $$
+  declare candidate uuid:='10000000-0000-4000-8000-000000000002'; org uuid:='20000000-0000-4000-8000-000000000001'; op uuid:='30000000-0000-4000-8000-000000000003'; old_upload uuid:='40000000-0000-4000-8000-000000000003'; tracked uuid:=gen_random_uuid(); object_id uuid:=gen_random_uuid(); fresh_op uuid; recorded timestamptz; req jsonb; preparation jsonb; path text;
+  begin
+    assert not has_table_privilege('service_role','private.analysis_admission_upload_transport','SELECT,INSERT,UPDATE,DELETE');
+    assert not has_function_privilege('authenticated','public.begin_analysis_admission_upload(uuid,uuid,uuid,uuid,text,text)','EXECUTE');
+    assert has_function_privilege('service_role','public.acknowledge_analysis_admission_upload(uuid,uuid,uuid,uuid,text,text,uuid)','EXECUTE');
+    assert private.analysis_admission_export_records(candidate)#>'{analysisAdmissionUploads,0,storageTransport}'='null'::jsonb;
+    assert not public.acknowledge_analysis_admission_upload(candidate,org,op,old_upload,'resumes','fixture-3',object_id);
+    assert not public.begin_analysis_admission_upload(candidate,org,op,old_upload,'resumes','fixture-3');
+    req:=jsonb_build_object('idempotencyKey',gen_random_uuid(),'uploadId',tracked,'analysisId',gen_random_uuid(),'resumeId',gen_random_uuid(),'versionId',gen_random_uuid(),'jobId',gen_random_uuid(),
+      'checksum',repeat('a',64),'bytes',32,'titleSha256',repeat('b',64),'jobSha256',repeat('c',64),'nameSha256',repeat('d',64),'requestPolicySha256',repeat('e',64),
+      'policyVersion','analysis-admission/1.0.0','consentPolicyVersion','candidate-ai-v1');
+    req:=req||jsonb_build_object('bindingSha256',private.analysis_admission_hash(req));
+    preparation:=public.prepare_tracked_analysis_admission(candidate,org,req);
+    assert preparation->>'kind'='upload';
+    fresh_op:=(preparation->>'operationId')::uuid;
+    path:=preparation->>'storageKey';
+    assert exists(select 1 from private.analysis_admission_upload_transport where upload_id=tracked and dispatched_at is null);
+    begin update private.analysis_admission_uploads set state='adopted' where id=tracked;raise exception 'tracked adoption bypass';exception when check_violation then null;end;
+    assert not public.begin_analysis_admission_upload(candidate,org,fresh_op,tracked,'resumes','wrong-key');
+    assert public.begin_analysis_admission_upload(candidate,org,fresh_op,tracked,'resumes',path);
+    assert not public.begin_analysis_admission_upload(candidate,org,fresh_op,tracked,'resumes',path);
+    assert exists(select 1 from jsonb_array_elements(private.analysis_admission_export_records(candidate)->'analysisAdmissionUploads') item where item->>'id'=tracked::text and item#>'{storageTransport,acknowledgedAt}'='null'::jsonb);
+    insert into public.data_requests(organization_id,user_id,kind) values(org,candidate,'deletion');
+    assert not public.acknowledge_analysis_admission_upload(candidate,org,fresh_op,tracked,'another',path,object_id);
+    assert public.acknowledge_analysis_admission_upload(candidate,org,fresh_op,tracked,'resumes',path,object_id);
+    select acknowledged_at into strict recorded from private.analysis_admission_upload_transport where upload_id=tracked;
+    assert recorded is not null;
+    assert public.acknowledge_analysis_admission_upload(candidate,org,fresh_op,tracked,'resumes',path,object_id);
+    assert not public.acknowledge_analysis_admission_upload(candidate,org,fresh_op,tracked,'resumes',path,gen_random_uuid());
+    assert (select acknowledged_at=recorded from private.analysis_admission_upload_transport where upload_id=tracked);
+    assert exists(select 1 from jsonb_array_elements(private.analysis_admission_export_records(candidate)->'analysisAdmissionUploads') item where item->>'id'=tracked::text and item#>>'{storageTransport,objectId}'=object_id::text);
+    assert not public.begin_analysis_admission_upload(candidate,org,fresh_op,tracked,'resumes',path);
+  end;$$;""",False)
+  assert checked.returncode==0,checked.stderr
+  print('Upload dispatch SQL passed: legacy unknown, exact scope, once-only grant, late acknowledgement, immutable replay, export, private ACLs',flush=True)
+  print('Two-session PostgreSQL checks passed: held owner deletion lock refuses new upload, held writer lock refuses deletion without waiting',flush=True)
+  print('PostgreSQL 17 passed: existing/new plan holds, rollback, intake fence, stale attempts, no-history deletion, exact owned export, malformed export rollback, grants and same-request requeue',flush=True)
+ finally: run('pg_ctl','-w','-D',tmp+'/data','-m','immediate','stop',check=True,stdout=subprocess.DEVNULL)

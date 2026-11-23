@@ -1,0 +1,255 @@
+{
+  "status": "STAGES_PARTIAL",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "changedSource": {
+    "app/lib/server/analysis-ingestion.ts": "80c72aa26db64f2715a9b4128f1685fde618d11f61ad27556b40838dfb0ba6cc",
+    "tests/unit/analysis-ingestion.test.ts": "b3fd00f7d873b5385d6081c9b65932f03dd585397166f1a7bb44c09bf0785c7d",
+    "supabase/migrations/20261121130718_analysis_admission_upload_transport.sql": "fa348172dafe1abf2965c113ed484975347b208a280bfad2cd48fb3f497592b8"
+  },
+  "admissionTransport": {
+    "localPostgresRegression": "PASS",
+    "preChangeExpectedDispatchOrder": "FAILED_AS_EXPECTED",
+    "fixture": {
+      "path": "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-transport-native-fixture.py.txt",
+      "sha256": "bbebbf6d395381ebd0e5f4177cf9d575785a7e5b6836b77e915abff833612371"
+    },
+    "managedExecution": false,
+    "physicalRetirement": false,
+    "freshTrackedCohortOnly": true,
+    "storageObjectIdentityVerifiedByClient": true,
+    "review": "Peer review found and the final candidate fixed historical enrollment and incomplete Storage acknowledgement."
+  },
+  "managed": {
+    "project": "Resumide",
+    "state": "ACTIVE_HEALTHY",
+    "postgresVersion": "17.11",
+    "migrationCountBeforeTests": 33,
+    "missing": [
+      "analysis_admission_uploads",
+      "candidate_owner_write_fence",
+      "admission_privacy_guard"
+    ],
+    "syntheticAuthUsers": 2,
+    "tenantOwnedReads": "PASS",
+    "tenantForeignReadsDenied": "PASS",
+    "globalSignOutClearsClients": "PASS",
+    "syntheticResidualRows": {
+      "auth": 0,
+      "sessions": 0,
+      "profiles": 0,
+      "workspaces": 0,
+      "memberships": 0,
+      "requests": 0
+    },
+    "probeSource": {
+      "path": "tasks/agent-handoffs/2026-11-09-reliability-implementation/managed-auth-synthetic-probe.mjs.txt",
+      "sha256": "942cb68a68324008224023b9d380c5f4726389e63a84f917cee0f661c38e2826"
+    },
+    "hostedDdlOrDeployment": false
+  },
+  "local": {
+    "tests": 6752,
+    "testFiles": 323,
+    "reports": {
+      "unit": {
+        "path": "/tmp/resumide-stage-final-tests.spCU3N/unit.json",
+        "sha256": "7b1eb29aac8ad642ae32f8e61ab0d765b6d1dc31e83ff99b41d3c15e14d3dbea"
+      },
+      "process": {
+        "path": "/tmp/resumide-stage-final-tests.spCU3N/process.json",
+        "sha256": "bdc4b7fc1107b0caad0a9499966a763d22ea2f940d5222115fcb28e524cc9b75"
+      }
+    },
+    "typecheck": true,
+    "lintWarnings": 4,
+    "build": true,
+    "workerBuild": true,
+    "buildLog": {
+      "path": "/tmp/resumide-stage-final-build.wRIyv5/build.log",
+      "sha256": "c184b95da1057fd059ac490f5892bee1610096c101f953d4733b0efef4303872"
+    },
+    "artifacts": {
+      "build/server/index.js": "e352dfcefc5c6412bddc082cad990c12b17fb492eb47552ee5af81d9e95f76c4",
+      "build/worker/analysis.mjs": "f272cf73e08d4e390713e704901d0831cfbd46a9040e953501561a6f28286c1d"
+    },
+    "staticChecks": [
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/check:aa1:source.log",
+        "sha256": "63f98f13c99eead08a7636d1dedecf7e858a0ae8b86407a220c9c45bbc6aca2a"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/check:aa2:source.log",
+        "sha256": "32e4e359e996ff43b63b5801f4a9f8f7c5e445b984cfea2a9dfc0b0c6ccc822c"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/check:aa3:source.log",
+        "sha256": "4ff839033b88af96eefa2642a3700a04119bb9bfa1f9f93c94a53f8fdfa28284"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/check:aa4:source.log",
+        "sha256": "ae21a5699172835cbafcc4e4e2a44887b95af36631b913b0a21c1d9a98e8f4d8"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/check:aa5:source.log",
+        "sha256": "4344299aed32887d5048c6ce233a83a69f986558e93f020a0d611795ab5b3b75"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/check:aa6:source.log",
+        "sha256": "9d89fe475a9aa8313ac7f50e956cdcf79897a5421c72e3c90a669be6d605f133"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/check:aa8:source.log",
+        "sha256": "50b7f26d854d4bc24871850800cc1e9da6c6d08c6be275f5e7a7775f5a278d58"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/check:aa9:source.log",
+        "sha256": "af534c18139aee3587223c85539f049528e27970dd8666e15ae45682d26ba8c0"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/check:alerts.log",
+        "sha256": "41a7189f0a76f13cc6a66255b1db74cf27e9afa9090b16854a50f4929fdd0c7a"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/check:container.log",
+        "sha256": "8dba541bb02f629442b22c886936e080a9451f534476e6c903d5b8a641ceba64"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/check:ocr:pilot-source.log",
+        "sha256": "001421808dfb8efeafe55817602be2a155e55d2ef2400ca4cf01a30970373c2f"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/format:check.log",
+        "sha256": "c4c1053d0bdac9b44d14f71b609433f128dfd7c9b1592827cb1e5584161677bb"
+      },
+      {
+        "path": "/tmp/resumide-stage-static.dHeAfA/format:check:native-layout.log",
+        "sha256": "73abae45fc8dc711d02af2a76fedfba169c522e3eeb74009370147e84e95ad57"
+      }
+    ],
+    "benchmarks": [
+      {
+        "name": "phase5",
+        "path": "/tmp/resumide-stage-bench.CUbnod/phase5.log",
+        "sha256": "ccf9b9a682dad7981f9c20f919995e8473463dd7a872bb6a94119c0e0d29bb0b",
+        "exitCode": 0,
+        "engineeringPass": true,
+        "releasePass": null
+      },
+      {
+        "name": "job-intelligence",
+        "path": "/tmp/resumide-stage-bench.CUbnod/job-intelligence.log",
+        "sha256": "964e43d2a1bd95123354a82e203f3e151a9c2fe6964c35a301ffa909d84d029a",
+        "exitCode": 0,
+        "engineeringPass": true,
+        "releasePass": false
+      },
+      {
+        "name": "scoring-validity",
+        "path": "/tmp/resumide-stage-bench.CUbnod/scoring-validity.log",
+        "sha256": "7fbcec11c95d6da6ee9aa4bcf76787fd5433fc03ce7122d5a63ff0dc9165f943",
+        "exitCode": 0,
+        "engineeringPass": true,
+        "releasePass": false
+      },
+      {
+        "name": "writer-grounding",
+        "path": "/tmp/resumide-stage-bench.CUbnod/writer-grounding.log",
+        "sha256": "e4ec779e3a168fecf64153f65e20b532993790f28d87dcf18f35f93fb90ea8fc",
+        "exitCode": 0,
+        "engineeringPass": true,
+        "releasePass": false
+      },
+      {
+        "name": "render-parity",
+        "path": "/tmp/resumide-stage-bench.CUbnod/render-parity.log",
+        "sha256": "1fbc8e29b4bb6ec89198fd7268b2005e125bdc001dd6dfff6d4babdd0c33e4ae",
+        "exitCode": 0,
+        "engineeringPass": true,
+        "releasePass": false
+      }
+    ],
+    "finalScopedIntegrationTests": 15
+  },
+  "ocr": {
+    "image": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+    "imageBytes": 370412050,
+    "platform": "linux/arm64",
+    "smoke": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-ocr-results-eetovhqh/smoke.log",
+      "sha256": "072a1a03871f0c649322ae34707e1e0dfbe9a249ff4eab8873a9cf094bc66854",
+      "exitCode": 0
+    },
+    "developmentQuality": [
+      {
+        "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-ocr-results-eetovhqh/development.log",
+        "sha256": "067bdab68343ce39de4c442a3f8ff18bf7d596e463bf2f77ecacec0425cc593c",
+        "ppiCeiling": 300,
+        "exitCode": 1,
+        "status": "diagnostic_execution_completed",
+        "evaluationReceiptSha256": "968cd09c00653ede302405a43ecc903803a9d7b1044fbcbc36207faa68dcdc6d",
+        "segments": [
+          {
+            "segment": "clean",
+            "documents": 3,
+            "screeningGate": "not_passed",
+            "characterErrorRate": 0.0047984644913627635,
+            "macroExactPositionLineAgreement": 0.9465811965811964
+          },
+          {
+            "segment": "challenging",
+            "documents": 3,
+            "screeningGate": "passed",
+            "characterErrorRate": 0,
+            "macroExactPositionLineAgreement": 1
+          },
+          {
+            "segment": "mixed",
+            "documents": 3,
+            "screeningGate": "not_passed",
+            "characterErrorRate": 0.004812319538017324,
+            "macroExactPositionLineAgreement": 0.9465811965811964
+          }
+        ]
+      },
+      {
+        "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-ocr-results-eetovhqh/development-psm3-dpi150.log",
+        "sha256": "c8d52212034ff46843da2195a9d1ffd1de6dd3baea4a5803044e2558f66a9155",
+        "ppiCeiling": 150,
+        "exitCode": 0,
+        "status": "diagnostic_execution_completed",
+        "evaluationReceiptSha256": "c1fb05dc60f18658592b1a5ee9eb400a03a5fe3d735a959b2a033c68e248920b",
+        "segments": [
+          {
+            "segment": "clean",
+            "documents": 3,
+            "screeningGate": "passed",
+            "characterErrorRate": 0,
+            "macroExactPositionLineAgreement": 1
+          },
+          {
+            "segment": "challenging",
+            "documents": 3,
+            "screeningGate": "passed",
+            "characterErrorRate": 0,
+            "macroExactPositionLineAgreement": 1
+          },
+          {
+            "segment": "mixed",
+            "documents": 3,
+            "screeningGate": "passed",
+            "characterErrorRate": 0,
+            "macroExactPositionLineAgreement": 1
+          }
+        ]
+      }
+    ],
+    "ownedResidualContainers": 0,
+    "lockedOrRepresentativeDataRun": false
+  },
+  "latex": {
+    "runtimeRan": false,
+    "pinnedCandidateAndHistoricalBaselinePresent": false
+  },
+  "currentSchemaInventory": "managed-schema-successor-inventory.json",
+  "closedStageCount": 0
+}

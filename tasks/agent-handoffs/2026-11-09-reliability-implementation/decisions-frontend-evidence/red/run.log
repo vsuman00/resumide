@@ -1,0 +1,45 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/components/JdClauseOrderDecisionReview.test.tsx (14 tests | 1 failed) 618ms
+   ✓ renders the complete actual prepared wording, JD and source with pinned references and no undo authority 154ms
+   ✓ requires a fresh controlled acknowledgement before acceptance 41ms
+   ✓ accepts only the exact actual producer command and a fully correlated receipt 46ms
+   ✓ records rejection without an acknowledgement or a resume-head movement claim 28ms
+   ✓ withholds all controls when the actual proposal command digest is corrupted 11ms
+   ✓ rejects a cross-bound command even when its individual shape is valid 17ms
+   ✓ treats a wrong receipt SHA as unknown and requires fresh acknowledgement for exact retry 36ms
+   ✓ retains the exact original proposal and command after transport ambiguity and later head movement 64ms
+   ✓ clears unknown private review state when the actual source scope changes 46ms
+   ✓ resets acknowledgement on a full proposal change and persisted history restoration 42ms
+   ✓ prevents a duplicate action while the first controlled handler is unresolved 35ms
+   ✓ does not publish an old in-flight receipt into a different source review 39ms
+   × keeps a confirmed old receipt attached to its original review after same-source heads move in flight 47ms
+   ✓ ignores stale async verification after mutation of the incoming proposal 11ms
+ ✓ tests/unit/jd-clause-order-browser.test.ts (45 tests) 292ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/JdClauseOrderDecisionReview.test.tsx > keeps a confirmed old receipt attached to its original review after same-source heads move in flight
+AssertionError: expected 'Git preferred' to be 'Git required' // Object.is equality
+
+Expected: "Git required"
+Received: "Git preferred"
+
+ ❯ tests/components/JdClauseOrderDecisionReview.test.tsx:445:84
+    443|   await act(async () => { resolve?.(receipt(f.proposal.acceptCommand))…
+    444|   await screen.findByText(/The exact decision was confirmed as saved/u…
+    445|   expect(screen.getByRole("blockquote",{name:"Exact saved JD quote"}).…
+       |                                                                                    ^
+    446|   expect(screen.getByRole("link",{name:"Inspect the current fact and p…
+    447|   expect(onDecision).toHaveBeenCalledExactlyOnceWith(f.proposal.accept…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 58 passed (59)
+   Start at  19:33:06
+   Duration  2.28s (transform 430ms, setup 0ms, import 736ms, tests 910ms, environment 506ms)
+
+JSON report written to /private/tmp/resumide-clause-order-decisions-frontend-l9vj4e2t/red/tests.json

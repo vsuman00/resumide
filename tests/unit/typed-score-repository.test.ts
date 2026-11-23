@@ -1,0 +1,757 @@
+import { expect, it, vi } from "vitest";
+import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
+import { loadScoreDiagnostics } from "../../app/lib/server/score-v2-repository";
+import {
+  createRequirementContextFixture,
+  requirementFixtureId,
+} from "../fixtures/requirement-context";
+import type { RequirementRelationshipContext } from "../../app/lib/server/requirement-relationship-context";
+
+import { parseJobRequirements } from "../../app/lib/server/job-requirements";
+import { createJobRequirementRelations } from "../../app/lib/server/job-requirement-admission";
+import { buildScoreDiagnostics } from "../../app/lib/server/score-v2-engine";
+import {
+  assertAuthoringDiagnosticsAllowed,
+  buildSuggestion,
+  buildFindings,
+  validateSuggestion,
+  TypedAuthoringPausedError,
+  TYPED_AUTHORING_PAUSED_MESSAGE,
+} from "../../app/lib/server/authoring-contract";
+import {
+  loadAuthoring,
+  applyAuthoring,
+} from "../../app/lib/server/authoring-repository";
+
+type Result = { data: unknown; error: unknown };
+type Read = {
+  table: string;
+  columns: string;
+  filters: Record<string, unknown>;
+  single: boolean;
+};
+const ok = (data: unknown): Result => ({ data, error: null });
+function ownedStore(
+  context: RequirementRelationshipContext,
+  override?: (read: Read, sequence: Read[]) => Result | undefined,
+) {
+  const c = context.canonical,
+    s = context.source,
+    r = context.requirements;
+  const docs = [c, ...context.ancestors];
+  const reads: Read[] = [];
+  const root = {
+    id: s.resumeId,
+    owner_id: s.ownerId,
+    organization_id: s.organizationId,
+    status: "active",
+  };
+  const analysis = {
+    id: s.analysisId,
+    owner_id: s.ownerId,
+    organization_id: s.organizationId,
+    resume_version_id: s.sourceId,
+    job_id: r.content.jobId,
+  };
+  const source = {
+    id: s.sourceId,
+    resume_id: s.resumeId,
+    owner_id: s.ownerId,
+    organization_id: s.organizationId,
+    active_resume: root,
+    page_count: context.sourceMetadata.pageCount,
+  };
+  const job = {
+    id: r.content.jobId,
+    title: "Software Engineer",
+    description: r.content.sourceText,
+    owner_id: s.ownerId,
+    organization_id: s.organizationId,
+  };
+  const canonicalRows = docs.map((d) => ({
+    id: d.versionId,
+    resume_id: s.resumeId,
+    owner_id: s.ownerId,
+    organization_id: s.organizationId,
+    source_resume_version_id: s.sourceId,
+    parent_version_id: d.content.parentVersionId,
+    revision: d.revision,
+    content: d.content,
+    created_at: d.content.createdAt,
+  }));
+  const requirementRows = [
+    {
+      id: r.versionId,
+      analysis_id: s.analysisId,
+      job_id: r.content.jobId,
+      owner_id: s.ownerId,
+      organization_id: s.organizationId,
+      parent_version_id: r.content.parentVersionId,
+      revision: r.revision,
+      content: r.content,
+      created_at: r.content.createdAt,
+    },
+  ];
+  const privacy = {
+    subjects: new Set([s.ownerId]),
+    preparations: [] as { owner_id: string }[],
+    requests: [] as { user_id: string; kind: string; status: string }[],
+  };
+  const authorityRpc = vi.fn((name: string, args: Record<string, unknown>) => ({
+    abortSignal: async (signal: AbortSignal) => {
+      if (signal.aborted) throw Error("SYNTHETIC_AUTHORITY_ABORTED");
+      const read: Read = {
+        table: name,
+        columns: "",
+        filters: args,
+        single: true,
+      };
+      reads.push(read);
+      const replacement = override?.(read, reads);
+      if (replacement) return replacement;
+      if (name === "read_owned_ai_disposition_readiness")
+        return ok({
+          ...OWNED_AI_DISPOSITION_PROFILE,
+          schemaReady: true,
+          exportExecutable: false,
+          accessExecutable: true,
+        });
+      const ownerId = String(args.p_user_id);
+      if (
+        name !== "read_candidate_privacy_access" ||
+        !privacy.subjects.has(ownerId)
+      )
+        return { data: null, error: { code: "42501" } };
+      return ok({
+        schemaVersion: "candidate-privacy-access/1.0.0",
+        ownerId,
+        deletionPrepared: privacy.preparations.some(
+          (row) => row.owner_id === ownerId,
+        ),
+        blockingRequest: privacy.requests.some(
+          (row) =>
+            row.user_id === ownerId &&
+            row.kind === "deletion" &&
+            !["failed", "cancelled"].includes(row.status),
+        ),
+      });
+    },
+  }));
+  const rpc = vi.fn<(name: string, args: unknown) => Promise<Result>>(
+    async (name) => {
+      if (name !== "read_requirement_relationship_context")
+        throw Error("UNEXPECTED_WRITE_RPC");
+      return ok(context);
+    },
+  );
+  function valueAt(row: Record<string, unknown>, path: string): unknown {
+    let value: unknown = row;
+    for (const key of path.split(".")) {
+      if (typeof value !== "object" || value === null) return undefined;
+      value = (value as Record<string, unknown>)[key];
+    }
+    return value;
+  }
+  const from = vi.fn((table: string) => {
+    const read: Read = { table, columns: "", filters: {}, single: false };
+    const query = {
+      select(columns: string) {
+        read.columns = columns;
+        return query;
+      },
+      eq(key: string, value: unknown) {
+        read.filters[key] = value;
+        return query;
+      },
+      neq() {
+        return query;
+      },
+      order() {
+        return query;
+      },
+      limit() {
+        return query;
+      },
+      range() {
+        return query;
+      },
+      maybeSingle() {
+        read.single = true;
+        return query;
+      },
+      then(yes: (result: Result) => unknown, no: (error: unknown) => unknown) {
+        reads.push(read);
+        const replacement = override?.(read, reads);
+        if (replacement) return Promise.resolve(replacement).then(yes, no);
+        let rows: Record<string, unknown>[];
+        if (table === "analyses") rows = [analysis];
+        else if (table === "resume_versions") rows = [source];
+        else if (table === "memberships")
+          rows = [
+            {
+              organization_id: s.organizationId,
+              user_id: s.ownerId,
+              role: "owner",
+            },
+          ];
+        else if (table === "data_requests" || table === "authoring_events")
+          rows = [];
+        else if (table === "resumes") rows = [root];
+        else if (table === "jobs") rows = [job];
+        else if (table === "canonical_resume_heads")
+          rows = [
+            {
+              resume_id: s.resumeId,
+              owner_id: s.ownerId,
+              organization_id: s.organizationId,
+              version_id: context.heads.canonicalHeadId,
+              revision: context.heads.canonicalHeadRevision,
+            },
+          ];
+        else if (table === "canonical_resume_versions") rows = canonicalRows;
+        else if (table === "job_requirement_versions") rows = requirementRows;
+        else if (table === "document_evidence_attempts")
+          rows = [
+            {
+              id: context.attempt.id,
+              analysis_id: s.analysisId,
+              owner_id: s.ownerId,
+              organization_id: s.organizationId,
+              envelope: context.attempt.envelope,
+              resume_version_id: s.sourceId,
+              input_sha256: s.inputSha256,
+              attempt_number: context.attempt.attemptNumber,
+            },
+          ];
+        else throw Error("UNEXPECTED_TABLE_READ");
+        rows = rows.filter((row) =>
+          Object.entries(read.filters).every(
+            ([key, value]) => valueAt(row, key) === value,
+          ),
+        );
+        if (
+          table === "canonical_resume_versions" ||
+          table === "job_requirement_versions"
+        )
+          rows = [...rows].sort(
+            (a, b) => Number(b.revision) - Number(a.revision),
+          );
+        return Promise.resolve(ok(read.single ? (rows[0] ?? null) : rows)).then(
+          yes,
+          no,
+        );
+      },
+    };
+    return query;
+  });
+  return {
+    client: {
+      from,
+      rpc(name: string, args: Record<string, unknown>) {
+        return [
+          "read_owned_ai_disposition_readiness",
+          "read_candidate_privacy_access",
+        ].includes(name)
+          ? authorityRpc(name, args)
+          : rpc(name, args);
+      },
+    } as unknown as Parameters<typeof loadScoreDiagnostics>[0],
+    from,
+    rpc,
+    authorityRpc,
+    privacy,
+    reads,
+    canonicalRows,
+    requirementRows,
+    source,
+    analysis,
+    job,
+  };
+}
+
+it("loads real typed coverage through the owned repository pipeline", async () => {
+  const f = await createRequirementContextFixture({ confirm: true });
+  const store = ownedStore(f.context);
+  const model = await loadScoreDiagnostics(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+  );
+  expect(model).toHaveProperty("typedCoverage.state", "available");
+  expect(model.diagnostics.schemaVersion).toBe("score-diagnostics/typed-1.0.0");
+  expect(store.rpc).toHaveBeenCalledWith(
+    "read_requirement_relationship_context",
+    {
+      p_user_id: f.owned.ownerId,
+      p_analysis_id: f.owned.analysisId,
+      p_selection: {
+        canonicalVersionId: f.context.canonical.versionId,
+        requirementVersionId: f.context.requirements.versionId,
+      },
+    },
+  );
+  expect(store.reads.some((r) => r.table === "canonical_resume_versions")).toBe(
+    true,
+  );
+  expect(store.reads.some((r) => r.table === "job_requirement_versions")).toBe(
+    true,
+  );
+});
+
+function rejectStatus(promise: Promise<unknown>, status: number) {
+  return expect(promise).rejects.toMatchObject({ status });
+}
+const privateFailure = (status: "not_found" | "unavailable") => ({
+  schemaVersion: "requirement-relationship-context/1.0.0",
+  status,
+  scoringEligible: false,
+});
+
+it("keeps typed SHA clauses outside legacy alignment and all authoritative numbers withheld", async () => {
+  const f = await createRequirementContextFixture({
+    confirm: true,
+    jdText: "Requirements\n• PostgreSQL or Python required",
+  });
+  const store = ownedStore(f.context);
+  const model = await loadScoreDiagnostics(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+  );
+  expect(model.typedCoverage?.binding.canonical.versionId).toBe(
+    f.context.canonical.versionId,
+  );
+  expect(model.typedCoverage?.binding.requirements.versionId).toBe(
+    f.context.requirements.versionId,
+  );
+  expect(model.typedCoverage?.clauses.map((c) => c.id)).toEqual(
+    f.context.requirements.content.relations.clauses.map((c) => c.id),
+  );
+  expect(model.typedCoverage?.clauses[0]).toMatchObject({
+    evidence: { quote: "• PostgreSQL or Python required" },
+    storedExpressionKind: "unknown",
+    expressionKind: "any_of",
+    proposedState: "satisfied",
+  });
+  expect(model.diagnostics.alignment).toEqual([]);
+  expect(model.diagnostics.score.producerVersion).toBe("score-v2/typed-1.0.1");
+  expect(model.diagnostics.score.state).toBe("withheld");
+  expect(
+    model.diagnostics.score.dimensions.every(
+      (d) => d.value === null && !d.eligible,
+    ),
+  ).toBe(true);
+  expect(
+    model.typedCoverage?.clauses.every((c) => c.state === "not_evaluated"),
+  ).toBe(true);
+  expect(store.rpc).toHaveBeenCalledTimes(2);
+});
+
+it.each([null, 21])(
+  "preserves owned declared page metadata %s without inference or clamp",
+  async (pageCount) => {
+    const f = await createRequirementContextFixture({ pageCount });
+    const model = await loadScoreDiagnostics(
+      ownedStore(f.context).client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+    );
+    expect(model.diagnostics.readiness).toHaveProperty(
+      "declaredPageCount",
+      pageCount,
+    );
+    expect(model.diagnostics.readiness.observedPageCoverage).toBe(
+      pageCount === null ? null : 1 / 21,
+    );
+  },
+);
+
+it.each(["canonical", "requirements"] as const)(
+  "rejects a stale expected %s head before relationship transport",
+  async (name) => {
+    const f = await createRequirementContextFixture();
+    const store = ownedStore(f.context);
+    await rejectStatus(
+      loadScoreDiagnostics(
+        store.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        name === "canonical"
+          ? { expectedCanonical: requirementFixtureId(990) }
+          : { expectedRequirements: requirementFixtureId(990) },
+      ),
+      409,
+    );
+    expect(store.rpc).not.toHaveBeenCalled();
+  },
+);
+
+it.each(["foreign_owner", "membership", "deletion", "source"] as const)(
+  "rejects owned input failure %s before relationship transport",
+  async (failure) => {
+    const f = await createRequirementContextFixture();
+    const store = ownedStore(f.context, (read) => {
+      if (failure === "membership" && read.table === "memberships")
+        return ok(null);
+      if (
+        failure === "deletion" &&
+        read.table === "read_candidate_privacy_access"
+      )
+        return ok({
+          schemaVersion: "candidate-privacy-access/1.0.0",
+          ownerId: f.owned.ownerId,
+          deletionPrepared: false,
+          blockingRequest: true,
+        });
+      if (failure === "source" && read.table === "resume_versions")
+        return ok(null);
+    });
+    await rejectStatus(
+      loadScoreDiagnostics(
+        store.client,
+        f.owned.analysisId,
+        failure === "foreign_owner"
+          ? requirementFixtureId(992)
+          : f.owned.ownerId,
+      ),
+      404,
+    );
+    expect(store.rpc).not.toHaveBeenCalled();
+  },
+);
+
+it("fails closed on a missing relationship migration without exposing raw errors or falling back", async () => {
+  const f = await createRequirementContextFixture();
+  const store = ownedStore(f.context);
+  store.rpc.mockResolvedValue({
+    data: null,
+    error: { code: "42883", message: "RAW_PRIVATE_CANARY" },
+  });
+  const promise = loadScoreDiagnostics(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+  );
+  await rejectStatus(promise, 503);
+  await expect(promise).rejects.not.toThrow("RAW_PRIVATE_CANARY");
+  expect(store.rpc).toHaveBeenCalledTimes(1);
+  expect(
+    store.reads.every(
+      (r) =>
+        !r.table.startsWith("entry_regroup") &&
+        !r.table.startsWith("canonical_entry"),
+    ),
+  ).toBe(true);
+});
+
+it.each(["owner", "source", "profile"] as const)(
+  "rejects malformed owned relationship %s binding",
+  async (failure) => {
+    const f = await createRequirementContextFixture();
+    const row = structuredClone(f.context);
+    if (failure === "owner") row.source.ownerId = requirementFixtureId(993);
+    else if (failure === "source")
+      row.source.sourceId = requirementFixtureId(993);
+    else
+      Object.assign(row.profiles, { readinessProfileVersion: "unsupported" });
+    const store = ownedStore(f.context);
+    store.rpc.mockResolvedValue(ok(row));
+    await rejectStatus(
+      loadScoreDiagnostics(store.client, f.owned.analysisId, f.owned.ownerId),
+      503,
+    );
+  },
+);
+
+it("keeps an explicit real historical canonical selection separate from the captured current head", async () => {
+  const f = await createRequirementContextFixture({
+    confirm: true,
+    extraVersions: 1,
+  });
+  const store = ownedStore(f.context);
+  const original = f.context.ancestors.at(-1)!;
+  const selected = structuredClone(f.context);
+  selected.canonical = { ...original, locale: original.content.locale };
+  selected.ancestors = [];
+  selected.headerSnapshot.canonicalVersionId = original.versionId;
+  selected.headerSnapshot.canonicalContentSha256 = original.contentSha256;
+  selected.headerSnapshot.creationKind = "grouped_import";
+  store.rpc.mockResolvedValue(ok(selected));
+  const model = await loadScoreDiagnostics(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+    { canonical: original.versionId },
+  );
+  expect(model.historical).toBe(true);
+  expect(model.canonical).toEqual({
+    versionId: original.versionId,
+    revision: original.revision,
+    headId: f.context.heads.canonicalHeadId,
+  });
+  expect(model.typedCoverage?.binding.canonical.versionId).toBe(
+    original.versionId,
+  );
+  expect(
+    store.rpc.mock.calls.every(
+      ([, args]) =>
+        (args as { p_selection: { canonicalVersionId: string } }).p_selection
+          .canonicalVersionId === original.versionId,
+    ),
+  ).toBe(true);
+});
+
+it("keeps a real historical typed JD selected when the current JD head advances", async () => {
+  const f = await createRequirementContextFixture();
+  const newer = createJobRequirementRelations("Requirements\nPython required", {
+    ownerId: f.owned.ownerId,
+    organizationId: f.owned.organizationId,
+    analysisId: f.owned.analysisId,
+    jobId: f.context.requirements.content.jobId,
+    parentVersionId: f.context.requirements.versionId,
+    locale: f.context.requirements.content.locale,
+    domain: f.context.requirements.content.domain,
+  });
+  const selected = structuredClone(f.context);
+  selected.heads.requirementHeadId = newer.id;
+  selected.heads.requirementHeadRevision = 2;
+  const store = ownedStore(selected);
+  store.job.description = newer.sourceText;
+  store.requirementRows.push({
+    id: newer.id,
+    analysis_id: f.owned.analysisId,
+    job_id: newer.jobId,
+    owner_id: f.owned.ownerId,
+    organization_id: f.owned.organizationId,
+    parent_version_id: newer.parentVersionId,
+    revision: 2,
+    content: newer,
+    created_at: newer.createdAt,
+  });
+  const model = await loadScoreDiagnostics(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+    { requirements: f.context.requirements.versionId },
+  );
+  expect(model.historical).toBe(true);
+  expect(model.requirements).toEqual({
+    versionId: f.context.requirements.versionId,
+    revision: 1,
+    headId: newer.id,
+  });
+  expect(model.typedCoverage?.binding.requirements.versionId).toBe(
+    f.context.requirements.versionId,
+  );
+});
+
+it.each(["not_found", "unavailable"] as const)(
+  "rechecks privacy/source access on the final owned read: %s",
+  async (status) => {
+    const f = await createRequirementContextFixture();
+    const store = ownedStore(f.context);
+    store.rpc
+      .mockResolvedValueOnce(ok(f.context))
+      .mockResolvedValueOnce(ok(privateFailure(status)));
+    await rejectStatus(
+      loadScoreDiagnostics(store.client, f.owned.analysisId, f.owned.ownerId),
+      status === "not_found" ? 404 : 503,
+    );
+    expect(store.rpc).toHaveBeenCalledTimes(2);
+  },
+);
+
+it.each(["head", "page_count", "native_digest"] as const)(
+  "rejects changed final pair metadata: %s",
+  async (change) => {
+    const f = await createRequirementContextFixture();
+    const final = structuredClone(f.context);
+    if (change === "head") {
+      final.heads.canonicalHeadId = requirementFixtureId(994);
+      final.heads.canonicalHeadRevision++;
+    } else if (change === "page_count") final.sourceMetadata.pageCount = 21;
+    else {
+      final.canonical.contentSha256 = "f".repeat(64);
+      final.headerSnapshot.canonicalContentSha256 =
+        final.canonical.contentSha256;
+    }
+    const store = ownedStore(f.context);
+    store.rpc
+      .mockResolvedValueOnce(ok(f.context))
+      .mockResolvedValueOnce(ok(final));
+    await rejectStatus(
+      loadScoreDiagnostics(store.client, f.owned.analysisId, f.owned.ownerId),
+      409,
+    );
+  },
+);
+
+it("rejects a changed final analysis-to-JD link", async () => {
+  const f = await createRequirementContextFixture();
+  const store = ownedStore(f.context, (read, reads) =>
+    read.table === "analyses" &&
+    read.columns === "job_id" &&
+    reads.filter((r) => r.table === "analyses" && r.columns === "job_id")
+      .length === 2
+      ? ok({ job_id: requirementFixtureId(995) })
+      : undefined,
+  );
+  await rejectStatus(
+    loadScoreDiagnostics(store.client, f.owned.analysisId, f.owned.ownerId),
+    409,
+  );
+});
+
+function legacyInputs(
+  f: Awaited<ReturnType<typeof createRequirementContextFixture>>,
+) {
+  const c = f.context;
+  const requirements = parseJobRequirements(c.requirements.content.sourceText, {
+    ownerId: c.source.ownerId,
+    organizationId: c.source.organizationId,
+    analysisId: c.source.analysisId,
+    jobId: c.requirements.content.jobId,
+  });
+  requirements.id = c.requirements.versionId;
+  requirements.createdAt = c.requirements.content.createdAt;
+  const diagnostics = buildScoreDiagnostics({
+    canonical: c.canonical.content,
+    requirements,
+    evidence: c.attempt.envelope,
+    expectedPageCount: 1,
+  });
+  return { requirements, diagnostics };
+}
+
+it("preserves the real legacy diagnostics path without relationship RPC or typed sidecar", async () => {
+  const f = await createRequirementContextFixture({ confirm: true });
+  const legacy = legacyInputs(f);
+  const stored = {
+    id: legacy.requirements.id,
+    analysis_id: f.owned.analysisId,
+    job_id: legacy.requirements.jobId,
+    owner_id: f.owned.ownerId,
+    organization_id: f.owned.organizationId,
+    parent_version_id: null,
+    revision: 1,
+    content: legacy.requirements,
+    created_at: legacy.requirements.createdAt,
+  };
+  const store = ownedStore(f.context, (read) =>
+    read.table === "job_requirement_versions"
+      ? ok(read.single ? stored : [stored])
+      : undefined,
+  );
+  const model = await loadScoreDiagnostics(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+  );
+  expect(model.typedCoverage).toBeUndefined();
+  expect(model.diagnostics).toEqual(legacy.diagnostics);
+  expect(store.rpc).not.toHaveBeenCalled();
+});
+
+it("pauses typed proposals in shared builders and loadAuthoring before any authoring read", async () => {
+  const f = await createRequirementContextFixture({ confirm: true });
+  const store = ownedStore(f.context);
+  const model = await loadScoreDiagnostics(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+  );
+  const patch = buildSuggestion(
+    f.context.canonical.content,
+    f.targetFactId,
+    "xyz",
+    legacyInputs(f).diagnostics,
+  );
+  expect(() => assertAuthoringDiagnosticsAllowed(model.diagnostics)).toThrow(
+    TypedAuthoringPausedError,
+  );
+  expect(() =>
+    buildSuggestion(
+      f.context.canonical.content,
+      f.targetFactId,
+      "xyz",
+      model.diagnostics,
+    ),
+  ).toThrow(TypedAuthoringPausedError);
+  expect(() =>
+    buildFindings(f.context.canonical.content, model.diagnostics),
+  ).toThrow(TypedAuthoringPausedError);
+  expect(() =>
+    validateSuggestion(patch, f.context.canonical.content, model.diagnostics),
+  ).toThrow(TypedAuthoringPausedError);
+  store.from.mockClear();
+  store.rpc.mockClear();
+  await expect(
+    loadAuthoring(store.client, f.owned.analysisId, f.owned.ownerId, model),
+  ).rejects.toMatchObject({
+    status: 503,
+    message: TYPED_AUTHORING_PAUSED_MESSAGE,
+  });
+  expect(store.from).not.toHaveBeenCalled();
+  expect(store.rpc).not.toHaveBeenCalled();
+});
+
+it.each(["accept", "reject"] as const)(
+  "pauses a genuine old %s proposal before any write RPC",
+  async (action) => {
+    const f = await createRequirementContextFixture({ confirm: true });
+    const store = ownedStore(f.context);
+    const patch = buildSuggestion(
+      f.context.canonical.content,
+      f.targetFactId,
+      "xyz",
+      legacyInputs(f).diagnostics,
+    );
+    await expect(
+      applyAuthoring(
+        store.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        {
+          action,
+          expectedVersionId: f.context.canonical.versionId,
+          idempotencyKey: requirementFixtureId(996),
+          patch,
+          ...(action === "accept" ? { confirmation: true } : {}),
+        },
+        requirementFixtureId(997),
+      ),
+    ).rejects.toMatchObject({
+      status: 503,
+      message: TYPED_AUTHORING_PAUSED_MESSAGE,
+    });
+    expect(
+      store.rpc.mock.calls.every(
+        ([name]) => name === "read_requirement_relationship_context",
+      ),
+    ).toBe(true);
+    expect(store.rpc).toHaveBeenCalledTimes(2);
+  },
+);
+
+it.each(["failed", "cancelled"])(
+  "withholds typed scoring after prepared %s deletion",
+  async (status) => {
+    const f = await createRequirementContextFixture();
+    const store = ownedStore(f.context);
+    store.privacy.requests.push({
+      user_id: f.owned.ownerId,
+      kind: "deletion",
+      status,
+    });
+    store.privacy.preparations.push({ owner_id: f.owned.ownerId });
+    await rejectStatus(
+      loadScoreDiagnostics(store.client, f.owned.analysisId, f.owned.ownerId),
+      404,
+    );
+    expect(store.rpc).not.toHaveBeenCalled();
+    expect(store.authorityRpc).toHaveBeenCalledWith(
+      "read_candidate_privacy_access",
+      { p_user_id: f.owned.ownerId },
+    );
+  },
+);

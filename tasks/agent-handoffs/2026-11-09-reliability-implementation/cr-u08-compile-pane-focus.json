@@ -1,0 +1,59 @@
+{
+  "id": "CR-U08-S06",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_LOCAL_CHROME_AND_EXACT_WORKER_WITH_SYNTHETIC_SERVICES",
+  "before": {
+    "failedComponentRegressions": 3,
+    "finding": "A successful response changed Code back to PDF preview. Removing a focused Cancel control after cancellation or success lost focus."
+  },
+  "after": {
+    "success": "A completed compile publishes the source-bound PDF and leaves the current pane selected.",
+    "focus": "Focus returns to Recompile only if Cancel had focus when compilation ended and no other element gained focus. Session expiry still focuses the sign-in notice.",
+    "recovery": "A cancelled request aborts and cannot publish a late PDF. Current source and generation checks remain verified."
+  },
+  "browser": {
+    "channel": "Google Chrome",
+    "zoomPercent": 200,
+    "viewportCssWidths": [390, 320],
+    "workerImageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "workerPlatform": "linux/arm64",
+    "transport": "Two successful requests were held before routing to the real compiler. Auth, rate admission, the AI suggestion and separate 401 and empty-PDF responses used fixtures.",
+    "completedCompileKeptCodePane": true,
+    "completedCompileRestoredKeyboardFocus": true,
+    "realCompilations": 3,
+    "totalCompileRequests": 5,
+    "matchedDownloads": 3,
+    "pdfSha256": [
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f",
+      "3ec3c5e17be268457834e91528b760dd8b1f9c206effd64040db2a4810d195f0",
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f"
+    ],
+    "remainingConverterContainers": 0
+  },
+  "checks": {
+    "focusedTests": 158,
+    "focusedFiles": 6,
+    "integratedTests": 7225,
+    "integratedFiles": 340,
+    "firstTypecheck": "The two new DOM test selectors used a Playwright option outside their Testing Library type. Exact regular expressions preserved their scope.",
+    "finalTypecheck": "pass",
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 4
+    },
+    "webBuild": "pass",
+    "workerBuild": "pass"
+  },
+  "sourceHashes": {
+    "app/routes/latex.tsx": "af008504a4a025f3ce1ffe3c4b0803d91e80e5209b12eff8f85b40397627f001",
+    "tests/components/LatexCompileRecovery.test.tsx": "514cbb0daecfe7ad9998221c04ae560ee8b985bb4f391c17a0621a9a64407f19",
+    "scripts/verify-local-build-pdf-lifecycle.ts": "6dbff4b09117eb9d475741b6ada64f778c4e8a356586e2ef767501bf8ebc04b9"
+  },
+  "open": [
+    "Managed Auth and rate admission",
+    "Live Build AI",
+    "Formal accessibility and release acceptance"
+  ]
+}

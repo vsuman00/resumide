@@ -1,0 +1,31 @@
+
+> verify:latex
+> vite-node --config vitest.config.ts scripts/verify-latex-sandbox.ts sha256:22cb68acedec7c9e10ff9c9658e7430cb0dc57067647c030850ebc61d9c15597
+
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+AssertionError [ERR_ASSERTION]: Representative macro document must actually compile
++ actual - expected
+
++ 'compile_failed'
+- undefined
+
+    at verifyLatexSandbox (/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/scripts/verify-latex-sandbox.ts:185:10)
+    at processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/scripts/verify-latex-sandbox.ts:484:5
+    at ViteNodeRunner.runModule (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:397:4)
+    at ViteNodeRunner.directRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:375:3)
+    at ViteNodeRunner.cachedRequest (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:189:11)
+    at ViteNodeRunner.executeFile (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/client.mjs:162:10)
+    at CAC.run (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/vite-node/dist/cli.mjs:102:28) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 'compile_failed',
+  expected: undefined,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.4

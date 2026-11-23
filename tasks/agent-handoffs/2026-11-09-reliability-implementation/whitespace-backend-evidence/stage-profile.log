@@ -1,0 +1,37 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+stdout | tests/unit/preparation-whitespace.test.ts > prepares actual synthetic normal source within the unchanged five-second floor
+{"profile":"synthetic_preparation_whitespace","variant":"normal","elapsedMs":87.49787500000002,"stages":{"parse_contact":{"calls":193,"elapsedMs":2.377119000000448,"maximumMs":1.2847079999999664},"native_builder":{"calls":1,"elapsedMs":2.4975000000000023,"maximumMs":2.4975000000000023},"reconciliation":{"calls":1,"elapsedMs":8.375291000000004,"maximumMs":8.375291000000004},"canonical_import":{"calls":1,"elapsedMs":3.0378749999999854,"maximumMs":3.0378749999999854},"canonical_confirmation":{"calls":1,"elapsedMs":0.29374999999998863,"maximumMs":0.29374999999998863},"typed_jd":{"calls":1,"elapsedMs":26.78845899999999,"maximumMs":26.78845899999999},"relationship_context":{"calls":3,"elapsedMs":9.19545800000003,"maximumMs":5.754500000000007},"owned_score":{"calls":1,"elapsedMs":39.495041000000015,"maximumMs":39.495041000000015}}}
+
+stdout | tests/unit/preparation-whitespace.test.ts > prepares actual synthetic bounded_lines source within the unchanged five-second floor
+{"profile":"synthetic_preparation_whitespace","variant":"bounded_lines","elapsedMs":106.21895900000004,"stages":{"parse_contact":{"calls":193,"elapsedMs":8.423459000000037,"maximumMs":7.59054100000003},"native_builder":{"calls":1,"elapsedMs":8.517165999999975,"maximumMs":8.517165999999975},"reconciliation":{"calls":1,"elapsedMs":5.6747910000000275,"maximumMs":5.6747910000000275},"canonical_import":{"calls":1,"elapsedMs":4.37337500000001,"maximumMs":4.37337500000001},"canonical_confirmation":{"calls":1,"elapsedMs":0.07554099999998698,"maximumMs":0.07554099999998698},"typed_jd":{"calls":1,"elapsedMs":0.5237089999999966,"maximumMs":0.5237089999999966},"relationship_context":{"calls":3,"elapsedMs":24.380165999999917,"maximumMs":8.708708000000001},"owned_score":{"calls":1,"elapsedMs":77.95350000000002,"maximumMs":77.95350000000002}}}
+
+stdout | tests/unit/preparation-whitespace.test.ts > prepares actual synthetic single_long_line source within the unchanged five-second floor
+{"profile":"synthetic_preparation_whitespace","variant":"single_long_line","elapsedMs":7790.734791999999,"stages":{"parse_contact":{"calls":193,"elapsedMs":7684.6145899999965,"maximumMs":7683.728709},"native_builder":{"calls":1,"elapsedMs":7684.947084,"maximumMs":7684.947084},"reconciliation":{"calls":1,"elapsedMs":5.947582999999213,"maximumMs":5.947582999999213},"canonical_import":{"calls":1,"elapsedMs":4.354291000001467,"maximumMs":4.354291000001467},"canonical_confirmation":{"calls":1,"elapsedMs":0.14654200000040873,"maximumMs":0.14654200000040873},"typed_jd":{"calls":1,"elapsedMs":0.9757919999992737,"maximumMs":0.9757919999992737},"relationship_context":{"calls":3,"elapsedMs":25.702542999997604,"maximumMs":9.359833999998955},"owned_score":{"calls":1,"elapsedMs":84.31908399999884,"maximumMs":84.31908399999884}}}
+
+ ❯ tests/unit/preparation-whitespace.test.ts (3 tests | 1 failed) 7988ms
+   ✓ prepares actual synthetic normal source within the unchanged five-second floor 89ms
+   ✓ prepares actual synthetic bounded_lines source within the unchanged five-second floor 107ms
+   × prepares actual synthetic single_long_line source within the unchanged five-second floor 7792ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/preparation-whitespace.test.ts > prepares actual synthetic single_long_line source within the unchanged five-second floor
+AssertionError: expected 7790.490292 to be less than 5000
+ ❯ tests/unit/preparation-whitespace.test.ts:40:34
+     38|  expect(model.jdClauseOrderPlan?.state).toBe(variant==="normal"?"avail…
+     39|  expect(model.jdClauseOrderPlan?.reason).toBe(variant==="normal"?null:…
+     40|  expect(performance.now()-start).toBeLessThan(5000);
+       |                                  ^
+     41|  }finally{
+     42|  // Inclusive durations overlap: parse_contact is a leaf of native/rec…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 passed (3)
+   Start at  13:54:12
+   Duration  8.37s (transform 221ms, setup 0ms, import 319ms, tests 7.99s, environment 0ms)
+

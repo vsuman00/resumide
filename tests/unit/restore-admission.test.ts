@@ -1,0 +1,520 @@
+import fs from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  RestoreAdmissionController,
+  type RestoreCall,
+  type RestoreFenceProof,
+  type TrustedRestoreAuthority,
+} from "../../app/lib/server/restore-admission";
+import { RestoreFloorStore } from "../../app/lib/server/restore-floor";
+import {
+  createBackupManifest,
+  verifyRestoredSnapshot,
+} from "../../app/lib/server/backup-restore";
+const dirs: string[] = [];
+afterEach(() => {
+  vi.restoreAllMocks();
+  for (const dir of dirs.splice(0))
+    fs.rmSync(dir, { recursive: true, force: true });
+});
+async function fixture() {
+  const dir = fs.realpathSync(
+    fs.mkdtempSync(join(tmpdir(), "resumide-admission-fixture-")),
+  );
+  fs.chmodSync(dir, 0o700);
+  dirs.push(dir);
+  const store = new RestoreFloorStore(dir);
+  await store.bootstrap();
+  const events: string[] = [];
+  const actual = {
+    checkpoint: "0",
+    fence: "0",
+    instanceId: "synthetic-db-1",
+    closed: true,
+    outcome: "unknown" as "committed" | "not_committed" | "unknown",
+  };
+  const candidates = new Map<string, { generation: string; guards: boolean }>([
+    ["current", { generation: "1", guards: true }],
+    ["older", { generation: "0", guards: true }],
+    ["missing-guard", { generation: "1", guards: false }],
+  ]);
+  const observed = (schemaVersion: string, call: RestoreCall) => ({
+    schemaVersion,
+    generation: call.generation,
+    revision: call.state.revision,
+    fence: actual.fence,
+    instanceId: actual.instanceId,
+  });
+  const enforce = async (call: RestoreCall) => {
+    if (
+      call.signal.aborted ||
+      (await store.read()).fence !== call.state.fence ||
+      actual.fence !== call.state.fence
+    )
+      throw Error("stale control-plane effect");
+  };
+  const authority: TrustedRestoreAuthority = {
+    quarantine: vi.fn(async (call) => {
+      events.push("fence");
+      expect((await store.read()).phase).toBe("quarantined");
+      if (call.signal.aborted) throw Error("cancelled fence");
+      actual.closed = true;
+      actual.fence = call.state.fence;
+      return observed("restore-fence/1.0.0", call);
+    }),
+    transition: vi.fn(async (call) => {
+      await enforce(call);
+      events.push("transition");
+      expect(actual.closed).toBe(true);
+      expect((await store.read()).generation).toBe(call.generation);
+      actual.checkpoint = call.generation;
+      actual.outcome = "committed";
+      return { selectedCount: 1 };
+    }),
+    inspect: vi.fn(async (call) => {
+      await enforce(call);
+      events.push("inspect");
+      return {
+        ...observed("restore-outcome/1.0.0", call),
+        outcome: actual.outcome,
+        guardVersion: "restore-admission-guards/1.0.0",
+        generation:
+          actual.outcome === "committed" ? actual.checkpoint : call.generation,
+      };
+    }),
+    inspectCandidate: vi.fn(async (call) => {
+      await enforce(call);
+      events.push("candidate");
+      const snapshot = candidates.get(call.candidate as string);
+      if (!snapshot) throw Error("unauthenticated candidate");
+      return {
+        ...observed("restore-candidate/1.0.0", call),
+        generation: snapshot.generation,
+        guardVersion: snapshot.guards
+          ? "restore-admission-guards/1.0.0"
+          : "absent",
+      };
+    }),
+    reopen: vi.fn(async (call) => {
+      await enforce(call);
+      events.push("open");
+      expect((await store.read()).phase).toBe("ready");
+      if (
+        actual.outcome !== "committed" ||
+        actual.checkpoint !== call.generation
+      )
+        throw Error("no committed checkpoint");
+      actual.closed = false;
+      return observed("restore-open/1.0.0", call);
+    }),
+  };
+  return {
+    store,
+    dir,
+    events,
+    actual,
+    candidates,
+    authority,
+    controller: new RestoreAdmissionController(store, authority),
+  };
+}
+describe("restore quarantine and admission", () => {
+  it("orders durable quarantine, actual fence, durable floor, one transition, commit proof and ready before reopening", async () => {
+    const f = await fixture();
+    const ready = await f.controller.transition();
+    expect(ready).toMatchObject({ generation: "1", phase: "ready" });
+    expect(f.events).toEqual(["fence", "transition", "inspect", "open"]);
+    expect(f.actual.closed).toBe(false);
+    expect(f.authority.transition).toHaveBeenCalledTimes(1);
+  });
+  it("requires all trusted adapters without a default allow implementation", async () => {
+    const f = await fixture();
+    expect(
+      () =>
+        new RestoreAdmissionController(f.store, {} as TrustedRestoreAuthority),
+    ).toThrow();
+  });
+  it.each([
+    true,
+    { ready: true },
+    { selectedCount: 1 },
+    {
+      schemaVersion: "restore-fence/1.0.0",
+      generation: "1",
+      revision: "1",
+      fence: "0",
+      instanceId: "synthetic-db-1",
+    },
+  ])(
+    "refuses malformed or stale fence evidence %# before any transition",
+    async (raw) => {
+      const f = await fixture();
+      vi.mocked(f.authority.quarantine).mockResolvedValue(raw);
+      await expect(f.controller.transition()).rejects.toThrow();
+      expect(f.authority.transition).not.toHaveBeenCalled();
+      expect((await f.store.read()).generation).toBe("0");
+      expect((await f.store.read()).phase).toBe("quarantined");
+    },
+  );
+  it("rejects accessor, symbol and non-plain evidence without evaluating getters", async () => {
+    const f = await fixture(),
+      getter = vi.fn(() => "1");
+    const raw = {
+      schemaVersion: "restore-fence/1.0.0",
+      generation: "1",
+      revision: "1",
+      fence: "1",
+      instanceId: f.actual.instanceId,
+    };
+    Object.defineProperty(raw, "generation", { get: getter, enumerable: true });
+    const plain = {
+      schemaVersion: "restore-fence/1.0.0",
+      generation: "1",
+      revision: "1",
+      fence: "1",
+      instanceId: f.actual.instanceId,
+    };
+    for (const invalid of [
+      raw,
+      { ...plain, [Symbol("hidden")]: "x" },
+      Object.assign(Object.create({ hidden: "x" }), plain),
+    ]) {
+      const calls = getter.mock.calls.length;
+      // Each independent initial controller uses actual fresh filesystem authority.
+      const next = await fixture();
+      vi.mocked(next.authority.quarantine).mockResolvedValue(invalid);
+      await expect(next.controller.transition()).rejects.toThrow();
+      expect(getter.mock.calls.length).toBe(calls);
+      expect(next.authority.transition).not.toHaveBeenCalled();
+    }
+  });
+  it("does not advance or transition after a fence adapter fails", async () => {
+    const f = await fixture();
+    vi.mocked(f.authority.quarantine).mockRejectedValue(Error("offline"));
+    await expect(f.controller.transition()).rejects.toThrow();
+    expect(f.authority.transition).not.toHaveBeenCalled();
+    expect((await f.store.read()).generation).toBe("0");
+  });
+  it("does not transition if durable floor acknowledgement fails", async () => {
+    const f = await fixture();
+    vi.spyOn(f.store, "advance").mockRejectedValue(Error("disk unavailable"));
+    await expect(f.controller.transition()).rejects.toThrow();
+    expect(f.authority.transition).not.toHaveBeenCalled();
+    expect(f.authority.reopen).not.toHaveBeenCalled();
+  });
+  it("never infers commit from counts or retries an uncertain native transition", async () => {
+    const f = await fixture();
+    vi.mocked(f.authority.transition).mockImplementation(async () => {
+      throw Error("uncertain commit");
+    });
+    await expect(f.controller.transition()).rejects.toThrow();
+    expect(f.authority.transition).toHaveBeenCalledTimes(1);
+    expect(f.authority.inspect).not.toHaveBeenCalled();
+    expect(f.authority.reopen).not.toHaveBeenCalled();
+    expect((await f.store.read()).generation).toBe("1");
+    await expect(f.controller.transition()).rejects.toThrow();
+    expect(f.authority.transition).toHaveBeenCalledTimes(1);
+  });
+  it.each([
+    true,
+    { selectedCount: 1 },
+    {
+      schemaVersion: "restore-outcome/1.0.0",
+      generation: "1",
+      revision: "2",
+      fence: "1",
+      instanceId: "other-instance",
+      outcome: "committed",
+      guardVersion: "restore-admission-guards/1.0.0",
+    },
+  ])(
+    "requires exact committed instance and guards instead of Boolean/echo/count success %#",
+    async (raw) => {
+      const f = await fixture();
+      vi.mocked(f.authority.inspect).mockResolvedValue(raw);
+      await expect(f.controller.transition()).rejects.toThrow();
+      expect(f.authority.reopen).not.toHaveBeenCalled();
+      expect((await f.store.read()).phase).toBe("quarantined");
+    },
+  );
+  it("reconciles an acknowledged commit at the exact generation without another transition", async () => {
+    const f = await fixture();
+    vi.mocked(f.authority.transition).mockImplementationOnce(async (call) => {
+      f.actual.checkpoint = call.generation;
+      f.actual.outcome = "committed";
+      throw Error("reply lost after commit");
+    });
+    await expect(f.controller.transition()).rejects.toThrow();
+    const result = await f.controller.reconcileQuarantine();
+    expect(result.outcome).toBe("committed");
+    expect(await f.store.read()).toMatchObject({
+      generation: "1",
+      phase: "ready",
+      fence: "2",
+    });
+    expect(f.authority.transition).toHaveBeenCalledTimes(1);
+  });
+  it("unknown recovery permits neither retry nor ready and cannot manufacture a recovery grant", async () => {
+    const f = await fixture();
+    vi.mocked(f.authority.transition).mockRejectedValue(Error("unknown"));
+    await expect(f.controller.transition()).rejects.toThrow();
+    const result = await f.controller.reconcileQuarantine();
+    expect(result.outcome).toBe("unknown");
+    expect(f.authority.reopen).not.toHaveBeenCalled();
+    await expect(
+      f.controller.transition({}, { state: await f.store.read() }),
+    ).rejects.toThrow();
+    expect(f.authority.transition).toHaveBeenCalledTimes(1);
+  });
+  it("proven noncommit permits only a new fenced higher generation, with a one-use unforgeable grant", async () => {
+    const f = await fixture();
+    vi.mocked(f.authority.transition).mockRejectedValueOnce(
+      Error("noncommit confirmed later"),
+    );
+    await expect(f.controller.transition()).rejects.toThrow();
+    f.actual.outcome = "not_committed";
+    const result = await f.controller.reconcileQuarantine();
+    expect(result.outcome).toBe("not_committed");
+    if (result.outcome !== "not_committed") throw Error("expected grant");
+    const ready = await f.controller.transition({}, result.authorization);
+    expect(ready.generation).toBe("2");
+    expect(ready.fence).toBe("3");
+    expect(f.authority.transition).toHaveBeenCalledTimes(2);
+    const q = await f.store.quarantine(ready);
+    await expect(
+      f.controller.transition({}, result.authorization),
+    ).rejects.toThrow();
+    expect(await f.store.read()).toEqual(q);
+  });
+  it("refuses a commit witness whose generation differs from the prospective floor", async () => {
+    const f = await fixture();
+    vi.mocked(f.authority.inspect).mockImplementation(async (call) => ({
+      ...call.state,
+      schemaVersion: "restore-outcome/1.0.0",
+      generation: "0",
+      instanceId: f.actual.instanceId,
+      outcome: "committed",
+      guardVersion: "restore-admission-guards/1.0.0",
+    }));
+    await expect(f.controller.transition()).rejects.toThrow();
+    expect(f.authority.reopen).not.toHaveBeenCalled();
+  });
+  it("cancellation while fencing leaves quarantine and prevents a late destructive call", async () => {
+    const f = await fixture(),
+      ac = new AbortController();
+    let release!: (proof: RestoreFenceProof) => void;
+    let call!: RestoreCall;
+    const entered = new Promise<void>((done) => {
+      vi.mocked(f.authority.quarantine).mockImplementation(async (input) => {
+        call = input;
+        done();
+        return new Promise<RestoreFenceProof>((r) => {
+          release = r;
+        });
+      });
+    });
+    const task = f.controller.transition({ signal: ac.signal });
+    const rejected = expect(task).rejects.toThrow();
+    await entered;
+    ac.abort();
+    await rejected;
+    release({
+      schemaVersion: "restore-fence/1.0.0",
+      generation: call.generation,
+      revision: call.state.revision,
+      fence: call.state.fence,
+      instanceId: f.actual.instanceId,
+    });
+    await new Promise((r) => setTimeout(r, 20));
+    expect(f.authority.transition).not.toHaveBeenCalled();
+    expect((await f.store.read()).phase).toBe("quarantined");
+  });
+  it("shared deadline returns before an ignored native call completes and never publishes late ready", async () => {
+    const f = await fixture();
+    let release!: () => void;
+    const entered = new Promise<void>((done) => {
+      vi.mocked(f.authority.transition).mockImplementation(async () => {
+        done();
+        await new Promise<void>((r) => {
+          release = r;
+        });
+      });
+    });
+    const task = f.controller.transition({ timeoutMs: 100 });
+    const rejected = expect(task).rejects.toThrow();
+    await entered;
+    await rejected;
+    expect(f.authority.inspect).not.toHaveBeenCalled();
+    release();
+    await new Promise((r) => setTimeout(r, 20));
+    expect(f.authority.reopen).not.toHaveBeenCalled();
+    expect((await f.store.read()).phase).toBe("quarantined");
+  });
+  it("a delayed older controller cannot publish ready after a successor acquires authority", async () => {
+    const f = await fixture();
+    let release!: () => void;
+    const entered = new Promise<void>((done) => {
+      vi.mocked(f.authority.transition).mockImplementation(async () => {
+        done();
+        await new Promise<void>((r) => {
+          release = r;
+        });
+      });
+    });
+    const task = f.controller.transition();
+    const rejected = expect(task).rejects.toThrow();
+    await entered;
+    const successor = new RestoreAdmissionController(f.store, f.authority);
+    const result = await successor.reconcileQuarantine();
+    expect(result.outcome).toBe("unknown");
+    release();
+    await rejected;
+    expect(f.authority.reopen).not.toHaveBeenCalled();
+    expect((await f.store.read()).fence).toBe("2");
+  });
+  it("failed ready durability or reopening never returns admission success", async () => {
+    const f = await fixture();
+    vi.spyOn(f.store, "ready").mockRejectedValueOnce(Error("ready ack lost"));
+    await expect(f.controller.transition()).rejects.toThrow();
+    expect(f.authority.reopen).not.toHaveBeenCalled();
+    expect((await f.store.read()).phase).toBe("quarantined");
+    vi.mocked(f.authority.reopen).mockRejectedValue(
+      Error("ingress unavailable"),
+    );
+    await expect(f.controller.reconcileQuarantine()).rejects.toThrow();
+    expect((await f.store.read()).phase).toBe("quarantined");
+  });
+  it("binds the intended ready CAS token before an uncertain publication acknowledgement", async () => {
+    const f = await fixture(),
+      ac = new AbortController(),
+      original = f.store.ready.bind(f.store);
+    const quarantine = vi.spyOn(f.store, "quarantine");
+    vi.spyOn(f.store, "ready").mockImplementation(async (...args) => {
+      await original(...args);
+      ac.abort();
+      throw Error("publication acknowledgement lost");
+    });
+    await expect(
+      f.controller.transition({ signal: ac.signal }),
+    ).rejects.toThrow();
+    expect(quarantine).toHaveBeenCalledTimes(2);
+    await expect(quarantine.mock.results[1].value).resolves.toMatchObject({
+      phase: "quarantined",
+      fence: "2",
+    });
+    expect(f.authority.reopen).not.toHaveBeenCalled();
+    expect((await f.store.read()).phase).toBe("quarantined");
+  });
+  it("an ignored delayed reopen cannot outlive cancellation or reopen under a stale token", async () => {
+    const f = await fixture(),
+      ac = new AbortController();
+    const reopen = vi.mocked(f.authority.reopen);
+    const original = reopen.getMockImplementation()!;
+    const quarantine = vi.spyOn(f.store, "quarantine");
+    let release!: () => void;
+    const entered = new Promise<void>((done) => {
+      reopen.mockImplementation(async (call) => {
+        done();
+        await new Promise<void>((r) => {
+          release = r;
+        });
+        return original(call);
+      });
+    });
+    const task = f.controller.transition({ signal: ac.signal });
+    const rejected = expect(task).rejects.toThrow();
+    await entered;
+    ac.abort();
+    await rejected;
+    release();
+    await expect(reopen.mock.results[0].value).rejects.toThrow(
+      "stale control-plane effect",
+    );
+    expect(quarantine).toHaveBeenCalledTimes(2);
+    await expect(quarantine.mock.results[1].value).resolves.toMatchObject({
+      phase: "quarantined",
+      fence: "2",
+    });
+    expect(f.actual.closed).toBe(true);
+    expect((await f.store.read()).phase).toBe("quarantined");
+  });
+  it.each(["older", "missing-guard"])(
+    "rejects authentic %s candidate despite valid manifest checksums",
+    async (candidate) => {
+      const f = await fixture();
+      await f.controller.transition();
+      const manifest = createBackupManifest({
+        createdAt: "2026-01-01T00:00:00.000Z",
+        records: [],
+        objects: [],
+      });
+      expect(
+        verifyRestoredSnapshot(manifest, structuredClone(manifest)),
+      ).toEqual({ ok: true, reason: "integrity_verified" });
+      await expect(
+        f.controller.admitRestoredCandidate(candidate),
+      ).rejects.toThrow();
+      expect((await f.store.read()).phase).toBe("quarantined");
+      expect(f.authority.transition).toHaveBeenCalledTimes(1);
+      expect(f.actual.closed).toBe(true);
+    },
+  );
+  it("rejects forged candidate epoch/timestamp rather than treating them as authority", async () => {
+    const f = await fixture();
+    await f.controller.transition();
+    await expect(
+      f.controller.admitRestoredCandidate({
+        generation: "1",
+        createdAt: "2099-01-01",
+        checksum: "valid",
+      }),
+    ).rejects.toThrow();
+    expect((await f.store.read()).phase).toBe("quarantined");
+  });
+  it("accepts only authentic current checkpoint provenance, without re-running the transition", async () => {
+    const f = await fixture();
+    await f.controller.transition();
+    const ready = await f.controller.admitRestoredCandidate("current");
+    expect(ready.generation).toBe("1");
+    expect(ready.phase).toBe("ready");
+    expect(f.authority.transition).toHaveBeenCalledTimes(1);
+    expect(f.events).toEqual([
+      "fence",
+      "transition",
+      "inspect",
+      "open",
+      "fence",
+      "candidate",
+      "inspect",
+      "open",
+    ]);
+  });
+  it.each([
+    "first account preparation",
+    "first root retirement capture",
+    "final expiry fold",
+  ])("rejects a pre-clock snapshot after the %s cutover boundary", async () => {
+    const f = await fixture();
+    await f.controller.transition();
+    await expect(
+      f.controller.admitRestoredCandidate("older"),
+    ).rejects.toThrow();
+    expect((await f.store.read()).generation).toBe("1");
+    expect(f.actual.closed).toBe(true);
+  });
+  it("rejects missing state and invalid/cancelled caller bounds without adapter calls", async () => {
+    const f = await fixture();
+    for (const timeoutMs of [0, 5001, NaN])
+      await expect(f.controller.transition({ timeoutMs })).rejects.toThrow();
+    const ac = new AbortController();
+    ac.abort();
+    await expect(
+      f.controller.transition({ signal: ac.signal }),
+    ).rejects.toThrow();
+    fs.unlinkSync(join(f.dir, "restore-floor.jsonl"));
+    await expect(f.controller.transition()).rejects.toThrow();
+    expect(f.events).toEqual([]);
+  });
+});

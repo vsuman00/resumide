@@ -1,0 +1,63 @@
+
+> test
+> vitest run tests/unit/owned-ai-usage.test.ts
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats[39m
+
+ [31m❯[39m tests/unit/owned-ai-usage.test.ts [2m([22m[2m27 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 13[2mms[22m[39m
+     [32m✓[39m reads the exact owned RPC once and retains all three disjoint components[32m 4[2mms[22m[39m
+     [32m✓[39m preserves zero and aggregate integers above Number safe precision without coercion[32m 0[2mms[22m[39m
+     [32m✓[39m refuses number metadata without fallback[32m 1[2mms[22m[39m
+     [32m✓[39m refuses null metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses leading zero metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses negative metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses fraction metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses exponent metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses oversized metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses extra key metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses owner metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses org metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses analysis metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses uppercase UUID metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses pin metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses old profile metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses sum metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m refuses nonadjacent month metadata without fallback[32m 1[2mms[22m[39m
+     [32m✓[39m refuses prior month metadata without fallback[32m 0[2mms[22m[39m
+     [32m✓[39m reports claimed unknown usage as a hold rather than zero or capacity[32m 0[2mms[22m[39m
+     [32m✓[39m refuses malformed bindings and expected pins before RPC[32m 0[2mms[22m[39m
+     [32m✓[39m sanitizes actual RPC errors and missing data[32m 0[2mms[22m[39m
+     [32m✓[39m refuses absolute elapsed deadline even before timer delivery[32m 0[2mms[22m[39m
+     [32m✓[39m refuses reversed clocks and UTC month crossings at completion[32m 0[2mms[22m[39m
+     [32m✓[39m handles actual calendar year rollover without day approximations[32m 0[2mms[22m[39m
+[31m     [31m×[31m pre-aborts before IO and passes a linked abort signal for cancellation[39m[32m 2[2mms[22m[39m
+     [32m✓[39m times out a pending real RPC shape and ignores late completion[32m 1[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m26 passed[39m[22m[90m (27)[39m
+[2m   Start at [22m 14:05:48
+[2m   Duration [22m 208ms[2m (transform 84ms, setup 0ms, import 133ms, tests 13ms, environment 0ms)[22m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/unit/owned-ai-usage.test.ts[2m > [22mactual shared owned usage helper (fake RPC only)[2m > [22mpre-aborts before IO and passes a linked abort signal for cancellation
+[31m[1mAssertionError[22m: expected undefined to be true // Object.is equality[39m
+
+[32m- Expected:[39m
+true
+
+[31m+ Received:[39m
+undefined
+
+[36m [2m❯[22m tests/unit/owned-ai-usage.test.ts:[2m197:31[22m[39m
+    [90m195|[39m     controller[33m.[39m[34mabort[39m()[33m;[39m
+    [90m196|[39m     [34mexpect[39m([35mawait[39m result)[33m.[39m[34mtoMatchObject[39m({ code[33m:[39m [32m"unavailable"[39m })[33m;[39m
+    [90m197|[39m     [34mexpect[39m(observed[33m?.[39maborted)[33m.[39m[34mtoBe[39m([35mtrue[39m)[33m;[39m
+    [90m   |[39m                               [31m^[39m
+    [90m198|[39m   })[33m;[39m
+    [90m199|[39m   it("times out a pending real RPC shape and ignores late completion",…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+

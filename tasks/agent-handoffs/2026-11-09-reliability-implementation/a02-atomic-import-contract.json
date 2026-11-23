@@ -1,0 +1,151 @@
+{
+  "task": "CR-A02-S02",
+  "status": "FROZEN_LEDGER_PRIVACY_AND_ATOMIC_ADMISSION_SOURCE_CONTRACT",
+  "at": "2026-11-13T13:14:41.898542+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Complete ledger/privacy foundation and coherent atomic admission source in separate ordered migrations/worktrees; no writer activation, repository/route dispatch or native operation. Existing full task remains PARTIAL.",
+  "tables": {
+    "candidate_entry_association_batches": {
+      "columns": [
+        "id uuid",
+        "owner_id uuid",
+        "organization_id uuid",
+        "resume_id uuid",
+        "analysis_id uuid",
+        "source_resume_version_id uuid",
+        "evidence_attempt_id uuid",
+        "input_sha256 text",
+        "association_revision integer",
+        "previous_batch_id uuid nullable",
+        "idempotency_key uuid",
+        "command jsonb",
+        "command_bytes bytea",
+        "command_sha256 text",
+        "codec_version text",
+        "result_version_id uuid",
+        "result_revision integer=1",
+        "storage_key uuid",
+        "result_content_sha256 text",
+        "created_at timestamptz"
+      ],
+      "meaning": "Full strict command {normalForm,previewHash,idempotencyKey} preserves ORIGINAL captures, locale, acknowledgement/disposition and all bound model/policy versions. Separate typed S tuple must match command. Unique(resume_id,idempotency_key), unique(analysis_id,association_revision), unique(result_version_id), unique(storage_key). Contiguous1..1000 revision/previous chain. Result-version FK deferrable; no hidden raw parent. Byte/hash/size/codec checks and immutable metadata-only errors. Content proof is DB-local SHA256 of origin result JSONB text, not semantic identity."
+    },
+    "candidate_entry_association_groups": {
+      "columns": [
+        "id uuid",
+        "batch_id uuid",
+        "owner_id uuid",
+        "organization_id uuid",
+        "resume_id uuid",
+        "source_resume_version_id uuid",
+        "result_version_id uuid",
+        "group_order integer1..32",
+        "page_id text",
+        "method native_text|local_ocr",
+        "section_id uuid",
+        "entry_id uuid",
+        "source_selection jsonb"
+      ],
+      "meaning": "Immutable origin group. source_selection is exact ordered structural selection from existing normal form, not UI hash/value. Unique(batch_id,group_order) and unique(batch_id,section_id,entry_id). Scoped FK to batch; FK origin result version. Complete final entry is read from immutable result content; no copied candidate values."
+    },
+    "candidate_entry_association_members": {
+      "columns": [
+        "id uuid",
+        "group_id uuid",
+        "batch_id uuid",
+        "owner_id uuid",
+        "organization_id uuid",
+        "resume_id uuid",
+        "source_resume_version_id uuid",
+        "result_version_id uuid",
+        "source_order integer1..3",
+        "entry_order integer1..3",
+        "assertion_id text",
+        "field employer|role|dates",
+        "fact_id uuid",
+        "original_entry_id uuid",
+        "citations jsonb"
+      ],
+      "meaning": "Both source-member and final-entry/mapping order are required. Complete structural citation array; exact fact FK(result_version_id,fact_id), scoped group/batch FKs. Unique(group,source_order), unique(group,entry_order), unique(batch,fact_id), unique(batch,assertion_id). original_entry_id refers to the validated removed raw-base entry, not a separately persisted row or hidden parent; no fabricated FK proof."
+    },
+    "canonical_entry_association_snapshots": {
+      "columns": [
+        "canonical_version_id uuid",
+        "owner_id uuid",
+        "organization_id uuid",
+        "resume_id uuid",
+        "source_resume_version_id uuid",
+        "evidence_attempt_id uuid",
+        "origin_batch_id uuid nullable",
+        "origin_kind grouped_import|inherited|restore|legacy_empty",
+        "inherited_from_version_id uuid nullable",
+        "restored_from_version_id uuid nullable"
+      ],
+      "meaning": "One immutable header including empty states. Historical origin proof distinct from active links. Scoped version/provenance/batch/parent/restore references and exact coherent metadata. Initial grouped version requires valid batch/result proof; .3 descendants require retained origin. .2 descendants with inherited origin validate it; old .2 without grouped ancestry remains readable as explicit legacy-empty."
+    },
+    "canonical_entry_association_links": {
+      "columns": [
+        "canonical_version_id uuid",
+        "group_id uuid",
+        "owner_id uuid",
+        "organization_id uuid",
+        "resume_id uuid",
+        "source_resume_version_id uuid",
+        "origin_batch_id uuid"
+      ],
+      "meaning": "Whole-group active links only, PK(version,group), scoped header/group/batch references. No copied values. Group origin must agree with header origin."
+    }
+  },
+  "storageFloor": "All five tables RLS enabled, no browser policies, no app-role SELECT/DML/column grants including service_role; append-only update rejection, owned FK cascades from resume/analysis/source/attempt/account/org and useful FK indexes. Use exact scoped FK tuples where supported; do not silently add broad core grants. Explicitly validate canonical-version/fact owner/provenance tuples where existing core composite uniqueness is unavailable; no claims a single FK proves all scope. Preserve old tables/history/functions. Native constraint/cascade tests remain deferred.",
+  "foundationHelpers": {
+    "private.entry_association_prefix(p_scope jsonb) returns jsonb": "VOLATILE invoker empty search_path, all app EXECUTE revoked. Input is actual trusted correction_scope (not auth grant); validate complete owned bounded contiguous global analysis batch stream/previous chain then return EXACT {associationRevision,associationHeadId}. No extra keys added to correction_scope or existing C02 strict DTO.",
+    "private.entry_association_validate_head(p_version_id uuid) returns void": "VOLATILE invoker/revoked. Validate version/owned provenance/origin header, immutable origin batch/result/content proof and normalized group/member/citation/fact/entry relationships. Require valid proof for.3; preserve legacy semantics for old.0/.1/.2, validate inherited grouped proof on.2 descendants. Fixed metadata-only error via correction_fail unavailable/invalid; no DB content in error/log.",
+    "private.entry_association_write_snapshot(p_version_id uuid,p_command jsonb) returns void": "VOLATILE invoker/revoked. Called after existing C02 snapshot through future atomic guarded hook. Initial writer supplies all batch/group/member rows before call. Reject duplicate snapshot; validate complete plan before recording header/whole-group links. Ordinary children inherit historical origin, retain only groups whose complete entry composition/placement and every member type/value/ORDERED sources are unchanged; confirmation changes ignored. .2 add into grouped entry invalidates whole group. Rollback copies TARGET header origin+exact active links or explicit legacy-empty; never recomputes approval from current values. No state/qualification/score promotion.",
+    "private.entry_association_group_active(p_version_id uuid,p_group_id uuid) returns boolean": "Private VOLATILE invoker/revoked internal helper if useful. Compare actual immutable origin result vs candidate version: exact ordered entry factIds and bullets, section type/id and anchor entry id, exact member type/value/ordered sources, exactly one entry placement and no contact/section/bullet/other-entry reuse. Do not compare confirmation-only changes; changed structure/member invalidates WHOLE group. Tampered origin/scope is an integrity failure, not a silently approved link.",
+    "private.entry_association_export_records(p_user_id uuid) returns jsonb": "Private STABLE invoker/revoked helper if useful for single MVCC export. Return all ten owned metadata arrays, no independent DML or service call. Export public wrapper remains STABLE security definer empty path with existing ACL, exact known predecessor body/attribute/grant guard before replacement."
+  },
+  "privacyExport": {
+    "keys": {
+      "candidateCorrectionOperations": "candidate_correction_operations",
+      "candidateCorrectionAssignments": "candidate_correction_assignments",
+      "candidateCorrectionApplications": "candidate_correction_applications",
+      "canonicalCorrectionSnapshots": "canonical_correction_snapshots",
+      "canonicalCorrectionSnapshotFacts": "canonical_correction_snapshot_facts",
+      "candidateEntryAssociationBatches": "candidate_entry_association_batches",
+      "candidateEntryAssociationGroups": "candidate_entry_association_groups",
+      "candidateEntryAssociationMembers": "candidate_entry_association_members",
+      "canonicalEntryAssociationSnapshots": "canonical_entry_association_snapshots",
+      "canonicalEntryAssociationLinks": "canonical_entry_association_links"
+    },
+    "sql": "Extend exact existing export_resume_workspace_records in SAME stable MVCC statement with existing canonical/JD/authoring arrays plus all10 metadata arrays. Exact owner filters and deterministic per-collection order; existing32MiB complete-snapshot cap preserved. No direct DML/crossowner output/broad grant. Preserve current read-only export contract and all old fields.",
+    "worker": "Extend explicit workspace parsing with REQUIRED10 arrays; preserve all row fields, validate each metadata row owner_id equals request.userId, reject malformed/missing/foreign data with existing safe error. Never default absent metadata to[] or silently strip it. Paired SQL/application transition fails closed on old incomplete response; no deployment implied.",
+    "tests": "Actual existing repository buildExportManifest mocked RPC RED: owned nonempty synthetic C02+association rows must survive manifest; existing component currently strips unknown fields. Preserve old tests/expectations and extend fixtures with newly required empty arrays only where corresponding complete response is intended. Test missing/wrong-shape/foreign metadata fail closed; exact request owner/SAME RPC/old fields preserved. Native stable/cascade/ACL/restore verifier source remains unexecuted."
+  },
+  "atomicAdmission": {
+    "rpc": "public.import_canonical_grouped_original(p_user_id uuid,p_analysis_id uuid,p_command jsonb,p_original jsonb,p_request_id text) returns jsonb",
+    "command": "Strict {normalForm: GroupedOriginalNormalForm,previewHash: lowerSHA256,idempotencyKey:lowerUUID}. SQL independently validates exact shape/model/bounds, reprojects source selectors and rebuilds A02OP1 atoms/hash. No supplied semantic hash/opaque UI ID authority.",
+    "order": [
+      "Owner mutex/privacy READ COMMITTED and fresh owned resume/member/source/latest immutable evidence/canonical/catalog authority first; use existing correction_scope exact output plus separate prefix.",
+      "Look up exact outer batch key and compare ORIGINAL A02 normal form/semantic bytes/hash/outputlocale/binding; verify stored result/origin and return same result even after head/review/assignment/association movement. Changed command/source/owner/catalog fails safely. Do not replace original captures with today values before replay.",
+      "Only for NEW command: compare null canonical head plus complete review/assignment/association revision+head pairs and source/model identity; validate current correction-original predicate and canonical output locale syntax, not invented locale preference.",
+      "Pure placement validates trusted server original once, all assertions/grounding and selected delta; generate batch/group/member/innerstorage identities; write immutable batch/proofs/version/facts/import event/head/C02+association snapshots and audit in ONE transaction. Any failure rolls back everything, including approval. Unselected retain_original and unconfirmed states stay."
+    ],
+    "prospectiveIdClarification": "The single trusted external1.0.1 constructor may allocate prospective version/fact/entry/event UUIDs and time before RPC; they are excluded from semantic identity and ignored on exact replay. Only after replay misses may these become the persisted result; batch/group/member/INNER storage key IDs allocate after replay. No raw-body regeneration for comparison, hidden raw parent, fact-ID replacement or generated technical ID in A02 bytes.",
+    "storageCommand": "Canonical command operation grouped_original_import in a distinct storage domain under generated INNER storage UUID. Outer key and A02 exact replay live only in batch ledger. Existing change_events.operation/import event remain import. Legacy replay must explicitly reject .3 results; no legacy six-key command reuse or key-secrecy assumption.",
+    "result": "Strict grouped-original-result/1.0.0 applied receipt with versionId,revision1,batchId,associationRevision,associationHeadId,idempotent and scoringEligible:false. Include actual source/model/locale binding if needed, no body/PII. Other statuses fixed invalid/not_found/conflict/unavailable; exceptions must rollback partial writes, not catch-and-return after partial approval.",
+    "compatibility": "One coherent guarded successor: shared shape admits.3 ONLY together with plain-save fresh/prior grouped-import denial; ordinary edit/confirm/rename .3 producer-retag protection; rollback exact TARGET producer/proof; legacy import wrapper prior.0/.1 guard; correction_scope private proof check without returned-key changes; C02 snapshot companion hook including private1.0.2 add. Do not weaken ordinary canonical/correction validations.",
+    "catalog": "Preserve historical37 source manifest unchanged. Guard exact predecessor prosrc/context/ACL/result before all prepared replacements. Existing canonical_correction_write_ready must transition to full explicit successor (unchanged32+patched5) plus15 prior A02 helpers, actual foundation/admission helpers/tables/triggers and explicit per-signature app-grant policy. No generic public-prefix rule for revoked NEW writer. No magic count bump/no obsolete weakening. Guard readiness predecessor; pin successor readiness hash EXTERNALLY in verifier/profile (no impossible self-hash cycle).",
+    "activation": "New RPC EXECUTE revoked from public/anon/authenticated/service_role. No broad core/table grant cutover, flags, repository/route or provider. Current C02 capability remains coherent under successor expected ACLs; full activation waits companion lifecycle/native/consumer checks and separate current authorization."
+  },
+  "evidenceBoundary": "Local Node22 fakeenv/no dotenv synthetic JS/DOM/source checks only; SQL remains UNPARSED/UNAPPLIED/UNEXECUTED. No parser/native SQL/DB/Docker/provider/key/realenv/PII/Git/dependency/deployment. Preserve every original failed receipt; no weakened assertions/thresholds/guards. Native rollback-only scripts never auto-run and never reset shared state. Root owns contracts, migration order, shared docs and integrated gate.",
+  "documentation": [
+    {
+      "title": "Supabase database function privileges",
+      "url": "https://supabase.com/docs/guides/database/functions"
+    },
+    {
+      "title": "Supabase current changelog",
+      "url": "https://supabase.com/changelog.md"
+    }
+  ]
+}

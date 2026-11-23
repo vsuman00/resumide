@@ -1,0 +1,49 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ✓ tests/unit/initial-feedback-late-settlement-sql.test.ts (8 tests) 5ms
+ ✓ tests/unit/initial-feedback-publication-sql.test.ts (13 tests) 9ms
+ ❯ tests/unit/owned-ai-usage-sql.test.ts (8 tests | 2 failed) 8ms
+     ✓ pins the real local bodies and composed actual publication interfaces without a cycle 2ms
+     ✓ admits owned current source/privacy/membership and optional job without a numeric score guard 0ms
+     ✓ validates links across all months before the legacy creation-month filter 0ms
+     ✓ excludes exact run IDs only and refuses ambiguous or inconsistent authoritative links 0ms
+     ✓ keeps all claimed known/unknown accounting regardless publication outcome 0ms
+     ✓ returns exact thirteen usage fields and nineteen real readiness fields 1ms
+     × preserves old counters/source profiles while the actual caller always uses the shared helper 3ms
+     × keeps actual Native verification deferred and refuses empty/time-backdated substitutes 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/owned-ai-usage-sql.test.ts > shared owned usage native source (unparsed/unexecuted) > preserves old counters/source profiles while the actual caller always uses the shared helper
+Error: ENOENT: no such file or directory, open '/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/supabase/migrations/20261114192207_canonical_rewrite_compatibility.sql'
+ ❯ read tests/unit/owned-ai-usage-sql.test.ts:28:3
+     26| });
+     27| const read = (path: string) =>
+     28|   readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+       |   ^
+     29| const sql = read("supabase/migrations/20261115082125_owned_ai_usage.sq…
+     30| const hash = (text: string) =>
+ ❯ tests/unit/owned-ai-usage-sql.test.ts:201:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/unit/owned-ai-usage-sql.test.ts > shared owned usage native source (unparsed/unexecuted) > keeps actual Native verification deferred and refuses empty/time-backdated substitutes
+Error: ENOENT: no such file or directory, open '/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/scripts/verify-owned-ai-usage.sql'
+ ❯ read tests/unit/owned-ai-usage-sql.test.ts:28:3
+     26| });
+     27| const read = (path: string) =>
+     28|   readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+       |   ^
+     29| const sql = read("supabase/migrations/20261115082125_owned_ai_usage.sq…
+     30| const hash = (text: string) =>
+ ❯ tests/unit/owned-ai-usage-sql.test.ts:209:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  2 failed | 27 passed (29)
+   Start at  15:29:06
+   Duration  304ms (transform 47ms, setup 0ms, import 72ms, tests 22ms, environment 0ms)
+

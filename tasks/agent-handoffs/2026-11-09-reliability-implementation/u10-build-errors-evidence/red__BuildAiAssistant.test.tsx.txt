@@ -1,0 +1,102 @@
+/** @vitest-environment jsdom */
+import { useRef } from "react";
+import { webcrypto } from "node:crypto";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+import BuildAiAssistant from "~/components/BuildAiAssistant";
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
+it("keeps selected-context suggestions dismissed through Escape keyup and permits fresh selection", () => {
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+  const fetch = vi.fn();
+  vi.stubGlobal("fetch", fetch);
+  function Editor() {
+    const editorRef = useRef<HTMLTextAreaElement>(null);
+    const source = "Neutral first line\nNeutral second line";
+    return (
+      <>
+        <textarea aria-label="Source" ref={editorRef} defaultValue={source} />
+        <BuildAiAssistant
+          source={source}
+          editorRef={editorRef}
+          enabled
+          onApply={vi.fn()}
+        />
+      </>
+    );
+  }
+  render(<Editor />);
+  const editor = screen.getByRole("textbox", {
+    name: "Source",
+  }) as HTMLTextAreaElement;
+  editor.focus();
+  editor.setSelectionRange(0, 18);
+  fireEvent.select(editor);
+  expect(screen.getByRole("dialog", { name: "AI suggestions" })).toBeTruthy();
+  fireEvent.keyDown(editor, { key: "Escape" });
+  expect(screen.queryByRole("dialog", { name: "AI suggestions" })).toBeNull();
+  fireEvent.keyUp(editor, { key: "Escape" });
+  expect(screen.queryByRole("dialog", { name: "AI suggestions" })).toBeNull();
+  editor.setSelectionRange(19, 38);
+  fireEvent.select(editor);
+  expect(screen.getByRole("dialog", { name: "AI suggestions" })).toBeTruthy();
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+const failureSource = "Neutral first line\nNeutral second line";
+function RequestEditor({ source, onApply }: { source: string; onApply: (value: string) => void }) {
+  const editorRef = useRef<HTMLTextAreaElement>(null);
+  return (
+    <>
+      <textarea aria-label="Source" ref={editorRef} value={source} readOnly />
+      <BuildAiAssistant source={source} editorRef={editorRef} enabled onApply={onApply} />
+    </>
+  );
+}
+function prepareRequest(response: Promise<Response>) {
+  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+  vi.stubGlobal("crypto", webcrypto);
+  const fetch = vi.fn<typeof globalThis.fetch>(() => response);
+  vi.stubGlobal("fetch", fetch);
+  const onApply = vi.fn();
+  const view = render(<RequestEditor source={failureSource} onApply={onApply} />);
+  const editor = screen.getByRole("textbox", { name: "Source" }) as HTMLTextAreaElement;
+  editor.focus();
+  editor.setSelectionRange(0, 18);
+  fireEvent.select(editor);
+  expect(screen.getByRole("dialog", { name: "AI suggestions" })).toBeTruthy();
+  expect(fetch).not.toHaveBeenCalled();
+  const consent = screen.getByRole("checkbox", { name: "I agree to send this selected context for this request." }) as HTMLInputElement;
+  const ask = screen.getByRole("button", { name: "Ask AI" }) as HTMLButtonElement;
+  expect(ask.disabled).toBe(true);
+  fireEvent.click(ask);
+  expect(fetch).not.toHaveBeenCalled();
+  fireEvent.click(consent);
+  expect(ask.disabled).toBe(false);
+  ask.focus();
+  fireEvent.click(ask);
+  return { ...view, fetch, onApply, editor, consent, ask };
+}
+it.each([
+  ["cancelled", 409, "The AI request was cancelled.", "The AI request was cancelled. No suggestion was applied."],
+  ["output_invalid", 422, "The AI response could not be safely used. No edit was applied.", "The AI response could not be used safely. No change was applied."],
+  ["request_conflict", 409, "This suggestion request cannot be reused. Start a new request.", "This suggestion request cannot be reused. Review the current selection before asking again."],
+] as const)("renders published Build %s as its own safe outcome", async (code, status, error, message) => {
+  const request = prepareRequest(Promise.resolve(Response.json({ code, error }, { status })));
+  await waitFor(() => expect(request.fetch).toHaveBeenCalledTimes(1));
+  const alert = await screen.findByRole("alert");
+  const init = request.fetch.mock.calls[0][1];
+  expect(init?.signal?.aborted).toBe(false);
+  expect(request.editor.value).toBe(failureSource);
+  expect(request.onApply).not.toHaveBeenCalled();
+  expect(alert.textContent).toBe(message);
+});

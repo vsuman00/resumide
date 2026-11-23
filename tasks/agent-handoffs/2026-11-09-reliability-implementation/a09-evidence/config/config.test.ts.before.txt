@@ -1,0 +1,158 @@
+import { describe, expect, it } from "vitest";
+import {
+  parseAnalysisConfig,
+  parseServerConfig,
+  ServerConfigError,
+} from "../../app/lib/server/config";
+
+const validEnvironment = {
+  NODE_ENV: "test",
+  APP_ORIGIN: "http://localhost:5173",
+  SUPABASE_URL: "https://example.supabase.co",
+  SUPABASE_PUBLISHABLE_KEY: "publishable",
+  SUPABASE_SECRET_KEY: "secret",
+  OPENAI_API_KEY: "openai",
+};
+
+describe("server configuration", () => {
+  it("applies safe defaults", () => {
+    const config = parseServerConfig(validEnvironment);
+    expect(config.MAX_UPLOAD_BYTES).toBe(10_485_760);
+    expect(config.ANALYSIS_CONCURRENCY).toBe(5);
+    expect(config.OPENAI_TIMEOUT_MS).toBe(20_000);
+    expect(config.OPENAI_MAX_OUTPUT_TOKENS).toBe(1_200);
+    expect(config.OPENAI_BASE_URL).toBe("https://api.openai.com/v1");
+    expect(config.OPENAI_MODEL).toBe("gpt-6-luna");
+    expect(config.QUALITATIVE_MAX_ATTEMPTS).toBe(1);
+    expect(config.NATIVE_EVIDENCE_ENABLED).toBe(false);
+    expect(config.NATIVE_LAYOUT_ENABLED).toBe(false);
+    expect(config.EVIDENCE_REVIEW_ENABLED).toBe(false);
+    expect(config.CANONICAL_AUTHORING_ENABLED).toBe(false);
+    expect(config.ARTIFACT_RENDERING_ENABLED).toBe(false);
+    expect(config.ANALYSIS_ADMISSION_BINDING_ENABLED).toBe(false);
+    expect(config.ANALYSIS_FENCING_ENABLED).toBe(false);
+    expect(config.AI_BUDGET_ENABLED).toBe(false);
+    expect(config.AI_BUDGET_POLICY_VERSION).toBe("");
+    const analysis = parseAnalysisConfig(validEnvironment);
+    expect(analysis.ANALYSIS_FENCING_ENABLED).toBe(false);
+    expect(analysis.AI_BUDGET_ENABLED).toBe(false);
+    expect(analysis.AI_BUDGET_POLICY_VERSION).toBe("");
+  });
+
+  it("preserves an explicitly configured model", () => {
+    expect(
+      parseServerConfig({ ...validEnvironment, OPENAI_MODEL: "custom-model" })
+        .OPENAI_MODEL,
+    ).toBe("custom-model");
+  });
+
+  it("rejects provider egress outside the approved OpenAI endpoint", () => {
+    expect(() =>
+      parseServerConfig({
+        ...validEnvironment,
+        OPENAI_BASE_URL: "https://proxy.example.test/v1",
+      }),
+    ).toThrow(ServerConfigError);
+  });
+
+  it("redacts values from configuration errors", () => {
+    expect(() =>
+      parseServerConfig({ ...validEnvironment, SUPABASE_URL: "bad-url" }),
+    ).toThrow(ServerConfigError);
+    try {
+      parseServerConfig({ ...validEnvironment, SUPABASE_URL: "bad-url" });
+    } catch (error) {
+      expect(String(error)).not.toContain("bad-url");
+    }
+  });
+
+  it("exposes explicit shared budget settings to server and analysis callers", () => {
+    const environment = {
+      ...validEnvironment,
+      AI_BUDGET_ENABLED: "true",
+      AI_BUDGET_POLICY_VERSION: "synthetic-budget/1",
+    };
+    for (const parse of [parseServerConfig, parseAnalysisConfig]) {
+      const config = parse(environment);
+      expect(config.AI_BUDGET_ENABLED).toBe(true);
+      expect(config.AI_BUDGET_POLICY_VERSION).toBe("synthetic-budget/1");
+    }
+  });
+
+  it.each([
+    { AI_BUDGET_ENABLED: "yes" },
+    { AI_BUDGET_POLICY_VERSION: "bad policy" },
+    { AI_BUDGET_POLICY_VERSION: "x".repeat(101) },
+  ])("rejects invalid shared budget settings %j", (settings) => {
+    for (const parse of [parseServerConfig, parseAnalysisConfig]) {
+      expect(() => parse({ ...validEnvironment, ...settings })).toThrow(
+        ServerConfigError,
+      );
+    }
+  });
+});
+
+describe("durable analysis feature flags", () => {
+  it("enables only explicitly configured admission and fencing branches", () => {
+    const config = parseServerConfig({
+      ...validEnvironment,
+      ANALYSIS_ADMISSION_BINDING_ENABLED: "true",
+      ANALYSIS_FENCING_ENABLED: "true",
+    });
+    expect(config.ANALYSIS_ADMISSION_BINDING_ENABLED).toBe(true);
+    expect(config.ANALYSIS_FENCING_ENABLED).toBe(true);
+  });
+
+  it.each(["ANALYSIS_ADMISSION_BINDING_ENABLED", "ANALYSIS_FENCING_ENABLED"])(
+    "rejects an ambiguous %s setting",
+    (flag) => {
+      expect(() =>
+        parseServerConfig({ ...validEnvironment, [flag]: "yes" }),
+      ).toThrow(ServerConfigError);
+    },
+  );
+});
+
+describe("canonical correction controls", () => {
+  it("keeps corrected-version writes disabled by default", () => {
+    expect(
+      parseServerConfig(validEnvironment).CANONICAL_CORRECTIONS_ENABLED,
+    ).toBe(false);
+  });
+
+  it("allows explicit correction review without requiring AI", () => {
+    const config = parseServerConfig({
+      ...validEnvironment,
+      CANONICAL_CORRECTIONS_ENABLED: "true",
+      CANONICAL_AUTHORING_ENABLED: "true",
+      EVIDENCE_REVIEW_ENABLED: "true",
+      AI_ENABLED: "false",
+    });
+    expect(config.CANONICAL_CORRECTIONS_ENABLED).toBe(true);
+    expect(config.AI_ENABLED).toBe(false);
+  });
+
+  it.each([
+    ["false", "true"],
+    ["true", "false"],
+    ["false", "false"],
+  ])("requires both prerequisite capabilities (%s/%s)", (canonical, review) => {
+    expect(() =>
+      parseServerConfig({
+        ...validEnvironment,
+        CANONICAL_CORRECTIONS_ENABLED: "true",
+        CANONICAL_AUTHORING_ENABLED: canonical,
+        EVIDENCE_REVIEW_ENABLED: review,
+      }),
+    ).toThrow(ServerConfigError);
+  });
+
+  it("rejects an ambiguous correction setting", () => {
+    expect(() =>
+      parseServerConfig({
+        ...validEnvironment,
+        CANONICAL_CORRECTIONS_ENABLED: "yes",
+      }),
+    ).toThrow(ServerConfigError);
+  });
+});

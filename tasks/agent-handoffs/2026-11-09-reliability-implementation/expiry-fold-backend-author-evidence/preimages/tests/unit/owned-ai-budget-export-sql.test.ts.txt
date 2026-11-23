@@ -1,0 +1,181 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { OWNED_AI_BUDGET_EXPORT_PROFILE as profile } from "../../app/lib/server/owned-ai-budget-export-profile";
+
+const read = (file: string) =>
+  readFileSync(new URL(`../../${file}`, import.meta.url), "utf8");
+const sql = read(
+  "supabase/migrations/20261115102625_owned_ai_budget_export.sql",
+);
+const original = read(
+  "supabase/migrations/20261110062548_technical_ai_budget.sql",
+);
+const hash = (s: string) =>
+  createHash("sha256").update(s, "utf8").digest("hex");
+function body(text: string, name: string) {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const m = new RegExp(
+    `create(?: or replace)? function ${escaped}\\([\\s\\S]*?\\)\\s*returns [\\s\\S]*?\\bas\\s+(\\$[A-Za-z0-9_]*\\$)([\\s\\S]*?)\\1;`,
+    "u",
+  ).exec(text);
+  if (!m) throw Error(`Missing actual source ${name}`);
+  return m[2];
+}
+const exported = body(sql, "public.export_owned_ai_budget_records"),
+  checker = body(sql, "private.owned_ai_budget_export_ready"),
+  metadata = body(sql, "public.read_owned_ai_budget_export_readiness");
+describe("R03 owner-wide export source; SQL unparsed/unexecuted", () => {
+  it("pins all real new and inherited read-path bodies without self recursion", () => {
+    expect(Object.keys(profile)).toHaveLength(5);
+    expect(hash(exported)).toBe(profile.exportSha256);
+    expect(hash(checker)).toBe(profile.checkerSha256);
+    expect(hash(metadata)).toBe(profile.metadataSha256);
+    const manifest = JSON.parse(
+      checker.split("$budget_export_catalog$")[1],
+    ) as Array<{ signature: string; sha256: string }>;
+    expect(manifest).toHaveLength(8);
+    expect(
+      manifest.some(
+        (x) => x.signature === "private.owned_ai_budget_export_ready()",
+      ),
+    ).toBe(false);
+    for (const entry of manifest) {
+      const name = entry.signature.split("(")[0];
+      expect(
+        hash(
+          body(name.startsWith("private.ai_budget_") ? original : sql, name),
+        ),
+      ).toBe(entry.sha256);
+    }
+  });
+  it("keeps complete historical owner reads in one stable read-only snapshot", () => {
+    expect(sql).toContain(
+      "function public.export_owned_ai_budget_records(p_user_id uuid) returns jsonb\nlanguage plpgsql stable security definer set search_path=''",
+    );
+    expect(exported).not.toMatch(
+      /\bfor\s+(?:update|share|key share)\b|insert into|update private|delete from/giu,
+    );
+    expect(exported).toContain("from auth.users where id=p_user_id;");
+    expect(exported).toContain("where user_id=p_user_id");
+    expect(exported).toContain(
+      "where o.user_id=p_user_id or e.operator_id=p_user_id",
+    );
+    expect(exported).not.toMatch(
+      /memberships|consents|analysis_results|document_evidence|AI_ENABLED|period_start/gu,
+    );
+    expect(sql).not.toContain("create or replace function");
+  });
+  it("redacts foreign actors and returns only the five own-action fields for foreign targets", () => {
+    expect(exported).toContain(
+      "'operator_id',case when e.operator_id=p_user_id then e.operator_id else null end",
+    );
+    expect(exported).toContain(
+      "when e.operator_id=p_user_id then 'self' else 'redacted'",
+    );
+    const foreign = exported
+      .split("-- Never to_jsonb(e) here:")[1]
+      .split("actions:=array_append")[0];
+    expect(foreign).not.toContain("item:=to_jsonb(e)");
+    expect(
+      [...foreign.matchAll(/(?:\(|,)\s*'([A-Za-z0-9_]+)'\s*,/gu)].map(
+        (x) => x[1],
+      ),
+    ).toEqual([
+      "kind",
+      "operator_id",
+      "reconciliation_id",
+      "evidence_sha256",
+      "created_at",
+    ]);
+    expect(foreign).not.toMatch(
+      /e\.(attempt_id|id|input_tokens|output_tokens|cost_microusd)/gu,
+    );
+    expect(exported).not.toContain("from private.ai_budget_pools");
+    expect(exported).not.toContain("from private.ai_budget_period_openings");
+  });
+  it("validates precision, immutable binding, cost, history and unknown-null state before projection", () => {
+    const number = body(sql, "private.owned_ai_budget_export_number");
+    expect(number).toContain("if p_value is null then return null");
+    expect(number).toContain("private.ai_budget_integer(p_value) is not true");
+    expect(number).toContain("return trunc(p_value)::text");
+    for (const text of [
+      "9007199254740991",
+      "9223372036854775807",
+      "private.ai_budget_binding_sha256(o.user_id,o.organization_id",
+      "a.actual_cost_microusd is distinct from private.ai_budget_cost",
+      "a.state<>'settled' and (a.actual_input_tokens is not null",
+      "history<>array['dispatch','reserve','unknown']",
+      "'settle'=any(history) and 'reconcile'=any(history) and not",
+      "to_char(a.period,'YYYY-MM-DD')",
+      "at time zone 'UTC'",
+    ])
+      expect(exported).toContain(text);
+    expect(exported).not.toMatch(
+      /coalesce\([^\n]*(actual_input|actual_output|actual_cost)/gu,
+    );
+  });
+  it("enforces all five collection bounds and aggregate bytes before appending", () => {
+    for (const text of [
+      "n>4096",
+      "n>12288",
+      "cardinality(events)>=73728",
+      "cardinality(actions)>=73728",
+      "n>147456",
+      "bytes>33554432",
+      "octet_length(convert_to(answer::text,'UTF8'))>33554432",
+    ])
+      expect(exported).toContain(text);
+    for (const name of ["ops", "attempts", "events", "operators", "actions"]) {
+      const pos = exported.indexOf(`${name}:=array_append`);
+      expect(pos).toBeGreaterThan(0);
+      expect(exported.slice(Math.max(0, pos - 220), pos)).toContain(
+        "bytes>33554432",
+      );
+    }
+  });
+  it("checks actual seven-store identities, keys, triggers, roles and exact ACL boundaries", () => {
+    expect(
+      Object.keys(JSON.parse(checker.split("$budget_export_columns$")[1])),
+    ).toHaveLength(7);
+    expect(JSON.parse(checker.split("$budget_export_keys$")[1])).toHaveLength(
+      24,
+    );
+    expect(
+      JSON.parse(checker.split("$budget_export_triggers$")[1]),
+    ).toHaveLength(6);
+    for (const text of [
+      "has_any_column_privilege",
+      "p.proconfig is distinct from array['search_path=\"\"']",
+      "g.is_grantable",
+      "c.confdeltype='r'",
+      "Existing CHECK/default expressions",
+    ])
+      expect(checker).toContain(text);
+    expect([
+      ...metadata.matchAll(/(?:\(|,)\s*'([A-Za-z][A-Za-z0-9]*)'\s*,/gu),
+    ]).toHaveLength(7);
+    expect(sql.match(/grant execute on function/gu)).toHaveLength(1);
+    expect(sql).toContain(
+      "grant execute on function public.read_owned_ai_budget_export_readiness() to service_role",
+    );
+    expect(sql).toContain("from public,anon,authenticated,service_role");
+    expect(sql).not.toMatch(
+      /create table|alter table|insert into|delete from/giu,
+    );
+  });
+  it("defers actual Native export/redaction and immutable snapshot acceptance", () => {
+    const verifier = read("scripts/verify-owned-ai-budget-export.sql");
+    for (const text of [
+      "UNPARSED/UNEXECUTED",
+      "exact_preregistered_owner_collections",
+      "foreign_actor_redacted",
+      "own_operator_foreign_target_receipt_only",
+      "unknown_null_not_zero",
+      "ledger_unchanged_after_read",
+      "set constraints all immediate;\nrollback;",
+    ])
+      expect(verifier).toContain(text);
+    expect(verifier).not.toMatch(/grant execute|disable trigger/gu);
+  });
+});

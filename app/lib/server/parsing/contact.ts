@@ -185,7 +185,7 @@ function startsWithUppercaseLetter(word: string): boolean {
 
 function detectLocation(lines: readonly string[]): string | null {
   for (const line of lines.slice(0, 15)) {
-    const candidates = line.split(/\s*(?:\||•|·)\s*/u);
+    const candidates = line.split(/[|•·]/u);
     for (const value of candidates) {
       const candidate = value
         .replace(/^\s*(?:location|based in|address)\s*:\s*/iu, "")

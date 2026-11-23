@@ -3,7 +3,7 @@ import {
   PublicApiError,
   toErrorResponse,
 } from "~/lib/server/errors";
-import { createRequestId } from "~/lib/server/request-context";
+import { requestIdFrom } from "~/lib/server/request-context";
 import { assertSameOrigin } from "~/lib/server/security";
 import { getServerConfig } from "~/lib/server/config";
 import {
@@ -11,12 +11,12 @@ import {
   recordClientTelemetry,
 } from "~/lib/server/observability";
 
-export function loader() {
-  return methodNotAllowedResponse(createRequestId(), ["POST"]);
+export function loader({ request }: { request: Request }) {
+  return methodNotAllowedResponse(requestIdFrom(request), ["POST"]);
 }
 
 export async function action({ request }: { request: Request }) {
-  const requestId = createRequestId();
+  const requestId = requestIdFrom(request);
   if (request.method !== "POST") {
     return methodNotAllowedResponse(requestId, ["POST"]);
   }

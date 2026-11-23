@@ -1,0 +1,21 @@
+--- attempt1-launcher.py
++++ attempt2-launcher.py
+@@ -1,5 +1,5 @@
+ import pathlib,hashlib,json,os,signal,stat,subprocess,time,shutil
+-ROOT=pathlib.Path('/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats');A=pathlib.Path('/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-final-combined-worker-z4scwpn1');CTX=ROOT/'scripts/latex-runtime';MANIFEST=A/'manifest.json';EXPECTED_MANIFEST='9dc255f48db8b29b4963e089530fa4cbd22bc94d2c03156e5b6745896273d364'
++ROOT=pathlib.Path('/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats');A=pathlib.Path('/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-final-combined-worker2-4fk2y3de');CTX=ROOT/'scripts/latex-runtime';MANIFEST=A/'manifest.json';EXPECTED_MANIFEST='9dc255f48db8b29b4963e089530fa4cbd22bc94d2c03156e5b6745896273d364'
+ sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+ assert sha(MANIFEST)==EXPECTED_MANIFEST
+ m=json.loads(MANIFEST.read_text());env={'HOME':str(A/'home'),'LANG':'C.UTF-8','PATH':'/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin','TMPDIR':str(A/'tmp')}
+@@ -13,9 +13,9 @@
+ def save():
+  p=A/'receipt.json';p.write_text(json.dumps(receipt,indent=2)+'\n');p.chmod(0o600)
+ floor=5176082432;logcap=33554432;deadline=2400;process=None
+-receipt={'status':'PREFLIGHT','runtimeAdopted':False,'diskFloorBytes':floor,'admissionBytes':9663676416,'deadlineSeconds':deadline,'logCapBytes':logcap,'manifestSha256':EXPECTED_MANIFEST,'environmentNames':list(env),'startedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())};start=time.monotonic()
++receipt={'status':'PREFLIGHT','runtimeAdopted':False,'diskFloorBytes':floor,'admissionBytes':9500000000,'deadlineSeconds':deadline,'logCapBytes':logcap,'manifestSha256':EXPECTED_MANIFEST,'environmentNames':list(env),'startedUTC':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime())};start=time.monotonic()
+ try:
+- receipt['sourcesBefore']=snapshot();assert shutil.disk_usage(A).free>=9663676416,'9GiB admission';receipt['freeBefore']=shutil.disk_usage(A).free
++ receipt['sourcesBefore']=snapshot();assert shutil.disk_usage(A).free>=9500000000,'E011 reviewed 9500000000B admission';receipt['freeBefore']=shutil.disk_usage(A).free
+  socket=pathlib.Path('/var/run/docker.sock').resolve(strict=True);assert socket==pathlib.Path('/Users/vaibhavsuman/.docker/run/docker.sock')and stat.S_ISSOCK(socket.stat().st_mode)
+  tool='/Applications/Docker.app/Contents/Resources/cli-plugins/docker-buildx';assert pathlib.Path(tool).is_file()
+  version=subprocess.check_output([tool,'version'],env=env,text=True,timeout=10);receipt['buildxVersion']=version.strip()

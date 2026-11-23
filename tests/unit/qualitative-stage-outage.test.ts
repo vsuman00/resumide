@@ -1,4 +1,7 @@
-import { describe, expect, it, vi } from "vitest";
+import { AI_BUDGET_SOURCE_PROFILE } from "../../app/lib/server/ai-budget-source-profile";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { hashAiBudgetBinding } from "../../app/lib/server/ai-budget";
+import { QualitativeAiFailure } from "../../app/lib/server/qualitative-ai";
 
 const mocks = vi.hoisted(() => {
   const rpc = vi.fn();
@@ -6,6 +9,17 @@ const mocks = vi.hoisted(() => {
   return {
     rpc,
     single,
+    factory: vi.fn(),
+    budget: {
+      enabled: false,
+      policy: "synthetic-budget/1",
+      maxAttempts: 1,
+      ordinal: 1,
+      cap: 3,
+    },
+    consent: vi
+      .fn()
+      .mockResolvedValue({ data: { id: "consent" }, error: null }),
     evidence: vi.fn().mockResolvedValue({ data: [], error: null }),
   };
 });
@@ -18,21 +32,40 @@ vi.mock("../../app/lib/server/config", () => ({
     OPENAI_MODEL: "test-model",
     OPENAI_MAX_OUTPUT_TOKENS: 1_000,
     OPENAI_TIMEOUT_MS: 50,
-    QUALITATIVE_MAX_ATTEMPTS: 1,
+    QUALITATIVE_MAX_ATTEMPTS: mocks.budget.maxAttempts,
+    AI_BUDGET_ENABLED: mocks.budget.enabled,
+    AI_BUDGET_POLICY_VERSION: mocks.budget.policy,
   }),
 }));
 
 vi.mock("../../app/lib/server/supabase", () => ({
   createSupabaseAdminClient: () => ({
-    from: () => ({
-      select: () => ({
-        eq: () => ({ single: mocks.single, limit: mocks.evidence }),
-      }),
-    }),
+    from: (table: string) => {
+      const consentQuery = {
+        eq: vi.fn(() => consentQuery),
+        limit: vi.fn(() => consentQuery),
+        maybeSingle: mocks.consent,
+      };
+      return {
+        select: () =>
+          table === "consents"
+            ? consentQuery
+            : { eq: () => ({ single: mocks.single, limit: mocks.evidence }) },
+      };
+    },
     rpc: mocks.rpc,
   }),
 }));
 
+vi.mock("../../app/lib/server/qualitative-ai", async (original) => ({
+  ...(await original<typeof import("../../app/lib/server/qualitative-ai")>()),
+  OpenAIQualitativeTransport: class {
+    constructor() {
+      mocks.factory();
+    }
+    execute = vi.fn();
+  },
+}));
 import { processQualitativeStage } from "../../app/lib/server/qualitative-stage";
 
 describe("qualitative-stage provider outage", () => {
@@ -47,7 +80,7 @@ describe("qualitative-stage provider outage", () => {
     });
     mocks.rpc.mockClear();
     const execute = vi.fn();
-    expect(await processQualitativeStage("analysis-1", 1, { execute })).toBe(
+    expect(await processQualitativeStage(analysisId, 1, { execute })).toBe(
       false,
     );
     expect(execute).not.toHaveBeenCalled();
@@ -59,7 +92,9 @@ describe("qualitative-stage provider outage", () => {
       data: {
         status: "qualitative_review",
         request_id: "request-1",
-        organization_id: "org-1",
+        owner_id: "00000000-0000-4000-8000-000000000001",
+        resume_version_id: resumeVersionId,
+        organization_id: "00000000-0000-4000-8000-000000000002",
         jobs: { title: "Engineer", description: "Build software" },
         analysis_extractions: { extracted_text: "Candidate resume" },
         analysis_deterministic_results: {
@@ -73,11 +108,10 @@ describe("qualitative-stage provider outage", () => {
       },
       error: null,
     });
-    mocks.rpc
-      .mockResolvedValueOnce({ data: 0, error: null })
-      .mockResolvedValueOnce({ data: true, error: null });
+    mocks.budget.enabled = true;
+    installBudgetRpc();
 
-    const persisted = await processQualitativeStage("analysis-1", 1, {
+    const persisted = await processQualitativeStage(analysisId, 1, {
       execute: vi.fn().mockRejectedValue({ status: 503 }),
     });
 
@@ -85,7 +119,7 @@ describe("qualitative-stage provider outage", () => {
     expect(mocks.rpc).toHaveBeenLastCalledWith(
       "persist_partial_analysis",
       expect.objectContaining({
-        p_analysis_id: "analysis-1",
+        p_analysis_id: analysisId,
         p_feedback: expect.objectContaining({
           overallScore: 74,
           ATS: expect.objectContaining({ score: 74 }),
@@ -102,7 +136,9 @@ describe("AA044 persistence semantics", () => {
         data: {
           status: "qualitative_review",
           request_id: "request-1",
-          organization_id: "org-1",
+          owner_id: "00000000-0000-4000-8000-000000000001",
+          resume_version_id: resumeVersionId,
+          organization_id: "00000000-0000-4000-8000-000000000002",
           jobs: null,
           analysis_extractions: { extracted_text: "Built reliable services" },
           analysis_deterministic_results: {
@@ -116,10 +152,8 @@ describe("AA044 persistence semantics", () => {
         },
         error: null,
       });
-      mocks.rpc
-        .mockReset()
-        .mockResolvedValueOnce({ data: 0, error: null })
-        .mockResolvedValueOnce({ data: true, error: null });
+      mocks.budget.enabled = true;
+      installBudgetRpc();
       const category = {
         tips: [
           {
@@ -140,7 +174,7 @@ describe("AA044 persistence semantics", () => {
         },
         usage: { inputTokens: 10, outputTokens: 20 },
       });
-      expect(await processQualitativeStage("analysis-1", 1, { execute })).toBe(
+      expect(await processQualitativeStage(analysisId, 1, { execute })).toBe(
         true,
       );
       const saved = mocks.rpc.mock.calls.at(-1)![1];
@@ -153,3 +187,422 @@ describe("AA044 persistence semantics", () => {
     }
   });
 });
+
+describe("shared qualitative budget admission", () => {
+  beforeEach(() => {
+    mocks.budget.enabled = true;
+    mocks.budget.policy = "synthetic-budget/1";
+    mocks.budget.maxAttempts = 1;
+    mocks.budget.ordinal = 1;
+    mocks.budget.cap = 3;
+    mocks.consent.mockResolvedValue({ data: { id: "consent" }, error: null });
+  });
+  afterEach(() => {
+    mocks.budget.enabled = false;
+    mocks.budget.maxAttempts = 1;
+  });
+  it("never falls back to the legacy pool or dispatches when the enabled ledger denies", async () => {
+    mocks.budget.enabled = true;
+    mocks.single.mockResolvedValue({
+      data: {
+        status: "qualitative_review",
+        owner_id: "00000000-0000-4000-8000-000000000001",
+        resume_version_id: resumeVersionId,
+        organization_id: "00000000-0000-4000-8000-000000000002",
+        jobs: null,
+        analysis_extractions: { extracted_text: "Built reliable services." },
+        analysis_deterministic_results: { score: 74, rule_trace: [] },
+      },
+      error: null,
+    });
+    mocks.rpc.mockReset().mockImplementation(async (name: string, args) => {
+      if (name === "read_ai_budget_source_readiness")
+        return sourceReadinessReply();
+      if (name === "ai_budget_reserve_next")
+        throw Error("GENERIC_RESERVE_FORBIDDEN");
+      if (name === "ai_budget_reserve_source_next") assertSourceReserve(args);
+      if (name === "ai_budget_reserve_source_next")
+        return {
+          data: {
+            schemaVersion: "ai-budget/1.0.0",
+            status: "denied",
+            code: "AI_BUDGET_UNAVAILABLE",
+          },
+          error: null,
+        };
+      return {
+        data: name === "get_organization_ai_tokens_used" ? 0 : true,
+        error: null,
+      };
+    });
+    const execute = vi.fn().mockRejectedValue({ status: 503 });
+    try {
+      await expect(
+        processQualitativeStage("00000000-0000-4000-8000-000000000003", 1, {
+          execute,
+        }),
+      ).rejects.toMatchObject({ code: "AI_BUDGET_UNAVAILABLE" });
+      expect(execute).not.toHaveBeenCalled();
+      expect(mocks.rpc).not.toHaveBeenCalledWith(
+        "get_organization_ai_tokens_used",
+        expect.anything(),
+      );
+    } finally {
+      mocks.budget.enabled = false;
+    }
+  });
+
+  it.each(["AI_BUDGET_EXHAUSTED", "AI_BUDGET_BLOCKED"])(
+    "persists deterministic partial feedback on definitive %s without provider dispatch",
+    async (code) => {
+      setupBudgetStage();
+      mocks.rpc.mockImplementation(async (name, args) => {
+        if (name === "read_ai_budget_source_readiness")
+          return sourceReadinessReply();
+        if (name === "ai_budget_reserve_next")
+          throw Error("GENERIC_RESERVE_FORBIDDEN");
+        if (name === "ai_budget_reserve_source_next") assertSourceReserve(args);
+        return name === "ai_budget_reserve_source_next"
+          ? {
+              data: {
+                schemaVersion: "ai-budget/1.0.0",
+                status: "denied",
+                code,
+              },
+              error: null,
+            }
+          : { data: true, error: null };
+      });
+      const execute = validQualitativeOutput();
+      await expect(
+        processQualitativeStage(analysisId, 1, { execute }),
+      ).resolves.toBe(false);
+      expect(execute).not.toHaveBeenCalled();
+      expect(mocks.rpc.mock.calls.map(([name]) => name)).toEqual([
+        "read_ai_budget_source_readiness",
+        "ai_budget_reserve_source_next",
+        "persist_partial_analysis",
+      ]);
+      expect(mocks.rpc).toHaveBeenLastCalledWith(
+        "persist_partial_analysis",
+        expect.objectContaining({
+          p_feedback: expect.objectContaining({
+            scoreSemantics: "deterministic_baseline_no_model_ratings/1.0.0",
+            overallScore: 74,
+            ATS: expect.objectContaining({ score: 74 }),
+          }),
+        }),
+      );
+    },
+  );
+
+  it("settles before product persistence and retains the charge when persistence fails", async () => {
+    setupBudgetStage();
+    const execute = validQualitativeOutput();
+    const implementation = mocks.rpc.getMockImplementation()!;
+    mocks.rpc.mockImplementation(async (name, args) =>
+      name === "persist_qualitative_analysis"
+        ? { data: null, error: { code: "synthetic persistence failure" } }
+        : implementation(name, args),
+    );
+    await expect(
+      processQualitativeStage(analysisId, 1, { execute }),
+    ).rejects.toThrow("Qualitative result persistence failed");
+    const calls = mocks.rpc.mock.calls.map(([name]) => name);
+    expect(calls.indexOf("ai_budget_settle")).toBeLessThan(
+      calls.indexOf("persist_qualitative_analysis"),
+    );
+    expect(execute.mock.calls[0][0].idempotencyKey).toBe(
+      mocks.rpc.mock.calls.find(
+        ([name]) => name === "ai_budget_reserve_source_next",
+      )![1].p_request.attemptId,
+    );
+    expect(calls).not.toContain("get_organization_ai_tokens_used");
+    expect(calls).not.toContain("ai_budget_reserve_next");
+    expect(calls).not.toContain("ai_budget_release");
+  });
+
+  it("charges rejected known output but holds unknown provider usage before partial persistence", async () => {
+    for (const known of [true, false]) {
+      setupBudgetStage();
+      const execute = known
+        ? vi.fn().mockResolvedValue({
+            output: { invalid: true },
+            usage: { inputTokens: 10, outputTokens: 20 },
+          })
+        : vi.fn().mockRejectedValue({ status: 503 });
+      expect(await processQualitativeStage(analysisId, 1, { execute })).toBe(
+        false,
+      );
+      const calls = mocks.rpc.mock.calls.map(([name]) => name);
+      const accounting = known ? "ai_budget_settle" : "ai_budget_mark_unknown";
+      expect(calls.indexOf(accounting)).toBeGreaterThan(
+        calls.indexOf("ai_budget_claim_dispatch"),
+      );
+      expect(calls.indexOf(accounting)).toBeLessThan(
+        calls.indexOf("persist_partial_analysis"),
+      );
+      expect(calls).not.toContain(
+        known ? "ai_budget_mark_unknown" : "ai_budget_settle",
+      );
+      expect(calls).not.toContain("ai_budget_release");
+    }
+  });
+
+  it("uses admitted logical ordinal and policy cap rather than the global job retry count", async () => {
+    for (const ordinal of [1, 3]) {
+      setupBudgetStage();
+      mocks.budget.ordinal = ordinal;
+      mocks.budget.maxAttempts = 3;
+      const failure = new QualitativeAiFailure(
+        "AI_PROVIDER_UNAVAILABLE",
+        true,
+        { inputTokens: 10, outputTokens: 20 },
+      );
+      const promise = processQualitativeStage(
+        analysisId,
+        ordinal === 1 ? 99 : 1,
+        { execute: vi.fn().mockRejectedValue(failure) },
+      );
+      if (ordinal === 1) await expect(promise).rejects.toBe(failure);
+      else await expect(promise).resolves.toBe(false);
+      expect(
+        mocks.rpc.mock.calls.some(
+          ([name]) => name === "persist_partial_analysis",
+        ),
+      ).toBe(ordinal === 3);
+      expect(mocks.rpc).toHaveBeenCalledWith(
+        "ai_budget_settle",
+        expect.objectContaining({
+          p_request: expect.objectContaining({
+            attemptOrdinal: ordinal,
+            usage: { inputTokens: "10", outputTokens: "20" },
+          }),
+        }),
+      );
+    }
+  });
+
+  it("keeps the deterministic result after upstream authentication rejection even with retries available", async () => {
+    setupBudgetStage();
+    mocks.budget.ordinal = 1;
+    mocks.budget.maxAttempts = 3;
+    const execute = vi.fn().mockRejectedValue({ status: 401 });
+    await expect(
+      processQualitativeStage(analysisId, 1, { execute }),
+    ).resolves.toBe(false);
+    expect(execute).toHaveBeenCalledOnce();
+    const calls = mocks.rpc.mock.calls.map(([name]) => name);
+    expect(calls.indexOf("ai_budget_mark_unknown")).toBeGreaterThan(
+      calls.indexOf("ai_budget_claim_dispatch"),
+    );
+    expect(calls.indexOf("persist_partial_analysis")).toBeGreaterThan(
+      calls.indexOf("ai_budget_mark_unknown"),
+    );
+    expect(calls).not.toContain("ai_budget_release");
+    expect(calls).not.toContain("persist_qualitative_analysis");
+  });
+
+  it("dispatches nothing without current consent or an explicit configured policy", async () => {
+    for (const missing of ["consent", "policy"]) {
+      setupBudgetStage();
+      if (missing === "consent")
+        mocks.consent.mockResolvedValue({ data: null, error: null });
+      else mocks.budget.policy = "";
+      const execute = validQualitativeOutput();
+      if (missing === "policy") {
+        await expect(
+          processQualitativeStage(analysisId, 1, { execute }),
+        ).resolves.toBe(false);
+        expect(mocks.rpc).toHaveBeenCalledExactlyOnceWith(
+          "persist_partial_analysis",
+          expect.objectContaining({
+            p_feedback: expect.objectContaining({ overallScore: 74 }),
+          }),
+        );
+      } else {
+        await expect(
+          processQualitativeStage(analysisId, 1, { execute }),
+        ).rejects.toMatchObject({ code: "AI_BUDGET_DENIED" });
+        expect(mocks.rpc).not.toHaveBeenCalled();
+      }
+      expect(execute).not.toHaveBeenCalled();
+    }
+  });
+});
+
+const analysisId = "00000000-0000-4000-8000-000000000003";
+const resumeVersionId = "00000000-0000-4000-8000-000000000004";
+function sourceReadinessReply() {
+  return {
+    data: {
+      ...AI_BUDGET_SOURCE_PROFILE,
+      schemaReady: true,
+      reserveExecutable: true,
+      exportExecutable: false,
+    },
+    error: null,
+  };
+}
+function assertSourceReserve(args: Record<string, unknown>) {
+  expect(args).toMatchObject({
+    p_user_id: "00000000-0000-4000-8000-000000000001",
+    p_organization_id: "00000000-0000-4000-8000-000000000002",
+    p_request: { operationId: analysisId, surface: "qualitative" },
+  });
+  expect(args.p_source).toEqual({
+    schemaVersion: "ai-budget-source/2.0.0",
+    kind: "legacy_qualitative",
+    analysisId,
+    resumeVersionId,
+  });
+}
+type BudgetRequest = {
+  operationId: string;
+  attemptId: string;
+  surface: "qualitative";
+  payloadSha256: string;
+  model: string;
+  promptPolicyVersion: string;
+  policyVersion: string;
+  reservedInputTokens: string;
+  reservedOutputTokens: string;
+  usage?: { inputTokens: string; outputTokens: string };
+};
+function ledgerResult(
+  name: string,
+  args: {
+    p_user_id: string;
+    p_organization_id: string;
+    p_request: BudgetRequest;
+  },
+) {
+  const request = args.p_request;
+  const binding = {
+    userId: args.p_user_id,
+    organizationId: args.p_organization_id,
+    operationId: request.operationId,
+    attemptId: request.attemptId,
+    attemptOrdinal: mocks.budget.ordinal,
+    surface: request.surface,
+    payloadSha256: request.payloadSha256,
+    model: request.model,
+    promptPolicyVersion: request.promptPolicyVersion,
+    policyVersion: request.policyVersion,
+    reservedInputTokens: Number(request.reservedInputTokens),
+    reservedOutputTokens: Number(request.reservedOutputTokens),
+  };
+  const settled = name === "ai_budget_settle";
+  return {
+    data: {
+      schemaVersion: "ai-budget/1.0.0",
+      status: "ok",
+      receipt: {
+        ...binding,
+        schemaVersion: "ai-budget/1.0.0",
+        attemptLimit: mocks.budget.cap,
+        bindingSha256: hashAiBudgetBinding(binding),
+        poolPolicyVersion: request.policyVersion,
+        period: "2026-11-01",
+        state: settled
+          ? "settled"
+          : name === "ai_budget_claim_dispatch"
+            ? "dispatched"
+            : name === "ai_budget_mark_unknown"
+              ? "held_unknown"
+              : "reserved",
+        reservedInputTokens: request.reservedInputTokens,
+        reservedOutputTokens: request.reservedOutputTokens,
+        reservedCostMicrousd: String(
+          binding.reservedInputTokens + binding.reservedOutputTokens,
+        ),
+        inputMicrousdPerMillion: "1000000",
+        outputMicrousdPerMillion: "1000000",
+        actualInputTokens: settled ? request.usage!.inputTokens : null,
+        actualOutputTokens: settled ? request.usage!.outputTokens : null,
+        actualCostMicrousd: settled
+          ? String(
+              Number(request.usage!.inputTokens) +
+                Number(request.usage!.outputTokens),
+            )
+          : null,
+        replayed: false,
+        dispatchAllowed: name === "ai_budget_claim_dispatch",
+        poolBlocked: false,
+      },
+    },
+    error: null,
+  };
+}
+function setupBudgetStage() {
+  mocks.single.mockResolvedValue({
+    data: {
+      status: "qualitative_review",
+      owner_id: "00000000-0000-4000-8000-000000000001",
+      resume_version_id: resumeVersionId,
+      organization_id: "00000000-0000-4000-8000-000000000002",
+      jobs: null,
+      analysis_extractions: { extracted_text: "Built reliable services." },
+      analysis_deterministic_results: { score: 74, rule_trace: [] },
+    },
+    error: null,
+  });
+  installBudgetRpc();
+}
+function installBudgetRpc() {
+  mocks.rpc.mockReset().mockImplementation(async (name, args) => {
+    if (name === "read_ai_budget_source_readiness")
+      return sourceReadinessReply();
+    if (name === "ai_budget_reserve_next")
+      throw Error("GENERIC_RESERVE_FORBIDDEN");
+    if (name === "ai_budget_reserve_source_next") assertSourceReserve(args);
+    return name.startsWith("ai_budget_")
+      ? ledgerResult(name, args)
+      : { data: true, error: null };
+  });
+}
+function validQualitativeOutput() {
+  return vi.fn().mockResolvedValue({
+    output: {
+      toneAndStyle: { tips: [] },
+      content: { tips: [] },
+      structure: { tips: [] },
+      skills: { tips: [] },
+      writer: { summary: null, bullets: [] },
+    },
+    usage: { inputTokens: 10, outputTokens: 20 },
+  });
+}
+
+it.each([
+  [false, "synthetic-budget/1"],
+  [undefined, "synthetic-budget/1"],
+  [true, undefined],
+  [true, ""],
+  [true, "   "],
+])(
+  "keeps deterministic partial before factory when qualitative technical selection is missing: %s/%s",
+  async (enabled, policy) => {
+    setupBudgetStage();
+    Reflect.set(mocks.budget, "enabled", enabled);
+    Reflect.set(mocks.budget, "policy", policy);
+    mocks.factory.mockClear();
+    const execute = vi.fn();
+    await expect(
+      processQualitativeStage(analysisId, 1, { execute }),
+    ).resolves.toBe(false);
+    await expect(processQualitativeStage(analysisId, 1)).resolves.toBe(false);
+    expect(execute).not.toHaveBeenCalled();
+    expect(mocks.factory).not.toHaveBeenCalled();
+    expect(mocks.rpc.mock.calls.map(([name]) => name)).toEqual([
+      "persist_partial_analysis",
+      "persist_partial_analysis",
+    ]);
+    expect(mocks.rpc).toHaveBeenLastCalledWith(
+      "persist_partial_analysis",
+      expect.objectContaining({
+        p_feedback: expect.objectContaining({ overallScore: 74 }),
+      }),
+    );
+  },
+);

@@ -1,0 +1,104 @@
+"""Exercise the exact page-count writer and dispatcher in temporary PostgreSQL.
+
+Historical writer/privacy functions and tables are fixture substitutes. This
+checks wrapper transaction behavior and does not admit the full schema seal.
+"""
+from pathlib import Path
+import subprocess
+import tempfile
+
+root = Path.cwd()
+migrations = root / 'supabase/migrations'
+source = (migrations / '20261117060054_document_evidence_page_count.sql').read_text()
+fence = (migrations / '20261110082455_analysis_stage_write_fencing.sql').read_text()
+
+def chunk(text, start, end):
+    return text[text.index(start):text.index(end, text.index(start))]
+
+schema = """
+create role anon;
+create role authenticated;
+create role service_role;
+create schema private;
+create schema extensions;
+create extension pgcrypto with schema extensions;
+create table public.analyses (id uuid primary key, status text, owner_id uuid, organization_id uuid, resume_version_id uuid);
+create table public.resume_versions (id uuid primary key, owner_id uuid, organization_id uuid, resume_id uuid, checksum text, page_count integer);
+create table public.resumes (id uuid primary key, owner_id uuid, organization_id uuid, status text);
+create table public.memberships (organization_id uuid, user_id uuid, role text);
+create table public.document_evidence_attempts (id uuid primary key, envelope jsonb);
+create table public.analysis_jobs (analysis_id uuid primary key, lease_owner text, attempt_count integer, lease_fence uuid, lease_expires_at timestamptz, dead_lettered_at timestamptz);
+create table public.data_requests (user_id uuid, kind text, status text);
+create function private.try_candidate_privacy_write(p_owner uuid)
+returns boolean language sql volatile set search_path='' as $$
+  select not exists(select 1 from public.data_requests where user_id=p_owner and kind='deletion' and status<>'failed');
+$$;
+create function public.persist_document_evidence(p_analysis uuid,p_envelope jsonb,p_process text,p_request text)
+returns boolean language plpgsql set search_path='' as $$
+begin
+  insert into public.document_evidence_attempts values ((p_envelope->>'id')::uuid,p_envelope) on conflict do nothing;
+  if p_process='refuse-after-write' then return false;end if;
+  if p_process='expire-after-write' then
+    update public.analysis_jobs set lease_expires_at=clock_timestamp()-interval '1 second' where analysis_id=p_analysis;
+  end if;
+  return (select envelope=p_envelope from public.document_evidence_attempts where id=(p_envelope->>'id')::uuid);
+end;$$;
+revoke all on function public.persist_document_evidence(uuid,jsonb,text,text) from public;
+"""
+checks = """
+do $$
+declare
+  candidate uuid:=gen_random_uuid(); org uuid:=gen_random_uuid(); a uuid:=gen_random_uuid(); versions uuid:=gen_random_uuid(); resume uuid:=gen_random_uuid();
+  attempt uuid:=gen_random_uuid(); next_attempt uuid:=gen_random_uuid(); token uuid:=gen_random_uuid(); work jsonb; payload jsonb;
+begin
+  insert into public.resume_versions values(versions,candidate,org,resume,repeat('a',64),null);
+  insert into public.analyses values(a,'extracting',candidate,org,versions);
+  insert into public.resumes values(resume,candidate,org,'active');
+  insert into public.memberships values(org,candidate,'owner');
+  insert into public.analysis_jobs values(a,'worker',1,token,clock_timestamp()+interval '60 seconds',null);
+  work:=jsonb_build_object('id',attempt,'sourceId',versions,'ownerId',candidate,'analysisId',a,'inputSha256',repeat('a',64),'nativeSource',
+     jsonb_build_object('pages','[{"id":"page-1","pageNumber":1,"text":"Synthetic"},{"id":"page-2","pageNumber":2,"text":""}]'::jsonb));
+  payload:=jsonb_build_object('p_analysis_id',a,'p_envelope',work,'p_process_id','fixture','p_request_id','fixture','p_page_count',2);
+  assert not has_function_privilege('authenticated','public.persist_document_evidence(uuid,jsonb,text,text,integer)','EXECUTE');
+  assert has_function_privilege('service_role','public.persist_document_evidence(uuid,jsonb,text,text,integer)','EXECUTE');
+  assert public.read_document_page_count_readiness()->>'schemaReady'='false';
+  assert not public.persist_document_evidence(a,work,'fixture','fixture',1);
+  assert not public.persist_document_evidence(a,work||jsonb_build_object('ownerId',gen_random_uuid()),'fixture','fixture',2);
+  assert not public.persist_document_evidence(a,work,'refuse-after-write','fixture',2);
+  assert not exists(select 1 from public.document_evidence_attempts);
+  assert (select page_count is null from public.resume_versions where id=versions);
+  assert not public.persist_analysis_stage_v2(a,'worker',1,gen_random_uuid(),'persist_document_evidence',payload);
+  assert not public.persist_analysis_stage_v2(a,'worker',1,token,'persist_document_evidence',payload||'{"p_page_count":"2"}'::jsonb);
+  assert not public.persist_analysis_stage_v2(a,'worker',1,token,'persist_document_evidence',payload||'{"p_process_id":"expire-after-write"}'::jsonb);
+  assert not exists(select 1 from public.document_evidence_attempts);
+  assert (select page_count is null from public.resume_versions where id=versions);
+  assert (select lease_expires_at>clock_timestamp() from public.analysis_jobs where analysis_id=a);
+  assert public.persist_analysis_stage_v2(a,'worker',1,token,'persist_document_evidence',payload);
+  assert (select page_count=2 from public.resume_versions where id=versions);
+  assert (select envelope=work from public.document_evidence_attempts where id=attempt);
+  assert public.persist_document_evidence(a,work,'fixture','fixture',2);
+  assert (select count(*)=1 from public.document_evidence_attempts);
+  update public.resume_versions set page_count=3 where id=versions;
+  assert not public.persist_document_evidence(a,work,'fixture','fixture',2);
+  update public.resume_versions set page_count=null where id=versions;
+  assert not public.persist_document_evidence(a,work,'fixture','fixture',2);
+  insert into public.data_requests values(candidate,'deletion','queued');
+  assert not public.persist_document_evidence(a,work||jsonb_build_object('id',next_attempt),'fixture','fixture',2);
+  assert (select count(*)=1 from public.document_evidence_attempts);
+end; $$;
+"""
+with tempfile.TemporaryDirectory(prefix='resumide-a01-native-') as tmp:
+    env = {'PATH': '/opt/homebrew/bin:/usr/bin:/bin', 'HOME': tmp, 'LC_ALL': 'C'}
+    def run(args, **kwargs):
+        return subprocess.run(args, env=env, timeout=20, text=True, **kwargs)
+    assert run(['postgres','--version'], capture_output=True, check=True).stdout.startswith('postgres (PostgreSQL) 17.')
+    run(['initdb','-D',tmp+'/data','--no-sync','--auth=trust','-U','fixture_owner'], check=True, stdout=subprocess.DEVNULL)
+    try:
+        run(['pg_ctl','-w','-D',tmp+'/data','-l',tmp+'/postgres.log','-o',f"-c listen_addresses='' -c unix_socket_directories={tmp} -c unix_socket_permissions=0700",'start'],check=True,stdout=subprocess.DEVNULL)
+        sql = '\n'.join([schema,chunk(fence,'create function private.analysis_stage_parameter_keys','create function public.assert_analysis_stage_lease'),chunk(source,'create function public.persist_document_evidence','do $page_count_final$'),checks])
+        result = run(['psql','-X','-v','ON_ERROR_STOP=1','-h',tmp,'-U','fixture_owner','-d','postgres','-Atq'],input=sql,capture_output=True)
+        assert result.returncode == 0, result.stderr
+        print('PASS: measured count, blank page, exact replay, known conflict, unknown historical replay, malformed and wrong-owner rejection, lease and privacy denial, rollback after partial writes, and application-role isolation.')
+    finally:
+        if Path(tmp+'/data/postmaster.pid').exists():
+            run(['pg_ctl','-w','-D',tmp+'/data','-m','immediate','stop'],check=True,stdout=subprocess.DEVNULL)

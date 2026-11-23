@@ -17,7 +17,9 @@ begin
   insert into public.resumes(id,organization_id,owner_id,display_name)
     values(root_id,org_id,owner_id,'Synthetic canonical draft');
   insert into public.resume_versions(id,resume_id,organization_id,owner_id,storage_key,checksum,bytes,media_type)
-    values(source_id,root_id,org_id,owner_id,'aa020/'||source_id,repeat('a',64),1024,'application/pdf');
+    values(source_id,root_id,org_id,owner_id,
+      format('organizations/%s/resumes/%s/versions/%s.pdf',org_id,root_id,source_id),
+      repeat('a',64),1024,'application/pdf');
   insert into public.canonical_resume_versions(id,resume_id,source_resume_version_id,organization_id,owner_id,locale,state,content)
     values(version_id,root_id,source_id,org_id,owner_id,'en-IN','review_required','{"sections":[],"contactFactIds":[]}');
   insert into public.resume_facts(canonical_version_id,id,organization_id,owner_id,type,value)
@@ -93,15 +95,22 @@ begin
   if exists(select 1 from public.canonical_resume_versions where id=version_id)
     or exists(select 1 from public.resume_facts where canonical_version_id=version_id) then
     raise exception 'Canonical rows survived source deletion'; end if;
-  -- Hard resume cleanup and account deletion also remove every derived row.
-  update public.resumes set status='active' where id=root_id;
+  -- A tombstone cannot be reactivated to reuse its fixture.
+  begin
+    update public.resumes set status='active' where id=root_id;
+    raise exception 'A deleted resume was reactivated';
+  exception when check_violation then
+    if sqlerrm <> 'RETENTION_ROOT_TOMBSTONE' then raise; end if;
+  end;
+  -- Hard resume cleanup and account deletion use fresh active roots.
   for case_number in 1..2 loop
-    if case_number=2 then
-      insert into public.resumes(id,organization_id,owner_id,display_name)
-        values(root_id,org_id,owner_id,'Synthetic canonical draft');
-    end if;
+    root_id := gen_random_uuid();
+    insert into public.resumes(id,organization_id,owner_id,display_name)
+      values(root_id,org_id,owner_id,'Synthetic canonical draft');
     insert into public.resume_versions(id,resume_id,organization_id,owner_id,storage_key,checksum,bytes,media_type)
-      values(source_id,root_id,org_id,owner_id,'aa020/'||source_id,repeat('a',64),1024,'application/pdf');
+      values(source_id,root_id,org_id,owner_id,
+        format('organizations/%s/resumes/%s/versions/%s.pdf',org_id,root_id,source_id),
+        repeat('a',64),1024,'application/pdf');
     insert into public.canonical_resume_versions(id,resume_id,source_resume_version_id,organization_id,owner_id,locale,state,content)
       values(version_id,root_id,source_id,org_id,owner_id,'en-IN','draft','{}');
     insert into public.resume_facts(canonical_version_id,id,organization_id,owner_id,type,value)

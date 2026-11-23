@@ -1,0 +1,808 @@
+--- a/tests/unit/canonical-correction-repository.test.ts
++++ b/tests/unit/canonical-correction-repository.test.ts
+@@ -1,4 +1,5 @@
+ import { beforeEach, describe, expect, it, vi } from "vitest";
++import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
+ import { buildNativeEvidence } from "../../app/lib/server/native-evidence";
+ import { reconcileDocumentEvidence } from "../../app/lib/server/document-evidence";
+ import { deriveEvidenceReviewTargets } from "../../app/lib/server/evidence-targets";
+@@ -122,6 +123,58 @@
+     memberships: { user_id: id(2) },
+     data_requests: [],
+   };
++  const privacy = {
++    subjects: new Set([id(2)]),
++    preparations: [] as { owner_id: string }[],
++    requests: [] as { user_id: string; kind: string; status: string }[],
++  };
++  const authorityRpc = vi.fn((name: string, args: Record<string, unknown>) => ({
++    abortSignal: async (signal: AbortSignal) => {
++      if (signal.aborted) throw Error("SYNTHETIC_AUTHORITY_ABORTED");
++      if (name === "read_owned_ai_disposition_readiness")
++        return {
++          data: {
++            ...OWNED_AI_DISPOSITION_PROFILE,
++            schemaReady: true,
++            exportExecutable: false,
++            accessExecutable: true,
++          },
++          error: null,
++        };
++      const ownerId = String(args.p_user_id);
++      if (
++        name !== "read_candidate_privacy_access" ||
++        !privacy.subjects.has(ownerId)
++      )
++        return { data: null, error: { code: "42501" } };
++      return {
++        data: {
++          schemaVersion: "candidate-privacy-access/1.0.0",
++          ownerId,
++          deletionPrepared: privacy.preparations.some(
++            (row) => row.owner_id === ownerId,
++          ),
++          blockingRequest: privacy.requests.some(
++            (row) =>
++              row.user_id === ownerId &&
++              row.kind === "deletion" &&
++              !["failed", "cancelled"].includes(row.status),
++          ),
++        },
++        error: null,
++      };
++    },
++  }));
++  // Existing mutation/ledger spies keep their original call and replay semantics.
++  const dispatchRpc =
++    (operationRpc: (name: string, args: Record<string, unknown>) => unknown) =>
++    (name: string, args: Record<string, unknown>) =>
++      [
++        "read_owned_ai_disposition_readiness",
++        "read_candidate_privacy_access",
++      ].includes(name)
++        ? authorityRpc(name, args)
++        : operationRpc(name, args);
+   const from = (table: string) => {
+     const chain = {
+       select: () => chain,
+@@ -150,8 +203,13 @@
+     error: null,
+   });
+   return {
+-    client: { from, rpc } as unknown as Parameters<typeof mutateCanonical>[0],
++    client: { from, rpc: dispatchRpc(rpc) } as unknown as Parameters<
++      typeof mutateCanonical
++    >[0],
+     rpc,
++    privacy,
++    authorityRpc,
++    dispatchRpc,
+   };
+ }
+ 
+@@ -450,9 +508,13 @@
+     };
+   });
+   return {
+-    client: { from, rpc } as unknown as Parameters<typeof mutateCanonical>[0],
++    client: { from, rpc: base.dispatchRpc(rpc) } as unknown as Parameters<
++      typeof mutateCanonical
++    >[0],
+     rpc,
+     ledger,
++    privacy: base.privacy,
++    authorityRpc: base.authorityRpc,
+   };
+ }
+ function mutationCalls(rpc: ReturnType<typeof scenario>["rpc"]) {
+@@ -462,6 +524,22 @@
+ }
+ 
+ describe("canonical correction repository admission", () => {
++  it.each(["failed", "cancelled"])(
++    "keeps prepared %s deletion blocked before correction admission",
++    async (status) => {
++      const db = scenario();
++      db.privacy.requests.push({ user_id: id(2), kind: "deletion", status });
++      db.privacy.preparations.push({ owner_id: id(2) });
++      await expect(
++        loadCanonicalCorrectionWorkspace(db.client, id(3), id(2)),
++      ).rejects.toMatchObject({ status: 404 });
++      expect(mutationCalls(db.rpc)).toEqual([]);
++      expect(db.authorityRpc).toHaveBeenCalledWith(
++        "read_candidate_privacy_access",
++        { p_user_id: id(2) },
++      );
++    },
++  );
+   beforeEach(() => {
+     vi.clearAllMocks();
+     mocks.config.CANONICAL_CORRECTIONS_ENABLED = true;
+--- a/tests/unit/job-requirement-admission-repository.test.ts
++++ b/tests/unit/job-requirement-admission-repository.test.ts
+@@ -1,5 +1,6 @@
+ import { createHash, randomUUID } from "node:crypto";
+ import { beforeEach, expect, it, vi } from "vitest";
++import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
+ const controls = vi.hoisted(() => ({ relations: false }));
+ vi.mock("../../app/lib/server/config", () => ({
+   getServerConfig: () => ({
+@@ -220,8 +221,59 @@
+       };
+     },
+   );
++  const privacy = {
++    subjects: new Set([ids.owner]),
++    preparations: [] as { owner_id: string }[],
++    requests: [] as { user_id: string; kind: string; status: string }[],
++  };
++  const authorityRpc = vi.fn((name: string, args: Record<string, unknown>) => ({
++    abortSignal: async (signal: AbortSignal) => {
++      if (signal.aborted) throw Error("SYNTHETIC_AUTHORITY_ABORTED");
++      if (name === "read_owned_ai_disposition_readiness")
++        return {
++          data: {
++            ...OWNED_AI_DISPOSITION_PROFILE,
++            schemaReady: true,
++            exportExecutable: false,
++            accessExecutable: true,
++          },
++          error: null,
++        };
++      const ownerId = String(args.p_user_id);
++      if (
++        name !== "read_candidate_privacy_access" ||
++        !privacy.subjects.has(ownerId)
++      )
++        return { data: null, error: { code: "42501" } };
++      return {
++        data: {
++          schemaVersion: "candidate-privacy-access/1.0.0",
++          ownerId,
++          deletionPrepared: privacy.preparations.some(
++            (row) => row.owner_id === ownerId,
++          ),
++          blockingRequest: privacy.requests.some(
++            (row) =>
++              row.user_id === ownerId &&
++              row.kind === "deletion" &&
++              !["failed", "cancelled"].includes(row.status),
++          ),
++        },
++        error: null,
++      };
++    },
++  }));
+   const client = {
+-    rpc,
++    rpc(name: string, args: Record<string, unknown>) {
++      if (
++        [
++          "read_owned_ai_disposition_readiness",
++          "read_candidate_privacy_access",
++        ].includes(name)
++      )
++        return authorityRpc(name, args);
++      return rpc(name, args as Parameters<typeof rpc>[1]);
++    },
+     from(table: string) {
+       let columns = "";
+       const filters: Record<string, unknown> = {};
+@@ -324,6 +376,8 @@
+   return {
+     client: client as unknown as Parameters<typeof loadJobRequirements>[0],
+     rpc,
++    privacy,
++    authorityRpc,
+     setSource: (value: string) => {
+       source = value;
+     },
+@@ -633,3 +687,26 @@
+     ),
+   ).rejects.toMatchObject({ status: 503 });
+ });
++
++it.each(["failed", "cancelled"])(
++  "does not admit a typed JD write after prepared %s deletion",
++  async (status) => {
++    const f = fixture(null, composite);
++    f.privacy.requests.push({ user_id: ids.owner, kind: "deletion", status });
++    f.privacy.preparations.push({ owner_id: ids.owner });
++    await expect(
++      saveJobRequirements(
++        f.client,
++        ids.analysis,
++        ids.owner,
++        { expectedVersionId: null, idempotencyKey: randomUUID() },
++        "synthetic-prepared-jd",
++      ),
++    ).rejects.toMatchObject({ status: 404 });
++    expect(f.rpc).not.toHaveBeenCalled();
++    expect(f.authorityRpc).toHaveBeenCalledWith(
++      "read_candidate_privacy_access",
++      { p_user_id: ids.owner },
++    );
++  },
++);
+--- a/tests/unit/repository-read-scheduling.test.ts
++++ b/tests/unit/repository-read-scheduling.test.ts
+@@ -1,6 +1,7 @@
+ import { randomUUID } from "node:crypto";
+ import { setImmediate } from "node:timers/promises";
+ import { expect, it, vi } from "vitest";
++import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
+ import { loadCanonical } from "../../app/lib/server/canonical-repository";
+ import { loadJobRequirements } from "../../app/lib/server/job-requirement-repository";
+ import {
+@@ -17,6 +18,16 @@
+   filters: Record<string, unknown>;
+ };
+ const ok = (data: unknown): Result => ({ data, error: null });
++const accessData = (
++  ownerId: string,
++  deletionPrepared: boolean,
++  blockingRequest: boolean,
++) => ({
++  schemaVersion: "candidate-privacy-access/1.0.0",
++  ownerId,
++  deletionPrepared,
++  blockingRequest,
++});
+ function held<T>() {
+   let resolve!: (value: T) => void;
+   let reject!: (error: Error) => void;
+@@ -58,6 +69,46 @@
+       status: "active",
+     },
+   };
++  const privacy = {
++    subjects: new Set([doc.ownerId]),
++    preparations: [] as { owner_id: string }[],
++    requests: [] as { user_id: string; kind: string; status: string }[],
++  };
++  const authorityRpc = vi.fn((name: string, args: Record<string, unknown>) => ({
++    abortSignal: async (signal: AbortSignal) => {
++      if (signal.aborted) throw Error("SYNTHETIC_AUTHORITY_ABORTED");
++      const read: Read = { table: name, columns: "", filters: args };
++      reads.push(read);
++      const replacement = override?.(read);
++      if (replacement) return await replacement;
++      if (name === "read_owned_ai_disposition_readiness")
++        return ok({
++          ...OWNED_AI_DISPOSITION_PROFILE,
++          schemaReady: true,
++          exportExecutable: false,
++          accessExecutable: true,
++        });
++      const ownerId = String(args.p_user_id);
++      if (
++        name !== "read_candidate_privacy_access" ||
++        !privacy.subjects.has(ownerId)
++      )
++        return { data: null, error: { code: "42501" } };
++      return ok(
++        accessData(
++          ownerId,
++          privacy.preparations.some((row) => row.owner_id === ownerId),
++          privacy.requests.some(
++            (row) =>
++              row.user_id === ownerId &&
++              row.kind === "deletion" &&
++              !["failed", "cancelled"].includes(row.status),
++          ),
++        ),
++      );
++    },
++  }));
++  const mutationRpc = vi.fn();
+   const head = ok({ version_id: doc.versionId, revision: 1 });
+   const jobHead = ok({ id: req.id, revision: 1 });
+   const client = {
+@@ -97,7 +148,6 @@
+           else if (table === "resumes") result = ok({ id: doc.resumeId });
+           else if (table === "memberships")
+             result = ok({ user_id: doc.ownerId });
+-          else if (table === "data_requests") result = ok([]);
+           else if (table === "canonical_resume_heads") result = head;
+           else if (table === "canonical_resume_versions")
+             result =
+@@ -145,7 +195,14 @@
+       };
+       return query;
+     },
+-    rpc: vi.fn(),
++    rpc(name: string, args: Record<string, unknown>) {
++      return [
++        "read_owned_ai_disposition_readiness",
++        "read_candidate_privacy_access",
++      ].includes(name)
++        ? authorityRpc(name, args)
++        : mutationRpc(name, args);
++    },
+   };
+   const model = {
+     canonical: { versionId: doc.versionId, headId: doc.versionId, revision: 1 },
+@@ -159,6 +216,9 @@
+     ...f,
+     client: client as unknown as Parameters<typeof loadCanonical>[0],
+     rawClient: client,
++    mutationRpc,
++    authorityRpc,
++    privacy,
+     reads,
+     analysisRow,
+     sourceRow,
+@@ -248,8 +308,8 @@
+     const f = fixture((r) =>
+       mode === "foreign" && r.table === "analyses"
+         ? ok(null)
+-        : mode === "deleted" && r.table === "data_requests"
+-          ? ok([{ id: randomUUID() }])
++        : mode === "deleted" && r.table === "read_candidate_privacy_access"
++          ? ok(accessData(f.canonical.ownerId, false, true))
+           : undefined,
+     );
+     await expect(
+@@ -381,7 +441,7 @@
+       "scheduling-retry",
+     ),
+   ).resolves.toMatchObject({ idempotent: true, versionId: headId });
+-  expect(f.rawClient.rpc).not.toHaveBeenCalled();
++  expect(f.mutationRpc).not.toHaveBeenCalled();
+ });
+ 
+ it("keeps a history rejection ahead of concurrent requirement read failures", async () => {
+@@ -452,8 +512,8 @@
+     const f = fixture((r) =>
+       mode === "foreign" && r.table === "analyses"
+         ? ok(null)
+-        : mode === "deleted" && r.table === "data_requests"
+-          ? ok([{ id: randomUUID() }])
++        : mode === "deleted" && r.table === "read_candidate_privacy_access"
++          ? ok(accessData(f.canonical.ownerId, false, true))
+           : undefined,
+     );
+     await expect(
+@@ -473,7 +533,7 @@
+ );
+ 
+ it.each(["canonical", "requirements"] as const)(
+-  "authorizes %s in two query waves without a separate parent request",
++  "starts %s authority during the source-read wave without a separate parent request",
+   async (kind) => {
+     const analysis = held<Result>(),
+       source = held<Result>();
+@@ -505,7 +565,7 @@
+         expect.arrayContaining([
+           "resume_versions",
+           "memberships",
+-          "data_requests",
++          "read_candidate_privacy_access",
+           ...(kind === "requirements" ? ["jobs"] : []),
+         ]),
+       );
+@@ -603,7 +663,7 @@
+   },
+ );
+ 
+-it.each(["memberships", "data_requests"] as const)(
++it.each(["memberships", "read_candidate_privacy_access"] as const)(
+   "handles a rejected speculative %s read without replacing a foreign-source failure",
+   async (table) => {
+     const scope = held<Result>(),
+@@ -652,8 +712,11 @@
+         }
+         if (state === "missing membership" && read.table === "memberships")
+           return ok(null);
+-        if (state === "deletion" && read.table === "data_requests")
+-          return ok([{ id: randomUUID() }]);
++        if (
++          state === "deletion" &&
++          read.table === "read_candidate_privacy_access"
++        )
++          return ok(accessData(f.canonical.ownerId, false, true));
+       });
+       const pending =
+         kind === "canonical"
+@@ -676,3 +739,27 @@
+     }
+   },
+ );
++
++it.each(["failed", "cancelled"])(
++  "keeps prepared %s authority closed without starting history reads",
++  async (status) => {
++    const f = fixture();
++    f.privacy.requests.push({
++      user_id: f.canonical.ownerId,
++      kind: "deletion",
++      status,
++    });
++    f.privacy.preparations.push({ owner_id: f.canonical.ownerId });
++    await expect(
++      loadCanonical(f.client, f.requirements.analysisId, f.canonical.ownerId),
++    ).rejects.toMatchObject({ status: 404 });
++    expect(
++      f.reads.some((read) => read.table === "canonical_resume_versions"),
++    ).toBe(false);
++    expect(f.authorityRpc).toHaveBeenCalledWith(
++      "read_candidate_privacy_access",
++      { p_user_id: f.canonical.ownerId },
++    );
++    expect(f.mutationRpc).not.toHaveBeenCalled();
++  },
++);
+--- a/tests/unit/privacy.test.ts
++++ b/tests/unit/privacy.test.ts
+@@ -1,6 +1,8 @@
+ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+ import { createHash } from "node:crypto";
+ import { OWNED_AI_BUDGET_EXPORT_PROFILE } from "../../app/lib/server/owned-ai-budget-export-profile";
++import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
++import type { OwnedAiDispositionExport } from "../../app/lib/server/owned-ai-disposition-export";
+ import {
+   INITIAL_FEEDBACK_PROFILE,
+   OWNED_AI_RETIREMENT_PROFILE,
+@@ -281,6 +283,17 @@
+   "canonicalEntryRegroupLinks",
+ ];
+ function privacyExportStore(data: unknown, error: unknown = null) {
++  const subjects = new Set([privacyExportRequest.userId]);
++  const dispositions: Pick<
++    OwnedAiDispositionExport,
++    "accounts" | "operations"
++  > = { accounts: [], operations: [] };
++  const dispositionMetadata = {
++    ...OWNED_AI_DISPOSITION_PROFILE,
++    schemaReady: true,
++    exportExecutable: true,
++    accessExecutable: false,
++  };
+   mocks.from.mockImplementation((table: string) => {
+     if (table === "analysis_scoring_inputs")
+       throw Error("PRIVATE_TABLE_FALLBACK_FORBIDDEN");
+@@ -290,85 +303,147 @@
+     };
+     return query;
+   });
+-  mocks.rpc.mockImplementation(async (name: string) => {
+-    if (name === "export_legacy_scoring_inputs") return { data, error };
+-    if (name === "export_resume_workspace_records")
+-      return {
+-        data: Object.fromEntries(
+-          oldWorkspaceCollections.map((key) => [key, []]),
+-        ),
+-        error: null,
+-      };
+-    if (name === "export_canonical_rewrite_records")
+-      return {
+-        data: {
+-          schemaVersion: "canonical-rewrite-export/1.0.0",
+-          canonicalRewriteOperations: [],
+-          canonicalRewriteVersions: [],
+-          canonicalRewriteHeads: [],
+-        },
+-        error: null,
+-      };
+-    const paired =
+-      name === "read_owned_ai_budget_export_readiness"
+-        ? {
+-            ...OWNED_AI_BUDGET_EXPORT_PROFILE,
+-            schemaReady: true,
+-            exportExecutable: true,
+-          }
+-        : name === "export_owned_ai_budget_records"
++  mocks.rpc.mockImplementation(
++    async (name: string, args: Record<string, unknown> = {}) => {
++      if ("p_user_id" in args && !subjects.has(String(args.p_user_id)))
++        return { data: null, error: { code: "42501" } };
++      if (name === "read_owned_ai_disposition_readiness")
++        return { data: dispositionMetadata, error: null };
++      if (name === "export_owned_ai_disposition_records")
++        return {
++          data: {
++            schemaVersion: "owned-ai-disposition-export/1.0.0",
++            ownerId: args.p_user_id,
++            ...dispositions,
++          },
++          error: null,
++        };
++      if (name === "export_legacy_scoring_inputs") return { data, error };
++      if (name === "export_resume_workspace_records")
++        return {
++          data: Object.fromEntries(
++            oldWorkspaceCollections.map((key) => [key, []]),
++          ),
++          error: null,
++        };
++      if (name === "export_canonical_rewrite_records")
++        return {
++          data: {
++            schemaVersion: "canonical-rewrite-export/1.0.0",
++            canonicalRewriteOperations: [],
++            canonicalRewriteVersions: [],
++            canonicalRewriteHeads: [],
++          },
++          error: null,
++        };
++      const paired =
++        name === "read_owned_ai_budget_export_readiness"
+           ? {
+-              schemaVersion: "owned-ai-budget-export/1.0.0",
+-              ownerId: privacyExportRequest.userId,
+-              operations: [],
+-              attempts: [],
+-              events: [],
+-              reconciliationOperators: [],
+-              operatorActions: [],
+-              omissions: {
+-                sharedPools: "not_subject_attributable",
+-                periodOpenings: "not_subject_attributable",
+-                foreignOperatorIdentity: "redacted",
+-                foreignTargetHistory: "redacted",
+-              },
++              ...OWNED_AI_BUDGET_EXPORT_PROFILE,
++              schemaReady: true,
++              exportExecutable: true,
+             }
+-          : name === "read_initial_feedback_readiness"
++          : name === "export_owned_ai_budget_records"
+             ? {
+-                ...INITIAL_FEEDBACK_PROFILE,
+-                schemaReady: true,
+-                readerExecutable: true,
+-                prepareExecutable: true,
+-                claimExecutable: true,
+-                settleExecutable: true,
+-                finishExecutable: true,
+-                usageExecutable: true,
+-                exportExecutable: true,
++                schemaVersion: "owned-ai-budget-export/1.0.0",
++                ownerId: privacyExportRequest.userId,
++                operations: [],
++                attempts: [],
++                events: [],
++                reconciliationOperators: [],
++                operatorActions: [],
++                omissions: {
++                  sharedPools: "not_subject_attributable",
++                  periodOpenings: "not_subject_attributable",
++                  foreignOperatorIdentity: "redacted",
++                  foreignTargetHistory: "redacted",
++                },
+               }
+-            : name === "export_initial_feedback_records"
++            : name === "read_initial_feedback_readiness"
+               ? {
+-                  schemaVersion: "initial-feedback-export/1.0.0",
+-                  operations: [],
+-                  attempts: [],
+-                  publications: [],
++                  ...INITIAL_FEEDBACK_PROFILE,
++                  schemaReady: true,
++                  readerExecutable: true,
++                  prepareExecutable: true,
++                  claimExecutable: true,
++                  settleExecutable: true,
++                  finishExecutable: true,
++                  usageExecutable: true,
++                  exportExecutable: true,
+                 }
+-              : name === "read_owned_ai_retirement_readiness"
++              : name === "export_initial_feedback_records"
+                 ? {
+-                    ...OWNED_AI_RETIREMENT_PROFILE,
+-                    schemaReady: true,
+-                    exportExecutable: true,
++                    schemaVersion: "initial-feedback-export/1.0.0",
++                    operations: [],
++                    attempts: [],
++                    publications: [],
+                   }
+-                : name === "export_owned_ai_retirement_records"
++                : name === "read_owned_ai_retirement_readiness"
+                   ? {
+-                      schemaVersion: "owned-ai-retirement-export/1.0.0",
+-                      retirements: [],
++                      ...OWNED_AI_RETIREMENT_PROFILE,
++                      schemaReady: true,
++                      exportExecutable: true,
+                     }
+-                  : undefined;
+-    if (paired !== undefined) return { data: paired, error: null };
+-    throw Error("UNEXPECTED_EXPORT_RPC");
+-  });
++                  : name === "export_owned_ai_retirement_records"
++                    ? {
++                        schemaVersion: "owned-ai-retirement-export/1.0.0",
++                        retirements: [],
++                      }
++                    : undefined;
++      if (paired !== undefined) return { data: paired, error: null };
++      throw Error("UNEXPECTED_EXPORT_RPC");
++    },
++  );
++  return { dispositions, dispositionMetadata, subjects };
+ }
+ afterEach(() => vi.useRealTimers());
+ describe("original legacy scoring-input privacy export", () => {
++  it("includes retained owner dispositions without treating export capability as access permission", async () => {
++    const f = privacyExportStore({
++      schemaVersion: "legacy-scoring-export/1.0.0",
++      scoringInputs: [],
++    });
++    f.dispositions.accounts.push({
++      owner_id: privacyExportRequest.userId,
++      first_request_id: requestId,
++      prepared_at: "2026-11-15T00:00:00.123456Z",
++      expires_at: "2026-12-15T00:00:00.123456Z",
++      phase: "prepared",
++    });
++    const manifest =
++      await new SupabasePrivacyRequestRepository().buildExportManifest(
++        privacyExportRequest,
++      );
++    expect(manifest.records.ownedAiDeletionDispositions).toEqual(
++      f.dispositions.accounts,
++    );
++    expect(manifest.records.ownedAiOperationDispositions).toEqual([]);
++    expect(f.dispositionMetadata.accessExecutable).toBe(false);
++    expect(mocks.rpc).toHaveBeenCalledWith(
++      "export_owned_ai_disposition_records",
++      { p_user_id: privacyExportRequest.userId },
++    );
++    expect(mocks.rpc).not.toHaveBeenCalledWith(
++      "read_candidate_privacy_access",
++      expect.anything(),
++    );
++  });
++  it("refuses the complete legacy export when its distinct disposition capability is denied", async () => {
++    const f = privacyExportStore({
++      schemaVersion: "legacy-scoring-export/1.0.0",
++      scoringInputs: [],
++    });
++    f.dispositionMetadata.exportExecutable = false;
++    await expect(
++      new SupabasePrivacyRequestRepository().buildExportManifest(
++        privacyExportRequest,
++      ),
++    ).rejects.toThrow("Privacy export data is unavailable.");
++    expect(mocks.rpc).not.toHaveBeenCalledWith(
++      "export_owned_ai_disposition_records",
++      expect.anything(),
++    );
++  });
+   it("includes complete original scoring snapshots across the same owner's historical organizations", async () => {
+     const base = scoringInputRow(exportUuid(2), exportUuid(22));
+     const noJob = {
+--- a/tests/unit/typed-score-repository.test.ts
++++ b/tests/unit/typed-score-repository.test.ts
+@@ -1,4 +1,5 @@
+ import { expect, it, vi } from "vitest";
++import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
+ import { loadScoreDiagnostics } from "../../app/lib/server/score-v2-repository";
+ import {
+   createRequirementContextFixture,
+@@ -91,6 +92,51 @@
+       created_at: r.content.createdAt,
+     },
+   ];
++  const privacy = {
++    subjects: new Set([s.ownerId]),
++    preparations: [] as { owner_id: string }[],
++    requests: [] as { user_id: string; kind: string; status: string }[],
++  };
++  const authorityRpc = vi.fn((name: string, args: Record<string, unknown>) => ({
++    abortSignal: async (signal: AbortSignal) => {
++      if (signal.aborted) throw Error("SYNTHETIC_AUTHORITY_ABORTED");
++      const read: Read = {
++        table: name,
++        columns: "",
++        filters: args,
++        single: true,
++      };
++      reads.push(read);
++      const replacement = override?.(read, reads);
++      if (replacement) return replacement;
++      if (name === "read_owned_ai_disposition_readiness")
++        return ok({
++          ...OWNED_AI_DISPOSITION_PROFILE,
++          schemaReady: true,
++          exportExecutable: false,
++          accessExecutable: true,
++        });
++      const ownerId = String(args.p_user_id);
++      if (
++        name !== "read_candidate_privacy_access" ||
++        !privacy.subjects.has(ownerId)
++      )
++        return { data: null, error: { code: "42501" } };
++      return ok({
++        schemaVersion: "candidate-privacy-access/1.0.0",
++        ownerId,
++        deletionPrepared: privacy.preparations.some(
++          (row) => row.owner_id === ownerId,
++        ),
++        blockingRequest: privacy.requests.some(
++          (row) =>
++            row.user_id === ownerId &&
++            row.kind === "deletion" &&
++            !["failed", "cancelled"].includes(row.status),
++        ),
++      });
++    },
++  }));
+   const rpc = vi.fn<(name: string, args: unknown) => Promise<Result>>(
+     async (name) => {
+       if (name !== "read_requirement_relationship_context")
+@@ -199,11 +245,21 @@
+     return query;
+   });
+   return {
+-    client: { from, rpc } as unknown as Parameters<
+-      typeof loadScoreDiagnostics
+-    >[0],
++    client: {
++      from,
++      rpc(name: string, args: Record<string, unknown>) {
++        return [
++          "read_owned_ai_disposition_readiness",
++          "read_candidate_privacy_access",
++        ].includes(name)
++          ? authorityRpc(name, args)
++          : rpc(name, args);
++      },
++    } as unknown as Parameters<typeof loadScoreDiagnostics>[0],
+     from,
+     rpc,
++    authorityRpc,
++    privacy,
+     reads,
+     canonicalRows,
+     requirementRows,
+@@ -328,8 +384,16 @@
+     const store = ownedStore(f.context, (read) => {
+       if (failure === "membership" && read.table === "memberships")
+         return ok(null);
+-      if (failure === "deletion" && read.table === "data_requests")
+-        return ok([{ id: requirementFixtureId(991) }]);
++      if (
++        failure === "deletion" &&
++        read.table === "read_candidate_privacy_access"
++      )
++        return ok({
++          schemaVersion: "candidate-privacy-access/1.0.0",
++          ownerId: f.owned.ownerId,
++          deletionPrepared: false,
++          blockingRequest: true,
++        });
+       if (failure === "source" && read.table === "resume_versions")
+         return ok(null);
+     });
+@@ -659,3 +723,26 @@
+     expect(store.rpc).toHaveBeenCalledTimes(2);
+   },
+ );
++
++it.each(["failed", "cancelled"])(
++  "withholds typed scoring after prepared %s deletion",
++  async (status) => {
++    const f = await createRequirementContextFixture();
++    const store = ownedStore(f.context);
++    store.privacy.requests.push({
++      user_id: f.owned.ownerId,
++      kind: "deletion",
++      status,
++    });
++    store.privacy.preparations.push({ owner_id: f.owned.ownerId });
++    await rejectStatus(
++      loadScoreDiagnostics(store.client, f.owned.analysisId, f.owned.ownerId),
++      404,
++    );
++    expect(store.rpc).not.toHaveBeenCalled();
++    expect(store.authorityRpc).toHaveBeenCalledWith(
++      "read_candidate_privacy_access",
++      { p_user_id: f.owned.ownerId },
++    );
++  },
++);

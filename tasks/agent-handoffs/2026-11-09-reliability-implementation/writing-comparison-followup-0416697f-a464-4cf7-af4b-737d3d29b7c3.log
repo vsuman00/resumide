@@ -1,0 +1,23 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats
+
+ ✓ tests/components/AuthoringRecommendationReview.test.tsx (9 tests) 551ms
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  15:49:43
+   Duration  1.43s (transform 145ms, setup 0ms, import 315ms, tests 551ms, environment 503ms)
+
+JSON report written to /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tasks/agent-handoffs/2026-11-09-reliability-implementation/writing-comparison-followup-0416697f-a464-4cf7-af4b-737d3d29b7c3.affected-tests.json
+
+> typecheck
+> react-router typegen && tsc
+
+app/routes/analysis.canonical.tsx(1074,22): error TS2339: Property 'writingComparison' does not exist on type '{ groupedOriginal: GroupedOriginalWorkspace; entryRegroup: CanonicalEntryRegroupWorkspace; groupedOwnerId: string; ... 13 more ...; corrections: { ...; }; } | { ...; }'.
+  Property 'writingComparison' does not exist on type '{ groupedOriginal: GroupedOriginalWorkspace; entryRegroup: CanonicalEntryRegroupWorkspace; groupedOwnerId: string; ... 13 more ...; corrections: { ...; }; }'.
+app/routes/analysis.canonical.tsx(1076,37): error TS2339: Property 'writingComparison' does not exist on type '{ groupedOriginal: GroupedOriginalWorkspace; entryRegroup: CanonicalEntryRegroupWorkspace; groupedOwnerId: string; ... 13 more ...; corrections: { ...; }; } | { ...; }'.
+  Property 'writingComparison' does not exist on type '{ groupedOriginal: GroupedOriginalWorkspace; entryRegroup: CanonicalEntryRegroupWorkspace; groupedOwnerId: string; ... 13 more ...; corrections: { ...; }; }'.
+tests/unit/score-snapshot-binding.test.ts(119,9): error TS2322: Type '{ analysisId: string; resumeId: string; current: { document: { schemaVersion: "canonical-resume/1.0.0"; producerVersion: "canonical-engine/1.0.0" | "canonical-engine/1.0.1" | "canonical-engine/1.0.2" | "canonical-engine/1.0.3" | "canonical-engine/1.0.4"; ... 15 more ...; changes: { ...; }[]; }; revision: number; sou...' is not assignable to type '{ analysisId: string; resumeId: string; current: null; headId: null; history: never[]; nextOffset: null; comparison: null; writingComparison: null; scoringEligible: false; } | { analysisId: string; ... 7 more ...; scoringEligible: false; }'.
+  Property 'writingComparison' is missing in type '{ analysisId: string; resumeId: string; current: { document: { schemaVersion: "canonical-resume/1.0.0"; producerVersion: "canonical-engine/1.0.0" | "canonical-engine/1.0.1" | "canonical-engine/1.0.2" | "canonical-engine/1.0.3" | "canonical-engine/1.0.4"; ... 15 more ...; changes: { ...; }[]; }; revision: number; sou...' but required in type '{ analysisId: string; resumeId: string; current: { document: CanonicalResumeDraft; revision: number; sourceId: string; }; headId: string; history: { id: string; parent_version_id: string | null; revision: number; created_at: string; }[]; nextOffset: number | null; comparison: { ...; }[] | null; writingComparison: Sa...'.
+tests/unit/scoring-release-admission.test.ts(395,11): error TS2322: Type '{ analysisId: string; resumeId: string; current: { document: { schemaVersion: "canonical-resume/1.0.0"; producerVersion: "canonical-engine/1.0.0" | "canonical-engine/1.0.1" | "canonical-engine/1.0.2" | "canonical-engine/1.0.3" | "canonical-engine/1.0.4"; ... 15 more ...; changes: { ...; }[]; }; revision: number; sou...' is not assignable to type '{ analysisId: string; resumeId: string; current: null; headId: null; history: never[]; nextOffset: null; comparison: null; writingComparison: null; scoringEligible: false; } | { analysisId: string; ... 7 more ...; scoringEligible: false; }'.
+  Property 'writingComparison' is missing in type '{ analysisId: string; resumeId: string; current: { document: { schemaVersion: "canonical-resume/1.0.0"; producerVersion: "canonical-engine/1.0.0" | "canonical-engine/1.0.1" | "canonical-engine/1.0.2" | "canonical-engine/1.0.3" | "canonical-engine/1.0.4"; ... 15 more ...; changes: { ...; }[]; }; revision: number; sou...' but required in type '{ analysisId: string; resumeId: string; current: { document: CanonicalResumeDraft; revision: number; sourceId: string; }; headId: string; history: { id: string; parent_version_id: string | null; revision: number; created_at: string; }[]; nextOffset: number | null; comparison: { ...; }[] | null; writingComparison: Sa...'.

@@ -1,0 +1,79 @@
+/** @vitest-environment jsdom */
+
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { createMemoryRouter, RouterProvider } from "react-router";
+import { buildNativeEvidence } from "~/lib/server/native-evidence";
+import { DocumentEvidenceSchema, reconcileDocumentEvidence } from "~/lib/server/document-evidence";
+import { loadGroupedOriginalWorkspace } from "~/lib/server/grouped-import-repository";
+
+vi.mock("~/lib/server/auth", () => ({ getAuthenticatedUser: vi.fn() }));
+vi.mock("~/lib/server/config", () => ({
+  getServerConfig: () => ({
+    APP_ORIGIN: "https://fixture.test",
+    CANONICAL_AUTHORING_ENABLED: true,
+    CANONICAL_CORRECTIONS_ENABLED: true,
+    EVIDENCE_REVIEW_ENABLED: true,
+    SCORING_V2_ENABLED: false,
+  }),
+}));
+vi.mock("~/lib/server/supabase", () => ({
+  createSupabaseAdminClient: vi.fn(),
+  createSupabaseServerClient: vi.fn(),
+}));
+import CanonicalResume from "~/routes/analysis.canonical";
+
+const id = (value: number) => `10000000-0000-4000-8000-${String(value).padStart(12, "0")}`;
+function sourceFixture() {
+  const context = {
+    id: id(1), ownerId: id(2), analysisId: id(3), sourceId: id(4),
+    inputSha256: "a".repeat(64), createdAt: "2026-11-13T00:00:00.000Z",
+    retentionPolicyId: "synthetic/1.0.0",
+  };
+  const envelope = DocumentEvidenceSchema.parse(reconcileDocumentEvidence(context, buildNativeEvidence([
+    "Experience\nEmployer: Synthetic North Labs\nRole: Engineer\nDates: 2020 - 2022\nEmployer: Synthetic South Labs\nRole: Analyst\nDates: 2021 - 2023",
+  ])));
+  const source = {
+    ownerId: context.ownerId, organizationId: id(6), resumeId: id(5),
+    analysisId: context.analysisId, sourceId: context.sourceId,
+    attemptId: context.id, inputSha256: context.inputSha256,
+  };
+  const captured = {
+    reviewRevision: 2, reviewHeadId: id(7), assignmentRevision: 1,
+    assignmentHeadId: id(8), associationRevision: 0, associationHeadId: null,
+    canonicalHeadId: null,
+  };
+  const rpc = vi.fn().mockResolvedValue({ data: {
+    schemaVersion: "grouped-original-read/1.0.0", status: "available",
+    compatibilityReady: true, canCommit: false, freshImportAllowed: true,
+    scoringEligible: false, source, captured,
+    attempt: { id: context.id, attemptNumber: 1, envelope },
+  }, error: null });
+  return { envelope, source, captured, rpc };
+}
+afterEach(() => cleanup());
+
+describe("grouped original import in the actual canonical page", () => {
+  it("shows unverified employment relationships from the real owned workspace DTO", async () => {
+    const fixture = sourceFixture();
+    const groupedOriginal = await loadGroupedOriginalWorkspace({ rpc: fixture.rpc }, id(3), id(2));
+    expect(groupedOriginal.state).toBe("available");
+    if (groupedOriginal.state !== "available") throw Error("EXPECTED_OWNED_WORKSPACE");
+    expect(groupedOriginal.groups).toHaveLength(2);
+    expect(groupedOriginal.canPreview).toBe(true);
+    expect(groupedOriginal.canCommit).toBe(false);
+    const router = createMemoryRouter([{
+      path: "/analysis/:id/canonical",
+      loader: () => ({
+        analysisId: id(3), resumeId: id(5), current: null, headId: null,
+        history: [], nextOffset: null, comparison: null, scoringEligible: false,
+        formKey: id(10), factKeys: {}, retainedKeys: {}, restoreKey: id(11),
+        scoringDiagnosticsEnabled: false, groupedOwnerId: id(2), groupedOriginal,
+      }),
+      Component: CanonicalResume,
+    }], { initialEntries: [`/analysis/${id(3)}/canonical`] });
+    render(<RouterProvider router={router} />);
+    expect(await screen.findByRole("button", { name: "Import resume for review" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Review possible employment entries" })).toBeTruthy();
+  });
+});

@@ -1,0 +1,98 @@
+{
+  "recordedAt": "2026-11-06T06:38:29.426327+00:00",
+  "scope": "Missing applicable independent non-Docker CI checks on root; not composite verify:ci acceptance",
+  "status": "selected_checks_passed",
+  "node": "22.23.4",
+  "commands": {
+    "npm audit signatures": {
+      "exitCode": 0,
+      "logSha256": "fe8582dc8c6b844de650e197eec07ec38646db5f8b60d98c5e997895fca7544f"
+    },
+    "scan:secrets": {
+      "exitCode": 0,
+      "logSha256": "134b24e39742ef1b767c6994f74ac31771e75232607bcee78499fefb4a1f4d7f"
+    },
+    "check:alerts": {
+      "exitCode": 0,
+      "logSha256": "41a7189f0a76f13cc6a66255b1db74cf27e9afa9090b16854a50f4929fdd0c7a"
+    },
+    "check:container": {
+      "exitCode": 0,
+      "logSha256": "8dba541bb02f629442b22c886936e080a9451f534476e6c903d5b8a641ceba64"
+    },
+    "test:load": {
+      "exitCode": 0,
+      "logSha256": "0d4c1d0f8704e71710652fc2df86d3ae3d4a55e46e9f4bc368898f2c8926aacb"
+    },
+    "test:restore": {
+      "exitCode": 0,
+      "logSha256": "6b63eaa3ec10f945726c4c44ed2a04dabf5b85e7dc9b85555de2d8f4e54fb818"
+    },
+    "benchmark:phase5": {
+      "exitCode": 0,
+      "logSha256": "456b56e00705b9209842043652940fced6bf82352d50c0773e580e3ba8151733"
+    },
+    "benchmark:job-intelligence": {
+      "exitCode": 0,
+      "logSha256": "5882851fd1d417677d01d569b1b64ebcf89efb6c92137168c5c622de046be08a"
+    },
+    "benchmark:scoring-validity": {
+      "exitCode": 0,
+      "logSha256": "fc17c75baebe4f448a88b9f5578b8538b12a9ed88895227584395ebd628c281b"
+    },
+    "benchmark:writer-grounding": {
+      "exitCode": 0,
+      "logSha256": "83307ded216cee4b2376ea0cca745c8806375bea1e5e10ef96d0d4eba4d5d8f0"
+    },
+    "benchmark:render-parity": {
+      "exitCode": 0,
+      "logSha256": "bb53b1450a84ada76ebc22e5455615619767fffe896dc29f3be1df878b9650ba"
+    }
+  },
+  "registryIntegrity": {
+    "auditedPackages": 463,
+    "verifiedSignatures": 463,
+    "verifiedAttestations": 141
+  },
+  "supplementalSecretScan": {
+    "policy": "same canonical OpenAI/Supabase key-shaped regexes; no values disclosed",
+    "gitAwareTextFilesScanned": 926,
+    "binaryFilesSkipped": 60,
+    "unreadableFiles": 0,
+    "findings": [],
+    "ignoredFilesExcluded": true
+  },
+  "semantics": {
+    "check:container": "Static app Dockerfile/worker Dockerfile policy only; not compiler-image containment proof",
+    "test:load": "Pure deterministic synthetic simulation, not measured running service load",
+    "test:restore": "Fixture manifest roundtrip, not actual hosted database restoration",
+    "benchmarks": "Engineering synthetic/default modes; release modes and representative validity not claimed"
+  },
+  "omissions": {
+    "verify:ci": "Not run literally; default broad browser configuration loads .env and enables traces; upstream CI starts/resets Docker Supabase, forbidden for this task",
+    "default test:e2e": "Excluded broad unisolated browser flow; dedicated current-candidate browser suites separately coordinated",
+    "test:db and local Supabase CI jobs": "Forbidden database-container/reset operations not executed",
+    "benchmark:native-layout": "Not separately repeated: identical test file is covered by integrated application unit suite",
+    "npm ci": "Not repeated: root owns reviewed dependency installation and lockfile, signatures/resolution/audits separately verified"
+  },
+  "sourceBindings": {
+    ".github/workflows/ci.yml": "1a7023bca5d6409807f1f80d5ebfd0ae3d1ddbb2d05c7a1336fc526534d6e2c1",
+    "playwright.config.ts": "896e0ce16c2916a924f0255ef153e66578bdbc004ae8fac15c28a01fd37f475f",
+    "scripts/check-container.mjs": "d700e8b57213d272a6718589fd2c35dad5c64184e42e147e402389da46bb6fae",
+    "scripts/validate-alerts.mjs": "02507fa7915d0176d159aca620193ea50a19b559c05e2e398bbaeedacd080dd6",
+    "scripts/load-test.ts": "5f6c2503509092f7cdb0a3c885ef730cf8349c3a75e5d1c324e25e092902f5ad",
+    "scripts/verify-restore.ts": "564d54caa931f789d63f47a88de6e039244c5f82dd6e868c39652ad5a27dfff1",
+    "scripts/benchmark-phase5.ts": "f654a4c82cd105091abbd721142da37e41a5093154d11575db2c09dc37211f8e",
+    "scripts/benchmark-job-intelligence.ts": "95c74feb9698098354625ecc0865d71eeaba28e9b9b95338586bb37f9565e9df",
+    "scripts/benchmark-scoring-validity.ts": "2a532e2bd10abb31a431e83208e7c38c305b95418d87a1565fc808f22deca434",
+    "scripts/benchmark-writer-grounding.ts": "a07e5e1e740f7952b25ca900bdfee89b7f6fb014e867ddc1b423abfddaa64ab6",
+    "scripts/benchmark-render-parity.ts": "02ada4091d4b0e6356cab25916147a0868a267f88b7d6181f9018bd28e89023a",
+    "Dockerfile": "64bc127fbc50f84362f667773836a6dc802bd33368586f573ac447f0a70db679",
+    "Dockerfile.worker": "89c63878d89a76a4210476411c5c147fa524edfcf7ac3ffb749be84dab7eda75",
+    "package.json": "9c03153541f136a35fa6af1c827607c576eecd251db0b28af1634e26c8f57108",
+    "package-lock.json": "d190bf3f360b0b2c4a309853ae00c19cbd39e1e58458e5730fda4a626a80d3a9"
+  },
+  "packageNote": "Current package.json additionally has root-owned script-only render alias/quality-target additions; dependencies and lock resolution unchanged by those additions",
+  "noDockerOrDatabaseOrProviderCalls": true,
+  "secretValuesDisclosed": false
+}

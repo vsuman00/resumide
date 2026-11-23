@@ -1,0 +1,243 @@
+{
+  "policyVersion": "latex-source/1.0.0",
+  "imageId": "sha256:8f7cbabfb247412220b1fa3b27aa9dff8e8c7c316173c0edad6b7690ce082fb8",
+  "sourceHashes": {
+    "app/lib/server/latex-source.ts": "10e3975858dbd91a7de04724d2cf452d358364ce11cf840aaa0bbd9b3496116f",
+    "app/lib/server/latex-sandbox.ts": "e7b0b41aee2d83553c29437264524cf71f4fbb9a6bf8b1f760e4041d5eea2477",
+    "scripts/latex-runtime/Dockerfile": "e4e69ab227e8a129308976736f2f179233c97c1375007a7a9096642c8f1268e2",
+    "scripts/latex-runtime/landlock.c": "6a7e52ea8aff6893084b1df11ebcdff8aa0bec1e1b4a7d14cbdb29ec009e4fd9",
+    "scripts/latex-runtime/supervisor.py": "c77987e4497a0a08b8c8ae0d110a2654821fab3d235419e885013a6b76049ada",
+    "scripts/latex-runtime/inspect_pdf.py": "abebf24292b7c591758c818994ddee65db475f7fa1fba6ab81cd9d2ca906e152",
+    "scripts/latex-runtime/build-closure.py": "8bb06bc086b1a61cd51941e7ac505f5610d2330a1712174e73f989a64a45cd5a",
+    "scripts/latex-runtime/texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa",
+    "scripts/latex-runtime/requirements.lock": "6c3793776e6b3c3d9a955e11b1eb2de1f192aa0990305fef4bb065f70b402261"
+  },
+  "configuration": {
+    "user": "65532:65532",
+    "network": "none",
+    "memory": 536870912,
+    "memorySwap": 536870912,
+    "cpus": 2000000000,
+    "pids": 64,
+    "readOnly": true,
+    "mounts": [],
+    "security": [
+      "no-new-privileges"
+    ],
+    "logDriver": "none"
+  },
+  "limits": {
+    "sourceBytes": 49152,
+    "pdfBytes": 5242880,
+    "pages": 10,
+    "timeoutMs": 20000,
+    "concurrency": 2
+  },
+  "checks": [
+    {
+      "name": "actual-landlock-rights-and-exec",
+      "abi": 8,
+      "deniedReads": 2,
+      "approvedRead": 1,
+      "scratchWrite": 1,
+      "outsideWriteDenied": 1,
+      "shellExecDenied": 1
+    },
+    {
+      "name": "image-runtime-and-closure-binding",
+      "runtimeHashes": {
+        "landlock.c": "6a7e52ea8aff6893084b1df11ebcdff8aa0bec1e1b4a7d14cbdb29ec009e4fd9",
+        "supervisor.py": "c77987e4497a0a08b8c8ae0d110a2654821fab3d235419e885013a6b76049ada",
+        "inspect_pdf.py": "abebf24292b7c591758c818994ddee65db475f7fa1fba6ab81cd9d2ca906e152",
+        "build-closure.py": "8bb06bc086b1a61cd51941e7ac505f5610d2330a1712174e73f989a64a45cd5a",
+        "texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa",
+        "requirements.lock": "6c3793776e6b3c3d9a955e11b1eb2de1f192aa0990305fef4bb065f70b402261"
+      },
+      "manifestSha256": "71b7e83e7bebfe4abd634188baeeea0d24cf933339d91742326dfe3ebeaa2e54",
+      "closureFiles": 1975,
+      "snapshot": "20261106T000000Z",
+      "packagesSha256": "b78970b9b379c65ac8e25e6c97402005f55de8377b52a0095245eb7b75894dec",
+      "requiredStyles": {
+        "amssymb.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amssymb.sty",
+          "sha256": "70838b061b56569dd3ed9f339b1bdd1c78ba185de49f27ceae331c97f48b5986"
+        },
+        "amsmath.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsmath.sty",
+          "sha256": "bcb034eb1b9ba90d62b9c33bb3d20ce3c906d00ae74a9f9baef81ddf14168458"
+        },
+        "latexsym.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/base/latexsym.sty",
+          "sha256": "8ea53855692048df939608c0f0d8f723eda51b72963704bd6e7d1aa9449424b3"
+        },
+        "enumitem.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/enumitem/enumitem.sty",
+          "sha256": "628ef5b6916c682f586a066e735ceb6191e73fe3216dfb2fb4aa8e2f4c819dba"
+        },
+        "geometry.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/geometry/geometry.sty",
+          "sha256": "d5d36ad74051ad36288242b51438e2d9a5db2bd6c063b9b5704d0931fbc9f439"
+        },
+        "hyperref.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/hyperref/hyperref.sty",
+          "sha256": "cc2605545116df536759dc2fba3ce8bbe9ae02d08ebf4789a970e1ec2ae3b082"
+        },
+        "titlesec.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/titlesec/titlesec.sty",
+          "sha256": "82a440377f90231b37433ae1ab7d8b16479be7bc47f302064b53e85d70d59a39"
+        },
+        "xcolor.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty",
+          "sha256": "478888f8e8f00345fd645b6cdd6fa7db1e9efdd6f585b25c89bb3665d9029295"
+        }
+      },
+      "requiredFonts": {
+        "computerModernMetrics": {
+          "files": 1,
+          "inventorySha256": "66dc46e9a3247e36fe2a7a619e8b5fdc41311cbbf0c1cd27e29b66fcce6bbf58"
+        },
+        "computerModernType1": {
+          "files": 1,
+          "inventorySha256": "6077d37ab1c2c8093cdde317a07b5cb4ab5ead0e9810b5730012c00ca5d36702"
+        },
+        "latinModernEncodings": {
+          "files": 34,
+          "inventorySha256": "78f119a7b3256c5f513ac1be83d82179c1761c7bfabad62bb34190592752702f"
+        },
+        "latinModernMetrics": {
+          "files": 596,
+          "inventorySha256": "216e7c2d57cb0ea7a8f675ceee766f758c41ef651d734624fed22929366f5e62"
+        },
+        "latinModernOpenType": {
+          "files": 72,
+          "inventorySha256": "914bdaefdccfff85edcd85a2727348057e845b4dcf877800d50db772e02ec5ff"
+        },
+        "latinModernType1": {
+          "files": 92,
+          "inventorySha256": "5f0049f3c4b89aafcdfdb9532e7da2dcad23e47383d2f5d41d08ec5ecd0279bb"
+        }
+      },
+      "requiredRuntime": {
+        "/etc/ld.so.cache": "51838a00c9a88aca67281b45725a93868ff73999b160190b9ab6898a598afc32",
+        "/opt/latex/texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa",
+        "/var/lib/texmf/web2c/xetex/xelatex.fmt": "e1b6842eafb15d65df9f3df377d3c6849fe89388376a38d20bda2d63338522f9"
+      },
+      "requiredTransitiveFiles": {
+        "/etc/paperspecs": "d335af4a3d4a834d8b4156a8f7ae435a6463b78e83d34d774622b0aab3ae8962",
+        "/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty": "23e5277f81dc963963081c91b1f674055914bd2ab1b479c522ed3e747fa9d10e"
+      },
+      "engineLoaders": {
+        "/usr/bin/xetex": {
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1": "1b882eddacd494b060413a8aa4f0a4754ee3f84775e68cecbf8a86092b59cca6"
+        },
+        "/usr/bin/xdvipdfmx": {
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1": "1b882eddacd494b060413a8aa4f0a4754ee3f84775e68cecbf8a86092b59cca6"
+        }
+      }
+    },
+    {
+      "name": "maintained-parser-and-no-runtime-build-tools",
+      "parser": "pypdf",
+      "version": "6.21.4",
+      "legacyParserPresent": false,
+      "buildTools": {
+        "gcc": null,
+        "cc": null,
+        "make": null
+      }
+    },
+    {
+      "name": "actual-docker-network-and-resource-limits",
+      "networkErrno": 101,
+      "openFilesLimited": true,
+      "processesLimited": true,
+      "fileLimitBytes": 8388608,
+      "memoryChildReturn": -9,
+      "cpuChildReturn": -9,
+      "cpuUserSeconds": 10,
+      "tmpfsLimited": true
+    },
+    {
+      "name": "actual-pdf-parser-active-content-and-bounds",
+      "cases": 20,
+      "failures": []
+    },
+    {
+      "name": "real-macro-math-layout-pdf",
+      "pages": 2,
+      "pdfBytes": 14077,
+      "pdfSha256": "d649b6b2bedbd7622f95a919e994b40ece49c1df268bc1a4c98ba07756c32926",
+      "sourceSha256": "7bb2f9d426e4bec5030315c809d823618e8ef65c876e927a26d040464f3901d0",
+      "taggedPages": 0,
+      "durationMs": 868
+    },
+    {
+      "name": "negative-wrapper-control",
+      "pass": true
+    },
+    {
+      "name": "direct-file-read",
+      "code": "compile_failed",
+      "durationMs": 466
+    },
+    {
+      "name": "constructed-file-read",
+      "code": "compile_failed",
+      "durationMs": 474
+    },
+    {
+      "name": "outside-write",
+      "code": "compile_failed",
+      "durationMs": 469
+    },
+    {
+      "name": "unsupported-package",
+      "code": "compile_failed",
+      "durationMs": 455
+    },
+    {
+      "name": "unsafe-pdf-link",
+      "code": "output_invalid",
+      "durationMs": 656
+    },
+    {
+      "name": "unbounded-pages",
+      "code": "output_invalid",
+      "durationMs": 472
+    },
+    {
+      "name": "overfull-layout",
+      "code": "layout_overflow",
+      "durationMs": 467
+    },
+    {
+      "name": "recursive-macro",
+      "code": "compile_failed",
+      "durationMs": 10338
+    },
+    {
+      "name": "cpu-loop",
+      "code": "compile_failed",
+      "durationMs": 10329
+    },
+    {
+      "name": "production-cancel-cleanup",
+      "pass": true
+    },
+    {
+      "name": "active-production-cancellation-cleanup",
+      "pass": true
+    },
+    {
+      "name": "real-paused-worker-wall-timeout-cleanup",
+      "pass": true
+    },
+    {
+      "name": "actual-two-active-admission-and-cleanup",
+      "pass": true
+    }
+  ],
+  "checksExecuted": 20,
+  "accessibility": "Structural inspection only; assistive-technology and PDF/UA acceptance unrun",
+  "evidence": "Local synthetic engineering; no production or security-owner acceptance"
+}

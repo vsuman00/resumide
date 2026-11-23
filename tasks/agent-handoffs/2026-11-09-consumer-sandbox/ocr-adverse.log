@@ -1,0 +1,84 @@
+
+> test:ocr:adverse
+> node node_modules/vite-node/vite-node.mjs --config vitest.config.ts scripts/verify-ocr-adverse.ts sha256:ab1d5c0fab7533a23584bd533df8459fdf2090fb27fbabe3355bbc7fb750b58c
+
+{"status":"adverse_receipt_pre_execution","receiptSha256":"60db5096329eda600b412b6928170004cb1f0bc117ab9f41f2ebdeeed26ca682","imageId":"sha256:ab1d5c0fab7533a23584bd533df8459fdf2090fb27fbabe3355bbc7fb750b58c","config":{"psm":3,"maxDpi":150},"sources":[{"id":"encrypted-valid-blank-v1","properties":{"encryption":"standard_r2_empty_user_password"},"sourceSha256":"a8df45c54164e3c8d5adf3e6751c48ad1369cfe7cda2323e7190af0a83e39994","datasetType":"synthetic_engineering_only","partition":"development","annotatorType":"ai","humanValidation":"not_evaluated","representativeValidity":"not_evaluated","persistedRawAssets":false},{"id":"oversized-embedded-raster-v1","properties":{"width":4000,"height":4000,"sourcePixels":16000000,"decodedRasterBytes":16000000},"sourceSha256":"9b7b7af1ef915d37202708840805c38568580c5f1e57bc5a2afb7453b30fb4c8","datasetType":"synthetic_engineering_only","partition":"development","annotatorType":"ai","humanValidation":"not_evaluated","representativeValidity":"not_evaluated","persistedRawAssets":false}]}
+{
+  "status": "adverse_runtime_verified",
+  "receiptSha256": "60db5096329eda600b412b6928170004cb1f0bc117ab9f41f2ebdeeed26ca682",
+  "completedAt": "2026-11-09T07:25:52.080Z",
+  "datasetType": "synthetic_engineering_only",
+  "humanValidation": "not_evaluated",
+  "representativeValidity": "not_evaluated",
+  "persistedRawAssets": false,
+  "calibration": "not_evaluated",
+  "productionEnablement": false,
+  "automaticRetries": 0,
+  "results": [
+    {
+      "id": "encrypted-valid-blank-v1",
+      "sourceSha256": "a8df45c54164e3c8d5adf3e6751c48ad1369cfe7cda2323e7190af0a83e39994",
+      "sourceBytes": 651,
+      "properties": {
+        "encryption": "standard_r2_empty_user_password"
+      },
+      "status": "failed",
+      "errorCode": "engine_failure",
+      "wallMs": 295.06829199999993,
+      "createMs": 51.172124999999994,
+      "attachMs": 120.03283400000004,
+      "terminalState": {
+        "exitCode": 1,
+        "oomKilled": false,
+        "running": false
+      },
+      "isolation": "verified",
+      "cleanup": "verified",
+      "nativePreservation": "verified",
+      "startupScope": "new_container_create_and_attach_wall_times_cached_image_not_host_or_engine_cold_start",
+      "resourceUsage": null,
+      "failedResourceReason": "failed_attempt_cpu_and_memory_unmeasured",
+      "renderedPixels": null
+    },
+    {
+      "id": "oversized-embedded-raster-v1",
+      "sourceSha256": "9b7b7af1ef915d37202708840805c38568580c5f1e57bc5a2afb7453b30fb4c8",
+      "sourceBytes": 16249,
+      "properties": {
+        "width": 4000,
+        "height": 4000,
+        "sourcePixels": 16000000,
+        "decodedRasterBytes": 16000000
+      },
+      "status": "insufficient",
+      "errorCode": null,
+      "wallMs": 534.197666,
+      "createMs": 44.569582999999966,
+      "attachMs": 360.455375,
+      "terminalState": {
+        "exitCode": 0,
+        "oomKilled": false,
+        "running": false
+      },
+      "isolation": "verified",
+      "cleanup": "verified",
+      "nativePreservation": "verified",
+      "startupScope": "new_container_create_and_attach_wall_times_cached_image_not_host_or_engine_cold_start",
+      "resourceUsage": {
+        "kind": "child_process_rusage",
+        "cpuTimeMs": 252.44500000000002,
+        "maxChildRssBytes": 55169024,
+        "rendererCalls": 1,
+        "recognitionCalls": 1,
+        "containerMemoryPeak": {
+          "kind": "cgroup_v2_memory_peak",
+          "measuredThrough": "recognition_complete",
+          "valueBytes": 49643520,
+          "reason": null
+        }
+      },
+      "failedResourceReason": null,
+      "renderedPixels": 2103750
+    }
+  ]
+}

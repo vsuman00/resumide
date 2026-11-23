@@ -1,0 +1,11 @@
+# Phase7 application dependency remediation
+
+Status: application dependency audit CLEAN on the current source-bound candidate. Worker-image vulnerabilities and formal phase acceptance are separate. The [receipt](AA7_APPLICATION_REMEDIATION_20261106.json) binds package/lock/test hashes and actual command results.
+
+The original all-dependency audit returned seven moderate affected packages cascading from GHSA-g3hv-75wg-m249 in nested minimatch10.2.6. The [original raw report](AA7_APPLICATION_AUDIT_RAW_20261106.json) remains unchanged. Root reviewed a scoped override for typescript-estree to minimatch11.0.5, including its required helper package; unrelated ESLint minimatch3.1.5 paths remain. The audit's suggested top-level downgrade was not applied blindly.
+
+The new regression file uses the actual estree CommonJS dependency resolution and actual parseAndGenerateServices project services. It verifies hidden-file matching with dot:true, admits the explicit allowDefaultProject pattern with a working typechecker, and rejects a nonmatching hidden-file glob. Both tests pass, and synthetic temporary files/parser caches are cleaned in finally. The override had already been installed before this test ran; no pre-install red test is claimed. The advisory-bearing audit supplies the retained initial failure evidence.
+
+Post-fix `npm audit --json` and `npm audit --omit=dev --json` both returned exit0 with zero info/low/moderate/high/critical findings. `npm ls minimatch --all --json` returned exit0 with no invalid dependency problems. Exact outputs are retained in the [all-dependency audit](AA7_APPLICATION_AUDIT_FIXED_RAW_20261106.json), [production audit](AA7_APPLICATION_PRODUCTION_AUDIT_FIXED_RAW_20261106.json) and [resolution inventory](AA7_APPLICATION_MINIMATCH_RESOLUTION_20261106.json). No severity filter or advisory ignore was introduced.
+
+Final root `npm run verify` returned exit0 under Node22.23.4: 146 test files / 1,205 tests, formatting, lint, types, web and worker builds. Existing non-fatal Vite/dependency warnings remain. These checks cover the application dependency change; they do not verify a proposed new-base compiler image. No DB, provider, Docker database, deployment or public testing ran. Registry audit evidence is bounded to known advisories at its captured timestamp and is not a guarantee against future vulnerabilities.

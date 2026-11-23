@@ -1,0 +1,152 @@
+{
+  "legacy-red": {
+    "args": [
+      "--no-warnings",
+      "--experimental-loader",
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-grouped-original-32v0hoeb/ts-loader.mjs",
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-grouped-original-32v0hoeb/legacy-red.mjs"
+    ],
+    "expectedExit": 1
+  },
+  "initial-green": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "--no-cache"
+    ],
+    "expectedExit": 0
+  },
+  "affected": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "tests/unit/canonical-resume-schema.test.ts",
+      "--no-cache"
+    ],
+    "expectedExit": 0
+  },
+  "types": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-grouped-original-32v0hoeb/types.mjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/canonical-grouped-import.ts",
+      "app/lib/server/canonical-resume-schema.ts",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "tests/unit/canonical-resume-schema.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/canonical-grouped-import.ts",
+      "app/lib/server/canonical-resume-schema.ts",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "tests/unit/canonical-resume-schema.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "affected-retry": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "tests/unit/canonical-resume-schema.test.ts",
+      "--no-cache"
+    ],
+    "expectedExit": 0
+  },
+  "feature-final": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "--no-cache"
+    ],
+    "expectedExit": 0
+  },
+  "final-retention": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "--no-cache",
+      "-t",
+      "retains every unselected contact, section, entry, bullet and fact"
+    ],
+    "expectedExit": 0
+  },
+  "final-types": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-grouped-original-32v0hoeb/types.mjs"
+    ],
+    "expectedExit": 0
+  },
+  "final-lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/canonical-grouped-import.ts",
+      "app/lib/server/canonical-resume-schema.ts",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "tests/unit/canonical-resume-schema.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "final-format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/canonical-grouped-import.ts",
+      "app/lib/server/canonical-resume-schema.ts",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "tests/unit/canonical-resume-schema.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "ocr-boundary": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "--no-cache",
+      "-t",
+      "real OCR selection boundary"
+    ],
+    "expectedExit": 0
+  },
+  "ocr-types": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-grouped-original-32v0hoeb/types.mjs"
+    ],
+    "expectedExit": 0
+  },
+  "ocr-lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/canonical-grouped-import.ts",
+      "app/lib/server/canonical-resume-schema.ts",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "tests/unit/canonical-resume-schema.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "ocr-format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/canonical-grouped-import.ts",
+      "app/lib/server/canonical-resume-schema.ts",
+      "tests/unit/canonical-grouped-import.test.ts",
+      "tests/unit/canonical-resume-schema.test.ts"
+    ],
+    "expectedExit": 0
+  }
+}

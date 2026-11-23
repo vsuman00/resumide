@@ -1,11 +1,21 @@
 import { Form, Link, useNavigation } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { checkWritingQuality } from "~/lib/writing-quality";
-import type { loadAuthoring } from "~/lib/server/authoring-repository";
-import { QUESTIONS, CLARIFICATION_KINDS } from "~/lib/authoring-ui";
+import { buildProjectedWritingComparison } from "~/lib/writing-comparison";
+import WritingDiagnosticComparison from "~/components/WritingDiagnosticComparison";
+import type {
+  ClarificationPreview,
+  loadAuthoring,
+} from "~/lib/server/authoring-repository";
+import {
+  QUESTIONS,
+  CLARIFICATION_KINDS,
+  describeWritingPattern,
+} from "~/lib/authoring-ui";
 type Model = Awaited<ReturnType<typeof loadAuthoring>>;
 export type AuthoringFeedback = {
-  error?: string;
+  error?: string | null;
+  preview?: ClarificationPreview;
   submitted?: {
     action: string;
     expectedVersionId: string;
@@ -17,22 +27,54 @@ export type AuthoringFeedback = {
   };
 };
 
+function BoundAcknowledgement({ name }: { name?: string }) {
+  const [checked, setChecked] = useState(false);
+  useEffect(() => {
+    const resetRestoredAcknowledgement = (event: PageTransitionEvent) => {
+      if (event.persisted) setChecked(false);
+    };
+    window.addEventListener("pageshow", resetRestoredAcknowledgement);
+    return () =>
+      window.removeEventListener("pageshow", resetRestoredAcknowledgement);
+  }, []);
+  return (
+    <input
+      type="checkbox"
+      name={name}
+      value="true"
+      required
+      checked={checked}
+      onChange={(event) => setChecked(event.target.checked)}
+    />
+  );
+}
+
+function ReviewAcknowledgement({
+  binding,
+  name,
+}: {
+  binding: string;
+  name?: string;
+}) {
+  return <BoundAcknowledgement key={binding} name={name} />;
+}
+
 function ClarificationInputs({
   kind,
   initialValue,
+  onDraftChange,
 }: {
   kind: (typeof CLARIFICATION_KINDS)[number];
   initialValue: string;
+  onDraftChange: () => void;
 }) {
   const [value, setValue] = useState(initialValue);
-  const [confirmed, setConfirmed] = useState(false);
   useEffect(() => {
     // A browser history restore can revive a whole page, including native form
     // values. A restored confirmation must never authorize a different draft.
     const resetRestoredDraft = (event: PageTransitionEvent) => {
       if (event.persisted) {
         setValue("");
-        setConfirmed(false);
       }
     };
     window.addEventListener("pageshow", resetRestoredDraft);
@@ -45,21 +87,13 @@ function ClarificationInputs({
         id={`question-${kind}`}
         name="value"
         value={value}
-        onChange={(event) => setValue(event.target.value)}
+        onChange={(event) => {
+          setValue(event.target.value);
+          onDraftChange();
+        }}
         maxLength={300}
         required
       />
-      <label>
-        <input
-          type="checkbox"
-          name="confirmation"
-          value="true"
-          required
-          checked={confirmed}
-          onChange={(event) => setConfirmed(event.target.checked)}
-        />
-        I confirm this answer is accurate.
-      </label>
     </>
   );
 }
@@ -76,6 +110,53 @@ export default function AuthoringWorkspace({
   const busy = useNavigation().state !== "idle";
   const base = `/analysis/${analysisId}`,
     doc = model.document;
+  const acknowledgementContext = JSON.stringify([
+    analysisId,
+    doc.ownerId,
+    doc.organizationId,
+    doc.resumeId,
+    doc.analysisId,
+    doc.versionId,
+    doc.sourceEvidenceVersionId,
+    doc.inputSha256,
+  ]);
+  const preview = feedback?.preview;
+  const previewBinding = preview
+    ? JSON.stringify([acknowledgementContext, preview])
+    : null;
+  const [invalidatedPreview, setInvalidatedPreview] = useState<string | null>(
+    null,
+  );
+  const previewCurrent = Boolean(
+    preview &&
+    model.editable &&
+    preview.schemaVersion === "clarification-preview/1.0.0" &&
+    preview.command.expectedVersionId === doc.versionId &&
+    preview.command.targetFactId === model.selectedFactId &&
+    doc.facts.find((fact) => fact.id === preview.command.targetFactId)
+      ?.value === preview.beforeValue &&
+    /^[a-f0-9]{64}$/u.test(preview.reviewedValueHash) &&
+    invalidatedPreview !== previewBinding,
+  );
+  const previousFeedback = useRef<AuthoringFeedback | undefined>(undefined);
+  const errorMessage = useRef<HTMLParagraphElement>(null);
+  const previewHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (busy || previousFeedback.current === feedback) return;
+
+    previousFeedback.current = feedback;
+    if (feedback?.error) errorMessage.current?.focus();
+    else if (previewCurrent) previewHeading.current?.focus();
+  }, [busy, feedback, previewCurrent]);
+
+  const submitted = feedback?.submitted;
+  const retainedAnswer =
+    feedback?.error &&
+    model.editable &&
+    (submitted?.action === "clarify" ||
+      submitted?.action === "preview_clarification") &&
+    submitted.targetFactId === model.selectedFactId &&
+    CLARIFICATION_KINDS.find((kind) => kind === submitted.questionKind);
   const linked = new Set(
     doc.sections.flatMap((s) => [
       ...s.factIds,
@@ -103,6 +184,8 @@ export default function AuthoringWorkspace({
   const rendered = new Set<string>();
   const fields = (action: string, target: string) => {
     const retry =
+      action !== "confirm" &&
+      action !== "preview_clarification" &&
       feedback?.submitted?.action === action &&
       (feedback.submitted.targetFactId === target ||
         `${feedback.submitted.targetFactId}:${feedback.submitted.questionKind}` ===
@@ -158,17 +241,22 @@ export default function AuthoringWorkspace({
           extraction accuracy.
         </p>
         {feedback?.error && (
-          <p role="alert">
+          <p ref={errorMessage} role="alert" tabIndex={-1}>
             {feedback.error} Your submitted correction is retained below. Review
             the latest version before resolving a stale save.
           </p>
+        )}
+        {retainedAnswer && (
+          <a href={`#question-${retainedAnswer}`}>
+            Return to your clarification answer
+          </a>
         )}
         {feedback?.submitted?.value && (
           <blockquote aria-label="Your submitted correction">
             {feedback.submitted.value}
           </blockquote>
         )}
-        {feedback?.submitted && (
+        {feedback?.error && feedback.submitted && (
           <Form method="post" action={`${base}/author`}>
             {Object.entries(feedback.submitted)
               .filter(([, v]) => v !== undefined)
@@ -278,7 +366,8 @@ export default function AuthoringWorkspace({
                           id={`author-fact-${fact.id}`}
                           name="value"
                           defaultValue={
-                            feedback?.submitted?.targetFactId === fact.id
+                            feedback?.submitted?.action === "edit" &&
+                            feedback.submitted.targetFactId === fact.id
                               ? feedback.submitted.value
                               : fact.value
                           }
@@ -318,9 +407,19 @@ export default function AuthoringWorkspace({
                                 value={feedback.submitted.value}
                               />
                               <label>
-                                <input type="checkbox" required />I reviewed the
-                                current value and want to save my retained
-                                correction.
+                                <ReviewAcknowledgement
+                                  binding={JSON.stringify([
+                                    acknowledgementContext,
+                                    "recovery",
+                                    fact.id,
+                                    fact.value,
+                                    feedback.submitted.expectedVersionId,
+                                    feedback.submitted.idempotencyKey,
+                                    feedback.submitted.value,
+                                  ])}
+                                />
+                                I reviewed the current value and want to save my
+                                retained correction.
                               </label>
                               <button type="submit">
                                 Save reviewed correction against current version
@@ -389,10 +488,13 @@ export default function AuthoringWorkspace({
                   <Form
                     key={`${model.selectedFactId}:${kind}`}
                     method="post"
-                    action={`${base}/author`}
+                    action={`${base}/author?focus=${encodeURIComponent(model.selectedFactId!)}`}
                     autoComplete="off"
                   >
-                    {fields("clarify", `${model.selectedFactId}:${kind}`)}
+                    {fields(
+                      "preview_clarification",
+                      `${model.selectedFactId}:${kind}`,
+                    )}
                     <input
                       type="hidden"
                       name="targetFactId"
@@ -401,19 +503,90 @@ export default function AuthoringWorkspace({
                     <input type="hidden" name="questionKind" value={kind} />
                     <ClarificationInputs
                       kind={kind}
+                      onDraftChange={() => {
+                        if (previewBinding)
+                          setInvalidatedPreview(previewBinding);
+                      }}
                       initialValue={
-                        feedback?.submitted?.action === "clarify" &&
-                        feedback.submitted.targetFactId ===
+                        preview?.command.targetFactId ===
                           model.selectedFactId &&
-                        feedback.submitted.questionKind === kind
-                          ? (feedback.submitted.value ?? "")
-                          : ""
+                        preview.command.questionKind === kind
+                          ? preview.command.value
+                          : ["clarify", "preview_clarification"].includes(
+                                feedback?.submitted?.action ?? "",
+                              ) &&
+                              feedback?.submitted?.targetFactId ===
+                                model.selectedFactId &&
+                              feedback?.submitted?.questionKind === kind
+                            ? (feedback.submitted.value ?? "")
+                            : ""
                       }
                     />
-                    <button type="submit">Save {kind} clarification</button>
+                    <button type="submit">Preview {kind} clarification</button>
                   </Form>
                 ))}
             </>
+          )}
+          {preview && (
+            <section aria-label="Clarification preview">
+              <h4 ref={previewHeading} tabIndex={-1}>
+                Review the complete fact before confirmation
+              </h4>
+              <p>{QUESTIONS[preview.command.questionKind]}</p>
+              <p>Answer: {preview.command.value}</p>
+              <p>Saved fact before this answer:</p>
+              <blockquote
+                style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+              >
+                {preview.beforeValue}
+              </blockquote>
+              <p>Complete fact to be saved:</p>
+              <blockquote
+                aria-label="Complete fact to confirm"
+                style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+              >
+                {preview.reviewedValue}
+              </blockquote>
+              <Link
+                to={`${base}/canonical?version=${encodeURIComponent(preview.command.expectedVersionId)}#fact-${encodeURIComponent(preview.command.targetFactId)}`}
+              >
+                Inspect the exact saved fact and version
+              </Link>
+              {!previewCurrent && (
+                <p role="status">
+                  The answer or resume context changed. Preview the answer again
+                  before confirming.
+                </p>
+              )}
+              <Form
+                method="post"
+                action={`${base}/author?focus=${encodeURIComponent(preview.command.targetFactId)}`}
+                onSubmit={(event) => {
+                  if (!previewCurrent) event.preventDefault();
+                }}
+              >
+                <fieldset disabled={!previewCurrent}>
+                  {Object.entries(preview.command).map(([name, value]) => (
+                    <input key={name} type="hidden" name={name} value={value} />
+                  ))}
+                  <input
+                    type="hidden"
+                    name="reviewedValueHash"
+                    value={preview.reviewedValueHash}
+                  />
+                  <label>
+                    <ReviewAcknowledgement
+                      name="confirmation"
+                      binding={JSON.stringify([previewBinding, previewCurrent])}
+                    />
+                    I reviewed and confirm the complete fact above.
+                  </label>
+                  <button type="submit" disabled={!previewCurrent}>
+                    Confirm complete fact
+                  </button>
+                </fieldset>
+              </Form>
+            </section>
           )}
           {model.patches.map((patch) => (
             <article key={patch.id} className="account-card">
@@ -423,6 +596,21 @@ export default function AuthoringWorkspace({
                 uncalibrated.
               </p>
               <p>{patch.rationale}</p>
+              <p>{describeWritingPattern(patch.pattern)}</p>
+              {doc.facts.find((f) => f.id === patch.targetFactId)!.value !==
+              patch.operations[0].value ? (
+                <p>
+                  These are structural wording changes using the same bound
+                  fact, not added qualification evidence.
+                </p>
+              ) : (
+                <p>
+                  Current wording is retained; no wording change is proposed
+                  yet. Clarify only details you know; unknown answers may remain
+                  unanswered. A measurement is not required to use the
+                  metric-free alternatives.
+                </p>
+              )}
               <p>
                 Factual strength: candidate-declared; domain quality needs
                 review.
@@ -435,7 +623,52 @@ export default function AuthoringWorkspace({
                   <li key={warning}>{warning}</li>
                 ))}
               </ul>
-              <blockquote>{patch.operations[0].value}</blockquote>
+              <p>Complete current wording:</p>
+              <blockquote
+                aria-label="Complete current wording"
+                style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+              >
+                {doc.facts.find((f) => f.id === patch.targetFactId)!.value}
+              </blockquote>
+              <p>
+                {doc.facts.find((f) => f.id === patch.targetFactId)!.value !==
+                patch.operations[0].value
+                  ? "Proposed wording (not saved):"
+                  : "Retained wording (no change to save yet):"}
+              </p>
+              <blockquote
+                aria-label="Complete proposed wording"
+                style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
+              >
+                {patch.operations[0].value}
+              </blockquote>
+              <details>
+                <summary>
+                  Unchanged fact binding and recorded provenance
+                </summary>
+                <p>Bound source fact IDs: {patch.sourceFactIds.join(", ")}</p>
+                <p>
+                  These IDs bind this proposal to the same fact; they are not
+                  independent verification of its claims. Recorded provenance
+                  may describe earlier wording. Candidate confirmation is a
+                  declaration, not independent source verification.
+                </p>
+                <Link
+                  to={`${base}/canonical?version=${encodeURIComponent(patch.baseVersionId)}#fact-${encodeURIComponent(patch.targetFactId)}`}
+                >
+                  Inspect the bound fact and recorded provenance
+                </Link>
+                <ul>
+                  {doc.facts
+                    .find((f) => f.id === patch.targetFactId)!
+                    .sources.map((source, index) => (
+                      <li key={index}>
+                        Recorded reference: attempt {source.attemptId}, span{" "}
+                        {source.spanId}, characters {source.start}–{source.end}.
+                      </li>
+                    ))}
+                </ul>
+              </details>
               {patch.clarificationNeeds.length > 0 && (
                 <p>
                   Clarification needed: {patch.clarificationNeeds.join(", ")}
@@ -445,6 +678,13 @@ export default function AuthoringWorkspace({
                 Projected before acceptance: unavailable. Actual after a saved
                 version: unavailable. Numeric delta: unavailable.
               </p>
+              <WritingDiagnosticComparison
+                comparison={buildProjectedWritingComparison({
+                  baseVersionId: patch.baseVersionId,
+                  fact: doc.facts.find((f) => f.id === patch.targetFactId)!,
+                  proposedValue: patch.operations[0].value,
+                })}
+              />
               {model.editable && (
                 <>
                   <Form method="post" action={`${base}/author`}>
@@ -455,11 +695,13 @@ export default function AuthoringWorkspace({
                       value={JSON.stringify(patch)}
                     />
                     <label>
-                      <input
-                        type="checkbox"
+                      <ReviewAcknowledgement
                         name="confirmation"
-                        value="true"
-                        required
+                        binding={JSON.stringify([
+                          acknowledgementContext,
+                          "accept",
+                          patch,
+                        ])}
                       />
                       I reviewed and confirm every proposed claim.
                     </label>

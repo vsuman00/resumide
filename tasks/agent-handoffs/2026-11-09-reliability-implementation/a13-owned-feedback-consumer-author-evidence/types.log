@@ -1,0 +1,148 @@
+[96mapp/root.tsx[0m:[93m23[0m:[93m56[0m - [91merror[0m[90m TS2322: [0mType '(_args: { request: Request; context: Readonly<RouterContextProvider>; }, next: () => Promise<Response>) => Promise<Response>' is not assignable to type 'CreateServerMiddlewareFunction<Info & { module: typeof import("/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/app/root"); matches: Matches; }>'.
+  Types of parameters '_args' and 'args' are incompatible.
+    Type 'ServerDataFunctionArgs<{ [x: string]: string | undefined; }>' is not assignable to type '{ request: Request; context: Readonly<RouterContextProvider>; }'.
+      Types of property 'context' are incompatible.
+        Type 'AppLoadContext' is missing the following properties from type 'Readonly<RouterContextProvider>': get, set
+
+[7m23[0m export const middleware: Route.MiddlewareFunction[] = [responseSecurity];
+[7m  [0m [91m                                                       ~~~~~~~~~~~~~~~~[0m
+[96mtests/components/CitedWritingSuggestions.test.tsx[0m:[93m276[0m:[93m27[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ scoreSemantics: string; overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string; }[]; }; content: { score: number; tips: { type: "good" | "improve"; tip: stri...' is not assignable to parameter of type '{ overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structure: { ...; }; skills: { ...; }; scoreSemantics?: "deter...'.
+  Types of property 'scoreSemantics' are incompatible.
+    Type 'string' is not assignable to type '"deterministic_baseline_no_model_ratings/1.0.0"'.
+
+[7m276[0m     visibleFeedbackGroups(f.feedback, false, provenance)
+[7m   [0m [91m                          ~~~~~~~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m101[0m:[93m17[0m - [91merror[0m[90m TS2352: [0mConversion of type '{ params: { id: string; }; request: Request; url: URL; }' to type 'CreateServerLoaderArgs<Info & { module: typeof import("/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/app/routes/resume"); matches: Matches; }>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Type '{ params: { id: string; }; request: Request; url: URL; }' is missing the following properties from type 'CreateServerLoaderArgs<Info & { module: typeof import("/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/app/routes/resume"); matches: Matches; }>': pattern, context
+
+[7m101[0m   return loader({
+[7m   [0m [91m                ~[0m
+[7m102[0m     params: { id: uuid(1) },
+[7m   [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[7m...[0m 
+[7m104[0m     url,
+[7m   [0m [91m~~~~~~~~[0m
+[7m105[0m   } as Parameters<typeof loader>[0]);
+[7m   [0m [91m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m111[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m111[0m   expect(result.data.result.feedback).toEqual(h.feedback);
+[7m   [0m [91m                ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m112[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m112[0m   expect(result.data).toHaveProperty(
+[7m   [0m [91m                ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m116[0m:[93m17[0m - [91merror[0m[90m TS2339: [0mProperty 'init' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'init' does not exist on type 'Response'.
+
+[7m116[0m   expect(result.init?.headers).toBeTruthy();
+[7m   [0m [91m                ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m312[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType '{ scoreSemantics: string; overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string; }[]; }; content: { score: number; tips: { type: "good" | "improve"; tip: stri...' is not assignable to type '{ overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structure: { ...; }; skills: { ...; }; scoreSemantics?: "deter...'.
+  Types of property 'scoreSemantics' are incompatible.
+    Type 'string' is not assignable to type '"deterministic_baseline_no_model_ratings/1.0.0"'.
+
+[7m312[0m     h.record.analysis_results.feedback = f.feedback;
+[7m   [0m [91m    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m313[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType '{ scoreSemantics: string; overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string; }[]; }; content: { score: number; tips: { type: "good" | "improve"; tip: stri...' is not assignable to type '{ overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structure: { ...; }; skills: { ...; }; scoreSemantics?: "deter...'.
+  Types of property 'scoreSemantics' are incompatible.
+    Type 'string' is not assignable to type '"deterministic_baseline_no_model_ratings/1.0.0"'.
+
+[7m313[0m     h.feedback = f.feedback;
+[7m   [0m [91m    ~~~~~~~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m316[0m:[93m20[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m316[0m       p = response.data.feedbackProvenance;
+[7m   [0m [91m                   ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m322[0m:[93m27[0m - [91merror[0m[90m TS7006: [0mParameter 't' implicitly has an 'any' type.
+
+[7m322[0m     expect(p.tips.filter((t) => t.category === "toneAndStyle")).toEqual([
+[7m   [0m [91m                          ~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m342[0m:[93m42[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ scoreSemantics: string; overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string; }[]; }; content: { score: number; tips: { type: "good" | "improve"; tip: stri...' is not assignable to parameter of type '{ overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structure: { ...; }; skills: { ...; }; scoreSemantics?: "deter...'.
+  Types of property 'scoreSemantics' are incompatible.
+    Type 'string' is not assignable to type '"deterministic_baseline_no_model_ratings/1.0.0"'.
+
+[7m342[0m     const groups = visibleFeedbackGroups(f.feedback, false, p);
+[7m   [0m [91m                                         ~~~~~~~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m371[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m371[0m     expect(response.data.result.feedback).toEqual(f.feedback);
+[7m   [0m [91m                    ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m376[0m:[93m42[0m - [91merror[0m[90m TS2339: [0mProperty 'init' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'init' does not exist on type 'Response'.
+
+[7m376[0m     const headers = new Headers(response.init?.headers);
+[7m   [0m [91m                                         ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m384[0m:[93m3[0m - [91merror[0m[90m TS2322: [0mType '{ scoreSemantics: string; overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string; }[]; }; content: { score: number; tips: { type: "good" | "improve"; tip: stri...' is not assignable to type '{ overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structure: { ...; }; skills: { ...; }; scoreSemantics?: "deter...'.
+  Types of property 'scoreSemantics' are incompatible.
+    Type 'string' is not assignable to type '"deterministic_baseline_no_model_ratings/1.0.0"'.
+
+[7m384[0m   h.record.analysis_results.feedback = structuredClone(f.feedback);
+[7m   [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m389[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m389[0m   expect(response.data.feedbackProvenance).toMatchObject({
+[7m   [0m [91m                  ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m394[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m394[0m   expect(response.data.result.feedback.toneAndStyle.tips[0].tip).toBe(
+[7m   [0m [91m                  ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m403[0m:[93m5[0m - [91merror[0m[90m TS2322: [0mType '{ scoreSemantics: string; overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string; }[]; }; content: { score: number; tips: { type: "good" | "improve"; tip: stri...' is not assignable to type '{ overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structure: { ...; }; skills: { ...; }; scoreSemantics?: "deter...'.
+  Types of property 'scoreSemantics' are incompatible.
+    Type 'string' is not assignable to type '"deterministic_baseline_no_model_ratings/1.0.0"'.
+
+[7m403[0m     h.record.analysis_results.feedback = f.feedback;
+[7m   [0m [91m    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m411[0m:[93m27[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m411[0m     expect((await load()).data.feedbackProvenance).toMatchObject({
+[7m   [0m [91m                          ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m448[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m448[0m   expect(response.data.feedbackProvenance).toMatchObject({
+[7m   [0m [91m                  ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m453[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m453[0m   expect(response.data.result.feedback).toEqual(h.feedback);
+[7m   [0m [91m                  ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m463[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m463[0m   expect((await load()).data.feedbackProvenance).toMatchObject({
+[7m   [0m [91m                        ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m478[0m:[93m3[0m - [91merror[0m[90m TS2322: [0mType '{ scoreSemantics: string; overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "improve"; tip: string; explanation: string; }[]; }; content: { score: number; tips: { type: "improve"; tip: string; explanation: string; }[]; }; s...' is not assignable to type '{ scoreSemantics: "deterministic_baseline_no_model_ratings/1.0.0"; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structure: { ...; }...'.
+  Types of property 'scoreSemantics' are incompatible.
+    Type 'string' is not assignable to type '"deterministic_baseline_no_model_ratings/1.0.0"'.
+
+[7m478[0m   p.compatibility.feedback = initialFeedbackPartialFeedback(f.d);
+[7m   [0m [91m  ~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m478[0m:[93m61[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ resultChecksum: string; score: number; parseView: ParseViewData; ruleTrace: RuleTrace[]; keywordCoverage: { taxonomyVersion: string; job: string[]; matched: string[]; missing: string[]; uncertain: string[]; evidence: MatchEvidence[]; }; ... 4 more ...; taxonomyVersion: string; }' is not assignable to parameter of type '{ resultChecksum: string; parserVersion: "parse-sim-v1"; rulesetVersion: "ats-rules-v4"; normalizerVersion: "normalizer-v1"; taxonomyVersion: "skills-taxonomy-v1"; score: number; parseView: { ...; }; ruleTrace: { ...; }[]; keywordCoverage: { ...; }; inputTextChecksum: string; }'.
+  Types of property 'parserVersion' are incompatible.
+    Type 'string' is not assignable to type '"parse-sim-v1"'.
+
+[7m478[0m   p.compatibility.feedback = initialFeedbackPartialFeedback(f.d);
+[7m   [0m [91m                                                            ~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m486[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m486[0m   expect(response.data.feedbackProvenance).toMatchObject({
+[7m   [0m [91m                  ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m492[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m492[0m   expect(response.data.qualitativeUnavailable).toBe(true);
+[7m   [0m [91m                  ~~~~[0m
+[96mtests/unit/initial-feedback-consumer.test.ts[0m:[93m493[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'data' does not exist on type 'Response | DataWithResponseInit<{ result: { feedback: { overallScore: number; ATS: { score: number; tips: { type: "good" | "improve"; tip: string; }[]; }; toneAndStyle: { score: number; tips: { type: "good" | "improve"; tip: string; explanation: string; quote?: string | undefined; }[]; }; content: { ...; }; structur...'.
+  Property 'data' does not exist on type 'Response'.
+
+[7m493[0m   expect(response.data.result.feedback.overallScore).toBe(
+[7m   [0m [91m                  ~~~~[0m
+{"roots":9,"sourceFiles":90,"diagnostics":26}

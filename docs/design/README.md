@@ -191,6 +191,8 @@ First visual order:
 
 Replace the large resume card grid with a responsive list or table. Each row shows resume name, target role/company, overall score, status, updated date, and overflow actions. On mobile, each row becomes a compact two-line item, not a decorative card.
 
+Pagination moves focus to the history heading, and changing the sort keeps focus on the select. Status labels use readable text in both themes. Chromium verified keyboard pagination and the original PDF action at 200% page zoom with synthetic accounts. [Zoom verification](../../tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-u19-history-source-browser-zoom.json)
+
 Empty state: a small 3D paper stack, `Run your first ATS visibility check`, a one-sentence explanation, and the Analyze Resume button.
 
 ### Sign in `/auth`
@@ -202,6 +204,7 @@ Purpose: establish trust and finish authentication with minimal friction.
 - Explain why sign-in is needed: durable private results and cross-device history.
 - Success state replaces the form with a clear email check state and resend timer.
 - Invalid or expired links offer resend, change email, and return actions.
+- Focus follows the sign-in outcome. An invalid email returns focus to the field. A resend failure focuses the service error and preserves the address for retry. An expired link or successful send focuses its heading. [W3C error identification](https://www.w3.org/WAI/WCAG22/Understanding/error-identification.html) · [W3C focus order](https://www.w3.org/WAI/WCAG22/Understanding/focus-order.html)
 
 ### Upload `/upload`
 
@@ -226,6 +229,7 @@ Purpose: reduce uncertainty during slow work and provide control.
 - Show last update time and `You can safely leave this page` when processing is durable.
 - Keep Cancel visible only while cancellation is valid.
 - Partial, failed, cancelled, rejected, and needs-OCR states each get distinct explanation and next action.
+- A status retry moves keyboard focus to the live status while the check runs. The next Tab can reach the evidence link once review is available. [Zoom verification](../../tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-u19-progress-browser-zoom.json)
 
 ### Result `/resume/:id`
 
@@ -255,6 +259,8 @@ Purpose: make sensitive controls clear and recoverable.
 - Explain retention and request consequences before actions.
 - Separate Export data and Delete account into distinct rows.
 - Deletion uses a confirmation dialog with re-authentication and explicit scope.
+- Focus starts on **Cancel** in the deletion dialog. Tab stays inside the dialog, and closing it returns focus to **Review deletion**. [W3C modal dialog pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
+- Chromium verified sign-in retry and both deletion dialog steps at 200% page zoom with simulated services. The tested retry and final deletion controls were visible at 320 CSS pixels. [Zoom verification](../../tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-u19-account-browser-zoom.json)
 - Request history uses a status list with submitted date, current state, and completion details.
 
 ### Error, 404, and expired session

@@ -1,0 +1,291 @@
+/** @vitest-environment jsdom */
+import { cleanup, render, screen, within } from "@testing-library/react";
+import { afterEach, expect, it } from "vitest";
+import WritingDiagnosticComparison from "../../app/components/WritingDiagnosticComparison";
+import type {
+  WritingComparison,
+  SavedWritingComparison,
+} from "../../app/lib/writing-comparison";
+
+afterEach(cleanup);
+const before = "40000000-0000-4000-8000-000000000001",
+  after = "40000000-0000-4000-8000-000000000002",
+  factId = "40000000-0000-4000-8000-000000000003";
+function fact(overrides: Partial<WritingComparison> = {}): WritingComparison {
+  return {
+    schemaVersion: "writing-comparison/1.0.0",
+    mode: "saved",
+    factId,
+    beforeVersionId: before,
+    afterVersionId: after,
+    changeKind: "wording_changed",
+    beforeWordCount: 4,
+    afterWordCount: 6,
+    wordCountDelta: 2,
+    beforeWarnings: ["Adjacent repeated words need review."],
+    afterWarnings: ["Review punctuation and sentence flow."],
+    newWarnings: ["Review punctuation and sentence flow."],
+    resolvedWarnings: ["Adjacent repeated words need review."],
+    beforeState: "candidate_confirmed",
+    afterState: "unconfirmed",
+    beforeSourceReferenceCount: 1,
+    afterSourceReferenceCount: 0,
+    beforeConfirmationRecorded: true,
+    afterConfirmationRecorded: false,
+    scoreValue: null,
+    scoreDelta: null,
+    qualificationCredit: "not_assessed",
+    ...overrides,
+  };
+}
+function saved(
+  overrides: Partial<SavedWritingComparison> = {},
+): SavedWritingComparison {
+  return {
+    schemaVersion: "saved-writing-comparison/1.0.0",
+    mode: "saved",
+    beforeVersionId: before,
+    afterVersionId: after,
+    beforeRevision: 2,
+    afterRevision: 7,
+    items: [fact()],
+    total: 1,
+    remainingCount: 0,
+    scoreValue: null,
+    scoreDelta: null,
+    qualificationCredit: "not_assessed",
+    ...overrides,
+  };
+}
+function show(comparison: WritingComparison | SavedWritingComparison) {
+  return render(<WritingDiagnosticComparison comparison={comparison} />);
+}
+it("labels projected wording as not saved without inheriting source or confirmation records", () => {
+  show(
+    fact({
+      mode: "projected",
+      afterVersionId: null,
+      afterState: "not_saved",
+      afterSourceReferenceCount: null,
+      afterConfirmationRecorded: null,
+    }),
+  );
+  const view = within(
+    screen.getByRole("region", {
+      name: "Projected writing observations (not saved)",
+    }),
+  );
+  expect(
+    view.getByText(
+      /Proposed text has no saved version, source references or confirmation/u,
+    ),
+  ).toBeTruthy();
+  expect(view.getByText(before, { exact: false })).toBeTruthy();
+  expect(view.queryByText(after, { exact: false })).toBeNull();
+  const table = view.getByRole("table", {
+    name: "Writing and record observations",
+  });
+  expect(within(table).getAllByText("Not saved")).toHaveLength(3);
+});
+it("shows text counts and distinct new/resolved warning observations without scoring them", () => {
+  show(fact());
+  const table = screen.getByRole("table", {
+    name: "Writing and record observations",
+  });
+  expect(
+    within(table).getByRole("row", { name: "Word count 4 6" }),
+  ).toBeTruthy();
+  expect(screen.getByText("Text word-count change: +2.")).toBeTruthy();
+  expect(
+    within(screen.getByRole("list", { name: "New warnings" })).getByText(
+      "Review punctuation and sentence flow.",
+    ),
+  ).toBeTruthy();
+  expect(
+    within(screen.getByRole("list", { name: "Resolved warnings" })).getByText(
+      "Adjacent repeated words need review.",
+    ),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(/Text counts and writing warnings are observations/u),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(/Numeric score and delta: unavailable/u),
+  ).toBeTruthy();
+  expect(screen.getByText(/Qualification credit: not assessed/u)).toBeTruthy();
+});
+it("uses actual saved pair references in either selected direction without claiming an accepted transition", () => {
+  const comparison = saved({
+    beforeVersionId: after,
+    afterVersionId: before,
+    beforeRevision: 7,
+    afterRevision: 2,
+    items: [fact({ beforeVersionId: after, afterVersionId: before })],
+  });
+  show(comparison);
+  expect(
+    screen.getByText(`Selected before: revision 7, version ${after}.`),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(`Selected after: revision 2, version ${before}.`),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(
+      /Comparison direction does not establish chronology or an accepted suggestion/u,
+    ),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(
+      /Recorded source references may describe earlier wording/u,
+    ),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(/A confirmation records a candidate declaration/u),
+  ).toBeTruthy();
+});
+it("describes record-only confirmation changes without claiming wording improvement", () => {
+  show(
+    saved({
+      items: [
+        fact({
+          changeKind: "record_only",
+          beforeWordCount: 4,
+          afterWordCount: 4,
+          wordCountDelta: 0,
+          beforeState: "unconfirmed",
+          afterState: "candidate_confirmed",
+          beforeConfirmationRecorded: false,
+          afterConfirmationRecorded: true,
+          beforeWarnings: [],
+          afterWarnings: [],
+          newWarnings: [],
+          resolvedWarnings: [],
+        }),
+      ],
+    }),
+  );
+  expect(
+    screen.getByText("Record changes only; wording unchanged"),
+  ).toBeTruthy();
+  expect(
+    screen.getByRole("row", {
+      name: "Confirmation record Not recorded Recorded",
+    }),
+  ).toBeTruthy();
+  expect(screen.getByText("Text word-count change: 0.")).toBeTruthy();
+});
+it.each<["added" | "removed", Partial<WritingComparison>]>([
+  [
+    "added",
+    {
+      beforeWordCount: null,
+      wordCountDelta: null,
+      beforeState: null,
+      beforeSourceReferenceCount: null,
+      beforeConfirmationRecorded: null,
+    },
+  ],
+  [
+    "removed",
+    {
+      afterWordCount: null,
+      wordCountDelta: null,
+      afterState: null,
+      afterSourceReferenceCount: null,
+      afterConfirmationRecorded: null,
+    },
+  ],
+])(
+  "labels %s claims as absent rather than pretending a zero count or inherited record",
+  (changeKind, fields) => {
+    show(saved({ items: [fact({ changeKind, ...fields })] }));
+    expect(
+      screen.getByText(
+        changeKind === "added"
+          ? "Fact added to this selected version"
+          : "Fact absent from this selected version",
+      ),
+    ).toBeTruthy();
+    expect(screen.getAllByRole("cell", { name: "Absent" })).toHaveLength(4);
+    expect(
+      screen.getByText(
+        "Text word-count change: unavailable when a fact is absent.",
+      ),
+    ).toBeTruthy();
+  },
+);
+it("keeps no-change previews projected and same-version saved comparisons honest", () => {
+  const { rerender } = show(
+    fact({
+      mode: "projected",
+      afterVersionId: null,
+      changeKind: "unchanged",
+      afterState: "not_saved",
+      afterSourceReferenceCount: null,
+      afterConfirmationRecorded: null,
+      afterWordCount: 4,
+      wordCountDelta: 0,
+    }),
+  );
+  expect(screen.getByText("Wording unchanged")).toBeTruthy();
+  rerender(
+    <WritingDiagnosticComparison
+      comparison={saved({
+        beforeVersionId: before,
+        afterVersionId: before,
+        beforeRevision: 2,
+        afterRevision: 2,
+        items: [],
+        total: 0,
+        remainingCount: 0,
+      })}
+    />,
+  );
+  expect(
+    screen.getByText("No fact changes in the selected saved pair."),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(`Selected after: revision 2, version ${before}.`),
+  ).toBeTruthy();
+});
+it("shows the complete remaining count alongside the bounded diagnostic rows", () => {
+  const items = Array.from({ length: 50 }, (_, i) =>
+    fact({
+      factId: `40000000-0000-4000-8000-${String(i + 10).padStart(12, "0")}`,
+    }),
+  );
+  show(saved({ items, total: 53, remainingCount: 3 }));
+  expect(
+    screen.getAllByRole("table", { name: "Writing and record observations" }),
+  ).toHaveLength(50);
+  expect(
+    screen.getByText(
+      "Showing writing observations for 50 of 53 changed facts.",
+    ),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(
+      "3 more changed facts remain in the complete fact comparison.",
+    ),
+  ).toBeTruthy();
+});
+it("has unique region labels and no mutation controls or qualification promises", () => {
+  const { container } = render(
+    <>
+      <WritingDiagnosticComparison comparison={saved()} />
+      <WritingDiagnosticComparison comparison={saved()} />
+    </>,
+  );
+  const regions = screen.getAllByRole("region", {
+    name: "Saved writing observations",
+  });
+  expect(regions[0].getAttribute("aria-labelledby")).not.toBe(
+    regions[1].getAttribute("aria-labelledby"),
+  );
+  expect(container.querySelectorAll("form,input,button,textarea")).toHaveLength(
+    0,
+  );
+  expect(container.textContent).not.toMatch(
+    /JD coverage (?:gain|increase)|ATS score (?:gain|increase)|\d+%/iu,
+  );
+});

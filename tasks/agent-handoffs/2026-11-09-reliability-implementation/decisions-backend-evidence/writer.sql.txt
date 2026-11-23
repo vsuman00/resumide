@@ -1,0 +1,114 @@
+create function public.apply_jd_clause_order_action(p_user_id uuid,p_analysis_id uuid,p_command jsonb,p_request_id text) returns jsonb
+language plpgsql volatile security definer set search_path='' as $jd_clause_apply$
+declare a public.analyses%rowtype; source_row public.resume_versions%rowtype; root public.resumes%rowtype; current_head public.canonical_resume_heads%rowtype;
+  canonical public.canonical_resume_versions%rowtype; jd public.job_requirement_versions%rowtype; prior public.authoring_events%rowtype;
+  context jsonb; fact jsonb; location jsonb;
+  native_binding jsonb; replacement text; command_sha text; created text; event_id uuid; edit_id uuid; confirm_id uuid;
+  edit_body jsonb; confirm_body jsonb; saved jsonb; result_value jsonb; canonical_command jsonb; result_version uuid; result_revision integer;
+  profiles jsonb:=$profiles${"evidenceSchemaVersion":"evidence/2.0.0","fieldExtractorVersion":"evidence-fields/1.0.1","targetModelVersion":"evidence-targets/1.0.0","associationModelVersion":"evidence-entry-associations/1.0.0","correctionProjectionVersion":"canonical-corrections/1.0.1","regroupModelVersion":"canonical-entry-regroup/1.0.0","jdAdmissionProfileSha256":"e82d68b1e58cf220d3584a8d510128d4428441a2b02815711e7f198adaeaacb8","aliasPolicyVersion":"jd-local-aliases/1.0.0","aliasLexiconSha256":"e5298fd95320299996a4f5eceff3fc7afcd61ed636aaec386e1d4107a7500fa2","relationPolicyVersion":"jd-local-relation-rules/1.0.0","relationPolicySha256":"fd69dde2640bcdc1cdd76ce622015cb577090d61581515585f7cdfe0cdcd8cdc","unicodePolicyVersion":"jd-unicode-profile/1.0.0","unicodePolicySha256":"f3f8335d9a957bc16e33d61321f28ed7a12c8c81ff8912f0c17c041d86d95571","readinessProfileVersion":"requirement-relationship-readiness/1.0.0","readinessPredecessorSha256":"de6e71fed03732a391e35226d20816acd207267eef5f09c27017cee1f054f3fd"}$profiles$::jsonb;
+begin
+  perform private.jd_clause_validate(p_command);
+  if p_user_id is null or p_analysis_id is null or p_request_id is distinct from p_command->>'idempotencyKey'
+    or p_command->'binding'->'source'->>'ownerId' is distinct from p_user_id::text
+    or p_command->'binding'->'source'->>'analysisId' is distinct from p_analysis_id::text then perform private.correction_fail('invalid'); end if;
+  -- Establish the actual owner before the common mutex and before any row lock.
+  select * into a from public.analyses where id=p_analysis_id and owner_id=p_user_id;
+  if not found then perform private.correction_fail('not_found'); end if;
+  perform private.lock_candidate_owners(array[p_user_id]);
+  if private.try_candidate_privacy_write(p_user_id) is not true then perform private.correction_fail('not_found'); end if;
+  select r.* into root from public.resumes r join public.resume_versions s on s.resume_id=r.id
+    where s.id=a.resume_version_id and r.owner_id=p_user_id and r.organization_id=a.organization_id for update of r;
+  if not found or root.status is distinct from 'active' then perform private.correction_fail('not_found'); end if;
+  select * into a from public.analyses where id=p_analysis_id and owner_id=p_user_id and organization_id=root.organization_id for update;
+  if not found then perform private.correction_fail('not_found'); end if;
+  select * into source_row from public.resume_versions where id=a.resume_version_id and resume_id=root.id and owner_id=p_user_id and organization_id=a.organization_id for share;
+  if not found then perform private.correction_fail('not_found'); end if;
+  perform 1 from public.memberships where organization_id=a.organization_id and user_id=p_user_id and role in ('owner','admin','member') for share;
+  if not found then perform private.correction_fail('not_found'); end if;
+  if (p_command->'binding'->'source'->>'organizationId',p_command->'binding'->'source'->>'resumeId',p_command->'binding'->'source'->>'sourceId',p_command->'binding'->'source'->>'inputSha256')
+    is distinct from (a.organization_id::text,root.id::text,source_row.id::text,source_row.checksum) then perform private.correction_fail('not_found'); end if;
+  command_sha:=private.jd_clause_fingerprint(private.jd_clause_atoms(p_command));
+  -- Current access precedes exact replay; fresh heads are checked only afterward.
+  select * into prior from public.authoring_events where analysis_id=p_analysis_id and idempotency_key=(p_command->>'idempotencyKey')::uuid;
+  if found then
+    if prior.command is distinct from p_command or (prior.owner_id,prior.organization_id,prior.resume_id) is distinct from (p_user_id,a.organization_id,root.id)
+      or prior.action is distinct from p_command->>'operation'
+      or prior.base_version_id::text is distinct from p_command->'binding'->'canonical'->>'versionId'
+      or private.jd_clause_receipt(prior.result,p_command,prior.id,prior.result_version_id) is not true then perform private.correction_fail('conflict'); end if;
+    -- Check actual immutable ledger parents; an event or caller digest is not source authority.
+    if not exists(select 1 from public.canonical_resume_versions v where v.id=prior.base_version_id
+      and (v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id)=(p_user_id,a.organization_id,root.id,source_row.id)
+      and v.source_evidence_version_id::text=p_command->'binding'->'source'->>'attemptId'
+      and v.revision=(p_command->'binding'->'canonical'->>'revision')::integer)
+      or (p_command->>'operation'='accept' and not exists(select 1 from public.canonical_resume_versions v
+        where v.id=prior.result_version_id and (v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id)=(p_user_id,a.organization_id,root.id,source_row.id)
+        and v.revision=(p_command->'binding'->'canonical'->>'revision')::integer+2)) then perform private.correction_fail('conflict');end if;
+    return prior.result||jsonb_build_object('idempotent',true);
+  end if;
+  if private.jd_clause_schema_ready() is not true then perform private.correction_fail('unavailable'); end if;
+  select * into current_head from public.canonical_resume_heads where resume_id=root.id and owner_id=p_user_id and organization_id=a.organization_id for update;
+  if not found then perform private.correction_fail('conflict'); end if;
+  select * into canonical from public.canonical_resume_versions where id=current_head.version_id and owner_id=p_user_id and organization_id=a.organization_id and resume_id=root.id;
+  if not found or canonical.source_resume_version_id<>source_row.id then perform private.correction_fail('conflict'); end if;
+  select * into jd from public.job_requirement_versions where analysis_id=p_analysis_id and owner_id=p_user_id and organization_id=a.organization_id order by revision desc limit 1 for share;
+  if not found or jd.job_id is distinct from a.job_id then perform private.correction_fail('conflict'); end if;
+  native_binding:=jsonb_build_object('source',jsonb_build_object('ownerId',p_user_id,'organizationId',a.organization_id,'resumeId',root.id,'analysisId',p_analysis_id,'sourceId',source_row.id,'attemptId',canonical.source_evidence_version_id,'inputSha256',source_row.checksum),
+    'canonical',jsonb_build_object('versionId',canonical.id,'revision',canonical.revision,'contentSha256',private.typed_authoring_sha256(canonical.content::text)),
+    'requirements',jsonb_build_object('versionId',jd.id,'revision',jd.revision,'inputSha256',jd.content->>'inputSha256','contentSha256',private.typed_authoring_sha256(jd.content::text)),
+    'heads',jsonb_build_object('canonicalHeadId',current_head.version_id,'canonicalHeadRevision',current_head.revision,'requirementHeadId',jd.id,'requirementHeadRevision',jd.revision),'profilesSha256','f1aa440e764197f8aab96ddb9bf5c84dbdfdf177ff04063f15e6c4ccff78df62');
+  if p_command->'binding' is distinct from native_binding then perform private.correction_fail('conflict'); end if;
+  -- Existing owned reader independently re-proves source, typed headers, JD and privacy.
+  context:=public.read_requirement_relationship_context(p_user_id,p_analysis_id,jsonb_build_object('canonicalVersionId',canonical.id,'requirementVersionId',jd.id));
+  if context->>'status' is distinct from 'available' or context->'profiles' is distinct from profiles
+    or context->'source' is distinct from native_binding->'source'
+    or context->'heads' is distinct from native_binding->'heads'
+    or context->'canonical'->'content' is distinct from canonical.content
+    or context->'requirements'->'content' is distinct from jd.content then perform private.correction_fail('unavailable'); end if;
+  select x.value into fact from jsonb_array_elements(canonical.content->'facts') x(value) where x.value->>'id'=p_command->'target'->>'factId';
+  if fact is null or fact->>'type' is distinct from 'contribution' or fact->>'state' is distinct from 'candidate_confirmed'
+    or fact->'confirmation'->>'actorId' is distinct from p_user_id::text or fact->'confirmation'->>'value' is distinct from fact->>'value'
+    or fact->'confirmation'->>'confirmedAt' is distinct from p_command->'target'->>'confirmedAt'
+    or private.typed_authoring_sha256(fact->>'value') is distinct from p_command->'target'->>'currentValueSha256' then perform private.correction_fail('invalid'); end if;
+  location:=private.correction_location(canonical.content,(fact->>'id')::uuid);
+  if jsonb_array_length(location)<>1 or location->0->>'kind' not in ('entry','bullet')
+    or location->0->'sectionId' is distinct from p_command->'target'->'sectionId'
+    or location->0->'entryId' is distinct from p_command->'target'->'entryId'
+    or location->0->'bulletId' is distinct from p_command->'target'->'bulletId' then perform private.correction_fail('invalid'); end if;
+  if p_command->'target'->'bulletId'<>'null'::jsonb and not exists(
+    select 1 from jsonb_array_elements(canonical.content->'sections') s(value)
+    cross join lateral jsonb_array_elements(s.value->'entries') e(value)
+    cross join lateral jsonb_array_elements(e.value->'bullets') b(value)
+    where s.value->'id'=p_command->'target'->'sectionId' and e.value->'id'=p_command->'target'->'entryId'
+      and b.value->'id'=p_command->'target'->'bulletId' and b.value->'factIds'=jsonb_build_array(fact->'id')) then perform private.correction_fail('invalid');end if;
+  -- Independent complete-source grammar, exact original quote/ranges/JD and fixed reconstruction.
+  replacement:=private.jd_clause_reconstruct(context,fact,p_command);
+  event_id:=gen_random_uuid();result_version:=canonical.id;result_revision:=canonical.revision;
+  if p_command->>'operation'='accept' then
+    if canonical.revision>2147483645 then perform private.correction_fail('invalid'); end if;
+    edit_id:=gen_random_uuid();confirm_id:=gen_random_uuid();created:=to_char(clock_timestamp() at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"');
+    edit_body:=private.typed_authoring_child(canonical.content,(fact->>'id')::uuid,replacement,false,created,edit_id,gen_random_uuid());
+    confirm_body:=private.typed_authoring_child(edit_body,(fact->>'id')::uuid,replacement,true,created,confirm_id,gen_random_uuid());
+    canonical_command:=jsonb_build_object('operation','edit','expectedVersionId',canonical.id,'idempotencyKey',edit_id,'factId',fact->>'id','value',replacement,'targetVersionId',null);
+    saved:=public.save_canonical_version(p_user_id,source_row.id,edit_body,canonical_command,p_request_id);
+    if saved->>'status' is distinct from 'applied' or saved->>'versionId' is distinct from edit_id::text or saved->'idempotent' is distinct from 'false'::jsonb or saved->'revision' is distinct from to_jsonb(canonical.revision+1) then perform private.correction_fail('conflict'); end if;
+    canonical_command:=jsonb_build_object('operation','confirm','expectedVersionId',edit_id,'idempotencyKey',confirm_id,'factId',fact->>'id','value',null,'targetVersionId',null);
+    saved:=public.save_canonical_version(p_user_id,source_row.id,confirm_body,canonical_command,p_request_id);
+    if saved->>'status' is distinct from 'applied' or saved->>'versionId' is distinct from confirm_id::text or saved->'idempotent' is distinct from 'false'::jsonb or saved->'revision' is distinct from to_jsonb(canonical.revision+2) then perform private.correction_fail('conflict'); end if;
+    result_version:=confirm_id;result_revision:=canonical.revision+2;
+  end if;
+  result_value:=jsonb_build_object('schemaVersion','jd-clause-order-receipt/2.0.0','status','applied','action',p_command->>'operation','idempotencyKey',p_command->>'idempotencyKey','commandSha256',command_sha,
+    'draftId',p_command->>'draftId','baseVersionId',canonical.id,'baseRevision',canonical.revision,'requirementVersionId',jd.id,'requirementRevision',jd.revision,'versionId',result_version,'revision',result_revision,'eventId',event_id,'idempotent',false);
+  if private.jd_clause_receipt(result_value,p_command,event_id,case when p_command->>'operation'='accept' then result_version else null end) is not true then perform private.correction_fail('invalid');end if;
+  insert into public.authoring_events(id,analysis_id,resume_id,owner_id,organization_id,base_version_id,result_version_id,idempotency_key,action,command,result,retention_policy_id)
+    values(event_id,p_analysis_id,root.id,p_user_id,a.organization_id,canonical.id,case when p_command->>'operation'='accept' then result_version else null end,(p_command->>'idempotencyKey')::uuid,p_command->>'operation',p_command,result_value,canonical.content->>'retentionPolicyId');
+  insert into public.audit_events(organization_id,actor_id,action,target_type,target_id,outcome,request_id)
+    values(a.organization_id,p_user_id,'jd_clause_order.'||(p_command->>'operation'),'authoring_event',event_id,'success',p_request_id);
+  return result_value;
+exception
+  when insufficient_privilege then return jsonb_build_object('status','not_found');
+  when sqlstate 'P0C01' or unique_violation then return jsonb_build_object('status','conflict');
+  when invalid_parameter_value or invalid_text_representation or numeric_value_out_of_range then return jsonb_build_object('status','invalid');
+  when others then return jsonb_build_object('status','unavailable');
+end;
+$jd_clause_apply$;
+

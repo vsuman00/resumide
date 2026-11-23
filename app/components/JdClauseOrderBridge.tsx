@@ -1,0 +1,478 @@
+import { useEffect, useId, useRef, useState } from "react";
+import JdClauseOrderDecisionReview from "./JdClauseOrderDecisionReview";
+import { JdClauseOrderPlanReview } from "./JdClauseOrderReview";
+import type { JdClauseOrderPlan } from "~/lib/server/jd-clause-order-drafting";
+import {
+  JdClauseOrderProposalSchema,
+  JdClauseOrderCommandSchema,
+  JdClauseOrderHttpErrorSchema,
+  JdClauseOrderHttpSuccessSchema,
+  JdClauseOrderRequestFailure,
+  sameClauseOrderValue,
+  validateClauseOrderWorkspace,
+  validateClauseOrderReceipt,
+  validateClauseOrderUndoReceipt,
+  type JdClauseOrderCommand,
+  type JdClauseOrderProposal,
+  type JdClauseOrderWorkspace,
+  type JdClauseOrderReceipt,
+  type JdClauseOrderUndoReceipt,
+  type JdClauseOrderHttpError,
+} from "~/lib/jd-clause-order-decisions";
+
+type Source = JdClauseOrderWorkspace["binding"]["source"];
+export type JdClauseOrderBridgeProps = {
+  analysisId: string;
+  source: Source;
+  workspace: JdClauseOrderWorkspace | null;
+  previewPlan: JdClauseOrderPlan | null;
+};
+type Accepted = {
+  command: JdClauseOrderCommand;
+  receipt: JdClauseOrderReceipt;
+};
+type Undo = { accepted: JdClauseOrderReceipt; key: string; scope: string };
+const sourceSchema =
+  JdClauseOrderProposalSchema.shape.draft.shape.binding.shape.source;
+const unavailable = () => Error("CLAUSE_ORDER_UNCONFIRMED_RESPONSE");
+
+export default function JdClauseOrderBridge({
+  analysisId,
+  source,
+  workspace,
+  previewPlan,
+}: JdClauseOrderBridgeProps) {
+  const heading = useId(),
+    selectionLabel = useId();
+  const parsedSource = sourceSchema.safeParse(source);
+  const scope =
+    parsedSource.success && parsedSource.data.analysisId === analysisId
+      ? JSON.stringify(parsedSource.data)
+      : "invalid";
+  const currentScope = useRef(scope);
+  currentScope.current = scope;
+  const generation = useRef(0),
+    busyRef = useRef(false),
+    retainedRef = useRef(false);
+  const requests = useRef(new Set<AbortController>()),
+    undoRef = useRef<Undo | null>(null);
+  const [stateScope, setStateScope] = useState(scope);
+  const [available, setAvailable] = useState<JdClauseOrderWorkspace | null>(
+    null,
+  );
+  const [active, setActive] = useState<JdClauseOrderProposal | null>(null);
+  const [retained, setRetained] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [invalid, setInvalid] = useState(false);
+  const [accepted, setAccepted] = useState<Accepted | null>(null);
+  const [undone, setUndone] = useState<JdClauseOrderUndoReceipt | null>(null);
+  const [undoUnknown, setUndoUnknown] = useState(false);
+  const [failure, setFailure] = useState<JdClauseOrderHttpError | null>(null);
+  useEffect(() => {
+    for (const request of requests.current) request.abort();
+    retainedRef.current = false;
+    busyRef.current = false;
+    undoRef.current = null;
+    setStateScope(scope);
+    setAvailable(null);
+    setActive(null);
+    setRetained(false);
+    setBusy(false);
+    setAccepted(null);
+    setUndone(null);
+    setUndoUnknown(false);
+    setFailure(null);
+  }, [scope]);
+  useEffect(() => {
+    const token = ++generation.current,
+      captured = scope;
+    setInvalid(scope === "invalid");
+    setVerifying(Boolean(workspace));
+    if (!workspace || scope === "invalid") {
+      setVerifying(false);
+      if (!retainedRef.current) {
+        setAvailable(null);
+        setActive(null);
+      }
+      return () => {
+        generation.current++;
+      };
+    }
+    void validateClauseOrderWorkspace(workspace)
+      .then((value) => {
+        if (generation.current !== token || currentScope.current !== captured)
+          return;
+        if (!sameClauseOrderValue(value.binding.source, JSON.parse(captured)))
+          throw unavailable();
+        if (!retainedRef.current) {
+          setAvailable(value);
+          setActive(value.proposals[0] ?? null);
+        }
+      })
+      .catch(() => {
+        if (generation.current === token && currentScope.current === captured) {
+          setAvailable(null);
+          setInvalid(true);
+          if (!retainedRef.current) setActive(null);
+        }
+      })
+      .finally(() => {
+        if (generation.current === token) setVerifying(false);
+      });
+    return () => {
+      generation.current++;
+    };
+  }, [scope, workspace]);
+  useEffect(() => {
+    const activeRequests = requests.current;
+    return () => {
+      generation.current++;
+      for (const request of activeRequests) request.abort();
+    };
+  }, []);
+
+  async function post(fields: Record<string, string>): Promise<unknown> {
+    const controller = new AbortController(),
+      started = Date.now();
+    const requestScope = currentScope.current;
+    requests.current.add(controller);
+    let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+    let rejectAbort: () => void = () => controller.abort();
+    const aborted = new Promise<never>((_, reject) => {
+      rejectAbort = () => reject(unavailable());
+      controller.signal.addEventListener("abort", rejectAbort, { once: true });
+    });
+    const timer = setTimeout(() => controller.abort(), 5000);
+    function activeRequest() {
+      const now = Date.now();
+      if (
+        controller.signal.aborted ||
+        currentScope.current !== requestScope ||
+        !Number.isFinite(now) ||
+        now < started ||
+        now - started >= 5000
+      )
+        throw unavailable();
+    }
+    try {
+      activeRequest();
+      const body = new FormData();
+      for (const [key, value] of Object.entries(fields)) body.set(key, value);
+      const response = await Promise.race([
+        fetch(
+          `/analysis/${encodeURIComponent(analysisId)}/author/clause-order`,
+          {
+            method: "POST",
+            body,
+            credentials: "same-origin",
+            cache: "no-store",
+            redirect: "error",
+            headers: { Accept: "application/json" },
+            signal: controller.signal,
+          },
+        ),
+        aborted,
+      ]);
+      activeRequest();
+      if (
+        response.redirected ||
+        response.headers
+          .get("Content-Type")
+          ?.split(";")[0]
+          .trim()
+          .toLowerCase() !== "application/json" ||
+        !response.body
+      )
+        throw unavailable();
+      const contentLength = response.headers.get("Content-Length");
+      if (
+        contentLength !== null &&
+        (!/^(?:0|[1-9][0-9]*)$/u.test(contentLength) ||
+          Number(contentLength) > 65536)
+      )
+        throw unavailable();
+      const bodyReader = response.body.getReader();
+      reader = bodyReader;
+      const drain = async () => {
+        const chunks: Uint8Array[] = [];
+        let length = 0;
+        while (true) {
+          activeRequest();
+          const chunk = await bodyReader.read();
+          activeRequest();
+          if (chunk.done) break;
+          length += chunk.value.byteLength;
+          if (length > 65536) throw unavailable();
+          chunks.push(chunk.value);
+        }
+        const bytes = new Uint8Array(length);
+        let offset = 0;
+        for (const chunk of chunks) {
+          bytes.set(chunk, offset);
+          offset += chunk.byteLength;
+        }
+        const raw: unknown = JSON.parse(
+          new TextDecoder("utf-8", { fatal: true }).decode(bytes),
+        );
+        activeRequest();
+        if (
+          !response.ok &&
+          !JdClauseOrderHttpErrorSchema.safeParse(raw).success
+        )
+          throw unavailable();
+        return raw;
+      };
+      const result = await Promise.race([drain(), aborted]);
+      activeRequest();
+      return result;
+    } catch {
+      throw unavailable();
+    } finally {
+      clearTimeout(timer);
+      controller.signal.removeEventListener("abort", rejectAbort);
+      controller.abort();
+      requests.current.delete(controller);
+      if (reader) {
+        try {
+          void reader.cancel().catch(() => controller.abort());
+        } catch {
+          controller.abort();
+        }
+      }
+    }
+  }
+  function knownError(raw: unknown): void {
+    const error = JdClauseOrderHttpErrorSchema.safeParse(raw);
+    if (error.success) {
+      setFailure(error.data);
+      throw new JdClauseOrderRequestFailure(error.data);
+    }
+  }
+  async function decide(
+    command: JdClauseOrderCommand,
+    acknowledgement: "accepted" | null,
+  ): Promise<unknown> {
+    if (
+      busyRef.current ||
+      scope === "invalid" ||
+      currentScope.current !== scope ||
+      !sameClauseOrderValue(command.binding.source, sourceSchema.parse(source))
+    )
+      throw unavailable();
+    const captured = currentScope.current,
+      c = JdClauseOrderCommandSchema.parse(command);
+    retainedRef.current = true;
+    setRetained(true);
+    busyRef.current = true;
+    setBusy(true);
+    setFailure(null);
+    try {
+      const raw = await post({
+        action: "decision",
+        command: JSON.stringify(c),
+        ...(acknowledgement === "accepted"
+          ? { reviewAcknowledgement: "accepted" }
+          : {}),
+      });
+      if (currentScope.current !== captured) throw unavailable();
+      knownError(raw);
+      const success = JdClauseOrderHttpSuccessSchema.parse(raw);
+      if (success.kind !== "applied") throw unavailable();
+      const receipt = await validateClauseOrderReceipt(success.receipt, c);
+      if (currentScope.current !== captured) throw unavailable();
+      if (receipt.action === "accept") setAccepted({ command: c, receipt });
+      return receipt;
+    } finally {
+      if (currentScope.current === captured) {
+        busyRef.current = false;
+        setBusy(false);
+      }
+    }
+  }
+  async function undo() {
+    if (
+      !accepted ||
+      busyRef.current ||
+      undone ||
+      currentScope.current !== scope
+    )
+      return;
+    const captured = currentScope.current;
+    busyRef.current = true;
+    setBusy(true);
+    setFailure(null);
+    setUndoUnknown(false);
+    try {
+      if (!undoRef.current) {
+        const key = crypto.randomUUID();
+        if (key === accepted.receipt.idempotencyKey) throw unavailable();
+        undoRef.current = { accepted: accepted.receipt, key, scope: captured };
+      }
+      const request = undoRef.current;
+      if (request.scope !== captured) return;
+      const raw = await post({
+        action: "undo",
+        receipt: JSON.stringify(request.accepted),
+        idempotencyKey: request.key,
+      });
+      if (currentScope.current !== captured) throw unavailable();
+      knownError(raw);
+      const success = JdClauseOrderHttpSuccessSchema.parse(raw);
+      if (success.kind !== "undone") throw unavailable();
+      const receipt = validateClauseOrderUndoReceipt(
+        success.receipt,
+        request.accepted,
+        request.key,
+      );
+      setUndone(receipt);
+      undoRef.current = null;
+    } catch {
+      if (currentScope.current === captured) setUndoUnknown(true);
+    } finally {
+      if (currentScope.current === captured) {
+        busyRef.current = false;
+        setBusy(false);
+      }
+    }
+  }
+  const restoredMessage = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (undone) restoredMessage.current?.focus();
+  }, [undone]);
+
+  const visible = stateScope === scope && scope !== "invalid";
+  const base = `/analysis/${encodeURIComponent(analysisId)}`;
+  return (
+    <section aria-labelledby={heading} style={{ overflowWrap: "anywhere" }}>
+      <h2 id={heading}>Reviewed JD-focused clause order</h2>
+      {(!visible || invalid) && (
+        <p role="alert">
+          A source-bound decision workspace is unavailable. No new decision can
+          be prepared here.
+        </p>
+      )}
+      {visible && (
+        <>
+          {verifying && !retained && (
+            <p role="status">Verifying the prepared source-bound reviews.</p>
+          )}
+          {available && (
+            <>
+              <p>
+                Prepared proposals: {available.proposals.length}. Candidate
+                pairs inspected: {available.inspectedPairCount}.
+              </p>
+              {available.truncated && (
+                <p>
+                  The inspection limit was reached. Some candidate pairs were
+                  not examined.
+                </p>
+              )}
+              {available.proposals.length === 0 && (
+                <p>
+                  No decision proposal was admitted among the pairs examined.
+                  This does not assess every way to improve the resume.
+                </p>
+              )}
+            </>
+          )}
+          {available && !retained && available.proposals.length > 1 && (
+            <div>
+              <label htmlFor={selectionLabel}>
+                Prepared clause-order review
+              </label>
+              <select
+                id={selectionLabel}
+                disabled={retained || busy}
+                value={active?.draft.id ?? ""}
+                onChange={(event) => {
+                  const selected = available.proposals.find(
+                    (p) => p.draft.id === event.currentTarget.value,
+                  );
+                  if (selected && !retainedRef.current) setActive(selected);
+                }}
+              >
+                {available.proposals.map((p) => (
+                  <option key={p.draft.id} value={p.draft.id}>
+                    {p.draft.relevance.quote}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {active && (
+            <JdClauseOrderDecisionReview
+              proposal={active}
+              onDecision={decide}
+            />
+          )}
+          {!active && !available && !verifying && !invalid && previewPlan && (
+            <JdClauseOrderPlanReview plan={previewPlan} />
+          )}
+          {failure && (
+            <p role="alert">
+              {failure.recovery === "review_again"
+                ? "The service requests a review of current inputs."
+                : failure.recovery === "unavailable"
+                  ? "The service is unavailable for this retained request."
+                  : "The service could not confirm this request."}{" "}
+              An earlier request may already have been recorded. The original
+              request and key remain unchanged.
+            </p>
+          )}
+          {retained && (
+            <p>
+              <a href={`${base}/score`}>Review current inputs</a>. Opening a new
+              review leaves this retained local review; it does not cancel or
+              undo an earlier request.
+            </p>
+          )}
+          {accepted && (
+            <section aria-label="Undo the confirmed clause-order change">
+              <h3>Undo this confirmed change</h3>
+              <p>
+                Undo asks the owning service to restore the accepted event's
+                original base through a guarded new version. Later changes can
+                prevent this action.
+              </p>
+              {undone ? (
+                <p ref={restoredMessage} tabIndex={-1} role="status">
+                  Undo was confirmed.{" "}
+                  <a
+                    href={`${base}/canonical?version=${encodeURIComponent(undone.versionId)}`}
+                  >
+                    Inspect the restored version
+                  </a>
+                  .
+                </p>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="back-button"
+                    disabled={busy}
+                    onClick={() => {
+                      void undo();
+                    }}
+                  >
+                    {undoUnknown
+                      ? "Retry exact undo"
+                      : "Undo this saved change"}
+                  </button>
+                  {undoUnknown && (
+                    <p role="alert">
+                      Undo could not be confirmed. Any prepared request retains
+                      its exact accepted receipt and undo key; retry never
+                      replaces an existing request.
+                    </p>
+                  )}
+                </>
+              )}
+            </section>
+          )}
+        </>
+      )}
+    </section>
+  );
+}

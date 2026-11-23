@@ -1,0 +1,177 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+const read = (n: string) =>
+  readFileSync(new URL(`../../${n}`, import.meta.url), "utf8");
+const candidate = read(
+  "supabase/migrations/20261115182650_mandatory_ai_budget_dispatch.sql",
+);
+type Patch = {
+  signature: string;
+  before: string;
+  after: string;
+  old: string;
+  new: string;
+};
+const prior = JSON.parse(
+  read(
+    "supabase/migrations/20261115162257_ai_budget_all_caller_sources.sql",
+  ).split("$callers_patches$")[1],
+) as Patch[];
+const patches = candidate
+  ? (JSON.parse(candidate.split("$budget_required_patches$")[1]) as Patch[])
+  : prior;
+const body = (name: string) =>
+  patches.find((p) => p.signature.split("(")[0] === name)!.new;
+describe("actual predecessor null-budget dispatch regressions, Native unexecuted", () => {
+  it("refuses SQL/JSON null A12 budget immediately after no-dispatch replay", () => {
+    expect(body("public.claim_canonical_rewrite_dispatch")).toContain(
+      "end if;\n  if p_budget is null or p_budget='null'::jsonb then perform private.correction_fail('unavailable');end if;\n  if private.canonical_rewrite_ready()",
+    );
+  });
+  it("refuses absent stored A13 technical policy or SQL/JSON null budget after replay", () => {
+    expect(body("public.claim_initial_feedback_dispatch")).toContain(
+      "end if;\n  if (op.binding->'policy'->>'budgetPolicyVersion') is null or p_budget is null or p_budget='null'::jsonb then perform private.ifo_fail('unavailable');end if;\n  if a.status<>'qualitative_review'",
+    );
+  });
+});
+
+import { CANONICAL_REWRITE_READINESS_PROFILE } from "../../app/lib/server/canonical-rewrite-readiness-profile";
+
+import { CANONICAL_REWRITE_WORKSPACE_PROFILE } from "../../app/lib/server/canonical-rewrite-workspace-profile";
+
+import { INITIAL_FEEDBACK_OPERATION_PROFILE } from "../../app/lib/server/initial-feedback-operation-profile";
+
+import {
+  INITIAL_FEEDBACK_PROFILE,
+  OWNED_AI_RETIREMENT_PROFILE,
+} from "../../app/lib/server/initial-feedback-profile";
+
+import { OWNED_LEGACY_AI_USAGE_PROFILE } from "../../app/lib/server/owned-legacy-ai-usage-profile";
+
+import { AI_BUDGET_SOURCE_PROFILE } from "../../app/lib/server/ai-budget-source-profile";
+
+import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
+
+const hash = (s: string) => createHash("sha256").update(s).digest("hex");
+const changed = new Map(patches.map((p) => [p.signature.split("(")[0], p]));
+const guards = [
+  "  if p_budget is null or p_budget='null'::jsonb then perform private.correction_fail('unavailable');end if;\n",
+  "  if (op.binding->'policy'->>'budgetPolicyVersion') is null or p_budget is null or p_budget='null'::jsonb then perform private.ifo_fail('unavailable');end if;\n",
+];
+describe("exact forward mandatory-budget closure, Source evidence only", () => {
+  it("changes exactly two claim bodies and seven checker bodies with guarded pre/postimages", () => {
+    expect(patches).toHaveLength(9);
+    expect(new Set(patches.map((p) => p.signature)).size).toBe(9);
+    for (const p of patches) {
+      expect(hash(p.old)).toBe(p.before);
+      expect(hash(p.new)).toBe(p.after);
+    }
+    expect(candidate).toContain("p.prosrc is distinct from item->>'old'");
+    expect(candidate).toContain(
+      "statements:=array_append(statements,replace(source,p.prosrc,item->>'new'))",
+    );
+    expect(candidate).toContain("MANDATORY_AI_BUDGET_POSTIMAGE_DRIFT");
+  });
+  it.each([
+    ["public.claim_canonical_rewrite_dispatch", 0],
+    ["public.claim_initial_feedback_dispatch", 1],
+  ] as const)(
+    "preserves every predecessor byte except its mandatory guard: %s",
+    (name, index) => {
+      const p = changed.get(name)!;
+      expect(p.new.split(guards[index])).toHaveLength(2);
+      expect(p.new.replace(guards[index], "")).toBe(p.old);
+      expect(p.old).toBe(prior.find((x) => x.signature === p.signature)!.new);
+      const replay = p.new.indexOf(
+        name.includes("canonical")
+          ? "if op.state<>'reserved'"
+          : "if op.state<>'open'",
+      );
+      expect(replay).toBeLessThan(p.new.indexOf(guards[index]));
+      expect(p.new.indexOf(guards[index])).toBeLessThan(
+        p.new.indexOf("budget:=private.ai_budget_transition"),
+      );
+    },
+  );
+  it("renews checker digests only, preserving all other bytes/ACL/catalogue checks", () => {
+    for (const p of patches.slice(2)) {
+      let restored = p.new;
+      for (const dep of [...patches].reverse())
+        restored = restored.replaceAll(dep.after, dep.before);
+      expect(restored).toBe(p.old);
+    }
+  });
+  it("leaves table seals, permissions, prices and policy schemas unchanged", () => {
+    expect(candidate).not.toMatch(
+      /(?:create|alter|drop)\s+(?:table|trigger|policy)|(?:grant|revoke)\s/iu,
+    );
+    expect(
+      patches.every(
+        (p) =>
+          !/(?:settle|finish|publish|outcome|policy_valid|transition|prepare)/u.test(
+            p.signature,
+          ),
+      ),
+    ).toBe(true);
+    expect(body("public.claim_initial_feedback_dispatch")).toContain(
+      "op.binding->'policy'->>'budgetPolicyVersion'",
+    );
+    expect(body("public.claim_canonical_rewrite_dispatch")).not.toContain(
+      "budgetPolicyVersion",
+    );
+  });
+  it("preserves all seven profile preimages except actual successor body pins", () => {
+    const predecessors = {
+      "app/lib/server/canonical-rewrite-readiness-profile.ts":
+        "f6f9e1b12f02c9b24890ea6c90f1634a30ed4cbf7d3ede637c4722ea7f9fc54a",
+      "app/lib/server/canonical-rewrite-workspace-profile.ts":
+        "c5f6655a1d668b45af2f9142c13b6c9fe912e7947ce91e81da3f53bd65c3c23c",
+      "app/lib/server/initial-feedback-operation-profile.ts":
+        "4b2d8c7e1e3639b175f75bb6be62659cf1370a85860cd830e0b6d522b2546469",
+      "app/lib/server/initial-feedback-profile.ts":
+        "a7ced570ef5341cefdb67b42ce83fee844b9d6150b141469c639f64fc80fae55",
+      "app/lib/server/owned-legacy-ai-usage-profile.ts":
+        "837172b4f944bf374cc695d2b2dfb99e8fe845d4446e79e34a2be0bddf00da8c",
+      "app/lib/server/ai-budget-source-profile.ts":
+        "b2de20c04cddb06349f086912a6517a9da32b8f66e4090537013661319a19328",
+      "app/lib/server/owned-ai-disposition-profile.ts":
+        "d3af45bf0637475066edf69bbf8926852577cceb7ced9b8bd2d2dba60f3d21ad",
+    };
+    for (const [file, pin] of Object.entries(predecessors)) {
+      let restored = read(file);
+      for (const p of [...patches].reverse())
+        restored = restored.replaceAll(p.after, p.before);
+      expect(hash(restored)).toBe(pin);
+    }
+    const bindings = [
+      [CANONICAL_REWRITE_READINESS_PROFILE, "private.canonical_rewrite_ready"],
+      [
+        CANONICAL_REWRITE_WORKSPACE_PROFILE,
+        "private.canonical_rewrite_workspace_ready",
+      ],
+      [
+        INITIAL_FEEDBACK_OPERATION_PROFILE,
+        "private.initial_feedback_operation_ready",
+      ],
+      [INITIAL_FEEDBACK_PROFILE, "private.initial_feedback_ready"],
+      [OWNED_LEGACY_AI_USAGE_PROFILE, "private.owned_legacy_ai_usage_ready"],
+      [AI_BUDGET_SOURCE_PROFILE, "private.ai_budget_source_ready"],
+      [OWNED_AI_DISPOSITION_PROFILE, "private.owned_ai_disposition_ready"],
+    ] as const;
+    for (const [profile, name] of bindings)
+      expect(profile.checkerSha256).toBe(hash(body(name)));
+    expect(CANONICAL_REWRITE_READINESS_PROFILE.claimSha256).toBe(
+      hash(body("public.claim_canonical_rewrite_dispatch")),
+    );
+    expect(INITIAL_FEEDBACK_OPERATION_PROFILE.claimSha256).toBe(
+      hash(body("public.claim_initial_feedback_dispatch")),
+    );
+    expect(INITIAL_FEEDBACK_PROFILE.claimSha256).toBe(
+      hash(body("public.claim_initial_feedback_dispatch")),
+    );
+    expect(OWNED_AI_RETIREMENT_PROFILE.checkerSha256).toBe(
+      "a0b6290511973757a983b793f249c8ef1225091eaac5a118847a7e4bb53d0694",
+    );
+  });
+});

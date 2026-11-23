@@ -1,0 +1,34 @@
+--- a/scripts/latex-runtime/supervisor.py
++++ b/scripts/latex-runtime/supervisor.py
+@@ -1,7 +1,8 @@
+ """Disposable request supervisor. Never return compiler logs or source excerpts."""
+-import base64, hashlib, json, os, pathlib, resource, subprocess, sys, selectors, time, xml.etree.ElementTree as ET
++import base64, hashlib, json, os, pathlib, resource, subprocess, sys, selectors, time
+ sys.path.insert(0,'/opt/latex')
+ from inspect_pdf import inspect_pdf
++from native_geometry import GeometryError, parse_geometry
+ resource.setrlimit(resource.RLIMIT_CORE,(0,0))
+ resource.setrlimit(resource.RLIMIT_CPU,(10,10))
+ resource.setrlimit(resource.RLIMIT_FSIZE,(8388608,8388608))
+@@ -58,17 +59,11 @@
+  path=pathlib.Path('/scratch/main.pdf')
+  if not path.is_file() or path.stat().st_size>5242880:output('output_invalid')
+  pdf=path.read_bytes();pages=inspect_pdf(pdf)
+- if run(['/usr/bin/pdftotext','-bbox','/scratch/main.pdf','/scratch/text.xml']).returncode:output('output_invalid')
+- textpath=pathlib.Path('/scratch/text.xml')
++ if run(['/usr/bin/pdftotext','-resumide-bbox','/scratch/main.pdf','/scratch/text.frame']).returncode:output('output_invalid')
++ textpath=pathlib.Path('/scratch/text.frame')
+  if textpath.stat().st_size>2097152:output('output_invalid')
+- tree=ET.fromstring(textpath.read_bytes());words=[]
+- for page in tree.iter('{http://www.w3.org/1999/xhtml}page'):
+-  width,height=float(page.attrib['width']),float(page.attrib['height'])
+-  for word in page.iter('{http://www.w3.org/1999/xhtml}word'):
+-   if float(word.attrib['xMin']) < -1 or float(word.attrib['yMin']) < -1 or float(word.attrib['xMax'])>width+1 or float(word.attrib['yMax'])>height+1:output('layout_overflow')
+-   words.append(word.text or '')
+- text=' '.join(words)
+- if not text.strip() or len(text)>100000:output('output_invalid')
++ try:text=parse_geometry(textpath.read_bytes(),pages)
++ except GeometryError as error:output(error.code)
+  print(json.dumps({'pdf':base64.b64encode(pdf).decode('ascii'),'pages':pages,'text':text,'diagnostics':[]},separators=(',',':')))
+ except subprocess.TimeoutExpired:output('timeout')
+ except BaseException as error:

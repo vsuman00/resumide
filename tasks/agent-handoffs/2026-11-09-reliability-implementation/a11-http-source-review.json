@@ -1,0 +1,45 @@
+{
+  "status": "SOURCE_REPAIRED_ROOT_INTEGRATED_PASS_NATIVE_OPEN",
+  "tier": "manual source review plus agent synthetic regressions",
+  "findings": [
+    {
+      "id": "HTTP01",
+      "issue": "Client fetch/body lacked a whole-attempt deadline and bounded streaming response",
+      "owner": "frontend",
+      "result": "Actual stalled fetch/body RED2; repaired30s race/128KiB cap; Root final19DOM cases pass"
+    },
+    {
+      "id": "HTTP02",
+      "issue": "Server request-body read and cancellation could hang; cancellation error could mask413",
+      "owner": "backend",
+      "result": "Actual stalled read/cancel RED2; common5s read/parsing budget and nonblocking cleanup preserve413; Root final10HTTP-helper cases pass"
+    },
+    {
+      "id": "HTTP03",
+      "issue": "Temporary body timeout used unavailable recovery, blocking manual exact decision retry",
+      "owner": "backend",
+      "result": "Actual affected recoveryRED1/GREEN1; final7beb helper uses503/unavailable/retry_exact; Root integrated pass"
+    },
+    {
+      "id": "HTTP04",
+      "issue": "Known CanonicalError undo409 must map to fixed stale response",
+      "owner": "runtime review/backend",
+      "result": "Already repaired at actual0d9 checkpoint; actualHTTP34 tests pass"
+    }
+  ],
+  "setupFailuresNotBehavioralRed": [
+    "Missing runtime coverage component before dependency sync",
+    "Initial frontend native citation enum/fixture revision setup mixture",
+    "Fake timer/user-event setup timeouts before actual deadline assertions",
+    "Scoped TypeScript root-list/ambient setup repairs"
+  ],
+  "sqlParsing": "NOT_RUN",
+  "sqlExecution": "NOT_RUN",
+  "productionActivation": false,
+  "rootReceipt": "a11-http-integrated-5f9d707a-f97f-4178-bbca-a4c7e639dd4f.json",
+  "peerReviews": {
+    "runtimeReviewsFrontend": "ACK bridge1d96b483/score8c6b0619/test9471b76d; no edits/tests",
+    "frontendReviewsBackend": "ACK resource6a2c764e/helper e370 body successor; Root reviewed final7beb one-line recovery repair and integrated actual tests",
+    "scope": "Bounded manual source checks, not native/browser/provider acceptance"
+  }
+}

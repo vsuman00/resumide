@@ -1,0 +1,132 @@
+--- before/app/routes/analysis.score.tsx
++++ after/app/routes/analysis.score.tsx
+@@ -1,3 +1,4 @@
++import { createHash } from "node:crypto";
+ import {
+   data,
+   redirect,
+@@ -18,6 +19,8 @@
+ import CanonicalRewritePanel from "~/components/CanonicalRewritePanel";
+ import ScoreAdmissionNotice from "~/components/ScoreAdmissionNotice";
+ import JdRecommendations from "~/components/JdRecommendations";
++import { JdClauseOrderPlanReview } from "~/components/JdClauseOrderReview";
++import { JdClauseOrderPlanSchema } from "~/lib/server/jd-clause-order-drafting";
+ import {
+   loadCanonicalRewriteWorkspaceState,
+   CanonicalRewriteWorkspaceStateSchema,
+@@ -61,6 +64,60 @@
+   return h;
+ };
+ export const meta = () => [{ title: "Scoring diagnostics | Resumide" }];
++function ownedClauseOrderPlan(
++  model: Awaited<ReturnType<typeof loadScoreDiagnostics>>,
++  ownerId: string,
++  analysisId: string,
++) {
++  if (model.jdClauseOrderPlan === undefined) return undefined;
++  const parsed = JdClauseOrderPlanSchema.safeParse(model.jdClauseOrderPlan);
++  const coverage = model.typedCoverage;
++  if (!parsed.success || coverage?.state !== "available" || !model.requirements)
++    throw new CanonicalError(
++      503,
++      "JD drafting previews are unavailable. Reload before continuing.",
++    );
++  const plan = parsed.data,
++    binding = plan.binding,
++    owned = coverage.binding,
++    score = model.diagnostics.score;
++  if (
++    model.analysisId !== analysisId ||
++    binding.source.analysisId !== analysisId ||
++    binding.source.ownerId !== ownerId ||
++    score.ownerId !== ownerId ||
++    score.analysisId !== analysisId ||
++    score.organizationId !== binding.source.organizationId ||
++    binding.source.attemptId !== owned.attemptId ||
++    score.evidenceVersionId !== owned.attemptId ||
++    JSON.stringify(binding.source) !== JSON.stringify(owned.source) ||
++    JSON.stringify(binding.canonical) !== JSON.stringify(owned.canonical) ||
++    JSON.stringify(binding.requirements) !==
++      JSON.stringify(owned.requirements) ||
++    binding.profilesSha256 !==
++      createHash("sha256")
++        .update(JSON.stringify(owned.profiles))
++        .digest("hex") ||
++    binding.canonical.versionId !== model.canonical.versionId ||
++    binding.canonical.revision !== model.canonical.revision ||
++    score.canonicalVersionId !== model.canonical.versionId ||
++    binding.requirements.versionId !== model.requirements.versionId ||
++    binding.requirements.revision !== model.requirements.revision ||
++    score.requirementVersionId !== model.requirements.versionId ||
++    binding.heads.canonicalHeadId !== model.canonical.headId ||
++    binding.heads.requirementHeadId !== model.requirements.headId ||
++    (!model.historical &&
++      (binding.heads.canonicalHeadRevision !== model.canonical.revision ||
++        binding.heads.requirementHeadRevision !==
++          model.requirements.revision)) ||
++    (plan.reason === "historical_inputs") !== model.historical
++  )
++    throw new CanonicalError(
++      503,
++      "JD drafting previews are unavailable. Reload before continuing.",
++    );
++  return plan;
++}
+ export async function loader({ request, params }: Args) {
+   const h = privateHeaders();
+   try {
+@@ -98,13 +155,22 @@
+         );
+       options[key] = value;
+     }
++    const authoringEnabled = getServerConfig().AUTHORING_ENABLED;
+     const client = createSupabaseAdminClient();
+     const model = await loadScoreDiagnostics(
+       client,
+       params.id ?? "",
+       user.id,
+       options,
++      undefined,
++      { clauseOrderPreview: authoringEnabled },
+     );
++    const safeModel = { ...model };
++    delete safeModel.jdClauseOrderPlan;
++    if (authoringEnabled) {
++      const plan = ownedClauseOrderPlan(model, user.id, params.id ?? "");
++      if (plan) safeModel.jdClauseOrderPlan = plan;
++    }
+     const authoring =
+       getServerConfig().AUTHORING_ENABLED && !model.typedCoverage
+         ? await loadAuthoring(client, params.id ?? "", user.id, model, focus)
+@@ -254,7 +320,7 @@
+     }
+     return data(
+       {
+-        ...model,
++        ...safeModel,
+         authoring,
+         typedAuthoring,
+         rewriteEnabled,
+@@ -342,6 +408,9 @@
+         {model.jdRecommendations && (
+           <JdRecommendations plan={model.jdRecommendations} base={base} />
+         )}
++        {model.jdClauseOrderPlan && (
++          <JdClauseOrderPlanReview plan={model.jdClauseOrderPlan} />
++        )}
+         {model.typedCoverage && (
+           <>
+             {model.typedAuthoring ? (
+@@ -351,9 +420,9 @@
+               />
+             ) : (
+               <p role="status">
+-                Proposals are paused for typed job requirements while their
+-                version and evidence bindings are completed. You can still
+-                review and edit your structured resume independently.
++                {model.jdClauseOrderPlan?.drafts.length
++                  ? "Reviewed saving is unavailable for these projected previews. They have not been saved. You can still review and edit your structured resume independently."
++                  : "Proposals are paused for typed job requirements while their version and evidence bindings are completed. You can still review and edit your structured resume independently."}
+               </p>
+             )}
+             <RequirementCoverageReview

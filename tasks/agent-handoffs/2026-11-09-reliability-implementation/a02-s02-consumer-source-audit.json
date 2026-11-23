@@ -1,0 +1,44 @@
+{
+  "task": "CR-A02-S02",
+  "status": "READ_ONLY_CONSUMER_PROPOSAL_NO_IMPLEMENTATION",
+  "at": "2026-11-13T10:57:38.147806+00:00",
+  "source": {
+    "app/routes/analysis.canonical.tsx": {
+      "rootSha256": "aa6bd75349f6fc507f5358105d9a411384418dbc87f094d833014eae7cbf7d9b",
+      "frontendSha256": "aa6bd75349f6fc507f5358105d9a411384418dbc87f094d833014eae7cbf7d9b",
+      "identical": true
+    },
+    "app/lib/server/canonical-repository.ts": {
+      "rootSha256": "c50eed9f614ef6221ebecc3268a626d4511cd250dafb9042040dbc1541ae4d53",
+      "frontendSha256": "c50eed9f614ef6221ebecc3268a626d4511cd250dafb9042040dbc1541ae4d53",
+      "identical": true
+    }
+  },
+  "proposedFiles": [
+    "app/routes/analysis.canonical.tsx",
+    "tests/unit/canonical-route.test.ts",
+    "tests/components/CanonicalFirstImportRelationships.test.tsx",
+    "separate frontend grouped-first-import handoff"
+  ],
+  "guards": [
+    "current and canonical head both null",
+    "existing auth/flags/private cookies/headers/same-origin POST/form bounds",
+    "blocking corrections resolved and real write/source readiness",
+    "no existing-head restructuring or legacy fallback"
+  ],
+  "flow": [
+    "No preselected groups; show exact observed fields/source links and unsupported relationships separately",
+    "Server-derived preview from exact selected references before acknowledgement",
+    "Fresh relationship-only acknowledgement; facts require separate confirmation",
+    "Preserve exact ambiguous-failure retries; changed source/selection/revisions require fresh preview and acknowledgement"
+  ],
+  "requiredBackendContract": [
+    "first-import capability and exact owned candidates/member references",
+    "durable decision operation/revisions and source/model binding",
+    "preview identity and semantic replay",
+    "immutable transactional result receipt"
+  ],
+  "noActionsExecuted": true,
+  "testsRun": 0,
+  "limits": "Design proposal only; caller cannot claim durable source/readiness/decisions. Active implementation remains the separate five-file pure producer."
+}

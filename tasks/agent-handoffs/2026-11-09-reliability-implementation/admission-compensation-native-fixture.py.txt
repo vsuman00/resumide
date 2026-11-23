@@ -1,0 +1,168 @@
+"""Run the existing admission and compensation SQL on disposable PostgreSQL 17."""
+from hashlib import sha256
+import json
+from pathlib import Path
+import re
+import subprocess
+from tempfile import TemporaryDirectory
+
+migrations = Path("supabase/migrations")
+base = (migrations / "20261110080809_analysis_admission_binding.sql").read_text()
+locks = (migrations / "20261109164851_correction_ledger_foundation.sql").read_text()
+privacy = (migrations / "20261110085512_privacy_write_barrier.sql").read_text()
+transport = (migrations / "20261121130718_analysis_admission_upload_transport.sql").read_text()
+
+def section(source, start, end):
+    position = source.index(start)
+    return source[position:source.index(end, position)]
+
+# Emulate the repository's audited prosrc replacement for this one function.
+# The fixture excludes the full catalogue phase and unrelated Supabase schemas.
+old = section(base, "create function private.analysis_admission_authorized", "$$;")
+body = old.split("as $$", 1)[1]
+operation = next(
+    item for item in re.findall(r'\{\s*"signature":[\s\S]*?\]\s*\}', privacy)
+    if '"signature": "private.analysis_admission_authorized(uuid,uuid)"' in item
+)
+patch = json.loads(operation)
+assert sha256(body.encode()).hexdigest() == patch["sha256"]
+updated = old
+for change in patch["patches"]:
+    assert updated.count(change["old"]) == change["count"]
+    updated = updated.replace(change["old"], change["new"])
+base = base.replace(old, updated)
+
+scaffold = """
+create role anon;
+create role authenticated;
+create role service_role;
+create schema auth;
+create schema private;
+create schema extensions;
+create extension pgcrypto with schema extensions;
+create table auth.users(id uuid primary key);
+create table public.organizations(id uuid primary key, owner_id uuid);
+create table public.memberships(user_id uuid, organization_id uuid, role text);
+create table public.consents(user_id uuid, organization_id uuid, purpose text, policy_version text);
+create table public.data_requests(user_id uuid, kind text, status text);
+create table public.fixture_adoptions(analysis_id uuid primary key);
+
+-- Stub only the legacy queue writer, with a call marker and the expected receipt.
+create function public.create_queued_analysis(
+    uuid, int, text, text, uuid, text, uuid, text, uuid, text, uuid, text, uuid, uuid
+) returns jsonb language plpgsql set search_path='' as $$
+begin
+    insert into public.fixture_adoptions values($1);
+    return jsonb_build_object('created',true,'analysisId',$1,'resumeId',$11);
+end;
+$$;
+"""
+
+checks = """
+do $$
+declare
+  candidate uuid:=gen_random_uuid();
+  foreign_candidate uuid:=gen_random_uuid();
+  workspace uuid:=gen_random_uuid();
+  operation_id uuid;
+  upload_id uuid;
+  path text;
+  provider_object uuid;
+  meta jsonb;
+  preparation jsonb;
+  finalize jsonb;
+  result jsonb;
+begin
+  insert into auth.users values(candidate),(foreign_candidate);
+  insert into public.organizations values(workspace,candidate);
+  insert into public.memberships values(candidate,workspace,'owner');
+  insert into public.consents values(candidate,workspace,'qualitative_ai','candidate-ai-v1');
+
+  assert has_function_privilege('service_role','public.cleanup_analysis_admission(uuid,uuid,uuid,uuid,text)','execute');
+  assert not has_function_privilege('authenticated','public.cleanup_analysis_admission(uuid,uuid,uuid,uuid,text)','execute');
+  assert not has_function_privilege('anon','public.cleanup_analysis_admission(uuid,uuid,uuid,uuid,text)','execute');
+  assert not has_table_privilege('service_role','private.analysis_admission_uploads','update');
+
+  -- Exercise both orderings. The adopted case proves the cleanup refusal is
+  -- based on durable state even when later access is lost.
+  for ordering in 1..2 loop
+    upload_id:=gen_random_uuid();
+    provider_object:=gen_random_uuid();
+    meta:=jsonb_build_object(
+      'idempotencyKey',gen_random_uuid(),'uploadId',upload_id,'analysisId',gen_random_uuid(),
+      'resumeId',gen_random_uuid(),'versionId',gen_random_uuid(),'jobId',gen_random_uuid(),
+      'bytes',7,'checksum',repeat('a',64),'requestPolicySha256',repeat('b',64),
+      'titleSha256',encode(extensions.digest('Demo','sha256'),'hex'),
+      'jobSha256',encode(extensions.digest('Synthetic','sha256'),'hex'),
+      'nameSha256',encode(extensions.digest('demo.pdf','sha256'),'hex'),
+      'policyVersion','analysis-admission/1.0.0','consentPolicyVersion','candidate-ai-v1'
+    );
+    meta:=meta||jsonb_build_object('bindingSha256',private.analysis_admission_hash(meta));
+    finalize:=meta||'{"jobTitle":"Demo","jobDescription":"Synthetic","displayName":"demo.pdf","requestId":"fixture-01"}';
+    preparation:=public.prepare_tracked_analysis_admission(candidate,workspace,meta);
+    assert preparation->>'kind'='upload', preparation::text;
+    operation_id:=(preparation->>'operationId')::uuid;
+    path:=preparation->>'storageKey';
+    assert public.begin_analysis_admission_upload(candidate,workspace,operation_id,upload_id,'resumes',path);
+
+    if ordering=1 then
+      insert into public.data_requests values(candidate,'deletion','queued');
+    end if;
+    assert public.acknowledge_analysis_admission_upload(candidate,workspace,operation_id,upload_id,'resumes',path,provider_object);
+    result:=public.finalize_analysis_admission(candidate,workspace,operation_id,upload_id,finalize);
+    assert not public.cleanup_analysis_admission(foreign_candidate,workspace,operation_id,upload_id,'pending');
+
+    if ordering=1 then
+      assert result->>'code'='ADMISSION_DENIED', result::text;
+      assert not public.cleanup_analysis_admission(candidate,workspace,operation_id,upload_id,'cleaned');
+      assert public.cleanup_analysis_admission(candidate,workspace,operation_id,upload_id,'pending');
+      update public.data_requests set status='failed' where user_id=candidate;
+      assert not public.begin_analysis_admission_upload(candidate,workspace,operation_id,upload_id,'resumes',path);
+      result:=public.finalize_analysis_admission(candidate,workspace,operation_id,upload_id,finalize);
+      assert result->>'code'='ADMISSION_CONFLICT', result::text;
+      assert public.cleanup_analysis_admission(candidate,workspace,operation_id,upload_id,'cleaned');
+      assert public.cleanup_analysis_admission(candidate,workspace,operation_id,upload_id,'cleaned');
+      assert (select state='cleaned' from private.analysis_admission_uploads where id=upload_id);
+      assert (select count(*)=0 from public.fixture_adoptions);
+    else
+      assert result->>'created'='true', result::text;
+      update public.data_requests set status='queued' where user_id=candidate;
+      assert not public.cleanup_analysis_admission(candidate,workspace,operation_id,upload_id,'pending');
+      assert not public.cleanup_analysis_admission(candidate,workspace,operation_id,upload_id,'cleaned');
+      assert (select state='adopted' from private.analysis_admission_uploads where id=upload_id);
+      assert (select count(*)=1 from public.fixture_adoptions);
+    end if;
+  end loop;
+end;
+$$;
+"""
+
+with TemporaryDirectory(prefix="resumide-compensation-") as temporary:
+    home = Path(temporary)
+    data = str(home / "data")
+    env = {"HOME": temporary, "PATH": "/opt/homebrew/bin:/usr/bin:/bin", "LC_ALL": "C"}
+
+    def run(args, **options):
+        return subprocess.run(args, env=env, check=True, text=True, timeout=25, **options)
+
+    assert run(["postgres", "--version"], capture_output=True).stdout.startswith("postgres (PostgreSQL) 17.")
+    run(["initdb", "-D", data, "--no-sync", "--auth=trust", "-U", "fixture_owner"], stdout=subprocess.DEVNULL)
+    try:
+        run([
+            "pg_ctl", "-w", "-D", data, "-l", str(home / "postgres.log"),
+            "-o", f"-c listen_addresses='' -c unix_socket_directories={temporary} -c unix_socket_permissions=0700",
+            "start",
+        ], stdout=subprocess.DEVNULL)
+        sql = "\n".join([
+            scaffold,
+            section(locks, "create function private.candidate_owner_lock_keys", "-- A false try-lock"),
+            section(privacy, "create function private.candidate_write_blocked", "create function private.serialize_deletion_request"),
+            base,
+            transport,
+            checks,
+        ])
+        run(["psql", "-X", "-v", "ON_ERROR_STOP=1", "-h", temporary, "-U", "fixture_owner", "-d", "postgres", "-Atq"], input=sql)
+        print("PASS: late acknowledged write, exact pending transition, stale finalize refusal, adopted and foreign upload refusal, idempotent cleanup, and role privileges.")
+    finally:
+        if (Path(data) / "postmaster.pid").exists():
+            run(["pg_ctl", "-w", "-D", data, "-m", "immediate", "stop"], stdout=subprocess.DEVNULL)

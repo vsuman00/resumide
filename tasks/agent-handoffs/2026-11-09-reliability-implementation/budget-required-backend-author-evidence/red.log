@@ -1,0 +1,151 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/mandatory-ai-budget-sql.test.ts (2 tests | 2 failed) 18ms
+     × refuses SQL/JSON null A12 budget immediately after no-dispatch replay 9ms
+     × refuses absent stored A13 technical policy or SQL/JSON null budget after replay 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/mandatory-ai-budget-sql.test.ts > actual predecessor null-budget dispatch regressions, Native unexecuted > refuses SQL/JSON null A12 budget immediately after no-dispatch replay
+AssertionError: expected '\ndeclare a public.analyses%rowtype; …' to contain 'end if;\n  if p_budget is null or p_b…'
+
+- Expected
++ Received
+
+- end if;
+-   if p_budget is null or p_budget='null'::jsonb then perform private.correction_fail('unavailable');end if;
+-   if private.canonical_rewrite_ready()
++
++ declare a public.analyses%rowtype; op private.canonical_rewrite_operations%rowtype; ctx jsonb; budget jsonb;
++ begin
++   a:=private.canonical_rewrite_owner(p_user_id,p_analysis_id);
++   select * into strict op from private.canonical_rewrite_operations where owner_id=p_user_id and analysis_id=p_analysis_id and operation_id=p_operation_id for update;
++   if op.binding_sha256 is distinct from p_binding_sha256 or op.organization_id is distinct from a.organization_id then perform private.correction_fail('conflict'); end if;
++   if op.state<>'reserved' then return jsonb_build_object('operation',private.canonical_rewrite_operation(op,false),'budget',null); end if;
++   if private.canonical_rewrite_ready() is not true then perform private.correction_fail('unavailable'); end if;
++   perform private.canonical_rewrite_consent(p_user_id,a.organization_id);
++   ctx:=public.read_canonical_rewrite_context(p_user_id,p_analysis_id,jsonb_build_object('canonicalVersionId',op.request->'canonicalVersionId','requirementVersionId',op.request->'requirementVersionId'),op.policy);
++   if ctx->>'bindingSha256' is distinct from op.binding_sha256
++     or ctx->'relationshipContext'->'heads'->'canonicalHeadId' is distinct from op.request->'canonicalVersionId'
++     or ctx->'relationshipContext'->'heads'->'requirementHeadId' is distinct from op.request->'requirementVersionId' then perform private.correction_fail('conflict'); end if;
++   if p_budget is not null and p_budget<>'null'::jsonb then
++     if private.evidence_keys(p_budget,array['p_user_id','p_organization_id','p_request']) is not true
++       or p_budget->>'p_user_id' is distinct from p_user_id::text or p_budget->>'p_organization_id' is distinct from a.organization_id::text
++       or p_budget->'p_request'->>'operationId' is distinct from private.ai_budget_source_identity(p_user_id,a.organization_id,'canonical_rewrite',p_analysis_id,op.source_id,p_operation_id::text)::text
++       or p_budget->'p_request'->>'surface' is distinct from 'rewrite'
++       or p_budget->'p_request'->>'model' is distinct from op.policy->>'model'
++       or p_budget->'p_request'->>'promptPolicyVersion' is distinct from op.policy->>'promptVersion'
++       or p_budget->'p_request'->>'payloadSha256' is distinct from op.binding_sha256 then perform private.correction_fail('invalid'); end if;
++     if not exists(select 1 from private.ai_budget_operation_sources s where s.operation_id=(p_budget->'p_request'->>'operationId')::uuid and s.kind='canonical_rewrite'
++       and (s.owner_id,s.organization_id,s.analysis_id,s.resume_version_id,s.request_nonce)=(p_user_id,a.organization_id,p_analysis_id,op.source_id,p_operation_id::text)) then perform private.correction_fail('invalid');end if;
++     budget:=private.ai_budget_transition(p_user_id,a.organization_id,p_budget->'p_request','claim_dispatch');
++     -- A denied/replayed budget claim must roll back the operation claim as well.
++     if budget->>'status' is distinct from 'ok' or budget->'receipt'->'dispatchAllowed' is distinct from 'true'::jsonb then
++       return jsonb_build_object('operation',private.canonical_rewrite_operation(op,false),'budget',budget); end if;
++   end if;
++   update private.canonical_rewrite_operations set state='dispatched',claimed_at=clock_timestamp()
++     where owner_id=p_user_id and analysis_id=p_analysis_id and operation_id=p_operation_id returning * into op;
++   return jsonb_build_object('operation',private.canonical_rewrite_operation(op,true),'budget',budget);
++ end;
++
+
+ ❯ tests/unit/mandatory-ai-budget-sql.test.ts:11:59
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/unit/mandatory-ai-budget-sql.test.ts > actual predecessor null-budget dispatch regressions, Native unexecuted > refuses absent stored A13 technical policy or SQL/JSON null budget after replay
+AssertionError: expected '\ndeclare a public.analyses%rowtype;o…' to contain 'end if;\n  if (op.binding->\'policy\'…'
+
+- Expected
++ Received
+
+- end if;
+-   if (op.binding->'policy'->>'budgetPolicyVersion') is null or p_budget is null or p_budget='null'::jsonb then perform private.ifo_fail('unavailable');end if;
+-   if a.status<>'qualitative_review'
++
++ declare a public.analyses%rowtype;op private.initial_feedback_operations%rowtype;att private.initial_feedback_attempts%rowtype;
++   original jsonb;ctx jsonb;pol jsonb;budget jsonb:=null;req jsonb;
++ begin
++   if p_analysis_id is null or p_operation_id is null or p_attempt_id is null or p_binding_sha256 is null
++     or p_binding_sha256 collate "C" !~ '^[a-f0-9]{64}$' or private.legacy_scoring_lease(p_lease) is not true then perform private.ifo_fail('invalid');end if;
++   if private.initial_feedback_operation_ready() is not true then perform private.ifo_fail('unavailable');end if;
++   a:=private.legacy_scoring_access(p_analysis_id,null);original:=private.ifo_original(a);
++   select * into op from private.initial_feedback_operations where operation_id=p_operation_id and analysis_id=a.id
++     and owner_id=a.owner_id and organization_id=a.organization_id for update;
++   if not found or op.binding_sha256<>p_binding_sha256
++     or op.binding is distinct from private.ifo_binding(original,op.binding->'policy') then perform private.ifo_fail('not_found');end if;
++   select * into att from private.initial_feedback_attempts where attempt_id=p_attempt_id and operation_id=op.operation_id for update;
++   if not found then perform private.ifo_fail('not_found');end if;
++   if private.legacy_scoring_static_job(a.id,p_lease) is not true and att.claim_lease is distinct from p_lease then perform private.ifo_fail('not_found');end if;
++   if op.state<>'open' or op.publication_id is not null or att.state<>'reserved' then
++     return jsonb_build_object('schemaVersion','initial-feedback-claim/1.0.0','operation',private.ifo_operation_json(op),'attempt',private.ifo_attempt_json(att),
++       'dispatchAllowed',false,'replayed',true,'budget',null);
++   end if;
++   if a.status<>'qualitative_review' or not private.lock_analysis_stage_lease(a.id,p_lease->>'workerId',(p_lease->>'attempt')::integer,(p_lease->>'leaseFence')::uuid)
++     then perform private.ifo_fail('stale');end if;
++   pol:=private.ifo_selected_policy(a.organization_id,jsonb_build_object('version',op.policy_version,'sha256',op.policy_sha256));
++   if pol is distinct from op.binding->'policy' then perform private.ifo_fail('stale');end if;
++   ctx:=private.ifo_context(a,original);
++   if ctx->>'generationEligibility'<>'eligible' or private.ifo_binding(ctx,pol) is distinct from op.binding then perform private.ifo_fail('stale');end if;
++   -- The actual frozen source parser checks its source-domain/resource limits
++   -- BEFORE any provider permission; it supplies no candidate qualification.
++   perform private.ifp_document(ctx->'scoringContext'->'extraction'->>'text');
++   perform 1 from public.consents where user_id=a.owner_id and purpose='qualitative_ai' and policy_version='candidate-ai-v1' for share skip locked;
++   if not found then perform private.ifo_fail('not_found');end if;
++   if pol->'budgetPolicyVersion'='null'::jsonb then
++     if p_budget is not null and p_budget<>'null'::jsonb then perform private.ifo_fail('invalid');end if;
++   else
++     if private.ifo_keys(p_budget,array['p_user_id','p_organization_id','p_request']) is not true
++       or p_budget->>'p_user_id' is distinct from a.owner_id::text or p_budget->>'p_organization_id' is distinct from a.organization_id::text
++       then perform private.ifo_fail('invalid');end if;
++     req:=p_budget->'p_request';
++     if private.ai_budget_request_valid(req,'claim_dispatch') is not true or req->>'operationId' is distinct from op.operation_id::text
++       or req->>'attemptId' is distinct from att.attempt_id::text or (req->>'attemptOrdinal')::numeric is distinct from att.ordinal::numeric
++       or req->>'surface' is distinct from 'qualitative' or req->>'model' is distinct from pol->>'model'
++       or req->>'promptPolicyVersion' is distinct from pol->>'promptVersion' or req->>'policyVersion' is distinct from pol->>'budgetPolicyVersion'
++       or req->>'payloadSha256' is distinct from op.binding_sha256
++       or (req->>'reservedOutputTokens')::numeric is distinct from (pol->>'maxOutputTokens')::numeric then perform private.ifo_fail('invalid');end if;
++     -- Never wait for the inverse org -> membership order of generic R03 while
++     -- already holding analysis/queue/source/membership locks. Reentrant after.
++     perform 1 from public.organizations where id=a.organization_id for update skip locked;
++     if not found then perform private.ifo_fail('stale');end if;
++     perform 1 from public.memberships where organization_id=a.organization_id and user_id=a.owner_id
++       and role in ('owner','admin','member') for update skip locked;
++     if not found then perform private.ifo_fail('stale');end if;
++     if not exists(select 1 from private.ai_budget_operation_sources s where s.kind='initial_feedback' and (s.operation_id,s.owner_id,s.organization_id,s.analysis_id,s.resume_id,s.resume_version_id)
++       =(op.operation_id,a.owner_id,a.organization_id,a.id,op.resume_id,op.resume_version_id)) then perform private.ifo_fail('invalid');end if;
++     budget:=private.ai_budget_transition(a.owner_id,a.organization_id,req,'claim_dispatch');
++     if budget->>'status'='denied' then
++       return jsonb_build_object('schemaVersion','initial-feedback-claim/1.0.0','operation',private.ifo_operation_json(op),'attempt',private.ifo_attempt_json(att),
++         'dispatchAllowed',false,'replayed',false,'budget',budget);
++     end if;
++     -- An existing generic winner cannot be adopted as this still-reserved
++     -- feedback attempt. Never mark/release that winner or dispatch a new one.
++     if budget->>'status' is distinct from 'ok' or budget->'receipt'->'dispatchAllowed' is distinct from 'true'::jsonb then perform private.ifo_fail('stale');end if;
++     if budget->'receipt'->>'attemptId' is distinct from att.attempt_id::text or budget->'receipt'->>'operationId' is distinct from op.operation_id::text
++       or budget->'receipt'->'replayed' is distinct from 'false'::jsonb then perform private.ifo_fail('stale');end if;
++   end if;
++   if not private.lock_analysis_stage_lease(a.id,p_lease->>'workerId',(p_lease->>'attempt')::integer,(p_lease->>'leaseFence')::uuid)
++     or private.try_candidate_privacy_write(a.owner_id) is not true then perform private.ifo_fail('stale');end if;
++   update private.initial_feedback_attempts set state='dispatched',claim_lease=p_lease,claimed_at=clock_timestamp(),
++     budget_attempt_id=case when budget is null then null else att.attempt_id end
++     where attempt_id=att.attempt_id and state='reserved' returning * into att;
++   if not found then perform private.ifo_fail('stale');end if;
++   return jsonb_build_object('schemaVersion','initial-feedback-claim/1.0.0','operation',private.ifo_operation_json(op),'attempt',private.ifo_attempt_json(att),
++     'dispatchAllowed',true,'replayed',false,'budget',budget);
++ end;
++
+
+ ❯ tests/unit/mandatory-ai-budget-sql.test.ts:14:58
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  18:27:34
+   Duration  88ms (transform 9ms, setup 0ms, import 14ms, tests 18ms, environment 0ms)
+

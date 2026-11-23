@@ -1,0 +1,64 @@
+{
+  "missing-pub-red": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-publication-repository.test.ts",
+      "-t",
+      "paired owner export includes genuine retirement metadata after content cascade",
+      "--maxWorkers=1",
+      "--no-file-parallelism"
+    ],
+    "expectedExit": 1
+  },
+  "finite": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/owned-ai-retirement-export.test.ts",
+      "tests/unit/initial-feedback-publication-repository.test.ts",
+      "--maxWorkers=1",
+      "--no-file-parallelism"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/owned-ai-retirement-export.ts",
+      "app/lib/server/initial-feedback-publication-repository.ts",
+      "tests/unit/owned-ai-retirement-export.test.ts",
+      "tests/unit/initial-feedback-publication-repository.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/owned-ai-retirement-export.ts",
+      "app/lib/server/initial-feedback-publication-repository.ts",
+      "tests/unit/owned-ai-retirement-export.test.ts",
+      "tests/unit/initial-feedback-publication-repository.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "types": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-retirement-export-3tejhrj8/types.cjs"
+    ],
+    "expectedExit": 0
+  },
+  "binding-fixture-affected": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-publication-repository.test.ts",
+      "-t",
+      "paired mode rejects missing, foreign, mismatched or conflicting retirement authority",
+      "--maxWorkers=1",
+      "--no-file-parallelism"
+    ],
+    "expectedExit": 0
+  }
+}

@@ -1,0 +1,1954 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+stderr | tests/components/JdClauseOrderPage.test.tsx > renders actual owned source-to-plan-to-page previews with pinned inputs, private headers and no save authority
+No `HydrateFallback` element provided to render during initial hydration
+
+ ❯ tests/components/JdClauseOrderPage.test.tsx (12 tests | 5 failed) 5528ms
+   × renders actual owned source-to-plan-to-page previews with pinned inputs, private headers and no save authority 1183ms
+   ✓ keeps the existing authoring default-off path free of plan data and preserves the old paused message 62ms
+   ✓ requires verified sign-in before privileged owned reads 3ms
+   ✓ keeps scoring disabled before auth or privileged reads 2ms
+   ✓ refuses public activation query clauseOrderPreview=true before the client boundary 2ms
+   ✓ refuses public activation query authoring=true before the client boundary 1ms
+   × keeps exact historical inputs and shows refusal instead of substituting current heads 1047ms
+   × explains no admitted pair without calling it no room for improvement 1066ms
+   × keeps diagnostics and JD priorities when source coverage makes previews unavailable 1065ms
+   × shows at most five real previews and identifies unexamined pairs without a full eligible count 1076ms
+   ✓ refuses a final privacy/source read failure before releasing any preview 18ms
+   ✓ preserves duplicate version-query rejection 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/JdClauseOrderPage.test.tsx > renders actual owned source-to-plan-to-page previews with pinned inputs, private headers and no save authority
+TestingLibraryElementError: Unable to find role="region" and name "JD-focused wording previews"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Resumide home"[39m
+          [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-lockup is-compact"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-wordmark"[39m
+            [36m>[39m
+              [0mResumide[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"brand-leaf"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mviewBox[39m=[32m"0 0 28 34"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-descriptor"[39m
+            [36m>[39m
+              [0mEvidence desk[0m
+            [36m</span>[39m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+          [33mclass[39m=[32m"_primary_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/analyses"[39m
+          [36m>[39m
+            [0mAnalyses[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/upload"[39m
+          [36m>[39m
+            [0mNew analysis[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/build"[39m
+          [36m>[39m
+            [0mBuild[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"_menu_a67a5d"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33maria-label[39m=[32m"Open site menu"[39m
+          [36m>[39m
+            [0mMenu [0m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+            [36m>[39m
+              [0m☰[0m
+            [36m</span>[39m
+          [36m</summary>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Site menu"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/"[39m
+              [36m>[39m
+                [0mHome[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analyses"[39m
+              [36m>[39m
+                [0mAnalyses[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/upload"[39m
+              [36m>[39m
+                [0mNew analysis[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/build"[39m
+              [36m>[39m
+                [0mBuild[0m
+              [36m</a>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/privacy"[39m
+            [36m>[39m
+              [0mPrivacy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/account"[39m
+            [36m>[39m
+              [0mAccount[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_theme_a67a5d"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"theme-control"[39m
+                [33mtitle[39m=[32m"Choose color theme"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"theme-control-icon"[39m
+                [36m>[39m
+                  [0m◐[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"sr-only"[39m
+                [36m>[39m
+                  [0mColor theme[0m
+                [36m</span>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"Color theme"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"light"[39m
+                  [36m>[39m
+                    [0mLight[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"dark"[39m
+                  [36m>[39m
+                    [0mDark[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"system"[39m
+                  [36m>[39m
+                    [0mSystem[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/auth"[39m
+            [36m>[39m
+              [0mSign in[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+        [36m</details>[39m
+   ...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Resumide home"[39m
+          [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-lockup is-compact"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-wordmark"[39m
+            [36m>[39m
+              [0mResumide[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"brand-leaf"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mviewBox[39m=[32m"0 0 28 34"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-descriptor"[39m
+            [36m>[39m
+              [0mEvidence desk[0m
+            [36m</span>[39m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+          [33mclass[39m=[32m"_primary_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/analyses"[39m
+          [36m>[39m
+            [0mAnalyses[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/upload"[39m
+          [36m>[39m
+            [0mNew analysis[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/build"[39m
+          [36m>[39m
+            [0mBuild[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"_menu_a67a5d"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33maria-label[39m=[32m"Open site menu"[39m
+          [36m>[39m
+            [0mMenu [0m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+            [36m>[39m
+              [0m☰[0m
+            [36m</span>[39m
+          [36m</summary>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Site menu"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/"[39m
+              [36m>[39m
+                [0mHome[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analyses"[39m
+              [36m>[39m
+                [0mAnalyses[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/upload"[39m
+              [36m>[39m
+                [0mNew analysis[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/build"[39m
+              [36m>[39m
+                [0mBuild[0m
+              [36m</a>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/privacy"[39m
+            [36m>[39m
+              [0mPrivacy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/account"[39m
+            [36m>[39m
+              [0mAccount[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_theme_a67a5d"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"theme-control"[39m
+                [33mtitle[39m=[32m"Choose color theme"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"theme-control-icon"[39m
+                [36m>[39m
+                  [0m◐[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"sr-only"[39m
+                [36m>[39m
+                  [0mColor theme[0m
+                [36m</span>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"Color theme"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"light"[39m
+                  [36m>[39m
+                    [0mLight[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"dark"[39m
+                  [36m>[39m
+                    [0mDark[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"system"[39m
+                  [36m>[39m
+                    [0mSystem[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/auth"[39m
+            [36m>[39m
+              [0mSign in[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+        [36m</details>[39m
+   ...
+ ❯ waitForWrapper ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ tests/components/JdClauseOrderPage.test.tsx:25:87
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/components/JdClauseOrderPage.test.tsx > keeps exact historical inputs and shows refusal instead of substituting current heads
+TestingLibraryElementError: Unable to find role="region" and name "JD-focused wording previews"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Resumide home"[39m
+          [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-lockup is-compact"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-wordmark"[39m
+            [36m>[39m
+              [0mResumide[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"brand-leaf"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mviewBox[39m=[32m"0 0 28 34"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-descriptor"[39m
+            [36m>[39m
+              [0mEvidence desk[0m
+            [36m</span>[39m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+          [33mclass[39m=[32m"_primary_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/analyses"[39m
+          [36m>[39m
+            [0mAnalyses[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/upload"[39m
+          [36m>[39m
+            [0mNew analysis[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/build"[39m
+          [36m>[39m
+            [0mBuild[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"_menu_a67a5d"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33maria-label[39m=[32m"Open site menu"[39m
+          [36m>[39m
+            [0mMenu [0m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+            [36m>[39m
+              [0m☰[0m
+            [36m</span>[39m
+          [36m</summary>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Site menu"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/"[39m
+              [36m>[39m
+                [0mHome[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analyses"[39m
+              [36m>[39m
+                [0mAnalyses[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/upload"[39m
+              [36m>[39m
+                [0mNew analysis[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/build"[39m
+              [36m>[39m
+                [0mBuild[0m
+              [36m</a>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/privacy"[39m
+            [36m>[39m
+              [0mPrivacy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/account"[39m
+            [36m>[39m
+              [0mAccount[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_theme_a67a5d"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"theme-control"[39m
+                [33mtitle[39m=[32m"Choose color theme"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"theme-control-icon"[39m
+                [36m>[39m
+                  [0m◐[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"sr-only"[39m
+                [36m>[39m
+                  [0mColor theme[0m
+                [36m</span>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"Color theme"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"light"[39m
+                  [36m>[39m
+                    [0mLight[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"dark"[39m
+                  [36m>[39m
+                    [0mDark[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"system"[39m
+                  [36m>[39m
+                    [0mSystem[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/auth"[39m
+            [36m>[39m
+              [0mSign in[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+        [36m</details>[39m
+   ...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Resumide home"[39m
+          [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-lockup is-compact"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-wordmark"[39m
+            [36m>[39m
+              [0mResumide[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"brand-leaf"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mviewBox[39m=[32m"0 0 28 34"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-descriptor"[39m
+            [36m>[39m
+              [0mEvidence desk[0m
+            [36m</span>[39m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+          [33mclass[39m=[32m"_primary_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/analyses"[39m
+          [36m>[39m
+            [0mAnalyses[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/upload"[39m
+          [36m>[39m
+            [0mNew analysis[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/build"[39m
+          [36m>[39m
+            [0mBuild[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"_menu_a67a5d"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33maria-label[39m=[32m"Open site menu"[39m
+          [36m>[39m
+            [0mMenu [0m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+            [36m>[39m
+              [0m☰[0m
+            [36m</span>[39m
+          [36m</summary>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Site menu"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/"[39m
+              [36m>[39m
+                [0mHome[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analyses"[39m
+              [36m>[39m
+                [0mAnalyses[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/upload"[39m
+              [36m>[39m
+                [0mNew analysis[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/build"[39m
+              [36m>[39m
+                [0mBuild[0m
+              [36m</a>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/privacy"[39m
+            [36m>[39m
+              [0mPrivacy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/account"[39m
+            [36m>[39m
+              [0mAccount[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_theme_a67a5d"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"theme-control"[39m
+                [33mtitle[39m=[32m"Choose color theme"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"theme-control-icon"[39m
+                [36m>[39m
+                  [0m◐[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"sr-only"[39m
+                [36m>[39m
+                  [0mColor theme[0m
+                [36m</span>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"Color theme"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"light"[39m
+                  [36m>[39m
+                    [0mLight[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"dark"[39m
+                  [36m>[39m
+                    [0mDark[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"system"[39m
+                  [36m>[39m
+                    [0mSystem[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/auth"[39m
+            [36m>[39m
+              [0mSign in[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+        [36m</details>[39m
+   ...
+ ❯ waitForWrapper ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ tests/components/JdClauseOrderPage.test.tsx:54:95
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/components/JdClauseOrderPage.test.tsx > explains no admitted pair without calling it no room for improvement
+TestingLibraryElementError: Unable to find role="region" and name "JD-focused wording previews"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Resumide home"[39m
+          [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-lockup is-compact"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-wordmark"[39m
+            [36m>[39m
+              [0mResumide[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"brand-leaf"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mviewBox[39m=[32m"0 0 28 34"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-descriptor"[39m
+            [36m>[39m
+              [0mEvidence desk[0m
+            [36m</span>[39m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+          [33mclass[39m=[32m"_primary_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/analyses"[39m
+          [36m>[39m
+            [0mAnalyses[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/upload"[39m
+          [36m>[39m
+            [0mNew analysis[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/build"[39m
+          [36m>[39m
+            [0mBuild[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"_menu_a67a5d"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33maria-label[39m=[32m"Open site menu"[39m
+          [36m>[39m
+            [0mMenu [0m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+            [36m>[39m
+              [0m☰[0m
+            [36m</span>[39m
+          [36m</summary>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Site menu"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/"[39m
+              [36m>[39m
+                [0mHome[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analyses"[39m
+              [36m>[39m
+                [0mAnalyses[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/upload"[39m
+              [36m>[39m
+                [0mNew analysis[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/build"[39m
+              [36m>[39m
+                [0mBuild[0m
+              [36m</a>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/privacy"[39m
+            [36m>[39m
+              [0mPrivacy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/account"[39m
+            [36m>[39m
+              [0mAccount[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_theme_a67a5d"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"theme-control"[39m
+                [33mtitle[39m=[32m"Choose color theme"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"theme-control-icon"[39m
+                [36m>[39m
+                  [0m◐[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"sr-only"[39m
+                [36m>[39m
+                  [0mColor theme[0m
+                [36m</span>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"Color theme"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"light"[39m
+                  [36m>[39m
+                    [0mLight[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"dark"[39m
+                  [36m>[39m
+                    [0mDark[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"system"[39m
+                  [36m>[39m
+                    [0mSystem[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/auth"[39m
+            [36m>[39m
+              [0mSign in[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+        [36m</details>[39m
+   ...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Resumide home"[39m
+          [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-lockup is-compact"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-wordmark"[39m
+            [36m>[39m
+              [0mResumide[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"brand-leaf"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mviewBox[39m=[32m"0 0 28 34"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-descriptor"[39m
+            [36m>[39m
+              [0mEvidence desk[0m
+            [36m</span>[39m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+          [33mclass[39m=[32m"_primary_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/analyses"[39m
+          [36m>[39m
+            [0mAnalyses[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/upload"[39m
+          [36m>[39m
+            [0mNew analysis[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/build"[39m
+          [36m>[39m
+            [0mBuild[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"_menu_a67a5d"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33maria-label[39m=[32m"Open site menu"[39m
+          [36m>[39m
+            [0mMenu [0m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+            [36m>[39m
+              [0m☰[0m
+            [36m</span>[39m
+          [36m</summary>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Site menu"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/"[39m
+              [36m>[39m
+                [0mHome[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analyses"[39m
+              [36m>[39m
+                [0mAnalyses[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/upload"[39m
+              [36m>[39m
+                [0mNew analysis[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/build"[39m
+              [36m>[39m
+                [0mBuild[0m
+              [36m</a>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/privacy"[39m
+            [36m>[39m
+              [0mPrivacy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/account"[39m
+            [36m>[39m
+              [0mAccount[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_theme_a67a5d"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"theme-control"[39m
+                [33mtitle[39m=[32m"Choose color theme"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"theme-control-icon"[39m
+                [36m>[39m
+                  [0m◐[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"sr-only"[39m
+                [36m>[39m
+                  [0mColor theme[0m
+                [36m</span>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"Color theme"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"light"[39m
+                  [36m>[39m
+                    [0mLight[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"dark"[39m
+                  [36m>[39m
+                    [0mDark[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"system"[39m
+                  [36m>[39m
+                    [0mSystem[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/auth"[39m
+            [36m>[39m
+              [0mSign in[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+        [36m</details>[39m
+   ...
+ ❯ waitForWrapper ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ tests/components/JdClauseOrderPage.test.tsx:57:123
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+ FAIL  tests/components/JdClauseOrderPage.test.tsx > keeps diagnostics and JD priorities when source coverage makes previews unavailable
+TestingLibraryElementError: Unable to find role="region" and name "JD-focused wording previews"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Resumide home"[39m
+          [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-lockup is-compact"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-wordmark"[39m
+            [36m>[39m
+              [0mResumide[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"brand-leaf"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mviewBox[39m=[32m"0 0 28 34"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-descriptor"[39m
+            [36m>[39m
+              [0mEvidence desk[0m
+            [36m</span>[39m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+          [33mclass[39m=[32m"_primary_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/analyses"[39m
+          [36m>[39m
+            [0mAnalyses[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/upload"[39m
+          [36m>[39m
+            [0mNew analysis[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/build"[39m
+          [36m>[39m
+            [0mBuild[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"_menu_a67a5d"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33maria-label[39m=[32m"Open site menu"[39m
+          [36m>[39m
+            [0mMenu [0m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+            [36m>[39m
+              [0m☰[0m
+            [36m</span>[39m
+          [36m</summary>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Site menu"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/"[39m
+              [36m>[39m
+                [0mHome[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analyses"[39m
+              [36m>[39m
+                [0mAnalyses[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/upload"[39m
+              [36m>[39m
+                [0mNew analysis[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/build"[39m
+              [36m>[39m
+                [0mBuild[0m
+              [36m</a>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/privacy"[39m
+            [36m>[39m
+              [0mPrivacy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/account"[39m
+            [36m>[39m
+              [0mAccount[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_theme_a67a5d"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"theme-control"[39m
+                [33mtitle[39m=[32m"Choose color theme"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"theme-control-icon"[39m
+                [36m>[39m
+                  [0m◐[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"sr-only"[39m
+                [36m>[39m
+                  [0mColor theme[0m
+                [36m</span>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"Color theme"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"light"[39m
+                  [36m>[39m
+                    [0mLight[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"dark"[39m
+                  [36m>[39m
+                    [0mDark[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"system"[39m
+                  [36m>[39m
+                    [0mSystem[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/auth"[39m
+            [36m>[39m
+              [0mSign in[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+        [36m</details>[39m
+   ...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Resumide home"[39m
+          [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-lockup is-compact"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-wordmark"[39m
+            [36m>[39m
+              [0mResumide[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"brand-leaf"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mviewBox[39m=[32m"0 0 28 34"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-descriptor"[39m
+            [36m>[39m
+              [0mEvidence desk[0m
+            [36m</span>[39m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+          [33mclass[39m=[32m"_primary_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/analyses"[39m
+          [36m>[39m
+            [0mAnalyses[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/upload"[39m
+          [36m>[39m
+            [0mNew analysis[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/build"[39m
+          [36m>[39m
+            [0mBuild[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"_menu_a67a5d"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33maria-label[39m=[32m"Open site menu"[39m
+          [36m>[39m
+            [0mMenu [0m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+            [36m>[39m
+              [0m☰[0m
+            [36m</span>[39m
+          [36m</summary>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Site menu"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/"[39m
+              [36m>[39m
+                [0mHome[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analyses"[39m
+              [36m>[39m
+                [0mAnalyses[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/upload"[39m
+              [36m>[39m
+                [0mNew analysis[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/build"[39m
+              [36m>[39m
+                [0mBuild[0m
+              [36m</a>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/privacy"[39m
+            [36m>[39m
+              [0mPrivacy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/account"[39m
+            [36m>[39m
+              [0mAccount[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_theme_a67a5d"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"theme-control"[39m
+                [33mtitle[39m=[32m"Choose color theme"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"theme-control-icon"[39m
+                [36m>[39m
+                  [0m◐[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"sr-only"[39m
+                [36m>[39m
+                  [0mColor theme[0m
+                [36m</span>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"Color theme"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"light"[39m
+                  [36m>[39m
+                    [0mLight[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"dark"[39m
+                  [36m>[39m
+                    [0mDark[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"system"[39m
+                  [36m>[39m
+                    [0mSystem[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/auth"[39m
+            [36m>[39m
+              [0mSign in[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+        [36m</details>[39m
+   ...
+ ❯ waitForWrapper ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ tests/components/JdClauseOrderPage.test.tsx:60:103
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+
+ FAIL  tests/components/JdClauseOrderPage.test.tsx > shows at most five real previews and identifies unexamined pairs without a full eligible count
+TestingLibraryElementError: Unable to find role="region" and name "JD-focused wording previews"
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Resumide home"[39m
+          [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-lockup is-compact"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-wordmark"[39m
+            [36m>[39m
+              [0mResumide[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"brand-leaf"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mviewBox[39m=[32m"0 0 28 34"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-descriptor"[39m
+            [36m>[39m
+              [0mEvidence desk[0m
+            [36m</span>[39m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+          [33mclass[39m=[32m"_primary_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/analyses"[39m
+          [36m>[39m
+            [0mAnalyses[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/upload"[39m
+          [36m>[39m
+            [0mNew analysis[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/build"[39m
+          [36m>[39m
+            [0mBuild[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"_menu_a67a5d"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33maria-label[39m=[32m"Open site menu"[39m
+          [36m>[39m
+            [0mMenu [0m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+            [36m>[39m
+              [0m☰[0m
+            [36m</span>[39m
+          [36m</summary>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Site menu"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/"[39m
+              [36m>[39m
+                [0mHome[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analyses"[39m
+              [36m>[39m
+                [0mAnalyses[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/upload"[39m
+              [36m>[39m
+                [0mNew analysis[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/build"[39m
+              [36m>[39m
+                [0mBuild[0m
+              [36m</a>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/privacy"[39m
+            [36m>[39m
+              [0mPrivacy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/account"[39m
+            [36m>[39m
+              [0mAccount[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_theme_a67a5d"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"theme-control"[39m
+                [33mtitle[39m=[32m"Choose color theme"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"theme-control-icon"[39m
+                [36m>[39m
+                  [0m◐[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"sr-only"[39m
+                [36m>[39m
+                  [0mColor theme[0m
+                [36m</span>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"Color theme"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"light"[39m
+                  [36m>[39m
+                    [0mLight[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"dark"[39m
+                  [36m>[39m
+                    [0mDark[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"system"[39m
+                  [36m>[39m
+                    [0mSystem[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/auth"[39m
+            [36m>[39m
+              [0mSign in[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+        [36m</details>[39m
+   ...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Resumide home"[39m
+          [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-lockup is-compact"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-wordmark"[39m
+            [36m>[39m
+              [0mResumide[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"brand-leaf"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mviewBox[39m=[32m"0 0 28 34"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-descriptor"[39m
+            [36m>[39m
+              [0mEvidence desk[0m
+            [36m</span>[39m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+          [33mclass[39m=[32m"_primary_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/analyses"[39m
+          [36m>[39m
+            [0mAnalyses[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/upload"[39m
+          [36m>[39m
+            [0mNew analysis[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/build"[39m
+          [36m>[39m
+            [0mBuild[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"_menu_a67a5d"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33maria-label[39m=[32m"Open site menu"[39m
+          [36m>[39m
+            [0mMenu [0m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+            [36m>[39m
+              [0m☰[0m
+            [36m</span>[39m
+          [36m</summary>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Site menu"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/"[39m
+              [36m>[39m
+                [0mHome[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analyses"[39m
+              [36m>[39m
+                [0mAnalyses[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/upload"[39m
+              [36m>[39m
+                [0mNew analysis[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/build"[39m
+              [36m>[39m
+                [0mBuild[0m
+              [36m</a>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/privacy"[39m
+            [36m>[39m
+              [0mPrivacy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/account"[39m
+            [36m>[39m
+              [0mAccount[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_theme_a67a5d"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"theme-control"[39m
+                [33mtitle[39m=[32m"Choose color theme"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"theme-control-icon"[39m
+                [36m>[39m
+                  [0m◐[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"sr-only"[39m
+                [36m>[39m
+                  [0mColor theme[0m
+                [36m</span>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"Color theme"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"light"[39m
+                  [36m>[39m
+                    [0mLight[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"dark"[39m
+                  [36m>[39m
+                    [0mDark[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"system"[39m
+                  [36m>[39m
+                    [0mSystem[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/auth"[39m
+            [36m>[39m
+              [0mSign in[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+        [36m</details>[39m
+   ...
+ ❯ waitForWrapper ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ tests/components/JdClauseOrderPage.test.tsx:63:153
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 7 passed (12)
+   Start at  11:11:44
+   Duration  6.66s (transform 344ms, setup 0ms, import 542ms, tests 5.53s, environment 512ms)
+
+JSON report written to /private/tmp/resumide-preview-consumer-frontend-f4y6xl8c/red/tests.json

@@ -1,0 +1,38 @@
+{
+  "status": "FROZEN",
+  "version": "restore-floor-foundation/1",
+  "scope": "Implement real durable independent-volume journal and bounded quarantine/admission controller with fault-injection tests and synthetic restore script. Actual platform adapters/serving integration remain explicit requirements, not stubs or granted capability.",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "boundary": "Source/synthetic and disposable-filesystem/fake RPC only; pinned Node22.23.4, sealed empty HOME, OS network/root dotenv/Git-write denial. No SQL parser/execution/DB/actual env/keys/PII/provider/network/services/browser/compiler/OCR/Docker/deps/workspace Git mutation/deploy. InstalledCLI2.117.0 migration-new only after exact allocation.",
+  "journalWire": {
+    "schemaVersion": "restore-floor/1.0.0",
+    "keys": [
+      "schemaVersion",
+      "generation",
+      "revision",
+      "fence",
+      "phase"
+    ],
+    "numbers": "canonical nonnegative bounded decimal strings; monotonic, no wrap or rollback",
+    "phase": [
+      "quarantined",
+      "ready"
+    ]
+  },
+  "rules": [
+    "Persist only global protocol/generation/revision/fence/phase. No subject/org/op/request/artifact IDs, selectors, hashes, timestamps or per-subject work/receipt. Generation is a global instance/cutover boundary, not an owner-set identity.",
+    "Explicit approved independent durable volume is required; no cwd/project/temp/snapshot production default or auto initialization on missing/corrupt state. Controlled one-time bootstrap is separate and starts quarantined. Tests use identical APIs on disposable synthetic directories. Filesystem code cannot prove physical independence or protection from replacement by a valid older authority copy; real operational proof is required before adoption.",
+    "Exclusive acquisition, CAS revisions and fencing tokens; real file and directory durability acknowledgment before success. Reject symlink/unexpected type/permission, corrupt/torn records and stale tokens. Bound storage/reads/operations; uncertainty fails closed. No automatic crash-lock stealing, floor lowering, generation reuse or reconstruction from restored data.",
+    "Durable quarantine -> actual trusted ingress/writer drain/fence -> durable floor advance -> exactly one protected native transition -> trusted committed-checkpoint and still-current-fence validation -> durable ready -> reopening. No fold before durable fence/floor. Cancellation never undoes quarantine.",
+    "Recovery: trusted committed outcome reconciles that exact generation without rerunning fold; proven noncommit requires a freshly fenced higher generation for new work; unknown outcome allows neither retry nor ready. Stale controllers cannot publish ready or continue old effects. Adapters are required trusted dependencies with strict bound evidence, never default-allow Boolean/echo/count success. No placeholder production adapter or invented provider API.",
+    "Restore admission needs authentic backup/DB checkpoint provenance from actual trusted adapter plus the independent floor, not freely editable marker/createdAt/checksum. A valid old or missing-guard snapshot is denied when below floor. No safe backup means unavailable/RPO failure, not resurrection or relaxed retention.",
+    "Later paired integration MUST cover first durable account preparation and first root retention/tombstone capture as well as final fold; a pre-clock restore cannot restart720hours. Also mandatory: private adopter/checkpoint, export completion producer fence, startup/readyz/per-request/per-claim/provider/protected-write and direct Auth/DataAPI/Storage/Native fencing. A startup-only or Node-only gate cannot certify complete exposure closure.",
+    "Preserve backup-restore.ts v1 integrity API and original assertions. Extend scripts/verify-restore.ts only with explicitly synthetic floor/admission cases using disposable journal. Do not call it managed restore, production floor or 720-hour verification."
+  ],
+  "tests": [
+    "Actual temporary filesystem concurrency/CAS/durability/fault boundaries, malformed/torn/missing state and stale-controller handling.",
+    "Failure injection before/after quarantine/fence/floor/native commit/ready ack; no retry on unknown commit, no release on count-only sweep, cancellation leaves quarantine.",
+    "Reject old checksum-valid/missing-guard snapshot against independent advanced fixture floor; first-clock rollback scenario at admission boundary, not simulated SQL proof.",
+    "Meaningful RED for new feature, no missing-module legacy-regression claim; finite focused tests and existing synthetic restore script only before Root combined checks."
+  ]
+}

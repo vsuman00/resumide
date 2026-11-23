@@ -1,0 +1,59 @@
+{
+  "task": "CR-A01-S06",
+  "tier": "LOCAL_POSTGRESQL_17_COLD_REPLAY_DIAGNOSTIC",
+  "status": "TWO_BARRIERS_REPAIRED_IN_LOCAL_CANDIDATE_SUCCESSOR_NOT_READY",
+  "frozenInventory": "managed-schema-inventory-91.json",
+  "frozenInventoryVerifiedUnchanged": true,
+  "candidateProbe": {
+    "path": "cr-a01-cold-replay-probe.py.txt",
+    "sha256": "330972f550f3a47706a11b6af7ef0a5274196b06822051583ffe73161ddb5c5a"
+  },
+  "platformSubstitutions": [
+    "Synthetic Auth and Storage schemas and role identities",
+    "Fail-closed pg_jsonschema stand-in on the disposable host because the extension is absent. Normal JSON Schema validation is outside this diagnostic."
+  ],
+  "sourcesSha256": {
+    "supabase/migrations/20261012054243_canonical_resume_transactions.sql": "5dd2b09ad3f7deb526d3862630544418f2a87a69cb81396a09ec3f0e67ddfb15",
+    "supabase/migrations/20261111010000_job_requirement_relations.sql": "7c3d6158b9c25eea8b9f42d828cccbd3a9bb84eb11dc9017bf03b1de42642f45",
+    "supabase/migrations/20261113180050_entry_regroup_atomic_admission.sql": "6cbfe89710cb64cec058b26a921d0a680112ffe3dce9839c080564bd5040601f",
+    "supabase/migrations/20261114104337_requirement_relationship_context.sql": "b56c97da7cac8e15df1e58a3a76eb1e1a34ff9981a3d83bdb5a718b0a7cfa906"
+  },
+  "baseline": {
+    "appliedOperations": 46,
+    "firstFailedOperation": 47,
+    "reason": "PL/pgSQL syntax error in private.jd_relation_literals(text,text,text)",
+    "logSha256": "2481b92151c2acf5b9fb46dc4fe5e5d5a8007663f11b9c44587defd79440fb1f"
+  },
+  "literalRepair": {
+    "oldBodySha256": "4527bd4ce30bda237682292402619aba2d564c2548857e5b70aec39c8f760263",
+    "newBodySha256": "3279197623d90b11736206a1e85193a7aa078d9b40e03d0e1ae84913cf6645ef",
+    "test": "Accepted 300 alias and 1,000 literal hits, rejected 301 and 1,001 with the original error",
+    "logSha256": "99106cea847dc25e8b4757667b1e8c4a995e77230b83a3034dded585b4f46071"
+  },
+  "grantRepair": {
+    "failingOperationBeforeRepair": 55,
+    "reason": "Five early table DELETE grants to service_role conflict with the sealed profile",
+    "tables": [
+      "canonical_resume_versions",
+      "resume_facts",
+      "canonical_resume_heads",
+      "change_events",
+      "authoring_events"
+    ],
+    "catalogLogSha256": "7c7abf5c98391572ee2b400b620d76efa8bc64f0589a363332a24e871f31ed20",
+    "beforeLogSha256": "14423c62dae75703e3974b45bb028702c325ee94d86d51e4ba0dc32bd46f2c5b",
+    "result": "The existing guard and operation 55 passed after the narrowly scoped candidate revocation."
+  },
+  "remainingBlocker": {
+    "appliedOperations": 55,
+    "firstFailedOperation": 56,
+    "reason": "RR_READINESS_POSTIMAGE_DRIFT after updating the JD helper body hash",
+    "logSha256": "374fe47bcaf645c62b6666a10941956ad7a20ffd26e300c1f122c9e2990b9833"
+  },
+  "managedTarget": {
+    "dedicatedActiveProjectFound": false,
+    "configuredProjectBranches": 0,
+    "hostedSchemaWrites": 0,
+    "fixtureWrites": 0
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "task": "CR-R17-S10",
+  "checkedDate": "2026-11-21",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "checkout": "dirty integration worktree",
+  "inputSha256": {
+    "supabase/migrations/20261121214800_analysis_admission_deletion_handoff.sql": "cee5fa7398f756528dec907d2b6c708b19509ded12c76abed085c8957d9e0c38",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-deletion-handoff-native-fixture.py.txt": "845fc7e1f92be2d6c7304a625d0f873e5c7ee04151cda6e5a643857bba16626b",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-cleanup-recovery-native-fixture.py.txt": "646c561c65735786eff003f9036388a0616ba2799e67e29de99cda9fa89ac7ec",
+    "app/lib/server/privacy-worker.ts": "efc0315ba0bf79f154bf90a485a859d5b29057df8ee9edb234c9c1545366c18a",
+    "tests/unit/privacy-claim-fence.test.ts": "d282874dd77f72d58eff79bb53fef4169ad617638f6bd786de6e95892b58473c",
+    "supabase/migrations/20261116075250_privacy_export_generation.sql": "17de23bf5bc6d167038f82468ca8609c455a413f93ee2c3800e6c681e991d910"
+  },
+  "before": {
+    "nativeDetected": "Sealed preparation held a fully bound adopted source before the durable plan could take ownership.",
+    "logSha256": "c76dc6e2811d100063b5ad661f65216106a905ff4d7f6544886272347f4c0e0d"
+  },
+  "intermediateFailure": {
+    "reason": "Fixture seeded a transport row before installing the transport table. Setup moved transport seeding after the original migrations.",
+    "logSha256": "c78ef7f2624241232b5ea52bf28a8b768205f03afea1b7f81beb4537689d2f84"
+  },
+  "native": {
+    "result": "PASS: bound handoff, transactional rollback, prepared-owner barrier, exact object receipt, retry, and continued completion hold.",
+    "scope": "Unmodified sealed preparation and completion bodies, actual admission guard and handoff, synthetic supporting relations and accounting adapters. Recorded absence uses a synthetic provider outcome.",
+    "logSha256": "52860c8254d8f9046d147ce741343efa5942015cf63651334b777fbee2bc65db"
+  },
+  "after": {
+    "focusedCases": 130,
+    "focusedFiles": 5,
+    "unit": [
+      {
+        "passed": 6797,
+        "files": 322,
+        "sha256": "9418f6fe354b03233c305d79f9293179109a39974ad4d298d1058fe3b5e856c1"
+      },
+      {
+        "passed": 3,
+        "files": 1,
+        "sha256": "f197be1ce872184c189adbfa79791f5f7534de762a9e254f4ce07081522e90c0"
+      }
+    ]
+  },
+  "statics": {
+    "commands": ["format:check", "typecheck", "lint", "build", "build:worker"],
+    "exitCode": 0,
+    "lintWarnings": 4,
+    "logSha256": "a1202c8175d33910d91ca720dcb376459739ffb6024dd70b4f56ea43d1c5d25e"
+  },
+  "migrationInventory": "managed-schema-inventory-90.json",
+  "notRun": [
+    "managed migration replay",
+    "actual adopted Storage cleanup",
+    "account-wide admission retirement",
+    "deployment"
+  ]
+}

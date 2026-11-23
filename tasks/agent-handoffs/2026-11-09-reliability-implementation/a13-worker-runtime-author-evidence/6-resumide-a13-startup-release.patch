@@ -1,0 +1,732 @@
+--- a/app/lib/server/config.ts
++++ b/app/lib/server/config.ts
+@@ -59,6 +59,10 @@
+     .enum(["true", "false"])
+     .default("false")
+     .transform((value) => value === "true"),
++  INITIAL_FEEDBACK_ENABLED: z
++    .enum(["true", "false"])
++    .default("false")
++    .transform((value) => value === "true"),
+   LEGACY_SCORING_INPUT_ENABLED: z
+     .enum(["true", "false"])
+     .default("false")
+@@ -201,6 +205,7 @@
+ export type ServerConfig = z.infer<typeof ServerConfigSchema>;
+ 
+ const AnalysisConfigSchema = ServerConfigSchema.pick({
++  INITIAL_FEEDBACK_ENABLED: true,
+   LEGACY_SCORING_INPUT_ENABLED: true,
+   ANALYSIS_FENCING_ENABLED: true,
+   NATIVE_EVIDENCE_ENABLED: true,
+@@ -244,6 +249,28 @@
+   }
+ }
+ 
++function assertInitialFeedbackDependencies(
++  config: Pick<
++    AnalysisConfig,
++    | "INITIAL_FEEDBACK_ENABLED"
++    | "LEGACY_SCORING_INPUT_ENABLED"
++    | "ANALYSIS_FENCING_ENABLED"
++  >,
++) {
++  if (
++    config.INITIAL_FEEDBACK_ENABLED &&
++    (!config.LEGACY_SCORING_INPUT_ENABLED || !config.ANALYSIS_FENCING_ENABLED)
++  ) {
++    throw new ServerConfigError([
++      {
++        code: "custom",
++        path: ["INITIAL_FEEDBACK_ENABLED"],
++        message: "Original scoring input and analysis fencing must be enabled.",
++      },
++    ]);
++  }
++}
++
+ export function parseServerConfig(
+   environment: NodeJS.ProcessEnv = process.env,
+ ): ServerConfig {
+@@ -276,6 +303,7 @@
+       },
+     ]);
+   }
++  assertInitialFeedbackDependencies(parsed.data);
+   return parsed.data;
+ }
+ 
+@@ -286,6 +314,7 @@
+   if (!parsed.success) {
+     throw new ServerConfigError(parsed.error.issues);
+   }
++  assertInitialFeedbackDependencies(parsed.data);
+   return parsed.data;
+ }
+ 
+--- a/app/lib/server/worker-readiness.ts
++++ b/app/lib/server/worker-readiness.ts
+@@ -1,5 +1,27 @@
+ import type { createSupabaseAdminClient } from "./supabase";
+ import { z } from "zod";
++import { LegacyScoringInputProfileSchema } from "./legacy-scoring-input";
++import { LEGACY_SCORING_INPUT_PROFILE } from "./legacy-scoring-input-profile";
++import {
++  INITIAL_FEEDBACK_CAPABILITIES,
++  validateInitialFeedbackReadiness,
++} from "./initial-feedback-operation-contract";
++import {
++  INITIAL_FEEDBACK_PROFILE,
++  OWNED_AI_RETIREMENT_PROFILE,
++} from "./initial-feedback-profile";
++import { OwnedAiRetirementProfileSchema } from "./owned-ai-retirement-export";
++import { OWNED_AI_BUDGET_EXPORT_PROFILE } from "./owned-ai-budget-export-profile";
++import { OwnedAiBudgetExportReadinessSchema } from "./owned-ai-budget-export";
++
++const legacyReadinessSchema = LegacyScoringInputProfileSchema.extend({
++  schemaReady: z.boolean(),
++  writerExecutable: z.boolean(),
++});
++const retirementReadinessSchema = OwnedAiRetirementProfileSchema.extend({
++  schemaReady: z.boolean(),
++  exportExecutable: z.boolean(),
++});
+ 
+ const labels = [
+   "INVALID_SELECTION",
+@@ -45,6 +67,8 @@
+ export type WorkerReadinessOptions = {
+   signal?: AbortSignal;
+   analysisFencingEnabled?: boolean;
++  initialFeedbackEnabled?: boolean;
++  legacyScoringInputEnabled?: boolean;
+   aiEnabled?: boolean;
+   aiBudgetEnabled?: boolean;
+   aiBudgetPolicyVersion?: string;
+@@ -66,12 +90,20 @@
+     timeoutMs > 5_000 ||
+     [
+       options.analysisFencingEnabled,
++      options.initialFeedbackEnabled,
++      options.legacyScoringInputEnabled,
+       options.aiEnabled,
+       options.aiBudgetEnabled,
+     ].some((value) => value !== undefined && typeof value !== "boolean")
+   )
+     throw new WorkerReadinessError("WORKER_SCHEMA_INVALID");
+   const fencing = options.analysisFencingEnabled === true;
++  const initialFeedback = options.initialFeedbackEnabled === true;
++  if (
++    initialFeedback &&
++    (!fencing || options.legacyScoringInputEnabled !== true)
++  )
++    throw new WorkerReadinessError("WORKER_SCHEMA_INVALID");
+   const aiBudget =
+     options.aiEnabled === true && options.aiBudgetEnabled === true;
+   const identifier = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$/u;
+@@ -121,7 +153,7 @@
+         active();
+         if (error) throw new WorkerReadinessError("WORKER_SCHEMA_UNAVAILABLE");
+       }
+-      if (!fencing && !aiBudget) return;
++      if (!fencing && !aiBudget && !initialFeedback) return;
+       active();
+       if (!client.rpc)
+         throw new WorkerReadinessError("WORKER_SCHEMA_UNAVAILABLE");
+@@ -150,6 +182,82 @@
+           "WORKER_SCHEMA_CAPABILITY_MISSING",
+           parsed.data.failures,
+         );
++      if (!initialFeedback) return;
++      const readMetadata = async (name: string) => {
++        active();
++        const reply = await client.rpc!(name, {}).abortSignal(
++          controller.signal,
++        );
++        active();
++        if (reply.error)
++          throw new WorkerReadinessError("WORKER_SCHEMA_UNAVAILABLE");
++        return reply.data;
++      };
++      const checkExport = (
++        raw: unknown,
++        schema:
++          | typeof retirementReadinessSchema
++          | typeof OwnedAiBudgetExportReadinessSchema,
++        profile:
++          | typeof OWNED_AI_RETIREMENT_PROFILE
++          | typeof OWNED_AI_BUDGET_EXPORT_PROFILE,
++      ) => {
++        const value = schema.safeParse(raw);
++        if (
++          !value.success ||
++          Object.entries(profile).some(
++            ([key, expected]) =>
++              value.data[key as keyof typeof value.data] !== expected,
++          )
++        )
++          throw new WorkerReadinessError("WORKER_SCHEMA_INVALID");
++        if (!value.data.schemaReady || !value.data.exportExecutable)
++          throw new WorkerReadinessError("WORKER_SCHEMA_CAPABILITY_MISSING");
++      };
++      // Metadata only: all private reader/writer/export ACLs must be ready before
++      // queue construction. These requests share the original deadline and signal.
++      await Promise.all([
++        (async () => {
++          const value = legacyReadinessSchema.safeParse(
++            await readMetadata("read_legacy_scoring_readiness"),
++          );
++          if (
++            !value.success ||
++            Object.entries(LEGACY_SCORING_INPUT_PROFILE).some(
++              ([key, expected]) =>
++                value.data[key as keyof typeof value.data] !== expected,
++            )
++          )
++            throw new WorkerReadinessError("WORKER_SCHEMA_INVALID");
++          if (!value.data.schemaReady || !value.data.writerExecutable)
++            throw new WorkerReadinessError("WORKER_SCHEMA_CAPABILITY_MISSING");
++        })(),
++        (async () => {
++          const raw = await readMetadata("read_initial_feedback_readiness");
++          try {
++            validateInitialFeedbackReadiness(
++              raw,
++              INITIAL_FEEDBACK_PROFILE,
++              INITIAL_FEEDBACK_CAPABILITIES,
++            );
++          } catch {
++            throw new WorkerReadinessError("WORKER_SCHEMA_INVALID");
++          }
++        })(),
++        (async () =>
++          checkExport(
++            await readMetadata("read_owned_ai_retirement_readiness"),
++            retirementReadinessSchema,
++            OWNED_AI_RETIREMENT_PROFILE,
++          ))(),
++        (async () =>
++          checkExport(
++            await readMetadata("read_owned_ai_budget_export_readiness"),
++            OwnedAiBudgetExportReadinessSchema,
++            OWNED_AI_BUDGET_EXPORT_PROFILE,
++          ))(),
++      ]);
++      active();
+     };
+     await Promise.race([work(), cancellation]);
+     active();
+@@ -159,6 +267,7 @@
+     throw new WorkerReadinessError("WORKER_SCHEMA_UNAVAILABLE");
+   } finally {
+     clearTimeout(timer);
++    controller.abort();
+     options.signal?.removeEventListener("abort", onAbort);
+   }
+ }
+--- a/scripts/run-worker.ts
++++ b/scripts/run-worker.ts
+@@ -18,6 +18,8 @@
+   const config = getServerConfig();
+   await assertWorkerSchemaReady(createSupabaseAdminClient(), {
+     analysisFencingEnabled: config.ANALYSIS_FENCING_ENABLED,
++    initialFeedbackEnabled: config.INITIAL_FEEDBACK_ENABLED,
++    legacyScoringInputEnabled: config.LEGACY_SCORING_INPUT_ENABLED,
+     aiEnabled: config.AI_ENABLED,
+     aiBudgetEnabled: config.AI_BUDGET_ENABLED,
+     aiBudgetPolicyVersion: config.AI_BUDGET_POLICY_VERSION,
+--- a/scripts/run-worker-once.ts
++++ b/scripts/run-worker-once.ts
+@@ -17,6 +17,8 @@
+   const config = getServerConfig();
+   await assertWorkerSchemaReady(createSupabaseAdminClient(), {
+     analysisFencingEnabled: config.ANALYSIS_FENCING_ENABLED,
++    initialFeedbackEnabled: config.INITIAL_FEEDBACK_ENABLED,
++    legacyScoringInputEnabled: config.LEGACY_SCORING_INPUT_ENABLED,
+     aiEnabled: config.AI_ENABLED,
+     aiBudgetEnabled: config.AI_BUDGET_ENABLED,
+     aiBudgetPolicyVersion: config.AI_BUDGET_POLICY_VERSION,
+--- a/.env.example
++++ b/.env.example
+@@ -46,6 +46,8 @@
+ 
+ # Staged original legacy scoring input binding; requires native and privacy admission.
+ LEGACY_SCORING_INPUT_ENABLED=false
++# Opt-in owned initial feedback requires original scoring input, fencing and all private export capabilities.
++INITIAL_FEEDBACK_ENABLED=false
+ 
+ # AA4 private diagnostics only; no numeric policy activation
+ SCORING_V2_ENABLED=false
+--- a/tests/unit/config.test.ts
++++ b/tests/unit/config.test.ts
+@@ -15,6 +15,39 @@
+ };
+ 
+ describe("server configuration", () => {
++  it("keeps owned initial feedback default-off and validates both selected dependencies", () => {
++    for (const parse of [parseServerConfig, parseAnalysisConfig]) {
++      expect(parse(validEnvironment).INITIAL_FEEDBACK_ENABLED).toBe(false);
++      expect(
++        parse({ ...validEnvironment, INITIAL_FEEDBACK_ENABLED: "false" })
++          .INITIAL_FEEDBACK_ENABLED,
++      ).toBe(false);
++      expect(() =>
++        parse({ ...validEnvironment, INITIAL_FEEDBACK_ENABLED: "yes" }),
++      ).toThrow(ServerConfigError);
++      for (const deps of [
++        {},
++        { LEGACY_SCORING_INPUT_ENABLED: "true" },
++        { ANALYSIS_FENCING_ENABLED: "true" },
++      ]) {
++        expect(() =>
++          parse({
++            ...validEnvironment,
++            ...deps,
++            INITIAL_FEEDBACK_ENABLED: "true",
++          }),
++        ).toThrow(ServerConfigError);
++      }
++      expect(
++        parse({
++          ...validEnvironment,
++          INITIAL_FEEDBACK_ENABLED: "true",
++          LEGACY_SCORING_INPUT_ENABLED: "true",
++          ANALYSIS_FENCING_ENABLED: "true",
++        }).INITIAL_FEEDBACK_ENABLED,
++      ).toBe(true);
++    }
++  });
+   it("keeps original scoring input binding default-off and rejects non-boolean configuration", () => {
+     expect(
+       parseAnalysisConfig(validEnvironment).LEGACY_SCORING_INPUT_ENABLED,
+--- a/tests/unit/worker-readiness.test.ts
++++ b/tests/unit/worker-readiness.test.ts
+@@ -1,5 +1,12 @@
+ import { afterEach, describe, expect, it, vi } from "vitest";
+ import { assertWorkerSchemaReady } from "../../app/lib/server/worker-readiness";
++import { LEGACY_SCORING_INPUT_PROFILE } from "../../app/lib/server/legacy-scoring-input-profile";
++import {
++  INITIAL_FEEDBACK_PROFILE,
++  OWNED_AI_RETIREMENT_PROFILE,
++} from "../../app/lib/server/initial-feedback-profile";
++import { INITIAL_FEEDBACK_CAPABILITIES } from "../../app/lib/server/initial-feedback-operation-contract";
++import { OWNED_AI_BUDGET_EXPORT_PROFILE } from "../../app/lib/server/owned-ai-budget-export-profile";
+ 
+ type Result = { data?: unknown; error: unknown };
+ const selectedOptions = {
+@@ -66,6 +73,17 @@
+ afterEach(() => vi.useRealTimers());
+ 
+ describe("worker schema readiness", () => {
++  it("blocks selected initial feedback without its metadata capabilities", async () => {
++    const fixture = clientFor();
++    const options = {
++      ...selectedOptions,
++      initialFeedbackEnabled: true,
++      legacyScoringInputEnabled: true,
++    };
++    await expect(
++      assertWorkerSchemaReady(fixture.client as never, options),
++    ).rejects.toMatchObject({ code: "WORKER_SCHEMA_INVALID" });
++  });
+   it("checks score and correction storage before claiming work", async () => {
+     const table = query({ error: null });
+     const client = { from: vi.fn(() => table) };
+@@ -210,3 +228,397 @@
+     expect(vi.getTimerCount()).toBe(0);
+   });
+ });
++
++const feedbackOptions = {
++  ...selectedOptions,
++  initialFeedbackEnabled: true,
++  legacyScoringInputEnabled: true,
++};
++function feedbackMetadata(): Record<string, Record<string, unknown>> {
++  return {
++    worker_schema_readiness: ready(),
++    read_legacy_scoring_readiness: {
++      ...LEGACY_SCORING_INPUT_PROFILE,
++      schemaReady: true,
++      writerExecutable: true,
++    },
++    read_initial_feedback_readiness: {
++      ...INITIAL_FEEDBACK_PROFILE,
++      schemaReady: true,
++      ...Object.fromEntries(
++        INITIAL_FEEDBACK_CAPABILITIES.map((key) => [key, true]),
++      ),
++    },
++    read_owned_ai_retirement_readiness: {
++      ...OWNED_AI_RETIREMENT_PROFILE,
++      schemaReady: true,
++      exportExecutable: true,
++    },
++    read_owned_ai_budget_export_readiness: {
++      ...OWNED_AI_BUDGET_EXPORT_PROFILE,
++      schemaReady: true,
++      exportExecutable: true,
++    },
++  };
++}
++function feedbackClient(
++  metadata: Record<string, unknown> = feedbackMetadata(),
++) {
++  const probes = new Map<string, ReturnType<typeof query>>();
++  return {
++    probes,
++    client: {
++      from: vi.fn(() => query({ data: [], error: null })),
++      rpc: vi.fn((name: string) => {
++        const probe = query({ data: metadata[name], error: null });
++        probes.set(name, probe);
++        return probe;
++      }),
++    },
++  };
++}
++const metadataNames = Object.keys(feedbackMetadata()).filter(
++  (name) => name !== "worker_schema_readiness",
++);
++describe("owned initial feedback startup metadata", () => {
++  it("keeps an explicitly disabled feature on the unchanged worker metadata wire", async () => {
++    const fixture = clientFor();
++    await assertWorkerSchemaReady(fixture.client as never, {
++      ...feedbackOptions,
++      initialFeedbackEnabled: false,
++    });
++    expect(fixture.client.rpc).toHaveBeenCalledExactlyOnceWith(
++      "worker_schema_readiness",
++      {
++        p_fencing: true,
++        p_ai_budget: true,
++        p_model: "synthetic-model",
++        p_policy_version: "synthetic-policy/1",
++      },
++    );
++  });
++  it("checks exact actual metadata and every private capability without data RPCs", async () => {
++    const fixture = feedbackClient();
++    await assertWorkerSchemaReady(fixture.client as never, feedbackOptions);
++    expect(fixture.client.rpc.mock.calls).toEqual([
++      [
++        "worker_schema_readiness",
++        {
++          p_fencing: true,
++          p_ai_budget: true,
++          p_model: "synthetic-model",
++          p_policy_version: "synthetic-policy/1",
++        },
++      ],
++      ...metadataNames.map((name) => [name, {}]),
++    ]);
++    expect(fixture.client.from.mock.calls).toEqual([
++      ["document_evidence_attempts"],
++      ["evidence_corrections"],
++    ]);
++    const signals = [...fixture.probes.values()].map(
++      (probe) => probe.abortSignal.mock.calls[0][0],
++    );
++    expect(new Set(signals).size).toBe(1);
++  });
++  it("requires private exports even with AI generation disabled", async () => {
++    const metadata = feedbackMetadata();
++    metadata.worker_schema_readiness = ready(true, false);
++    metadata.read_owned_ai_budget_export_readiness.exportExecutable = false;
++    const fixture = feedbackClient(metadata);
++    await expect(
++      assertWorkerSchemaReady(fixture.client as never, {
++        ...feedbackOptions,
++        aiEnabled: false,
++      }),
++    ).rejects.toMatchObject({ code: "WORKER_SCHEMA_CAPABILITY_MISSING" });
++    expect(fixture.client.rpc).toHaveBeenCalledWith(
++      "read_owned_ai_budget_export_readiness",
++      {},
++    );
++  });
++  it.each([
++    { legacyScoringInputEnabled: false },
++    { legacyScoringInputEnabled: undefined },
++    { analysisFencingEnabled: false },
++    { initialFeedbackEnabled: "true" },
++    { legacyScoringInputEnabled: "true" },
++  ])(
++    "rejects invalid selected dependencies before any read: %j",
++    async (override) => {
++      const fixture = feedbackClient();
++      await expect(
++        assertWorkerSchemaReady(
++          fixture.client as never,
++          { ...feedbackOptions, ...override } as never,
++        ),
++      ).rejects.toMatchObject({ code: "WORKER_SCHEMA_INVALID" });
++      expect(fixture.client.from).not.toHaveBeenCalled();
++      expect(fixture.client.rpc).not.toHaveBeenCalled();
++    },
++  );
++  it.each(
++    metadataNames.flatMap((name) =>
++      Object.entries(feedbackMetadata()[name]).map(([key, value]) => ({
++        name,
++        key,
++        value,
++      })),
++    ),
++  )(
++    "rejects wrong profile or denied capability $name.$key",
++    async ({ name, key, value }) => {
++      const metadata = feedbackMetadata();
++      metadata[name][key] =
++        typeof value === "boolean" ? false : "incorrect-source-pin";
++      const fixture = feedbackClient(metadata);
++      await expect(
++        assertWorkerSchemaReady(fixture.client as never, feedbackOptions),
++      ).rejects.toMatchObject({
++        code: expect.stringMatching(
++          /^WORKER_SCHEMA_(INVALID|CAPABILITY_MISSING)$/,
++        ),
++      });
++    },
++  );
++  it.each(
++    metadataNames.flatMap((name) =>
++      [
++        null,
++        {},
++        { ...feedbackMetadata()[name], unexpected: true },
++        Object.fromEntries(Object.entries(feedbackMetadata()[name]).slice(1)),
++      ].map((data) => ({ name, data })),
++    ),
++  )(
++    "rejects malformed, missing and open metadata wire $name %#",
++    async ({ name, data }) => {
++      const fixture = feedbackClient({ ...feedbackMetadata(), [name]: data });
++      await expect(
++        assertWorkerSchemaReady(fixture.client as never, feedbackOptions),
++      ).rejects.toMatchObject({ code: "WORKER_SCHEMA_INVALID" });
++    },
++  );
++  it.each(metadataNames)(
++    "rejects unavailable metadata %s without exposing details",
++    async (name) => {
++      const fixture = feedbackClient();
++      const original = fixture.client.rpc.getMockImplementation()!;
++      fixture.client.rpc.mockImplementation((called) =>
++        called === name
++          ? query({
++              data: null,
++              error: { message: "synthetic-private-metadata-detail" },
++            })
++          : original(called),
++      );
++      await expect(
++        assertWorkerSchemaReady(fixture.client as never, feedbackOptions),
++      ).rejects.toMatchObject({
++        code: "WORKER_SCHEMA_UNAVAILABLE",
++        message: expect.not.stringContaining("synthetic-private"),
++      });
++    },
++  );
++  it.each(["deadline", "cancel"])(
++    "shares the original bounded deadline and abort across metadata: %s",
++    async (cause) => {
++      vi.useFakeTimers();
++      const fixture = feedbackClient();
++      const original = fixture.client.rpc.getMockImplementation()!;
++      const pending = query(new Promise<Result>(() => {}));
++      fixture.client.rpc.mockImplementation((name) =>
++        name === "read_initial_feedback_readiness" ? pending : original(name),
++      );
++      const controller = new AbortController();
++      const checking = assertWorkerSchemaReady(fixture.client as never, {
++        ...feedbackOptions,
++        timeoutMs: 20,
++        signal: controller.signal,
++      });
++      const outcome = checking.catch((error: unknown) => error);
++      await vi.advanceTimersByTimeAsync(10);
++      expect(pending.abortSignal).toHaveBeenCalledTimes(1);
++      if (cause === "cancel") controller.abort();
++      else await vi.advanceTimersByTimeAsync(10);
++      expect(await outcome).toMatchObject({
++        code:
++          cause === "cancel"
++            ? "WORKER_STARTUP_CANCELLED"
++            : "WORKER_STARTUP_TIMEOUT",
++      });
++      expect(pending.abortSignal.mock.calls[0][0].aborted).toBe(true);
++      expect(pending.aborted).toHaveBeenCalledTimes(1);
++      expect(vi.getTimerCount()).toBe(0);
++    },
++  );
++  it("does not give later metadata requests a fresh timeout allowance", async () => {
++    vi.useFakeTimers();
++    const fixture = feedbackClient();
++    const original = fixture.client.rpc.getMockImplementation()!;
++    const base = query(
++      new Promise<Result>((resolve) =>
++        setTimeout(() => resolve({ data: ready(), error: null }), 15),
++      ),
++    );
++    const pending = query(new Promise<Result>(() => {}));
++    fixture.client.rpc.mockImplementation((name) =>
++      name === "worker_schema_readiness"
++        ? base
++        : name === "read_initial_feedback_readiness"
++          ? pending
++          : original(name),
++    );
++    const checking = assertWorkerSchemaReady(fixture.client as never, {
++      ...feedbackOptions,
++      timeoutMs: 20,
++    });
++    const outcome = checking.catch((error: unknown) => error);
++    await vi.advanceTimersByTimeAsync(20);
++    expect(await outcome).toMatchObject({ code: "WORKER_STARTUP_TIMEOUT" });
++    expect(pending.aborted).toHaveBeenCalledTimes(1);
++    expect(vi.getTimerCount()).toBe(0);
++  });
++});
++
++it.each(
++  (["loop", "once"] as const).flatMap((mode) =>
++    [
++      "success",
++      "dependency",
++      "hash",
++      "acl",
++      "malformed",
++      "missing",
++      "timeout",
++      "cancel",
++    ].map((failure) => ({ mode, failure })),
++  ),
++)(
++  "actual $mode CLI blocks queue construction and claim on selected metadata failure: $failure",
++  async ({ mode, failure }) => {
++    vi.resetModules();
++    const metadata = feedbackMetadata();
++    if (failure === "hash")
++      metadata.read_legacy_scoring_readiness.checkerSha256 = "0".repeat(64);
++    if (failure === "acl")
++      metadata.read_owned_ai_retirement_readiness.exportExecutable = false;
++    if (failure === "malformed")
++      metadata.read_initial_feedback_readiness.unexpected = true;
++    const fixture = feedbackClient(metadata);
++    const original = fixture.client.rpc.getMockImplementation()!;
++    if (failure === "missing")
++      fixture.client.rpc.mockImplementation((name) =>
++        name === "read_owned_ai_budget_export_readiness"
++          ? query({
++              data: null,
++              error: { message: "synthetic-private-RPC-detail" },
++            })
++          : original(name),
++      );
++    if (failure === "timeout" || failure === "cancel")
++      fixture.client.rpc.mockImplementation((name) =>
++        name === "read_initial_feedback_readiness"
++          ? query(new Promise<Result>(() => {}))
++          : original(name),
++      );
++    const construct = vi.fn(),
++      claim = vi.fn(),
++      cycle = vi.fn().mockResolvedValue(false),
++      loop = vi.fn().mockResolvedValue(undefined);
++    const listeners = new Set(process.listeners("SIGTERM"));
++    const exitCode = process.exitCode;
++    const stderr = vi
++      .spyOn(process.stderr, "write")
++      .mockImplementation(() => true);
++    const stdout = vi
++      .spyOn(process.stdout, "write")
++      .mockImplementation(() => true);
++    vi.doMock("../../app/lib/server/config", () => ({
++      getServerConfig: () => ({
++        INITIAL_FEEDBACK_ENABLED: true,
++        LEGACY_SCORING_INPUT_ENABLED: failure !== "dependency",
++        ANALYSIS_FENCING_ENABLED: true,
++        AI_ENABLED: true,
++        AI_BUDGET_ENABLED: true,
++        AI_BUDGET_POLICY_VERSION: "synthetic-policy/1",
++        OPENAI_MODEL: "synthetic-model",
++        READINESS_TIMEOUT_MS: failure === "timeout" ? 20 : 500,
++        SHUTDOWN_TIMEOUT_MS: 1000,
++      }),
++    }));
++    vi.doMock("../../app/lib/server/supabase", () => ({
++      createSupabaseAdminClient: () => fixture.client,
++    }));
++    vi.doMock("../../app/lib/server/analysis-worker", () => ({
++      processQueuedAnalysis: vi.fn(),
++    }));
++    vi.doMock("../../app/lib/server/jobs", () => ({
++      AnalysisJobQueue: class {
++        claim = claim;
++        constructor() {
++          construct();
++        }
++      },
++    }));
++    vi.doMock("../../app/lib/server/worker-runner", () => ({
++      runWorkerLoop: loop,
++      runWorkerCycle: cycle,
++    }));
++    try {
++      const loading =
++        mode === "loop"
++          ? import("../../scripts/run-worker")
++          : import("../../scripts/run-worker-once");
++      if (failure === "cancel") {
++        await vi.waitFor(() =>
++          expect(fixture.client.rpc).toHaveBeenCalledWith(
++            "read_initial_feedback_readiness",
++            {},
++          ),
++        );
++        const shutdown = process
++          .listeners("SIGTERM")
++          .find((listener) => !listeners.has(listener));
++        expect(shutdown).toBeDefined();
++        shutdown?.("SIGTERM");
++      }
++      await loading;
++      expect(claim).not.toHaveBeenCalled();
++      if (failure === "success") {
++        expect(construct).toHaveBeenCalledTimes(1);
++        expect(mode === "loop" ? loop : cycle).toHaveBeenCalledTimes(1);
++        expect(fixture.client.rpc.mock.calls.map(([name]) => name)).toEqual([
++          "worker_schema_readiness",
++          ...metadataNames,
++        ]);
++      } else {
++        expect(construct).not.toHaveBeenCalled();
++        expect(cycle).not.toHaveBeenCalled();
++        expect(loop).not.toHaveBeenCalled();
++        if (failure !== "cancel") expect(process.exitCode).toBe(1);
++      }
++      expect(JSON.stringify(stderr.mock.calls)).not.toContain(
++        "synthetic-private",
++      );
++      expect(
++        process
++          .listeners("SIGTERM")
++          .filter((listener) => !listeners.has(listener)),
++      ).toEqual([]);
++    } finally {
++      process.exitCode = exitCode;
++      stderr.mockRestore();
++      stdout.mockRestore();
++      for (const path of [
++        "../../app/lib/server/config",
++        "../../app/lib/server/supabase",
++        "../../app/lib/server/analysis-worker",
++        "../../app/lib/server/jobs",
++        "../../app/lib/server/worker-runner",
++      ])
++        vi.doUnmock(path);
++      vi.resetModules();
++    }
++  },
++);

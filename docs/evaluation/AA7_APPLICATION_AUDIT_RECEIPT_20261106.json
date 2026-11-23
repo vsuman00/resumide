@@ -1,0 +1,42 @@
+{
+  "recordedAt": "2026-11-06T06:02:06.582445+00:00",
+  "status": "findings_present",
+  "command": ["npm", "audit", "--json"],
+  "node": "22.23.4",
+  "exitCode": 1,
+  "scope": "All severities and production/development dependencies; no omit, fix, install or update",
+  "rawReport": "AA7_APPLICATION_AUDIT_RAW_20261106.json",
+  "rawSha256": "570b288f9d89abc2c6cc0370d9f8eb3a9cbe71374ac364cb77f80649fc3e6c1f",
+  "counts": {
+    "info": 0,
+    "low": 0,
+    "moderate": 7,
+    "high": 0,
+    "critical": 0,
+    "total": 7
+  },
+  "dependencies": {
+    "prod": 160,
+    "dev": 384,
+    "optional": 98,
+    "peer": 10,
+    "peerOptional": 0,
+    "total": 553
+  },
+  "distinctDirectAdvisories": ["GHSA-g3hv-75wg-m249"],
+  "installedPath": "typescript-eslint8.70.0 -> typescript-estree8.70.0 -> minimatch10.2.6",
+  "declaredMinimatchRange": "^10.2.2",
+  "fixedVersionMinimumReported": "11.0.1",
+  "auditSuggestedTopLevelFix": {
+    "name": "typescript-eslint",
+    "version": "8.36.0",
+    "isSemVerMajor": true
+  },
+  "fixCaution": "Suggested top-level downgrade is outside configured ^8.70.0; patched minimatch11.x exceeds the current transitive declared major. Review upstream upgrade/backport or tested scoped override; do not apply audit fix blindly.",
+  "sourceHashes": {
+    "package.json": "5f4262c1dcb1f98fa5fa63525fd3492e55303c7fe68697edb30754d9595f21be",
+    "package-lock.json": "fc91b38b6ba9c91b30234aefa6f729826348d12487f9bc81c257338c57d59128"
+  },
+  "noProjectSourceOrCandidateDataUploaded": true,
+  "projectFilesChanged": false
+}

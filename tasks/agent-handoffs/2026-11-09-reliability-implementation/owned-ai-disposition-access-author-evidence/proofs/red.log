@@ -1,0 +1,54 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/privacy-export-route.test.ts (19 tests | 2 failed) 19ms
+     ✓ downloads a permitted completed export with fixed no-store and attachment semantics 10ms
+     ✓ revokes old completed manifest access for an active deletion: queued 1ms
+     ✓ revokes old completed manifest access for an active deletion: processing 1ms
+     ✓ revokes old completed manifest access for an active deletion: completed 0ms
+     × keeps an old export blocked after durable preparation even when its request is failed 3ms
+     × keeps an old export blocked after durable preparation even when its request is cancelled 0ms
+     ✓ blocks before serialization when deletion arrives while the manifest is loading 0ms
+     ✓ permits an export when deletion does not match the existing access policy: {"id":"10000000-0000-4000-8000-000000000004","user_id":"10000000-0000-4000-8000-000000000001","kind":"deletion","status":"failed"} 0ms
+     ✓ permits an export when deletion does not match the existing access policy: {"id":"10000000-0000-4000-8000-000000000004","user_id":"10000000-0000-4000-8000-000000000001","kind":"deletion","status":"cancelled"} 1ms
+     ✓ permits an export when deletion does not match the existing access policy: {"id":"10000000-0000-4000-8000-000000000004","user_id":"10000000-0000-4000-8000-000000000002","kind":"deletion","status":"queued"} 0ms
+     ✓ fails closed on a deletion-policy query error before loading private manifest data 0ms
+     ✓ fails closed on an unverifiable deletion-policy result 0ms
+     ✓ fails closed if the final access check fails after manifest loading 0ms
+     ✓ keeps unauthenticated, missing-id and unsupported-method guards before privileged reads 0ms
+     ✓ does not expose an export request with status queued 0ms
+     ✓ does not expose an export request with status processing 0ms
+     ✓ does not expose an export request with status failed 0ms
+     ✓ does not expose an export request with status cancelled 0ms
+     ✓ keeps foreign-owner and manifest-query failures unavailable 0ms
+ ✓ tests/unit/privacy-route.test.ts (4 tests) 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/privacy-export-route.test.ts > owner privacy export download > keeps an old export blocked after durable preparation even when its request is failed
+ FAIL  tests/unit/privacy-export-route.test.ts > owner privacy export download > keeps an old export blocked after durable preparation even when its request is cancelled
+AssertionError: expected 200 to be 404 // Object.is equality
+
+- Expected
++ Received
+
+- 404
++ 200
+
+ ❯ tests/unit/privacy-export-route.test.ts:201:31
+    199|       mocks.deletionPrepared = true;
+    200|       const response = await loader(args());
+    201|       expect(response.status).toBe(404);
+       |                               ^
+    202|       expect(mocks.manifestRead).not.toHaveBeenCalled();
+    203|       expect(mocks.serialize).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 21 passed (23)
+   Start at  13:16:36
+   Duration  200ms (transform 134ms, setup 0ms, import 177ms, tests 32ms, environment 0ms)
+
+JSON report written to /var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-disposition-access-work-6u44n22t/red-tests.json

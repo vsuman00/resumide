@@ -1,0 +1,12 @@
+--- a/scripts/verify-latex-rollback.ts
++++ b/scripts/verify-latex-rollback.ts
+@@ -24,6 +24,9 @@
+   PATH: process.env.PATH,
+   HOME: process.env.HOME,
+   AI_ENABLED: "false",
++  ...(process.env.RESUMIDE_PRIVATE_VERIFY === undefined
++    ? {}
++    : { RESUMIDE_PRIVATE_VERIFY: process.env.RESUMIDE_PRIVATE_VERIFY }),
+ };
+ function node(args: string[]) {
+   return new Promise<string>((resolve, reject) => {

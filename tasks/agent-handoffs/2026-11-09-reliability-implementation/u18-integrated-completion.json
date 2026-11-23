@@ -1,0 +1,80 @@
+{
+  "status": "VERIFIED_SCOPED_SOURCE_AND_REAL_SYNTHETIC_OUTPUT_PARENT_PARTIAL",
+  "at": "2026-11-10T18:56:51.211119+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "dirtyScope": "Preserved main checkout plus five reviewed U18 files; no Git mutation.",
+  "integration": "u18-integration.json",
+  "gate": "u18-integrated-2894205a-2f95-45b1-94b1-71eeb8067db9.json",
+  "independentReview": "u18-independent-review.json",
+  "sourceReview": {
+    "reviewer": "a04_runtime",
+    "linksSha256": "1207c3f85f0a959465c90b377d11867a8dabb761a5ada632067e4fdb3e3ab573",
+    "repositorySha256": "6f46e7baf4665c4db1eaaad8f1ac8e144ac03be58fef32e167a4c0dc9c6cbbe3",
+    "result": "SOURCE_ACK, no reviewer execution"
+  },
+  "verification": {
+    "testsPassed": 45,
+    "testFiles": 4,
+    "failed": 0,
+    "skipped": 0,
+    "realCorrectedFormats": ["pdf", "docx"],
+    "realComponents": [
+      "source PDF annotation guard",
+      "canonical edit and exact confirmation fixture",
+      "owned artifact repository",
+      "local renderer workers",
+      "independent PDF text/annotation and DOCX text/relationship parses"
+    ],
+    "mockedBoundaries": [
+      "owned canonical database reads",
+      "owned source storage download",
+      "HTTP unit artifact response"
+    ],
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "webBuild": "PASS",
+    "workerBuild": "PASS",
+    "stableInputsIndependentlyRehashed": 704,
+    "ownedGroupsIndependentlyAbsent": 5,
+    "artifactHashesVerified": {
+      "build/server/index.js": {
+        "bytes": 869418,
+        "sha256": "4dc2f8b6e8dd44e60ae959a4a8c979188a9138bedcd82409f1345f8c03b89ed8"
+      },
+      "build/worker/analysis.mjs": {
+        "bytes": 168159,
+        "sha256": "cfc31ea7d0f630a0fee9de130cc17226dd633ba84f3c04edadf0e1b68062aca9"
+      }
+    }
+  },
+  "replacementPolicy": {
+    "exactCurrentPlanAndSourceSha256": true,
+    "exactCurrentOwnerValueConfirmation": true,
+    "ownedGaplessStableTypedFactLineage": true,
+    "nearestCitedOriginOnly": true,
+    "maxAncestors": 64,
+    "maxLineageBytes": 2097152,
+    "maxLineageFacts": 20000,
+    "unsafeUnexplainedForeignStaleUnconfirmedDenial": "PRESERVED"
+  },
+  "failuresPreserved": [
+    "actual original corrected-email preview 422",
+    "34/35 first affected result: new fixture assumed mailto queries forbidden, existing policy permits them",
+    "scoped type narrowing error repaired with return through existing never-returning failure, no suppressions"
+  ],
+  "notProven": [
+    "native browser correction/confirmation and actual HTTP downloads",
+    "managed storage/RLS/concurrency/deletion/restore/cleanup",
+    "viewer/screen-reader/PDF-UA/employer ATS acceptance",
+    "full CR-U18 or reliability/release acceptance"
+  ],
+  "newExternalOperations": {
+    "database": 0,
+    "provider": 0,
+    "Docker": 0,
+    "LaTexCompiler": 0,
+    "ownerFile": 0,
+    "GitMutation": 0,
+    "deployment": 0
+  }
+}

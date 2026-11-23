@@ -1,0 +1,179 @@
+
+declare
+  root public.resumes%rowtype; source public.resume_versions%rowtype;
+  head public.canonical_resume_versions%rowtype; prior public.canonical_resume_versions%rowtype;
+  evidence public.document_evidence_attempts%rowtype; target public.canonical_resume_versions%rowtype;
+  op text; fact jsonb; old_fact jsonb; citation jsonb; span jsonb; section jsonb; entry jsonb; bullet jsonb;
+  event jsonb; object_ids text[]; references_ids text[] := '{}'::text[]; ref text;
+  new_entries jsonb; new_bullets jsonb; new_sections jsonb := '[]'::jsonb;
+  content_chars bigint; revision_value integer;
+begin
+  if p_user_id is null then return jsonb_build_object('status','not_found'); end if;
+  perform private.lock_candidate_owners(array[p_user_id]);
+  if not private.try_candidate_privacy_write(p_user_id) then return jsonb_build_object('status','not_found'); end if;
+  if p_body is null or octet_length(p_body::text)>1048576 or not private.canonical_shape_valid(p_body)
+    or p_command is null or not private.evidence_keys(p_command,case when p_command->>'operation'='rename_section' then array['operation','expectedVersionId','idempotencyKey','factId','value','targetVersionId','sectionId'] else array['operation','expectedVersionId','idempotencyKey','factId','value','targetVersionId'] end)
+    or p_request_id is null or char_length(p_request_id) not between 1 and 100 then
+    raise exception 'Invalid canonical request' using errcode='22023'; end if;
+  op:=p_command->>'operation';
+  if op not in ('import','edit','confirm','rollback','rename_section') then raise exception 'Invalid canonical operation' using errcode='22023'; end if;
+  if op='import' and p_body->>'producerVersion'='canonical-engine/1.0.3' then raise exception 'GROUPED_IMPORT_REQUIRES_ADMISSION' using errcode='22023'; end if;
+  select * into root from public.resumes where id=(p_body->>'resumeId')::uuid for update;
+  if not found or root.owner_id<>p_user_id or root.status<>'active'
+    or not exists(select 1 from public.memberships where user_id=p_user_id and organization_id=root.organization_id)
+    or not private.try_candidate_privacy_write(p_user_id) then
+    return jsonb_build_object('status','not_found'); end if;
+  if p_body->>'ownerId'<>p_user_id::text or p_body->>'organizationId'<>root.organization_id::text then
+    raise exception 'Canonical ownership mismatch' using errcode='22023'; end if;
+  select * into source from public.resume_versions where id=p_source_id and resume_id=root.id
+    and owner_id=p_user_id and organization_id=root.organization_id;
+  if not found then return jsonb_build_object('status','not_found'); end if;
+  select * into prior from public.canonical_resume_versions
+    where resume_id=root.id and idempotency_key=(p_command->>'idempotencyKey')::uuid;
+  if found then
+    if prior.command->>'operation'='grouped_original_import' or (op='import' and prior.content->>'producerVersion'='canonical-engine/1.0.3') then return jsonb_build_object('status','conflict'); end if;
+    if prior.command<>p_command or prior.source_resume_version_id<>p_source_id then return jsonb_build_object('status','conflict'); end if;
+    return jsonb_build_object('status','applied','versionId',prior.id,'revision',prior.revision,'idempotent',true);
+  end if;
+  select v.* into head from public.canonical_resume_heads h join public.canonical_resume_versions v on v.id=h.version_id where h.resume_id=root.id;
+  if (p_command->>'expectedVersionId')::uuid is distinct from head.id then return jsonb_build_object('status','conflict'); end if;
+  if head.id is not null then perform private.entry_association_validate_head(head.id); end if;
+  if op in ('edit','confirm','rename_section') and (head.content->>'producerVersion'='canonical-engine/1.0.3' or p_body->>'producerVersion'='canonical-engine/1.0.3')
+    and p_body->'producerVersion' is distinct from head.content->'producerVersion' then raise exception 'GROUPED_PRODUCER_RETAG' using errcode='22023'; end if;
+  if op='import' and head.id is not null then return jsonb_build_object('status','conflict'); end if;
+  if op<>'import' and head.id is null then return jsonb_build_object('status','conflict'); end if;
+  if (p_body->>'parentVersionId')::uuid is distinct from head.id then raise exception 'Invalid parent' using errcode='22023'; end if;
+  if head.id is not null and (head.source_resume_version_id<>p_source_id
+      or p_body->'sourceEvidenceVersionId' is distinct from head.content->'sourceEvidenceVersionId') then
+    raise exception 'Source cannot change within a lineage' using errcode='22023'; end if;
+  select * into evidence from public.document_evidence_attempts where id=(p_body->>'sourceEvidenceVersionId')::uuid
+    and resume_version_id=p_source_id and owner_id=p_user_id and organization_id=root.organization_id;
+  if not found then raise exception 'Canonical evidence missing' using errcode='22023'; end if;
+  if p_body->>'analysisId'<>evidence.analysis_id::text or p_body->>'inputSha256'<>evidence.input_sha256
+    or p_body->'retentionPolicyId' is distinct from evidence.envelope->'retentionPolicyId' then
+    raise exception 'Canonical provenance metadata mismatch' using errcode='22023'; end if;
+  object_ids:=array[p_body->>'resumeId',p_body->>'versionId'];
+  content_chars:=0;
+  for fact in select value from jsonb_array_elements(p_body->'facts') loop
+    object_ids:=array_append(object_ids,fact->>'id');
+    content_chars:=content_chars+char_length(fact->>'value');
+    if fact->>'value'<>btrim(fact->>'value') or fact->>'state'='source_supported' then
+      raise exception 'Unsupported canonical fact' using errcode='22023'; end if;
+    if (fact->>'state'='candidate_confirmed') is distinct from (fact->'confirmation'<>'null'::jsonb) then
+      raise exception 'Confirmation state mismatch' using errcode='22023'; end if;
+    if fact->'confirmation'<>'null'::jsonb and (fact->'confirmation'->>'actorId'<>p_user_id::text
+      or fact->'confirmation'->>'value'<>fact->>'value') then raise exception 'Invalid confirmation' using errcode='22023'; end if;
+    for citation in select value from jsonb_array_elements(fact->'sources') loop
+      select value into span from jsonb_array_elements(evidence.envelope->'spans') where value->>'id'=citation->>'spanId';
+      if span is null or citation->>'attemptId'<>evidence.id::text or (citation->>'end')::int<=(citation->>'start')::int
+        or (citation->>'end')::int>char_length(span->>'text') then raise exception 'Invalid canonical citation' using errcode='22023'; end if;
+      -- Source text is exact and Unicode code-point indexed, including OCR.
+      if substring(span->>'text' from (citation->>'start')::int+1 for (citation->>'end')::int-(citation->>'start')::int)
+        <> fact->>'value' then raise exception 'Fact does not match cited text' using errcode='22023'; end if;
+    end loop;
+    if op='import' and (fact->>'state'<>'unconfirmed' or jsonb_array_length(fact->'sources')=0) then
+      raise exception 'Imports require uncertain sourced facts' using errcode='22023'; end if;
+  end loop;
+  for ref in select jsonb_array_elements_text(p_body->'contactFactIds') loop
+    if not exists(select 1 from jsonb_array_elements(p_body->'facts') where value->>'id'=ref and value->>'type' in ('name','email','phone','link','location')) then
+      raise exception 'Invalid contact reference' using errcode='22023'; end if;
+  end loop;
+  references_ids:=array(select jsonb_array_elements_text(p_body->'contactFactIds'));
+  if cardinality(references_ids)<>(select count(distinct x) from unnest(references_ids) x) then
+    raise exception 'Duplicate contact references' using errcode='22023'; end if;
+  for section in select value from jsonb_array_elements(p_body->'sections') loop
+    if jsonb_array_length(section->'factIds')<>(select count(distinct value) from jsonb_array_elements(section->'factIds')) then
+      raise exception 'Duplicate section references' using errcode='22023'; end if;
+    object_ids:=array_append(object_ids,section->>'id'); content_chars:=content_chars+char_length(section->>'title');
+    references_ids:=references_ids||array(select jsonb_array_elements_text(section->'factIds'));
+    for entry in select value from jsonb_array_elements(section->'entries') loop
+      if jsonb_array_length(entry->'factIds')<>(select count(distinct value) from jsonb_array_elements(entry->'factIds')) then
+        raise exception 'Duplicate entry references' using errcode='22023'; end if;
+      object_ids:=array_append(object_ids,entry->>'id');
+      references_ids:=references_ids||array(select jsonb_array_elements_text(entry->'factIds'));
+      for bullet in select value from jsonb_array_elements(entry->'bullets') loop
+        object_ids:=array_append(object_ids,bullet->>'id'); content_chars:=content_chars+char_length(bullet->>'text');
+        references_ids:=references_ids||array(select jsonb_array_elements_text(bullet->'factIds'));
+        if jsonb_array_length(bullet->'factIds')<>1 or not exists(select 1 from jsonb_array_elements(p_body->'facts') f
+          where f.value->>'id'=bullet->'factIds'->>0 and f.value->>'value'=bullet->>'text') then
+          raise exception 'Draft bullet must reference its exact factual content' using errcode='22023'; end if;
+      end loop;
+    end loop;
+  end loop;
+  if jsonb_array_length(p_body->'changes')<>1 then raise exception 'Exactly one append-only event required' using errcode='22023'; end if;
+  event:=p_body->'changes'->0; object_ids:=array_append(object_ids,event->>'id');
+  if content_chars>200000 or cardinality(object_ids)<>(select count(distinct x) from unnest(object_ids) x)
+    or event->>'actorId'<>p_user_id::text or event->>'createdAt'<>p_body->>'createdAt' then raise exception 'Invalid canonical identities or event' using errcode='22023'; end if;
+  for ref in select unnest(references_ids) loop
+    if not exists(select 1 from jsonb_array_elements(p_body->'facts') where value->>'id'=ref) then raise exception 'Dangling fact reference' using errcode='22023'; end if;
+  end loop;
+  if op='import' then
+    if event->>'action'<>'import' or event->>'targetId'<>p_body->>'versionId' or event->'priorValue'<>'null'::jsonb then
+      raise exception 'Invalid import event' using errcode='22023'; end if;
+  elsif op in ('edit','confirm') then
+    select value into old_fact from jsonb_array_elements(head.content->'facts') where value->>'id'=p_command->>'factId';
+    if old_fact is null or event->>'targetId'<>old_fact->>'id' or event->>'action'<>'edit' or event->>'priorValue'<>old_fact->>'value'
+      or p_body->'contactFactIds'<>head.content->'contactFactIds' or p_body->'locale'<>head.content->'locale'
+      or jsonb_array_length(p_body->'facts')<>jsonb_array_length(head.content->'facts') then raise exception 'Invalid edit target' using errcode='22023'; end if;
+    for fact in select value from jsonb_array_elements(p_body->'facts') loop
+      if fact->>'id'=old_fact->>'id' then
+        if fact->>'type'<>old_fact->>'type' then raise exception 'Fact type changed' using errcode='22023'; end if;
+        if op='edit' and (fact->>'value' is distinct from p_command->>'value' or fact->>'state'<>'unconfirmed'
+          or fact->'sources'<>'[]'::jsonb or fact->'confirmation'<>'null'::jsonb) then raise exception 'Edited fact must be unconfirmed' using errcode='22023'; end if;
+        if op='confirm' and (fact->>'value'<>old_fact->>'value' or fact->'sources'<>old_fact->'sources'
+          or fact->>'state'<>'candidate_confirmed' or fact->'confirmation'->>'confirmedAt'<>p_body->>'createdAt') then raise exception 'Confirmation must bind exact value' using errcode='22023'; end if;
+      elsif not exists(select 1 from jsonb_array_elements(head.content->'facts') where value=fact) then
+        raise exception 'Unrelated facts changed' using errcode='22023'; end if;
+    end loop;
+    -- Only update preview text for the one edited, singly-linked bullet.
+    for section in select value from jsonb_array_elements(head.content->'sections') loop
+      new_entries:='[]';
+      for entry in select value from jsonb_array_elements(section->'entries') loop
+        new_bullets:='[]';
+        for bullet in select value from jsonb_array_elements(entry->'bullets') loop
+          if op='edit' and bullet->'factIds'=jsonb_build_array(old_fact->>'id') then
+            bullet:=jsonb_set(bullet,'{text}',p_command->'value'); end if;
+          new_bullets:=new_bullets||jsonb_build_array(bullet);
+        end loop;
+        new_entries:=new_entries||jsonb_build_array(jsonb_set(entry,'{bullets}',new_bullets));
+      end loop;
+      new_sections:=new_sections||jsonb_build_array(jsonb_set(section,'{entries}',new_entries));
+    end loop;
+    if p_body->'sections'<>new_sections then raise exception 'Unrelated structure changed' using errcode='22023'; end if;
+  elsif op='rename_section' then
+    select value into section from jsonb_array_elements(head.content->'sections') where value->>'id'=p_command->>'sectionId';
+    if section is null or jsonb_typeof(p_command->'value')<>'string' or char_length(p_command->>'value') not between 1 and 100
+      or p_body->'facts'<>head.content->'facts' or p_body->'contactFactIds'<>head.content->'contactFactIds' or p_body->'locale'<>head.content->'locale'
+      or event->>'action'<>'edit' or event->>'targetId'<>section->>'id' or event->>'priorValue'<>section->>'title' then
+      raise exception 'Invalid section rename' using errcode='22023'; end if;
+    select jsonb_agg(case when value->>'id'=section->>'id' then jsonb_set(value,'{title}',p_command->'value') else value end order by ordinality)
+      into new_sections from jsonb_array_elements(head.content->'sections') with ordinality;
+    if p_body->'sections'<>new_sections then raise exception 'Unrelated structure changed' using errcode='22023'; end if;
+  else
+    with recursive ancestors as (select id,parent_version_id from public.canonical_resume_versions where id=head.id
+      union all select v.id,v.parent_version_id from public.canonical_resume_versions v join ancestors a on v.id=a.parent_version_id)
+      select v.* into target from public.canonical_resume_versions v join ancestors a on a.id=v.id where v.id=(p_command->>'targetVersionId')::uuid;
+    if target.id is not null then perform private.entry_association_validate_head(target.id); end if;
+    if target.id is null or p_body->'producerVersion' is distinct from target.content->'producerVersion' or p_body->'facts'<>target.content->'facts' or p_body->'sections'<>target.content->'sections'
+      or p_body->'contactFactIds'<>target.content->'contactFactIds' or p_body->'locale'<>target.content->'locale'
+      or event->>'action'<>'rollback' or event->>'targetId'<>p_body->>'versionId' or event->'priorValue'<>'null'::jsonb then
+      raise exception 'Invalid rollback lineage' using errcode='22023'; end if;
+  end if;
+  revision_value:=coalesce(head.revision,0)+1;
+  insert into public.canonical_resume_versions(id,resume_id,source_resume_version_id,organization_id,owner_id,locale,state,content,created_at,
+    parent_version_id,source_evidence_version_id,revision,idempotency_key,command,request_id)
+    values((p_body->>'versionId')::uuid,root.id,source.id,root.organization_id,p_user_id,p_body->>'locale',p_body->>'state',p_body,(p_body->>'createdAt')::timestamptz,
+      head.id,evidence.id,revision_value,(p_command->>'idempotencyKey')::uuid,p_command,p_request_id);
+  insert into public.resume_facts(canonical_version_id,id,organization_id,owner_id,type,value,state,sources,confirmation)
+    select (p_body->>'versionId')::uuid,(value->>'id')::uuid,root.organization_id,p_user_id,value->>'type',value->>'value',value->>'state',value->'sources',nullif(value->'confirmation','null'::jsonb)
+      from jsonb_array_elements(p_body->'facts');
+  insert into public.change_events(canonical_version_id,id,owner_id,organization_id,actor_id,operation,event,created_at)
+    values((p_body->>'versionId')::uuid,(event->>'id')::uuid,p_user_id,root.organization_id,p_user_id,op,event,(p_body->>'createdAt')::timestamptz);
+  insert into public.canonical_resume_heads(resume_id,version_id,owner_id,organization_id,revision)
+    values(root.id,(p_body->>'versionId')::uuid,p_user_id,root.organization_id,revision_value)
+    on conflict(resume_id) do update set version_id=excluded.version_id,revision=excluded.revision;
+  insert into public.audit_events(organization_id,actor_id,action,target_type,target_id,outcome,request_id)
+    values(root.organization_id,p_user_id,'canonical.'||op,'canonical_resume_version',(p_body->>'versionId')::uuid,'success',p_request_id);
+  perform private.write_correction_snapshot((p_body->>'versionId')::uuid,p_command);
+  return jsonb_build_object('status','applied','versionId',p_body->>'versionId','revision',revision_value,'idempotent',false);
+end;

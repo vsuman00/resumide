@@ -1,0 +1,63 @@
+{
+  "id": "CR-U09-S02",
+  "relatedTask": "CR-U16",
+  "status": "VERIFIED_LOCAL_PROGRESS_RESPONSE_ORDER",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated worktree, synthetic route responses",
+  "sources": {
+    "app/routes/analysis.tsx": "0c64c5f4a5346130fbf8d50b14fdd6c127b76d09fd4fe030a68dd7aa4a017d16",
+    "tests/components/AnalysisProgress.test.tsx": "a38ccd697899ad84e3a21cdcc95241429f8b1e27a3b7fcd64cc4a9048904ab52"
+  },
+  "baselineRegressions": 3,
+  "focusedTests": {
+    "exitCode": 0,
+    "files": 6,
+    "passed": 46,
+    "componentCases": 5
+  },
+  "typecheck": {
+    "exitCode": 0
+  },
+  "lint": {
+    "exitCode": 0,
+    "errors": 0,
+    "existingHookWarnings": 4
+  },
+  "webBuild": {
+    "exitCode": 0,
+    "logSha256": "a5fcece95e8a62732687a3cdea7cf2b9dcac3376da87aff96b54e828f01a0611"
+  },
+  "workerBuild": {
+    "exitCode": 0,
+    "logSha256": "e13ef95893f82ed6481e614b51afbfc2ec14dab36f04bd00a8f131b2c1898bc2"
+  },
+  "browser": {
+    "engine": "Chromium",
+    "app": "Built SSR on loopback",
+    "backend": "Simulated Supabase Auth and Data API",
+    "scriptSha256": "fb7d6d6472f82bea6cf1e592f31bae3ea428affc72f2b36dc20456f98980bb5c",
+    "reportSha256": "6a171de58ae16001ba1943399f7e48fc2a3f1f57a763acdf3ec7f671096d6e2e",
+    "result": {
+      "outcomes": [
+        {
+          "scenario": "cancelled",
+          "olderPollAborted": true,
+          "retainedLatest": true
+        },
+        {
+          "scenario": "not_found",
+          "olderPollAborted": true,
+          "retainedLatest": true
+        }
+      ],
+      "ownedRpcCalls": 2,
+      "externalRequests": 0
+    }
+  },
+  "workerReadinessVerified": false,
+  "managedVerification": false,
+  "remaining": [
+    "Worker readiness and authorized leased OCR journey",
+    "Managed session and progress verification"
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "task": "CR-A02-S02",
+  "status": "PURE_GROUPED_ORIGINAL_PREPARATION_CONTRACT_FROZEN_NO_WRITER_AUTHORITY",
+  "at": "2026-11-13T10:49:42.916860+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "api": {
+    "module": "app/lib/server/canonical-grouped-import.ts",
+    "function": "importCanonicalGroupedEvidence(raw: unknown, owned: OwnedEvidenceBinding & {resumeId: string; organizationId: string; locale?: string}, intent: GroupedOriginalImportIntent): GroupedOriginalPreparation",
+    "producerVersion": "canonical-engine/1.0.3",
+    "selectionVersion": "grouped-original-selection/1.0.0",
+    "receiptVersion": "grouped-original-preparation/1.0.0",
+    "result": "state prepared or unavailable, document/associationReceipt null on failure; persistable:false and scoringEligible:false always; fixed metadata-only unavailableReason",
+    "ownedBoundary": "Supplied by owned server read only; helper cannot authenticate actor, read current head/history, record relationship approval, satisfy CAS or authorize persistence"
+  },
+  "intent": {
+    "shape": "strict object: schemaVersion, binding, acknowledgement, unselectedDisposition, selections",
+    "schemaVersion": "grouped-original-selection/1.0.0",
+    "binding": "exact owned source/model binding: ownerId,organizationId,resumeId,analysisId,sourceId,inputSha256,attemptId,evidenceSchemaVersion:evidence/2.0.0,fieldExtractorVersion:evidence-fields/1.0.1,targetModelVersion:evidence-targets/1.0.0,associationModelVersion:evidence-entry-associations/1.0.0,producerVersion:canonical-engine/1.0.3,canonicalHeadId:null",
+    "acknowledgement": "relationship_only_not_fact_confirmation",
+    "unselectedDisposition": "retain_original",
+    "selections": "nonempty bounded array of strict {groupId,members}; members are exact existing observationId/assertionId/targetId/field/citations selectors, never values or a claimed authoritative group DTO. Recompute all groups from raw source; reject forged/stale/missing/duplicate/overlapping selection or any mismatched member/citation. Normalize selection ordering to rederived source order. Reject unknown keys. Empty selection uses existing legacy importer, not this producer."
+  },
+  "algorithm": [
+    "Run existing bounded association helper against exact owned source, require review_required; strict replay raw document and exact owned IDs/models; do not trust caller DTO/draft",
+    "Call frozen importCanonicalEvidence ONCE internally with owned context. Fresh allocated UUID/time semantics remain legacy; there is no caller-provided originalDraft and no existing head",
+    "For each selected rederived group, map every member to exactly one assertion and exactly one original fact by field, exact value and COMPLETE attempt/span/codepoint citation references; no global deduplication or assertion dropping",
+    "Every selected fact must occur exactly once in one pure single-fact bullet-free entry, within the SAME experience section as its employer anchor. Require whole selected group safely placeable; reject zero/multiple/unplaced/mixed/crosssection mapping. Native-only observations shadowed by selected OCR layout are not guessed into an entry",
+    "Reuse employer anchor entry UUID and all original fact IDs; merge selected fact references in original source order and remove only the other now-empty selected entries. Preserve every unselected entry/bullet/section/contact reference, fact/value/source/state/confirmation, legacy import event, source identity and UUID. Do not attach nearby contributions or add tenure/qualification credit",
+    "Set only new producer version and selected placements, validate additive canonical schema, return separate unverified preparation receipt; any failure returns no partial document/receipt"
+  ],
+  "receipt": {
+    "authority": "derived_preparation_only",
+    "verified": false,
+    "requiresDurableAdmission": true,
+    "contents": "Exact source/model/null-head binding, canonical-source-ordered selections/members, explicit relationship-only intent, and selected generated entry/fact mapping; no copied source values/text beyond returned canonical document",
+    "replayBoundary": "This receipt is NOT durable approval or a persistence command. Generated canonical/version/fact/entry/event UUIDs and timestamps are NOT semantic replay identity. Do not invent a durable codec/hash or change C02OP1 in this leaf."
+  },
+  "nextPersistenceContract": {
+    "operation": "Separately versioned grouped-original operation; no silent six-key legacy import command extension",
+    "required": "Authenticated owned stored rows, source/active attempt/privacy/consent checks; complete contiguous immutable relationship-decision prefix with explicit relationship-only approval; exact review/assignment/association revisions, null canonical head, model/policy/producer versions and selected member fingerprints; fresh transactional CAS; immutable decision/provenance receipt",
+    "replay": "Bind original request key plus original submitted semantic source/model/selections/ack and original revisions under a separately reviewed byte contract. Current authority/source checks precede replay. Identical original request returns recorded version without moving head; changed selections/request semantics conflict. Fresh current revisions/head CAS apply only to new writes, never replace original semantic identity with current revisions. Generated UUIDs/time/previews excluded.",
+    "readiness": "Preserve existing37 critical routines/bodies/grants/direct-DML denials. Enumerate actual later additions and bind all readers/correction snapshots/privacy/export/restore. No SQL parsed/applied/executed or version admitted here.",
+    "existingHead": "Excluded; separately reviewed immutable child regrouping preserving candidate edits/UUID history required before full A02 closure"
+  },
+  "evidence": "Before new module import capture real current importer behavior failing two-entry expectation (six actual isolated entries), not a missing-module failure. Then actual new producer tests with strict replayed synthetic evidence. Preserve all old schema/content cases and producer meanings.",
+  "tests": [
+    "two jobs with overlapping dates reduce6entries to2 while preserving6exact facts/citations/unconfirmed states and unselected text",
+    "subset selection retains all other entries and contacts; source-order canonicalization; employer UUID retained",
+    "same-span existing groups and unsupported contexts left unchanged unless explicitly selectable under this new multiline-only subset",
+    "rejected or forged intent, mismatched owner/source/hash/attempt/model/head, extra keys, duplicate/overlap/member/citation/value tamper",
+    "native/OCR selected and shadowed layout refusal; exact Unicode offsets; repeated labels/headers; ambiguous/unplaced/mixed/crosssection refusal",
+    "history readers1.0.0/1.0.1/1.0.2 and new1.0.3; unknown producers still rejected; no changed fact confirmation or corrected-value citation inheritance",
+    "no route/repository/writer dispatch; input immutability, nonpersistable/unverified receipt, whole failure no partial output"
+  ],
+  "nonGoals": "No canonical-content/targets/evidence/corrections/repository/route/codec/SQL/lockfile/CI edits; no stored evidence rewrite, fact confirmation, current-head regrouping, new provider/DB/realenv/PII/Docker/Git/deploy/deps action. All current A02 helper/UI checks closed; do not repeat unchanged campaigns."
+}

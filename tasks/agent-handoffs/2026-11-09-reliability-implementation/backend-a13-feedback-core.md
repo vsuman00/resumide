@@ -1,0 +1,33 @@
+# A13 source-content feedback core
+
+Released the four code/test files below from the preserved backend worktree. This is the first CR-A13 producer leaf, not full A13 completion. No owned snapshot reader, native publication, stage, presenter, Feedback schema, writing-support policy, production flag or grant changed. A12's twelve files remain frozen. Root owns combined verification and subsequent contracts.
+
+The actual helper now validates each title and explanation independently. A quoted substring establishes a unique physical source citation; it cannot certify a different factual assertion. Factual transformations use the existing writing IR with its actor, qualifier, polarity, metric and relationship checks. Generic writing observations use a finite nonclaim language; source-specific editorial topics require actual anchored IR support. Unknown assertions are withheld. The producer retains useful exact source claims, editorial guidance, explicit evidence questions, supported clause reordering and explicit role/contribution summaries. No score, probability, qualification credit or accepted candidate edit is generated.
+
+The strict sidecar distinguishes source_claim, editorial_observation and clarification_question, with supported, clarification_required or rejected decisions. Each title/explanation records its content hash, fixed reason and actual operations/anchors; citations have Unicode-code-point ranges and exact quote hashes. Questions always project as improve, never a factual strength. Unknown quoted questions cannot fall through the IR's source-copy branch. Rejected text is absent from the support metadata and retained projection. Legacy Tip rows keep their original field shape.
+
+Exports are assessQualitativeProse(raw, source, expected?), QualitativeSourceProseSchema, QualitativeSupportSchema, QualitativeSupportResultSchema and their types. Expected source/policy hashes detect mismatch; they do not prove ownership. The compatibility groundQualitativeProse returns prose only; groundQualitativeProseWithSupport returns both prose and support, preserving the legacy malformed-output exception. runQualitativeAi now also returns the actual sidecar. The existing stage still persists its old prose projection; this leaf does not pretend support metadata is already durable or presented.
+
+The authority is explicitly source_content_only and ownedVersionProof is not_provided. No owner, canonical or native-version identity is fabricated from a string. Policy qualitative-content-support/1.0.0 has actual descriptor SHA `230f22333dd468f3bf78395b118330ec1ff78de18be9da5349356e84d0f6bd13`; the actual JSON is in policy-actual.json. The initial candidate policy/hash remains preserved. Exported policy arrays and limits are frozen. Current limits include full source 100,000 UTF16 units, the existing 512-anchor IR floor, at most 16 quote anchors, 73 assessments and 65,536 serialized input bytes. Overflow is unavailable, never silently truncated. The later owned reader must separately bind the full stored extraction and native snapshot, including the existing 200,000-character legacy store domain.
+
+## Verification
+
+Private packet: `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-feedback-core-6yfiudzo` (0700). Each receipt has its exact command, same-name log/hash, before/after source hashes and settled process group. All author runs had no input drift; terminal checks bind 774 source files.
+
+- existing-boundary-red.json preserves four genuine failures through the actual old helper: a question supplied as good became a strength, a presupposing question survived, unknown factual grammar survived, and an oversized source still admitted a quoted tip. No absent-module RED was used.
+- core-initial-green.json passed 47 tests in five files: the four new controls plus original prose, AI, worker transport and stage/outage checks. finite-core.json passed all 23 expanded pure controls for content/policy mismatch, caller-proof refusal, independent parts, actor/context, Unicode/ambiguous citations, questions, useful IR summaries/reordering, resource limits and actual AI sidecar propagation.
+- Peer review found an additional exact quoted non-template question admitted through IR copy. quoted-question-red.json preserves its actual helper failure; quoted-question-green.json passed the added control after the narrow guard. The final own file contains 24 cases; no fresh combined 24-pass run is claimed here. Root owns that run.
+- Scoped types passed with five roots, 11 source files and zero diagnostics; scoped lint and formatting passed. Frontend preserved its original 17-case discovery receipt. Root approved only two safe-fixture topic corrections, replacing unrelated dashboard-specific advice with generic wording; all case IDs, malicious assertions and positive controls remain. Frontend's amended 17 passed on the initial coherent source. Its later review identified literal-type widening in the binding; schema-inferred annotation fixed it without casts or suppressions.
+
+Exact commands use the pinned Node22 executable with packet run.mjs and labels existing-boundary-red, core-initial-green, finite-core, quoted-question-red, quoted-question-green, scoped-types, scoped-lint and scoped-format. commands.json contains every original argument. The runner creates receipt/log files exclusively; use a new label for any authorized repeat rather than overwriting history. No provider, real environment, SQL parser/execution, DB, browser, service, dependency or Git action ran.
+
+## Remaining full A13 work
+
+Actual owned-source and deterministic/JD binding is still required. The legacy deterministic row has no full-JD snapshot proof; a current mutable job cannot retroactively supply it. Retain uncalibrated and numerical withholding guards. Native code must independently validate/reconstruct an admitted plan, store immutable support and source metadata atomically, account known/unknown usage, preserve exact replay and stale/cancel/privacy behavior, and include privacy exports. The actual consumer must render those stored states and keep questions distinct. Source-only sidecars and fake transport checks do not supply native, live-provider, representative usefulness or release acceptance.
+
+## Frozen code/test hashes
+
+- `app/lib/server/qualitative-support.ts`: `602ba4c5f2be916e85e891dbc9e168083db6e978bb821bce9404a66fa777f666`
+- `app/lib/server/qualitative-prose.ts`: `83df6a0d7bd3b8003037a02528819afbcfad63c712ed046640639bb5b17bfadd`
+- `app/lib/server/qualitative-ai.ts`: `df99c8e26a9a5b14fbebf519a57782395d7c27d9bb517417b5ea9c3f54229203`
+- `tests/unit/qualitative-support.test.ts`: `85e1cf6df23ff4ac55a8260246815670e5bfd61598544a71b1ff973ebe5a72cb`

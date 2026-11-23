@@ -1,0 +1,40 @@
+{
+  "id": "CR-U08-S02",
+  "date": "2026-11-22",
+  "status": "VERIFIED_LOCAL_WEB_WITH_SIMULATED_TRANSPORT",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty main checkout. Browser responses for compilation, suggestions and Auth were simulated.",
+  "sources": {
+    "app/lib/latex-compile-response.ts": "8f98cac859d636fa22acee0991a6b603b71901ad60898fc18b9556bcfff8bfff",
+    "app/routes/latex.tsx": "380604a68363fb795558d38ad5697010ae822ae81a4419a1c76f32390bd52a21",
+    "app/components/LatexConverter.module.css": "7e3decc2b2feb25ee63be2e25b147c66b4d9621ecc988aad48f1a8d6c8df04ee",
+    "tests/components/LatexCompileRecovery.test.tsx": "f5f79f1af4b2fa267a579f22b8146d288281f554298ab02ef2f950ec651839d7",
+    "scripts/local-fixture-browser.ts": "4134f63bba9633368b302c08699bc5f060e95b6d18e95091170f315df6782805",
+    "scripts/verify-local-build-pdf-lifecycle.ts": "f261799b38933a70311640b0a6b4d16fe3e7b8a4390719fb934e0b0ed6a13acd"
+  },
+  "regressionsReproducedBeforeFix": 7,
+  "focusedTestCommand": "npm test -- tests/components/LatexCompileRecovery.test.tsx tests/components/LatexPdfPreview.test.tsx tests/unit/latex-routes.test.ts tests/unit/latex-service.test.ts tests/unit/build-assist.test.ts tests/unit/build-assist-service.test.ts",
+  "focusedTestsPassed": 288,
+  "sourceCheck": "npm run check:latex:source, scoped ESLint and Prettier passed.",
+  "repositoryLint": "PASS with four existing warnings in JD clause-order components.",
+  "typecheck": "PASS",
+  "webBuild": "PASS",
+  "workerBuild": "PASS",
+  "browser": {
+    "version": "Google Chrome 157.0.8103.80",
+    "viewportCssPixelsAt200PercentZoom": [390, 320],
+    "compileAttempts": 5,
+    "signInNewTabAndRetry": true,
+    "emptyPdfRejected": true,
+    "pdfJsCanvasAndPageTextVerified": true,
+    "pdfDownloadsByteMatched": 3,
+    "suggestionCalls": 1,
+    "firstAttempt": "The assertion targeted the hidden Code pane after the sign-in popup closed. The fixture now switches to Code before reading it, then returns to PDF preview for retry.",
+    "secondAttempt": "PASS"
+  },
+  "reviewedCompilerId": "sha256:5e5c2436bcac0a97c4616d7392d1089ecf7ef7d6d5df9063c02e4498d1e0d431",
+  "reviewedCompilerLocallyPresent": false,
+  "actualCompilerVerifiedInThisRun": false,
+  "managedServicesUsed": false,
+  "liveProviderUsed": false
+}

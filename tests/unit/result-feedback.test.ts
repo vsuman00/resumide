@@ -42,3 +42,17 @@ describe("visible result feedback", () => {
     );
   });
 });
+
+it("requires owned provenance before raw-good counts become strengths", () => {
+  const feedback = buildPartialFeedback({ score: 74, ruleTrace: [] });
+  feedback.content.tips[0] = {
+    type: "good",
+    tip: "Keep the wording",
+    explanation: "Review this saved claim.",
+    quote: "Built services using Python",
+  };
+  const group = visibleFeedbackGroups(feedback).find(
+    (g) => g.source === "Content",
+  );
+  expect(group?.tips[0]).toMatchObject({ classification: "unverified" });
+});

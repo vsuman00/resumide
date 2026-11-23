@@ -1,0 +1,75 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "parent": "CR-A13",
+  "predecessor": "a13-scoring-input-integrated-review.json",
+  "wire": {
+    "backend-a13-initial-feedback-plan-contract.md": "5cd7e1c7a28aa792cbc1907eaab9aafea9c1f79ce0e5c5bc18e0539b76e1e6a4",
+    "runtime-a13-initial-feedback-plan-contract.md": "6bc053c73183aa5a66bf870fea3ce7b493342d14202086c9fb19a1efd9eaf4fd",
+    "frontend-a13-owned-feedback-consumer-seam.md": "b4497f0f98d794cc03e5d2753e87b3341c291da35652d86ba28e1160714a5496"
+  },
+  "nodeOwner": "a01_page_backend",
+  "nodeFiles": [
+    "app/lib/server/initial-feedback-contract.ts",
+    "app/lib/server/initial-feedback-plan.ts",
+    "tests/unit/initial-feedback-plan.test.ts",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a13-initial-feedback-plan.md"
+  ],
+  "nativeOwner": "pricing_validation",
+  "nativeFiles": [
+    "supabase/migrations/20261115054612_initial_feedback_plan.sql",
+    "app/lib/server/initial-feedback-plan-profile.ts",
+    "tests/unit/initial-feedback-plan-sql.test.ts",
+    "scripts/verify-initial-feedback-plan.sql",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a13-initial-feedback-plan.md"
+  ],
+  "oracleOwner": "a01_page_frontend",
+  "oracleFiles": [
+    "tests/fixtures/initial-feedback-plan-oracles.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a13-plan-oracles.md"
+  ],
+  "api": {
+    "compileInitialFeedbackPlan": "(sourceText,rawProse) derives actual assessQualitativeProse result and emits byte-exact complete retained plan plus original recorded observation and rendered prose. Never accepts supplied supported boolean as authority.",
+    "renderInitialFeedbackPlan": "(sourceText,plan) validates/derives full actual source IR, renders and assesses all parts with preserved original/output mapping; source-content-only result, no Native/owner proof or placeholder digest.",
+    "nativePrivateRenderer": "Private source/plan renderer yields prose/derived parts/mapping only; accepts no caller ownership/proof flags. Future owned factory must fetch immutable actual scoring input and add actual binding/native digests; renderer alone confers no ownership. Metadata-only public readiness allowed."
+  },
+  "required": [
+    "exact authoritative finite TextExpr/Plan and all limits",
+    "unchanged core602/230f and IR1.0.4, no old source/policy edits",
+    "capture-only full Node sidecar, independent retained-only proof scope",
+    "explicit original->retained->padding map; no question strength",
+    "byte-exact compile, no silent dropping/rewriting of retained true parts",
+    "useful finite families beyond copy; no false full-usefulness claim",
+    "historical deterministic_only original binding, no provider/claim and no assessed overwrite",
+    "unknown Unicode/normalization/operator/native behavior refuses, no generic locale approximations",
+    "source hashes separate from opaque Native JSONB digests; no placeholders",
+    "no publication/repository/worker/consumer adoption in this pure foundation"
+  ],
+  "boundaries": "Pinned sealed Node22 source/synthetic only; no dotenv, SQL parse/execution/advisors, DB/hosted/services/browser/compiler/Docker/provider/real env/PII/dependencies/Git/deploy. No Native proof claims. Supabase directly, never Docker DB.",
+  "frozenIndependentOracles": {
+    "tests/fixtures/initial-feedback-plan-oracles.json": "7b0e3da37bd4d1531bdcde710e3f47f800213d64ae30fab93b22e60474279042",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a13-plan-oracles.md": "cd0a6a0bacbab45f0a7211d8912fa967d9f9c929777c5edfa27577bdb1af5a1f"
+  },
+  "integratedFiles": {
+    "app/lib/server/initial-feedback-contract.ts": "b8419d239a86762cf4df92b5ec7164bb0c72ae6b8f0d360dd2348ff645b20ae6",
+    "app/lib/server/initial-feedback-plan.ts": "f4645db230b01a456d8cb8868deac1f38bd9d1764fbd5a10981146bd24d3c554",
+    "tests/unit/initial-feedback-plan.test.ts": "96fd45229bc39c1d63e9be4fb78ff7eab5e3e429fbb9862a347ba5b9ed0ea688",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a13-initial-feedback-plan.md": "9aea04c904d210302ba3adbcfcec8769671dfdfd55363232af32e11dbc069b2d",
+    "tests/unit/initial-feedback-plan-oracles.test.ts": "c3ff8271c3437ebd6ea8cbdc9e3cacb5ecb6024cbc2a8e8e5075f1271275f4ae",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a13-plan-oracle-validation.md": "b17adb567a70ffe83898dd9a8e867e86a16e7bb959f181ba42a43b92d11361c4",
+    "supabase/migrations/20261115054612_initial_feedback_plan.sql": "7a67f96d68eff03ce1efdfe0bdf3c551799af714a9465efe3d4eadb1bfb16ff8",
+    "app/lib/server/initial-feedback-plan-profile.ts": "e9f53e3e9e409fcf69b2c3cf420e3639323fdca8bf1d79f603cf1fc78618e3a1",
+    "tests/unit/initial-feedback-plan-sql.test.ts": "a636651dd09eed4cd02b982de308a48b4090a4ad7124fdee53985887982a262e",
+    "scripts/verify-initial-feedback-plan.sql": "7ddf9c10cc230a9a850a6a14bf0d679575d34b2737001627a4882b7941afaa12",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a13-initial-feedback-plan.md": "a448db9246c7cf2b40e01e347df10929630b94c2de3bb2d6b78d14acce55a2f3",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a13-initial-feedback-native-peer.md": "410ba53b984b8dcd8fb659f948ff9e7cbe5479bfedf3903a16e474f1f6ea81d8",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a13-initial-feedback-native-resolution.md": "ecfea752d19818f2b807a92fb850bd94195b52a21cb9a0e2c087fc4b6a9bade4",
+    "tests/fixtures/initial-feedback-plan-oracles.json": "7b0e3da37bd4d1531bdcde710e3f47f800213d64ae30fab93b22e60474279042",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a13-plan-oracles.md": "cd0a6a0bacbab45f0a7211d8912fa967d9f9c929777c5edfa27577bdb1af5a1f",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a13-initial-feedback-plan-contract.md": "5cd7e1c7a28aa792cbc1907eaab9aafea9c1f79ce0e5c5bc18e0539b76e1e6a4",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a13-initial-feedback-plan-contract.md": "6bc053c73183aa5a66bf870fea3ce7b493342d14202086c9fb19a1efd9eaf4fd",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a13-owned-feedback-consumer-seam.md": "b4497f0f98d794cc03e5d2753e87b3341c291da35652d86ba28e1160714a5496"
+  },
+  "actualPolicySha256": "972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48",
+  "sourcePeerFindings": "410b preserved, closed by ecfea source review; Native behavior remains unexecuted."
+}

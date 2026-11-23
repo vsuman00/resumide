@@ -1,0 +1,169 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/retention-root-coverage-sql.test.ts (4 tests | 4 failed) 8ms
+     × keeps deleted roots with missing version coverage eligible independently of failed items 4ms
+     × requires exact actual version coverage before final root deletion 1ms
+     × does not resurrect a deleted item when a late removal failure arrives 1ms
+     × preserves first timestamps rather than requeueing a new enrollment event 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/retention-root-coverage-sql.test.ts > R17 actual source regressions; SQL unparsed/unexecuted > keeps deleted roots with missing version coverage eligible independently of failed items
+AssertionError: expected '\ndeclare candidate record;claimed pr…' to contain 'uncovered version inventory'
+
+- Expected
++ Received
+
+- uncovered version inventory
++
++ declare candidate record;claimed private.retention_items%rowtype;
++ begin
++  if p_limit is null or p_limit<1 or p_limit>1000 or p_before is null or not isfinite(p_before) then
++   raise exception 'invalid retention batch size' using errcode='22023';end if;
++  for candidate in
++   select rv.resume_id,rv.owner_id,rv.storage_key from public.resume_versions rv join public.resumes r on r.id=rv.resume_id
++   where ((r.status='active' and r.created_at<p_before) or (r.status='deleted' and exists(
++     select 1 from private.retention_items t where t.resume_id=r.id and t.status='failed')))
++    and not exists(select 1 from private.retention_items t where t.storage_key=rv.storage_key and t.status='deleted')
++   order by r.created_at,rv.id limit p_limit for update of rv,r skip locked loop
++   -- Source rows may already be locked: owner acquisition must never wait.
++   if not private.try_lock_candidate_owners(array[candidate.owner_id]) then raise exception 'PRIVACY_OWNER_BUSY' using errcode='55P03';end if;
++   insert into private.retention_items as t(resume_id,owner_id,storage_key,status,attempt_count,created_at)
++    values(candidate.resume_id,candidate.owner_id,candidate.storage_key,'queued',1,clock_timestamp())
++    on conflict on constraint retention_items_storage_key_key do update
++     set status='queued',attempt_count=t.attempt_count+1,last_error_code=null returning * into claimed;
++   -- Separate commands observe the inserted item. First version claim captures ALL root versions/operations.
++   perform private.capture_owned_ai_operation_dispositions(candidate.owner_id,candidate.resume_id,null,claimed.id);
++   update public.resumes r set status='deleted',updated_at=timezone('utc',now()) where r.id=candidate.resume_id;
++   item_id:=claimed.id;resume_id:=claimed.resume_id;storage_key:=claimed.storage_key;return next;
++  end loop;
++ end;
++
+
+ ❯ tests/unit/retention-root-coverage-sql.test.ts:20:13
+     18|  it("keeps deleted roots with missing version coverage eligible indepe…
+     19|   const s=current("public.claim_expired_resume_objects");
+     20|   expect(s).toContain("uncovered version inventory");
+       |             ^
+     21|   expect(s).toContain("enroll_count>=p_limit");
+     22|   expect(s).toContain("return_count>=p_limit");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/unit/retention-root-coverage-sql.test.ts > R17 actual source regressions; SQL unparsed/unexecuted > requires exact actual version coverage before final root deletion
+AssertionError: expected '\ndeclare\n  item_row private.retenti…' to contain 'private.r17_root_covered'
+
+- Expected
++ Received
+
+- private.r17_root_covered
++
++ declare
++   item_row private.retention_items%rowtype;
++ begin
++   update private.retention_items
++   set status = 'deleted', completed_at = timezone('utc', now()), last_error_code = null
++   where id = p_item_id
++   returning * into item_row;
++   if not found then return false; end if;
++
++   if exists(select 1 from public.resumes r where r.id=item_row.resume_id and r.owner_id=item_row.owner_id
++     and not exists(select 1 from private.retention_items ri where ri.resume_id=r.id and ri.status<>'deleted')) then
++     perform private.retire_initial_feedback_publications(item_row.owner_id,item_row.resume_id,null,item_row.id);
++   end if;
++   delete from public.resumes r
++   where r.id = item_row.resume_id and r.owner_id=item_row.owner_id and r.status='deleted'
++     and not exists (
++       select 1 from private.retention_items ri
++       where ri.resume_id = r.id and ri.status <> 'deleted'
++     );
++   return true;
++ end;
++
+
+ ❯ tests/unit/retention-root-coverage-sql.test.ts:26:13
+     24|  it("requires exact actual version coverage before final root deletion…
+     25|   const s=current("public.complete_retention_item");
+     26|   expect(s).toContain("private.r17_root_covered");
+       |             ^
+     27|   expect(s.indexOf("private.r17_root_covered")).toBeLessThan(s.indexOf…
+     28|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/unit/retention-root-coverage-sql.test.ts > R17 actual source regressions; SQL unparsed/unexecuted > does not resurrect a deleted item when a late removal failure arrives
+AssertionError: expected '\nbegin\n  if p_error_code is null or…' to contain 'item_row.status=\'deleted\' then retu…'
+
+- Expected
++ Received
+
+- item_row.status='deleted' then return false
++
++ begin
++   if p_error_code is null or btrim(p_error_code) = '' then return false; end if;
++   update private.retention_items
++   set status = 'failed', last_error_code = p_error_code
++   where id = p_item_id;
++   return found;
++ end;
++
+
+ ❯ tests/unit/retention-root-coverage-sql.test.ts:31:13
+     29|  it("does not resurrect a deleted item when a late removal failure arr…
+     30|   const s=current("public.fail_retention_item");
+     31|   expect(s).toContain("item_row.status='deleted' then return false");
+       |             ^
+     32|   expect(s).not.toContain("set status = 'failed', last_error_code = p_…
+     33|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/unit/retention-root-coverage-sql.test.ts > R17 actual source regressions; SQL unparsed/unexecuted > preserves first timestamps rather than requeueing a new enrollment event
+AssertionError: expected '\ndeclare candidate record;claimed pr…' to contain 'RETENTION_FIRST_CLOCK_REPAIR_REQUIRED'
+
+- Expected
++ Received
+
+- RETENTION_FIRST_CLOCK_REPAIR_REQUIRED
++
++ declare candidate record;claimed private.retention_items%rowtype;
++ begin
++  if p_limit is null or p_limit<1 or p_limit>1000 or p_before is null or not isfinite(p_before) then
++   raise exception 'invalid retention batch size' using errcode='22023';end if;
++  for candidate in
++   select rv.resume_id,rv.owner_id,rv.storage_key from public.resume_versions rv join public.resumes r on r.id=rv.resume_id
++   where ((r.status='active' and r.created_at<p_before) or (r.status='deleted' and exists(
++     select 1 from private.retention_items t where t.resume_id=r.id and t.status='failed')))
++    and not exists(select 1 from private.retention_items t where t.storage_key=rv.storage_key and t.status='deleted')
++   order by r.created_at,rv.id limit p_limit for update of rv,r skip locked loop
++   -- Source rows may already be locked: owner acquisition must never wait.
++   if not private.try_lock_candidate_owners(array[candidate.owner_id]) then raise exception 'PRIVACY_OWNER_BUSY' using errcode='55P03';end if;
++   insert into private.retention_items as t(resume_id,owner_id,storage_key,status,attempt_count,created_at)
++    values(candidate.resume_id,candidate.owner_id,candidate.storage_key,'queued',1,clock_timestamp())
++    on conflict on constraint retention_items_storage_key_key do update
++     set status='queued',attempt_count=t.attempt_count+1,last_error_code=null returning * into claimed;
++   -- Separate commands observe the inserted item. First version claim captures ALL root versions/operations.
++   perform private.capture_owned_ai_operation_dispositions(candidate.owner_id,candidate.resume_id,null,claimed.id);
++   update public.resumes r set status='deleted',updated_at=timezone('utc',now()) where r.id=candidate.resume_id;
++   item_id:=claimed.id;resume_id:=claimed.resume_id;storage_key:=claimed.storage_key;return next;
++  end loop;
++ end;
++
+
+ ❯ tests/unit/retention-root-coverage-sql.test.ts:36:13
+     34|  it("preserves first timestamps rather than requeueing a new enrollmen…
+     35|   const s=current("public.claim_expired_resume_objects");
+     36|   expect(s).toContain("RETENTION_FIRST_CLOCK_REPAIR_REQUIRED");
+       |             ^
+     37|   expect(s).toContain("attempt_count=attempt_count+1");
+     38|   expect(s).not.toContain("set created_at");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed (4)
+   Start at  14:40:36
+   Duration  101ms (transform 20ms, setup 0ms, import 27ms, tests 8ms, environment 0ms)
+

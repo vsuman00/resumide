@@ -1,0 +1,211 @@
+"""Verify exact ledger retirement and sealed completion in disposable PostgreSQL 17."""
+import ast
+import hashlib
+import json
+from pathlib import Path
+import subprocess
+import sys
+from tempfile import TemporaryDirectory
+
+migrations = Path("supabase/migrations")
+fixtures = Path(__file__).parent
+
+def source(prefix):
+    file, = migrations.glob(prefix + "_*.sql")
+    return file.read_text()
+
+def section(text, start, end):
+    start_at = text.index(start)
+    return text[start_at:text.index(end, start_at)]
+
+def variable(tree, name):
+    return next(
+        node.value for node in tree.body
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == name for t in node.targets)
+    )
+
+root_fixture = ast.parse((fixtures / "admission-cleanup-recovery-native-fixture.py.txt").read_text())
+handoff_fixture = ast.parse((fixtures / "admission-deletion-handoff-native-fixture.py.txt").read_text())
+scaffold = ast.literal_eval(variable(root_fixture, "scaffold"))
+scaffold += next(
+    ast.literal_eval(node.value) for node in handoff_fixture.body
+    if isinstance(node, ast.AugAssign) and isinstance(node.target, ast.Name) and node.target.id == "scaffold"
+)
+seed = ast.literal_eval(variable(handoff_fixture, "seed"))
+seed_tail = seed.index("insert into private.analysis_admission_upload_transport")
+handoff = ast.literal_eval(variable(handoff_fixture, "handoff").func.value)
+handoff = handoff.replace("PREPARE(", "public.prepare_deletion_request_with_admission_handoff(")
+retry = ast.literal_eval(variable(handoff_fixture, "retry"))
+
+manifest = source("20261115131621").split("$disposition_patches$", 2)[1]
+blocked = next(x for x in json.loads(manifest) if x["signature"] == "private.candidate_write_blocked(uuid)")
+assert hashlib.sha256(blocked["new"].encode()).hexdigest() == blocked["after"]
+durable_guard = """create function private.candidate_write_blocked(p_owner_id uuid)
+returns boolean language sql volatile set search_path='' as $hold$""" + blocked["new"] + "$hold$;"
+
+baseline = "--baseline" in sys.argv
+if not baseline:
+    marker = "  assert public.complete_analysis_admission_deletion_object(f.request_id,'worker',1,f.upload_id,f.object_id);"
+    assert handoff.count(marker) == 1
+    handoff = handoff.replace(marker,
+        "  assert not public.complete_deletion_request_with_admission_retirement(f.request_id,'worker',1);\n" + marker)
+
+red = """
+do $$
+declare f fixture_adopted%rowtype;
+begin
+  select * into strict f from fixture_adopted;
+  begin
+    perform public.complete_privacy_request(f.request_id,'worker',2,'{"deleted":true}');
+  exception when sqlstate 'P0A01' then
+    raise exception 'A verified adopted plan still could not retire its ledger';
+  end;
+end;
+$$;
+"""
+
+checks = """
+create function private.fixture_fail_sealed_completion() returns trigger language plpgsql as $fixture_failure$
+begin
+  if current_setting('fixture.fail_completion',true)='on' and new.status='completed' then
+    raise exception 'Synthetic failure after ledger writes';
+  end if;
+  return new;
+end;
+$fixture_failure$;
+create trigger fixture_fail_sealed_completion before update of status on public.privacy_request_steps
+  for each row execute function private.fixture_fail_sealed_completion();
+
+do $$
+declare
+  f fixture_adopted%rowtype;
+  other_owner uuid:=gen_random_uuid();
+  other_org uuid:=gen_random_uuid();
+  other_operation uuid:=gen_random_uuid();
+  other_upload uuid:=gen_random_uuid();
+  other_request uuid:=gen_random_uuid();
+  historical_request uuid:=gen_random_uuid();
+begin
+  select * into strict f from fixture_adopted;
+  insert into auth.users values(other_owner);
+  insert into public.organizations values(other_org,other_owner);
+  insert into private.analysis_admission_operations(id,organization_id,owner_id,idempotency_key,binding_sha256)
+    values(other_operation,other_org,other_owner,gen_random_uuid(),repeat('e',64));
+  insert into private.analysis_admission_uploads(id,operation_id,analysis_id,resume_id,version_id,job_id,storage_key)
+    values(other_upload,other_operation,gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),gen_random_uuid(),'fixture-foreign.pdf');
+  insert into public.data_requests(id,user_id,kind,status,attempt_count,organization_id) values
+    (other_request,other_owner,'deletion','failed',1,other_org),
+    (historical_request,f.owner_id,'deletion','failed',1,f.org_id);
+  insert into private.analysis_admission_retirement_capture(request_id,operation_ids,upload_ids)
+    values(historical_request,array[f.operation_id],array[f.upload_id]);
+  insert into private.analysis_admission_cleanup_progress(request_id,last_progress_attempt)
+    values(historical_request,1);
+  insert into private.analysis_admission_cleanup_receipts(request_id,upload_id,issued_attempt)
+    values(historical_request,f.upload_id,1);
+
+  assert has_function_privilege('service_role','public.complete_deletion_request_with_admission_retirement(uuid,text,integer)','execute');
+  assert not has_function_privilege('authenticated','public.complete_deletion_request_with_admission_retirement(uuid,text,integer)','execute');
+  assert not has_table_privilege('service_role','private.analysis_admission_retirement_authority','INSERT,UPDATE,DELETE');
+  assert not public.complete_deletion_request_with_admission_retirement(f.request_id,'worker',1);
+  assert not public.complete_deletion_request_with_admission_retirement(f.request_id,'wrong-worker',2);
+
+  begin
+    update private.analysis_admission_operations set adopted_upload_id=null where id=f.operation_id;
+    raise exception 'Direct adopted pointer update passed';
+  exception when check_violation then null;end;
+  begin
+    delete from private.analysis_admission_upload_transport where upload_id=f.upload_id;
+    raise exception 'Direct transport deletion passed';
+  exception when check_violation then null;end;
+  begin
+    delete from private.analysis_admission_retirement_capture where request_id=f.request_id;
+    raise exception 'Direct capture deletion passed';
+  exception when check_violation then null;end;
+
+  begin
+    insert into private.analysis_admission_retirement_capture(request_id,operation_ids,upload_ids)
+      values(other_request,array[f.operation_id],array[f.upload_id]);
+    assert not public.complete_deletion_request_with_admission_retirement(f.request_id,'worker',2);
+    raise exception 'fixture rollback' using errcode='P9T01';
+  exception when sqlstate 'P9T01' then null;end;
+
+  begin
+    insert into public.analysis_jobs values(f.analysis_id,'fixture-late',clock_timestamp()+interval '2 minutes');
+    assert not public.complete_deletion_request_with_admission_retirement(f.request_id,'worker',2);
+    raise exception 'fixture rollback' using errcode='P9T01';
+  exception when sqlstate 'P9T01' then null;end;
+
+  perform set_config('fixture.fail_completion','on',true);
+  begin
+    perform public.complete_deletion_request_with_admission_retirement(f.request_id,'worker',2);
+    raise exception 'Expected the injected completion failure';
+  exception when raise_exception then
+    assert sqlerrm='Synthetic failure after ledger writes';
+  end;
+  perform set_config('fixture.fail_completion','off',true);
+  assert (select adopted_upload_id=f.upload_id from private.analysis_admission_operations where id=f.operation_id);
+  assert (select count(*)=2 from private.analysis_admission_retirement_capture);
+  assert exists(select 1 from private.analysis_admission_cleanup_progress where request_id=historical_request);
+  assert exists(select 1 from private.analysis_admission_cleanup_receipts where request_id=f.request_id and verified_at is not null);
+  assert exists(select 1 from private.privacy_deletion_plans where request_id=f.request_id);
+  assert (select status='processing' from public.data_requests where id=f.request_id);
+  assert not exists(select 1 from private.analysis_admission_retirement_authority);
+
+  assert public.complete_deletion_request_with_admission_retirement(f.request_id,'worker',2);
+  assert (select status='completed' and result_manifest='{"deleted":true}'::jsonb from public.data_requests where id=f.request_id);
+  assert (select bool_and(status='completed') from public.privacy_request_steps where request_id=f.request_id);
+  assert not exists(select 1 from private.analysis_admission_operations where owner_id=f.owner_id);
+  assert not exists(select 1 from private.analysis_admission_uploads where id=f.upload_id);
+  assert not exists(select 1 from private.analysis_admission_upload_transport where upload_id=f.upload_id);
+  assert not exists(select 1 from private.analysis_admission_retirement_capture);
+  assert not exists(select 1 from private.analysis_admission_cleanup_receipts);
+  assert not exists(select 1 from private.analysis_admission_adopted_source_bindings);
+  assert not exists(select 1 from private.analysis_admission_cleanup_progress);
+  assert not exists(select 1 from private.analysis_admission_deletion_handoffs);
+  assert not exists(select 1 from private.analysis_admission_retirement_authority);
+  assert not exists(select 1 from private.privacy_deletion_plans where request_id=f.request_id);
+  assert exists(select 1 from private.analysis_admission_operations where id=other_operation);
+  assert exists(select 1 from private.analysis_admission_uploads where id=other_upload);
+  assert exists(select 1 from auth.users where id=f.owner_id);
+  assert private.candidate_write_blocked(f.owner_id);
+  assert not public.complete_deletion_request_with_admission_retirement(f.request_id,'worker',2);
+end;
+$$;
+"""
+
+gen = source("20261116075250")
+versions = ["20261121091814","20261121130718","20261121132235","20261121203700","20261121205500",
+            "20261121211200","20261121212400"]
+sql = "\n".join([
+    scaffold,
+    section(source("20260911130000"),"create table private.privacy_deletion_plans","revoke all on private.privacy_deletion_plans"),
+    section(source("20261110080809"),"create table private.analysis_admission_operations","create function private.analysis_admission_denied"),
+    section(source("20261109164851"),"create function private.candidate_owner_lock_keys","-- A false try-lock"),
+    section(gen,"create function private.privacy_generation_claim","create function public.fail_privacy_request"),
+    section(gen,"create function public.prepare_deletion_request","create function private.privacy_generation_catalogue"),
+    section(source("20261110080810"),"create function private.analysis_job_v2_review_handoff","create function public.claim_analysis_job_v2"),
+    durable_guard,
+    section(source("20261110085512"),"create function private.try_candidate_privacy_write","create function private.serialize_deletion_request"),
+    seed[:seed_tail], *(source(version) for version in versions), seed[seed_tail:],
+    source("20261121214800"), "" if baseline else source("20261121220100"),
+    handoff, retry, red if baseline else checks,
+])
+
+with TemporaryDirectory(prefix="resumide-ledger-retirement-") as tmp:
+    env = {"HOME": tmp, "PATH": "/opt/homebrew/bin:/usr/bin:/bin", "LC_ALL": "C"}
+    data = str(Path(tmp) / "data")
+
+    def run(argv, **options):
+        return subprocess.run(argv, env=env, timeout=25, text=True, check=True, **options)
+
+    assert run(["postgres","--version"],capture_output=True).stdout.startswith("postgres (PostgreSQL) 17.")
+    run(["initdb","-D",data,"--no-sync","--auth=trust","-U","fixture_owner"],stdout=subprocess.DEVNULL)
+    try:
+        run(["pg_ctl","-w","-D",data,"-l",str(Path(tmp)/"postgres.log"),
+             "-o",f"-c listen_addresses='' -c unix_socket_directories={tmp} -c unix_socket_permissions=0700","start"],
+            stdout=subprocess.DEVNULL)
+        run(["psql","-X","-v","ON_ERROR_STOP=1","-h",tmp,"-U","fixture_owner","-d","postgres","-Atq"],input=sql)
+        print("PASS: exact ledger retirement, historical capture cleanup, foreign and stale refusal, atomic rollback, sealed completion and durable owner hold.")
+    finally:
+        if (Path(data)/"postmaster.pid").exists():
+            run(["pg_ctl","-w","-D",data,"-m","immediate","stop"],stdout=subprocess.DEVNULL)

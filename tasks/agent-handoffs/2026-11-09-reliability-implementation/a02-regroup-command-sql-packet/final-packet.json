@@ -1,0 +1,116 @@
+{
+  "status": "RELEASED_SOURCE_ONLY_PEER_ACKED",
+  "worktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "contractOriginalSha256": "a706deba95f1db92dcc1cc84aaa646ae61c67f67b67f8f461b3241608a987fae",
+  "ownedFiles": {
+    "supabase/migrations/20261113165140_entry_regroup_command_normalization.sql": "c75d39515a7df6f7297c5bf085e2db1fcfe6201dcfa5dc713a8cbe90df16081f",
+    "tests/unit/entry-regroup-command-sql.test.ts": "466f299b5035f2b0fca0dba6680fa1062f96d089316ba80fe4ed5af0ef9fcc99",
+    "scripts/verify-entry-regroup-command.sql": "cf166c03239ab3961fc0b0137501069747674dec51441dd9614921cfa2d1c806",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a02-regroup-command-sql.md": "2c073b9a0bef0fcfe763e2ffe484ed121ddd50ababd2dc8c1068a48ac51c9da7"
+  },
+  "checks": [
+    {
+      "receipt": "red-source.json",
+      "status": "FAIL",
+      "log": "red-source.log",
+      "logSha256": "ac25410248652525eb1cc38fa4d7ec049aa5ba5df2f23c74128103379340e69f",
+      "sourceInputs": 716,
+      "processGroup": 36582,
+      "groupAbsent": true
+    },
+    {
+      "receipt": "format-write.json",
+      "status": "CONTROLLED_FORMAT",
+      "log": "format-write.log",
+      "logSha256": "e3626091789b25d123489ede8388e42462660f9173b5c92cace6451bb98fe9ab",
+      "sourceInputs": 721,
+      "processGroup": 38582,
+      "groupAbsent": true
+    },
+    {
+      "receipt": "focused.json",
+      "status": "FAIL",
+      "log": "focused.log",
+      "logSha256": "b2ab0360d033bb3030d1ba8b9db2483e92947c3543bf9daaea8214a74be38851",
+      "sourceInputs": 721,
+      "processGroup": 38589,
+      "groupAbsent": true
+    },
+    {
+      "receipt": "focused-retry.json",
+      "status": "PASS",
+      "log": "focused-retry.log",
+      "logSha256": "ebce3cf387c305cc5e6d79f01214abe3167cf32c754ef4b04794d790ca0680f9",
+      "sourceInputs": 723,
+      "processGroup": 38744,
+      "groupAbsent": true
+    },
+    {
+      "receipt": "types.json",
+      "status": "FAIL",
+      "log": "types.log",
+      "logSha256": "e839b2b656c2f2cf657d70a310443096526b16056641fd2eff41f71c62777dca",
+      "sourceInputs": 723,
+      "processGroup": 38743,
+      "groupAbsent": true
+    },
+    {
+      "receipt": "lint.json",
+      "status": "PASS",
+      "log": "lint.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceInputs": 723,
+      "processGroup": 38746,
+      "groupAbsent": true
+    },
+    {
+      "receipt": "format.json",
+      "status": "PASS",
+      "log": "format.log",
+      "logSha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "sourceInputs": 723,
+      "processGroup": 38745,
+      "groupAbsent": true
+    },
+    {
+      "receipt": "format-final-write.json",
+      "status": "CONTROLLED_FORMAT",
+      "log": "format-final-write.log",
+      "logSha256": "2808294c5be02c8332bf469167d3ac342f929e69abc62128425067ee325cd47d",
+      "sourceInputs": 723,
+      "processGroup": 39130,
+      "groupAbsent": true
+    },
+    {
+      "receipt": "focused-verifier-final.json",
+      "status": "PASS",
+      "log": "focused-verifier-final.log",
+      "logSha256": "43502975adbc04e42c08f44622400990396cea2119b76cc2d0acc9387a95343e",
+      "sourceInputs": 723,
+      "processGroup": 39137,
+      "groupAbsent": true
+    }
+  ],
+  "terminalSourceInputs": 723,
+  "terminalSourceInputsUnchangedAtRelease": true,
+  "ownedGroupsAbsent": [
+    36582,
+    38582,
+    38589,
+    38744,
+    38743,
+    38746,
+    38745,
+    39130,
+    39137
+  ],
+  "peer": "backend source+finite verifier ACK, no remaining finding",
+  "sourceGate": "8 passing cases before verifier-only fix; affected final1 PASS with7unselected",
+  "typeHarness": "HARNESS_CONFIGURATION_INCOMPLETE:5 missing ambient globals; no product diagnostics claimed; Root fulltypecheck owns resolution",
+  "sql": "UNPARSED_UNAPPLIED_UNEXECUTED",
+  "nativeParityProven": false,
+  "writerOrProfileAdopted": false,
+  "rootCombinedGate": "PENDING",
+  "fixtureCorrection": "Seven explicit rollback scopes retain UNIQUE(resume,revision); forged3 expects P0C03/C02_UNAVAILABLE only. Node literal unchanged."
+}

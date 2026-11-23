@@ -1,0 +1,50 @@
+
+> test
+> vitest run tests/unit/private-verification.test.ts -t refuses unavailable process identity
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats[39m
+
+ [31m❯[39m tests/unit/private-verification.test.ts [2m([22m[2m3 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m2 skipped[39m[2m)[22m[32m 61[2mms[22m[39m
+   [2m[90m↓[39m[22m seals real Vite env loading and rejects unsafe private browser configuration
+   [2m[90m↓[39m[22m inventories Git-aware source changes and aborts the actual owned process group
+[31m   [31m×[31m refuses unavailable process identity before starting the real neutral workload[39m[32m 60[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/unit/private-verification.test.ts[2m > [22mrefuses unavailable process identity before starting the real neutral workload
+[31m[1mAssertionError[22m: expected { failure: null, started: true, …(1) } to deeply equal { …(3) }[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  {[22m
+[32m-   "failure": "Private verification process identity is unavailable",[39m
+[32m-   "started": false,[39m
+[32m-   "workload": false,[39m
+[31m+   "failure": null,[39m
+[31m+   "started": true,[39m
+[31m+   "workload": true,[39m
+[2m  }[22m
+
+[36m [2m❯[22m tests/unit/private-verification.test.ts:[2m298:20[22m[39m
+    [90m296|[39m       })[33m,[39m
+    [90m297|[39m     )[33m;[39m
+    [90m298|[39m     [34mexpect[39m(result)[33m.[39m[34mtoEqual[39m({
+    [90m   |[39m                    [31m^[39m
+    [90m299|[39m       failure[33m:[39m [32m"Private verification process identity is unavailable"[39m[33m,[39m
+    [90m300|[39m       started[33m:[39m [35mfalse[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m2 skipped[39m[90m (3)[39m
+[2m   Start at [22m 16:44:58
+[2m   Duration [22m 210ms[2m (transform 24ms, setup 0ms, import 84ms, tests 61ms, environment 0ms)[22m
+
+npm notice
+npm notice New major version of npm available! 11.17.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

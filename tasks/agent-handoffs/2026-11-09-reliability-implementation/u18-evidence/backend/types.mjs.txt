@@ -1,0 +1,12 @@
+import ts from '/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/node_modules/typescript/lib/typescript.js';
+import {writeFileSync} from 'node:fs';
+const root='/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats';
+const config=ts.readConfigFile(root+'/tsconfig.json',ts.sys.readFile);
+const parsed=ts.parseJsonConfigFileContent(config.config,ts.sys,root);
+const roots=['app/lib/server/artifact-source-links.ts','app/lib/server/artifact-repository.ts','tests/unit/artifact-source-links.test.ts','tests/unit/artifact-repository.test.ts','types/index.d.ts','types/puter.d.ts'].map(x=>root+'/'+x);
+const program=ts.createProgram(roots,{...parsed.options,noEmit:true,incremental:false});
+const diagnostics=ts.getPreEmitDiagnostics(program);
+const report={roots:roots.length,sourceFiles:program.getSourceFiles().filter(x=>!x.fileName.includes('/node_modules/')).length,diagnostics:diagnostics.length};
+writeFileSync(new URL('scoped-types.json',import.meta.url),JSON.stringify(report,null,2)+'\n');
+if(diagnostics.length)process.stdout.write(ts.formatDiagnosticsWithColorAndContext(diagnostics,{getCurrentDirectory:()=>root,getCanonicalFileName:x=>x,getNewLine:()=>"\n"}));
+process.stdout.write(JSON.stringify(report)+'\n');process.exitCode=diagnostics.length?1:0;

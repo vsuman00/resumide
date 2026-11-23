@@ -1,0 +1,204 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ✓ tests/unit/ai-budget-source-sql.test.ts (29 tests) 8ms
+ ❯ tests/unit/retention-root-coverage-sql.test.ts (15 tests | 2 failed) 73ms
+     ✓ keeps deleted roots with missing version coverage eligible independently of failed items 1ms
+     ✓ requires exact actual version coverage before final root deletion 0ms
+     ✓ does not resurrect a deleted item when a late removal failure arrives 0ms
+     ✓ preserves first timestamps rather than requeueing a new enrollment event 0ms
+     × checks terminal preimages from the final clock successor and every actual new body pin 4ms
+     ✓ binds storage work to actual owned rows and freezes the enrolled/deleted key identity 0ms
+     ✓ rejects post-tombstone inserts/updates in the DB while preserving legitimate active page-count updates 0ms
+     ✓ makes existing root tombstones permanent without changing old generic barrier handling 0ms
+     ✓ keeps the privileged verifier deferred and checks a saved completion timestamp 0ms
+     ✓ re-reads terminal item state after owner acquisition before requiring a parent 0ms
+     ✓ drains more than 1000 versions through p_limit=1 without a history cap or early root deletion 59ms
+     ✓ keeps missing inventory reachable after every currently enrolled item completes 4ms
+     ✓ preserves the earliest deleted-item clock during backfill and rejects an unproved first event 0ms
+     ✓ keeps deletion terminal when a stale worker fails after another completes the last item 0ms
+   × bridges the frozen R17 disposition checker/export to the source-registration successor 1ms
+ ✓ tests/unit/canonical-sql-contract.test.ts (10 tests) 28ms
+ ❯ tests/unit/owned-ai-disposition-sql.test.ts (12 tests | 3 failed) 12ms
+     ✓ checks exact composed terminal preimages and fixed postimages, including guarded historical successors 4ms
+     × pins every changed checker from actual postimages without reshaping existing profile wires 4ms
+     ✓ captures the first account clock within actual preparation before candidate deletion and preserves retries 0ms
+     ✓ captures every version/operation at first root claim before tombstoning, independently of storage completion 0ms
+     ✓ retains composite A12 selectors and never rebinds generic R03 by owner/hash guesses 0ms
+     ✓ keeps the durable DB barrier and cancellation race authoritative without changing pre-preparation failed/cancelled semantics 0ms
+     ✓ exports the entire bounded owner closure with microseconds and effective minimum, failing incomplete captures 1ms
+     ✓ preserves exact historical policy validation while fresh Native selection requires current descriptor 0ms
+   ✓ captures the exact A13 reserve-before-claim attempt identity and refuses guessed generic linkage 0ms
+   ✓ seals exact future Native catalogue forms once and never learns them at runtime 1ms
+   × adopts the exact R17 terminal checker successors while retaining all clock-source goldens 1ms
+   × preserves R17 pins and binds the current source-registration disposition successor 1ms
+ ✓ tests/unit/initial-feedback-operation-sql.test.ts (13 tests) 6ms
+ ❯ tests/unit/initial-feedback-late-settlement-sql.test.ts (9 tests | 1 failed) 8ms
+     ✓ does not make exact terminal accounting depend on an erasable publication row 1ms
+     ✓ preserves9ffc/6bc/63dd source bytes and the publication profile 0ms
+     ✓ changes only the erasable-row condition while retaining every old guard 0ms
+     ✓ changes only the exact guard hash in the operation source manifest 0ms
+     ✓ changes only the exact operation checker hash in the full source manifest 0ms
+     ✓ guards exact preimages/postimages and keeps all three private routines denied 1ms
+     ✓ adds no storage/policy/admission path and leaves the usage-retirement defect separate 0ms
+     ✓ retains a real owner-scoped cascade/late-settlement verifier as explicitly unrun 0ms
+   × renews the current operation checker through the exact disposition successor without changing late-settlement history 4ms
+ ❯ tests/unit/owned-ai-retirement-sql.test.ts (11 tests | 1 failed) 8ms
+     ✓ requires actual retirement authority before accepting a missing publication 1ms
+     ✓ captures within the two real producer transactions before parent erasure 0ms
+     ✓ requires live durable authority and actual immutable source/publication/run rows 0ms
+     ✓ keeps link validation in one snapshot across all months and validates retained attempts without runs 0ms
+     ✓ pins real composed source bodies without a self-hash cycle 1ms
+     ✓ guards the exact table identities, attributes, ACLs and producer predecessors 0ms
+     ✓ exports whole owner scope with separate staged capability and no false existing-export authority 0ms
+     ✓ preserves frozen accounting and publication sources 0ms
+     ✓ keeps Native deletion, corruption and export proof deferred 0ms
+   ✓ adopts exact current retirement/full checker successors while retaining every historical100607 body 1ms
+   × pins the current R17 retirement and full checker bodies through explicit forward successors 3ms
+ ❯ tests/unit/owned-ai-usage-sql.test.ts (9 tests | 1 failed) 7ms
+     ✓ pins the real local bodies and composed actual publication interfaces without a cycle 1ms
+     ✓ admits owned current source/privacy/membership and optional job without a numeric score guard 0ms
+     ✓ validates links across all months before the legacy creation-month filter 0ms
+     ✓ excludes exact run IDs only and refuses ambiguous or inconsistent authoritative links 0ms
+     ✓ keeps all claimed known/unknown accounting regardless publication outcome 0ms
+     ✓ returns exact thirteen usage fields and nineteen real readiness fields 0ms
+     ✓ preserves old counters/source profiles while the actual caller always uses the shared helper 0ms
+     ✓ keeps actual Native verification deferred and refuses empty/time-backdated substitutes 0ms
+   × adopts the exact disposition-era rewrite checker postimage while preserving the historical profile-file golden 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-late-settlement-sql.test.ts > renews the current operation checker through the exact disposition successor without changing late-settlement history
+AssertionError: expected '2f5dc596054e962f56059afbe62c2b6bccace…' to be 'cfd7be13fbfc2f0a3770ddc02fe931b640d46…' // Object.is equality
+
+Expected: "cfd7be13fbfc2f0a3770ddc02fe931b640d46a2449405fe77b58dd8ef67bd0a6"
+Received: "2f5dc596054e962f56059afbe62c2b6bccacec60e845a0f1a493e121ca532fc0"
+
+ ❯ tests/unit/initial-feedback-late-settlement-sql.test.ts:217:23
+    215|   );
+    216|   expect(p.before).toBe(operationProfile.checkerSha256);
+    217|   expect(hash(p.new)).toBe(currentOperationProfile.checkerSha256);
+       |                       ^
+    218|   expect(p.after).toBe(currentOperationProfile.checkerSha256);
+    219| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tests/unit/owned-ai-disposition-sql.test.ts > ADR0020 first-preparation clock/closure SOURCE ONLY, SQL unparsed/unexecuted > pins every changed checker from actual postimages without reshaping existing profile wires
+AssertionError: expected 'f396a7e3c1d66801ebeae03b371b0ef5ef5eb…' to be 'ef084481faf7a75e5da4dafbabdb8cd9c2aac…' // Object.is equality
+
+Expected: "ef084481faf7a75e5da4dafbabdb8cd9c2aacae542b26c5e90ced4ed25b8ef14"
+Received: "f396a7e3c1d66801ebeae03b371b0ef5ef5eb9d27b7895160d009f4cd091fba7"
+
+ ❯ tests/unit/owned-ai-disposition-sql.test.ts:265:38
+    263|       ],
+    264|     ])
+    265|       expect(hash(byName(name).new)).toBe(pin);
+       |                                      ^
+    266|     const catalog = JSON.parse(
+    267|       literal(migration, "disposition_catalog"),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tests/unit/owned-ai-disposition-sql.test.ts > adopts the exact R17 terminal checker successors while retaining all clock-source goldens
+AssertionError: expected '6836a2370569e10034ecba67d87d2bbb2c519…' to be '7a203a7faa708467656c96618e7e16fc3d624…' // Object.is equality
+
+Expected: "7a203a7faa708467656c96618e7e16fc3d624f24bf0b5d9aba6da9883a87a8d7"
+Received: "6836a2370569e10034ecba67d87d2bbb2c519253d299710cb5daae97b8e72e78"
+
+ ❯ tests/unit/owned-ai-disposition-sql.test.ts:524:25
+    522|     expect(hash(p.old)).toBe(oldPin);
+    523|     expect(p.before).toBe(oldPin);
+    524|     expect(hash(p.new)).toBe(newPin);
+       |                         ^
+    525|     expect(p.after).toBe(newPin);
+    526|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tests/unit/owned-ai-disposition-sql.test.ts > preserves R17 pins and binds the current source-registration disposition successor
+AssertionError: expected 'b20a83ce978794972816d2fd2389991799214…' to be '8d74e455b6f29fb3c5caceae2f030c044175c…' // Object.is equality
+
+Expected: "8d74e455b6f29fb3c5caceae2f030c044175c3f1a1a296b4639ee44ea77f66b4"
+Received: "b20a83ce978794972816d2fd238999179921426d55ae77da1d35515f944370e0"
+
+ ❯ tests/unit/owned-ai-disposition-sql.test.ts:553:25
+    551|     expect(hash(p.old)).toBe(oldPin);
+    552|     expect(p.before).toBe(oldPin);
+    553|     expect(hash(p.new)).toBe(newPin);
+       |                         ^
+    554|     expect(p.after).toBe(newPin);
+    555|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  tests/unit/owned-ai-retirement-sql.test.ts > pins the current R17 retirement and full checker bodies through explicit forward successors
+AssertionError: expected '6836a2370569e10034ecba67d87d2bbb2c519…' to be '7a203a7faa708467656c96618e7e16fc3d624…' // Object.is equality
+
+Expected: "7a203a7faa708467656c96618e7e16fc3d624f24bf0b5d9aba6da9883a87a8d7"
+Received: "6836a2370569e10034ecba67d87d2bbb2c519253d299710cb5daae97b8e72e78"
+
+ ❯ tests/unit/owned-ai-retirement-sql.test.ts:368:25
+    366|     expect(hash(p.old)).toBe(oldPin);
+    367|     expect(p.before).toBe(oldPin);
+    368|     expect(hash(p.new)).toBe(pin);
+       |                         ^
+    369|     expect(p.after).toBe(pin);
+    370|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  tests/unit/owned-ai-usage-sql.test.ts > adopts the exact disposition-era rewrite checker postimage while preserving the historical profile-file golden
+AssertionError: expected 'f396a7e3c1d66801ebeae03b371b0ef5ef5eb…' to be 'ef084481faf7a75e5da4dafbabdb8cd9c2aac…' // Object.is equality
+
+Expected: "ef084481faf7a75e5da4dafbabdb8cd9c2aacae542b26c5e90ced4ed25b8ef14"
+Received: "f396a7e3c1d66801ebeae03b371b0ef5ef5eb9d27b7895160d009f4cd091fba7"
+
+ ❯ tests/unit/owned-ai-usage-sql.test.ts:257:19
+    255|     "e98f6ec0de0a09ec002a85d97d007cb71a49c261bbcba746d82c688a7281251b",
+    256|   );
+    257|   expect(p.after).toBe(currentRewriteProfile.checkerSha256);
+       |                   ^
+    258|   expect(historicalRewriteProfileSource.split(p.before)).toHaveLength(…
+    259|   expect(read("app/lib/server/canonical-rewrite-readiness-profile.ts")…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  tests/unit/retention-root-coverage-sql.test.ts > R17 composed source closure and guards, not Native execution > checks terminal preimages from the final clock successor and every actual new body pin
+AssertionError: expected '6836a2370569e10034ecba67d87d2bbb2c519…' to be '7a203a7faa708467656c96618e7e16fc3d624…' // Object.is equality
+
+Expected: "7a203a7faa708467656c96618e7e16fc3d624f24bf0b5d9aba6da9883a87a8d7"
+Received: "6836a2370569e10034ecba67d87d2bbb2c519253d299710cb5daae97b8e72e78"
+
+ ❯ tests/unit/retention-root-coverage-sql.test.ts:135:32
+    133|       ],
+    134|     ])
+    135|       expect(hash(current(n))).toBe(pin);
+       |                                ^
+    136|     const catalog = JSON.parse(
+    137|       block(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  tests/unit/retention-root-coverage-sql.test.ts > bridges the frozen R17 disposition checker/export to the source-registration successor
+AssertionError: expected 'b20a83ce978794972816d2fd2389991799214…' to be '8d74e455b6f29fb3c5caceae2f030c044175c…' // Object.is equality
+
+Expected: "8d74e455b6f29fb3c5caceae2f030c044175c3f1a1a296b4639ee44ea77f66b4"
+Received: "b20a83ce978794972816d2fd238999179921426d55ae77da1d35515f944370e0"
+
+ ❯ tests/unit/retention-root-coverage-sql.test.ts:439:25
+    437|     expect(hash(p.old)).toBe(oldPin);
+    438|     expect(p.before).toBe(oldPin);
+    439|     expect(hash(p.new)).toBe(newPin);
+       |                         ^
+    440|     expect(p.after).toBe(newPin);
+    441|   }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  5 failed | 3 passed (8)
+      Tests  8 failed | 100 passed (108)
+   Start at  16:38:04
+   Duration  741ms (transform 75ms, setup 0ms, import 155ms, tests 149ms, environment 0ms)
+

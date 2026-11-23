@@ -1,0 +1,515 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { OWNED_AI_DISPOSITION_PROFILE as terminalDispositionProfile } from "../../app/lib/server/owned-ai-disposition-profile";
+import {
+  INITIAL_FEEDBACK_PROFILE as terminalFeedbackProfile,
+  OWNED_AI_RETIREMENT_PROFILE as terminalRetirementProfile,
+} from "../../app/lib/server/initial-feedback-profile";
+import { INITIAL_FEEDBACK_OPERATION_PROFILE } from "../../app/lib/server/initial-feedback-operation-profile";
+import {
+  LEGACY_SCORING_INPUT_PROFILE,
+  HISTORICAL_LEGACY_SCORING_INPUT_PROFILE,
+} from "../../app/lib/server/legacy-scoring-input-profile";
+import { TYPED_AUTHORING_READINESS_PROFILE } from "../../app/lib/server/typed-authoring-readiness-profile";
+import { CANONICAL_REWRITE_READINESS_PROFILE } from "../../app/lib/server/canonical-rewrite-readiness-profile";
+import { CANONICAL_REWRITE_WORKSPACE_PROFILE } from "../../app/lib/server/canonical-rewrite-workspace-profile";
+// Frozen clock profiles retain every historical assertion; R17 terminal pins follow below.
+const INITIAL_FEEDBACK_PROFILE = Object.freeze({
+  schemaVersion: "initial-feedback-readiness/1.0.0",
+  profileVersion: "initial-feedback-readiness-profile/1.0.0",
+  checkerSha256:
+    "2f735266a5f2e7c44578b0bed2c2cfec2e671d4665f32a480389c5e397e664c2",
+  readerSha256:
+    "57701a307d3087720642d9b4057eac87b770465e81726c000c5238708bcfc47b",
+  prepareSha256:
+    "93b7af8445710cd105e2da67eb27f7d9b8d9c52cd7ec924a6ab6f6aa69548f92",
+  claimSha256:
+    "335cef3a4e4f948b4c3b3c17ea9a3159368cab5df6e5a7a1389bc0f46759766a",
+  settleSha256:
+    "739919dedaa5080c4bb8f3c556a9f9b1528fb88747edef9764588bd9038d4148",
+  finishSha256:
+    "966cdb270ca5a4c1ab8fe6a6dd9097b5d46ebb2b2218f8047b794646cca315a8",
+  usageSha256:
+    "9564c709cea106d8999c61e4db14ce45c40c41eacd23ce54f7fa1ea5c234c223",
+  exportSha256:
+    "eefd5842be1eb38fe1e0f17ea148f1708eae634c2a8fe42ab94467c9839fe0cd",
+  metadataSha256:
+    "2bafa1e30a02308604ad0114ab114189aef6e8323379e443ab7a96a64b2196d6",
+});
+const OWNED_AI_RETIREMENT_PROFILE = Object.freeze({
+  schemaVersion: "owned-ai-retirement-readiness/1.0.0",
+  profileVersion: "owned-ai-retirement-profile/1.0.0",
+  checkerSha256:
+    "d5330d9d5dae482c055bf2f61b08fcd838c603865732d4578e90440be9c79e46",
+  captureSha256:
+    "d066dfb3459d527b551ab81a564f85e896220e8b8f88749d21e378bd2b84cce0",
+  exportSha256:
+    "dc09528d888b8089e5e87d2d1edf32a8796267683021b2085dac2d0e80f3db27",
+  metadataSha256:
+    "55a9f1dd2000b1a4cd1e258e68b0e56d36872422f7a76ced5c08585fe31d70b7",
+});
+const OWNED_AI_DISPOSITION_PROFILE = Object.freeze({
+  schemaVersion: "owned-ai-disposition-readiness/1.0.0",
+  profileVersion: "owned-ai-disposition-profile/1.0.0",
+  checkerSha256:
+    "bb578c9ba158fc7a56b504b6b4f4efe84997db2d986153936446641270054815",
+  exportSha256:
+    "cc77dc66d2a576de1e5249ff1542188c06314cb703a10a6a41dbbf111bd011b5",
+  accessSha256:
+    "0846149a1f25edf14ea3c907219634cda85358065b3e4d5a06c79da2522f87db",
+  metadataSha256:
+    "f42f6f60454023ad2b6ef998e2fd9098585768c0cfe35cd5307affdd5f349a6a",
+});
+const read = (name: string) =>
+  readFileSync(new URL(`../../${name}`, import.meta.url), "utf8");
+const migration = read(
+  "supabase/migrations/20261115131621_owned_ai_disposition_clocks.sql",
+);
+const hash = (s: string) =>
+  createHash("sha256").update(s, "utf8").digest("hex");
+const esc = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+// Delimited text and JSON patch data only. Never a SQL parser or database call.
+function body(s: string, name: string) {
+  const m = new RegExp(
+    `create(?: or replace)? function ${esc(name)}\\([^;]*?\\bas\\s+(\\$[A-Za-z0-9_]*\\$)([\\s\\S]*?)\\1;`,
+  ).exec(s);
+  if (!m) throw Error("MISSING_SOURCE_BODY");
+  return m[2];
+}
+function literal(s: string, name: string) {
+  const m = new RegExp(`\\$${name}\\$([\\s\\S]*?)\\$${name}\\$`).exec(s);
+  if (!m) throw Error("MISSING_SOURCE_LITERAL");
+  return m[1];
+}
+function replace(s: string, old: string, next: string) {
+  expect(s.split(old)).toHaveLength(2);
+  return s.replace(old, next);
+}
+type Change = { old: string; new: string };
+type HistoricalPatch = {
+  signature: string;
+  sha256?: string;
+  before?: string;
+  newSha256?: string;
+  after?: string;
+  patches?: Change[];
+  changes?: Change[];
+};
+function apply(source: string, patch: HistoricalPatch) {
+  expect(hash(source)).toBe(patch.sha256 ?? patch.before);
+  for (const c of patch.patches ?? patch.changes ?? [])
+    source = replace(source, c.old, c.new);
+  expect(hash(source)).toBe(patch.newSha256 ?? patch.after);
+  return source;
+}
+const file = (name: string) => read(`supabase/migrations/${name}.sql`);
+type Patch = {
+  signature: string;
+  before: string;
+  after: string;
+  old: string;
+  new: string;
+  setof: boolean;
+};
+const patches = JSON.parse(
+  literal(migration, "disposition_patches"),
+) as Patch[];
+const byName = (name: string) => {
+  const p = patches.find((p) => p.signature.startsWith(name + "("));
+  if (!p) throw Error("MISSING_FORWARD_PATCH");
+  return p;
+};
+function canonicalTerminal() {
+  let b = body(
+    file("20261113131538_grouped_original_admission"),
+    "private.canonical_correction_write_ready",
+  );
+  let s = file("20261113142537_grouped_original_workspace_read");
+  b = replace(
+    b,
+    literal(s, "a02_old_manifest"),
+    literal(s, "a02_new_manifest"),
+  );
+  s = file("20261113155247_entry_regroup_ledger_foundation");
+  for (const p of JSON.parse(literal(s, "regroup_profile_patches")) as Change[])
+    b = replace(b, p.old, p.new);
+  s = file("20261113180050_entry_regroup_atomic_admission");
+  b = replace(b, literal(s, "erg_old_catalog"), literal(s, "erg_new_catalog"));
+  s = file("20261114104337_requirement_relationship_context");
+  b = replace(b, literal(s, "rr_old_catalog"), literal(s, "rr_new_catalog"));
+  s = file("20261114170229_typed_authoring_readiness");
+  const p = (JSON.parse(literal(s, "typed_patches")) as HistoricalPatch[]).find(
+    (p) => p.signature === "private.canonical_correction_write_ready()",
+  )!;
+  return apply(b, p);
+}
+function typedTerminal() {
+  const b = body(
+    file("20261114170229_typed_authoring_readiness"),
+    "private.typed_authoring_write_ready",
+  );
+  const p = (
+    JSON.parse(
+      literal(
+        file("20261114174039_typed_authoring_declaration"),
+        "ta_declaration_patches",
+      ),
+    ) as HistoricalPatch[]
+  ).find((p) => p.signature === "private.typed_authoring_write_ready()")!;
+  return apply(b, p);
+}
+function rewriteTerminal() {
+  const b = body(
+    file("20261114181344_canonical_rewrite_operations"),
+    "private.canonical_rewrite_ready",
+  );
+  const p = (
+    JSON.parse(
+      literal(
+        file("20261114192207_canonical_rewrite_compatibility"),
+        "patches",
+      ),
+    ) as HistoricalPatch[]
+  ).find((p) => p.signature === "private.canonical_rewrite_ready()")!;
+  return apply(b, p);
+}
+
+describe("ADR0020 first-preparation clock/closure SOURCE ONLY, SQL unparsed/unexecuted", () => {
+  it("checks exact composed terminal preimages and fixed postimages, including guarded historical successors", () => {
+    expect(patches).toHaveLength(14);
+    expect(new Set(patches.map((p) => p.signature)).size).toBe(14);
+    for (const p of patches) {
+      expect(hash(p.old)).toBe(p.before);
+      expect(hash(p.new)).toBe(p.after);
+      expect(p.before).not.toBe(p.after);
+    }
+    expect(byName("private.canonical_correction_write_ready").old).toBe(
+      canonicalTerminal(),
+    );
+    expect(byName("private.typed_authoring_write_ready").old).toBe(
+      typedTerminal(),
+    );
+    expect(byName("private.canonical_rewrite_ready").old).toBe(
+      rewriteTerminal(),
+    );
+    for (const [n, f] of [
+      ["public.prepare_deletion_request", "20261115100607_owned_ai_retirement"],
+      [
+        "public.claim_expired_resume_objects",
+        "20260911130000_durable_privacy_deletion_plan",
+      ],
+      [
+        "private.candidate_write_blocked",
+        "20261110085512_privacy_write_barrier",
+      ],
+      [
+        "private.serialize_deletion_request",
+        "20261110085512_privacy_write_barrier",
+      ],
+    ])
+      expect(byName(n).old).toBe(body(file(f), n));
+    expect(migration).toContain("p.prosrc is distinct from item->>'old'");
+    expect(migration).toContain(
+      "private.ifo_sha(item->>'new')<>item->>'after'",
+    );
+    expect(byName("public.claim_expired_resume_objects").setof).toBe(true);
+  });
+  it("pins every changed checker from actual postimages without reshaping existing profile wires", () => {
+    for (const [name, pin] of [
+      [
+        "private.legacy_scoring_ready",
+        LEGACY_SCORING_INPUT_PROFILE.checkerSha256,
+      ],
+      [
+        "private.canonical_correction_write_ready",
+        TYPED_AUTHORING_READINESS_PROFILE.canonicalReadinessSha256,
+      ],
+      [
+        "private.typed_authoring_write_ready",
+        TYPED_AUTHORING_READINESS_PROFILE.typedReadinessSha256,
+      ],
+      [
+        "private.canonical_rewrite_ready",
+        CANONICAL_REWRITE_READINESS_PROFILE.checkerSha256,
+      ],
+      [
+        "private.canonical_rewrite_workspace_ready",
+        CANONICAL_REWRITE_WORKSPACE_PROFILE.checkerSha256,
+      ],
+      [
+        "private.initial_feedback_operation_ready",
+        INITIAL_FEEDBACK_OPERATION_PROFILE.checkerSha256,
+      ],
+      [
+        "private.owned_ai_retirement_ready",
+        OWNED_AI_RETIREMENT_PROFILE.checkerSha256,
+      ],
+      [
+        "private.initial_feedback_ready",
+        INITIAL_FEEDBACK_PROFILE.checkerSha256,
+      ],
+    ])
+      expect(hash(byName(name).new)).toBe(pin);
+    const catalog = JSON.parse(
+      literal(migration, "disposition_catalog"),
+    ) as Array<{ signature: string; sha256: string }>;
+    for (const p of patches)
+      expect(catalog.find((c) => c.signature === p.signature)?.sha256).toBe(
+        p.after,
+      );
+    for (const [name, pin] of [
+      [
+        "private.owned_ai_disposition_ready",
+        OWNED_AI_DISPOSITION_PROFILE.checkerSha256,
+      ],
+      [
+        "public.export_owned_ai_disposition_records",
+        OWNED_AI_DISPOSITION_PROFILE.exportSha256,
+      ],
+      [
+        "public.read_candidate_privacy_access",
+        OWNED_AI_DISPOSITION_PROFILE.accessSha256,
+      ],
+      [
+        "public.read_owned_ai_disposition_readiness",
+        OWNED_AI_DISPOSITION_PROFILE.metadataSha256,
+      ],
+    ])
+      expect(hash(body(migration, name))).toBe(pin);
+    expect(Object.keys(OWNED_AI_DISPOSITION_PROFILE)).toHaveLength(6);
+    expect(Object.keys(INITIAL_FEEDBACK_PROFILE)).toHaveLength(11);
+  });
+  it("captures the first account clock within actual preparation before candidate deletion and preserves retries", () => {
+    const p = byName("public.prepare_deletion_request").new;
+    expect(
+      p.indexOf("insert into private.privacy_deletion_plans"),
+    ).toBeLessThan(
+      p.indexOf("insert into private.owned_ai_deletion_dispositions"),
+    );
+    expect(
+      p.indexOf("private.capture_owned_ai_operation_dispositions"),
+    ).toBeLessThan(p.indexOf("delete from public.analyses"));
+    expect(p).toContain("first_at:=clock_timestamp()");
+    expect(p).toContain("plan.storage_objects,plan.created_at");
+    expect(p).toContain("on conflict(owner_id) do nothing");
+    expect(p).toContain("OWNED_AI_DISPOSITION_HISTORICAL_REPAIR");
+    expect(p).toContain("first_at+interval '720 hours'");
+    expect(
+      migration.slice(
+        migration.indexOf(
+          "create table private.owned_ai_deletion_dispositions",
+        ),
+        migration.indexOf("alter table"),
+      ),
+    ).not.toContain("references");
+    expect(body(migration, "private.owned_ai_disposition_guard")).toContain(
+      "if tg_op<>'INSERT'",
+    );
+  });
+  it("captures every version/operation at first root claim before tombstoning, independently of storage completion", () => {
+    const p = byName("public.claim_expired_resume_objects").new,
+      c = body(migration, "private.capture_owned_ai_operation_dispositions");
+    expect(p.indexOf("insert into private.retention_items")).toBeLessThan(
+      p.indexOf("perform private.capture_owned_ai_operation_dispositions"),
+    );
+    expect(
+      p.indexOf("perform private.capture_owned_ai_operation_dispositions"),
+    ).toBeLessThan(p.indexOf("update public.resumes"));
+    expect(p).toContain("limit p_limit for update of rv,r skip locked");
+    expect(p).toContain("created_at)");
+    expect(p).not.toContain("set created_at");
+    expect(c).toContain("where resume_id=p_resume and owner_id=p_owner");
+    expect(c).toContain("locked<>expected");
+    expect(c).toContain("order by t.created_at,t.id limit 1");
+    expect(c).not.toContain("publication_id is not null");
+    expect(c).not.toContain("claimed_at is not null");
+    expect(c).toContain("private.try_lock_candidate_owners(array[p_owner])");
+    expect(c).toContain("for update skip locked");
+    expect(c).toContain("for share of r,v skip locked");
+  });
+  it("retains composite A12 selectors and never rebinds generic R03 by owner/hash guesses", () => {
+    const c = body(
+        migration,
+        "private.capture_owned_ai_operation_dispositions",
+      ),
+      row = body(migration, "private.capture_owned_ai_disposition_row");
+    expect(migration).toContain(
+      "unique nulls not distinct(kind,owner_id,analysis_id,operation_id)",
+    );
+    expect(migration).toContain("owned_ai_r03_disposition_identity");
+    expect(c).toContain("c.binding_sha256=x.payload_sha256");
+    expect(c).toContain("private.owned_ai_feedback_budget_link");
+    expect(c).toContain("a.id=x.id and a.owner_id=p_owner");
+    expect(c.indexOf("Account capture cannot restart")).toBeLessThan(
+      c.indexOf("elsif x.surface='build'"),
+    );
+    expect(c).toContain(
+      "scope:=source_row.source_scope;capture_at:=source_row.prepared_at",
+    );
+    expect(c).toContain(
+      "scope:='historical_unresolved';capture_at:=null;cause:=null;cause_request:=null;cause_item:=null",
+    );
+    expect(row).toContain("p_at<prior.prepared_at");
+    expect(row).not.toContain("update private.");
+    expect(c).not.toMatch(
+      /(?:update|delete from) private\.ai_budget_(?:attempts|operations|pools)/u,
+    );
+  });
+  it("keeps the durable DB barrier and cancellation race authoritative without changing pre-preparation failed/cancelled semantics", () => {
+    const b = byName("private.candidate_write_blocked").new,
+      s = byName("private.serialize_deletion_request").new;
+    expect(b).toContain("private.owned_ai_deletion_dispositions");
+    expect(b).toContain(
+      "d.status is distinct from 'failed' and d.status is distinct from 'cancelled'",
+    );
+    expect(s).toContain(
+      "new.status='cancelled' and exists(select 1 from private.owned_ai_deletion_dispositions",
+    );
+    expect(s).toContain("PRIVACY_DELETION_PREPARED");
+    expect(s.indexOf("private.try_lock_candidate_owners")).toBeLessThan(
+      s.indexOf("new.status='cancelled'"),
+    );
+    const a = body(migration, "public.read_candidate_privacy_access");
+    expect(a).toContain("from auth.users u where u.id=p_user_id");
+    expect(a).toContain("'deletionPrepared',exists");
+    expect(a).toContain("'blockingRequest',exists");
+    expect(a).not.toContain("expires_at");
+  });
+  it("exports the entire bounded owner closure with microseconds and effective minimum, failing incomplete captures", () => {
+    const e = body(migration, "public.export_owned_ai_disposition_records");
+    expect(e).toContain("private.try_lock_candidate_owners(array[p_user_id])");
+    expect(e).toContain("OWNED_AI_DISPOSITION_INCOMPLETE");
+    expect(e).toContain("OWNED_AI_DISPOSITION_HISTORICAL_REPAIR");
+    expect(e).toContain("private.initial_feedback_content_retirements");
+    expect(e).toContain("where d.owner_id=p_user_id");
+    expect(e).not.toContain("memberships");
+    expect(e).not.toContain("selections");
+    expect(e).toContain("n>4096 or bytes>33554432");
+    expect(e).toContain("limit 4097");
+    expect(e).toContain("least(d.expires_at,a.expires_at)");
+    expect(e).toContain(
+      "'ownerId',p_user_id,'accounts',to_jsonb(accounts),'operations',to_jsonb(operations)",
+    );
+    expect(
+      body(migration, "public.read_owned_ai_disposition_readiness"),
+    ).toContain("'accessExecutable'");
+    expect(migration).toContain(
+      "revoke all on function public.read_candidate_privacy_access(uuid) from public,anon,authenticated,service_role",
+    );
+    expect(migration).not.toContain(
+      "grant execute on function public.read_candidate_privacy_access",
+    );
+    expect(migration).not.toMatch(
+      /create (?:or replace )?function [^\n]*(?:purge|expire|sweep)/u,
+    );
+  });
+  it("preserves exact historical policy validation while fresh Native selection requires current descriptor", () => {
+    const v = byName("private.ifo_policy_valid").new,
+      s = byName("private.ifo_selected_policy").new;
+    expect(JSON.parse(literal(v, "scoring"))).toEqual(
+      HISTORICAL_LEGACY_SCORING_INPUT_PROFILE,
+    );
+    expect(JSON.parse(literal(v, "current_scoring"))).toEqual(
+      LEGACY_SCORING_INPUT_PROFILE,
+    );
+    expect(s).toContain(
+      "pol->'scoringInputProfile' is distinct from $current_scoring$",
+    );
+    expect(v).toContain(
+      "p_policy->>'sha256'=private.ifo_sha(private.ifo_policy_frame(p_policy))",
+    );
+  });
+});
+
+it("captures the exact A13 reserve-before-claim attempt identity and refuses guessed generic linkage", () => {
+  const link = body(migration, "private.owned_ai_feedback_budget_link");
+  for (const clause of [
+    "a.budget_attempt_id=b.id",
+    "a.budget_attempt_id is null and a.state='reserved' and b.state='reserved' and b.id=a.attempt_id",
+    "b.ordinal=a.ordinal",
+    "o.id=f.operation_id",
+    "o.user_id=f.owner_id",
+    "o.organization_id=f.organization_id",
+    "o.payload_sha256=f.binding_sha256",
+    "o.reserved_output_tokens=(f.binding->'policy'->>'maxOutputTokens')::numeric",
+    "private.ai_budget_binding_sha256",
+  ])
+    expect(link).toContain(clause);
+  const service = read("app/lib/server/initial-feedback-service.ts");
+  expect(service).toContain("attemptId,");
+  expect(service).toContain("operationId: op.operationId");
+  expect(service).toContain('name === "ai_budget_claim_dispatch"');
+});
+it("seals exact future Native catalogue forms once and never learns them at runtime", () => {
+  const ready = body(migration, "private.owned_ai_disposition_ready"),
+    catalogue = body(migration, "private.owned_ai_disposition_catalogue");
+  for (const clause of [
+    "pg_get_constraintdef",
+    "pg_get_indexdef",
+    "pg_get_triggerdef",
+    "pg_get_expr",
+    "indnullsnotdistinct",
+    "attnotnull",
+  ])
+    expect(catalogue).toContain(clause);
+  expect(
+    migration.match(
+      /insert into private\.owned_ai_disposition_catalogue_seal/gu,
+    ),
+  ).toHaveLength(1);
+  expect(
+    migration.indexOf(
+      "insert into private.owned_ai_disposition_catalogue_seal",
+    ),
+  ).toBeLessThan(
+    migration.indexOf("create trigger owned_ai_disposition_seal_closed"),
+  );
+  expect(body(migration, "private.owned_ai_disposition_seal_closed")).toContain(
+    "begin raise exception",
+  );
+  expect(ready).toContain(
+    "private.owned_ai_disposition_catalogue() is distinct from",
+  );
+  expect(ready).toContain("attname=item->>0");
+  expect(catalogue).toContain(
+    "\'private.owned_ai_disposition_catalogue_seal\'::regclass",
+  );
+  expect(catalogue).toContain(
+    "c.relname=\'owned_ai_disposition_catalogue_seal\' and t.tgname=\'owned_ai_disposition_seal_closed\'",
+  );
+  expect(ready).not.toContain("insert into");
+  expect(ready).not.toContain("update private.");
+});
+
+it("adopts the exact R17 terminal checker successors while retaining all clock-source goldens", () => {
+  const rows = JSON.parse(
+    literal(
+      read("supabase/migrations/20261115143547_retention_root_coverage.sql"),
+      "r17_patches",
+    ),
+  ) as Patch[];
+  for (const [name, oldPin, newPin] of [
+    [
+      "private.owned_ai_disposition_ready",
+      OWNED_AI_DISPOSITION_PROFILE.checkerSha256,
+      terminalDispositionProfile.checkerSha256,
+    ],
+    [
+      "private.owned_ai_retirement_ready",
+      OWNED_AI_RETIREMENT_PROFILE.checkerSha256,
+      terminalRetirementProfile.checkerSha256,
+    ],
+    [
+      "private.initial_feedback_ready",
+      INITIAL_FEEDBACK_PROFILE.checkerSha256,
+      terminalFeedbackProfile.checkerSha256,
+    ],
+  ]) {
+    const p = rows.find((p) => p.signature === name + "()")!;
+    expect(hash(p.old)).toBe(oldPin);
+    expect(p.before).toBe(oldPin);
+    expect(hash(p.new)).toBe(newPin);
+    expect(p.after).toBe(newPin);
+  }
+});

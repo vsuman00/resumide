@@ -1,0 +1,127 @@
+-- Disposable database only. Verify the sealed fold refuses a due fixture,
+-- then exercise its read-only monthly SELECT without enabling adoption.
+begin;
+set local plpgsql.check_asserts=on;
+set local statement_timeout='15s';
+
+do $fixture$
+declare
+  test_owner uuid:=gen_random_uuid();
+  other_owner uuid:=gen_random_uuid();
+  test_org uuid;
+  other_org uuid;
+  current_month date:=date_trunc('month',clock_timestamp() at time zone 'UTC')::date;
+  first_clock timestamptz:=clock_timestamp()-interval '31 days';
+  deletion_id uuid:=gen_random_uuid();
+  policy constant text:='synthetic-expiry-policy';
+  model_value constant text:='synthetic-model';
+  index_value integer;
+  selected_owner uuid;
+  selected_org uuid;
+  nonce text;
+  operation_ids uuid[]:=array[]::uuid[];
+  requests jsonb[]:=array[]::jsonb[];
+  request jsonb;
+  receipt jsonb;
+  core_source text;
+  month_select text;
+  projection jsonb;
+  recovered boolean:=false;
+begin
+  assert current_setting('listen_addresses')='', 'private socket required';
+  assert not exists(select 1 from auth.users);
+  assert private.owned_ai_expiry_ready() and private.owned_ai_expiry_safety_ready();
+  assert private.owned_ai_expiry_adoption_ready() is false;
+  assert not has_function_privilege('service_role','public.sweep_owned_ai_expiry(integer)','EXECUTE');
+  insert into auth.users(id,email) values(test_owner,'expiry-owner@example.test'),(other_owner,'expiry-other@example.test');
+  select id into strict test_org from public.organizations where owner_id=test_owner;
+  select id into strict other_org from public.organizations where owner_id=other_owner;
+  insert into private.ai_budget_policies(version,model,monthly_token_limit,monthly_cost_limit_microusd,
+    input_microusd_per_million,output_microusd_per_million,max_attempts,enabled,approval_sha256)
+    values(policy,model_value,5000,5000,100,200,1,true,repeat('a',64));
+  insert into private.ai_budget_period_openings(organization_id,period,pool_policy_version,
+    opening_spent_tokens,opening_spent_cost_microusd,unresolved_legacy_attempts,evidence_sha256)
+    values(test_org,current_month,policy,0,0,0,repeat('b',64)),
+          (other_org,current_month,policy,0,0,0,repeat('c',64));
+  for index_value in 1..3 loop
+    selected_owner:=case when index_value=3 then other_owner else test_owner end;
+    selected_org:=case when index_value=3 then other_org else test_org end;
+    nonce:='synthetic-projection-'||index_value::text;
+    operation_ids[index_value]:=private.ai_budget_source_identity(selected_owner,selected_org,'build_account',null,null,nonce);
+    request:=jsonb_build_object('operationId',operation_ids[index_value],'attemptId',gen_random_uuid(),
+      'surface','build','payloadSha256',repeat('d',64),'model',model_value,'promptPolicyVersion','synthetic',
+      'policyVersion',policy,'reservedInputTokens','400','reservedOutputTokens','100');
+    receipt:=public.ai_budget_reserve_source_next(selected_owner,selected_org,
+      jsonb_build_object('schemaVersion','ai-budget-source/2.0.0','kind','build_account','requestNonce',nonce),request);
+    assert receipt->>'status'='ok', 'synthetic reservation failed';
+    requests[index_value]:=request||jsonb_build_object('attemptOrdinal',1);
+  end loop;
+
+  -- Record neutral synthetic dispatch and usage in SQL, without a provider.
+  for index_value in 1..2 loop
+    receipt:=public.ai_budget_claim_dispatch(test_owner,test_org,requests[index_value]);
+    assert receipt->>'status'='ok', 'synthetic dispatch failed';
+  end loop;
+  receipt:=public.ai_budget_settle(test_owner,test_org,requests[1]||
+    jsonb_build_object('usage',jsonb_build_object('inputTokens','700','outputTokens','100')));
+  assert receipt->>'status'='ok', 'synthetic settlement failed';
+  receipt:=public.ai_budget_mark_unknown(test_owner,test_org,requests[2]);
+  assert receipt->>'status'='ok', 'synthetic unknown usage failed';
+  assert (select a.state='settled' from private.ai_budget_attempts a where a.operation_id=operation_ids[1])
+    and (select a.state='held_unknown' from private.ai_budget_attempts a where a.operation_id=operation_ids[2]);
+
+  -- Synthetic due clock under the normal database INSERT guards, no adoption seed.
+  insert into public.data_requests(id,organization_id,user_id,kind,created_at)
+    values(deletion_id,test_org,test_owner,'deletion',first_clock);
+  receipt:=public.claim_privacy_request_with_cleanup_credits('synthetic-expiry-worker',120,3);
+  assert receipt->>'id'=deletion_id::text;
+  insert into private.privacy_deletion_plans(request_id,storage_objects,created_at)
+    values(deletion_id,'[]'::jsonb,first_clock);
+  insert into private.owned_ai_deletion_dispositions(owner_id,first_request_id,prepared_at,expires_at,phase)
+    values(test_owner,deletion_id,first_clock,first_clock+interval '720 hours','prepared');
+  begin
+    perform private.expire_owned_ai_disposition(test_owner);
+  exception when sqlstate 'P0E01' then
+    recovered:=sqlerrm='OWNED_AI_EXPIRY_ADOPTION_UNAVAILABLE';
+  end;
+  assert recovered, 'a due clock must still require adoption';
+  assert not exists(select 1 from private.owned_ai_expiry_work)
+    and not exists(select 1 from private.owned_ai_expiry_months)
+    and exists(select 1 from private.owned_ai_deletion_dispositions d where d.owner_id=test_owner)
+    and (select count(*) from private.ai_budget_operations)=3;
+  raise notice 'PASS: due privacy expiry refuses missing adoption and keeps the ledgers';
+
+  -- Run only the exact monthly SELECT from the stored body. The local wrapper
+  -- keeps the formerly conflicting scalar to expose a qualification regression.
+  select p.prosrc into strict core_source from pg_proc p
+    where p.oid='private.expire_owned_ai_disposition(uuid)'::regprocedure;
+  month_select:=split_part(split_part(core_source,E'\n for month_row in\n',2),
+    'from months m order by m.month loop',1)||'from months m order by m.month';
+  assert ltrim(month_select) like 'with shared_usage as (%', 'missing exact expiry projection';
+  execute format($projection$
+    create function pg_temp.read_synthetic_expiry_projection() returns jsonb
+    language plpgsql set search_path='' as $read$
+    declare month_row record;overage numeric;rows jsonb:='[]'::jsonb;
+    begin
+      for month_row in %s loop rows:=rows||to_jsonb(month_row);end loop;
+      return rows;
+    end;
+    $read$
+  $projection$,month_select);
+  for index_value in 1..2 loop
+    insert into private.owned_ai_expiry_work(transaction_id,owner_id,kind,identity,expires_at)
+      values(txid_current(),test_owner,'r03',
+        jsonb_build_object('analysisId',null,'operationId',operation_ids[index_value],'runId',null),
+        first_clock+interval '720 hours');
+  end loop;
+  projection:=pg_temp.read_synthetic_expiry_projection();
+  assert projection=jsonb_build_array(jsonb_build_object('month',current_month,'shared',0,'shared_unknown',0,
+    'spent',800,'cost',private.ai_budget_cost(700,100,100,200),
+    'reserved_tokens',500,'reserved_cost',private.ai_budget_cost(400,100,100,200),
+    'technical_unknown',1,'overage',1,'erased_runs',0));
+  assert not exists(select 1 from private.owned_ai_expiry_months)
+    and (select count(*) from private.ai_budget_operations)=3;
+  raise notice 'PASS: exact monthly SELECT counts spent usage, unknown reserve and overage without foreign contribution';
+end;
+$fixture$;
+rollback;

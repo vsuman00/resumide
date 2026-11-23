@@ -1,0 +1,272 @@
+{
+  "id": "CR-R18-S11",
+  "status": "verified-local-ocr-security-cohort-and-synthetic-runtime",
+  "date": "2026-11-22T07:58:58+00:00",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "previousImageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+  "releaseAccepted": false,
+  "reviewedSource": {
+    "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+    "sha256": {
+      ".dockerignore": "96f059110252793f912a4c4e9e4f97934c0aa8104894538096ae4d91e06ba94a",
+      "Dockerfile": "9206036dc721eb1cdd7f60bb359d1a2843e551eadfa1300e471c5c721536719d",
+      "install-security-packages.py": "78571d07c5cd3fd01312c37890889f084a322375c8bc904424685f8902f241f2",
+      "runner.py": "d683e041106fdf1d765c1264dd7fbb7a0a17b971c301e0b6b47e238e1d7bbe63",
+      "test_install_security_packages.py": "64d82530c7e494d5a05c39a18cb1c41b94097f22cf0ed520f2aa47d5a8b2ffea"
+    },
+    "archiveMatrixSha256": "2d5d9e43fa3f8a06bcf161a51e0d3a1757feb4f98e86e0072a2d2d06e51d6cc8",
+    "buildBudgetSecondsPerPlatform": 360,
+    "minimumHostAvailableGiB": 16,
+    "maxParallelBuilds": 1,
+    "independentSourceReview": "Archive, build context and offline installer checked"
+  },
+  "authenticatedDebian": {
+    "inReleaseSha256": "ddcdf4e1bf60ba944b7978e8ca426cc3bcd6d3cfa1a86963a647e1ba8f9b106e",
+    "suite": "bookworm-security",
+    "packages": {
+      "arm64": {
+        "apt": {
+          "version": "2.6.2",
+          "architecture": "arm64",
+          "sha256": "4fa6cc317a264db2d5cb90167720120a91910740cb3f14a838ebfb348abc1075",
+          "bytes": 1309688,
+          "source": "apt",
+          "url": "https://deb.debian.org/debian-security/pool/updates/main/a/apt/apt_2.6.2_arm64.deb",
+          "indexSha256": "0e70c1405d2fb7faff48b4f612092c17111c288ef770255f4ce87f3982c5dd72"
+        },
+        "libapt-pkg6.0": {
+          "version": "2.6.2",
+          "architecture": "arm64",
+          "sha256": "586df8843e204aaf0c809fc804262289ea81d988cd4049a8fa6b2c3d58b64e88",
+          "bytes": 814180,
+          "source": "apt",
+          "url": "https://deb.debian.org/debian-security/pool/updates/main/a/apt/libapt-pkg6.0_2.6.2_arm64.deb",
+          "indexSha256": "0e70c1405d2fb7faff48b4f612092c17111c288ef770255f4ce87f3982c5dd72"
+        },
+        "libpcre2-8-0": {
+          "version": "10.42-1+deb12u2",
+          "architecture": "arm64",
+          "sha256": "8498d2c0bd6747dfc2fc6eec62774a86967079555f7043d5a7b78ee4efbbc0fb",
+          "bytes": 230704,
+          "source": "pcre2",
+          "url": "https://deb.debian.org/debian-security/pool/updates/main/p/pcre2/libpcre2-8-0_10.42-1+deb12u2_arm64.deb",
+          "indexSha256": "0e70c1405d2fb7faff48b4f612092c17111c288ef770255f4ce87f3982c5dd72"
+        },
+        "perl-base": {
+          "version": "5.36.0-7+deb12u4",
+          "architecture": "arm64",
+          "sha256": "03d979b849a1a0a8955eee28b988dbc25a407fd3a0581df5c94e6ae7bcc01ddf",
+          "bytes": 1477684,
+          "source": "perl",
+          "url": "https://deb.debian.org/debian-security/pool/updates/main/p/perl/perl-base_5.36.0-7+deb12u4_arm64.deb",
+          "indexSha256": "0e70c1405d2fb7faff48b4f612092c17111c288ef770255f4ce87f3982c5dd72"
+        }
+      },
+      "amd64": {
+        "apt": {
+          "version": "2.6.2",
+          "architecture": "amd64",
+          "sha256": "796fc7fe18866f5b1fb27a115d7339e549d71b7ddbc15b8d6fc4226c243e96d1",
+          "bytes": 1373116,
+          "source": "apt",
+          "url": "https://deb.debian.org/debian-security/pool/updates/main/a/apt/apt_2.6.2_amd64.deb",
+          "indexSha256": "8575ec1f224d635ce30646a2a1388bee267a7f37fae3f997687643c9ebb8fb43"
+        },
+        "libapt-pkg6.0": {
+          "version": "2.6.2",
+          "architecture": "amd64",
+          "sha256": "023a7017b75295fc7037c7a4352847f9516a36a82cc5e1650d6832d238860913",
+          "bytes": 906972,
+          "source": "apt",
+          "url": "https://deb.debian.org/debian-security/pool/updates/main/a/apt/libapt-pkg6.0_2.6.2_amd64.deb",
+          "indexSha256": "8575ec1f224d635ce30646a2a1388bee267a7f37fae3f997687643c9ebb8fb43"
+        },
+        "libpcre2-8-0": {
+          "version": "10.42-1+deb12u2",
+          "architecture": "amd64",
+          "sha256": "d2f7edfcc7689b9e0761c2742cc824ac86a20768bc5e8057818dc6875291fe76",
+          "bytes": 261628,
+          "source": "pcre2",
+          "url": "https://deb.debian.org/debian-security/pool/updates/main/p/pcre2/libpcre2-8-0_10.42-1+deb12u2_amd64.deb",
+          "indexSha256": "8575ec1f224d635ce30646a2a1388bee267a7f37fae3f997687643c9ebb8fb43"
+        },
+        "perl-base": {
+          "version": "5.36.0-7+deb12u4",
+          "architecture": "amd64",
+          "sha256": "d7d1943aec9597629bf73075efcc5ef6dc9bda96d78e80d843156ecd448478b8",
+          "bytes": 1609596,
+          "source": "perl",
+          "url": "https://deb.debian.org/debian-security/pool/updates/main/p/perl/perl-base_5.36.0-7+deb12u4_amd64.deb",
+          "indexSha256": "8575ec1f224d635ce30646a2a1388bee267a7f37fae3f997687643c9ebb8fb43"
+        }
+      }
+    }
+  },
+  "outputImages": {
+    "arm64": {
+      "imageId": "sha256:ed396e851755d5d3158bb931b158193fb246afb9b07b4797088b3c26f0a047d5",
+      "platform": "linux/arm64",
+      "user": "10001:10001",
+      "buildLogSha256": "4fe4ff489298a5d4d3729ed79b85c3e9241f31b3b515a9e5ffda3240cab611f6",
+      "buildMetadataSha256": "44c069a7d5294c65700d5c0913e3277f0b7c218cc65ef3b15f291300bbb3b475",
+      "installedBinaries": 170,
+      "packageLockSha256": "6ceec98b8a77aa5799a99bf4505d12c4cacf92df2a8327a43a4adcca77042522",
+      "dpkgStatusSha256": "1708d02771a9545c679b85dc38b79c1aebd0e2bae1cf913cfbb3d9e10fda1f80",
+      "reviewedVersions": {
+        "apt": "2.6.2",
+        "libapt-pkg6.0": "2.6.2",
+        "libpcre2-8-0": "10.42-1+deb12u2",
+        "perl-base": "5.36.0-7+deb12u4"
+      },
+      "previousImageComparison": {
+        "apt": {
+          "previous": "2.6.1",
+          "installed": "2.6.2"
+        },
+        "libapt-pkg6.0": {
+          "previous": "2.6.1",
+          "installed": "2.6.2"
+        },
+        "libpcre2-8-0": {
+          "previous": "10.42-1+deb12u1",
+          "installed": "10.42-1+deb12u2"
+        },
+        "perl-base": {
+          "previous": "5.36.0-7+deb12u3",
+          "installed": "5.36.0-7+deb12u4"
+        }
+      },
+      "runtimeFileHashes": {
+        "/opt/ocr-runner.py": "d683e041106fdf1d765c1264dd7fbb7a0a17b971c301e0b6b47e238e1d7bbe63",
+        "/opt/tessdata-best/LICENSE": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9",
+        "/opt/tessdata-best/eng.traineddata": "8280aed0782fe27257a68ea10fe7ef324ca0f8d85bd2fd145d1c2b560bcb66ba",
+        "/usr/share/tesseract-ocr/5/tessdata/eng.traineddata": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+      },
+      "copyrightSha256": {
+        "apt": "b4701305243d8d746f4acaafe15d94f946251b05691bd6917fef41dd15e9ee12",
+        "libapt-pkg6.0": "b4701305243d8d746f4acaafe15d94f946251b05691bd6917fef41dd15e9ee12",
+        "libpcre2-8-0": "030511beb4d9d620ad09914c369c36ec0528dcf301d1923cc643c948ee7c6a38",
+        "perl-base": "b52f3ca17b45473cb0da6ec46748949101fcf0dda1fd5d8b306e6c97fd41af4d"
+      },
+      "scope": "Local synthetic OCR engineering",
+      "sbom": {
+        "file": "docs/evaluation/RESUMIDE_OCR_WORKER_SBOM_20261122_SECURITY_ARM64.cdx.json",
+        "sha256": "52f0fb2503e303c87120a3b343c1070ff7c2dd187a4db16cee146b634ad5a5b1",
+        "components": 172,
+        "schemaStructureValidated": true
+      },
+      "runtimeChecks": {
+        "legacy-fast": {
+          "result": "engineering_smoke_passed",
+          "fixtureCount": 3,
+          "verifiedFailureCleanup": [
+            "cancelled",
+            "timeout",
+            "invalid_pdf"
+          ],
+          "sha256": "1367f8251950045e66699d8dcddcc72cba6e252fb17ffffddc81446a9a064bd2"
+        },
+        "text-fusion": {
+          "result": "engineering_smoke_passed",
+          "fixtureCount": 3,
+          "verifiedFailureCleanup": [
+            "cancelled",
+            "cancelled_second_pass",
+            "timeout",
+            "invalid_pdf"
+          ],
+          "sha256": "19a6e8ad6d412c69d75c0d1f6d4955ab52a8a33092424aee9fc151bdb44de9dc"
+        }
+      }
+    },
+    "amd64": {
+      "imageId": "sha256:ff7372bd6ba689b17d76928f86136a7d71defc613367cb551a87d45b54c4dab3",
+      "platform": "linux/amd64",
+      "user": "10001:10001",
+      "buildLogSha256": "baa19c53fb96d881537d8c2c99199dfe9ebdb1d9c30264b183fab9385663d983",
+      "buildMetadataSha256": "d88624c69eee851f23ed0bdc22d97feae1824150f9cdbf47dfeb6b5326c71e1f",
+      "installedBinaries": 170,
+      "packageLockSha256": "142691e9b78466c30bf0b83acbad0d4633518119248c24cf0572a7c8f069ee9a",
+      "dpkgStatusSha256": "484dca3b8bc1362b1991f8f51206eb76802d45e4005bde30dfde4e4551c05ed9",
+      "reviewedVersions": {
+        "apt": "2.6.2",
+        "libapt-pkg6.0": "2.6.2",
+        "libpcre2-8-0": "10.42-1+deb12u2",
+        "perl-base": "5.36.0-7+deb12u4"
+      },
+      "previousImageComparison": null,
+      "runtimeFileHashes": {
+        "/opt/ocr-runner.py": "d683e041106fdf1d765c1264dd7fbb7a0a17b971c301e0b6b47e238e1d7bbe63",
+        "/opt/tessdata-best/LICENSE": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9",
+        "/opt/tessdata-best/eng.traineddata": "8280aed0782fe27257a68ea10fe7ef324ca0f8d85bd2fd145d1c2b560bcb66ba",
+        "/usr/share/tesseract-ocr/5/tessdata/eng.traineddata": "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+      },
+      "copyrightSha256": {
+        "apt": "b4701305243d8d746f4acaafe15d94f946251b05691bd6917fef41dd15e9ee12",
+        "libapt-pkg6.0": "b4701305243d8d746f4acaafe15d94f946251b05691bd6917fef41dd15e9ee12",
+        "libpcre2-8-0": "030511beb4d9d620ad09914c369c36ec0528dcf301d1923cc643c948ee7c6a38",
+        "perl-base": "b52f3ca17b45473cb0da6ec46748949101fcf0dda1fd5d8b306e6c97fd41af4d"
+      },
+      "scope": "Local synthetic OCR engineering",
+      "sbom": {
+        "file": "docs/evaluation/RESUMIDE_OCR_WORKER_SBOM_20261122_SECURITY_AMD64.cdx.json",
+        "sha256": "c3569b947d3851718c8f14fecd2eaf97b2844a103c6b95511cccccce9a5bf06d",
+        "components": 172,
+        "schemaStructureValidated": true
+      },
+      "runtimeChecks": {
+        "legacy-fast": {
+          "result": "engineering_smoke_passed",
+          "fixtureCount": 3,
+          "verifiedFailureCleanup": [
+            "cancelled",
+            "timeout",
+            "invalid_pdf"
+          ],
+          "sha256": "75aeea3578d2a1e8dcbb181a06459dc45300847f53cbdeb14cd92be9c380be2d"
+        },
+        "text-fusion": {
+          "result": "engineering_smoke_passed",
+          "fixtureCount": 3,
+          "verifiedFailureCleanup": [
+            "cancelled",
+            "cancelled_second_pass",
+            "timeout",
+            "invalid_pdf"
+          ],
+          "sha256": "493b7f18728457b41b8d5286e61b12ddb4d543562477c76f5029b508010602c9"
+        }
+      }
+    }
+  },
+  "remediation": {
+    "recordsAtOrAboveVendorFix": 15,
+    "matchedVersionFlagsBySource": {
+      "apt": 1,
+      "pcre2": 1,
+      "perl": 13
+    },
+    "priorCatalogSha256": "5e4aeb30c9ed9a70785c6315b61b3632b864947bba85f57f7c19e07ea6a46338",
+    "currentVendorAdvisoryScannerExecuted": false,
+    "historicalCalibrationReused": false
+  },
+  "verification": {
+    "installerUnitTests": 5,
+    "ocrUnitTests": 328,
+    "ocrUnitTestFiles": 17,
+    "typecheckPassed": true,
+    "containerSourceCheckPassed": true,
+    "ocrPilotCheckPassed": true,
+    "sourceLogsSha256": {
+      "ocr-security-vitest.log": "6cd45caf4dd7dfa536a82209d33eab919631d10e28787cd56d61437ed5a0a6f8",
+      "ocr-security-pilot-source.log": "001421808dfb8efeafe55817602be2a155e55d2ef2400ca4cf01a30970373c2f",
+      "ocr-security-container-source.log": "8dba541bb02f629442b22c886936e080a9451f534476e6c903d5b8a641ceba64",
+      "ocr-security-typecheck.log": "b63c0de51fcb1526e23a41bde9c50d3e1af56b2b08d9bfe50e3d977251642455"
+    },
+    "cycloneDxSchemaSha256": "1ebcb88a2c845ecb6ff7bee7aeabdff9422cb0347f3d6875b241bd444b7e098f"
+  },
+  "remaining": [
+    "Full trusted scanner collection and advisory applicability for exact images",
+    "OCR calibration and consumer runtime acceptance on an approved target"
+  ]
+}

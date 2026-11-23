@@ -1,0 +1,1052 @@
+import { AI_BUDGET_SOURCE_PROFILE } from "../../app/lib/server/ai-budget-source-profile";
+import { createSourceBoundAiBudgetOperationId } from "../../app/lib/server/ai-budget-source";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  createRequirementContextFixture,
+  requirementFixtureId as id,
+} from "../fixtures/requirement-context";
+import { buildTypedAuthoringPatch } from "../../app/lib/server/typed-authoring-protocol";
+import { CANONICAL_REWRITE_READINESS_PROFILE as profile } from "../../app/lib/server/canonical-rewrite-readiness-profile";
+import {
+  buildCanonicalRewriteWorkspace,
+  canonicalRewritePolicy,
+  createCanonicalRewriteRequest,
+  reconstructCanonicalRewrite,
+  type CanonicalRewriteOperation,
+  type CanonicalRewritePublication,
+} from "../../app/lib/server/canonical-rewrite-contract";
+import { runCanonicalRewrite } from "../../app/lib/server/canonical-rewrite-repository";
+import {
+  createCanonicalRewriteTransport,
+  type CanonicalRewriteTransport,
+} from "../../app/lib/server/canonical-rewrite-ai";
+import { QualitativeAiFailure } from "../../app/lib/server/qualitative-ai";
+import {
+  hashAiBudgetBinding,
+  AiBudgetError,
+  type AiBudgetBinding,
+} from "../../app/lib/server/ai-budget";
+
+async function store(edit = "Built database services using PostgreSQL") {
+  const f = await createRequirementContextFixture({ edit, confirm: true }),
+    clauseId = f.context.requirements.content.relations.clauses[0].id;
+  const patch = buildTypedAuthoringPatch(
+    f.context,
+    {
+      canonicalVersionId: f.context.canonical.versionId,
+      requirementVersionId: f.context.requirements.versionId,
+      clauseId,
+      targetFactId: f.targetFactId,
+    },
+    "Created",
+  );
+  const fact = f.context.canonical.content.facts.find(
+    (v) => v.id === f.targetFactId,
+  )!;
+  const row = {
+    schemaVersion: "canonical-rewrite-context/1.0.0",
+    status: "available",
+    relationshipContext: f.context,
+    draft: {
+      id: id(301),
+      updatedAt: "2026-11-15T00:00:00.000001Z",
+      contentSha256: "1".repeat(64),
+      versionId: null,
+      revision: 0,
+      headId: null,
+    },
+    bindingSha256: "2".repeat(64),
+    manifest: [
+      {
+        sourceId: 0,
+        factId: fact.id,
+        valueSha256: patch.target.currentValueSha256,
+        location: {
+          sectionId: patch.target.sectionId,
+          entryId: patch.target.entryId,
+          bulletId: patch.target.bulletId,
+        },
+        confirmation: fact.confirmation,
+        basis: patch.support.basis,
+        currentCitations: patch.sourceCitations,
+        clauseIds: [clauseId],
+        authoringVersion: patch.policies.authoringVersion,
+      },
+    ],
+    saved: {
+      state: "legacy_unbound",
+      publication: null,
+      legacyDraft: { summary: "Legacy prior content.", bullets: [] },
+    },
+    readiness: { ...profile, schemaReady: true, mutatorsExecutable: true },
+  };
+  const workspace = buildCanonicalRewriteWorkspace(row, "unit-model", profile),
+    request = createCanonicalRewriteRequest(workspace, id(302));
+  let operation: CanonicalRewriteOperation | null = null,
+    publication: CanonicalRewritePublication | null = null,
+    writes = 0;
+  let binding: AiBudgetBinding | undefined;
+  const events: string[] = [],
+    control = {
+      stale: false,
+      freshReadUnavailable: false,
+      preparePrivacyDenied: false,
+      budgetSettlementFailure: false,
+      budgetDeniedAt: null as "reserve" | "claim" | null,
+      claimAmbiguous: false,
+      finishFailure: false,
+      invalidReceipt: false,
+      prepareErrorCode: undefined as string | undefined,
+    };
+  const budgetEnvelope = (
+    args: Record<string, unknown>,
+    state: "reserved" | "dispatched" | "settled" | "held_unknown",
+  ) => {
+    const r = args.p_request as Record<string, unknown>;
+    if (!binding)
+      binding = {
+        userId: String(args.p_user_id),
+        organizationId: String(args.p_organization_id),
+        operationId: String(r.operationId),
+        attemptId: String(r.attemptId),
+        attemptOrdinal: 1,
+        surface: "rewrite",
+        payloadSha256: String(r.payloadSha256),
+        model: String(r.model),
+        promptPolicyVersion: String(r.promptPolicyVersion),
+        policyVersion: String(r.policyVersion),
+        reservedInputTokens: Number(r.reservedInputTokens),
+        reservedOutputTokens: Number(r.reservedOutputTokens),
+      };
+    const actual = r.usage as
+      { inputTokens: string; outputTokens: string } | undefined;
+    return {
+      schemaVersion: "ai-budget/1.0.0",
+      status: "ok",
+      receipt: {
+        ...binding,
+        schemaVersion: "ai-budget/1.0.0",
+        attemptLimit: 3,
+        poolPolicyVersion: "unit-pool/1",
+        bindingSha256: hashAiBudgetBinding(binding),
+        period: "2026-11-01",
+        state,
+        reservedInputTokens: String(binding.reservedInputTokens),
+        reservedOutputTokens: String(binding.reservedOutputTokens),
+        reservedCostMicrousd: String(
+          binding.reservedInputTokens + binding.reservedOutputTokens,
+        ),
+        inputMicrousdPerMillion: "1000000",
+        outputMicrousdPerMillion: "1000000",
+        actualInputTokens: state === "settled" ? actual!.inputTokens : null,
+        actualOutputTokens: state === "settled" ? actual!.outputTokens : null,
+        actualCostMicrousd:
+          state === "settled"
+            ? String(Number(actual!.inputTokens) + Number(actual!.outputTokens))
+            : null,
+        replayed: false,
+        dispatchAllowed: state === "dispatched",
+        poolBlocked: state === "held_unknown",
+      },
+    };
+  };
+  const client = {
+    rpc: vi.fn(async (name: string, args: Record<string, unknown>) => {
+      events.push(name);
+      if (name === "read_ai_budget_source_readiness")
+        return {
+          data: {
+            ...AI_BUDGET_SOURCE_PROFILE,
+            schemaReady: true,
+            reserveExecutable: true,
+            exportExecutable: false,
+          },
+          error: null,
+        };
+      if (
+        args.p_user_id !== f.owned.ownerId ||
+        (!name.startsWith("ai_budget_") &&
+          args.p_analysis_id !== f.owned.analysisId)
+      )
+        return { data: { status: "not_found" }, error: null };
+      if (name === "prepare_canonical_rewrite") {
+        if (control.preparePrivacyDenied)
+          return {
+            data: null,
+            error: { code: "42501", message: "PRIVATE_UNIT_PRIVACY" },
+          };
+        if (control.prepareErrorCode)
+          return {
+            data: null,
+            error: {
+              code: control.prepareErrorCode,
+              message: "PRIVATE_UNIT_NATIVE_CANARY",
+            },
+          };
+        const c = args.p_command as {
+          request: typeof request;
+          policy: ReturnType<typeof canonicalRewritePolicy>;
+        };
+        if (operation) {
+          if (
+            JSON.stringify(operation.request) !== JSON.stringify(c.request) ||
+            JSON.stringify(operation.policy) !== JSON.stringify(c.policy)
+          )
+            return { data: { status: "conflict" }, error: null };
+          return {
+            data: {
+              status: "prepared",
+              operation: { ...operation, dispatchAllowed: false },
+              context: null,
+            },
+            error: null,
+          };
+        }
+        operation = {
+          schemaVersion: "canonical-rewrite-operation/1.0.0",
+          operationId: request.operationId,
+          ownerId: f.owned.ownerId,
+          analysisId: f.owned.analysisId,
+          request: c.request,
+          policy: c.policy,
+          bindingSha256: workspace.bindingSha256,
+          state: "reserved",
+          dispatchAllowed: false,
+          publication: null,
+        };
+        return {
+          data: {
+            status: "prepared",
+            operation,
+            context: structuredClone(row),
+          },
+          error: null,
+        };
+      }
+      if (name === "claim_canonical_rewrite_dispatch") {
+        if (control.claimAmbiguous) throw Error("UNIT_AMBIGUOUS_CLAIM");
+        if (!operation || operation.state !== "reserved")
+          return { data: { status: "conflict" }, error: null };
+        if (control.budgetDeniedAt === "claim")
+          return {
+            data: {
+              operation: { ...operation, dispatchAllowed: false },
+              budget: {
+                schemaVersion: "ai-budget/1.0.0",
+                status: "denied",
+                code: "AI_BUDGET_EXHAUSTED",
+              },
+            },
+            error: null,
+          };
+        operation.state = "dispatched";
+        operation.dispatchAllowed = true;
+        return {
+          data: {
+            operation: { ...operation },
+            budget: args.p_budget
+              ? budgetEnvelope(
+                  args.p_budget as Record<string, unknown>,
+                  "dispatched",
+                )
+              : null,
+          },
+          error: null,
+        };
+      }
+      if (name === "settle_canonical_rewrite_attempt") {
+        if (args.p_error_code && operation)
+          operation.state = args.p_usage ? "rejected" : "unknown";
+        return {
+          data: {
+            schemaVersion: "canonical-rewrite-settlement/1.0.0",
+            operationId: request.operationId,
+            bindingSha256: workspace.bindingSha256,
+            usage: args.p_usage,
+            state: operation!.state,
+          },
+          error: null,
+        };
+      }
+      if (name === "read_canonical_rewrite_context") {
+        if (control.freshReadUnavailable)
+          return { data: { status: "not_found" }, error: null };
+        const current = structuredClone(row);
+        if (control.stale) {
+          current.relationshipContext.heads.canonicalHeadId = id(390);
+          current.relationshipContext.heads.canonicalHeadRevision++;
+        }
+        return { data: current, error: null };
+      }
+      if (name === "finish_canonical_rewrite") {
+        if (control.finishFailure)
+          return { data: { status: "conflict" }, error: null };
+        const result = reconstructCanonicalRewrite(
+          workspace,
+          request.operationId,
+          args.p_plan,
+        );
+        publication = {
+          result,
+          receipt: {
+            schemaVersion: "canonical-rewrite-receipt/1.0.0",
+            state: "saved_proposals",
+            operationId: request.operationId,
+            bindingSha256: workspace.bindingSha256,
+            runId: id(303),
+            draftId: row.draft.id,
+            draftVersionId: id(304),
+            revision: 1,
+            draftUpdatedAt: "2026-11-15T00:00:01.000002Z",
+            resultSha256: "3".repeat(64),
+            projectionSha256: "4".repeat(64),
+            idempotent: false,
+          },
+        };
+        writes++;
+        operation!.state = "saved";
+        operation!.dispatchAllowed = false;
+        operation!.publication = publication;
+        if (control.invalidReceipt)
+          return {
+            data: {
+              ...publication,
+              receipt: { ...publication.receipt, operationId: id(399) },
+            },
+            error: null,
+          };
+        return { data: publication, error: null };
+      }
+      if (
+        name === "ai_budget_reserve_source_next" &&
+        control.budgetDeniedAt === "reserve"
+      )
+        return {
+          data: {
+            schemaVersion: "ai-budget/1.0.0",
+            status: "denied",
+            code: "AI_BUDGET_EXHAUSTED",
+          },
+          error: null,
+        };
+      if (name === "ai_budget_settle" && control.budgetSettlementFailure)
+        return { data: null, error: { message: "PRIVATE_UNIT_BUDGET" } };
+      if (name === "ai_budget_reserve_source_next") {
+        expect(args.p_source).toEqual({
+          schemaVersion: "ai-budget-source/2.0.0",
+          kind: "canonical_rewrite",
+          analysisId: f.owned.analysisId,
+          resumeVersionId: f.owned.sourceId,
+          operationId: request.operationId,
+          bindingSha256: workspace.bindingSha256,
+        });
+        return { data: budgetEnvelope(args, "reserved"), error: null };
+      }
+      if (name === "ai_budget_settle")
+        return { data: budgetEnvelope(args, "settled"), error: null };
+      if (name === "ai_budget_mark_unknown")
+        return { data: budgetEnvelope(args, "held_unknown"), error: null };
+      throw Error("UNEXPECTED_UNIT_RPC");
+    }),
+  };
+  const transport = {
+    execute: vi.fn<CanonicalRewriteTransport["execute"]>(async () => {
+      events.push("provider");
+      return {
+        output: {
+          summarySourceId: null,
+          bullets: [
+            {
+              sourceId: 0,
+              clauseId,
+              operation: "equivalent_action",
+              replacementAction: "Created",
+            },
+          ],
+        },
+        usage: { inputTokens: 8, outputTokens: 3 },
+      };
+    }),
+  };
+  const authorize = vi.fn(async () => {
+    events.push("authorize");
+  });
+  const options = {
+    model: "unit-model",
+    expectedProfile: profile,
+    getTransport: () => transport,
+    timeoutMs: 1000,
+    budget: { policyVersion: "unit-budget/1", maxOutputTokens: 100 },
+    authorize,
+  };
+  return {
+    ...f,
+    row,
+    workspace,
+    request,
+    client,
+    transport,
+    authorize,
+    options,
+    events,
+    control,
+    get operation() {
+      return operation;
+    },
+    get publication() {
+      return publication;
+    },
+    get writes() {
+      return writes;
+    },
+  };
+}
+describe("canonical rewrite durable repository with real builders and fake native boundaries", () => {
+  it("admits actual fresh reserved context with false preclaim dispatch permission", async () => {
+    const f = await store();
+    const result = await runCanonicalRewrite(
+      f.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      f.request,
+      f.options,
+    );
+    expect(result.kind).toBe("saved");
+    expect(f.transport.execute).toHaveBeenCalledTimes(1);
+    expect(f.writes).toBe(1);
+    expect(f.events).toEqual([
+      "prepare_canonical_rewrite",
+      "authorize",
+      "read_ai_budget_source_readiness",
+      "ai_budget_reserve_source_next",
+      "claim_canonical_rewrite_dispatch",
+      "provider",
+      "ai_budget_settle",
+      "settle_canonical_rewrite_attempt",
+      "read_canonical_rewrite_context",
+      "finish_canonical_rewrite",
+    ]);
+  });
+  it("replays the exact saved request before a failing fresh-head read, consent, rates or provider work", async () => {
+    const f = await store();
+    const first = await runCanonicalRewrite(
+      f.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      f.request,
+      f.options,
+    );
+    f.control.stale = true;
+    f.control.freshReadUnavailable = true;
+    const before = f.events.length;
+    const second = await runCanonicalRewrite(
+      f.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      f.request,
+      f.options,
+    );
+    expect(second).toEqual(first);
+    expect(f.events.slice(before)).toEqual(["prepare_canonical_rewrite"]);
+    expect(f.authorize).toHaveBeenCalledTimes(1);
+    expect(f.transport.execute).toHaveBeenCalledTimes(1);
+    expect(f.writes).toBe(1);
+    await expect(
+      runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        { ...f.request, expectedDraftUpdatedAt: "2026-11-15T00:00:09Z" },
+        f.options,
+      ),
+    ).rejects.toMatchObject({ reason: "stale_inputs" });
+    expect(f.transport.execute).toHaveBeenCalledTimes(1);
+  });
+  it("never automatically reclaims a reserved replay or an ambiguous claim", async () => {
+    const f = await store();
+    f.control.claimAmbiguous = true;
+    await expect(
+      runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.request,
+        f.options,
+      ),
+    ).rejects.toMatchObject({ code: "AI_BUDGET_UNAVAILABLE" });
+    const calls = f.events.length;
+    const retry = await runCanonicalRewrite(
+      f.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      f.request,
+      f.options,
+    );
+    expect(retry).toMatchObject({ kind: "pending", state: "unknown" });
+    expect(f.events.slice(calls)).toEqual(["prepare_canonical_rewrite"]);
+    expect(f.transport.execute).not.toHaveBeenCalled();
+  });
+  it("settles known usage before rejecting provider output without a content finish", async () => {
+    const f = await store();
+    f.transport.execute.mockResolvedValueOnce({
+      output: {
+        summarySourceId: null,
+        bullets: [
+          {
+            sourceId: 31,
+            clauseId: f.context.requirements.content.relations.clauses[0].id,
+            operation: "copy",
+            replacementAction: null,
+          },
+        ],
+      },
+      usage: { inputTokens: 8, outputTokens: 3 },
+    });
+    await expect(
+      runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.request,
+        f.options,
+      ),
+    ).rejects.toMatchObject({ reason: "unsupported_output" });
+    expect(f.events).toContain("settle_canonical_rewrite_attempt");
+    expect(f.events).not.toContain("finish_canonical_rewrite");
+    expect(f.writes).toBe(0);
+    const settlement = f.client.rpc.mock.calls.find(
+      (c) => c[0] === "settle_canonical_rewrite_attempt",
+    )![1];
+    expect(settlement.p_usage).toEqual({ inputTokens: "8", outputTokens: "3" });
+  });
+  it.each(["stale", "freshReadUnavailable", "finishFailure"] as const)(
+    "preserves the prior draft/run on final %s",
+    async (kind) => {
+      const f = await store(),
+        original = f.transport.execute.getMockImplementation()!;
+      f.transport.execute.mockImplementationOnce(async (request) => {
+        const response = await original(request);
+        f.control[kind] = true;
+        return response;
+      });
+      await expect(
+        runCanonicalRewrite(
+          f.client,
+          f.owned.analysisId,
+          f.owned.ownerId,
+          f.request,
+          f.options,
+        ),
+      ).rejects.toBeInstanceOf(Error);
+      expect(f.writes).toBe(0);
+      expect(f.events).toContain("settle_canonical_rewrite_attempt");
+      if (kind !== "finishFailure")
+        expect(f.events).not.toContain("finish_canonical_rewrite");
+    },
+  );
+  it("retains the exact operation after an ambiguous applied receipt without provider duplication", async () => {
+    const f = await store();
+    f.control.invalidReceipt = true;
+    await expect(
+      runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.request,
+        f.options,
+      ),
+    ).rejects.toMatchObject({
+      reason: "invalid_result",
+      recovery: "retry_exact",
+    });
+    f.control.invalidReceipt = false;
+    expect(
+      (
+        await runCanonicalRewrite(
+          f.client,
+          f.owned.analysisId,
+          f.owned.ownerId,
+          f.request,
+          f.options,
+        )
+      ).kind,
+    ).toBe("saved");
+    expect(f.transport.execute).toHaveBeenCalledTimes(1);
+    expect(f.writes).toBe(1);
+  });
+  it("refuses foreign ownership and missing/staged readiness before provider access", async () => {
+    const f = await store();
+    await expect(
+      runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        id(398),
+        f.request,
+        f.options,
+      ),
+    ).rejects.toMatchObject({ reason: "not_found" });
+    expect(f.transport.execute).not.toHaveBeenCalled();
+    expect(f.authorize).not.toHaveBeenCalled();
+    const g = await store();
+    g.row.readiness.mutatorsExecutable = false;
+    await expect(
+      runCanonicalRewrite(
+        g.client,
+        g.owned.analysisId,
+        g.owned.ownerId,
+        g.request,
+        g.options,
+      ),
+    ).rejects.toMatchObject({ reason: "unavailable" });
+    expect(g.transport.execute).not.toHaveBeenCalled();
+    expect(g.events).not.toContain("claim_canonical_rewrite_dispatch");
+  });
+  it("keeps durable operations and atomically wraps the admitted technical budget claim", async () => {
+    const f = await store();
+    const result = await runCanonicalRewrite(
+      f.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      f.request,
+      {
+        ...f.options,
+        budget: { policyVersion: "unit-budget/1", maxOutputTokens: 100 },
+      },
+    );
+    expect(result.kind).toBe("saved");
+    expect(f.events).toContain("ai_budget_reserve_source_next");
+    expect(f.events).not.toContain("ai_budget_claim_dispatch");
+    const claim = f.client.rpc.mock.calls.find(
+      (c) => c[0] === "claim_canonical_rewrite_dispatch",
+    )![1];
+    expect(claim.p_budget).toMatchObject({
+      p_user_id: f.owned.ownerId,
+      p_organization_id: f.owned.organizationId,
+      p_request: {
+        operationId: createSourceBoundAiBudgetOperationId({
+          userId: f.owned.ownerId,
+          organizationId: f.owned.organizationId,
+          source: {
+            schemaVersion: "ai-budget-source/2.0.0",
+            kind: "canonical_rewrite",
+            analysisId: f.owned.analysisId,
+            resumeVersionId: f.owned.sourceId,
+            operationId: f.request.operationId,
+            bindingSha256: f.workspace.bindingSha256,
+          },
+        }),
+        payloadSha256: f.workspace.bindingSha256,
+        surface: "rewrite",
+      },
+    });
+    expect(f.events.indexOf("ai_budget_settle")).toBeLessThan(
+      f.events.indexOf("settle_canonical_rewrite_attempt"),
+    );
+    expect(f.events.indexOf("settle_canonical_rewrite_attempt")).toBeLessThan(
+      f.events.indexOf("finish_canonical_rewrite"),
+    );
+  });
+  it("retains unknown budget holds and technical unknown usage without inventing zero", async () => {
+    const f = await store();
+    f.transport.execute.mockRejectedValueOnce(
+      new QualitativeAiFailure("AI_TIMEOUT", false, null),
+    );
+    await expect(
+      runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.request,
+        {
+          ...f.options,
+          budget: { policyVersion: "unit-budget/1", maxOutputTokens: 100 },
+        },
+      ),
+    ).rejects.toMatchObject({ reason: "unavailable" });
+    expect(f.events).toContain("ai_budget_mark_unknown");
+    expect(f.events).not.toContain("ai_budget_release");
+    const settle = f.client.rpc.mock.calls.find(
+      (c) => c[0] === "settle_canonical_rewrite_attempt",
+    )![1];
+    expect(settle.p_usage).toBeNull();
+    expect(f.writes).toBe(0);
+  });
+  it("records a definitive invalid plan after known usage was settled", async () => {
+    const f = await store();
+    f.transport.execute.mockResolvedValueOnce({
+      output: {
+        summarySourceId: null,
+        bullets: [
+          {
+            sourceId: 31,
+            clauseId: f.context.requirements.content.relations.clauses[0].id,
+            operation: "copy",
+            replacementAction: null,
+          },
+        ],
+      },
+      usage: { inputTokens: 8, outputTokens: 3 },
+    });
+    await expect(
+      runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.request,
+        f.options,
+      ),
+    ).rejects.toMatchObject({ reason: "unsupported_output" });
+    const settlements = f.client.rpc.mock.calls
+      .filter((c) => c[0] === "settle_canonical_rewrite_attempt")
+      .map((c) => c[1]);
+    expect(settlements[0].p_error_code).toBeNull();
+    expect(settlements.at(-1)?.p_error_code).toBe("invalid_output");
+    expect(
+      settlements.every(
+        (s) =>
+          JSON.stringify(s.p_usage) ===
+          JSON.stringify({ inputTokens: "8", outputTokens: "3" }),
+      ),
+    ).toBe(true);
+    expect(f.writes).toBe(0);
+  });
+  it("preserves observed usage when malformed provider output and budget settlement both fail", async () => {
+    const f = await store();
+    f.control.budgetSettlementFailure = true;
+    f.transport.execute.mockRejectedValueOnce(
+      new QualitativeAiFailure("AI_OUTPUT_INVALID", false, {
+        inputTokens: 8,
+        outputTokens: 3,
+      }),
+    );
+    await expect(
+      runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.request,
+        {
+          ...f.options,
+          budget: { policyVersion: "unit-budget/1", maxOutputTokens: 100 },
+        },
+      ),
+    ).rejects.toBeInstanceOf(Error);
+    const settlement = f.client.rpc.mock.calls.find(
+      (c) => c[0] === "settle_canonical_rewrite_attempt",
+    )![1];
+    expect(settlement.p_usage).toEqual({ inputTokens: "8", outputTokens: "3" });
+    expect(f.writes).toBe(0);
+    expect(f.events.filter((v) => v === "ai_budget_settle")).toHaveLength(1);
+  });
+  it.each(["reserve", "claim"] as const)(
+    "preserves strict budget denial at %s without provider dispatch",
+    async (at) => {
+      const f = await store();
+      f.control.budgetDeniedAt = at;
+      const error = await runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.request,
+        {
+          ...f.options,
+          budget: { policyVersion: "unit-budget/1", maxOutputTokens: 100 },
+        },
+      ).catch((e) => e);
+      expect(error).toBeInstanceOf(AiBudgetError);
+      expect(error).toMatchObject({ code: "AI_BUDGET_EXHAUSTED" });
+      expect(f.transport.execute).not.toHaveBeenCalled();
+      expect(f.writes).toBe(0);
+    },
+  );
+  it("rechecks prepare privacy even for an exact saved request", async () => {
+    const f = await store();
+    await runCanonicalRewrite(
+      f.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      f.request,
+      f.options,
+    );
+    f.control.preparePrivacyDenied = true;
+    await expect(
+      runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.request,
+        f.options,
+      ),
+    ).rejects.toMatchObject({ reason: "not_found" });
+    expect(f.transport.execute).toHaveBeenCalledTimes(1);
+    expect(f.writes).toBe(1);
+  });
+  it.each([
+    ["P0C01", "stale_inputs"],
+    ["42501", "not_found"],
+    ["22023", "invalid_input"],
+    ["P0C03", "unavailable"],
+    ["P0002", "not_found"],
+  ])(
+    "maps actual native SQLSTATE %s without private body leakage",
+    async (code, reason) => {
+      const f = await store();
+      f.control.prepareErrorCode = code;
+      const error = await runCanonicalRewrite(
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.request,
+        f.options,
+      ).catch((e) => e);
+      expect(error).toMatchObject({ reason });
+      expect(String(error)).not.toContain("PRIVATE_UNIT_NATIVE_CANARY");
+      expect(f.transport.execute).not.toHaveBeenCalled();
+      expect(f.authorize).not.toHaveBeenCalled();
+      expect(f.writes).toBe(0);
+    },
+  );
+});
+
+// Exercises the installed SDK with a synthetic fetch boundary, never a provider.
+describe("canonical rewrite installed SDK transport", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const config = {
+    OPENAI_API_KEY: "offline-unit-sdk-key",
+    OPENAI_BASE_URL: "https://api.openai.com/v1",
+    OPENAI_TIMEOUT_MS: 1000,
+    OPENAI_MODEL: "gpt-5.4",
+    OPENAI_MAX_OUTPUT_TOKENS: 128,
+  };
+  const request = (): Parameters<CanonicalRewriteTransport["execute"]>[0] => ({
+    payload: {
+      promptVersion: "canonical-closed-rewrite/1.0.0",
+      sources: [],
+      clauses: [],
+    },
+    idempotencyKey: "canonical-rewrite-unit-scoped-key",
+    signal: new AbortController().signal,
+  });
+  const completion = (
+    content = JSON.stringify({ summarySourceId: null, bullets: [] }),
+    finish = "stop",
+    refusal: string | null = null,
+  ) =>
+    new Response(
+      JSON.stringify({
+        id: "unit-completion",
+        object: "chat.completion",
+        created: 0,
+        model: config.OPENAI_MODEL,
+        choices: [
+          {
+            index: 0,
+            finish_reason: finish,
+            message: { role: "assistant", content, refusal },
+          },
+        ],
+        usage: { prompt_tokens: 11, completion_tokens: 7, total_tokens: 18 },
+      }),
+      { headers: { "content-type": "application/json" } },
+    );
+  it("preserves selected key, signal, schema, no-store and redirect controls at real SDK fetch", async () => {
+    const fetch = vi.fn(async () => completion());
+    vi.stubGlobal("fetch", fetch);
+    const r = request();
+    const result = await createCanonicalRewriteTransport(config).execute(r);
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const [url, init] = fetch.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe("https://api.openai.com/v1/chat/completions");
+    expect(init.redirect).toBe("error");
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+    expect(new Headers(init.headers).get("Idempotency-Key")).toBe(
+      r.idempotencyKey,
+    );
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      model: config.OPENAI_MODEL,
+      store: false,
+      max_completion_tokens: 128,
+      response_format: {
+        type: "json_schema",
+        json_schema: { name: "canonical_rewrite_plan" },
+      },
+    });
+    expect(result).toEqual({
+      output: { summarySourceId: null, bullets: [] },
+      usage: { inputTokens: 11, outputTokens: 7 },
+    });
+  });
+  it("retains observed usage on provider refusal without admitting prose", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => completion("", "stop", "unit refusal")),
+    );
+    expect(
+      await createCanonicalRewriteTransport(config).execute(request()),
+    ).toEqual({
+      output: null,
+      usage: { inputTokens: 11, outputTokens: 7 },
+      refused: true,
+    });
+  });
+  it.each(["malformed", "truncated"])(
+    "preserves known usage on %s output",
+    async (kind) => {
+      const fetch = vi.fn(async () =>
+        completion(
+          kind === "malformed"
+            ? "{"
+            : JSON.stringify({ summarySourceId: null, bullets: [] }),
+          kind === "truncated" ? "length" : "stop",
+        ),
+      );
+      vi.stubGlobal("fetch", fetch);
+      await expect(
+        createCanonicalRewriteTransport(config).execute(request()),
+      ).rejects.toMatchObject({
+        code: "AI_OUTPUT_INVALID",
+        usage: { inputTokens: 11, outputTokens: 7 },
+      });
+      expect(fetch).toHaveBeenCalledTimes(1);
+    },
+  );
+  it.each([429, 503])("never retries synthetic HTTP %i", async (status) => {
+    const fetch = vi.fn(
+      async () =>
+        new Response(
+          JSON.stringify({
+            error: { type: "unit", message: "PRIVATE_UNIT_PROVIDER" },
+          }),
+          {
+            status,
+            headers: {
+              "content-type": "application/json",
+              "x-should-retry": "true",
+              "retry-after-ms": "0",
+            },
+          },
+        ),
+    );
+    vi.stubGlobal("fetch", fetch);
+    await expect(
+      createCanonicalRewriteTransport(config).execute(request()),
+    ).rejects.toMatchObject({
+      code: status === 429 ? "AI_RATE_LIMITED" : "AI_PROVIDER_UNAVAILABLE",
+      usage: null,
+    });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it("propagates caller cancellation through the SDK signal without another attempt", async () => {
+    const controller = new AbortController();
+    let started!: () => void;
+    const atFetch = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const fetch = vi.fn(
+      (_url: unknown, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init!.signal!.addEventListener(
+            "abort",
+            () => reject(new DOMException("unit abort", "AbortError")),
+            { once: true },
+          );
+          started();
+        }),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const pending = createCanonicalRewriteTransport(config).execute({
+      ...request(),
+      signal: controller.signal,
+    });
+    const checked = expect(pending).rejects.toMatchObject({
+      code: "AI_CANCELLED",
+      usage: null,
+    });
+    await atFetch;
+    controller.abort();
+    await checked;
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+it("refuses current source metadata before A12 typed claim and provider", async () => {
+  const f = await store(),
+    original = f.client.rpc.getMockImplementation()!;
+  f.client.rpc.mockImplementation((name, args) =>
+    name === "read_ai_budget_source_readiness"
+      ? Promise.resolve({
+          data: {
+            ...AI_BUDGET_SOURCE_PROFILE,
+            schemaReady: true,
+            reserveExecutable: false,
+            exportExecutable: true,
+          },
+          error: null,
+        })
+      : original(name, args),
+  );
+  await expect(
+    runCanonicalRewrite(
+      f.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      f.request,
+      {
+        ...f.options,
+        budget: { policyVersion: "unit-budget/1", maxOutputTokens: 100 },
+      },
+    ),
+  ).rejects.toThrow();
+  expect(f.transport.execute).not.toHaveBeenCalled();
+  expect(f.events).not.toContain("claim_canonical_rewrite_dispatch");
+  expect(f.events).not.toContain("ai_budget_reserve_next");
+});
+
+it.each([
+  undefined,
+  { policyVersion: "", maxOutputTokens: 100 },
+  { policyVersion: undefined, maxOutputTokens: 100 },
+  { policyVersion: "   ", maxOutputTokens: 100 },
+])(
+  "refuses fresh A12 without technical admission before authorize/factory/claim: %j",
+  async (budget) => {
+    const f = await store(),
+      factory = vi.fn(() => f.transport);
+    await expect(
+      Reflect.apply(runCanonicalRewrite, undefined, [
+        f.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        f.request,
+        { ...f.options, budget, getTransport: factory },
+      ]),
+    ).rejects.toMatchObject({ code: "AI_BUDGET_DISABLED" });
+    expect(factory).not.toHaveBeenCalled();
+    expect(f.authorize).not.toHaveBeenCalled();
+    expect(f.transport.execute).not.toHaveBeenCalled();
+    expect(f.events).toEqual(["prepare_canonical_rewrite"]);
+  },
+);
+it("replays saved A12 proposals with technical selection absent before factory or claims", async () => {
+  const f = await store(),
+    first = await runCanonicalRewrite(
+      f.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      f.request,
+      f.options,
+    ),
+    factory = vi.fn(() => f.transport),
+    at = f.events.length;
+  const replay = await runCanonicalRewrite(
+    f.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+    f.request,
+    { ...f.options, budget: undefined, getTransport: factory },
+  );
+  expect(replay).toEqual(first);
+  expect(f.events.slice(at)).toEqual(["prepare_canonical_rewrite"]);
+  expect(factory).not.toHaveBeenCalled();
+  expect(f.transport.execute).toHaveBeenCalledTimes(1);
+});

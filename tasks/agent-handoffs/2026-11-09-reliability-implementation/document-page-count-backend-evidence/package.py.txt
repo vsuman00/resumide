@@ -1,0 +1,24 @@
+from pathlib import Path
+import json,hashlib,shutil,subprocess
+w=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats');t=Path(__file__).parent;b=Path('tasks/agent-handoffs/2026-11-09-reliability-implementation');sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+files=['app/lib/server/document-extraction.ts','app/lib/server/extraction-stage.ts','tests/unit/document-extraction.test.ts','tests/unit/analysis-worker-fence.test.ts',str(b/'document-page-count-backend.md')];old=json.loads((t/'preimages.json').read_text());product=[]
+for f in files:
+ p=w/f;copy=t/'snapshots'/f;copy.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,copy);product.append({'path':f,'preimageSha256':old.get(f),'sha256':sha(p),'snapshot':str(copy)})
+receipts=[];groups=set()
+for p in sorted(t.glob('*.json')):
+ try:v=json.loads(p.read_text())
+ except:continue
+ if 'commands' not in v:continue
+ for c in v['commands']:
+  if c.get('processGroup'):groups.add(c['processGroup'])
+ receipts.append({'path':str(p),'sha256':sha(p),'log':v.get('log'),'logSha256':v.get('logSha256'),'commands':v['commands'],'sourceStable':v['sourceStable']})
+ps=subprocess.check_output(['/bin/ps','-axo','pid=,pgid=,command='],text=True);active=[line for line in ps.splitlines() if len(line.split())>1 and int(line.split()[1]) in groups];assert not active
+(t/'process-groups.json').write_text(json.dumps({'allAbsent':True,'groups':sorted(groups),'method':'Independent ps PID/PGID inventory after all runCommand closures'},indent=2)+'\n')
+first=json.loads((t/'page-count-red.json').read_text())['sourceBefore'];last=json.loads((t/'statics-format-handoff.json').read_text())['sourceAfter'];changed=[f for f,v in first.items() if f not in files and last.get(f)!=v];assert not changed
+preservation=[]
+for name,anchor in [('document-extraction.test.ts','describe("document review extraction boundary"'),('analysis-worker-fence.test.ts','it("forwards signal')]:
+ oldtext=(t/'preimages'/name).read_text();block=oldtext[oldtext.index(anchor):];current=(w/'tests/unit'/name).read_text();assert block in current;preservation.append({'path':'tests/unit/'+name,'entireOriginalCasesPresentByteForByte':True,'oldCaseBlockSha256':hashlib.sha256(block.encode()).hexdigest()})
+(t/'source-preservation.json').write_text(json.dumps({'existingUnownedInputs':sum(f not in files for f in first),'changedUnowned':changed,'originalTests':preservation,'historicalMigrationFiles':{p.name:sha(p) for p in sorted((w/'supabase/migrations').glob('*.sql'))}},indent=2)+'\n')
+contracts=[b/'document-page-count-contract.json',b/'jd-browser-source-sync.json'];bindings={str(p):sha(w/p) for p in contracts if (w/p).exists()}
+r={'status':'FROZEN_SOURCE_SYNTHETIC_FIRST_LEAF','baseHeadFromContract':'a0b239299d75b0bd64b588fe743ebe2975fb28b9','product':product,'contractBindings':bindings,'actualPredecessorRed':{'receipt':str(t/'page-count-red.json'),'result':'2 failed/13 passed, actual worker outgoing p_page_count undefined despite two-page actual envelope from real pure extractor/reconciliation with controlled PDF layers','snapshot':str(t/'red-analysis-worker-fence.test.ts'),'snapshotSha256':sha(t/'red-analysis-worker-fence.test.ts')},'verification':{'green':'56/3 PASS:document33,worker-fence15,legacyextraction8','greenReceipt':str(t/'page-count-green.json'),'lint':'four owned source/test files PASS','format':'four owned source/test +handoff PASS','postGreenChange':'Formatter only in tests; product source unchanged'},'receiptsIncludingFailures':receipts,'failedFormatting':'Initial four-file formatting check flagged two new test additions after firstwrite; test-only secondwrite/check passed, original case blocks preserved','proofs':{str(t/f):sha(t/f) for f in ['process-groups.json','source-preservation.json','prose-before.json']},'limitations':['No actual PDF extraction, standalone worker, SQL parser/execution, DB, hosted/provider/browser/service/env/credentials/dependency/Git/deployment','Native five-argument persistence/dispatcher/readiness and entrypoint forwarding remain coordinated separate source leaves','Historical NULL page counts remain unknown; no envelope-derived backfill or numeric authority','Future real browser fixture is not yet executed or ready from this author evidence']}
+(t/'release.json').write_text(json.dumps(r,indent=2)+'\n');print(json.dumps({'release':str(t/'release.json'),'sha256':sha(t/'release.json'),'groupsAbsent':len(groups),'unownedPreserved':sum(f not in files for f in first),'product':[{x['path']:x['sha256']} for x in product]},indent=2))

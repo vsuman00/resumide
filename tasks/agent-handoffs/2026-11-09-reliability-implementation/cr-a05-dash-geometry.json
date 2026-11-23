@@ -1,0 +1,375 @@
+{
+  "id": "CR-A05-S09",
+  "status": "VERIFIED_DEVELOPMENT_GEOMETRY_RECOGNITION_PARTIAL",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "sourceScope": "Dirty integrated working tree, original synthetic development only",
+  "registration": "docs/evaluation/OCR_DASH_GEOMETRY_REGISTRATION.json",
+  "registrationSha256": "493875bc04174e744677c9b6e99c2030f548dccc268efdf037f0386c8e3a32ba",
+  "mainComparison": {
+    "reportSha256": "48011d1b58b5ea66437453cef156594d279ffc9ae84dfe90d3b35359e26bdb83",
+    "recognitionExecutions": 8
+  },
+  "cedarFollowUp": {
+    "preRunManifestSha256": "8c219bf21caecd5c558789cbadfe0c6fe7af61b6034c3dbbcaca3e7baeb867ca",
+    "reportSha256": "73e29bb925122e17dc39115c9eb839b213b1bd949bc8badcdbd23fb41ed8cff8",
+    "diagnosticSourceSha256": "15a26989d7ccf013a83ef03869d1c3b0d09fa1c785cbbc6b17d2e411111400c2",
+    "recognitionExecutions": 3,
+    "sourceBytesMatchCR_A05_S08": true
+  },
+  "rejectedV1": {
+    "archivedRegistration": "tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-a05-geometry-v1/registration.json",
+    "archivedRegistrationSha256": "248ab738825f4a1398a7d277c1830b03b37dcd07a9658f85708d13e143a37c4f",
+    "pairedReportSha256": "bb7de5dbd871f1dbd83f07bd9052f5f0881d4d99611e684d0454309e8751d870",
+    "pairedRecognitionExecutions": 8,
+    "crossCheckRegistrationSha256": "328e91b6e3f078e54071e039b359b6531c5331fc17516876ecc4a8ff3a93a113",
+    "crossCheckReportSha256": "650c2733fb0446ae05768a4e49d1d4d1a834d6375eedb012b6b7fc21d593efb3",
+    "crossCheckRecognitionExecutions": 8,
+    "expectedCodePoint": "U+2212",
+    "primaryCodePoint": "U+2014",
+    "v1CodePoint": "U+2013",
+    "guardedCodePoint": "U+2014"
+  },
+  "cases": [
+    {
+      "source": "print-reliability-dev-copper-workplace-clean-v1",
+      "selectedPages": [
+        1
+      ],
+      "baselineReceipt": "local-paired-run",
+      "linePositions": 12,
+      "beforeExactLines": 11,
+      "afterExactLines": 12,
+      "punctuation": [
+        {
+          "codePoint": 45,
+          "expected": 1,
+          "exact": 1,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8211,
+          "expected": 1,
+          "exact": 1,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8212,
+          "expected": 0,
+          "exact": 0,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8722,
+          "expected": 0,
+          "exact": 0,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        }
+      ],
+      "sourceBackedFields": 8
+    },
+    {
+      "source": "print-reliability-dev-slate-glyph-boxes-clean-v1",
+      "selectedPages": [
+        1
+      ],
+      "baselineReceipt": "local-paired-run",
+      "linePositions": 12,
+      "beforeExactLines": 8,
+      "afterExactLines": 11,
+      "punctuation": [
+        {
+          "codePoint": 45,
+          "expected": 5,
+          "exact": 5,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8211,
+          "expected": 3,
+          "exact": 3,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8212,
+          "expected": 1,
+          "exact": 1,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8722,
+          "expected": 1,
+          "exact": 0,
+          "substituted": 1,
+          "observedGlyphCounts": {
+            "8212": 1
+          },
+          "unaligned": 0
+        }
+      ],
+      "sourceBackedFields": 8
+    },
+    {
+      "source": "print-reliability-dev-slate-glyph-boxes-challenging-v1",
+      "selectedPages": [
+        1
+      ],
+      "baselineReceipt": "local-paired-run",
+      "linePositions": 12,
+      "beforeExactLines": 8,
+      "afterExactLines": 11,
+      "punctuation": [
+        {
+          "codePoint": 45,
+          "expected": 5,
+          "exact": 5,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8211,
+          "expected": 3,
+          "exact": 3,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8212,
+          "expected": 1,
+          "exact": 1,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8722,
+          "expected": 1,
+          "exact": 0,
+          "substituted": 1,
+          "observedGlyphCounts": {
+            "8212": 1
+          },
+          "unaligned": 0
+        }
+      ],
+      "sourceBackedFields": 8
+    },
+    {
+      "source": "print-reliability-dev-slate-glyph-boxes-mixed-v1",
+      "selectedPages": [
+        1,
+        3
+      ],
+      "baselineReceipt": "local-paired-run",
+      "linePositions": 15,
+      "beforeExactLines": 11,
+      "afterExactLines": 14,
+      "punctuation": [
+        {
+          "codePoint": 45,
+          "expected": 5,
+          "exact": 5,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8211,
+          "expected": 3,
+          "exact": 3,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8212,
+          "expected": 1,
+          "exact": 1,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8722,
+          "expected": 1,
+          "exact": 0,
+          "substituted": 1,
+          "observedGlyphCounts": {
+            "8212": 1
+          },
+          "unaligned": 0
+        }
+      ],
+      "sourceBackedFields": 8
+    },
+    {
+      "source": "print-reliability-dev-cedar-punctuation-clean-v1",
+      "selectedPages": [
+        1
+      ],
+      "baselineReceipt": "cr-a05-dash-controls.json",
+      "linePositions": 12,
+      "beforeExactLines": 9,
+      "afterExactLines": 11,
+      "punctuation": [
+        {
+          "codePoint": 45,
+          "expected": 6,
+          "exact": 6,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8211,
+          "expected": 3,
+          "exact": 2,
+          "substituted": 1,
+          "observedGlyphCounts": {
+            "45": 1
+          },
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8212,
+          "expected": 0,
+          "exact": 0,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8722,
+          "expected": 0,
+          "exact": 0,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        }
+      ],
+      "sourceBackedFields": 8
+    },
+    {
+      "source": "print-reliability-dev-cedar-punctuation-challenging-v1",
+      "selectedPages": [
+        1
+      ],
+      "baselineReceipt": "cr-a05-dash-controls.json",
+      "linePositions": 12,
+      "beforeExactLines": 9,
+      "afterExactLines": 11,
+      "punctuation": [
+        {
+          "codePoint": 45,
+          "expected": 6,
+          "exact": 6,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8211,
+          "expected": 3,
+          "exact": 2,
+          "substituted": 1,
+          "observedGlyphCounts": {
+            "45": 1
+          },
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8212,
+          "expected": 0,
+          "exact": 0,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8722,
+          "expected": 0,
+          "exact": 0,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        }
+      ],
+      "sourceBackedFields": 8
+    },
+    {
+      "source": "print-reliability-dev-cedar-punctuation-mixed-v1",
+      "selectedPages": [
+        1,
+        3
+      ],
+      "baselineReceipt": "cr-a05-dash-controls.json",
+      "linePositions": 15,
+      "beforeExactLines": 12,
+      "afterExactLines": 14,
+      "punctuation": [
+        {
+          "codePoint": 45,
+          "expected": 6,
+          "exact": 6,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8211,
+          "expected": 3,
+          "exact": 2,
+          "substituted": 1,
+          "observedGlyphCounts": {
+            "45": 1
+          },
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8212,
+          "expected": 0,
+          "exact": 0,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        },
+        {
+          "codePoint": 8722,
+          "expected": 0,
+          "exact": 0,
+          "substituted": 0,
+          "observedGlyphCounts": {},
+          "unaligned": 0
+        }
+      ],
+      "sourceBackedFields": 8
+    }
+  ],
+  "verification": {
+    "preservedExactNativeMixedPages": 2,
+    "ownedWorkerCleanup": true,
+    "developmentPythonTestsPassed": 4,
+    "focusedTestsPassed": 105,
+    "typecheckExitCode": 0,
+    "scriptLintExitCode": 0
+  },
+  "scoringEligible": false,
+  "applicationProfileAdopted": false,
+  "previousCalibrationReused": false,
+  "lockedRecognitionExecuted": false
+}

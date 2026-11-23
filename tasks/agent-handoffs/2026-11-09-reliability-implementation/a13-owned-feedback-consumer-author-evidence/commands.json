@@ -1,0 +1,267 @@
+{
+  "consumer-red": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/unit/result-feedback.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx",
+      "-t",
+      "owned-feedback|owned provenance"
+    ],
+    "expectedExit": 1
+  },
+  "dom-red": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/components/CitedWritingSuggestions.test.tsx",
+      "-t",
+      "requires owned provenance"
+    ],
+    "expectedExit": 1
+  },
+  "format-write": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--write",
+      "app/lib/result-feedback.ts",
+      "app/lib/server/initial-feedback-consumer.ts",
+      "app/components/CitedWritingSuggestions.tsx",
+      "app/routes/resume.tsx",
+      "tests/unit/result-feedback.test.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0,
+    "allowedChanges": [
+      "app/lib/result-feedback.ts",
+      "app/lib/server/initial-feedback-consumer.ts",
+      "app/components/CitedWritingSuggestions.tsx",
+      "app/routes/resume.tsx",
+      "tests/unit/result-feedback.test.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ]
+  },
+  "focused": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/result-feedback.test.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/result-feedback.ts",
+      "app/lib/server/initial-feedback-consumer.ts",
+      "app/components/CitedWritingSuggestions.tsx",
+      "app/routes/resume.tsx",
+      "tests/unit/result-feedback.test.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0
+  },
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/result-feedback.ts",
+      "app/lib/server/initial-feedback-consumer.ts",
+      "app/components/CitedWritingSuggestions.tsx",
+      "app/routes/resume.tsx",
+      "tests/unit/result-feedback.test.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0
+  },
+  "types": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-owned-consumer-79pz6m90/types.mjs"
+    ],
+    "expectedExit": 0
+  },
+  "format-fix": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--write",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0,
+    "allowedChanges": [
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ]
+  },
+  "fixture-followup": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-consumer.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "types-final": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-owned-consumer-79pz6m90/types.mjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint-final": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/result-feedback.ts",
+      "app/lib/server/initial-feedback-consumer.ts",
+      "app/components/CitedWritingSuggestions.tsx",
+      "app/routes/resume.tsx",
+      "tests/unit/result-feedback.test.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0
+  },
+  "format-final": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/result-feedback.ts",
+      "app/lib/server/initial-feedback-consumer.ts",
+      "app/components/CitedWritingSuggestions.tsx",
+      "app/routes/resume.tsx",
+      "tests/unit/result-feedback.test.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0
+  },
+  "format-last": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--write",
+      "tests/unit/initial-feedback-consumer.test.ts"
+    ],
+    "allowedChanges": [
+      "tests/unit/initial-feedback-consumer.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "compatibility-followup": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "-t",
+      "deterministic-only"
+    ],
+    "expectedExit": 0
+  },
+  "types-terminal": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-owned-consumer-79pz6m90/types.mjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint-terminal": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/result-feedback.ts",
+      "app/lib/server/initial-feedback-consumer.ts",
+      "app/components/CitedWritingSuggestions.tsx",
+      "app/routes/resume.tsx",
+      "tests/unit/result-feedback.test.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0
+  },
+  "format-terminal": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/result-feedback.ts",
+      "app/lib/server/initial-feedback-consumer.ts",
+      "app/components/CitedWritingSuggestions.tsx",
+      "app/routes/resume.tsx",
+      "tests/unit/result-feedback.test.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0
+  },
+  "mixed-red": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "-t",
+      "mixed source/editorial"
+    ],
+    "expectedExit": 1
+  },
+  "format-mixed": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--write",
+      "app/lib/server/initial-feedback-consumer.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "allowedChanges": [
+      "app/lib/server/initial-feedback-consumer.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0
+  },
+  "mixed-green": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx",
+      "-t",
+      "mixed source/editorial|projects actual owned|shows actual retained|makes historical"
+    ],
+    "expectedExit": 0
+  },
+  "types-mixed": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-owned-consumer-79pz6m90/types.mjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint-mixed": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/result-feedback.ts",
+      "app/lib/server/initial-feedback-consumer.ts",
+      "app/components/CitedWritingSuggestions.tsx",
+      "app/routes/resume.tsx",
+      "tests/unit/result-feedback.test.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0
+  },
+  "format-mixed-check": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/result-feedback.ts",
+      "app/lib/server/initial-feedback-consumer.ts",
+      "app/components/CitedWritingSuggestions.tsx",
+      "app/routes/resume.tsx",
+      "tests/unit/result-feedback.test.ts",
+      "tests/unit/initial-feedback-consumer.test.ts",
+      "tests/components/CitedWritingSuggestions.test.tsx"
+    ],
+    "expectedExit": 0
+  }
+}

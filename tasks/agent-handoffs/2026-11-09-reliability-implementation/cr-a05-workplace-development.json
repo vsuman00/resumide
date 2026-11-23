@@ -1,0 +1,618 @@
+{
+  "id": "CR-A05-S06",
+  "status": "VERIFIED_DEVELOPMENT_FIELD_REPAIR_LINE_RECOGNITION_OPEN",
+  "revision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated worktree, local synthetic development only",
+  "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+  "platform": "linux/arm64",
+  "workerUser": "10001:10001",
+  "fieldProfile": "mixed-ocr-review/1.0.2",
+  "priorFieldProfile": "mixed-ocr-review/1.0.1",
+  "binding": {
+    "sources": [
+      {
+        "id": "print-reliability-dev-copper-workplace-clean-v1",
+        "sourceSha256": "2d9f6735c05e66bf569fcb916668c817d66f12eb633c7ea4f27c90f556b161f1",
+        "family": "reliability-dev-copper-workplace",
+        "segment": "clean",
+        "labelsSha256": "e2d828994a3760e9e4605102395f8d340359f521f04273c279d2d32726c340d5"
+      },
+      {
+        "id": "print-reliability-dev-copper-workplace-challenging-v1",
+        "sourceSha256": "9ab083a7bdacab6c0be11aaa7653bb2e1fc037c33f911330db3b40b8de9eef31",
+        "family": "reliability-dev-copper-workplace",
+        "segment": "challenging",
+        "labelsSha256": "e2d828994a3760e9e4605102395f8d340359f521f04273c279d2d32726c340d5"
+      },
+      {
+        "id": "print-reliability-dev-copper-workplace-mixed-v1",
+        "sourceSha256": "fc9af18b3cf85e6ebb63ad6001fefc1996af8d2e26267c5fd6d79fb726e8c51f",
+        "family": "reliability-dev-copper-workplace",
+        "segment": "mixed",
+        "labelsSha256": "1665d7dd20488b79d6e035cf73e5c010d16169a8ccce2381da7708b7e812d525"
+      },
+      {
+        "id": "print-reliability-dev-lantern-workplace-clean-v1",
+        "sourceSha256": "f1f4c760db4f6d9a8b746fc2c0fd3e06a2afa9cec7a6508c31483910c83b7596",
+        "family": "reliability-dev-lantern-workplace",
+        "segment": "clean",
+        "labelsSha256": "88cd893173a16eede95fb788d5f360ba2763f06e806da283cf921bfce1a5e3c3"
+      },
+      {
+        "id": "print-reliability-dev-lantern-workplace-challenging-v1",
+        "sourceSha256": "c7fcd2a1e8594169ab95588098f8cddc3ccfbb86d64c0215ed6302d51e3e1a15",
+        "family": "reliability-dev-lantern-workplace",
+        "segment": "challenging",
+        "labelsSha256": "88cd893173a16eede95fb788d5f360ba2763f06e806da283cf921bfce1a5e3c3"
+      },
+      {
+        "id": "print-reliability-dev-lantern-workplace-mixed-v1",
+        "sourceSha256": "64dda2c8ba437342c499a41f99f90acdad32551b773c8481cb934ac1705c7edb",
+        "family": "reliability-dev-lantern-workplace",
+        "segment": "mixed",
+        "labelsSha256": "00f370ee60e83ec8d6aa9bb21b3f2e84928f51178e981b67df1977d08fb214e1"
+      }
+    ],
+    "parserSources": [
+      {
+        "path": "app/lib/server/evidence-fields.ts",
+        "sha256": "b9635ccb12c641fd79d6ab95f04c87f09fadbf0c4678d5afc0f341af7b1c1d15"
+      },
+      {
+        "path": "app/lib/server/parsing/contact.ts",
+        "sha256": "41c7c81b820b64a1dde2fb59bceaa9b080e4399f2aa10f6a3179ee04fdccd34e"
+      },
+      {
+        "path": "app/lib/server/parsing/dates.ts",
+        "sha256": "eac02b60b1219f555d1e3d9c8a605ce2da45cb8b8d0113f564835da7a0acac72"
+      },
+      {
+        "path": "app/lib/server/parsing/sections.ts",
+        "sha256": "e77b740238416b85e84c58f111b34a98834a73a595504cdca379c730c77d6ad1"
+      }
+    ],
+    "fixtureAndRuntimeSources": {
+      "tests/fixtures/ocr-employment-development.ts": "524e1d42877b641094add8fe634aa10e1f6c36f9a7a644367ac1566b92a235ff",
+      "tests/fixtures/ocr-print-pilot.ts": "b9081984b4865676ca25fe5301cc00e96c57d747075192453b24f8605559ab74",
+      "app/lib/server/ocr/local-container.ts": "45234904a4dad16ccc5b998c679ce6ae1850f72650edcc2920824bec27fc1f65",
+      "app/lib/server/ocr/profiles.ts": "44eb3115fcff823c2f271917d317b2bbcc824b3efbd0f113fa4045167e39cfa8"
+    }
+  },
+  "frozenReceipts": {
+    "cr-a05-calibration-first.json": "a48fe209b38061dacb577c75ca3fa62e5036982c3b565caf64545e96f0f448b2",
+    "cr-a05-calibration-round2.json": "74f287b0855bd94daadc3a30211f2174d039dfd6e617af9e578513fbbf4fb0b8",
+    "cr-a05-holdout-registration.json": "4260230a605587d65105aac3cc75cedbd30ffe75db9e6d7a533d85f247ff01fe",
+    "cr-a05-calibration-round2-registration.json": "ddb42ea678d2dc34a90ad1ecb524c1cf496cfc61106f110355a5fd7e5bd4e22c"
+  },
+  "pairedComparison": {
+    "dpi150": {
+      "config": {
+        "psm": 3,
+        "maxDpi": 150
+      },
+      "preExecutionReceiptSha256": "4689a7fb2f55e4286ae9d0f4694381e375148fcd5e2b543b85562981f5cb7c50",
+      "rawReportSha256": "3dc1928f405221b7f10da192be397311388ed2024d6aa56c6d174ac95e9cfa5d",
+      "completedAt": "2026-11-21T22:51:21.929Z",
+      "exitCode": 0,
+      "baselineFieldsRecovered": 42,
+      "candidateFields": {
+        "truePositive": 48,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "ungroundedPredictions": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      "characterErrors": 3,
+      "referenceCharacters": 2562,
+      "exactPositionLines": 75,
+      "positionLineDenominator": 78,
+      "results": [
+        {
+          "id": "print-reliability-dev-copper-workplace-clean-v1",
+          "family": "reliability-dev-copper-workplace",
+          "segment": "clean",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 1,
+            "referenceCharacters": 391,
+            "characterErrorRate": 0.0025575447570332483,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 0.9166666666666666,
+            "referenceLines": 12,
+            "exactPositionLines": 11,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 0.9166666666666666
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-copper-workplace-challenging-v1",
+          "family": "reliability-dev-copper-workplace",
+          "segment": "challenging",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 1,
+            "referenceCharacters": 391,
+            "characterErrorRate": 0.0025575447570332483,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 0.9166666666666666,
+            "referenceLines": 12,
+            "exactPositionLines": 11,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 0.9166666666666666
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-copper-workplace-mixed-v1",
+          "family": "reliability-dev-copper-workplace",
+          "segment": "mixed",
+          "selectedPages": [1, 3],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 1,
+            "referenceCharacters": 478,
+            "characterErrorRate": 0.0020920502092050207,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 0.9333333333333333,
+            "referenceLines": 15,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 15,
+            "exactPositionLineAgreement": 0.9333333333333333
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-lantern-workplace-clean-v1",
+          "family": "reliability-dev-lantern-workplace",
+          "segment": "clean",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 405,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 12,
+            "exactPositionLines": 12,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 1
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-lantern-workplace-challenging-v1",
+          "family": "reliability-dev-lantern-workplace",
+          "segment": "challenging",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 405,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 12,
+            "exactPositionLines": 12,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 1
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-lantern-workplace-mixed-v1",
+          "family": "reliability-dev-lantern-workplace",
+          "segment": "mixed",
+          "selectedPages": [1, 3],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 492,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 15,
+            "exactPositionLines": 15,
+            "positionLineDenominator": 15,
+            "exactPositionLineAgreement": 1
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        }
+      ]
+    },
+    "dpi300": {
+      "config": {
+        "psm": 3,
+        "maxDpi": 300
+      },
+      "preExecutionReceiptSha256": "638a050f293b3a5e22edcbcb1e70efc73e0eb9e3aeb3ad288354e654ff1ac4f6",
+      "rawReportSha256": "9b57afcf19a7848ae100417685370dc9a85b6bec28c6f23f20701ef3f73b55bc",
+      "completedAt": "2026-11-21T22:52:02.284Z",
+      "exitCode": 0,
+      "baselineFieldsRecovered": 42,
+      "candidateFields": {
+        "truePositive": 48,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "ungroundedPredictions": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      "characterErrors": 3,
+      "referenceCharacters": 2562,
+      "exactPositionLines": 75,
+      "positionLineDenominator": 78,
+      "results": [
+        {
+          "id": "print-reliability-dev-copper-workplace-clean-v1",
+          "family": "reliability-dev-copper-workplace",
+          "segment": "clean",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 1,
+            "referenceCharacters": 391,
+            "characterErrorRate": 0.0025575447570332483,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 0.9166666666666666,
+            "referenceLines": 12,
+            "exactPositionLines": 11,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 0.9166666666666666
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-copper-workplace-challenging-v1",
+          "family": "reliability-dev-copper-workplace",
+          "segment": "challenging",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 1,
+            "referenceCharacters": 391,
+            "characterErrorRate": 0.0025575447570332483,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 0.9166666666666666,
+            "referenceLines": 12,
+            "exactPositionLines": 11,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 0.9166666666666666
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-copper-workplace-mixed-v1",
+          "family": "reliability-dev-copper-workplace",
+          "segment": "mixed",
+          "selectedPages": [1, 3],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 1,
+            "referenceCharacters": 478,
+            "characterErrorRate": 0.0020920502092050207,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 0.9333333333333333,
+            "referenceLines": 15,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 15,
+            "exactPositionLineAgreement": 0.9333333333333333
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-lantern-workplace-clean-v1",
+          "family": "reliability-dev-lantern-workplace",
+          "segment": "clean",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 405,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 12,
+            "exactPositionLines": 12,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 1
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-lantern-workplace-challenging-v1",
+          "family": "reliability-dev-lantern-workplace",
+          "segment": "challenging",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 405,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 12,
+            "exactPositionLines": 12,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 1
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-lantern-workplace-mixed-v1",
+          "family": "reliability-dev-lantern-workplace",
+          "segment": "mixed",
+          "selectedPages": [1, 3],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 492,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 15,
+            "exactPositionLines": 15,
+            "positionLineDenominator": 15,
+            "exactPositionLineAgreement": 1
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        }
+      ]
+    },
+    "fusion": {
+      "config": {
+        "psm": 3,
+        "maxDpi": 150,
+        "model": "text-fusion"
+      },
+      "preExecutionReceiptSha256": "938d12a18b300eb79e5af278c6a43577ef07c83d79cf5b5931509801b99766c3",
+      "rawReportSha256": "b3a6ba52f7830daee496fa8f80a6d7837ea495ed0b6ce76ad447e22a32dbc059",
+      "completedAt": "2026-11-21T22:53:16.129Z",
+      "exitCode": 0,
+      "baselineFieldsRecovered": 42,
+      "candidateFields": {
+        "truePositive": 48,
+        "falsePositive": 0,
+        "falseNegative": 0,
+        "ungroundedPredictions": 0,
+        "precision": 1,
+        "recall": 1
+      },
+      "characterErrors": 3,
+      "referenceCharacters": 2562,
+      "exactPositionLines": 75,
+      "positionLineDenominator": 78,
+      "results": [
+        {
+          "id": "print-reliability-dev-copper-workplace-clean-v1",
+          "family": "reliability-dev-copper-workplace",
+          "segment": "clean",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 1,
+            "referenceCharacters": 391,
+            "characterErrorRate": 0.0025575447570332483,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 0.9166666666666666,
+            "referenceLines": 12,
+            "exactPositionLines": 11,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 0.9166666666666666
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-copper-workplace-challenging-v1",
+          "family": "reliability-dev-copper-workplace",
+          "segment": "challenging",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 1,
+            "referenceCharacters": 391,
+            "characterErrorRate": 0.0025575447570332483,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 0.9166666666666666,
+            "referenceLines": 12,
+            "exactPositionLines": 11,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 0.9166666666666666
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-copper-workplace-mixed-v1",
+          "family": "reliability-dev-copper-workplace",
+          "segment": "mixed",
+          "selectedPages": [1, 3],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 1,
+            "referenceCharacters": 478,
+            "characterErrorRate": 0.0020920502092050207,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 0.9333333333333333,
+            "referenceLines": 15,
+            "exactPositionLines": 14,
+            "positionLineDenominator": 15,
+            "exactPositionLineAgreement": 0.9333333333333333
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-lantern-workplace-clean-v1",
+          "family": "reliability-dev-lantern-workplace",
+          "segment": "clean",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 405,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 12,
+            "exactPositionLines": 12,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 1
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-lantern-workplace-challenging-v1",
+          "family": "reliability-dev-lantern-workplace",
+          "segment": "challenging",
+          "selectedPages": [1],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 405,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 12,
+            "exactPositionLines": 12,
+            "positionLineDenominator": 12,
+            "exactPositionLineAgreement": 1
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        },
+        {
+          "id": "print-reliability-dev-lantern-workplace-mixed-v1",
+          "family": "reliability-dev-lantern-workplace",
+          "segment": "mixed",
+          "selectedPages": [1, 3],
+          "status": "review_required",
+          "nativePreservation": "verified",
+          "cleanup": "verified",
+          "scoringEligible": false,
+          "transcription": {
+            "errors": 0,
+            "referenceCharacters": 492,
+            "characterErrorRate": 0,
+            "pageCoverage": 1,
+            "orderedLineAgreement": 1,
+            "referenceLines": 15,
+            "exactPositionLines": 15,
+            "positionLineDenominator": 15,
+            "exactPositionLineAgreement": 1
+          },
+          "previousFieldsRecovered": 7,
+          "candidateFieldsRecovered": 8
+        }
+      ],
+      "versions": {
+        "engine": "tesseract-5.3.0-2/text-fusion-v4",
+        "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+        "languageData": "model-bundle-sha256:74a6c07f4943981367364af90d830c36c6de018cb0c7762caba61e51189c44cc"
+      }
+    }
+  },
+  "verification": {
+    "reproduction": {
+      "exitCode": 1,
+      "expectedMissingEmployerCases": 2,
+      "otherCasesPassed": 29
+    },
+    "focusedUnit": {
+      "exitCode": 0,
+      "files": 6,
+      "passed": 139
+    },
+    "typecheck": {
+      "exitCode": 0
+    },
+    "lint": {
+      "exitCode": 0,
+      "errors": 0,
+      "existingWarnings": 4
+    },
+    "webBuild": {
+      "exitCode": 0,
+      "logSha256": "97190d87d83be6be19cf9f967eda4174f30e4984f30b2a7bdb5b2a7ad8ed428d"
+    },
+    "workerBuild": {
+      "exitCode": 0,
+      "logSha256": "8e2f4c57662e28f0ff42f41b5819d7d649ec984e9ec71587c49a5f926ba5f64c"
+    }
+  },
+  "localWorkerCleanupVerified": true,
+  "noNewImageDownloaded": true,
+  "applicationAdoption": false,
+  "calibrationExecuted": false,
+  "lockedRecognitionExecuted": false,
+  "applicableQualityGatesPassed": false
+}

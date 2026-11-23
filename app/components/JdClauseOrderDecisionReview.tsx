@@ -1,0 +1,411 @@
+import { useEffect, useId, useRef, useState } from "react";
+import {
+  JdClauseOrderCommandSchema,
+  JdClauseOrderProposalSchema,
+  validateClauseOrderProposal,
+  validateClauseOrderReceipt,
+  type JdClauseOrderCommand,
+  type JdClauseOrderProposal,
+  type JdClauseOrderReceipt,
+} from "~/lib/jd-clause-order-decisions";
+
+export type JdClauseOrderDecisionReviewProps = {
+  proposal: JdClauseOrderProposal;
+  onDecision: (
+    command: JdClauseOrderCommand,
+    reviewAcknowledgement: "accepted" | null,
+  ) => Promise<unknown>;
+};
+type Submission = {
+  proposal: JdClauseOrderProposal;
+  command: JdClauseOrderCommand;
+};
+function sourceScope(proposal: JdClauseOrderProposal) {
+  return JSON.stringify(proposal.draft.binding.source);
+}
+function proposalScope(proposal: JdClauseOrderProposal) {
+  try {
+    return JSON.stringify(proposal) ?? "invalid";
+  } catch {
+    return "invalid";
+  }
+}
+/** Standalone controlled review. Only the owning server can admit a decision. */
+export default function JdClauseOrderDecisionReview({
+  proposal,
+  onDecision,
+}: JdClauseOrderDecisionReviewProps) {
+  const heading = useId();
+  const scope = proposalScope(proposal);
+  const parsed = JdClauseOrderProposalSchema.safeParse(proposal);
+  const currentSource = parsed.success ? sourceScope(parsed.data) : null;
+  const source = useRef(currentSource);
+  source.current = currentSource;
+  const verifiedScope = useRef<string | null>(null);
+  const generation = useRef(0),
+    action = useRef(0),
+    busyRef = useRef(false);
+  const pendingRef = useRef<Submission | null>(null);
+  const [verified, setVerified] = useState<JdClauseOrderProposal | null>(null);
+  const [pending, setPending] = useState<Submission | null>(null);
+  const [receipt, setReceipt] = useState<JdClauseOrderReceipt | null>(null);
+  const receiptMessage = useRef<HTMLDivElement>(null);
+  const [savedReview, setSavedReview] = useState<JdClauseOrderProposal | null>(
+    null,
+  );
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [invalid, setInvalid] = useState(false);
+  const [unknown, setUnknown] = useState(false);
+  useEffect(() => {
+    if (receipt) receiptMessage.current?.focus();
+  }, [receipt]);
+  useEffect(() => {
+    const token = ++generation.current;
+    setVerified(null);
+    setInvalid(false);
+    setAcknowledged(false);
+    setReceipt(null);
+    setSavedReview(null);
+    if (
+      !currentSource ||
+      (pendingRef.current &&
+        sourceScope(pendingRef.current.proposal) !== currentSource)
+    ) {
+      pendingRef.current = null;
+      setPending(null);
+      setUnknown(false);
+      busyRef.current = false;
+      setBusy(false);
+      action.current++;
+    }
+    void validateClauseOrderProposal(proposal)
+      .then((value) => {
+        if (generation.current === token) {
+          verifiedScope.current = scope;
+          setVerified(value);
+        }
+      })
+      .catch(() => {
+        if (generation.current === token) setInvalid(true);
+      });
+    return () => {
+      generation.current++;
+    };
+  }, [scope, currentSource, proposal]);
+  useEffect(() => {
+    const reset = (event: PageTransitionEvent) => {
+      if (event.persisted) setAcknowledged(false);
+    };
+    window.addEventListener("pageshow", reset);
+    return () => {
+      action.current++;
+      window.removeEventListener("pageshow", reset);
+    };
+  }, []);
+  const displayed =
+    pending && sourceScope(pending.proposal) === currentSource
+      ? pending.proposal
+      : receipt && savedReview && sourceScope(savedReview) === currentSource
+        ? savedReview
+        : verified &&
+            verifiedScope.current === scope &&
+            sourceScope(verified) === currentSource
+          ? verified
+          : null;
+  async function submit(operation: "accept" | "reject", retry = false) {
+    if (
+      busyRef.current ||
+      !displayed ||
+      invalid ||
+      receipt ||
+      (pendingRef.current && !retry)
+    )
+      return;
+    const submission = retry
+      ? pendingRef.current
+      : {
+          proposal: displayed,
+          command:
+            operation === "accept"
+              ? displayed.acceptCommand
+              : displayed.rejectCommand,
+        };
+    if (
+      !submission ||
+      (submission.command.operation === "accept" && !acknowledged)
+    )
+      return;
+    const capturedSource = sourceScope(submission.proposal),
+      token = ++action.current;
+    if (source.current !== capturedSource) return;
+    busyRef.current = true;
+    setBusy(true);
+    setAcknowledged(false);
+    setUnknown(false);
+    pendingRef.current = submission;
+    setPending(submission);
+    try {
+      const response = await onDecision(
+        JdClauseOrderCommandSchema.parse(submission.command),
+        submission.command.operation === "accept" ? "accepted" : null,
+      );
+      const confirmed = await validateClauseOrderReceipt(
+        response,
+        submission.command,
+      );
+      if (action.current !== token || source.current !== capturedSource) return;
+      pendingRef.current = null;
+      setPending(null);
+      setSavedReview(submission.proposal);
+      setReceipt(confirmed);
+    } catch {
+      if (action.current === token && source.current === capturedSource)
+        setUnknown(true);
+    } finally {
+      if (action.current === token) {
+        busyRef.current = false;
+        setBusy(false);
+      }
+    }
+  }
+  const base = displayed
+    ? `/analysis/${displayed.draft.binding.source.analysisId}`
+    : "";
+  return (
+    <section
+      className="account-card"
+      aria-labelledby={heading}
+      style={{ overflowWrap: "anywhere" }}
+    >
+      <h2 id={heading}>Review clause-order decision</h2>
+      {!displayed && !invalid && (
+        <p role="status">Verifying the complete decision review.</p>
+      )}
+      {invalid && (
+        <p role="alert">
+          This decision review could not be verified. No decision was sent.
+        </p>
+      )}
+      {displayed &&
+        (() => {
+          const d = displayed.draft;
+          return (
+            <>
+              <p>
+                This is proposed wording. It is not saved until the owning
+                service confirms the exact decision.
+              </p>
+              <h3>Saved job requirement</h3>
+              <blockquote
+                aria-label="Exact saved JD quote"
+                className="whitespace-pre-wrap break-words"
+              >
+                {d.relevance.quote}
+              </blockquote>
+              <p>
+                {d.relevance.importance === "required"
+                  ? "Required"
+                  : "Preferred"}{" "}
+                requirement. The moved source clause names{" "}
+                {d.relevance.sourceSkillValue}, related to{" "}
+                {d.relevance.jdSkillValue}. This explains order, not
+                proficiency, duration or qualification.
+              </p>
+              <h3>Complete current wording</h3>
+              <blockquote
+                aria-label="Complete current wording"
+                className="whitespace-pre-wrap break-words"
+              >
+                {d.before}
+              </blockquote>
+              <h3>Complete proposed wording</h3>
+              <blockquote
+                aria-label="Complete proposed wording"
+                className="whitespace-pre-wrap break-words"
+              >
+                {d.after}
+              </blockquote>
+              <h3>Proposed clause order</h3>
+              <p>
+                Move source clause 2 before source clause 1. Both clauses keep
+                their exact wording.
+              </p>
+              <ol aria-label="Proposed clause order">
+                {d.transform.order.map((i) => (
+                  <li key={i}>
+                    <p>Source clause {i + 1}</p>
+                    <blockquote>{d.sourceClauses[i].text}</blockquote>
+                    <p>
+                      Current-fact codepoint characters{" "}
+                      {d.sourceClauses[i].start} to {d.sourceClauses[i].end},
+                      end excluded.
+                    </p>
+                  </li>
+                ))}
+              </ol>
+              <h3>Source support for current wording</h3>
+              <blockquote
+                aria-label="Whole quoted source claim"
+                className="whitespace-pre-wrap break-words"
+              >
+                {d.before}
+              </blockquote>
+              <p>
+                Source quotation and candidate confirmation are not independent
+                verification. These references support the current wording; the
+                proposal has no saved source references or confirmation.
+              </p>
+              <ul aria-label="Current source citations">
+                {d.sourceCitations.map((c) => (
+                  <li key={JSON.stringify(c)}>
+                    <a
+                      href={`${base}/evidence#source-${encodeURIComponent(c.spanId)}`}
+                    >
+                      Review source workspace
+                    </a>
+                    <p>
+                      Recorded{" "}
+                      {c.method === "native_text" ? "native text" : "local OCR"}
+                      ; span <code>{c.spanId}</code>, characters {c.start} to{" "}
+                      {c.end}; attempt <code>{c.attemptId}</code>, page{" "}
+                      <code>{c.pageId}</code>, page characters {c.pageStart} to{" "}
+                      {c.pageEnd}.
+                    </p>
+                  </li>
+                ))}
+              </ul>
+              <nav aria-label="Pinned decision inputs">
+                <a
+                  href={`${base}/canonical?version=${encodeURIComponent(d.binding.canonical.versionId)}#fact-${encodeURIComponent(d.target.factId)}`}
+                >
+                  Inspect the current fact and pinned version
+                </a>{" "}
+                <a
+                  href={`${base}/requirements?version=${encodeURIComponent(d.binding.requirements.versionId)}`}
+                >
+                  Inspect the saved job requirements
+                </a>
+              </nav>
+              <p>
+                Numeric score and score change: unavailable. Qualification
+                credit: not assessed. Reordering does not establish new
+                qualifications.
+              </p>
+              {busy && (
+                <p role="status">
+                  Waiting for confirmation of the exact decision.
+                </p>
+              )}
+              {unknown && (
+                <p role="alert">
+                  The decision outcome could not be confirmed. Keep this
+                  original review and retry the exact decision. No new decision
+                  can be sent while this outcome is unknown.
+                </p>
+              )}
+              {pending &&
+                !busy &&
+                sourceScope(pending.proposal) === currentSource && (
+                  <p>
+                    The retry retains the original wording, JD quote, command
+                    and key, even if the current input heads have moved.
+                  </p>
+                )}
+              {receipt ? (
+                <div ref={receiptMessage} tabIndex={-1} role="status">
+                  {receipt.action === "accept" ? (
+                    <>
+                      <p>
+                        The exact decision was confirmed as saved. Edited
+                        wording is candidate-confirmed; the original support
+                        citations remain recorded provenance, not direct source
+                        proof of the edited wording.
+                      </p>
+                      <a
+                        href={`${base}/canonical?version=${encodeURIComponent(receipt.versionId)}`}
+                      >
+                        Inspect the confirmed saved version
+                      </a>
+                    </>
+                  ) : (
+                    <p>
+                      Rejection was confirmed. This decision did not move the
+                      resume head.
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <fieldset disabled={busy || invalid}>
+                  <legend>
+                    {pending
+                      ? "Retry the original decision"
+                      : "Choose a decision after reviewing every claim"}
+                  </legend>
+                  {(!pending || pending.command.operation === "accept") && (
+                    <label>
+                      <input
+                        type="checkbox"
+                        checked={acknowledged}
+                        onChange={(event) =>
+                          setAcknowledged(event.currentTarget.checked)
+                        }
+                      />
+                      I reviewed the complete wording, source support and saved
+                      job requirement.
+                    </label>
+                  )}
+                  {pending ? (
+                    <button
+                      className={
+                        pending.command.operation === "accept"
+                          ? "primary-button"
+                          : "back-button"
+                      }
+                      type="button"
+                      disabled={
+                        busy ||
+                        (pending.command.operation === "accept" &&
+                          !acknowledged)
+                      }
+                      onClick={() => {
+                        void submit(pending.command.operation, true);
+                      }}
+                    >
+                      Retry exact{" "}
+                      {pending.command.operation === "accept"
+                        ? "acceptance"
+                        : "rejection"}
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        className="primary-button"
+                        type="button"
+                        disabled={!acknowledged || busy}
+                        onClick={() => {
+                          void submit("accept");
+                        }}
+                      >
+                        Accept reviewed wording
+                      </button>
+                      <button
+                        className="back-button"
+                        type="button"
+                        disabled={busy}
+                        onClick={() => {
+                          void submit("reject");
+                        }}
+                      >
+                        Reject this proposal
+                      </button>
+                    </>
+                  )}
+                </fieldset>
+              )}
+            </>
+          );
+        })()}
+    </section>
+  );
+}

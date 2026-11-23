@@ -1,0 +1,150 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/canonical-rewrite-workspace.test.ts (29 tests | 1 failed) 527ms
+     ✓ shows the old reader's missing-slot boundary without inventing a draft 85ms
+     ✓ reads an honest missing state with no writer mutation or fake draft tokens 18ms
+     ✓ initializes with AI off and returns actual empty tokens without generation capability 47ms
+     ✓ preserves an existing projection null without invoking a writer or requiring generation eligibility 24ms
+     ✓ preserves an existing projection Retained prior legacy text without invoking a writer or requiring generation eligibility 25ms
+     ✓ retries an ambiguous insert as an existing current row with no duplicate or automatic generation 26ms
+     × uses real initialization tokens for a separately consented existing generation protocol and exact replay 34ms
+     ✓ requires current heads on missing initialization 12ms
+     ✓ requires current heads on existing initialization 23ms
+     ✓ preserves historical missing read status without claiming initialization capability 13ms
+     ✓ lets native fresh CAS refuse a head change after the owned preflight 12ms
+     ✓ refuses foreign owner without initialization 10ms
+     ✓ refuses privacy without initialization 9ms
+     ✓ requires full RR source proof and exact bootstrap metadata 11ms
+     ✓ withholds missing-slot initialization when its separate capability is denied 12ms
+     ✓ refuses a forged created=true nonempty projection while preserving exact retry recovery 33ms
+     ✓ admits exact two UUID fields in urlencoded 10ms
+     ✓ admits exact two UUID fields in multipart 11ms
+     ✓ refuses duplicate fields before admin IO 9ms
+     ✓ refuses unknown fields before admin IO 10ms
+     ✓ refuses file fields before admin IO 10ms
+     ✓ refuses malformed fields before admin IO 9ms
+     ✓ refuses uppercase fields before admin IO 11ms
+     ✓ refuses encoded overflow and stalled/cancel-rejecting bodies without waiting for cleanup 11ms
+     ✓ checks CANONICAL_REWRITE_ENABLED before service IO 13ms
+     ✓ checks AUTHORING_ENABLED before service IO 8ms
+     ✓ checks SCORING_V2_ENABLED before service IO 9ms
+     ✓ rejects GET, wrong origin and unauthenticated callers without writing 10ms
+     ✓ bounds pending RPC and observes pre-abort without a writer attempt 10ms
+ ❯ tests/unit/canonical-rewrite-route.test.ts (11 tests | 6 failed) 558ms
+   × runs the actual authenticated resource and producer with declaration=false, then exact replay dispatches once 152ms
+   × runs the actual authenticated resource and producer with declaration=true, then exact replay dispatches once 63ms
+   × refuses final draft movement after dispatch while preserving previous drafts and technical usage 48ms
+   × refuses a changed request under an existing operation identity without redispatch 47ms
+   ✓ does not redispatch a retained reserved operation 34ms
+   ✓ does not redispatch a retained dispatched operation 35ms
+   ✓ does not redispatch a retained unknown operation 32ms
+   ✓ keeps fixed errors and prevents reads for malformed consent, duplicate fields and foreign ownership 33ms
+   ✓ preserves method, flag, origin and authentication guards before private dispatch 37ms
+   × refuses known canonical spend through the actual resource before provider dispatch 42ms
+   × refuses unknown canonical claim through the actual resource before provider dispatch 36ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/canonical-rewrite-route.test.ts > runs the actual authenticated resource and producer with declaration=false, then exact replay dispatches once
+ FAIL  tests/unit/canonical-rewrite-route.test.ts > runs the actual authenticated resource and producer with declaration=true, then exact replay dispatches once
+AssertionError: expected 503 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 503
+
+ ❯ tests/unit/canonical-rewrite-route.test.ts:380:26
+    378|     const f = await setup(declared);
+    379|     const first = await f.run(f.request(f.selected, { multipart: true …
+    380|     expect(first.status).toBe(200);
+       |                          ^
+    381|     const saved = await first.json();
+    382|     expect(saved).toEqual({ kind: "saved", publication: f.getSaved() }…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  tests/unit/canonical-rewrite-route.test.ts > refuses final draft movement after dispatch while preserving previous drafts and technical usage
+AssertionError: expected 503 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 503
+
+ ❯ tests/unit/canonical-rewrite-route.test.ts:448:27
+    446|   f.setStale();
+    447|   const response = await f.run();
+    448|   expect(response.status).toBe(409);
+       |                           ^
+    449|   expect(await response.json()).toEqual({
+    450|     kind: "error",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  tests/unit/canonical-rewrite-route.test.ts > refuses a changed request under an existing operation identity without redispatch
+AssertionError: expected 503 to be 200 // Object.is equality
+
+- Expected
++ Received
+
+- 200
++ 503
+
+ ❯ tests/unit/canonical-rewrite-route.test.ts:470:34
+    468| it("refuses a changed request under an existing operation identity wit…
+    469|   const f = await setup();
+    470|   expect((await f.run()).status).toBe(200);
+       |                                  ^
+    471|   const response = await f.run(
+    472|     f.request({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  tests/unit/canonical-rewrite-route.test.ts > refuses known canonical spend through the actual resource before provider dispatch
+ FAIL  tests/unit/canonical-rewrite-route.test.ts > refuses unknown canonical claim through the actual resource before provider dispatch
+AssertionError: expected { kind: 'error', …(2) } to deeply equal { kind: 'error', …(2) }
+
+- Expected
++ Received
+
+  {
+    "kind": "error",
+    "reason": "unavailable",
+-   "recovery": "review_again",
++   "recovery": "unavailable",
+  }
+
+ ❯ tests/unit/canonical-rewrite-route.test.ts:582:35
+    580|     const response = await f.run();
+    581|     expect(response.status).toBe(503);
+    582|     expect(await response.json()).toEqual({
+       |                                   ^
+    583|       kind: "error",
+    584|       reason: "unavailable",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  tests/unit/canonical-rewrite-workspace.test.ts > actual owned bootstrap with real builders and fake native storage > uses real initialization tokens for a separately consented existing generation protocol and exact replay
+AiBudgetError: AI budget admission is unavailable.
+ ❯ Module.runCanonicalRewrite app/lib/server/canonical-rewrite-repository.ts:293:11
+    291|     !options.budget.policyVersion.trim()
+    292|   )
+    293|     throw new AiBudgetError("AI_BUDGET_DISABLED");
+       |           ^
+    294|   const budgetSourceScope = {
+    295|     userId: ownerId,
+ ❯ tests/unit/canonical-rewrite-workspace.test.ts:555:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  7 failed | 33 passed (40)
+   Start at  00:14:29
+   Duration  1.05s (transform 569ms, setup 0ms, import 836ms, tests 1.09s, environment 0ms)
+
+JSON report written to /tmp/resumide-budget-required-followup-HbWXIb/tests.json

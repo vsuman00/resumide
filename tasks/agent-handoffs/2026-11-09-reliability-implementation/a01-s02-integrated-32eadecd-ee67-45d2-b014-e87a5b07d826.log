@@ -1,0 +1,26 @@
+
+> test
+> vitest run tests/unit/native-page-diagnostics.test.ts tests/unit/evidence-review.test.ts tests/unit/evidence-review-route.test.ts tests/components/Phase6Accessibility.test.tsx tests/unit/parse-pages.test.ts tests/unit/ocr/extraction-router.test.ts tests/unit/document-extraction.test.ts
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats
+
+ ✓ tests/unit/parse-pages.test.ts (2 tests) 6ms
+ ✓ tests/unit/document-extraction.test.ts (11 tests) 32ms
+ ✓ tests/unit/ocr/extraction-router.test.ts (22 tests) 9ms
+ ✓ tests/unit/evidence-review.test.ts (49 tests) 63ms
+ ✓ tests/unit/native-page-diagnostics.test.ts (60 tests) 89ms
+ ✓ tests/unit/evidence-review-route.test.ts (19 tests) 101ms
+ ✓ tests/components/Phase6Accessibility.test.tsx (19 tests) 206ms
+
+ Test Files  7 passed (7)
+      Tests  182 passed (182)
+   Start at  15:11:02
+   Duration  991ms (transform 829ms, setup 0ms, import 1.44s, tests 505ms, environment 533ms)
+
+
+> typecheck
+> react-router typegen && tsc
+
+tests/unit/canonical-corrections.test.ts(52,9): error TS2322: Type '{ analysisId: string; attemptId: string; attemptNumber: number; evidence: { id: string; ownerId: string; analysisId: string; sourceId: string; inputSha256: string; createdAt: string; retentionPolicyId: string; ... 11 more ...; fieldExtractorVersion?: "evidence-fields/1.0.1" | undefined; }; corrections: never[]; revi...' is not assignable to type 'Review'.
+  Property 'nativePageDiagnostics' is missing in type '{ analysisId: string; attemptId: string; attemptNumber: number; evidence: { id: string; ownerId: string; analysisId: string; sourceId: string; inputSha256: string; createdAt: string; retentionPolicyId: string; ... 11 more ...; fieldExtractorVersion?: "evidence-fields/1.0.1" | undefined; }; corrections: never[]; revi...' but required in type 'Omit<{ analysisId: string; attemptId: string; attemptNumber: number; evidence: { id: string; ownerId: string; analysisId: string; sourceId: string; inputSha256: string; createdAt: string; retentionPolicyId: string; ... 11 more ...; fieldExtractorVersion?: "evidence-fields/1.0.1" | undefined; }; ... 5 more ...; histo...'.

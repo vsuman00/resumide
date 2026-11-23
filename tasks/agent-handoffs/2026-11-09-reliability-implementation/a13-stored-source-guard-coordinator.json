@@ -1,0 +1,40 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE",
+  "parent": "CR-A13",
+  "finding": "backend-a13-stored-source-access-triage.md",
+  "findingSha256": "a83157fc671e76dbc486c770d076acbc3018a14d09ac70432e7a3f63caf13974",
+  "oracles": "frontend-a13-stored-source-guard-oracles.md",
+  "owner": "a01_page_backend",
+  "files": [
+    "supabase/migrations/20261115064102_stored_scoring_source_access.sql",
+    "app/lib/server/legacy-scoring-input-profile.ts",
+    "tests/unit/legacy-scoring-input-sql.test.ts",
+    "scripts/verify-stored-scoring-source-access.sql",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a13-stored-source-guard.md"
+  ],
+  "preimage": {
+    "app/lib/server/legacy-scoring-input-profile.ts": "b18bbcd0242245d3a4b47ddbb1477bc121c7e3c566ef06bd00f0a5b081016b94",
+    "tests/unit/legacy-scoring-input-sql.test.ts": "04308fdc67f82b88a9b71b9dd180d1d7b41e721d115bc30a2e22622988b54094"
+  },
+  "contract": [
+    "New guarded original-source admission on existing bound worker read, saved read and exact finish replay; original source owner/org/version/root active independently of current analysis pointer.",
+    "Preserve original active source historical views and exact receipts; account-wide export remains complete, no retired-row filtering.",
+    "Original row/FK/source locks must avoid race with retirement/deletion; no waiting in reversed lock order. Busy/missing source refuses, never fabricates legacy_unbound or backfill.",
+    "New forward migration only; old16-routine2cb source and old19-file gate preserved. No scores/versions/checksum algorithm/public DTO/flags/actor grants weakened.",
+    "Current expected profile actual pins may renew for compatible source guard; keep old base-profile assertions as explicit historical evidence and add exact forward-closure assertions. No assertion deletion or threshold changes.",
+    "No Node wrapper logic/renderer/worker/consumer change; new dataRPCs remain denied, metadata only.",
+    "No Native reproduction possible under current source-only scope; do not invent a fake-store RED. Deferred actual mutation/tombstone/replay/export scenarios remain unexecuted."
+  ],
+  "integration": "Work only in backend WT. Root MUST NOT integrate any guard source until the in-flight pure-plan candidate gate closes; separate captured allocation, no mutation of earlier manifests/receipts.",
+  "boundaries": "Pinned sealed Node22 source/synthetic only, no dotenv, SQL parsing/execution/advisors, DB/hosted writes, services, browser, compiler, Docker, providers, actual env/PII, dependencies, Git/deploy. Supabase directly, never DockerDB.",
+  "integratedFiles": {
+    "supabase/migrations/20261115064102_stored_scoring_source_access.sql": "9e857437bbd3d5995d7942b365406f9eb9f96197d3495853747cf950fdb1c1b2",
+    "app/lib/server/legacy-scoring-input-profile.ts": "f2b2410fe652fbbf1963bbbbba5f9e5e1928f2bb177e5262d9edee30a99a101c",
+    "tests/unit/legacy-scoring-input-sql.test.ts": "1161b334a5a2e4d8c77023a7a2c9ecb72027c81271c1e8b9fa9ab21b76273091",
+    "scripts/verify-stored-scoring-source-access.sql": "a888db2a7a5ea03fd05ece142e7c5205e4011ec421b7f58f7a1642b50c8d8727",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a13-stored-source-guard.md": "f570ec1c82c4e3b6205a901fa77259cd8822dc1e1e06518b43bb9a6f81b08d90",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a13-stored-source-guard-peer.md": "7b9189bce061f9e213ac4af0459d1a8120f465c1d44976f7d2d1dde44d061985",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a13-stored-source-guard-oracles.md": "df794f15fc2ff52ab4c843902d6e561bb65839f8f2182e41384f1b4a8e53ccee",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a13-stored-source-access-triage.md": "a83157fc671e76dbc486c770d076acbc3018a14d09ac70432e7a3f63caf13974"
+  }
+}

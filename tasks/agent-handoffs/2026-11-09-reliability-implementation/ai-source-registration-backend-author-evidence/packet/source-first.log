@@ -1,0 +1,37 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/ai-budget-source-sql.test.ts (0 test)
+ ✓ tests/unit/retention-root-coverage-sql.test.ts (15 tests) 74ms
+ ✓ tests/unit/owned-ai-disposition-sql.test.ts (12 tests) 9ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/ai-budget-source-sql.test.ts [ tests/unit/ai-budget-source-sql.test.ts ]
+Error: Transform failed with 1 error:
+/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/tests/unit/ai-budget-source-sql.test.ts:38:258: ERROR: Unexpected ")"
+  Plugin: vite:esbuild
+  File: /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/tests/unit/ai-budget-source-sql.test.ts:38:258
+  
+  Unexpected ")"
+  36 |    expect(patches.map(p=>p.signature)).toEqual(["private.capture_owned_ai_operation_dispositions(uuid,uuid,uuid,uuid)","public.export_owned_ai_disposition_records(uuid)","private.owned_ai_disposition_ready()"]);
+  37 |    for(const p of patches){expect(hash(p.old)).toBe(p.before);expect(hash(p.new)).toBe(p.after);}
+  38 |    for(const p of pins.filter(p=>p.signature.split("(")[0].startsWith("private.ai_budget_source_")||["public.ai_budget_reserve_source_next","public.export_owned_ai_budget_sources","public.read_ai_budget_source_readiness"].includes(p.signature.split("(")[0]))))expect(hash(body(p.signature.split("(")[0])))).toBe(p.sha256);
+     |                                                                                                                                                                                                                                                                    ^
+  39 |    expect(hash(body("private.ai_budget_source_ready"))).toBe(AI_BUDGET_SOURCE_PROFILE.checkerSha256);
+  40 |    expect(hash(body("public.ai_budget_reserve_source_next"))).toBe(AI_BUDGET_SOURCE_PROFILE.reserveSha256);
+  
+ ❯ failureErrorWithLog ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  27 passed (27)
+   Start at  16:00:48
+   Duration  314ms (transform 41ms, setup 0ms, import 56ms, tests 82ms, environment 0ms)
+

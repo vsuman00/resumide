@@ -1,0 +1,432 @@
+{
+  "status": "FROZEN_LOCAL_ACTUAL_PROFILE_SOURCE_SYNTHETIC_PASS_AWAITING_ROOT_COMBINED_GATE",
+  "at": "2026-11-15T16:38:06.186733+00:00",
+  "worktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "allocation": "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tasks/agent-handoffs/2026-11-09-reliability-implementation/ai-callers-runtime-allocation.json",
+  "allocationSha256": "c6db9f4aa5f77454db2bc45557ed882665de244cbb21cdaa2e2d18299c2bda39",
+  "preimages": {
+    "app/lib/server/ai-budget-source.ts": "aff9acc366d7cdd204b001f6b9634e9eef54fddfa437fd27cc92261129c34376",
+    "app/lib/server/ai-budget-source-export.ts": "4a70d107151a72d01820ebea6e6faacea95ca2a39bf17a583e92f2b49dbbf8f9",
+    "app/lib/server/qualitative-stage.ts": "34858b0ade2258a617ee21d7c0579a9608e343a6bc3f65f7c080981803644fbd",
+    "app/lib/server/build-assist-service.ts": "3f6279ef5843fe88ccc2a0de44811d544e2beaa78d8ff74f05b6b0ea5838a0c7",
+    "app/lib/server/canonical-rewrite-repository.ts": "2e65080694eddd6696b88dac68adae2b475bc4cf0d0bafe577999bdf058a09aa",
+    "app/lib/server/initial-feedback-service.ts": "e59757235b63940b12fd027d07eaee1297426f2e12db1b9db18dc9d70d206dd7",
+    "tests/unit/ai-budget-source.test.ts": "f7e1d7b07a2a6b6bfe1c0abaac5d871984214c059b994ce1c5e2acfca893e9fb",
+    "tests/unit/ai-budget-source-export.test.ts": "a9639539a0e7183d61c3beadc03b64094d819fa3ebe8a2be24dbfe161b7a134d",
+    "tests/unit/build-assist-budget.test.ts": "2e5df97124d5dffdadaef1a00bb6c95e45f78d1495cea8e7c5037cb2c02a7cc2",
+    "tests/unit/canonical-rewrite-repository.test.ts": "490cd0aede2609501cf424e97c62eb55c8a707a08bf960a1f03942bdaf9acfa8",
+    "tests/unit/initial-feedback-service.test.ts": "4eb30aef79cc20ee2f73b10a55dfcaa9f044c0953150e7b8ac7b93b2b437f21e",
+    "tests/unit/provider-cancellation.test.ts": "b08dff71ef0b281616c0157c377b818e2a25b7ea71269e6e29d6ce26dd52c986",
+    "tests/unit/privacy.test.ts": "f4154ecf524a2ae50d3c569cd0280e293b7055d5986cc72385f2744a0a753221",
+    "tests/unit/privacy-operations.test.ts": "8bf76f61373c2d3715a1ef19d69c1bfeae6662e8a737799e91e665406e9efb03",
+    "tests/unit/owned-ai-privacy-export.test.ts": "bcd262c1a44cbd2fdbf88b8533b00d596833d631c33ea95ac465244ae54d5c76",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-ai-callers.md": null
+  },
+  "preimageArchive": "/tmp/resumide-ai-callers-runtime-preimages",
+  "preimagesAsserted": true,
+  "files": {
+    "app/lib/server/ai-budget-source.ts": "4c101b7962f3038ca7532259389679d1fbb4e4d7cd486b2d951596ab929bfb4d",
+    "app/lib/server/ai-budget-source-export.ts": "1884de7e112c5716b11f09a682757827fa14e2aa97027eadc495eac6466db09f",
+    "app/lib/server/qualitative-stage.ts": "3925a29948bec447a37d4a62634c5ee4fe506b11b66124def5cb39e25cf4872f",
+    "app/lib/server/build-assist-service.ts": "e043637924ad8dc77e0ca62daa89a7ef7c0c69fe7cd989d9285b8c575298b194",
+    "app/lib/server/canonical-rewrite-repository.ts": "166c21a7c316b10710e7c2135f70b0071be520aea59a3422aa25b60ca612871c",
+    "app/lib/server/initial-feedback-service.ts": "62b5bc35fd966bf0dc10f93179991e958f1d8014511137b0207b5cc0293d0b54",
+    "tests/unit/ai-budget-source.test.ts": "0e47c5adbf0eabc1aafd1b5d8bb5f0843c885cef9e4699f6b3f5f21822a91b8c",
+    "tests/unit/ai-budget-source-export.test.ts": "1030862ee6c47410e240ff9a582950c5d25c1b30da13a447e8c939c79ff6bcc1",
+    "tests/unit/build-assist-budget.test.ts": "eb42f59cdd243ef248a3bb3680a7bed760a6a7dc2a4cc3c69051c9d183f5ed00",
+    "tests/unit/canonical-rewrite-repository.test.ts": "7808e2bac148c650d5908fdfa0f3dcdf85a844ab55968a6b7d1f1e8c28921c9a",
+    "tests/unit/initial-feedback-service.test.ts": "aea9fea9051986405fec937a728f3fd0bf4fef28907981e02773b65cbb3b35e3",
+    "tests/unit/provider-cancellation.test.ts": "e4dadd3f9fdf825e13a43f289055baad55c40a9d525db348ce82cc6f814cf130",
+    "tests/unit/privacy.test.ts": "e5373fa54cbe36a0fd29061e7b1db8f255b65017a5ada8554a31cd9b65625498",
+    "tests/unit/privacy-operations.test.ts": "d937eff37c55c2f01f97f6d4b00602e4bae8bd3c61ebe52528648582eba99359",
+    "tests/unit/owned-ai-privacy-export.test.ts": "e60264549dabb86c91f9db1baea424ca27acc7cbf66d629686a492552374ee19",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-ai-callers.md": "0cc6976a1327b29df5f221682b3aba2a5c1f95fdccb7f193989e71872ae8bda3"
+  },
+  "contracts": {
+    "ai-callers-contract.json": "97c5fac13e0b7503de9e89e8fbd5aeb358bd4685f01ad8e64d14eb97af0c0e6e",
+    "ai-callers-codec-vectors.json": "b1d478091ac6a2b969ac6aa82caa17ab5a390b105197f0a1c211791ff03ca1fc"
+  },
+  "readonlyDependencies": {
+    "status": "ACTUAL_V2_SOURCE_PINS_TRANSFERRED_AUTHOR_TEST_REVIEW_PENDING",
+    "files": {
+      "app/lib/server/ai-budget-source-profile.ts": "6bf27fec35555ba5ac79c3e6293b8ce26c8e8193f85371a06b82ce7b053fd1f6",
+      "app/lib/server/owned-ai-disposition-profile.ts": "98be008699295a98632c34315e23b79703db795ad10808b9e504033a8168a8bb",
+      "app/lib/server/canonical-rewrite-readiness-profile.ts": "f6f9e1b12f02c9b24890ea6c90f1634a30ed4cbf7d3ede637c4722ea7f9fc54a",
+      "app/lib/server/initial-feedback-operation-profile.ts": "4b2d8c7e1e3639b175f75bb6be62659cf1370a85860cd830e0b6d522b2546469",
+      "app/lib/server/initial-feedback-profile.ts": "217dc684d7c0f2f136542b6d97b5b384c21dcc4cc1669120f046fd9004c2474d",
+      "app/lib/server/canonical-rewrite-workspace-profile.ts": "c5f6655a1d668b45af2f9142c13b6c9fe912e7947ce91e81da3f53bd65c3c23c"
+    },
+    "preimagesBackup": "/tmp/resumide-ai-callers-profile-preimages-oyypw_n2",
+    "nativeSha256": "36eb876589f1747e9008551419696e592b06ccdd851dc04fac64ec94cc9fb436"
+  },
+  "readonlyDependencyManifestSha256": "fe21425bea97855a57739e0e5664a27d7d01fe0fb9a918108eed2443e3303519",
+  "evidence": [
+    {
+      "directory": "/tmp/resumide-ai-callers-runtime-HG1LPJ",
+      "receiptSha256": "7cc23b55c322723ddf0e2af0d517dafc78551081b82b552dfef52ec693bb15bc",
+      "logSha256": "7f90fca3ad265b067a56a78e2c1439d2cd6c8e3bb4f035ed66c350e3058306c7",
+      "status": "FAILED_OR_INCOMPLETE",
+      "groups": [
+        {
+          "label": "caller-red",
+          "group": 48465,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 48465,
+            "startIdentity": "48465 48465 Sun Nov 15 21:53:24 2026"
+          },
+          "result": {
+            "code": 1,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 48465,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        }
+      ],
+      "changedInputs": []
+    },
+    {
+      "directory": "/tmp/resumide-ai-callers-runtime-DjJ7CK",
+      "receiptSha256": "a38951f7ea62f07db4c976930e313f19b12d64e66f1693c026d0c7d52deafa8c",
+      "logSha256": "a1b87047f9ebde9e5b074bc73c9bffe89754921f128adf626e5d131ed0a1572e",
+      "status": "PASS",
+      "groups": [
+        {
+          "label": "caller-core",
+          "group": 49233,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 49233,
+            "startIdentity": "49233 49233 Sun Nov 15 21:56:43 2026"
+          },
+          "result": {
+            "code": 0,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 49233,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        }
+      ],
+      "changedInputs": []
+    },
+    {
+      "directory": "/tmp/resumide-ai-callers-runtime-AUSJmx",
+      "receiptSha256": "109be27ec6a2158a2ed0085018e8f24dbe11367cf6f0ad126cc1da5858072eea",
+      "logSha256": "9f5f85a4de0531af6bd68d79d70fc5fcbaed720a9ed36a29819b125e53fcbd07",
+      "status": "FAILED_OR_INCOMPLETE",
+      "groups": [
+        {
+          "label": "caller-focused",
+          "group": 49405,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 49405,
+            "startIdentity": "49405 49405 Sun Nov 15 21:58:14 2026"
+          },
+          "result": {
+            "code": 1,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 49405,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        }
+      ],
+      "changedInputs": []
+    },
+    {
+      "directory": "/tmp/resumide-ai-callers-runtime-7Tc79u",
+      "receiptSha256": "c9701f337b237ec6e8be04251d500dc84a8c310628e188c75def62b3edef6ed9",
+      "logSha256": "958f944383d3c6d576afc05931f61c920dac4de26841d14d1900b04fc7ccfc12",
+      "status": "PASS",
+      "groups": [
+        {
+          "label": "caller-focused",
+          "group": 49516,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 49516,
+            "startIdentity": "49516 49516 Sun Nov 15 21:58:47 2026"
+          },
+          "result": {
+            "code": 0,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 49516,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        }
+      ],
+      "changedInputs": []
+    },
+    {
+      "directory": "/tmp/resumide-ai-callers-runtime-2BA8SL",
+      "receiptSha256": "a55090c8d954d9b47ca3451a099863de6194d551d4c8d6f06482514db64bcc9b",
+      "logSha256": "fe0ad3dd681fd3055be778993ccac8d1cd1e07583c59d8c88bb554a855cc8571",
+      "status": "FAILED_OR_INCOMPLETE",
+      "groups": [
+        {
+          "label": "scoped-format",
+          "group": 49586,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 49586,
+            "startIdentity": "49586 49586 Sun Nov 15 21:59:01 2026"
+          },
+          "result": {
+            "code": 0,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 49586,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        }
+      ],
+      "changedInputs": [
+        "app/lib/server/ai-budget-source-export.ts",
+        "app/lib/server/ai-budget-source.ts",
+        "app/lib/server/build-assist-service.ts",
+        "app/lib/server/canonical-rewrite-repository.ts",
+        "app/lib/server/initial-feedback-service.ts",
+        "app/lib/server/qualitative-stage.ts",
+        "tests/unit/ai-budget-source-export.test.ts",
+        "tests/unit/ai-budget-source.test.ts",
+        "tests/unit/build-assist-budget.test.ts",
+        "tests/unit/canonical-rewrite-repository.test.ts",
+        "tests/unit/initial-feedback-service.test.ts",
+        "tests/unit/owned-ai-privacy-export.test.ts",
+        "tests/unit/privacy-operations.test.ts",
+        "tests/unit/privacy.test.ts",
+        "tests/unit/provider-cancellation.test.ts"
+      ]
+    },
+    {
+      "directory": "/tmp/resumide-ai-callers-runtime-4qCHQy",
+      "receiptSha256": "6dafa718faef9a3e82f776ebb7e57eaa7706ab5c828e751d33bc253147e50447",
+      "logSha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "status": "PASS",
+      "groups": [
+        {
+          "label": "scoped-format-check",
+          "group": 49661,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 49661,
+            "startIdentity": "49661 49661 Sun Nov 15 21:59:49 2026"
+          },
+          "result": {
+            "code": 0,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 49661,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        },
+        {
+          "label": "scoped-lint",
+          "group": 49668,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 49668,
+            "startIdentity": "49668 49668 Sun Nov 15 21:59:49 2026"
+          },
+          "result": {
+            "code": 0,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 49668,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        }
+      ],
+      "changedInputs": []
+    },
+    {
+      "directory": "/tmp/resumide-ai-callers-runtime-OgTAeT",
+      "receiptSha256": "6f468041c57f0f8e9f8f216115a00c8b92054bc4cac414eb60d24a7e8ad7261d",
+      "logSha256": "cf1bc9a0902ece462fdb53f27124e55011cf2310a1a0df192eb6b848de5e43bb",
+      "status": "FAILED_OR_INCOMPLETE",
+      "groups": [
+        {
+          "label": "types",
+          "group": 49809,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 49809,
+            "startIdentity": "49809 49809 Sun Nov 15 22:01:08 2026"
+          },
+          "result": {
+            "code": 2,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 49809,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        }
+      ],
+      "changedInputs": []
+    },
+    {
+      "directory": "/tmp/resumide-ai-callers-runtime-QIe7x3",
+      "receiptSha256": "2ebe64671ea92c888164a9db1e2cf8d7402b1474cea4413d0a71508a56a5c2c1",
+      "logSha256": "450d3262a9be51fb6a0c6be4330b10aa29e54ded33e4c0cfa84310d4c6707c0b",
+      "status": "FAILED_OR_INCOMPLETE",
+      "groups": [
+        {
+          "label": "scoped-format",
+          "group": 50350,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 50350,
+            "startIdentity": "50350 50350 Sun Nov 15 22:06:28 2026"
+          },
+          "result": {
+            "code": 0,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 50350,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        }
+      ],
+      "changedInputs": [
+        "tests/unit/owned-ai-privacy-export.test.ts"
+      ]
+    },
+    {
+      "directory": "/tmp/resumide-ai-callers-runtime-2f711J",
+      "receiptSha256": "073ac4d82ccc268c63c5ba09f76ee66d3c82d88c7e9177b0e1e7ae5735afd445",
+      "logSha256": "7b8be6463327e095f796842aa437aa7da405cbfedf00cfed0458dd9e115e3aed",
+      "status": "PASS",
+      "groups": [
+        {
+          "label": "caller-focused",
+          "group": 50379,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 50379,
+            "startIdentity": "50379 50379 Sun Nov 15 22:06:33 2026"
+          },
+          "result": {
+            "code": 0,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 50379,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        }
+      ],
+      "changedInputs": []
+    },
+    {
+      "directory": "/tmp/resumide-ai-callers-runtime-6yD5QY",
+      "receiptSha256": "f5a3004c45fc8628230f2351e680f87a1850d04c53353f8edd0239b558dcf026",
+      "logSha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "status": "PASS",
+      "groups": [
+        {
+          "label": "scoped-format-check",
+          "group": 50418,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 50418,
+            "startIdentity": "50418 50418 Sun Nov 15 22:06:44 2026"
+          },
+          "result": {
+            "code": 0,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 50418,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        },
+        {
+          "label": "scoped-lint",
+          "group": 50425,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 50425,
+            "startIdentity": "50425 50425 Sun Nov 15 22:06:44 2026"
+          },
+          "result": {
+            "code": 0,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 50425,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        },
+        {
+          "label": "types",
+          "group": 50432,
+          "absentNow": true,
+          "startIdentity": {
+            "processGroup": 50432,
+            "startIdentity": "50432 50432 Sun Nov 15 22:06:45 2026"
+          },
+          "result": {
+            "code": 0,
+            "signal": null,
+            "startFailed": false,
+            "abortRequested": null,
+            "processGroup": 50432,
+            "manualGroupCleanupRequired": false,
+            "groupCleanupConfirmed": true
+          }
+        }
+      ],
+      "changedInputs": []
+    }
+  ],
+  "finalTests": {
+    "passed": 286,
+    "failed": 0,
+    "skipped": 0,
+    "files": 9,
+    "stableInputs": 911,
+    "temporaryModuleProfileMocksRemoved": 7,
+    "directPrivateHelperFixtures": "Explicitprivateprofile arguments only; production and callerfixtures import actual backend profiles."
+  },
+  "statics": {
+    "format": "PASS fifteen owned files",
+    "lint": "PASS fifteen owned files",
+    "tsc --noEmit": "PASS fullprogram"
+  },
+  "controller": {
+    "path": "/tmp/resumide-ai-callers-runtime-controller.mjs",
+    "sha256": "a5d50968770609b1ccdf05e2f21836c9222291b68a2d5b3510fca060b340a7a8"
+  },
+  "prose": {
+    "/tmp/resumide-ai-callers-prose-before-final.json": "0d4c59f068bc103880139a8413e0712c9d838a91281c41733e137e2f9625fffe",
+    "/tmp/resumide-ai-callers-prose-after-final.json": "b8e9dc861c3ca5d6a17bb4aae1fc8b8d66b423dc94898c822312433f845d04a6",
+    "/tmp/resumide-ai-callers-runtime-handoff.final.cleaned.md": "0cc6976a1327b29df5f221682b3aba2a5c1f95fdccb7f193989e71872ae8bda3"
+  },
+  "boundary": "No Native/DB/provider network/service/browser/dependencies/Git mutation/deployment. Root integrated gate and Native/owner/release acceptance remain open."
+}

@@ -1,0 +1,761 @@
+
+> test
+> vitest run tests/components/CanonicalCorrections.test.tsx -t U03 resolution
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+stderr | tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 resolution retains a rejected edit through unrelated successful and failed actions
+No `HydrateFallback` element provided to render during initial hydration
+
+ ❯ tests/components/CanonicalCorrections.test.tsx (17 tests | 2 failed | 15 skipped) 221ms
+     ↓ U03 draft retains a validated edit in a native server-rendered rejected response
+     ↓ U03 draft retains a validated rename_section in a native server-rendered rejected response
+     ↓ U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery
+     × U03 resolution retains a rejected edit through unrelated successful and failed actions 185ms
+     × U03 resolution preserves separate rejected targets until their own exact successful save 35ms
+     ↓ U03 draft retains text without permitting a historical recovery or inferred replacement target
+     ↓ U03 draft retains text without permitting a missing_target recovery or inferred replacement target
+     ↓ imports a saved correction through the reviewed path and leaves its fact unconfirmed
+     ↓ shows the exact diff and provenance, applies without retyping, and retains the operation key after a retryable failure
+     ↓ requires an explicit employer target and acknowledgement before assignment
+     ↓ reviews an absent-field placement before assigning and then adding an unconfirmed fact
+     ↓ shows undo provenance and requires fresh assignment before explicit reapply
+     ↓ keeps previews available and mutations unavailable when authoritative write readiness is false
+     ↓ keeps original import unavailable until correction write readiness returns
+     ↓ does not apply into a historical selected version or expose technical identifiers as labels
+     ↓ disables correction controls while a submission is pending
+     ↓ preserves the legacy workspace when correction review data is absent
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 resolution retains a rejected edit through unrelated successful and failed actions
+TestingLibraryElementError: Unable to find an accessible element with the role "region" and name "Retained correction"
+
+Here are the accessible roles:
+
+  banner:
+
+  Name "":
+  [36m<header[39m
+    [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "Resumide home":
+  [36m<a[39m
+    [33maria-label[39m=[32m"Resumide home"[39m
+    [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/"[39m
+  [36m/>[39m
+
+  Name "Home":
+  [36m<a[39m
+    [33mclass[39m=[32m"_link_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/"[39m
+  [36m/>[39m
+
+  Name "Analyses":
+  [36m<a[39m
+    [33mclass[39m=[32m"_link_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analyses"[39m
+  [36m/>[39m
+
+  Name "New analysis":
+  [36m<a[39m
+    [33mclass[39m=[32m"_link_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/upload"[39m
+  [36m/>[39m
+
+  Name "Build":
+  [36m<a[39m
+    [33mclass[39m=[32m"_link_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/build"[39m
+  [36m/>[39m
+
+  Name "Home":
+  [36m<a[39m
+    [33mclass[39m=[32m"_link_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/"[39m
+  [36m/>[39m
+
+  Name "Analyses":
+  [36m<a[39m
+    [33mclass[39m=[32m"_link_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analyses"[39m
+  [36m/>[39m
+
+  Name "New analysis":
+  [36m<a[39m
+    [33mclass[39m=[32m"_link_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/upload"[39m
+  [36m/>[39m
+
+  Name "Build":
+  [36m<a[39m
+    [33mclass[39m=[32m"_link_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/build"[39m
+  [36m/>[39m
+
+  Name "Privacy":
+  [36m<a[39m
+    [33mclass[39m=[32m"_link_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/privacy"[39m
+  [36m/>[39m
+
+  Name "Account":
+  [36m<a[39m
+    [33mclass[39m=[32m"_link_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/account"[39m
+  [36m/>[39m
+
+  Name "Sign in":
+  [36m<a[39m
+    [33mclass[39m=[32m"_link_a67a5d"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/auth"[39m
+  [36m/>[39m
+
+  Name "Reload latest version":
+  [36m<a[39m
+    [33mclass[39m=[32m"back-button"[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/canonical"[39m
+  [36m/>[39m
+
+  Name "View source evidence":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/evidence"[39m
+  [36m/>[39m
+
+  Name "Reload correction review":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/canonical"[39m
+  [36m/>[39m
+
+  Name "View cited source (native text, characters 10–20)":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/evidence#source-employer-span"[39m
+  [36m/>[39m
+
+  Name "employer-span, characters 10–20":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/evidence#source-employer-span"[39m
+  [36m/>[39m
+
+  Name "employer-span, characters 10–20":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/evidence#source-employer-span"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  navigation:
+
+  Name "Main navigation":
+  [36m<nav[39m
+    [33maria-label[39m=[32m"Main navigation"[39m
+    [33mclass[39m=[32m"_primary_a67a5d"[39m
+  [36m/>[39m
+
+  Name "Site menu":
+  [36m<nav[39m
+    [33maria-label[39m=[32m"Site menu"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  group:
+
+  Name "":
+  [36m<details[39m
+    [33mclass[39m=[32m"_menu_a67a5d"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "Color theme":
+  [36m<select[39m
+    [33maria-label[39m=[32m"Color theme"[39m
+  [36m/>[39m
+
+  Name "Choose the source and resume target":
+  [36m<select[39m
+    [33mid[39m=[32m"«r1»-target"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  option:
+
+  Name "Light":
+  [36m<option[39m
+    [33mvalue[39m=[32m"light"[39m
+  [36m/>[39m
+
+  Name "Dark":
+  [36m<option[39m
+    [33mvalue[39m=[32m"dark"[39m
+  [36m/>[39m
+
+  Name "System":
+  [36m<option[39m
+    [33mvalue[39m=[32m"system"[39m
+  [36m/>[39m
+
+  Name "Choose a target":
+  [36m<option[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Experience: Cedar Labs — employer":
+  [36m<option[39m
+    [33mvalue[39m=[32m"choose-cedar"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  main:
+
+  Name "":
+  [36m<main[39m
+    [33mclass[39m=[32m"workspace-stage _stage_6777b6"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"workspace-eyebrow"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"workspace-page-description"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Review your resume facts":
+  [36m<h1 />[39m
+
+  Name "Saved evidence corrections":
+  [36m<h2[39m
+    [33mid[39m=[32m"canonical-corrections-heading"[39m
+  [36m/>[39m
+
+  Name "employer correction":
+  [36m<h3[39m
+    [33mid[39m=[32m"«r1»-heading"[39m
+  [36m/>[39m
+
+  Name "Original source context":
+  [36m<h4 />[39m
+
+  Name "Version 2":
+  [36m<h2 />[39m
+
+  Name "Facts and confirmation":
+  [36m<h2[39m
+    [33mid[39m=[32m"facts-heading"[39m
+  [36m/>[39m
+
+  Name "employer: Cedar Labs":
+  [36m<h3 />[39m
+
+  Name "employer: Second employer":
+  [36m<h3 />[39m
+
+  Name "Content preview":
+  [36m<h2[39m
+    [33mid[39m=[32m"preview-heading"[39m
+  [36m/>[39m
+
+  Name "Experience":
+  [36m<h3 />[39m
+
+  Name "Other experience":
+  [36m<h3 />[39m
+
+  Name "Version change record":
+  [36m<h2[39m
+    [33mid[39m=[32m"changes-heading"[39m
+  [36m/>[39m
+
+  Name "Version history":
+  [36m<h2[39m
+    [33mid[39m=[32m"history-heading"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  status:
+
+  Name "":
+  [36m<p[39m
+    [33mrole[39m=[32m"status"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33maria-live[39m=[32m"polite"[39m
+    [33mrole[39m=[32m"status"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  region:
+
+  Name "Saved evidence corrections":
+  [36m<section[39m
+    [33maria-busy[39m=[32m"false"[39m
+    [33maria-labelledby[39m=[32m"canonical-corrections-heading"[39m
+  [36m/>[39m
+
+  Name "Source context":
+  [36m<section[39m
+    [33maria-label[39m=[32m"Source context"[39m
+  [36m/>[39m
+
+  Name "Facts and confirmation":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"facts-heading"[39m
+  [36m/>[39m
+
+  Name "Content preview":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"preview-heading"[39m
+  [36m/>[39m
+
+  Name "Version change record":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"changes-heading"[39m
+  [36m/>[39m
+
+  Name "Version history":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"history-heading"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  article:
+
+  Name "employer correction":
+  [36m<article[39m
+    [33maria-labelledby[39m=[32m"«r1»-heading"[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+    [33mid[39m=[32m"fact-10000000-0000-4000-8000-000000000008"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+    [33mid[39m=[32m"fact-10000000-0000-4000-8000-000000000108"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  time:
+
+  Name "":
+  [36m<time[39m
+    [33mdatetime[39m=[32m"2026-11-10T00:00:00Z"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  term:
+
+  Name "":
+  [36m<dt />[39m
+
+  Name "":
+  [36m<dt />[39m
+
+  --------------------------------------------------
+  definition:
+
+  Name "":
+  [36m<dd />[39m
+
+  Name "":
+  [36m<dd />[39m
+
+  --------------------------------------------------
+  blockquote:
+
+  Name "":
+  [36m<blockquote />[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "":
+  [36m<ul />[39m
+
+  Name "":
+  [36m<ul />[39m
+
+  Name "":
+  [36m<ul />[39m
+
+  Name "":
+  [36m<ul />[39m
+
+  Name "":
+  [36m<ol />[39m
+
+  Name "":
+  [36m<ol />[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  --------------------------------------------------
+  checkbox:
+
+  Name "I reviewed this target and proposed change.":
+  [36m<input[39m
+    [33mid[39m=[32m"«r1»-acknowledgement"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Save correction target":
+  [36m<button[39m
+    [33mclass[39m=[32m"back-button"[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm employer: Cedar Labs":
+  [36m<button[39m
+    [33mclass[39m=[32m"back-button"[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save correction for employer: Cedar Labs":
+  [36m<button[39m
+    [33mclass[39m=[32m"back-button"[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm employer: Second employer":
+  [36m<button[39m
+    [33mclass[39m=[32m"back-button"[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save correction for employer: Second employer":
+  [36m<button[39m
+    [33mclass[39m=[32m"back-button"[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Correct employer: Cedar Labs":
+  [36m<textarea[39m
+    [33mid[39m=[32m"edit-10000000-0000-4000-8000-000000000008"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Correct employer: Second employer":
+  [36m<textarea[39m
+    [33mid[39m=[32m"edit-10000000-0000-4000-8000-000000000108"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+    [36m>[39m
+      [36m<header[39m
+        [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33maria-label[39m=[32m"Resumide home"[39m
+          [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"brand-lockup is-compact"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-wordmark"[39m
+            [36m>[39m
+              [0mResumide[0m
+              [36m<svg[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"brand-leaf"[39m
+                [33mfocusable[39m=[32m"false"[39m
+                [33mviewBox[39m=[32m"0 0 28 34"[39m
+              [36m>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                [36m/>[39m
+                [36m<path[39m
+                  [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                [36m/>[39m
+              [36m</svg>[39m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-descriptor"[39m
+            [36m>[39m
+              [0mEvidence desk[0m
+            [36m</span>[39m
+          [36m</span>[39m
+        [36m</a>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Main navigation"[39m
+          [33mclass[39m=[32m"_primary_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [0mHome[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/analyses"[39m
+          [36m>[39m
+            [0mAnalyses[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/upload"[39m
+          [36m>[39m
+            [0mNew analysis[0m
+          [36m</a>[39m
+          [36m<a[39m
+            [33mclass[39m=[32m"_link_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/build"[39m
+          [36m>[39m
+            [0mBuild[0m
+          [36m</a>[39m
+        [36m</nav>[39m
+        [36m<details[39m
+          [33mclass[39m=[32m"_menu_a67a5d"[39m
+        [36m>[39m
+          [36m<summary[39m
+            [33maria-label[39m=[32m"Open site menu"[39m
+          [36m>[39m
+            [0mMenu [0m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+            [36m>[39m
+              [0m☰[0m
+            [36m</span>[39m
+          [36m</summary>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Site menu"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+            [36m>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/"[39m
+              [36m>[39m
+                [0mHome[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analyses"[39m
+              [36m>[39m
+                [0mAnalyses[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/upload"[39m
+              [36m>[39m
+                [0mNew analysis[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/build"[39m
+              [36m>[39m
+                [0mBuild[0m
+              [36m</a>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/privacy"[39m
+            [36m>[39m
+              [0mPrivacy[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/account"[39m
+            [36m>[39m
+              [0mAccount[0m
+            [36m</a>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"_theme_a67a5d"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"theme-control"[39m
+                [33mtitle[39m=[32m"Choose color theme"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"theme-control-icon"[39m
+                [36m>[39m
+                  [0m◐[0m
+                [36m</span>[39m
+                [36m<span[39m
+                  [33mclass[39m=[32m"sr-only"[39m
+                [36m>[39m
+                  [0mColor theme[0m
+                [36m</span>[39m
+                [36m<select[39m
+                  [33maria-label[39m=[32m"Color theme"[39m
+                [36m>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"light"[39m
+                  [36m>[39m
+                    [0mLight[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"dark"[39m
+                  [36m>[39m
+                    [0mDark[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"system"[39m
+                  [36m>[39m
+                    [0mSystem[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</label>[39m
+            [36m</div>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/auth"[39m
+            [36m>[39m
+              [0mSign in[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+        [36m</details>[39m
+   ...
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:109:15
+ ❯ values tests/components/CanonicalCorrections.test.tsx:461:8
+    459|   const values = () =>
+    460|     screen
+    461|       .getAllByRole("region", { name: "Retained correction" })
+       |        ^
+    462|       .map(
+    463|         (region) =>
+ ❯ tests/components/CanonicalCorrections.test.tsx:654:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 resolution preserves separate rejected targets until their own exact successful save
+AssertionError: expected [ 'Other retained title' ] to deeply equal [ …(2) ]
+
+- Expected
++ Received
+
+  [
+-   "Retained & <strong>candidate draft</strong>",
+    "Other retained title",
+  ]
+
+ ❯ tests/components/CanonicalCorrections.test.tsx:708:22
+    706|     } as Extract<RetainedSubmission, { operation: "rename_section" }>;
+    707|     await perform(b, "failure");
+    708|     expect(values()).toEqual([a.value, b.value]);
+       |                      ^
+    709|     await perform(
+    710|       {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 15 skipped (17)
+   Start at  00:00:42
+   Duration  752ms (transform 155ms, setup 0ms, import 248ms, tests 221ms, environment 223ms)
+

@@ -1,0 +1,20 @@
+import { runCommand } from '/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/scripts/verify-private-aa7.mjs';
+import { readdirSync, readFileSync, openSync, closeSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { join } from 'node:path';
+const root='/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats';
+const packet='/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-regroup-diff-x350jk0a';
+const node='/Users/vaibhavsuman/.codex/tools/resumide-node22/v22.23.4-darwin-arm64/node';
+const [stage,...args]=process.argv.slice(2);
+const sha=b=>createHash('sha256').update(b).digest('hex');
+function inputs(){const out={};function visit(rel){for(const e of readdirSync(join(root,rel),{withFileTypes:true})){const name=rel?rel+'/'+e.name:e.name;if(/(^|\/)(?:\.env[^/]*|private|\.private|secrets|credentials)(\/|$)/i.test(name))continue;if(e.isDirectory())visit(name);else if(e.isFile()&&/\.(?:tsx?|m?js|json|css|sql|py|toml|ya?ml)$/.test(name))out[name]=sha(readFileSync(join(root,name)));}}for(const name of ['app','tests','scripts','types','supabase','.github'])visit(name);for(const name of ['package.json','package-lock.json','tsconfig.json','vitest.config.ts','eslint.config.js','.prettierrc.json'])out[name]=sha(readFileSync(join(root,name)));return out;}
+const before=inputs();
+const log=join(packet,stage+'.log');const fd=openSync(log,'wx',0o600);
+const env={PATH:'/Users/vaibhavsuman/.codex/tools/resumide-node22/v22.23.4-darwin-arm64:/usr/bin:/bin:/usr/sbin:/sbin',HOME:'/Users/vaibhavsuman',TMPDIR:'/tmp',LANG:'en_US.UTF-8',TZ:'Asia/Kolkata',NODE_ENV:'test',RESUMIDE_PRIVATE_VERIFY:'aa7-owned-synthetic',AI_ENABLED:'false',SUPABASE_URL:'https://synthetic.invalid',SUPABASE_PUBLISHABLE_KEY:'synthetic-no-live-publishable',SUPABASE_SECRET_KEY:'synthetic-no-live-secret',APP_ORIGIN:'https://fixture.test',OPENAI_API_KEY:'synthetic-no-live-key'};
+const startedAt=new Date().toISOString();let processInfo;
+const result=await runCommand(node,args,{cwd:root,env,logFd:fd,onStart:v=>processInfo=v});closeSync(fd);
+const after=inputs();const changed=Object.keys({...before,...after}).filter(k=>before[k]!==after[k]);
+const receipt={status:result.code===0&&changed.length===0?'PASS':'FAIL',node:process.version,args,sourceHashes:before,sourceInputs:Object.keys(before).length,startedAt,finishedAt:new Date().toISOString(),environment:'SEALED_NO_DOTENV_NO_LIVE_CREDENTIALS',providerRequests:0,databaseOperations:0,log,logSha256:sha(readFileSync(log)),process:processInfo,result,changedSourceInputs:changed};
+writeFileSync(join(packet,stage+'.json'),JSON.stringify(receipt,null,2)+'\n',{flag:'wx',mode:0o600});
+process.stdout.write(JSON.stringify({stage,status:receipt.status,result,changedSourceInputs:changed,logSha256:receipt.logSha256})+'\n');
+process.exitCode=result.code??1;

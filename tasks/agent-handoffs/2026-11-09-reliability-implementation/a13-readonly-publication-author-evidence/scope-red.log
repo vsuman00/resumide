@@ -1,0 +1,57 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/initial-feedback-publication-repository.test.ts (16 tests | 2 failed | 14 skipped) 54ms
+     ↓ reads actual strict available current without inventing currentness
+     ↓ reads actual strict available historical without inventing currentness
+     ↓ retains explicit legacy_unbound and pending, not an empty assessed publication
+     ↓ refuses staged reader capability and malformed/missing full metadata before data RPC
+     ↓ correlates publication owner/org/analysis, including self-consistent foreign receipt
+     ↓ finishes exact deterministic-only and unchanged producer numbers using actual native parameter names
+     ↓ finishes an actual useful compiled plan without changing content-only support authority
+     ↓ refuses another completion or receipt binding rather than accepting nonempty saved prose
+     ↓ refuses invalid audit/foreign operation before any mutation
+     ↓ exports complete strict owner rows without current-org/analysis filtering or JSONB digest emulation
+     ↓ keeps empty owner export versioned and refuses missing/denied results instead of fallback
+     ↓ refuses whole export on foreign owner, incomplete member rows or duplicate publication
+     ↓ fails oversized export whole without returning a prefix
+     ↓ bounds stalled read without an ignored-abort follow-on data call
+     × reads an owned publication with lease-free owner/org/analysis scope 39ms
+     × exports the complete account using owner identity only, no invented lease/analysis/org 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-publication-repository.test.ts > read-only publication callers have no fabricated worker context > reads an owned publication with lease-free owner/org/analysis scope
+InitialFeedbackOperationError: Initial feedback operation is unavailable.
+ ❯ parse app/lib/server/initial-feedback-publication-repository.ts:196:9
+    194|     /* No raw decode errors. */
+    195|   }
+    196|   throw new InitialFeedbackOperationError(
+       |         ^
+    197|     submitted ? "unavailable" : "invalid",
+    198|     submitted ? "unknown" : "not_sent",
+ ❯ createInitialFeedbackPublicationRepository app/lib/server/initial-feedback-publication-repository.ts:245:17
+ ❯ tests/unit/initial-feedback-publication-repository.test.ts:653:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/unit/initial-feedback-publication-repository.test.ts > read-only publication callers have no fabricated worker context > exports the complete account using owner identity only, no invented lease/analysis/org
+InitialFeedbackOperationError: Initial feedback operation is unavailable.
+ ❯ parse app/lib/server/initial-feedback-publication-repository.ts:196:9
+    194|     /* No raw decode errors. */
+    195|   }
+    196|   throw new InitialFeedbackOperationError(
+       |         ^
+    197|     submitted ? "unavailable" : "invalid",
+    198|     submitted ? "unknown" : "not_sent",
+ ❯ createInitialFeedbackPublicationRepository app/lib/server/initial-feedback-publication-repository.ts:245:17
+ ❯ tests/unit/initial-feedback-publication-repository.test.ts:659:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 14 skipped (16)
+   Start at  15:26:03
+   Duration  384ms (transform 148ms, setup 0ms, import 260ms, tests 54ms, environment 0ms)
+

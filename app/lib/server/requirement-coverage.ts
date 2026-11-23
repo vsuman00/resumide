@@ -1,0 +1,826 @@
+import { createHash } from "node:crypto";
+import { z } from "zod";
+import {
+  deriveRequirementSemanticEvidence,
+  RequirementSemanticEvidenceSchema,
+  REQUIREMENT_SEMANTIC_POLICY_VERSION,
+  REQUIREMENT_SEMANTIC_POLICY_SHA256,
+  type RequirementSemanticEvidence,
+} from "./requirement-semantic-evidence";
+import {
+  validateRequirementRelationshipContext,
+  type RequirementRelationshipContext,
+} from "./requirement-relationship-context";
+import {
+  JobRequirementRelationsSchema,
+  type JobRequirementRelations,
+} from "./job-requirement-admission";
+import {
+  evaluateRequirementDuration,
+  REQUIREMENT_DURATION_POLICY,
+  type RequirementDurationResult,
+} from "./requirement-duration";
+import {
+  deriveJobDurationSubjects,
+  JobDurationSubjectInterpretationSchema,
+  JOB_DURATION_SUBJECT_POLICY_VERSION,
+  JOB_DURATION_SUBJECT_POLICY_SHA256,
+} from "./job-duration-subject";
+import { deriveReviewedSkillSections } from "./job-requirements";
+
+const sha = (value: string) => createHash("sha256").update(value).digest("hex");
+const fold = (value: string) =>
+  value.replace(/[A-Z]/gu, (c) => c.toLowerCase()).replace(/[\t ]+/gu, " ");
+const durationSha256 = sha(JSON.stringify(REQUIREMENT_DURATION_POLICY));
+export const REQUIREMENT_COVERAGE_POLICY_VERSION =
+  "typed-fact-coverage/1.2.0" as const;
+const COVERAGE_SCHEMA_VERSION = "requirement-coverage/1.2.0" as const;
+export const REQUIREMENT_COVERAGE_POLICY = Object.freeze({
+  version: REQUIREMENT_COVERAGE_POLICY_VERSION,
+  semanticVersion: REQUIREMENT_SEMANTIC_POLICY_VERSION,
+  semanticSha256: REQUIREMENT_SEMANTIC_POLICY_SHA256,
+  durationVersion: REQUIREMENT_DURATION_POLICY.version,
+  durationSha256,
+  durationSubjectVersion: JOB_DURATION_SUBJECT_POLICY_VERSION,
+  durationSubjectSha256: JOB_DURATION_SUBJECT_POLICY_SHA256,
+  matching: "approved-concept-or-ASCII-case-space-exact-literal-only",
+  actualState: "not_evaluated",
+  contribution: "exact-source-whole-current-fact-owner-confirmed",
+  declarations: "recorded-never-independent-proficiency-or-repeat-confirmation",
+  fragmentConfirmation: "current-fact-only-never-full-source-clause",
+  duration:
+    "same-skill-subject-union-all-matching-intervals; positive-requires-whole-confirmed-source",
+  clauses: "persisted-flat-AND-OR-polarity-importance-with-retained-unknowns",
+  skillsSections:
+    "exact-standalone-preferred-or-mandatory-skills-heading; explicit-clause-scope-and-negation-win",
+  durationSubjects:
+    "post-admission-explicit-typed-skill-subject-only; stored-expression-preserved; no-ambiguous-group-distribution",
+  dedup:
+    "concept-or-literal-evidence-group; clause-semantic-group-preserves-importance",
+  limits: Object.freeze({
+    clauses: 300,
+    operands: 1024,
+    work: 500000,
+    displayWitnessesPerOperand: 20,
+    witnesses: 1000,
+    outputUtf8Bytes: 5242880,
+  }),
+});
+export const REQUIREMENT_COVERAGE_POLICY_SHA256 = sha(
+  JSON.stringify(REQUIREMENT_COVERAGE_POLICY),
+);
+const MatchState = z.enum([
+  "satisfied",
+  "partially_satisfied",
+  "candidate_confirmation_required",
+  "not_evidenced",
+  "not_applicable",
+  "not_evaluated",
+]);
+type MatchState = z.infer<typeof MatchState>;
+const reason = z.enum([
+  "literal_contribution_supported",
+  "source_confirmation_missing",
+  "declaration_recorded_source_support_missing",
+  "source_dated_clause_requires_review",
+  "listed_skill_not_proficiency",
+  "proficiency_not_verified",
+  "no_supporting_witness",
+  "duration_evidence_missing",
+  "duration_interpretation_unknown",
+  "duration_not_established",
+  "duration_confirmation_missing",
+  "duration_subject_unknown",
+  "unknown_requirement",
+  "negated_requirement",
+  "importance_unknown",
+  "contextual_requirement",
+  "alternatives_supported",
+  "conjunction_supported",
+  "partial_group_support",
+  "group_confirmation_missing",
+  "group_support_unknown",
+]);
+type Reason = z.infer<typeof reason>;
+const explanations: Record<Reason, string> = {
+  literal_contribution_supported:
+    "An exact source contribution and its current owner confirmation support this bounded literal observation; authoritative evaluation remains withheld.",
+  source_confirmation_missing:
+    "An exact source contribution is present. Its current claim still needs owner confirmation; proficiency is not independently verified.",
+  declaration_recorded_source_support_missing:
+    "Your exact declaration is recorded. Supporting source evidence and the requirement's full scope still need review; you do not need to repeat that confirmation.",
+  source_dated_clause_requires_review:
+    "A source-reported dated clause is visible. Its fragments do not confirm the complete clause or independently establish the requirement.",
+  listed_skill_not_proficiency:
+    "The skill listing is recorded. A listing alone does not establish contribution, proficiency or skill-specific duration.",
+  proficiency_not_verified:
+    "A related contribution is present, but this proficiency claim is not independently established.",
+  no_supporting_witness:
+    "The available evidence does not establish this skill requirement. Missing or ambiguous evidence remains unknown, not a judgment that you are unqualified.",
+  duration_evidence_missing:
+    "Related evidence is present, but no explicit interval is associated with this skill-use claim.",
+  duration_interpretation_unknown:
+    "The explicit intervals or calendar boundary remain ambiguous for this duration requirement.",
+  duration_not_established:
+    "The admitted intervals do not establish this duration bound; other or missing experience has not been assessed.",
+  duration_confirmation_missing:
+    "Dated source claims are visible, but a fragment confirmation does not confirm the complete dated clause. Recorded declarations are not independent source verification.",
+  duration_subject_unknown:
+    "This duration clause does not establish which skill or responsibility its period applies to.",
+  unknown_requirement:
+    "The saved requirement has no supported, unambiguous interpretation.",
+  negated_requirement:
+    "The negated clause is preserved for review; it is not automatically satisfied or excluded.",
+  importance_unknown:
+    "Requirement importance is unknown and remains separate from the evidence observations.",
+  contextual_requirement:
+    "This contextual clause is preserved without treating it as a required or preferred qualification.",
+  alternatives_supported:
+    "At least one explicit alternative has bounded supporting evidence. No duplicate credit or authoritative score is granted.",
+  conjunction_supported:
+    "Each explicitly required skill has bounded supporting evidence. No duplicate credit or authoritative score is granted.",
+  partial_group_support:
+    "Some skills have related evidence; the complete requirement still needs review.",
+  group_confirmation_missing:
+    "The mapped source evidence still needs the stated current-claim confirmation, not another confirmation of an already recorded declaration.",
+  group_support_unknown:
+    "Evidence for the complete requirement is insufficient, so it remains unknown.",
+};
+const jdClause =
+  JobRequirementRelationsSchema.shape.relations.shape.clauses.element;
+const span = jdClause.shape.evidence;
+const mapping =
+  JobRequirementRelationsSchema.shape.requirements.element.shape.mapping.unwrap();
+const semanticAvailable = RequirementSemanticEvidenceSchema.options[0];
+const semanticWitness = semanticAvailable.shape.witnesses.element;
+const semanticBinding = semanticAvailable.shape.binding;
+const count = z.number().int().nonnegative();
+const band = z
+  .strictObject({ minimum: count, maximum: count })
+  .refine((v) => v.minimum <= v.maximum);
+const durationResult = z.strictObject({
+  schemaVersion: z.literal("requirement-duration-result/1.0.0"),
+  policyVersion: z.literal(REQUIREMENT_DURATION_POLICY.version),
+  policySha256: z.literal(durationSha256),
+  subjectId: z.string().min(1).max(200),
+  scoringEligible: z.literal(false),
+  state: z.enum(["satisfied", "not_satisfied", "unknown"]),
+  reason: z.enum([
+    "comparison_decisive",
+    "endpoint_or_calendar_ambiguity",
+    "requirement_duration_unknown",
+    "requirement_duration_not_stated",
+    "no_intervals",
+  ]),
+  durationDays: band,
+  unionComponents: z.strictObject({ exclusiveEnd: count, inclusiveEnd: count }),
+  basis: z.enum([
+    "none",
+    "continuous_calendar_anniversary",
+    "cumulative_calendar_band",
+  ]),
+  comparisons: z
+    .array(
+      z.strictObject({
+        side: z.enum(["lower", "upper"]),
+        years: z.number().int().min(0).max(100),
+        inclusive: z.boolean(),
+        thresholdDays: band,
+        state: z.enum(["satisfied", "not_satisfied", "unknown"]),
+      }),
+    )
+    .max(2),
+});
+const operandSchema = z.strictObject({
+  id: z.string().regex(/^coverage-operand-[a-f0-9]{64}$/u),
+  value: z.string().min(1).max(2000),
+  evidence: span,
+  sourceRequirementIds: z.array(z.uuid()).max(300),
+  mapping,
+  subjectId: z.string().min(1).max(200),
+  dedupGroup: z.string().regex(/^coverage-subject-[a-f0-9]{64}$/u),
+  duplicateOf: z
+    .string()
+    .regex(/^coverage-operand-[a-f0-9]{64}$/u)
+    .nullable(),
+  state: z.literal("not_evaluated"),
+  proposedState: MatchState,
+  reason,
+  explanation: z.string().min(1).max(300),
+  tiers: z.array(semanticWitness.shape.tier).max(4),
+  matches: z
+    .array(
+      z.strictObject({
+        witnessId: semanticWitness.shape.id,
+        matchKind: z.enum(["exact_literal", "approved_alias"]),
+      }),
+    )
+    .max(20),
+  matchingWitnessCount: count,
+  additionalWitnessCount: count,
+  factIds: z.array(z.uuid()).max(20),
+  additionalFactCount: count,
+  duration: durationResult.nullable(),
+  confirmedSourceDuration: durationResult.nullable(),
+});
+const clauseSchema = z.strictObject({
+  id: z.string().regex(/^[a-f0-9]{64}$/u),
+  evidence: span,
+  sourceRequirementIds: z.array(z.uuid()).max(300),
+  scope: jdClause.shape.scope,
+  scopeHeading: span.nullable(),
+  expressionKind: z.enum(["atom", "all_of", "any_of", "unknown"]),
+  storedExpressionKind: z.enum(["atom", "all_of", "any_of", "unknown"]),
+  durationSubjectInterpretation:
+    JobDurationSubjectInterpretationSchema.nullable(),
+  durationRequirement: jdClause.shape.duration,
+  dedupGroup: z.string().regex(/^coverage-clause-[a-f0-9]{64}$/u),
+  duplicateOf: z
+    .string()
+    .regex(/^[a-f0-9]{64}$/u)
+    .nullable(),
+  state: z.literal("not_evaluated"),
+  proposedState: MatchState,
+  reason,
+  explanation: z.string().min(1).max(300),
+  operands: z.array(operandSchema).max(32),
+});
+const policySchema = z.strictObject({
+  version: z.literal(REQUIREMENT_COVERAGE_POLICY_VERSION),
+  sha256: z.literal(REQUIREMENT_COVERAGE_POLICY_SHA256),
+  semanticVersion: z.literal(REQUIREMENT_SEMANTIC_POLICY_VERSION),
+  semanticSha256: z.literal(REQUIREMENT_SEMANTIC_POLICY_SHA256),
+  durationVersion: z.literal(REQUIREMENT_DURATION_POLICY.version),
+  durationSha256: z.literal(durationSha256),
+  durationSubjectVersion: z.literal(JOB_DURATION_SUBJECT_POLICY_VERSION),
+  durationSubjectSha256: z.literal(JOB_DURATION_SUBJECT_POLICY_SHA256),
+});
+const common = {
+  schemaVersion: z.literal(COVERAGE_SCHEMA_VERSION),
+  authority: z.literal("derived_typed_requirement_diagnostics"),
+  scoringEligible: z.literal(false),
+  policy: policySchema,
+};
+export const RequirementCoverageSchema = z.discriminatedUnion("state", [
+  z.strictObject({
+    ...common,
+    state: z.literal("available"),
+    binding: semanticBinding,
+    digest: z.string().regex(/^[a-f0-9]{64}$/u),
+    clauses: z.array(clauseSchema).max(300),
+    retainedClauses: JobRequirementRelationsSchema.shape.retainedClauses,
+    witnesses: z.array(semanticWitness).max(1000),
+    semanticUnresolved: semanticAvailable.shape.unresolved,
+    witnessCounts: z.strictObject({
+      semantic: count,
+      matching: count,
+      deduplicated: count,
+      displayed: count,
+      additionalMatching: count,
+      unmatched: count,
+    }),
+    unavailableReason: z.null(),
+  }),
+  z.strictObject({
+    ...common,
+    state: z.literal("unavailable"),
+    binding: semanticBinding.nullable(),
+    digest: z.null(),
+    clauses: z.array(clauseSchema).length(0),
+    retainedClauses:
+      JobRequirementRelationsSchema.shape.retainedClauses.length(0),
+    witnesses: z.array(semanticWitness).length(0),
+    semanticUnresolved: semanticAvailable.shape.unresolved.length(0),
+    witnessCounts: z.null(),
+    unavailableReason: z.enum([
+      "invalid_context",
+      "unsupported_context",
+      "semantic_unavailable",
+      "resource_limit",
+    ]),
+  }),
+]);
+export type RequirementCoverage = z.infer<typeof RequirementCoverageSchema>;
+type Available = Extract<RequirementCoverage, { state: "available" }>;
+type SemanticAvailable = Extract<
+  RequirementSemanticEvidence,
+  { state: "available" }
+>;
+type Witness = SemanticAvailable["witnesses"][number];
+type Atom = Extract<
+  JobRequirementRelations["relations"]["clauses"][number]["skillExpression"],
+  { kind: "atom" }
+>;
+type Duration =
+  JobRequirementRelations["relations"]["clauses"][number]["duration"];
+type Operand = z.infer<typeof operandSchema>;
+const flags = {
+  schemaVersion: COVERAGE_SCHEMA_VERSION,
+  authority: "derived_typed_requirement_diagnostics",
+  scoringEligible: false,
+  policy: {
+    version: REQUIREMENT_COVERAGE_POLICY_VERSION,
+    sha256: REQUIREMENT_COVERAGE_POLICY_SHA256,
+    semanticVersion: REQUIREMENT_SEMANTIC_POLICY_VERSION,
+    semanticSha256: REQUIREMENT_SEMANTIC_POLICY_SHA256,
+    durationVersion: REQUIREMENT_DURATION_POLICY.version,
+    durationSha256,
+    durationSubjectVersion: JOB_DURATION_SUBJECT_POLICY_VERSION,
+    durationSubjectSha256: JOB_DURATION_SUBJECT_POLICY_SHA256,
+  },
+} as const;
+class ResourceLimit extends Error {}
+function unavailable(
+  why: Extract<
+    RequirementCoverage,
+    { state: "unavailable" }
+  >["unavailableReason"],
+  binding: z.infer<typeof semanticBinding> | null,
+): RequirementCoverage {
+  return {
+    ...flags,
+    state: "unavailable",
+    binding,
+    digest: null,
+    clauses: [],
+    retainedClauses: [],
+    witnesses: [],
+    semanticUnresolved: [],
+    witnessCounts: null,
+    unavailableReason: why,
+  };
+}
+function fullSourceConfirmation(w: Witness) {
+  return (
+    w.basis === "source_quote" &&
+    w.sourceClause === null &&
+    w.offsetSpace === "current_fact" &&
+    w.currentSourceCitations.length > 0 &&
+    w.confirmation !== null &&
+    w.confirmation.value === w.clause.value
+  );
+}
+function subject(value: string, concept: string | null) {
+  return concept ? "concept:" + concept : "literal:" + sha(fold(value));
+}
+/** Produces typed observations from the actual owned context and internally
+ * derived semantic witnesses. It grants no source authentication or score. */
+export function evaluateRequirementCoverage(
+  rawContext: unknown,
+): RequirementCoverage {
+  let context: RequirementRelationshipContext;
+  let semantic: RequirementSemanticEvidence;
+  let durationSubjects: ReturnType<typeof deriveJobDurationSubjects>;
+  try {
+    const key = z
+      .object({
+        source: z.object({ ownerId: z.uuid(), analysisId: z.uuid() }),
+        canonical: z.object({ versionId: z.uuid() }),
+        requirements: z.object({ versionId: z.uuid() }),
+      })
+      .parse(rawContext);
+    context = validateRequirementRelationshipContext(
+      rawContext,
+      key.source.analysisId,
+      key.source.ownerId,
+      {
+        canonicalVersionId: key.canonical.versionId,
+        requirementVersionId: key.requirements.versionId,
+      },
+    );
+    semantic = deriveRequirementSemanticEvidence(context);
+    durationSubjects = deriveJobDurationSubjects(context.requirements.content);
+  } catch {
+    return unavailable("invalid_context", null);
+  }
+  if (semantic.state !== "available")
+    return unavailable(
+      semantic.unavailableReason === "unsupported_context"
+        ? "unsupported_context"
+        : semantic.unavailableReason === "resource_limit"
+          ? "resource_limit"
+          : "semantic_unavailable",
+      semantic.binding,
+    );
+  const binding = semantic.binding;
+  if (durationSubjects.state !== "available")
+    return unavailable(
+      durationSubjects.unavailableReason === "resource_limit"
+        ? "resource_limit"
+        : "invalid_context",
+      binding,
+    );
+  let work = 0;
+  const charge = (n = 1) => {
+    work += n;
+    if (work > REQUIREMENT_COVERAGE_POLICY.limits.work)
+      throw new ResourceLimit();
+  };
+  try {
+    const byConcept = new Map<string, Witness[]>(),
+      byLiteral = new Map<string, Witness[]>();
+    const add = (map: Map<string, Witness[]>, key: string, w: Witness) => {
+      const prior = map.get(key);
+      if (prior) prior.push(w);
+      else map.set(key, [w]);
+    };
+    for (const w of semantic.witnesses) {
+      charge();
+      if (w.skill.identity.conceptId)
+        add(byConcept, w.skill.identity.conceptId, w);
+      add(byLiteral, w.skill.identity.literalKey, w);
+    }
+    const displayed = new Map<string, Witness>(),
+      allMatched = new Set<string>(),
+      compatible = new Set<string>();
+    const durationMemo = new Map<string, RequirementDurationResult | null>();
+    function durationFor(
+      key: string,
+      all: Witness[],
+      requirement: Duration,
+      confirmedOnly: boolean,
+    ) {
+      if (requirement.kind === "not_stated") return null;
+      const memoKey = JSON.stringify([
+        key,
+        confirmedOnly,
+        requirement.kind,
+        requirement.lower?.value,
+        requirement.lower?.inclusive,
+        requirement.upper?.value,
+        requirement.upper?.inclusive,
+      ]);
+      if (durationMemo.has(memoKey)) return durationMemo.get(memoKey)!;
+      const intervals = all
+        .filter((w) => {
+          charge();
+          return (
+            w.tier === "dated_use" &&
+            w.interval !== null &&
+            (!confirmedOnly || fullSourceConfirmation(w))
+          );
+        })
+        .map((w) => ({
+          subjectId: key,
+          start: w.interval!.startDate,
+          end: w.interval!.endDate,
+        }));
+      // No silent interval truncation or widening of the admitted calendar utility.
+      if (intervals.length > REQUIREMENT_DURATION_POLICY.maxIntervals)
+        throw new ResourceLimit();
+      charge(intervals.length * 10 + 1);
+      const result = intervals.length
+        ? evaluateRequirementDuration({
+            subjectId: key,
+            intervals,
+            requirement,
+          })
+        : null;
+      durationMemo.set(memoKey, result);
+      return result;
+    }
+    let operandCount = 0;
+    function operand(
+      atom: Atom,
+      clauseId: string,
+      index: number,
+      requirement: Duration,
+      proficiency: boolean,
+      duplicateOf: string | null,
+      scopeBlock: Reason | null,
+    ): Operand {
+      charge();
+      if (++operandCount > 1024) throw new ResourceLimit();
+      const key = subject(atom.value, atom.mapping.conceptId),
+        candidates = atom.mapping.conceptId
+          ? (byConcept.get(atom.mapping.conceptId) ?? [])
+          : (byLiteral.get(fold(atom.value)) ?? []);
+      const groups = new Map<string, Witness>();
+      const strength = (w: Witness) =>
+        (w.tier === "source_contribution"
+          ? 20
+          : w.tier === "dated_use"
+            ? 10
+            : w.tier === "candidate_responsibility"
+              ? 5
+              : 0) + (fullSourceConfirmation(w) ? 2 : 0);
+      for (const w of candidates) {
+        charge();
+        compatible.add(w.id);
+        const old = groups.get(w.evidenceGroupId);
+        if (!old || strength(w) > strength(old))
+          groups.set(w.evidenceGroupId, w);
+      }
+      const matches = [...groups.values()].sort((a, b) => {
+        charge();
+        return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
+      });
+      for (const w of matches) {
+        charge();
+        allMatched.add(w.id);
+      }
+      const shown = matches.slice(0, 20);
+      for (const w of shown) displayed.set(w.id, w);
+      const factIds = [
+        ...new Set(
+          matches.flatMap((w) => {
+            charge();
+            return [
+              w.factId,
+              ...(w.sourceClause?.supportingFacts.map((f) => {
+                charge();
+                return f.factId;
+              }) ?? []),
+            ];
+          }),
+        ),
+      ];
+      const duration = durationFor(key, matches, requirement, false),
+        confirmedSourceDuration = durationFor(key, matches, requirement, true);
+      const contributions = matches.filter((w) => {
+        charge();
+        return w.tier === "source_contribution";
+      });
+      const confirmedContributions = contributions.filter(
+        fullSourceConfirmation,
+      );
+      let proposedState: MatchState = "not_evaluated",
+        why: Reason;
+      if (!matches.length) why = "no_supporting_witness";
+      else if (!contributions.length)
+        why = matches.every((w) => w.tier === "listed")
+          ? "listed_skill_not_proficiency"
+          : matches.some(
+                (w) => w.basis === "source_quote" && w.tier === "dated_use",
+              )
+            ? "source_dated_clause_requires_review"
+            : "declaration_recorded_source_support_missing";
+      else if (!confirmedContributions.length) {
+        proposedState = "candidate_confirmation_required";
+        why = "source_confirmation_missing";
+      } else if (proficiency) {
+        proposedState = "partially_satisfied";
+        why = "proficiency_not_verified";
+      } else if (requirement.kind === "unknown") {
+        proposedState = "partially_satisfied";
+        why = "duration_interpretation_unknown";
+      } else if (requirement.kind !== "not_stated") {
+        proposedState = "partially_satisfied";
+        if (!duration) why = "duration_evidence_missing";
+        else if (duration.state === "unknown")
+          why = "duration_interpretation_unknown";
+        else if (duration.state === "not_satisfied")
+          why = "duration_not_established";
+        else if (
+          !confirmedSourceDuration ||
+          confirmedSourceDuration.state !== "satisfied"
+        )
+          why = "duration_confirmation_missing";
+        else {
+          proposedState = "satisfied";
+          why = "literal_contribution_supported";
+        }
+      } else {
+        proposedState = "satisfied";
+        why = "literal_contribution_supported";
+      }
+      if (scopeBlock) {
+        proposedState = "not_evaluated";
+        why = scopeBlock;
+      }
+      return {
+        id: "coverage-operand-" + sha(JSON.stringify([clauseId, index, key])),
+        value: atom.value,
+        evidence: atom.evidence,
+        sourceRequirementIds: [...atom.requirementIds],
+        mapping: atom.mapping,
+        subjectId: key,
+        dedupGroup: "coverage-subject-" + sha(key),
+        duplicateOf,
+        state: "not_evaluated",
+        proposedState,
+        reason: why,
+        explanation: explanations[why],
+        tiers: [...new Set(matches.map((w) => w.tier))],
+        matches: shown.map((w) => ({
+          witnessId: w.id,
+          matchKind:
+            fold(atom.value) === w.skill.identity.literalKey
+              ? "exact_literal"
+              : "approved_alias",
+        })),
+        matchingWitnessCount: matches.length,
+        additionalWitnessCount: Math.max(0, matches.length - shown.length),
+        factIds: factIds.slice(0, 20),
+        additionalFactCount: Math.max(0, factIds.length - 20),
+        duration,
+        confirmedSourceDuration,
+      };
+    }
+    const seenClauses = new Map<string, string>();
+    const durationInterpretations = new Map(
+      durationSubjects.interpretations.map((interpretation) => {
+        charge();
+        return [interpretation.clauseId, interpretation] as const;
+      }),
+    );
+    const sections = deriveReviewedSkillSections(
+      context.requirements.content.sourceText,
+    );
+    const clauses: Available["clauses"] = [];
+    for (const clause of context.requirements.content.relations.clauses) {
+      charge();
+      if (sections.headings.has(clause.evidence.spanId)) continue;
+      if (clauses.length >= 300) throw new ResourceLimit();
+      const reviewedScope = clause.scope.negated
+        ? undefined
+        : sections.scopes.get(clause.evidence.spanId);
+      const scope = reviewedScope
+        ? { ...clause.scope, importance: reviewedScope.importance }
+        : clause.scope;
+      const storedExpression = clause.skillExpression;
+      const durationSubjectInterpretation =
+        durationInterpretations.get(clause.id) ?? null;
+      const expression =
+        durationSubjectInterpretation?.expression ??
+        durationSubjectInterpretation?.listExpression ??
+        storedExpression;
+      const duration =
+        durationSubjectInterpretation?.duration ?? clause.duration;
+      const atoms =
+        expression.kind === "atom"
+          ? [expression]
+          : expression.kind === "all_of" || expression.kind === "any_of"
+            ? expression.operands
+            : [];
+      const keys = atoms.map((a) => subject(a.value, a.mapping.conceptId));
+      const proficiencyQualifiers = [
+        ...new Set(
+          clause.evidence.quote
+            .match(
+              /\b(?:proficiency|proficient|expert|expertise|advanced|mastery|strong)\b/giu,
+            )
+            ?.map(fold) ?? [],
+        ),
+      ].sort();
+      const clauseKey = sha(
+        JSON.stringify([
+          scope,
+          expression.kind,
+          expression.kind === "unknown"
+            ? [fold(clause.evidence.quote), expression.reason]
+            : null,
+          [...new Set(keys)].sort(),
+          proficiencyQualifiers,
+          duration.kind,
+          duration.lower?.value,
+          duration.lower?.inclusive,
+          duration.upper?.value,
+          duration.upper?.inclusive,
+        ]),
+      );
+      const seenOperands = new Map<string, string>();
+      const proficiency = proficiencyQualifiers.length > 0;
+      const operands = atoms.map((a, i) => {
+        const key = keys[i];
+        const item = operand(
+          a,
+          clause.id,
+          i,
+          duration,
+          proficiency,
+          seenOperands.get(key) ?? null,
+          scope.negated
+            ? "negated_requirement"
+            : scope.importance === "unknown"
+              ? "importance_unknown"
+              : scope.importance === "contextual"
+                ? "contextual_requirement"
+                : null,
+        );
+        if (!seenOperands.has(key)) seenOperands.set(key, item.id);
+        return item;
+      });
+      const states = operands.map((o) => o.proposedState);
+      let proposedState: MatchState = "not_evaluated",
+        why: Reason = "group_support_unknown";
+      if (scope.negated) why = "negated_requirement";
+      else if (expression.kind === "unknown" || !operands.length)
+        why =
+          duration.kind !== "not_stated"
+            ? "duration_subject_unknown"
+            : "unknown_requirement";
+      else if (scope.importance === "unknown") why = "importance_unknown";
+      else if (scope.importance === "contextual")
+        why = "contextual_requirement";
+      else if (expression.kind === "atom") {
+        proposedState = operands[0].proposedState;
+        why = operands[0].reason;
+      } else if (expression.kind === "any_of") {
+        if (states.includes("satisfied")) {
+          proposedState = "satisfied";
+          why = "alternatives_supported";
+        } else if (states.includes("partially_satisfied")) {
+          proposedState = "partially_satisfied";
+          why = "partial_group_support";
+        } else if (states.includes("candidate_confirmation_required")) {
+          proposedState = "candidate_confirmation_required";
+          why = "group_confirmation_missing";
+        }
+      } else {
+        if (states.every((s) => s === "satisfied")) {
+          proposedState = "satisfied";
+          why = "conjunction_supported";
+        } else if (
+          states.every(
+            (s) => s === "satisfied" || s === "candidate_confirmation_required",
+          )
+        ) {
+          proposedState = "candidate_confirmation_required";
+          why = "group_confirmation_missing";
+        } else if (
+          states.some(
+            (s) =>
+              s === "satisfied" ||
+              s === "partially_satisfied" ||
+              s === "candidate_confirmation_required",
+          )
+        ) {
+          proposedState = "partially_satisfied";
+          why = "partial_group_support";
+        }
+      }
+      clauses.push({
+        id: clause.id,
+        evidence: clause.evidence,
+        sourceRequirementIds: [
+          ...new Set(
+            atoms
+              .flatMap((a) => a.requirementIds)
+              .concat(
+                storedExpression.kind === "unknown"
+                  ? storedExpression.observedRequirementIds
+                  : [],
+              ),
+          ),
+        ],
+        scope,
+        scopeHeading: reviewedScope?.heading ?? null,
+        expressionKind: expression.kind,
+        storedExpressionKind: storedExpression.kind,
+        durationSubjectInterpretation,
+        durationRequirement: duration,
+        dedupGroup: "coverage-clause-" + clauseKey,
+        duplicateOf: seenClauses.get(clauseKey) ?? null,
+        state: "not_evaluated",
+        proposedState,
+        reason: why,
+        explanation: explanations[why],
+        operands,
+      });
+      if (!seenClauses.has(clauseKey)) seenClauses.set(clauseKey, clause.id);
+    }
+    const result = {
+      ...flags,
+      state: "available" as const,
+      binding,
+      clauses,
+      retainedClauses: context.requirements.content.retainedClauses.flatMap(
+        (clause) => {
+          if (sections.headings.has(clause.evidence.spanId)) return [];
+          const reviewedScope = clause.negated
+            ? undefined
+            : sections.scopes.get(clause.evidence.spanId);
+          return [
+            reviewedScope
+              ? { ...clause, importance: reviewedScope.importance }
+              : clause,
+          ];
+        },
+      ),
+      witnesses: [...displayed.values()].sort((a, b) =>
+        a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
+      ),
+      semanticUnresolved: semantic.unresolved,
+      witnessCounts: {
+        semantic: semantic.witnesses.length,
+        matching: compatible.size,
+        deduplicated: allMatched.size,
+        displayed: displayed.size,
+        additionalMatching: allMatched.size - displayed.size,
+        unmatched: semantic.witnesses.length - compatible.size,
+      },
+      unavailableReason: null,
+    };
+    charge(clauses.length + displayed.size + semantic.unresolved.length);
+    const digest = sha(JSON.stringify(result));
+    const output = { ...result, digest };
+    if (Buffer.byteLength(JSON.stringify(output), "utf8") > 5242880)
+      throw new ResourceLimit();
+    return RequirementCoverageSchema.parse(output);
+  } catch (error) {
+    if (error instanceof ResourceLimit)
+      return unavailable("resource_limit", binding);
+    return unavailable("invalid_context", binding);
+  }
+}

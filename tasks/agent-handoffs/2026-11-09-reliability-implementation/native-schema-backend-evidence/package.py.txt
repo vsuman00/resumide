@@ -1,0 +1,24 @@
+from pathlib import Path
+import json,hashlib,shutil,subprocess
+w=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats');t=Path(__file__).parent;b=Path('tasks/agent-handoffs/2026-11-09-reliability-implementation');sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+files=['scripts/verify-jd-clause-order-catalog.sql','tests/unit/jd-clause-order-catalog-source.test.ts',str(b/'native-schema-catalog-backend.md')];product=[]
+for f in files:
+ p=w/f;copy=t/'snapshots'/f;copy.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,copy);product.append({'path':f,'preimageSha256':None,'sha256':sha(p),'bytes':p.stat().st_size,'snapshot':str(copy)})
+receipts=[];groups=set()
+for p in sorted(t.glob('*.json')):
+ try:v=json.loads(p.read_text())
+ except:continue
+ if 'commands' not in v:continue
+ for c in v['commands']:
+  if c.get('processGroup'):groups.add(c['processGroup'])
+ receipts.append({'path':str(p),'sha256':sha(p),'log':v.get('log'),'logSha256':v.get('logSha256'),'commands':v['commands'],'sourceStable':v['sourceStable']})
+ps=subprocess.check_output(['/bin/ps','-axo','pid=,pgid=,command='],text=True);active=[line for line in ps.splitlines() if len(line.split())>1 and int(line.split()[1]) in groups];assert not active
+(t/'process-groups.json').write_text(json.dumps({'allAbsent':True,'groups':sorted(groups),'method':'Independent ps PID/PGID inventory after runCommand closures'},indent=2)+'\n')
+first=json.loads((t/'catalog-source-first.json').read_text())['sourceBefore'];last=json.loads((t/'statics-lint-final.json').read_text())['sourceAfter'];changed=[f for f,v in first.items() if f not in files and last.get(f)!=v];assert not changed
+migrations={p.name:sha(p) for p in sorted((w/'supabase/migrations').glob('*.sql'))};assert len(migrations)==80
+(t/'old-source-preservation.json').write_text(json.dumps({'baseline':'catalog-source-first.sourceBefore','final':'statics-lint-final.sourceAfter','existingInputsCompared':sum(f not in files for f in first),'changed':changed,'migrationsCount':len(migrations),'migrations':migrations},indent=2)+'\n')
+whitespace={f:[i for i,line in enumerate((w/f).read_text().splitlines(),1) if line.rstrip()!=line] for f in files};assert not any(whitespace.values())
+(t/'text-hygiene.json').write_text(json.dumps({'trailingWhitespace':whitespace,'sqlParserRun':False,'sqlFormatterRun':False,'proseSkillBefore':str(t/'prose-before.json'),'deterministicProseChanges':0},indent=2)+'\n')
+contracts=[b/'native-schema-contract.json',Path('app/lib/server/jd-clause-order-readiness-profile.ts'),Path('supabase/migrations/20261116192537_jd_clause_order_decisions.sql')]
+release={'status':'FROZEN_SOURCE_PREPARATION_DRAFT_UNPARSED_UNEXECUTED','baseHeadFromContract':'a0b239299d75b0bd64b588fe743ebe2975fb28b9','product':product,'contractsAndReadonlySources':{str(p):sha(w/p) for p in contracts},'checks':{'sourceUnit':'10/1 PASS; text/JSON assertions only','sourceUnitReceipt':str(t/'catalog-source-final.json'),'eslint':'new test file PASS','prettier':'new test and handoff PASS; SQL not parsed/formatted','textHygiene':'three files checked for trailing whitespace'},'receiptsIncludingFailures':receipts,'proofs':{str(t/f):sha(t/f) for f in ['process-groups.json','old-source-preservation.json','text-hygiene.json']},'failureClassification':{'catalog-source-first':'Source-test allowlist omitted pg_catalog.pg_language required by prolang catalogue check; no SQL change.','catalog-source-successor':'Source-test lexical row scan misread IS DISTINCT FROM array as a row FROM; comparison phrase excluded before scan; no SQL change.'},'nativeAssertionsPrepared':{'newRoutines':23,'frozenSourceManifest':44,'extraCheckerFingerprint':1,'expectedSchemaReady':True,'expectedWriterExecutable':False,'newRoutineWriterHelperGrantChanges':0},'omissions':['No SQL parser, database connection/query/execution, schema application, hosted action, fixture, privilege grant, flag activation, provider/browser/runtime acceptance or deployment','Full old historical replay and actual catalogue proof remain unverified; verifier carries frozen terminal expected-body sources','No broad app tests/types/build rerun for this bounded validation preparation']}
+(t/'release.json').write_text(json.dumps(release,indent=2)+'\n');print(json.dumps({'path':str(t/'release.json'),'sha256':sha(t/'release.json'),'groupsAbsent':len(groups),'existingInputsPreserved':sum(f not in files for f in first),'migrations':len(migrations)},indent=2))

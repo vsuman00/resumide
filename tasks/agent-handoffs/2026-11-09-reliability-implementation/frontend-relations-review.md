@@ -1,0 +1,27 @@
+# A08 local relations: independent terminal review
+
+2026-11-09. **Source review PASS for the frozen local-only leaf.** Reviewed the complete relation source, its tests, additive requirement wrapper and backend receipt. No test, fuzz campaign, child process, provider, DB, network, Docker, browser or service ran. This separate handoff preserves frontend-build-review.md at 90e10f987fec269649e057d4928ceb82ba56aab6558311f967eaa0b06e32a96f and the separately held A11 contact candidate.
+
+| File                                | SHA-256                                                          |
+| ----------------------------------- | ---------------------------------------------------------------- |
+| app/lib/server/job-relations.ts     | 7d243a98ac3b26e432c1acd56326af36356ecc4f22378066ba04b22a552d4f98 |
+| tests/unit/job-relations.test.ts    | c78787b8e41af722c6f60cf59664a9bcd0686c66feb42ef6265b7d7f8f359cdc |
+| app/lib/server/job-requirements.ts  | 4cc22997a8d4c93ad5653029c01652a9dfbbb390bad99750b93415b56c60bc48 |
+| tests/unit/job-requirements.test.ts | fc28891fab9602c5ba2eef2100fd0b061cb9d91e2dea19dc729b2e699eee060b |
+| backend.md                          | 712a00dbf2d9ab9c9137cf3f576cd8246a2c976f338a6996da337d67f10f9407 |
+
+Independent byte comparison confirmed that removing only the new relation import and appended relation API restores the exact ROOT A07/default source at aecd3109508163b25b957e35776dba17e016e04555c0b3cc7fd54ca316da9606. The alias source is unchanged at 6b00cee1969c4680296277c5ff2905184df53c89d6604a0e56e1a6d66d45b73a. Search found no application writer/reader/scorer adopting the new API. The A07 API still returns its original DTO without relations; strict historical storage still rejects the new schema/model/extra fields. No stored producer, vocabulary, SQL, numerical rule, threshold or flag changes.
+
+The explicit relation wrapper retains its parent's raw source/hash/context and requirement identities while returning a distinct jd-local-relational-discovery/1.0.0 model. The pure relation result binds the source document ID/hash/text/model/state/locale/domain and alias-policy identity, plus its hashed rule/limit policy. Both remain local_review_only, persistable false and scoringEligible false. Relation clauses always require review; numericCredit is null. These are local source-model bindings, not proof of authenticated ownership or permission to persist/evaluate a requirement.
+
+Flat literal AND/OR operands and operators retain separate exact code-point citations and originating requirement IDs. Alias tokens are checked against the adopted local boundary scanner; raw literal mapping stays separate from source quotation. Mixed connectors, nesting/unbalanced parentheses, negation, unsupported connectors and unparsed residual scope remain unknown. No precedence, candidate proficiency, skill-duration relationship or prospective-group score is inferred.
+
+Year bounds distinguish closed ranges, inclusive/exclusive comparators, exact values, unknown and unstated duration. Number/operator/evidence offsets are converted from UTF-16 regex positions to code points. Unsupported units/decimal syntax, uncertain prefixes, mixed/inverted/multiple bounds and negation remain review states. Bounds are explicitly literal_clause_only and evaluated false; they do not establish experience coverage from dated candidate facts. Unsupported source state/locale/domain remains visible. Broader natural-language semantics and useful relation coverage remain later work.
+
+Source/item/clause/token/operand/depth/duration-candidate/node admission bounds precede output-graph expansion. Exact source slices, alias token boundaries, clause membership and negation are checked before interpretation. Resource-limit failures reject rather than silently truncate an expression or duration candidate list.
+
+**A08-F01 terminal disposition: PASS.** Root's initial ambiguity-input finding is preserved in the backend receipt, including its four original reds and subsequent sparse-slot red. The corrected preflight first admits the existing at-most-ten entries, then uses bounded Array.from to inspect every slot and requires nonempty strings of at most 100 UTF-16 units. Empty, nonstring, overlong and sparse entries cannot bypass includes interpretation; the exact-boundary positive remains. The limit identity is included in the policy hash. This is a pure helper shape/cost correction, not a demonstrated persisted/user-reachable exploit or a new product-history limit.
+
+The backend reports 48 relation tests and 165 affected tests across nine files passing, plus scoped format/lint/no-emit type checks. Earlier 159-case and default-parser benchmark receipts remain historical; the unchanged synthetic benchmark is engineering-only, release false and not validation of this new local relation policy. The reviewer inspected source and assertion bodies and did not rerun those checks. No additional concrete source/replay/cost blocker was found within this leaf.
+
+This PASS permits coordinator review/integration at its source/pure-regression tier only. It does not close full A08, current CV06 consumer behavior, A09 stored relations/RPC/replay, A10 dated-fact evaluation, semantic validity, provider behavior or release acceptance. Preserve unknown states, original failures and all gates. All services remain free; deployment/Git publication and hosted mutations remain stopped.

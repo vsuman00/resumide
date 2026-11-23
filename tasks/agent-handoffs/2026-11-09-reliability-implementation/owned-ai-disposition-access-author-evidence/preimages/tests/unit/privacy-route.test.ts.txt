@@ -1,0 +1,206 @@
+import { beforeEach, expect, it, vi } from "vitest";
+import { createStaticHandler } from "react-router";
+
+const mocks = vi.hoisted(() => ({
+  user: vi.fn(),
+  create: vi.fn(),
+  cancel: vi.fn(),
+  server: vi.fn(),
+  admin: vi.fn(),
+}));
+vi.mock("../../app/lib/server/auth", () => ({
+  getAuthenticatedUser: mocks.user,
+}));
+vi.mock("../../app/lib/server/privacy", () => ({
+  createDataRequest: mocks.create,
+  cancelDataRequest: mocks.cancel,
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseServerClient: mocks.server,
+  createSupabaseAdminClient: mocks.admin,
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getServerConfig: () => ({ APP_ORIGIN: "https://example.test" }),
+}));
+import { action, headers, loader } from "../../app/routes/privacy";
+import { PublicApiError } from "../../app/lib/server/errors";
+
+const owner = "10000000-0000-4000-8000-000000000001";
+const requestId = "10000000-0000-4000-8000-000000000002";
+function request(kind: string, origin = "https://example.test") {
+  return new Request("https://example.test/privacy", {
+    method: "POST",
+    headers: {
+      Origin: origin,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({ kind, requestId }),
+  });
+}
+function invoke(req: Request) {
+  return action({ request: req, params: {}, context: {} } as Parameters<
+    typeof action
+  >[0]);
+}
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.user.mockResolvedValue({ id: owner });
+  mocks.server.mockImplementation(
+    (_request: Request, responseHeaders: Headers) => {
+      responseHeaders.append("Set-Cookie", "synthetic=fixture; HttpOnly");
+      return {};
+    },
+  );
+  mocks.create.mockResolvedValue({ status: "queued" });
+  mocks.cancel.mockResolvedValue({ status: "cancelled" });
+});
+
+it.each(["deletion", "cancel"])(
+  "returns service contention as a safe SSR action response for %s",
+  async (kind) => {
+    const busy = new PublicApiError(
+      "SERVICE_UNAVAILABLE",
+      "Privacy changes are busy. Try again shortly.",
+      503,
+      true,
+      2,
+    );
+    (kind === "cancel" ? mocks.cancel : mocks.create).mockRejectedValueOnce(
+      busy,
+    );
+    const handler = createStaticHandler([
+      {
+        id: "privacy",
+        path: "/privacy",
+        action: (args) => invoke(args.request),
+        loader: () => null,
+      },
+    ]);
+    const result = await handler.query(request(kind));
+    if (result instanceof Response)
+      throw new Error("Expected an SSR action context");
+    expect(result.statusCode).toBe(503);
+    expect(result.errors).toBeNull();
+    expect(result.actionData?.privacy).toEqual({
+      error: busy.message,
+      success: null,
+    });
+    const responseHeaders = new Headers(
+      await headers({
+        loaderHeaders: new Headers(),
+        actionHeaders: result.actionHeaders.privacy,
+        errorHeaders: new Headers(),
+        parentHeaders: new Headers(),
+      }),
+    );
+    expect(responseHeaders.get("Cache-Control")).toBe("private, no-store");
+    expect(responseHeaders.get("Vary")).toBe("Cookie");
+    expect(responseHeaders.get("Retry-After")).toBe("2");
+    expect(responseHeaders.getSetCookie()).toEqual([
+      "synthetic=fixture; HttpOnly",
+    ]);
+    expect(
+      kind === "cancel" ? mocks.cancel : mocks.create,
+    ).toHaveBeenCalledWith(expect.objectContaining({ userId: owner }));
+  },
+);
+
+it("preserves origin/authentication guards and unexpected service failures", async () => {
+  await expect(
+    invoke(request("deletion", "https://foreign.test")),
+  ).rejects.toMatchObject({ code: "FORBIDDEN", status: 403 });
+  mocks.user.mockResolvedValueOnce(null);
+  await expect(invoke(request("deletion"))).rejects.toMatchObject({
+    status: 302,
+  });
+  expect(mocks.create).not.toHaveBeenCalled();
+  expect(mocks.cancel).not.toHaveBeenCalled();
+  const unexpected = new Error("synthetic-unexpected-error");
+  mocks.create.mockRejectedValueOnce(unexpected);
+  await expect(invoke(request("deletion"))).rejects.toBe(unexpected);
+});
+
+it("loads a blocking deletion outside the displayed twenty-row history", async () => {
+  const rows = [
+    ...Array.from({ length: 20 }, (_, index) => ({
+      id: `synthetic-export-${index}`,
+      user_id: owner,
+      kind: "export",
+      status: "completed",
+      created_at: "2026-11-10T00:00:00Z",
+    })),
+    {
+      id: requestId,
+      user_id: owner,
+      kind: "deletion",
+      status: "queued",
+      created_at: "2026-01-01T00:00:00Z",
+    },
+  ];
+  const queries: Array<{
+    filters: Array<{ operator: "eq" | "neq"; column: string; value: unknown }>;
+    limit?: number;
+  }> = [];
+  mocks.admin.mockReturnValue({
+    from(table: string) {
+      const query = {
+        filters: [] as Array<{
+          operator: "eq" | "neq";
+          column: string;
+          value: unknown;
+        }>,
+        limit: undefined as number | undefined,
+      };
+      queries.push(query);
+      const chain = {
+        select: () => chain,
+        eq: (column: string, value: unknown) => {
+          query.filters.push({ operator: "eq", column, value });
+          return chain;
+        },
+        neq: (column: string, value: unknown) => {
+          query.filters.push({ operator: "neq", column, value });
+          return chain;
+        },
+        order: () => chain,
+        limit: (value: number) => {
+          query.limit = value;
+          return chain;
+        },
+        then: (resolve: (value: unknown) => unknown) =>
+          Promise.resolve({
+            data:
+              table === "consents"
+                ? []
+                : rows
+                    .filter((row) =>
+                      query.filters.every((f) =>
+                        f.operator === "eq"
+                          ? row[f.column as keyof typeof row] === f.value
+                          : row[f.column as keyof typeof row] !== f.value,
+                      ),
+                    )
+                    .slice(0, query.limit),
+            error: null,
+          }).then(resolve),
+      };
+      return chain;
+    },
+  });
+  const result = await loader({
+    request: new Request("https://example.test/privacy"),
+    params: {},
+    context: {},
+  } as Parameters<typeof loader>[0]);
+  expect(result.data.requests).toHaveLength(20);
+  expect(result.data.requests.every((row) => row.kind === "export")).toBe(true);
+  expect(result.data.exportDownloadAccess).toBe("blocked");
+  expect(queries.find((q) => q.limit === 1)?.filters).toEqual(
+    expect.arrayContaining([
+      { operator: "eq", column: "user_id", value: owner },
+      { operator: "eq", column: "kind", value: "deletion" },
+      { operator: "neq", column: "status", value: "failed" },
+      { operator: "neq", column: "status", value: "cancelled" },
+    ]),
+  );
+});

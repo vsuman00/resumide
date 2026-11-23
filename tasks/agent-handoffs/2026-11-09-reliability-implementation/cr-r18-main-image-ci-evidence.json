@@ -1,0 +1,61 @@
+{
+  "id": "CR-R18-S09",
+  "status": "main-image-advisory-collection-workflow-verified-offline",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty working checkout and public upstream contract",
+  "scannerAction": "aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25",
+  "scannerVersion": "0.70.0",
+  "findingsMayFailGateAfterUpload": true,
+  "independentReview": {
+    "status": "clear for source-only validation",
+    "reviewedFilesSha256": {
+      ".github/workflows/ci.yml": "b5dc0242be0bcf3fb9f64b9d588b50034a9d809f9adad393489e207b6ca7fcc4",
+      "scripts/check-image-advisories.mjs": "704c8dbc5edb4e4939d2850fbad1af4710092d833ff540b19d59a691bf563a43",
+      "tests/unit/image-advisory-report.test.ts": "c594401261feb34871a72cbd7c553acfde008b8809ef70fd5db4b4a8d5afa52f"
+    }
+  },
+  "verification": {
+    "actionlint": "1.7.12 pass",
+    "focusedTestsPassed": 83,
+    "newValidatorCases": 12,
+    "typecheckPassed": true,
+    "changedFilesLintPassed": true,
+    "containerSourceChecksPassed": true,
+    "ciShellFixture": {
+      "cases": [
+        {
+          "mode": "blocking",
+          "gateExit": 1,
+          "allAdvisoryRowsPreserved": true,
+          "transientConfigDiscarded": true
+        },
+        {
+          "mode": "clear",
+          "gateExit": 0,
+          "allAdvisoryRowsPreserved": true,
+          "transientConfigDiscarded": true
+        },
+        {
+          "missingNodeInventoryRejected": true
+        }
+      ],
+      "fakeCycloneDxConverter": true,
+      "secretScannerExecuted": false
+    },
+    "integratedLocalSuite": {
+      "testsPassed": 7189,
+      "filesPassed": 340,
+      "logSha256": "edd83e73570500ffd62d0849f9ebbe371ce78b3c52c86f6a3e3f6765c5408689"
+    }
+  },
+  "remaining": [
+    "Run revised CI on the approved production-image candidate and retain the artifacts",
+    "Collect complete scanner reports on exact OCR and LaTeX workers",
+    "Review applicability and resolve remaining blocking findings"
+  ],
+  "mainDockerImageBuiltLocally": false,
+  "actualTrivyExecuted": false,
+  "hostedCiExecuted": false,
+  "releaseAccepted": false
+}

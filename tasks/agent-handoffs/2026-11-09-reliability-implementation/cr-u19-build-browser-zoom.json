@@ -1,0 +1,33 @@
+{
+  "id": "CR-U19-S10",
+  "status": "VERIFIED_LOCAL_BUILD_BROWSER_ZOOM",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR on loopback with simulated Supabase Auth, compilation and suggestion transport and actual PDF.js",
+  "sources": {
+    "scripts/local-fixture-browser.ts": "e8f78771b4545f1ec7cdf4145a9412f0c94f01f46e44f2f5a2e36d427a177609",
+    "scripts/verify-local-build-pdf-lifecycle.ts": "1e0b2d01f41cc27c758ff5fa0b31dfe14805042b93a265174de5971faedcf374",
+    "app/routes/latex.tsx": "cc5416fed1bd8ddfb059c99523ba44b639cb0d4ae0dfa8f36628ce85c375110d",
+    "app/components/LatexPdfPreview.tsx": "50c89a4531582224097a04eac9c264f5db9110e6dddf13a8c45dd3908ff34456",
+    "app/components/BuildAiAssistant.tsx": "63c2d4d2a861c1b16807a2563925b8cd956c00ed99fcb903b3e9ba28305e4192"
+  },
+  "browser": {
+    "version": "Chromium 153.0.8010.12",
+    "script": "scripts/verify-local-build-pdf-lifecycle.ts",
+    "option": "RESUMIDE_BUILD_BROWSER_ZOOM=true",
+    "pageZoomPercent": 200,
+    "effectiveViewportWidthsCssPx": [390, 320],
+    "ssrEntrySha256": "3efbdca189885de23dad91f31a0204701678056692c1751eaa9b4ddf37813b00",
+    "logSha256": "7e3593ea1862ceeefb0326312ca427af15dce3996fb39aeb0bfd1636cef8986c",
+    "result": {
+      "keyboardPaneSwitchAndRecompile": true,
+      "suggestionApplyAndUndoViaKeyboard": true,
+      "stalePreviewUnavailableAfterEachEdit": true,
+      "pdfJsCanvasAndCurrentPageText": true,
+      "keyboardDownloadsMatchCurrentPdfBytes": 3,
+      "scopedSeriousOrCriticalAxeViolations": 0
+    }
+  },
+  "manualScreenReaderVerified": false,
+  "compilerRuntimeVerified": false,
+  "liveProviderVerified": false
+}

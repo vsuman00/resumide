@@ -1,0 +1,366 @@
+
+> check:build-ai:source
+> prettier --check tests/unit/build-assist.test.ts tests/unit/build-assist-config.test.ts tests/unit/build-assist-provider.test.ts tests/unit/build-assist-service.test.ts tests/fixtures/build-assist.ts e2e/build-assist.spec.ts playwright.build-ai.config.ts scripts/verify-build-ai.ts scripts/build-ai-test-preload.mjs app/lib/build-assist.ts app/lib/server/build-assist.ts app/lib/server/build-assist-service.ts app/components/BuildAiAssistant.tsx app/routes/build.suggest.ts app/components/BuildAiAssistant.module.css && eslint tests/unit/build-assist.test.ts tests/unit/build-assist-config.test.ts tests/unit/build-assist-provider.test.ts tests/unit/build-assist-service.test.ts tests/fixtures/build-assist.ts e2e/build-assist.spec.ts playwright.build-ai.config.ts scripts/verify-build-ai.ts scripts/build-ai-test-preload.mjs app/lib/build-assist.ts app/lib/server/build-assist.ts app/lib/server/build-assist-service.ts app/components/BuildAiAssistant.tsx app/routes/build.suggest.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> verify
+> npm run format:check && npm run format:check:native-layout && npm run check:ocr:pilot-source && npm run check:aa1:source && npm run check:aa2:source && npm run check:aa3:source && npm run check:aa4:source && npm run check:aa5:source && npm run check:aa6:source && npm run check:aa8:source && npm run check:aa9:source && npm run lint && npm run test && npm run typecheck && npm run build && npm run build:worker
+
+
+> format:check
+> prettier --check eslint.config.js vitest.config.ts playwright.config.ts e2e tests app/routes/healthz.ts app/routes/readyz.ts app/routes/upload.tsx app/routes/resume.tsx app/routes/api.analyze.ts app/routes/api.telemetry.ts app/routes/api.privacy-export.ts app/routes/metrics.ts app/routes.ts app/root.tsx app/lib/server app/components/FileUploader.tsx app/components/TelemetryReporter.tsx scripts/validate-config.ts scripts/selfcheck-config.ts scripts/selfcheck-errors.ts scripts/selfcheck-upload.mjs scripts/server.mjs scripts/load-test.ts scripts/verify-restore.ts scripts/run-privacy-worker.ts scripts/run-retention.ts scripts/validate-alerts.mjs scripts/check-container.mjs docs/operations/ALERTS.json scripts/verify-local-ocr.ts vite.worker.config.ts scripts/check-container.mjs
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> format:check:native-layout
+> prettier --check app/lib/native-layout-schema.ts app/lib/native-layout-structure.ts app/components/NativeLayoutEvidence.tsx app/components/NativeStructureEvidence.tsx app/components/ParseView.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:ocr:pilot-source
+> prettier --check scripts/verify-ocr-pilot.ts && eslint scripts/verify-ocr-pilot.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa1:source
+> prettier --check scripts/verify-ocr-adverse.ts scripts/verify-ocr-fields.ts scripts/benchmark-extraction-v2.ts scripts/extraction-benchmark-engineering.ts scripts/verify-document-worker.ts app/routes/analysis.evidence.tsx && eslint scripts/verify-ocr-adverse.ts scripts/verify-ocr-fields.ts scripts/benchmark-extraction-v2.ts scripts/extraction-benchmark-engineering.ts scripts/verify-document-worker.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa2:source
+> prettier --check scripts/canonical-test-fixture.ts scripts/verify-canonical-resume.ts scripts/verify-canonical-restore.ts app/routes/analysis.canonical.tsx && eslint scripts/canonical-test-fixture.ts scripts/verify-canonical-resume.ts scripts/verify-canonical-restore.ts app/routes/analysis.canonical.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa3:source
+> prettier --check scripts/job-requirement-test-fixture.ts scripts/verify-job-requirements.ts scripts/benchmark-job-intelligence.ts app/routes/analysis.requirements.tsx && eslint scripts/job-requirement-test-fixture.ts scripts/verify-job-requirements.ts scripts/benchmark-job-intelligence.ts app/routes/analysis.requirements.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa4:source
+> prettier --check scripts/benchmark-scoring-validity.ts scripts/scoring-validity-engineering.ts scripts/score-v2-test-fixture.ts scripts/verify-score-v2.ts scripts/verify-score-v2-legacy.ts app/routes/analysis.score.tsx && eslint scripts/benchmark-scoring-validity.ts scripts/scoring-validity-engineering.ts scripts/score-v2-test-fixture.ts scripts/verify-score-v2.ts scripts/verify-score-v2-legacy.ts app/routes/analysis.score.tsx
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa5:source
+> prettier --check app/lib/authoring-ui.ts app/lib/writing-quality.ts app/routes/analysis.author.tsx app/components/AuthoringWorkspace.tsx scripts/verify-authoring.ts scripts/benchmark-writer-grounding.ts scripts/writer-grounding-engineering.ts && eslint app/lib/authoring-ui.ts app/lib/writing-quality.ts app/routes/analysis.author.tsx app/components/AuthoringWorkspace.tsx scripts/verify-authoring.ts scripts/benchmark-writer-grounding.ts scripts/writer-grounding-engineering.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa6:source
+> prettier --check app/lib/server/artifact-contract.ts app/lib/server/artifact-renderer.ts app/lib/server/artifact-worker.mjs app/lib/server/artifact-repository.ts app/lib/server/artifact-route-helpers.ts app/routes/analysis.export.tsx app/routes/analysis.artifact.ts scripts/verify-artifact-export.ts scripts/benchmark-render-parity.ts && eslint app/lib/server/artifact-contract.ts app/lib/server/artifact-renderer.ts app/lib/server/artifact-repository.ts app/lib/server/artifact-route-helpers.ts app/routes/analysis.export.tsx app/routes/analysis.artifact.ts scripts/verify-artifact-export.ts scripts/benchmark-render-parity.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa8:source
+> prettier --check app/lib/server/evaluation-corpus.ts app/lib/server/evaluation-annotation.ts app/lib/server/evaluation-partitions.ts app/lib/server/evaluation-calibration.ts app/lib/server/evaluation-corpus-drill.ts app/lib/server/evaluation-statistics.ts app/lib/server/evaluation-runner.ts app/lib/server/evaluation-claims.ts tests/unit/evaluation-corpus.test.ts tests/unit/evaluation-annotation.test.ts tests/unit/evaluation-partitions.test.ts tests/unit/evaluation-calibration.test.ts tests/unit/evaluation-corpus-drill.test.ts tests/unit/evaluation-statistics.test.ts tests/unit/evaluation-runner.test.ts tests/unit/evaluation-claims.test.ts tests/fixtures/evaluation-corpus.ts tests/fixtures/evaluation-workflow.ts tests/integration/evaluation-workflow.test.ts scripts/verify-evaluation-corpus.ts scripts/verify-evaluation-storage.ts scripts/verify-evaluation-workflow.ts && eslint app/lib/server/evaluation-corpus.ts app/lib/server/evaluation-annotation.ts app/lib/server/evaluation-partitions.ts app/lib/server/evaluation-calibration.ts app/lib/server/evaluation-corpus-drill.ts app/lib/server/evaluation-statistics.ts app/lib/server/evaluation-runner.ts app/lib/server/evaluation-claims.ts tests/unit/evaluation-corpus.test.ts tests/unit/evaluation-annotation.test.ts tests/unit/evaluation-partitions.test.ts tests/unit/evaluation-calibration.test.ts tests/unit/evaluation-corpus-drill.test.ts tests/unit/evaluation-statistics.test.ts tests/unit/evaluation-runner.test.ts tests/unit/evaluation-claims.test.ts tests/fixtures/evaluation-corpus.ts tests/fixtures/evaluation-workflow.ts tests/integration/evaluation-workflow.test.ts scripts/verify-evaluation-corpus.ts scripts/verify-evaluation-storage.ts scripts/verify-evaluation-workflow.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> check:aa9:source
+> prettier --check app/lib/server/pilot-evidence.ts app/lib/server/pilot-workflow.ts tests/unit/pilot-evidence.test.ts tests/unit/pilot-workflow.test.ts && eslint app/lib/server/pilot-evidence.ts app/lib/server/pilot-workflow.ts tests/unit/pilot-evidence.test.ts tests/unit/pilot-workflow.test.ts
+
+Checking formatting...
+All matched files use Prettier code style!
+
+> lint
+> eslint app/routes app/lib/server app/lib/native-layout-schema.ts app/lib/native-layout-structure.ts tests e2e app/components scripts/verify-local-ocr.ts vite.worker.config.ts scripts/check-container.mjs
+
+
+> test
+> vitest run
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats
+
+ ❯ tests/unit/build-assist-provider.test.ts (18 tests | 1 failed) 27ms
+     ✓ withholds the prior unrelated wording fixture as bounded advice 6ms
+     ✓ records bounded usage once for success 1ms
+     ✓ records bounded usage once for refusal 1ms
+     ✓ records bounded usage once for malformed 1ms
+     ✓ does not fabricate usage when absent or account invalid reported counts 2ms
+     × sends only selected context under bounded no-store/no-retry/no-redirect options 7ms
+     ✓ revalidates prepared source/hash before any SDK construction 1ms
+     ✓ refuses custom egress https://foreign.test/v1 1ms
+     ✓ refuses custom egress http://api.openai.com/v1 1ms
+     ✓ refuses custom egress https://api.openai.com/v1?secret=yes 1ms
+     ✓ withholds refused, incomplete or malformed output 1ms
+     ✓ withholds refused, incomplete or malformed output 1ms
+     ✓ withholds refused, incomplete or malformed output 1ms
+     ✓ rejects invalid usage counters {"prompt_tokens":-1,"completion_tokens":1} 0ms
+     ✓ rejects invalid usage counters {"prompt_tokens":1,"completion_tokens":769} 0ms
+     ✓ rejects invalid usage counters {"prompt_tokens":1.5,"completion_tokens":1} 0ms
+     ✓ propagates abort signals and does not apply a late result after cancellation 1ms
+     ✓ redacts arbitrary provider errors and does not retry 1ms
+stderr | tests/components/WorkspaceRepairs.test.tsx > rebinds writing selection and clears clarification text and confirmation when focus changes
+No `HydrateFallback` element provided to render during initial hydration
+
+ ✓ tests/unit/latex-probe-base.test.ts (37 tests) 3135ms
+ ✓ tests/unit/latex-build-inputs.test.ts (71 tests) 3101ms
+     ✓ CLI entry node_modules/vite-node/vite-node.mjs rejects unsupported arguments without reading app configuration or printing input  402ms
+     ✓ CLI entry node_modules/.bin/vite-node rejects unsupported arguments without reading app configuration or printing input  445ms
+ ✓ tests/components/WorkspaceRepairs.test.tsx (5 tests) 1770ms
+   ✓ rebinds writing selection and clears clarification text and confirmation when focus changes  1723ms
+ ✓ tests/unit/artifact-corruption.test.ts (2 tests) 3206ms
+   ✓ real pdf bytes with changed critical content or missing structure lose verified state  1672ms
+   ✓ real docx bytes with changed critical content or missing structure lose verified state  1533ms
+ ✓ tests/unit/trivy-metadata.test.ts (61 tests) 4511ms
+ ✓ tests/unit/evaluation-claims.test.ts (10 tests) 1322ms
+ ✓ tests/unit/scoring-validity.test.ts (2 tests) 1710ms
+   ✓ AA046 checks deterministic traces and invariance while failing closed on unreviewed release metrics  458ms
+   ✓ release CLI produces a blocked receipt and a nonzero exit  1251ms
+ ✓ tests/integration/evaluation-workflow.test.ts (3 tests) 1541ms
+ ✓ tests/unit/latex-current-render.test.ts (17 tests) 1651ms
+     ✓ rejects an incomplete invocation through the installed CLI before any Docker call  588ms
+     ✓ admits the documented CLI shape and empty output before the first scoped Docker trap  1041ms
+ ✓ tests/unit/ocr/ocr-print-pilot.test.ts (5 tests) 5356ms
+     ✓ renders deterministic image-only clean source with eight preauthored fields  426ms
+     ✓ actually applies declared 150 DPI challenge transformations  464ms
+     ✓ keeps every source family in one partition and counts controls honestly  4197ms
+ ✓ tests/unit/extraction-benchmark.test.ts (21 tests) 1337ms
+     ✓ returns nonzero from the release CLI while engineering output remains reviewable  1306ms
+ ✓ tests/unit/private-verification.test.ts (2 tests) 1347ms
+   ✓ seals real Vite env loading and rejects unsafe private browser configuration  825ms
+   ✓ inventories Git-aware source changes and aborts the actual owned process group  521ms
+ ✓ tests/unit/ocr/runtime-memory.test.ts (11 tests) 951ms
+ ✓ tests/unit/document-worker-cli.test.ts (4 tests) 1156ms
+     ✓ refuses unsafe configuration before client imports or network activity {"SUPABASE_URL":"http://localhost.attacker.test","EVIDENCE_REVIEW_ENABLED":"true"}  305ms
+ ✓ tests/unit/ocr/text-fusion.test.ts (17 tests) 1068ms
+ ✓ tests/unit/artifact-source-links.test.ts (1 test) 154ms
+ ✓ tests/unit/evaluation-runner.test.ts (10 tests) 911ms
+     ✓ requires separate sample authority for representative claims and never grants release  319ms
+ ✓ tests/unit/writer-grounding-engineering.test.ts (2 tests) 829ms
+   ✓ release mode emits a blocked receipt and exits nonzero  710ms
+stderr | tests/components/Privacy.test.tsx > withdraws completed-export downloads while a visible deletion is queued and preserves request tracking
+No `HydrateFallback` element provided to render during initial hydration
+
+ ✓ tests/components/RewriteGenerator.test.tsx (5 tests) 334ms
+ ✓ tests/unit/latex-build-cancellation.test.ts (23 tests) 489ms
+   ✓ uses its own CLI marker without activating the imported compiler wrapper  438ms
+ ✓ tests/components/LatexPdfPreview.test.tsx (15 tests) 644ms
+ ✓ tests/components/Privacy.test.tsx (7 tests) 606ms
+ ✓ tests/unit/repository-read-scheduling.test.ts (21 tests) 447ms
+ ✓ tests/components/Phase6Accessibility.test.tsx (3 tests) 212ms
+ ✓ tests/unit/ocr/ocr-synthetic.test.ts (8 tests) 576ms
+ ✓ tests/unit/typescript-eslint-glob.test.ts (2 tests) 509ms
+   ✓ allows only the declared hidden-file glob through real project services  500ms
+ ✓ tests/unit/artifact-repository.test.ts (5 tests) 175ms
+ ✓ tests/unit/managed-test-target.test.ts (75 tests) 233ms
+ ✓ tests/unit/worker-runner.test.ts (8 tests) 658ms
+     ✓ keeps a standalone idle worker alive until shutdown  612ms
+stderr | tests/components/WorkspaceShell.test.tsx > includes the workspace heading, description, action and content in one main landmark
+No `HydrateFallback` element provided to render during initial hydration
+
+ ✓ tests/unit/authoring-proposals.test.ts (3 tests) 130ms
+ ✓ tests/components/WorkspaceShell.test.tsx (1 test) 214ms
+ ✓ tests/unit/authoring-contract.test.ts (4 tests) 199ms
+ ✓ tests/unit/evaluation-statistics.test.ts (14 tests) 309ms
+ ✓ tests/unit/job-relations.test.ts (48 tests) 124ms
+ ✓ tests/components/ThemeControl.test.tsx (3 tests) 169ms
+ ✓ tests/unit/canonical-corrections.test.ts (77 tests) 251ms
+ ✓ tests/unit/score-v2-engine.test.ts (19 tests) 244ms
+ ✓ tests/components/ResumeWriter.test.tsx (10 tests) 321ms
+ ✓ tests/unit/artifact-contract.test.ts (3 tests) 126ms
+ ✓ tests/unit/extraction-benchmark-engineering.test.ts (4 tests) 8977ms
+     ✓ keeps existing locked families separate and requires their pre-execution receipt  2341ms
+     ✓ refuses release before recognition and binds explicit immutable CI images  3164ms
+     ✓ freezes every development source and label before running recognition  1571ms
+     ✓ extracts all fields through real PDF parsing and reconciliation without truth input  1899ms
+ ✓ tests/unit/ocr/ocr-pilot.test.ts (5 tests) 199ms
+ ✓ tests/unit/job-requirements.test.ts (39 tests) 151ms
+stderr | tests/integration/paddle-api.test.ts > native PDF to hosted OCR contract integration (no live provider) > rejects malformed before API disclosure
+Warning: Indexing all PDF objects
+
+ ✓ tests/integration/paddle-api.test.ts (8 tests) 82ms
+ ✓ tests/unit/artifact-renderer.test.ts (8 tests) 9601ms
+   ✓ renders and independently parses pdf for A4 and Letter  1051ms
+   ✓ renders and independently parses docx for A4 and Letter  1118ms
+   ✓ blocks unsupported glyphs, overflow, stale input and cancelled work  438ms
+   ✓ reproduces identical pdf bytes for identical version and options  719ms
+   ✓ reproduces identical docx bytes for identical version and options  1666ms
+   ✓ bounds simultaneous jobs and cancels active workers  782ms
+   ✓ preserves mixed text and mathematical symbols in pdf without substitution  839ms
+   ✓ preserves mixed text and mathematical symbols in docx without substitution  2986ms
+stderr | tests/components/PrivacyRepairs.test.tsx > uses stable UTC dates and lets the browser handle the export attachment link
+No `HydrateFallback` element provided to render during initial hydration
+
+ ✓ tests/components/FileUploader.test.tsx (3 tests) 395ms
+ ✓ tests/integration/native-evidence.test.ts (7 tests) 133ms
+ ✓ tests/unit/evidence-review.test.ts (49 tests) 232ms
+ ✓ tests/components/PrivacyRepairs.test.tsx (2 tests) 411ms
+   ✓ uses stable UTC dates and lets the browser handle the export attachment link  407ms
+ ✓ tests/components/BuildAiAssistant.test.tsx (1 test) 264ms
+ ✓ tests/unit/latex-sandbox.test.ts (21 tests) 214ms
+ ✓ tests/components/CitedWritingSuggestions.test.tsx (2 tests) 193ms
+ ✓ tests/unit/ocr/ocr-adverse.test.ts (2 tests) 145ms
+ ✓ tests/unit/score-inflation.test.ts (2 tests) 122ms
+ ✓ tests/components/Heatmap.test.tsx (1 test) 143ms
+ ✓ tests/unit/scoring-stage.test.ts (3 tests) 92ms
+ ✓ tests/unit/evidence-targets.test.ts (13 tests) 65ms
+ ✓ tests/unit/score-semantics.test.ts (12 tests) 98ms
+ ✓ tests/components/ResultTabs.test.tsx (2 tests) 216ms
+ ✓ tests/unit/job-intelligence-benchmark.test.ts (5 tests) 87ms
+ ✓ tests/unit/jd-matching.test.ts (16 tests) 70ms
+ ✓ tests/unit/pilot-evidence.test.ts (26 tests) 73ms
+ ✓ tests/components/EvidenceScene3D.test.tsx (4 tests) 95ms
+ ✓ tests/unit/analysis.test.ts (3 tests) 78ms
+ ✓ tests/unit/ocr/selective.test.ts (58 tests) 58ms
+ ✓ tests/unit/canonical-content.test.ts (12 tests) 80ms
+ ✓ tests/unit/ocr/paddle.test.ts (52 tests) 58ms
+ ✓ tests/unit/evaluation-partitions.test.ts (27 tests) 30ms
+ ✓ tests/unit/evidence-review-route.test.ts (9 tests) 30ms
+ ✓ tests/unit/canonical-route.test.ts (12 tests) 28ms
+ ✓ tests/unit/evidence-field-version.test.ts (1 test) 35ms
+ ✓ tests/integration/native-reading-order.test.ts (2 tests) 89ms
+ ✓ tests/unit/ai-readiness.test.ts (31 tests) 65ms
+ ✓ tests/unit/writer-worker-transport.test.ts (1 test) 36ms
+ ✓ tests/unit/rewrite-service.test.ts (8 tests) 42ms
+ ✓ tests/unit/job-requirement-proposals.test.ts (8 tests) 59ms
+ ✓ tests/unit/extraction-repair-development.test.ts (91 tests) 61ms
+ ✓ tests/unit/native-evidence-v2.test.ts (27 tests) 40ms
+ ✓ tests/unit/build-assist-service.test.ts (32 tests) 121ms
+ ✓ tests/unit/evaluation-calibration.test.ts (12 tests) 56ms
+ ✓ tests/unit/evaluation-annotation.test.ts (16 tests) 68ms
+ ✓ tests/unit/native-evidence-schema.test.ts (22 tests) 18ms
+ ✓ tests/integration/api-analyze.test.ts (2 tests) 25ms
+ ✓ tests/unit/artifact-route.test.ts (4 tests) 65ms
+ ✓ tests/unit/document-evidence.test.ts (8 tests) 23ms
+ ✓ tests/unit/ocr/ocr-evaluation.test.ts (11 tests) 49ms
+ ✓ tests/unit/latex-service.test.ts (30 tests) 47ms
+ ✓ tests/unit/pilot-workflow.test.ts (17 tests) 33ms
+ ✓ tests/unit/document-extraction.test.ts (11 tests) 33ms
+ ✓ tests/unit/writing-support.test.ts (88 tests) 78ms
+ ✓ tests/unit/job-requirement-route.test.ts (9 tests) 24ms
+ ✓ tests/unit/privacy-export-route.test.ts (17 tests) 27ms
+ ✓ tests/unit/response-security.test.ts (1 test) 13ms
+ ✓ tests/unit/evaluation-corpus.test.ts (55 tests) 22ms
+ ✓ tests/integration/error-matrix.test.ts (10 tests) 27ms
+ ✓ tests/unit/metrics-route.test.ts (2 tests) 63ms
+ ✓ tests/unit/evaluation-corpus-drill.test.ts (21 tests) 24ms
+ ✓ tests/unit/ocr/adapter.test.ts (33 tests) 24ms
+ ✓ tests/components/SavedScoreContext.test.tsx (2 tests) 71ms
+ ✓ tests/unit/ocr/ocr-pilot-cli.test.ts (7 tests) 12644ms
+     ✓ refuses unsafe flags before execution: ["--psm=7"]  511ms
+     ✓ refuses unsafe flags before execution: ["--dpi=150","--dpi=300"]  629ms
+     ✓ refuses unsafe flags before execution: ["--print-pilot"]  600ms
+     ✓ refuses unsafe flags before execution: ["--print-pilot","--partition=locked"]  721ms
+     ✓ refuses unsafe flags before execution: ["--lock-receipt=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"]  586ms
+     ✓ rejects a mismatched frozen receipt without reaching Docker  4565ms
+     ✓ can freeze held-out sources without Docker or recognition  5030ms
+ ✓ tests/unit/openai-model-transport.test.ts (2 tests) 39ms
+ ✓ tests/unit/score-v2-validity-metrics.test.ts (3 tests) 35ms
+ ✓ tests/unit/authoring-forms.test.ts (6 tests) 54ms
+ ✓ tests/unit/ocr/local-container.test.ts (32 tests) 55ms
+ ✓ tests/unit/build-assist.test.ts (158 tests) 147ms
+ ✓ tests/unit/analyze-request.test.ts (3 tests) 32ms
+ ✓ tests/unit/rewrite-ai.test.ts (10 tests) 134ms
+ ✓ tests/unit/latex-routes.test.ts (12 tests) 35ms
+ ✓ tests/unit/privacy-operations.test.ts (11 tests) 17ms
+ ✓ tests/unit/score-v2-route.test.ts (14 tests) 28ms
+ ✓ tests/unit/browser-test-target.test.ts (21 tests) 18ms
+ ✓ tests/components/UncalibratedScores.test.tsx (2 tests) 71ms
+ ✓ tests/unit/qualitative-ai.test.ts (12 tests) 57ms
+ ✓ tests/unit/security.test.ts (4 tests) 18ms
+ ✓ tests/unit/home-routing.test.ts (2 tests) 17ms
+ ✓ tests/unit/evidence-fields.test.ts (10 tests) 33ms
+ ✓ tests/unit/api-not-found.test.ts (2 tests) 27ms
+ ✓ tests/unit/qualitative-stage-outage.test.ts (3 tests) 24ms
+ ✓ tests/unit/parsing/parse-sim-benchmark.test.ts (1 test) 13ms
+ ✓ tests/unit/observability.test.ts (5 tests) 12ms
+ ✓ tests/unit/auth-logout.test.ts (3 tests) 18ms
+ ✓ tests/unit/latex-source.test.ts (47 tests) 25ms
+ ✓ tests/unit/extraction-stage.test.ts (8 tests) 19ms
+ ✓ tests/unit/job-domain.test.ts (9 tests) 11ms
+ ✓ tests/unit/request-context.test.ts (3 tests) 13ms
+ ✓ tests/unit/writing-source-alignment.test.ts (14 tests) 25ms
+ ✓ tests/unit/reliability-ai-live.test.ts (37 tests) 210ms
+ ✓ tests/unit/authoring-route.test.ts (5 tests) 14ms
+ ✓ tests/unit/ocr/extraction-router.test.ts (22 tests) 23ms
+ ✓ tests/unit/canonical-sql-contract.test.ts (1 test) 15ms
+ ✓ tests/unit/errors.test.ts (3 tests) 26ms
+ ✓ tests/unit/writing-support-usefulness.test.ts (20 tests) 29ms
+ ✓ tests/unit/writer-regeneration.test.ts (3 tests) 14ms
+ ✓ tests/unit/score-v2-contract.test.ts (8 tests) 11ms
+ ✓ tests/unit/parsing/dates.test.ts (6 tests) 6ms
+ ✓ tests/unit/correction-command-codec.test.ts (22 tests) 18ms
+ ✓ tests/unit/canonical-resume-schema.test.ts (16 tests) 13ms
+ ✓ tests/unit/config.test.ts (4 tests) 8ms
+ ✓ tests/unit/job-aliases.test.ts (27 tests) 10ms
+ ✓ tests/unit/native-evidence-worker.test.ts (4 tests) 22ms
+ ✓ tests/unit/ocr/paddle-admission.test.ts (18 tests) 8ms
+ ✓ tests/unit/qualitative-prose.test.ts (6 tests) 12ms
+ ✓ tests/unit/writer-grounding.test.ts (15 tests) 30ms
+ ✓ tests/unit/parse-pages.test.ts (2 tests) 10ms
+ ✓ tests/unit/source-route.test.ts (3 tests) 6ms
+ ✓ tests/unit/native-layout.test.ts (5 tests) 8ms
+ ✓ tests/unit/iso-datetime.test.ts (3 tests) 3ms
+ ✓ tests/unit/native-layout-schema.test.ts (6 tests) 6ms
+ ✓ tests/unit/parsing/contact.test.ts (8 tests) 14ms
+ ✓ tests/unit/native-layout-structure.test.ts (4 tests) 12ms
+ ✓ tests/unit/egress-policy.test.ts (20 tests) 4ms
+ ✓ tests/unit/database.test.ts (3 tests) 8ms
+ ✓ tests/unit/layout-read-model.test.ts (4 tests) 5ms
+ ✓ tests/unit/parsing/sections.test.ts (8 tests) 4ms
+ ✓ tests/unit/qualitative-stage.test.ts (1 test) 4ms
+ ✓ tests/unit/parsing/bullets.test.ts (9 tests) 5ms
+ ✓ tests/unit/ocr/ocr-field-evaluation.test.ts (4 tests) 5ms
+ ✓ tests/unit/latex-config.test.ts (7 tests) 10ms
+ ✓ tests/unit/worker-readiness.test.ts (2 tests) 3ms
+ ✓ tests/unit/parsing/layout.test.ts (7 tests) 4ms
+ ✓ tests/unit/extraction-transitions.test.ts (5 tests) 7ms
+ ✓ tests/unit/evidence-scoring-guard.test.ts (3 tests) 6ms
+ ✓ tests/unit/upload-validation.test.ts (3 tests) 3ms
+ ✓ tests/unit/score-snapshot-binding.test.ts (3 tests) 5ms
+ ✓ tests/unit/authorization.test.ts (2 tests) 2ms
+ ✓ tests/unit/privacy.test.ts (2 tests) 2ms
+ ✓ tests/unit/operations-readiness.test.ts (3 tests) 3ms
+ ✓ tests/unit/writing-quality.test.ts (2 tests) 6ms
+ ✓ tests/unit/native-layout-limits.test.ts (3 tests) 3ms
+ ✓ tests/unit/storage.test.ts (4 tests) 7ms
+ ✓ tests/unit/phase5-thresholds.test.ts (3 tests) 5ms
+ ✓ tests/unit/build-assist-config.test.ts (2 tests) 9ms
+ ✓ tests/unit/evidence-field-sql-version.test.ts (1 test) 1ms
+ ✓ tests/unit/theme.test.ts (3 tests) 2ms
+ ✓ tests/unit/job-policy.test.ts (1 test) 2ms
+ ✓ tests/unit/analysis-state.test.ts (1 test) 3ms
+ ✓ tests/unit/react-router-config.test.ts (1 test) 1ms
+ ✓ tests/unit/result-cache.test.ts (3 tests) 2ms
+ ✓ tests/unit/auth.test.ts (3 tests) 2ms
+ ✓ tests/unit/result-feedback.test.ts (2 tests) 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/build-assist-provider.test.ts > Build provider transport with SDK mocked, no network > sends only selected context under bounded no-store/no-retry/no-redirect options
+AssertionError: expected 'advice' to be 'replace' // Object.is equality
+
+Expected: "replace"
+Received: "advice"
+
+ ❯ tests/unit/build-assist-provider.test.ts:128:50
+    126|   it("sends only selected context under bounded no-store/no-retry/no-r…
+    127|     const result = await executeBuildAssist(prepared(), options);
+    128|     expect(result.response.suggestion.operation).toBe("replace");
+       |                                                  ^
+    129|     expect(result.response.suggestion.replacement).toBe(
+    130|       "\\textbf{Selected sentence.}",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 179 passed (180)
+      Tests  1 failed | 2399 passed (2400)
+   Start at  00:19:25
+   Duration  14.53s (transform 4.90s, setup 0ms, import 19.60s, tests 80.09s, environment 9.72s)
+

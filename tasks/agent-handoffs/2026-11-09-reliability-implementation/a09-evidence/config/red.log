@@ -1,0 +1,128 @@
+
+> test
+> vitest run tests/unit/config.test.ts -t A09 config
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/config.test.ts (26 tests | 9 failed | 17 skipped) 18ms
+     ↓ applies safe defaults
+     ↓ preserves an explicitly configured model
+     ↓ rejects provider egress outside the approved OpenAI endpoint
+     ↓ redacts values from configuration errors
+     ↓ exposes explicit shared budget settings to server and analysis callers
+     ↓ rejects invalid shared budget settings {"AI_BUDGET_ENABLED":"yes"}
+     ↓ rejects invalid shared budget settings {"AI_BUDGET_POLICY_VERSION":"bad policy"}
+     ↓ rejects invalid shared budget settings {"AI_BUDGET_POLICY_VERSION":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
+     ↓ enables only explicitly configured admission and fencing branches
+     ↓ rejects an ambiguous ANALYSIS_ADMISSION_BINDING_ENABLED setting
+     ↓ rejects an ambiguous ANALYSIS_FENCING_ENABLED setting
+     ↓ keeps corrected-version writes disabled by default
+     ↓ allows explicit correction review without requiring AI
+     ↓ requires both prerequisite capabilities (false/true)
+     ↓ requires both prerequisite capabilities (true/false)
+     ↓ requires both prerequisite capabilities (false/false)
+     ↓ rejects an ambiguous correction setting
+     × A09 config keeps typed relation capability off by default through the actual getter 5ms
+     × A09 config permits explicit false without job intelligence 2ms
+     × A09 config enables typed relations only with job intelligence and without enabling AI 1ms
+     × A09 config rejects enabled relations when job intelligence is undefined 1ms
+     × A09 config rejects enabled relations when job intelligence is false 2ms
+     × A09 config rejects ambiguous typed relation flag yes 1ms
+     × A09 config rejects ambiguous typed relation flag TRUE 1ms
+     × A09 config rejects ambiguous typed relation flag  1ms
+     × A09 config rejects ambiguous typed relation flag 1 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/config.test.ts > typed job relation capability > A09 config keeps typed relation capability off by default through the actual getter
+AssertionError: expected undefined to be false // Object.is equality
+
+- Expected:
+false
+
++ Received:
+undefined
+
+ ❯ tests/unit/config.test.ts:178:53
+    176|   it("A09 config keeps typed relation capability off by default throug…
+    177|     const { getServerConfig } = await freshServerConfig();
+    178|     expect(getServerConfig().JOB_RELATIONS_ENABLED).toBe(false);
+       |                                                     ^
+    179|     expect(getServerConfig().JOB_INTELLIGENCE_ENABLED).toBe(false);
+    180|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  tests/unit/config.test.ts > typed job relation capability > A09 config permits explicit false without job intelligence
+AssertionError: expected undefined to be false // Object.is equality
+
+- Expected:
+false
+
++ Received:
+undefined
+
+ ❯ tests/unit/config.test.ts:186:53
+    184|       JOB_INTELLIGENCE_ENABLED: "false",
+    185|     });
+    186|     expect(getServerConfig().JOB_RELATIONS_ENABLED).toBe(false);
+       |                                                     ^
+    187|   });
+    188|   it("A09 config enables typed relations only with job intelligence an…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  tests/unit/config.test.ts > typed job relation capability > A09 config enables typed relations only with job intelligence and without enabling AI
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected:
+true
+
++ Received:
+undefined
+
+ ❯ tests/unit/config.test.ts:194:53
+    192|       AI_ENABLED: "false",
+    193|     });
+    194|     expect(getServerConfig().JOB_RELATIONS_ENABLED).toBe(true);
+       |                                                     ^
+    195|     expect(getServerConfig().JOB_INTELLIGENCE_ENABLED).toBe(true);
+    196|     expect(getServerConfig().AI_ENABLED).toBe(false);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  tests/unit/config.test.ts > typed job relation capability > A09 config rejects enabled relations when job intelligence is undefined
+ FAIL  tests/unit/config.test.ts > typed job relation capability > A09 config rejects enabled relations when job intelligence is false
+AssertionError: expected function to throw an error, but it didn't
+ ❯ tests/unit/config.test.ts:205:39
+    203|         JOB_INTELLIGENCE_ENABLED: prerequisite,
+    204|       });
+    205|       expect(() => getServerConfig()).toThrow(ServerConfigError);
+       |                                       ^
+    206|       expect(() => getServerConfig()).toThrow("JOB_RELATIONS_ENABLED");
+    207|     },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  tests/unit/config.test.ts > typed job relation capability > A09 config rejects ambiguous typed relation flag yes
+ FAIL  tests/unit/config.test.ts > typed job relation capability > A09 config rejects ambiguous typed relation flag TRUE
+ FAIL  tests/unit/config.test.ts > typed job relation capability > A09 config rejects ambiguous typed relation flag 
+ FAIL  tests/unit/config.test.ts > typed job relation capability > A09 config rejects ambiguous typed relation flag 1
+AssertionError: expected function to throw an error, but it didn't
+ ❯ tests/unit/config.test.ts:216:39
+    214|         JOB_INTELLIGENCE_ENABLED: "true",
+    215|       });
+    216|       expect(() => getServerConfig()).toThrow(ServerConfigError);
+       |                                       ^
+    217|     },
+    218|   );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  9 failed | 17 skipped (26)
+   Start at  00:55:12
+   Duration  151ms (transform 33ms, setup 0ms, import 69ms, tests 18ms, environment 0ms)
+

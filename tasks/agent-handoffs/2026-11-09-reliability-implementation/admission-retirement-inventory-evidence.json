@@ -1,0 +1,73 @@
+{
+  "status": "SCOPED_CAPTURING_AND_EXPORT_VERIFIED_LOCALLY",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "source": {
+    "supabase/migrations/20261121132235_analysis_admission_retirement_capture.sql": "a0a38cbc3424c26ab94db9f3d71b45b175988829e3ee1c4508f3f14155a4fe59",
+    "app/lib/server/privacy-worker.ts": "6b7ebf51e0636e12aeffc7321f4862070eea72d909b0be2ad1bcaa2cd9c3e7ea",
+    "app/routes/privacy.tsx": "716fd82b5125478b612788773c0c03c25088dbdd2ca445c744887e367d7d4763",
+    "tests/unit/privacy-claim-fence.test.ts": "69ec65fee989753d173a5a0f77d03ba2e5731235e6219c409ecc894621c78966",
+    "tests/components/PrivacyRepairs.test.tsx": "727ff9423afa9073dfe5efe5af1316d12c9596b6833cf7a0f9dc19b4a8c463a4"
+  },
+  "red": "Initial focused test expected capture RPC while existing worker only held and failed the request. Reproduced before the patch.",
+  "local": {
+    "nativeCapture": {
+      "exitCode": 0,
+      "postgresVersion": "17.11",
+      "tier": "isolated_socket_minimal_synthetic_support_schema",
+      "cases": [
+        "owner-wide exact inclusion",
+        "cross-tenant exclusion",
+        "scope drift rejection",
+        "wrong worker and stale or expired claim denial",
+        "legacy lease observation",
+        "immutable retry",
+        "role ACL",
+        "owned capture export",
+        "bounded export refusal"
+      ],
+      "driver": {
+        "path": "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-retirement-inventory-native-fixture.py.txt",
+        "sha256": "4fce8b2c557a3ce361ed6a139750825d58618d8d2f0ee7bac317a1f4c669a637"
+      }
+    },
+    "focusedTestsPassed": 126,
+    "combinedTestsPassed": 6757,
+    "testFiles": 323,
+    "reports": {
+      "process": {
+        "path": "/tmp/resumide-retirement-final-tests.xcYjMe/process.json",
+        "sha256": "dc037fa2e4fccfe24fcb365bb55f6159bf1daa3047ca898430584a44f3776c16"
+      },
+      "unit": {
+        "path": "/tmp/resumide-retirement-final-tests.xcYjMe/unit.json",
+        "sha256": "99130a891ceb35da02e3f0579b7a9dcb8d4ab8eed351a6c1c2ebeecba331c188"
+      }
+    },
+    "lintWarnings": 4,
+    "formatPassed": true,
+    "typesPassed": true,
+    "webBuildPassed": true,
+    "workerBuildPassed": true,
+    "buildLog": {
+      "path": "/tmp/resumide-retirement-final-build.Pbsn9F/build.log",
+      "sha256": "b85b89a6cb16609dd28db616590601d68d16927bb8d29746e793b3a520358e64"
+    },
+    "syntheticOps": {
+      "load": {
+        "path": "/tmp/resumide-retirement-ops.O8FO4w/load.log",
+        "sha256": "0d4c1d0f8704e71710652fc2df86d3ae3d4a55e46e9f4bc368898f2c8926aacb"
+      },
+      "restore": {
+        "path": "/tmp/resumide-retirement-ops.O8FO4w/restore.log",
+        "sha256": "5f1d39e5948ccd878f04b52131ff25a15c5186ab2470ed40200b1768b179e405"
+      }
+    }
+  },
+  "managedMigrationsApplied": false,
+  "storageDeletionExecuted": false,
+  "fullErasureImplemented": false,
+  "browserAcceptanceExecuted": false,
+  "dockerUsed": false,
+  "currentReplayInventory": "managed-schema-inventory-84.json",
+  "stagesClosed": 0
+}

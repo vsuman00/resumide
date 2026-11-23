@@ -1,0 +1,131 @@
+{
+  "command": [
+    "/usr/bin/sandbox-exec",
+    "-p",
+    "(version 1)(allow default)(deny network*)",
+    "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-sealed-security-0zi88hb7/trivy",
+    "image",
+    "--input",
+    "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-decoder-security-04k1vlym/decoder-guard.image.tar",
+    "--cache-dir",
+    "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-sealed-security-0zi88hb7/cache",
+    "--config",
+    "",
+    "--ignorefile",
+    "",
+    "--scanners",
+    "vuln",
+    "--pkg-types",
+    "os,library",
+    "--severity",
+    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+    "--ignore-unfixed=false",
+    "--show-suppressed",
+    "--offline-scan",
+    "--disable-telemetry",
+    "--skip-version-check",
+    "--skip-db-update",
+    "--skip-java-db-update",
+    "--skip-check-update",
+    "--skip-vex-repo-update",
+    "--list-all-pkgs",
+    "--format",
+    "json",
+    "--output",
+    "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/docs/evaluation/AA7_DECODER_GUARD_SECURITY_20261106_RAW.json",
+    "--exit-code",
+    "1",
+    "--timeout",
+    "10m",
+    "--parallel",
+    "2",
+    "--max-image-size",
+    "2GB",
+    "--no-progress"
+  ],
+  "environmentNames": [
+    "HOME",
+    "LANG",
+    "PATH",
+    "TMPDIR"
+  ],
+  "error": "Traceback (most recent call last):\n  File \"/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-decoder-security-04k1vlym/scan-attempt2.py\", line 68, in <module>\n    rows,pkgs,types=collect(raw)\n                    ~~~~~~~^^^^^\n  File \"/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-decoder-security-04k1vlym/scan-attempt2.py\", line 65, in collect\n    assert v['PkgName']==p['Name'] and v['InstalledVersion']==p['Version']\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n",
+  "existingCachesImagesArchivesPreserved": true,
+  "exitCode": 1,
+  "finishedUnix": 1793979913.2546308,
+  "freeBytesBefore": 12397867008,
+  "freeDiskBytesAfter": 12873314304,
+  "imageBindingSha256": "074f3cf771531f6370386221768bbbfa50298ecf1ce89cee0d9077cf18676c4f",
+  "imageID": "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203",
+  "inputHashesAfter": {
+    "binary": "7a15c426f963473a485a4f315e21f8e2c881269d500bf0de35da13a4421fa108",
+    "db": "acc7850179a48dbe868f97eb59ea186510800ade8ee815392fa2e7b26875c22d",
+    "java-db": "7124b5d89aa910c1c79b7cbdd35903ab940762f6ebb27729e558fb197f9ae1db"
+  },
+  "inputHashesBefore": {
+    "binary": "7a15c426f963473a485a4f315e21f8e2c881269d500bf0de35da13a4421fa108",
+    "db": "acc7850179a48dbe868f97eb59ea186510800ade8ee815392fa2e7b26875c22d",
+    "java-db": "7124b5d89aa910c1c79b7cbdd35903ab940762f6ebb27729e558fb197f9ae1db"
+  },
+  "inputHashesUnchanged": true,
+  "networkDenialPreflight": {
+    "command": [
+      "/usr/bin/sandbox-exec",
+      "-p",
+      "(version 1)(allow default)(deny network*)",
+      "/usr/bin/python3",
+      "-I",
+      "-B",
+      "-c",
+      "import errno,json,socket\ns=socket.socket(socket.AF_INET,socket.SOCK_STREAM)\ns.settimeout(2)\ntry:\n result=s.connect_ex(('127.0.0.1',9))\nexcept OSError as e:\n result=e.errno\nfinally:\n s.close()\nprint(json.dumps({'connectErrno':result,'acceptedDenials':[errno.EPERM,errno.EACCES]}))\nraise SystemExit(0 if result in (errno.EPERM,errno.EACCES) else 1)\n"
+    ],
+    "exitCode": 0,
+    "seconds": 0.115,
+    "stderr": "",
+    "stdout": "{\"connectErrno\": 1, \"acceptedDenials\": [1, 13]}\n"
+  },
+  "noBootstrap": true,
+  "noFindingsSuppressed": true,
+  "noReexport": true,
+  "originalFailedReceiptSha256": "1ffdf8dee18100cf468913226b2504eaa2d71e08330fa37963f8dcfb2b6b789a",
+  "reusedArchives": [
+    {
+      "bytes": 257199104,
+      "command": [
+        "docker",
+        "image",
+        "save",
+        "--output",
+        "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-decoder-security-04k1vlym/decoder-guard.full-index.tar",
+        "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203"
+      ],
+      "freeDiskBytesAfter": 12889563136,
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-decoder-security-04k1vlym/decoder-guard.full-index.tar",
+      "seconds": 3.041,
+      "sha256": "4a85d348e5dfbd5166b428410664192e09824ee8eb1d7816da44629c6451c9fc"
+    },
+    {
+      "bytes": 257190400,
+      "command": [
+        "docker",
+        "image",
+        "save",
+        "--platform",
+        "linux/arm64",
+        "--output",
+        "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-decoder-security-04k1vlym/decoder-guard.image.tar",
+        "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203"
+      ],
+      "freeDiskBytesAfter": 12625186816,
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-decoder-security-04k1vlym/decoder-guard.image.tar",
+      "seconds": 1.691,
+      "sha256": "c602b4deef4e8f8f41a028a2afeec16802d7eb83e29fabdb8ecefbf886b905c2"
+    }
+  ],
+  "scanStarted": true,
+  "seconds": 3.128,
+  "startedUnix": 1793979905.3641632,
+  "status": "OPERATIONAL_OR_BINDING_FAILURE",
+  "stderr": "2026-11-06T21:15:09+05:30\tINFO\t[vex] Skipping VEX repository update\n2026-11-06T21:15:09+05:30\tINFO\t[vuln] Vulnerability scanning is enabled\n2026-11-06T21:15:11+05:30\tINFO\tDetected OS\tfamily=\"debian\" version=\"13.7\"\n2026-11-06T21:15:11+05:30\tINFO\t[debian] Detecting vulnerabilities...\tos_version=\"13\" pkg_num=216\n2026-11-06T21:15:11+05:30\tINFO\tNumber of language-specific files\tnum=1\n2026-11-06T21:15:11+05:30\tINFO\t[python-pkg] Detecting vulnerabilities...\n2026-11-06T21:15:11+05:30\tWARN\tUsing severities from other vendors for some vulnerabilities. Read https://trivy.dev/docs/v0.76/guide/scanner/vulnerability#severity-selection for details.\n",
+  "stdout": ""
+}

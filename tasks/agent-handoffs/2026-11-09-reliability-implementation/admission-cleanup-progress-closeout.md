@@ -1,0 +1,9 @@
+# Upload cleanup progress across worker claims
+
+CR-R17-S06 prevents a successful, deadline-limited upload cleanup from consuming one of the account request's allowed failures. Previously a large account could use all three default attempts while making valid progress.
+
+The database records which live claim last changed an upload to cleaned. When the worker reaches its shared deadline, it can requeue the request only if that same claim newly verified cleanup and another eligible upload remains. The handoff clears the lease without changing the current attempt number or incrementing failure counters. The next claim advances the attempt fence as usual. Failure bookkeeping subtracts only database-recorded handoffs from attempts. Replay of an old completion, an expired lease, or progress on another request earns no credit. Owner exports include the two progress counters with the existing deletion inventory.
+
+Three regression cases reproduced the old failure path or missing verification. The focused suite passed all 110 cases. The integrated application suite passed 6,792 tests across 323 files, and formatting, typecheck, lint, and both builds passed. Lint reported four existing warnings. The [PostgreSQL 17 fixture](admission-cleanup-progress-native-fixture.py.txt) tested four verified handoffs and three subsequent failures, with the third failure reaching the existing limit. It also checked replay, expired claims and owner-only export. The fixture used synthetic supporting relations and simulated reclaim through the existing attempt fence. Storage responses were synthetic. [Verification receipt](admission-cleanup-progress-evidence.json).
+
+The new migration is pinned as the [86th local file](managed-schema-inventory-86.json). Earlier migration hashes matched their inventories. The managed replay, actual Storage cleanup, unknown-writer reconciliation, and retirement of the account's admission records remain open.

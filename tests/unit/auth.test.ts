@@ -9,6 +9,16 @@ describe("authentication helpers", () => {
     expect(safeReturnTo("//untrusted.example")).toBe("/");
   });
 
+  it("preserves local navigation context and rejects ambiguous or recursive destinations", () => {
+    expect(safeReturnTo("/build?view=preview#editor")).toBe(
+      "/build?view=preview#editor",
+    );
+    expect(safeReturnTo("/build/./draft")).toBe("/build/draft");
+    expect(safeReturnTo("/auth/callback")).toBe("/");
+    expect(safeReturnTo(String.raw`/build\draft`)).toBe("/");
+    expect(safeReturnTo("/build\ndraft")).toBe("/");
+  });
+
   it("returns no user when Supabase rejects the session", async () => {
     const user = await getAuthenticatedUser({
       auth: {

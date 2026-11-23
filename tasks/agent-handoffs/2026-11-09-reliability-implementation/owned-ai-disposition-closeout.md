@@ -1,0 +1,31 @@
+# Owned AI disposition clocks and durable access checkpoint
+
+The clock, closure, access and export foundation is **VERIFIED_LOCAL at the source/synthetic tier**. The current candidate has passing evidence for **5,332 unique tests across 269 unit/component files**, with zero remaining failures or skips, plus full typecheck, lint, web build and worker build. This does not complete the 30-day erasure lifecycle, native validation or the full reliability plan.
+
+## Implemented source
+
+The [forward migration](../../../supabase/migrations/20261115131621_owned_ai_disposition_clocks.sql) records an immutable first-preparation timestamp and an exact 720-hour deadline. Account preparation captures owned operations across organizations; first retention claim captures the affected root's operations before its tombstone, including unpublished A12/A13 work and the exact R03 reservation created before A13 dispatch claim. Unrelated roots and standalone Build work are not inferred from an owner or payload hash. Earlier proved deadlines win. Missing historical evidence receives explicit repair state rather than a fabricated clock.
+
+The durable barrier survives failed/cancelled request bookkeeping and deletion-plan cleanup. Both export download probes, the privacy loader/cancel action and canonical/JD readers use a strict owner-correlated access RPC with its own metadata capability. Pre-preparation failed/cancelled requests keep their prior semantics. Prepared deletion cannot be cancelled through the authoritative source trigger. Shared deadlines reject cancellation, unavailable authority, delayed responses and clock reversal; there is no request-only fallback.
+
+Privacy export requires the new owner-wide disposition export even with feature flags off. It preserves nine existing accounting collections and adds account and operation dispositions. Strict ownership, typed identity, cause, microsecond clock arithmetic, effective minimum deadline and combined row/byte bounds fail closed. The native exporter refuses proved missing historical closure rather than silently returning an empty collection.
+
+The current readiness profiles follow actual composed source bodies. Historical A13 descriptors retain their original JSON/hash validation and replay/export semantics; fresh selection requires the current profile. A private nonpersonal catalogue seal is initialized only by the future migration transaction and compared against current schema definitions. It includes the seal's own schema without recording candidate rows or permitting runtime resealing. This is source implementation, not evidence that PostgreSQL has parsed or installed it. New access/export/data RPCs remain denied by default; no expiry/purge mutator or activation is supplied.
+
+## Validation and preserved failures
+
+[Root reconciliation](owned-ai-disposition-integrated-review.json) binds all 46 allocated files, 917 first-run inputs, 929 follow-up inputs, both logs, test reports, build artifacts and seven absent Root workload groups. Sessions3435 and86804 are closed; no Root command remains live.
+
+The [first bulk receipt](owned-ai-disposition-integrated-c2395b02-d133-4f77-8d41-24285aebcd76.json) records 5,181 passing and 120 failing cases across 268 files. Its failures remain preserved. Repairs touched only the 13 failing test files: old authority doubles and source-profile comparisons, one missing privacy UI fixture field, and a TTL assertion that raced an unsettled mock RPC. A controlled response gate reproduced the TTL race; all original expiry/storage assertions remain. New owner/prepared/denied controls were added. Three scheduling case names now describe the actual RPC boundary; inspected overlap, precedence, ownership and no-write assertions remain.
+
+The [follow-up receipt](owned-ai-disposition-followup-709c8188-ae86-4bec-b7b4-08ef20054f53.json) passes 281 cases across those 13 files, all three unchanged process-lifecycle cases, then `npm run typecheck`, `npm run lint`, `npm run build` and `npm run build:worker`. Exact comparison proves production inputs and the other 255 passing test files unchanged. Their 5,048 cases carry forward, yielding 5,332 current passing cases in 269 files across two receipts. This is not a fresh whole-suite rerun. The isolated bulk/affected partition denies OS network, root dotenv reads and Git writes. The three neutral process fixtures use the previously audited sealed environment because macOS Seatbelt prevents their required `ps` lookup; their source/helper hashes are unchanged and enforced.
+
+[Native source review](owned-ai-disposition-peer-review.md) and [access source review](owned-ai-disposition-access-peer.md) found no remaining scoped issue on exact final hashes. Draft catalogue, reserved-attempt and seal-self-schema findings were fixed before integration. Author failed type/fixture receipts and the compiler-zero receipt with dependency drift remain distinct from the final stable full typecheck.
+
+## Remaining work
+
+The full 30-day expiry/purge transaction, scheduler/deadline monitoring, source registration and erased-selector replay protections, foreign-actor sanitization, Auth/organization disposition, old export copies, exact storage deletion and external restore floor remain open. Known usage and unresolved holds must retain their original-period safety semantics without retained personal links.
+
+Next is CR-R17 storage coverage: the inherited retention path can select one version, tombstone the whole root, leave other versions without work items and later delete their parent too early. The new clock leaf captures all accounting operations; it does not prove physical cleanup. Repair must drain bounded batches, forbid early root deletion and late failure resurrection, preserve original clocks and avoid guessed object keys or an invented total-history limit.
+
+SQL parsing/execution, real database roles/transactions/races, actual services/provider/browser/OCR/compiler checks, representative validity and owner/release acceptance remain unverified here. All 64 parent tasks remain 2 VERIFIED, 38 PARTIAL and 24 PLANNED. The goal stays active. Services remain free, pricing deferred and deployment on hold. No workspace staging, commit, push or deployment occurred.

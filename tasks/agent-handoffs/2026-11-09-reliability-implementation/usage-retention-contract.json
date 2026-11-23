@@ -1,0 +1,132 @@
+{
+  "status": "FROZEN",
+  "version": "owned-legacy-usage-retention/1.0.1",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Preserve actual disappearing run contributions before content erasure; full expiry/purge and budget-off dispatch admission remain separate required work.",
+  "boundary": "Source/synthetic/fakeRPC only; pinnedNode22.23.4 sealedemptyHOME withOSnetwork/rootdotenv/Gitwritedenials. NoSQLparser/execution/advisors/DB/hosted/env/keys/PII/providers/services/browser/compiler/OCR/Docker/deps/Gitmutation/deployment. SupabaseCLI2.117.0migrationnew only; newdata grants denied, flags default-off.",
+  "table": "private.owned_legacy_ai_usage_retirements",
+  "columns": [
+    "run_id",
+    "owner_id",
+    "organization_id",
+    "analysis_id",
+    "resume_id",
+    "resume_version_id",
+    "run_created_at",
+    "original_month",
+    "input_tokens",
+    "output_tokens",
+    "classification",
+    "first_cause",
+    "deletion_request_id",
+    "retention_item_id",
+    "prepared_at",
+    "expires_at"
+  ],
+  "primaryKey": "actualrun_id only; distinctruns withidenticalinput_hash countseparately",
+  "classes": [
+    "legacy_unlinked",
+    "a12_linked",
+    "a13_linked"
+  ],
+  "sourceCounters": "Actualanalysis_ai_runs hasINTEGER NOT NULL CHECK>=0. Validateknowninput/output0..2147483647, castEACHtonumericbeforeadd. No inventedordinaryNULLlegacyrecords; invalid/source/counter/classification drift refuses withoutzero/refund. ExistingtypedunknownClaims/holds unchanged.",
+  "clock": "prepared_at actualminimum firstrootretirementitem.created_at(includingdeleted) and accountdisposition.prepared_at; exact matching originalcauseID. expires_at=prepared_at+720h. Nevercapture/completiontime. Effectiveexpiry=min(storedexpiry,currentaccountdispositionexpiry); no extension/no guessedmissingclock. Personalmetadata only, no anonymous/perpetualclaim.",
+  "producerHooks": {
+    "account": "Afteractualoperation/dispositionclockcapture, BEFOREretire_initial_feedback_publications and analyses DELETE",
+    "retention": "Insideexactownedobjectcoverage success, immediately BEFOREretirement/publicrootDELETE; terminalreplayreturnsbeforecapture. Finalsourceenumerationcloseslate-run hole."
+  },
+  "captureRules": [
+    "Privatehelpercapture_owned_legacy_ai_usage(uuid,uuid,uuid,uuid) serviceEXEC denied. Captureandcontentdelete sametransaction; anyfailure rollsbackboth.",
+    "EnumerateEVERY actualrun cascading parentdeletionwouldremove, thenvalidate exactowner/org/analysis/version/root; neverfilteroutmismatchedchildren and silentlydelete. Actualsource/root/analysis/runlocks preventlateinserts orcounterrebinding throughfinaldelete.",
+    "ClassifyusingexistinggloballyvalidatedALL-MONTHA12/A13linkpartition. Rejectinvalid/duplicatelinks beforecapture; no monthfilteronlinkauthority. RetainALL3classes forlegacyreadercontract.",
+    "DeduplicateactualrunID; ONCONFLICTmustcomparefullimmutabletuple/counters/classification/clockbeforeanyexclusion. Coexistinglive+retainedrecordmustmatchactualsource/period/counters/classification orrefuse. DifferentrunIDsnotcollapsedbyhash.",
+    "Readers countlivecopy once andretainedonlywhenrealrunabsent, AFTERintegritycheck. No blindNOTEXISTS hidingdrift. No totalhistorycapaddedtoR17root; statement/resourcebounds remainexplicit Native/performancegate.",
+    "Newtableprivate/RLS/defaultdenied, noFKcascadethatprematurelydropsaccounting, closedmetadata/schema checks; neverresealoldclosedcataloguemetadata. PreservehistoricalSQL/policy/receipt/scoringbytes."
+  ],
+  "readers": {
+    "shared": "public.read_initial_feedback_usage unchanged13fieldwire; ONLYretainedlegacy_unlinked addedtolegacyUnlinkedTokens byoriginalrunUTCmonth; A12/A13typedusage remainsauthoritative; preserveunknownClaims/integrity/profile checks. R03notadditive.",
+    "legacy": "public.get_organization_ai_tokens_used(uuid,timestamptz)->bigint keepsarbitraryp_since exactrun_created_at comparison andhistoricalALLclassknownrunsemantics. Addretainedclassrows, neverreinterpretasclaimedmonthtypedquota. Finite/nonfinite/NULLinputpolicy mustnotquietlyweakenexistingadmission; overflowunavailable notrefund."
+  },
+  "readiness": {
+    "profileModule": "app/lib/server/owned-legacy-ai-usage-profile.ts",
+    "schemaVersion": "owned-legacy-ai-usage-readiness/1.0.0",
+    "profileVersion": "owned-legacy-ai-usage-profile/1.0.0",
+    "profileKeys": [
+      "schemaVersion",
+      "profileVersion",
+      "checkerSha256",
+      "captureSha256",
+      "exportSha256",
+      "metadataSha256"
+    ],
+    "rpc": "read_owned_legacy_ai_usage_readiness",
+    "exactKeys": [
+      "schemaVersion",
+      "profileVersion",
+      "checkerSha256",
+      "captureSha256",
+      "exportSha256",
+      "metadataSha256",
+      "schemaReady",
+      "exportExecutable"
+    ],
+    "capabilities": "Literaltrue schemaReady+exportExecutable. Captureprivate, neverinventpubliccapturecapability. MetadataserviceEXEC only; exportdefaultdenied. Pinactualcapture/readers/producers/schema/guard/export/cataloguebodyclosure."
+  },
+  "export": {
+    "rpc": "export_owned_legacy_ai_usage_records",
+    "args": [
+      "p_user_id"
+    ],
+    "schemaVersion": "owned-legacy-ai-usage-export/1.0.0",
+    "exactEnvelopeKeys": [
+      "schemaVersion",
+      "ownerId",
+      "records"
+    ],
+    "exactRecordKeys": [
+      "runId",
+      "ownerId",
+      "organizationId",
+      "analysisId",
+      "resumeId",
+      "resumeVersionId",
+      "runCreatedAt",
+      "originalMonth",
+      "inputTokens",
+      "outputTokens",
+      "classification",
+      "firstCause",
+      "deletionRequestId",
+      "retentionItemId",
+      "preparedAt",
+      "expiresAt",
+      "effectiveExpiresAt"
+    ],
+    "uuid": "canonical lowercase",
+    "timestamp": "canonicalUTC6fractional digits, finite",
+    "originalMonth": "YYYY-MM-01 exactly UTCmonth(runCreatedAt)",
+    "counters": "canonicaldecimalstrings integer0..2147483647",
+    "cause": "firstCause account_preparation => deletionRequestIdUUID/retentionItemIdNULL; resume_retirement => requestNULL/itemUUID",
+    "expiry": "exactmicrosecondprepared+720hours; effective<=storedexpiry, pairedownerexport verifiesminimumwithactualaccountdisposition",
+    "maxRows": 4096,
+    "maxUtf8Bytes": 33554432,
+    "coverage": "Entireowner acrossorgs/periods/flags orrefuse; no silenttruncation/membershipfilter. Actual immutablepersonal records, notzeroedfakeusage.",
+    "manifestCollection": "ownedLegacyAiUsageRetirements",
+    "manifestRequirement": "Mandatory fifth accountingread, thirteenthcollection. Preserveall12existingcollections andsourceexportclosure; failureabortsentireexport."
+  },
+  "sourceAcceptance": [
+    "REDactualrawrunloss/predecessorreader omissions beforeimplementation, no JSmodelasSQLproof",
+    "Before/afterdelete known100 currentmonthandexactp_since invariant; repeatsnoredebit; unrelatedrootretained",
+    "A12/A13compatrowsnotdoubledebitincludingOctclaim/Novrun; R03notcountedagain; typedunknownunchanged",
+    "Lateactualrunset capturedatfinalerase, mismatchedowner/duplicates/conflictrefused; earliestclockneverextended",
+    "StrictNodewholeownerexport8keymetadata/17keyrecords/clockmicroseconds/month/counters/caps/no fallback/timeout/cancel, flags-offunconditionalworkerread",
+    "Allchangedactualbody/profilepinsrenewed; historicalassertionspreservedplusforwardcurrentbridges. Nativeverifierprivilegedmutatingrollbackdraftunparsedunexecuted."
+  ],
+  "requiredLater": [
+    "independentbudget-offprovideradmission",
+    "complete720hidentityexpiry/globalmonthaggregates/unknownholds",
+    "foreignactor/Auth/org/oldexports/objects/scheduler/externalrestorefloor",
+    "Native/actual/representative/owner/releaseacceptance"
+  ],
+  "deadlineUsageRule": "Expiry is NOT quota eligibility/refund. Never omit due personal rows to create capacity. Before separate aggregate-fold/purge protocol exists, a reader encountering an eligible due retained row must fail closed or preserve the charge without claiming extended personal retention permission. No deadline extension; activation/fullpurge remains blocked. Test31daymonth:720hours may precede originalmonthend."
+}

@@ -1,0 +1,42 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/build-assist-budget.test.ts (14 tests | 1 failed | 13 skipped) 22ms
+     ↓ denies the shared pool before provider dispatch even when the legacy allowance is available
+     ↓ uses one 24232+768 shared reservation and charges actual usage while retaining user/global/consent/audit gates
+     ↓ rejects an invalid HTTP idempotency key before ledger/provider work
+     ↓ recovers an unclaimed RESERVED replay through the first dispatch CAS
+     ↓ does not dispatch or alter accounting for a prior DISPATCHED replay
+     ↓ binds changed payload to the same namespaced HTTP key instead of granting another operation
+     ↓ settles observed safe usage even when the provider output is rejected
+     ↓ charges and fences known usage above the reservation before output rejection without changing old bounded metrics
+     ↓ holds unknown or invalid numeric usage undefined without an invented zero
+     ↓ holds unknown or invalid numeric usage {"prompt_tokens":1.5,"completion_tokens":10} without an invented zero
+     ↓ holds a post-claim cancellation without refunding the dispatched attempt
+     ↓ withholds a valid suggestion when known settlement fails
+     ↓ retains the known charge when result delivery fails afterward
+   × requires current source admission before Build SDK dispatch 21ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/build-assist-budget.test.ts > requires current source admission before Build SDK dispatch
+AssertionError: expected 200 to be 503 // Object.is equality
+
+- Expected
++ Received
+
+- 503
++ 200
+
+ ❯ tests/unit/build-assist-budget.test.ts:487:27
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 13 skipped (14)
+   Start at  21:53:24
+   Duration  282ms (transform 94ms, setup 0ms, import 197ms, tests 22ms, environment 0ms)
+
+JSON report written to /tmp/resumide-ai-callers-runtime-HG1LPJ/tests.json

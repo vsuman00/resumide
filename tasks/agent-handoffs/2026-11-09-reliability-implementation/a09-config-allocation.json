@@ -1,0 +1,26 @@
+{
+  "task": "CR-A09-S01",
+  "status": "ALLOCATED_CONFIG_REPRODUCTION_BEFORE_IMPLEMENTATION",
+  "at": "2026-11-10T19:22:58.748310+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "owner": "a04_frontend",
+  "worktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats",
+  "files": {
+    "app/lib/server/config.ts": "d2b222f20db8a6048ca54d0b65aa59d9277ace2a4a5640b6358bd4a7461a9a48",
+    "tests/unit/config.test.ts": "ad98bd1c4f437f023394e92352b9a2dca34f5df51d66b7c9825cbbb36fe0ac25",
+    ".env.example": "6c30271d8ce3f1ce27661d94cc6ff871d912926e6605166c933d8369887a079b"
+  },
+  "newHandoff": "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a09-config.md",
+  "maximumFiles": 4,
+  "contract": {
+    "flag": "JOB_RELATIONS_ENABLED",
+    "default": false,
+    "requires": [
+      "JOB_INTELLIGENCE_ENABLED"
+    ],
+    "noAIProviderRequirement": true,
+    "exampleOnly": "Appendfalsevalue next to jobintelligence config; no real.env read or change."
+  },
+  "acceptance": "Actual existing config red for newflag/dependency, oldassertions preserved; positive bothflags and malformedenv vectors; scoped Node22/static evidence. This is one leaf of fullA09, not storage activation.",
+  "exclusions": "No provider/DB/SQL/Docker/ownerdata/Git/deploy or unrelated config edits"
+}

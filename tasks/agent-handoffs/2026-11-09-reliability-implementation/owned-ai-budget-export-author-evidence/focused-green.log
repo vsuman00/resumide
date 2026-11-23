@@ -1,0 +1,158 @@
+
+> test
+> vitest run tests/unit/owned-ai-budget-export.test.ts tests/unit/owned-ai-budget-export-sql.test.ts
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats[39m
+
+ [31m❯[39m tests/unit/owned-ai-budget-export-sql.test.ts [2m([22m[2m7 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 8[2mms[22m[39m
+     [32m✓[39m pins all real new and inherited read-path bodies without self recursion[32m 2[2mms[22m[39m
+     [32m✓[39m keeps complete historical owner reads in one stable read-only snapshot[32m 0[2mms[22m[39m
+[31m     [31m×[31m redacts foreign actors and returns only the five own-action fields for foreign targets[39m[32m 3[2mms[22m[39m
+     [32m✓[39m validates precision, immutable binding, cost, history and unknown-null state before projection[32m 0[2mms[22m[39m
+     [32m✓[39m enforces all five collection bounds and aggregate bytes before appending[32m 0[2mms[22m[39m
+     [32m✓[39m checks actual seven-store identities, keys, triggers, roles and exact ACL boundaries[32m 0[2mms[22m[39m
+     [32m✓[39m defers actual Native export/redaction and immutable snapshot acceptance[32m 0[2mms[22m[39m
+ [31m❯[39m tests/unit/owned-ai-budget-export.test.ts [2m([22m[2m25 tests[22m[2m | [22m[31m4 failed[39m[2m)[22m[32m 27[2mms[22m[39m
+     [32m✓[39m admits each real lifecycle shape and preserves unknown nulls[32m 6[2mms[22m[39m
+     [32m✓[39m uses exact large integer costs from the existing R03 producer math[32m 0[2mms[22m[39m
+     [32m✓[39m preserves whole historical multi-organization owner rows without current membership[32m 1[2mms[22m[39m
+     [32m✓[39m records a redacted foreign actor while rejecting disclosure of that UUID[32m 1[2mms[22m[39m
+     [32m✓[39m exports own operator records/actions without foreign target or usage fields[32m 1[2mms[22m[39m
+     [32m✓[39m rejects malformed/nonexact numeric value 0[32m 0[2mms[22m[39m
+     [32m✓[39m rejects malformed/nonexact numeric value 01[32m 0[2mms[22m[39m
+     [32m✓[39m rejects malformed/nonexact numeric value -1[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects malformed/nonexact numeric value 1.0[39m[32m 3[2mms[22m[39m
+[31m     [31m×[31m rejects malformed/nonexact numeric value 1e3[39m[32m 1[2mms[22m[39m
+[31m     [31m×[31m rejects malformed/nonexact numeric value NaN[39m[32m 0[2mms[22m[39m
+[31m     [31m×[31m rejects malformed/nonexact numeric value Infinity[39m[32m 0[2mms[22m[39m
+     [32m✓[39m rejects malformed/nonexact numeric value 9007199254740992[32m 0[2mms[22m[39m
+     [32m✓[39m rejects owner/parent/duplicate/binding/cost corruption independently[32m 1[2mms[22m[39m
+     [32m✓[39m rejects impossible history, fabricated zero unknowns and false non-overrun acknowledgment[32m 1[2mms[22m[39m
+     [32m✓[39m requires exact current source metadata before the one owned data RPC[32m 1[2mms[22m[39m
+     [32m✓[39m fails malformed/staged/drifted readiness without data lookup[32m 0[2mms[22m[39m
+     [32m✓[39m fails malformed/staged/drifted readiness without data lookup[32m 0[2mms[22m[39m
+     [32m✓[39m fails malformed/staged/drifted readiness without data lookup[32m 0[2mms[22m[39m
+     [32m✓[39m fails malformed/staged/drifted readiness without data lookup[32m 0[2mms[22m[39m
+     [32m✓[39m fails malformed/staged/drifted readiness without data lookup[32m 0[2mms[22m[39m
+     [32m✓[39m keeps permission errors safe without empty fallback[32m 0[2mms[22m[39m
+     [32m✓[39m pre-aborts with zero IO and forwards mid-query cancellation[32m 1[2mms[22m[39m
+     [32m✓[39m enforces absolute elapsed deadline even before a delayed timer callback[32m 0[2mms[22m[39m
+     [32m✓[39m times out without accepting late data and safely handles synchronous throws[32m 6[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 5 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/unit/owned-ai-budget-export-sql.test.ts[2m > [22mR03 owner-wide export source; SQL unparsed/unexecuted[2m > [22mredacts foreign actors and returns only the five own-action fields for foreign targets
+[31m[1mAssertionError[22m: expected [ 'kind', 'operator_id', …(2) ] to deeply equal [ 'kind', 'operator_id', …(3) ][39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[2m  [[22m
+[2m    "kind",[22m
+[2m    "operator_id",[22m
+[2m    "reconciliation_id",[22m
+[32m-   "evidence_sha256",[39m
+[2m    "created_at",[22m
+[2m  ][22m
+
+[36m [2m❯[22m tests/unit/owned-ai-budget-export-sql.test.ts:[2m82:7[22m[39m
+    [90m 80|[39m     [34mexpect[39m(
+    [90m 81|[39m       [...foreign.matchAll(/(?:\(|,)\s*'([A-Za-z_]+)'\s*,/gu)].map((x)…
+    [90m 82|[39m     )[33m.[39m[34mtoEqual[39m([
+    [90m   |[39m       [31m^[39m
+    [90m 83|[39m       [32m"kind"[39m[33m,[39m
+    [90m 84|[39m       [32m"operator_id"[39m[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/owned-ai-budget-export.test.ts[2m > [22mowned R03 export; synthetic RPCs, no Native proof[2m > [22mrejects malformed/nonexact numeric value 1.0
+[31m[1mAssertionError[22m: expected error to be instance of OwnedAiBudgetExportError[39m
+
+[32m- Expected:[39m
+[Function OwnedAiBudgetExportError]
+
+[31m+ Received:[39m
+SyntaxError {
+  "message": "Cannot convert 1.0 to a BigInt",
+}
+
+[36m [2m❯[22m tests/unit/owned-ai-budget-export.test.ts:[2m233:9[22m[39m
+    [90m231|[39m       [34mexpect[39m(() [33m=>[39m
+    [90m232|[39m         validateOwnedAiBudgetExport({ ...data, attempts: [row] }, owne…
+    [90m233|[39m       )[33m.[39m[34mtoThrow[39m([33mOwnedAiBudgetExportError[39m)[33m;[39m
+    [90m   |[39m         [31m^[39m
+    [90m234|[39m     }[33m,[39m
+    [90m235|[39m   )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/owned-ai-budget-export.test.ts[2m > [22mowned R03 export; synthetic RPCs, no Native proof[2m > [22mrejects malformed/nonexact numeric value 1e3
+[31m[1mAssertionError[22m: expected error to be instance of OwnedAiBudgetExportError[39m
+
+[32m- Expected:[39m
+[Function OwnedAiBudgetExportError]
+
+[31m+ Received:[39m
+SyntaxError {
+  "message": "Cannot convert 1e3 to a BigInt",
+}
+
+[36m [2m❯[22m tests/unit/owned-ai-budget-export.test.ts:[2m233:9[22m[39m
+    [90m231|[39m       [34mexpect[39m(() [33m=>[39m
+    [90m232|[39m         validateOwnedAiBudgetExport({ ...data, attempts: [row] }, owne…
+    [90m233|[39m       )[33m.[39m[34mtoThrow[39m([33mOwnedAiBudgetExportError[39m)[33m;[39m
+    [90m   |[39m         [31m^[39m
+    [90m234|[39m     }[33m,[39m
+    [90m235|[39m   )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/owned-ai-budget-export.test.ts[2m > [22mowned R03 export; synthetic RPCs, no Native proof[2m > [22mrejects malformed/nonexact numeric value NaN
+[31m[1mAssertionError[22m: expected error to be instance of OwnedAiBudgetExportError[39m
+
+[32m- Expected:[39m
+[Function OwnedAiBudgetExportError]
+
+[31m+ Received:[39m
+SyntaxError {
+  "message": "Cannot convert NaN to a BigInt",
+}
+
+[36m [2m❯[22m tests/unit/owned-ai-budget-export.test.ts:[2m233:9[22m[39m
+    [90m231|[39m       [34mexpect[39m(() [33m=>[39m
+    [90m232|[39m         validateOwnedAiBudgetExport({ ...data, attempts: [row] }, owne…
+    [90m233|[39m       )[33m.[39m[34mtoThrow[39m([33mOwnedAiBudgetExportError[39m)[33m;[39m
+    [90m   |[39m         [31m^[39m
+    [90m234|[39m     }[33m,[39m
+    [90m235|[39m   )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m tests/unit/owned-ai-budget-export.test.ts[2m > [22mowned R03 export; synthetic RPCs, no Native proof[2m > [22mrejects malformed/nonexact numeric value Infinity
+[31m[1mAssertionError[22m: expected error to be instance of OwnedAiBudgetExportError[39m
+
+[32m- Expected:[39m
+[Function OwnedAiBudgetExportError]
+
+[31m+ Received:[39m
+SyntaxError {
+  "message": "Cannot convert Infinity to a BigInt",
+}
+
+[36m [2m❯[22m tests/unit/owned-ai-budget-export.test.ts:[2m233:9[22m[39m
+    [90m231|[39m       [34mexpect[39m(() [33m=>[39m
+    [90m232|[39m         validateOwnedAiBudgetExport({ ...data, attempts: [row] }, owne…
+    [90m233|[39m       )[33m.[39m[34mtoThrow[39m([33mOwnedAiBudgetExportError[39m)[33m;[39m
+    [90m   |[39m         [31m^[39m
+    [90m234|[39m     }[33m,[39m
+    [90m235|[39m   )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m5 failed[39m[22m[2m | [22m[1m[32m27 passed[39m[22m[90m (32)[39m
+[2m   Start at [22m 16:14:49
+[2m   Duration [22m 187ms[2m (transform 77ms, setup 0ms, import 129ms, tests 34ms, environment 0ms)[22m
+

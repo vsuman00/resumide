@@ -88,6 +88,7 @@ interface RuleTrace {
   outcome?: "passed" | "failed" | "not_evaluated";
   confidence?: "high" | "none";
   weight: number;
+  credit?: number;
   detail: string;
   evidence?: string[];
 }

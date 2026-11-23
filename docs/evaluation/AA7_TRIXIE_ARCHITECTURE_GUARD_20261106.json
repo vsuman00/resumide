@@ -1,0 +1,9 @@
+{
+  "status": "prepared-not-built",
+  "beforeSha256": "4fd93e54d84660cfc4d91cdc047c91352448750c300f85fe4e24086bc4bd5502",
+  "afterSha256": "e4e69ab227e8a129308976736f2f179233c97c1375007a7a9096642c8f1268e2",
+  "diff": "--- attempt3/Dockerfile\n+++ pending/Dockerfile\n@@ -17,6 +17,7 @@\n     apt-get -o Acquire::Retries=3 --with-new-pkgs --no-remove upgrade -y; \\\n     for artifact in 'libfontenc1=1:1.1.8-1+b2' 'xfonts-encodings=1:1.0.4-2.2' 'lmodern=2.005-1'; do \\\n       name=${artifact%%=*}; \\\n+      if [ \"$name\" = libfontenc1 ] && [ \"$(dpkg --print-architecture)\" != arm64 ]; then printf '%s\\n' \"APT native download retained for $name on this architecture\"; continue; fi; \\\n       apt-get --print-uris download \"$artifact\" > /tmp/pinned-font-uri; \\\n       read -r uri archive size checksum < /tmp/pinned-font-uri; \\\n       case \"$archive\" in */*) exit 1 ;; \"$name\"_*.deb) ;; *) exit 1 ;; esac; \\\n",
+  "shellSyntax": "pass",
+  "crossArchitectureRuntimeVerified": false,
+  "existingArm64ImageUnchanged": true
+}

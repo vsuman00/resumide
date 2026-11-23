@@ -1,0 +1,651 @@
+import { isDeepStrictEqual } from "node:util";
+import { z } from "zod";
+import {
+  InitialFeedbackProfileSchema,
+  InitialFeedbackReadSchema,
+  InitialFeedbackFinishSchema,
+  InitialFeedbackOperationSchema,
+  InitialFeedbackCompletionSchema,
+  InitialFeedbackBindingSchema,
+  InitialFeedbackAttemptSchema,
+  InitialFeedbackUsageSchema,
+  InitialFeedbackReceiptSchema,
+  InitialFeedbackPublicationSchema,
+  validateInitialFeedbackReadiness,
+  type InitialFeedbackProfile,
+  type InitialFeedbackOperation,
+  type InitialFeedbackCompletion,
+  type InitialFeedbackPublication,
+} from "./initial-feedback-operation-contract";
+import { InitialFeedbackRenderSchema } from "./initial-feedback-contract";
+import {
+  InitialFeedbackOperationError,
+  type InitialFeedbackOperationClient,
+} from "./initial-feedback-operation-repository";
+
+const id = z.uuid().regex(/^[a-f0-9-]+$/u);
+const scopeSchema = z.strictObject({
+  ownerId: id,
+  organizationId: id,
+  analysisId: id,
+  lease: z.strictObject({
+    workerId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u),
+    attempt: z.number().int().min(1).max(3),
+    leaseFence: id,
+  }),
+});
+const readScopeSchema = scopeSchema.omit({ lease: true });
+const ownerScopeSchema = z.strictObject({ ownerId: id });
+const accessScopeSchema = z.union([
+  scopeSchema,
+  readScopeSchema,
+  ownerScopeSchema,
+]);
+export type InitialFeedbackPublicationReadScope = z.infer<
+  typeof readScopeSchema
+>;
+export type InitialFeedbackPublicationOwnerScope = z.infer<
+  typeof ownerScopeSchema
+>;
+type RepositoryOptions = { timeoutMs?: number; now?: () => number };
+const methodSchema = z.strictObject({
+  signal: z.instanceof(AbortSignal).optional(),
+});
+const auditSchema = z.strictObject({
+  processId: z.string().regex(/^[ -~]{1,128}$/u),
+  requestId: z.string().regex(/^[ -~]{1,128}$/u),
+});
+const digest = z.string().regex(/^[a-f0-9]{64}$/u);
+const stamp = z.iso
+  .datetime()
+  .regex(/^(?!0000)\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,6})?Z$/u);
+const operationRow = z.strictObject({
+  operation_id: id,
+  analysis_id: id,
+  owner_id: id,
+  organization_id: id,
+  resume_id: id,
+  resume_version_id: id,
+  policy_version: z.string().max(100),
+  policy_sha256: digest,
+  binding: InitialFeedbackBindingSchema,
+  binding_sha256: digest,
+  attempt_limit: z.number().int().min(1).max(3),
+  state: z.enum(["open", "published"]),
+  publication_id: id.nullable(),
+  created_at: stamp,
+});
+const attemptRow = z.strictObject({
+  attempt_id: id,
+  operation_id: id,
+  ordinal: z.number().int().min(1).max(3),
+  state: z.enum([
+    "reserved",
+    "dispatched",
+    "known",
+    "held_unknown",
+    "failed",
+    "cancelled_before_dispatch",
+    "published",
+  ]),
+  claim_lease: scopeSchema.shape.lease.nullable(),
+  claimed_at: stamp.nullable(),
+  usage: InitialFeedbackUsageSchema.nullable(),
+  error_code: z
+    .enum([
+      "provider_failed",
+      "timeout",
+      "cancelled",
+      "invalid_output",
+      "unsupported_output",
+      "storage_failed",
+      "unknown",
+    ])
+    .nullable(),
+  budget_attempt_id: id.nullable(),
+  created_at: stamp,
+  owner_id: id,
+  organization_id: id,
+  analysis_id: id,
+});
+const publicationRow = z.strictObject({
+  id,
+  operation_id: id,
+  attempt_id: id.nullable(),
+  analysis_id: id,
+  owner_id: id,
+  organization_id: id,
+  resume_id: id,
+  resume_version_id: id,
+  run_id: id.nullable(),
+  state: z.enum(["assessed", "deterministic_only"]),
+  reason: z.string().max(100).nullable(),
+  binding_sha256: digest,
+  completion: InitialFeedbackCompletionSchema,
+  completion_sha256: digest,
+  publication_core: z.record(z.string(), z.unknown()),
+  publication_sha256: digest,
+  receipt: InitialFeedbackReceiptSchema,
+  render: InitialFeedbackRenderSchema.nullable(),
+  plan_sha256: digest.nullable(),
+  render_sha256: digest.nullable(),
+  support_sha256: digest.nullable(),
+  capture_sha256: digest.nullable(),
+  result_content_sha256: digest,
+  writer_content_sha256: digest,
+  run_content_sha256: digest.nullable(),
+  finish_lease: scopeSchema.shape.lease,
+  process_id: auditSchema.shape.processId,
+  request_id: auditSchema.shape.requestId,
+  created_at: stamp,
+});
+function boundedExport(raw: unknown) {
+  const stack = [{ value: raw, depth: 0 }];
+  let bytes = 0,
+    visits = 0;
+  while (stack.length) {
+    const { value, depth } = stack.pop()!;
+    if (++visits > 1000000 || depth > 40) throw Error("EXPORT_LIMIT");
+    if (typeof value === "string")
+      bytes += Buffer.byteLength(JSON.stringify(value), "utf8");
+    else if (value === null || typeof value === "boolean") bytes += 5;
+    else if (typeof value === "number") {
+      if (!Number.isFinite(value)) throw Error("EXPORT_LIMIT");
+      bytes += 32;
+    } else if (Array.isArray(value)) {
+      if (value.length > 12288) throw Error("EXPORT_LIMIT");
+      bytes += value.length + 2;
+      for (const v of value) stack.push({ value: v, depth: depth + 1 });
+    } else if (typeof value === "object" && value !== null) {
+      const proto = Object.getPrototypeOf(value),
+        ds = Object.getOwnPropertyDescriptors(value);
+      if (proto !== Object.prototype && proto !== null)
+        throw Error("EXPORT_LIMIT");
+      if (Reflect.ownKeys(value).length !== Object.keys(ds).length)
+        throw Error("EXPORT_LIMIT");
+      for (const [key, d] of Object.entries(ds)) {
+        if (d.get || d.set || !d.enumerable) throw Error("EXPORT_LIMIT");
+        bytes += Buffer.byteLength(JSON.stringify(key), "utf8") + 2;
+        stack.push({ value: d.value, depth: depth + 1 });
+      }
+    } else throw Error("EXPORT_LIMIT");
+    if (bytes > 33554432) throw Error("EXPORT_LIMIT");
+  }
+}
+export const InitialFeedbackExportSchema = z.preprocess(
+  (raw, ctx) => {
+    try {
+      boundedExport(raw);
+      return raw;
+    } catch {
+      ctx.addIssue({ code: "custom", message: "Export limit." });
+      return z.NEVER;
+    }
+  },
+  z.strictObject({
+    schemaVersion: z.literal("initial-feedback-export/1.0.0"),
+    operations: z.array(operationRow).max(4096),
+    attempts: z.array(attemptRow).max(12288),
+    publications: z.array(publicationRow).max(4096),
+  }),
+);
+export type InitialFeedbackOwnedExport = z.infer<
+  typeof InitialFeedbackExportSchema
+>;
+export type InitialFeedbackPublicationScope = z.infer<typeof scopeSchema>;
+export type InitialFeedbackOwnedRead = z.infer<
+  typeof InitialFeedbackReadSchema
+>;
+type Options = { signal?: AbortSignal };
+type Capability = Parameters<
+  typeof validateInitialFeedbackReadiness
+>[2][number];
+function parse<T>(schema: z.ZodType<T>, raw: unknown, submitted = false): T {
+  try {
+    const p = schema.safeParse(raw);
+    if (p.success) return p.data;
+  } catch {
+    /* No raw decode errors. */
+  }
+  throw new InitialFeedbackOperationError(
+    submitted ? "unavailable" : "invalid",
+    submitted ? "unknown" : "not_sent",
+  );
+}
+export function matchesInitialFeedbackPublication(
+  publication: InitialFeedbackPublication,
+  operation: InitialFeedbackOperation,
+  attemptId: string | null,
+  completion: InitialFeedbackCompletion,
+): boolean {
+  const r = publication.receipt;
+  if (
+    r.operationId !== operation.operationId ||
+    r.attemptId !== attemptId ||
+    r.bindingSha256 !== operation.bindingSha256 ||
+    !isDeepStrictEqual(publication.binding, operation.binding)
+  )
+    return false;
+  if (completion.kind === "assessed")
+    return (
+      publication.state === "assessed" &&
+      isDeepStrictEqual(publication.plan, completion.plan) &&
+      isDeepStrictEqual(
+        publication.recordedObservation,
+        completion.observation,
+      ) &&
+      publication.generationFailure === null
+    );
+  return (
+    publication.state === "deterministic_only" &&
+    publication.reason === completion.reason &&
+    isDeepStrictEqual(
+      publication.recordedObservation,
+      completion.observation,
+    ) &&
+    isDeepStrictEqual(
+      publication.generationFailure,
+      completion.generationFailure,
+    )
+  );
+}
+/** Explicit real source profile required; no partial readiness/default pin. */
+export function createInitialFeedbackPublicationRepository(
+  client: InitialFeedbackOperationClient,
+  rawScope:
+    | InitialFeedbackPublicationScope
+    | InitialFeedbackPublicationReadScope
+    | InitialFeedbackPublicationOwnerScope,
+  expectedProfile: InitialFeedbackProfile,
+  options: RepositoryOptions = {},
+) {
+  const scope = parse(accessScopeSchema, rawScope),
+    profile = parse(InitialFeedbackProfileSchema, expectedProfile);
+  const timeoutMs = options.timeoutMs ?? 5000,
+    now = options.now ?? Date.now;
+  if (
+    !client ||
+    typeof client.rpc !== "function" ||
+    !Number.isInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > 5000 ||
+    typeof now !== "function"
+  )
+    throw new InitialFeedbackOperationError("invalid");
+  async function run<T>(
+    method: Options,
+    work: (
+      call: (
+        name: string,
+        args: Record<string, unknown>,
+        mutation?: boolean,
+      ) => Promise<unknown>,
+      active: () => void,
+    ) => Promise<T>,
+  ): Promise<T> {
+    const { signal } = parse(methodSchema, method),
+      controller = new AbortController(),
+      started = now();
+    let sent = false;
+    if (!Number.isFinite(started))
+      throw new InitialFeedbackOperationError("invalid");
+    const failure = () =>
+      new InitialFeedbackOperationError(
+        signal?.aborted ? "cancelled" : "unavailable",
+        sent ? "unknown" : "not_sent",
+      );
+    let stop!: (e: Error) => void;
+    const stopped = new Promise<never>((_, reject) => {
+      stop = reject;
+    });
+    const abort = () => {
+      stop(failure());
+      controller.abort();
+    };
+    const active = () => {
+      const at = now();
+      if (
+        signal?.aborted ||
+        controller.signal.aborted ||
+        !Number.isFinite(at) ||
+        at < started ||
+        at >= started + timeoutMs
+      )
+        throw failure();
+    };
+    signal?.addEventListener("abort", abort, { once: true });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      active();
+      timer = setTimeout(abort, timeoutMs);
+      const call = async (
+        name: string,
+        args: Record<string, unknown>,
+        mutation = false,
+      ) => {
+        active();
+        if (mutation) sent = true;
+        let reply;
+        try {
+          const request = client.rpc(name, args);
+          reply = await (request.abortSignal
+            ? request.abortSignal(controller.signal)
+            : request);
+        } catch {
+          throw failure();
+        }
+        active();
+        if (!reply || typeof reply !== "object") throw failure();
+        if (reply.error) {
+          const d =
+            typeof reply.error === "object"
+              ? Object.getOwnPropertyDescriptor(reply.error, "code")
+              : null;
+          const code = d && "value" in d ? d.value : null;
+          const fixed =
+            code === "22023"
+              ? "invalid"
+              : code === "42501"
+                ? "not_found"
+                : code === "P0C01"
+                  ? "stale"
+                  : code === "P0C03"
+                    ? "unavailable"
+                    : null;
+          throw new InitialFeedbackOperationError(
+            fixed ?? "unavailable",
+            sent ? (fixed ? "refused" : "unknown") : "not_sent",
+          );
+        }
+        return reply.data;
+      };
+      const result = await Promise.race([
+        Promise.resolve().then(() => {
+          active();
+          return work(call, active);
+        }),
+        stopped,
+      ]);
+      active();
+      return result;
+    } catch (e) {
+      if (e instanceof InitialFeedbackOperationError) throw e;
+      throw failure();
+    } finally {
+      if (timer) clearTimeout(timer);
+      signal?.removeEventListener("abort", abort);
+      controller.abort();
+    }
+  }
+  async function ready(
+    call: (name: string, args: Record<string, unknown>) => Promise<unknown>,
+    capabilities: readonly Capability[],
+  ) {
+    const raw = await call("read_initial_feedback_readiness", {});
+    try {
+      return validateInitialFeedbackReadiness(raw, profile, capabilities);
+    } catch {
+      throw new InitialFeedbackOperationError("unavailable");
+    }
+  }
+  function ownedOperation(op: InitialFeedbackOperation) {
+    if (!("analysisId" in scope))
+      throw new InitialFeedbackOperationError("invalid");
+    if (
+      op.ownerId !== scope.ownerId ||
+      op.organizationId !== scope.organizationId ||
+      op.analysisId !== scope.analysisId
+    )
+      throw new InitialFeedbackOperationError("unavailable", "unknown");
+  }
+  return {
+    assertReady(capabilities: readonly Capability[], method: Options = {}) {
+      return run(method, async (call) => ready(call, capabilities));
+    },
+    exportOwned(method: Options = {}): Promise<InitialFeedbackOwnedExport> {
+      return run(method, async (call, active) => {
+        await ready(call, ["exportExecutable"]);
+        const value = parse(
+          InitialFeedbackExportSchema,
+          await call("export_initial_feedback_records", {
+            p_user_id: scope.ownerId,
+          }),
+          true,
+        );
+        const operations = new Map<string, InitialFeedbackOperation>(),
+          attemptIds = new Set<string>(),
+          publicationIds = new Set<string>();
+        for (const row of value.operations) {
+          if (
+            row.owner_id !== scope.ownerId ||
+            operations.has(row.operation_id)
+          )
+            throw new InitialFeedbackOperationError("unavailable");
+          const rows = value.attempts
+            .filter((a) => a.operation_id === row.operation_id)
+            .sort((a, b) => a.ordinal - b.ordinal);
+          const attempts = rows.map((a) => {
+            if (
+              a.owner_id !== row.owner_id ||
+              a.organization_id !== row.organization_id ||
+              a.analysis_id !== row.analysis_id ||
+              attemptIds.has(a.attempt_id)
+            )
+              throw new InitialFeedbackOperationError("unavailable");
+            attemptIds.add(a.attempt_id);
+            if ((a.claimed_at === null) !== (a.claim_lease === null))
+              throw new InitialFeedbackOperationError("unavailable");
+            return parse(
+              InitialFeedbackAttemptSchema,
+              {
+                attemptId: a.attempt_id,
+                ordinal: a.ordinal,
+                state: a.state,
+                claimedAt: a.claimed_at,
+                usage: a.usage,
+                errorCode: a.error_code,
+                budgetAttemptId: a.budget_attempt_id,
+              },
+              true,
+            );
+          });
+          const op = parse(
+            InitialFeedbackOperationSchema,
+            {
+              schemaVersion: "initial-feedback-operation/1.0.0",
+              operationId: row.operation_id,
+              analysisId: row.analysis_id,
+              ownerId: row.owner_id,
+              organizationId: row.organization_id,
+              binding: row.binding,
+              bindingSha256: row.binding_sha256,
+              state: row.state,
+              attemptLimit: row.attempt_limit,
+              attempts,
+              publicationId: row.publication_id,
+            },
+            true,
+          );
+          if (
+            row.resume_id !== op.binding.resumeId ||
+            row.resume_version_id !== op.binding.resumeVersionId ||
+            row.policy_version !== op.binding.policy.version ||
+            row.policy_sha256 !== op.binding.policy.sha256
+          )
+            throw new InitialFeedbackOperationError("unavailable");
+          operations.set(row.operation_id, op);
+        }
+        if (attemptIds.size !== value.attempts.length)
+          throw new InitialFeedbackOperationError("unavailable");
+        for (const row of value.publications) {
+          const op = operations.get(row.operation_id);
+          if (
+            !op ||
+            row.owner_id !== scope.ownerId ||
+            row.organization_id !== op.organizationId ||
+            row.analysis_id !== op.analysisId ||
+            row.resume_id !== op.binding.resumeId ||
+            row.resume_version_id !== op.binding.resumeVersionId ||
+            row.id !== op.publicationId ||
+            row.binding_sha256 !== op.bindingSha256 ||
+            publicationIds.has(row.id) ||
+            Object.hasOwn(row.publication_core, "receipt")
+          )
+            throw new InitialFeedbackOperationError("unavailable");
+          const p = parse(
+            InitialFeedbackPublicationSchema,
+            { ...row.publication_core, receipt: row.receipt },
+            true,
+          );
+          publicationIds.add(row.id);
+          if (
+            !matchesInitialFeedbackPublication(
+              p,
+              op,
+              row.attempt_id,
+              row.completion,
+            ) ||
+            p.publicationId !== row.id ||
+            p.state !== row.state ||
+            p.reason !== row.reason ||
+            row.receipt.runId !== row.run_id ||
+            row.receipt.publicationSha256 !== row.publication_sha256 ||
+            row.receipt.resultSha256 !== row.result_content_sha256 ||
+            (row.receipt.writerSha256 !== null &&
+              row.receipt.writerSha256 !== row.writer_content_sha256)
+          )
+            throw new InitialFeedbackOperationError("unavailable");
+          if (
+            row.render &&
+            (!isDeepStrictEqual(row.render.prose, p.prose) ||
+              !isDeepStrictEqual(row.render.parts, p.ownedSupport?.parts) ||
+              !isDeepStrictEqual(row.render.mapping, p.ownedSupport?.mapping))
+          )
+            throw new InitialFeedbackOperationError("unavailable");
+        }
+        if (
+          [...operations.values()].some(
+            (op) =>
+              op.publicationId !== null &&
+              !publicationIds.has(op.publicationId),
+          )
+        )
+          throw new InitialFeedbackOperationError("unavailable");
+        active();
+        return value;
+      });
+    },
+    async read(method: Options = {}): Promise<InitialFeedbackOwnedRead> {
+      if (!("analysisId" in scope))
+        throw new InitialFeedbackOperationError("invalid");
+      return run(method, async (call, active) => {
+        await ready(call, ["readerExecutable"]);
+        const value = parse(
+          InitialFeedbackReadSchema,
+          await call("read_initial_feedback", {
+            p_user_id: scope.ownerId,
+            p_analysis_id: scope.analysisId,
+          }),
+          true,
+        );
+        if (value.status === "pending") ownedOperation(value.operation);
+        else if (value.status === "legacy_unbound") {
+          if (value.analysisId !== scope.analysisId)
+            throw new InitialFeedbackOperationError("unavailable");
+        } else if (
+          value.publication.binding.ownerId !== scope.ownerId ||
+          value.publication.binding.organizationId !== scope.organizationId ||
+          value.publication.binding.analysisId !== scope.analysisId
+        )
+          throw new InitialFeedbackOperationError("unavailable");
+        active();
+        return value;
+      });
+    },
+    async finish(
+      rawOperation: InitialFeedbackOperation,
+      attemptId: string | null,
+      rawCompletion: InitialFeedbackCompletion,
+      rawAudit: z.infer<typeof auditSchema>,
+      method: Options = {},
+    ) {
+      if (!("lease" in scope))
+        throw new InitialFeedbackOperationError("invalid");
+      const operation = parse(InitialFeedbackOperationSchema, rawOperation),
+        completion = parse(InitialFeedbackCompletionSchema, rawCompletion),
+        audit = parse(auditSchema, rawAudit);
+      parse(id.nullable(), attemptId);
+      ownedOperation(operation);
+      if (
+        attemptId !== null &&
+        !operation.attempts.some((a) => a.attemptId === attemptId)
+      )
+        throw new InitialFeedbackOperationError("invalid");
+      return run(method, async (call, active) => {
+        await ready(call, ["finishExecutable", "exportExecutable"]);
+        const value = parse(
+          InitialFeedbackFinishSchema,
+          await call(
+            "finish_initial_feedback",
+            {
+              p_analysis_id: scope.analysisId,
+              p_lease: structuredClone(scope.lease),
+              p_operation_id: operation.operationId,
+              p_attempt_id: attemptId,
+              p_binding_sha256: operation.bindingSha256,
+              p_completion: completion,
+              p_process_id: audit.processId,
+              p_request_id: audit.requestId,
+            },
+            true,
+          ),
+          true,
+        );
+        if (
+          !matchesInitialFeedbackPublication(
+            value.publication,
+            operation,
+            attemptId,
+            completion,
+          )
+        )
+          throw new InitialFeedbackOperationError("unavailable", "unknown");
+        active();
+        return value.publication;
+      });
+    },
+  };
+}
+
+/** Owned consumer read: exact analysis scope, no worker lease or mutation API. */
+export function createInitialFeedbackPublicationReader(
+  client: InitialFeedbackOperationClient,
+  rawScope: InitialFeedbackPublicationReadScope,
+  expectedProfile: InitialFeedbackProfile,
+  options: RepositoryOptions = {},
+) {
+  const scope = parse(readScopeSchema, rawScope);
+  const repository = createInitialFeedbackPublicationRepository(
+    client,
+    scope,
+    expectedProfile,
+    options,
+  );
+  return Object.freeze({ read: repository.read });
+}
+/** Complete owner collection: never invent or filter by analysis/org/lease. */
+export function createInitialFeedbackOwnerExporter(
+  client: InitialFeedbackOperationClient,
+  rawScope: InitialFeedbackPublicationOwnerScope,
+  expectedProfile: InitialFeedbackProfile,
+  options: RepositoryOptions = {},
+) {
+  const scope = parse(ownerScopeSchema, rawScope);
+  const repository = createInitialFeedbackPublicationRepository(
+    client,
+    scope,
+    expectedProfile,
+    options,
+  );
+  return Object.freeze({ exportOwned: repository.exportOwned });
+}

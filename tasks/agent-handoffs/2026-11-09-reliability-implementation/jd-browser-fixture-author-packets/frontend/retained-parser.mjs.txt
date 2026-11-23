@@ -1,0 +1,7 @@
+export function clauseOrderRequestForm(response) {
+  const body = response.request().postData();
+  if (!body || Buffer.byteLength(body) > 131_072)
+    throw new Error("Clause-order request observation failed");
+  return new URLSearchParams(body);
+}
+

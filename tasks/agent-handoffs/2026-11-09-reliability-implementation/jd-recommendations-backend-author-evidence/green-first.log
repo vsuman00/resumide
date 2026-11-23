@@ -1,0 +1,836 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/jd-recommendations-repository.test.ts (8 tests | 1 failed) 195ms
+   ✓ returns a useful bound recommendation plan through the actual owned typed read 90ms
+   ✓ preserves existing diagnostics and coverage while adding the pure plan 27ms
+   ✓ refuses releasing a plan after final head changes 15ms
+   ✓ refuses releasing a plan after final hash changes 15ms
+   ✓ refuses releasing a plan after final privacy changes 13ms
+   ✓ refuses releasing a plan after final source changes 13ms
+   × refuses releasing a plan after final analysis changes 18ms
+   ✓ cannot release another owner's recommendation plan 4ms
+ ❯ tests/unit/jd-recommendations.test.ts (25 tests | 4 failed) 273ms
+     ✓ binds exact current contribution, quote, versions and complete digest without altering inputs 82ms
+     ✓ does not invent a Pydantic contribution from Python elsewhere 11ms
+     ✓ does not invent a RAG contribution from Python elsewhere 10ms
+     × does not invent a agents contribution from Python elsewhere 11ms
+     × does not invent a cloud contribution from Python elsewhere 8ms
+     × does not invent a async contribution from Python elsewhere 8ms
+     ✓ does not invent a microservices contribution from Python elsewhere 9ms
+     ✓ preserves and without inventing missing operands 7ms
+     ✓ preserves or without inventing missing operands 8ms
+     × keeps edited confirmed declarations distinct from old source wording 7ms
+     ✓ does not promote a listing to contribution 7ms
+     ✓ does not pick the first of multiple related contributions 8ms
+     ✓ does not upgrade a source fragment into a complete current claim 9ms
+     ✓ keeps ambiguous or nonpositive scope review-only: Python is not required 6ms
+     ✓ keeps ambiguous or nonpositive scope review-only: Context
+Python 6ms
+     ✓ keeps ambiguous or nonpositive scope review-only: Requirements
+Python experience may be useful 5ms
+     ✓ deduplicates actual semantic duplicates while preserving importance and full counts 17ms
+     ✓ rejects an expected ownerId mismatch 7ms
+     ✓ rejects an expected analysisId mismatch 6ms
+     ✓ rejects an expected canonicalVersionId mismatch 7ms
+     ✓ rejects an expected requirementVersionId mismatch 6ms
+     ✓ refuses tampered source rather than accepting supplied support 7ms
+     ✓ refuses tampered hash rather than accepting supplied support 6ms
+     ✓ refuses tampered head rather than accepting supplied support 6ms
+     ✓ refuses tampered client-matches rather than accepting supplied support 7ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/jd-recommendations-repository.test.ts > refuses releasing a plan after final analysis changes
+AssertionError: promise resolved "{ …(8) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "analysisId": "30000000-0000-4000-8000-000000000004",
++   "canonical": {
++     "headId": "e4b30157-29b3-4b0e-8b72-4b232242270d",
++     "revision": 1,
++     "versionId": "e4b30157-29b3-4b0e-8b72-4b232242270d",
++   },
++   "diagnostics": {
++     "alignment": [],
++     "improvements": [
++       {
++         "id": "evidence.critical_review",
++         "reason": "Inspect missing or conflicting critical fields and incomplete or unknown source-page coverage.",
++         "target": "evidence",
++       },
++       {
++         "id": "requirements.typed_review",
++         "reason": "Review the exact typed clauses, semantic witnesses and unresolved evidence in the requirement coverage panel.",
++         "target": "requirements",
++       },
++       {
++         "id": "contact.recovered",
++         "reason": "Observes name/email/phone recovery without rating identity or candidate merit.",
++         "target": "canonical",
++       },
++       {
++         "id": "format.geometry",
++         "reason": "Text alone cannot establish font, column, clipping or rendered-format compatibility.",
++         "target": "evidence",
++       },
++     ],
++     "policyState": "draft",
++     "readiness": {
++       "blockers": [
++         "calibration_not_approved",
++         "coverage_policy_unknown",
++         "critical_evidence_missing",
++         "extraction_review_required",
++         "requirements_review_required",
++       ],
++       "confirmedFactCount": 0,
++       "declaredPageCount": 1,
++       "observedPageCoverage": 1,
++       "sourceWarnings": [
++         "uncalibrated_confidence",
++         "missing_critical_fields",
++       ],
++       "state": "review_required",
++     },
++     "readinessAggregate": null,
++     "rules": [
++       {
++         "additionalCitationCount": 0,
++         "citations": [
++           {
++             "id": "native-page-1-line-1",
++             "kind": "document_span",
++           },
++           {
++             "id": "native-page-1-line-2",
++             "kind": "document_span",
++           },
++           {
++             "id": "native-page-1-line-3",
++             "kind": "document_span",
++           },
++           {
++             "id": "native-page-1-line-4",
++             "kind": "document_span",
++           },
++           {
++             "id": "native-page-1-line-5",
++             "kind": "document_span",
++           },
++           {
++             "id": "native-page-1-line-6",
++             "kind": "document_span",
++           },
++           {
++             "id": "native-page-1-line-7",
++             "kind": "document_span",
++           },
++         ],
++         "credit": 1,
++         "critical": true,
++         "id": "parse.page-coverage",
++         "label": "Recovered page coverage",
++         "reason": "Coverage describes retained pages with text, not calibrated extraction accuracy.",
++         "state": "pass",
++         "weight": null,
++       },
++       {
++         "additionalCitationCount": 0,
++         "citations": [],
++         "credit": 1,
++         "critical": false,
++         "id": "structure.recognized-sections",
++         "label": "Recognized section structure",
++         "reason": "Unrecognized sections remain inspectable and require review.",
++         "state": "pass",
++         "weight": null,
++       },
++       {
++         "additionalCitationCount": 0,
++         "citations": [],
++         "credit": 0,
++         "critical": true,
++         "id": "contact.recovered",
++         "label": "Recovered contact candidates",
++         "reason": "Observes name/email/phone recovery without rating identity or candidate merit.",
++         "state": "fail",
++         "weight": null,
++       },
++       {
++         "additionalCitationCount": 0,
++         "citations": [
++           {
++             "id": "be5af021-1c9e-4992-bd61-74de11426146",
++             "kind": "fact",
++           },
++         ],
++         "credit": 1,
++         "critical": false,
++         "id": "dates.order",
++         "label": "Calendar order in recovered date ranges",
++         "reason": "Ambiguous formats need review; year-only ranges never establish exact experience duration.",
++         "state": "pass",
++         "weight": null,
++       },
++       {
++         "additionalCitationCount": 0,
++         "citations": [],
++         "credit": 1,
++         "critical": false,
++         "id": "content.duplication",
++         "label": "Repeated bullet content",
++         "reason": "Repeated content cannot multiply factual or alignment credit.",
++         "state": "pass",
++         "weight": null,
++       },
++       {
++         "additionalCitationCount": 0,
++         "citations": [],
++         "credit": null,
++         "critical": false,
++         "id": "format.geometry",
++         "label": "Qualified layout evidence",
++         "reason": "Text alone cannot establish font, column, clipping or rendered-format compatibility.",
++         "state": "not_evaluated",
++         "weight": null,
++       },
++     ],
++     "schemaVersion": "score-diagnostics/typed-1.0.0",
++     "score": {
++       "analysisId": "30000000-0000-4000-8000-000000000004",
++       "calibrationReceipt": null,
++       "canonicalVersionId": "e4b30157-29b3-4b0e-8b72-4b232242270d",
++       "createdAt": "2026-11-16T09:13:58.209Z",
++       "dimensions": [
++         {
++           "blockers": [
++             "calibration_not_approved",
++             "coverage_policy_unknown",
++             "critical_evidence_missing",
++             "extraction_review_required",
++             "requirements_review_required",
++           ],
++           "coverage": null,
++           "eligible": false,
++           "id": "ats_compatibility",
++           "value": null,
++         },
++         {
++           "blockers": [
++             "calibration_not_approved",
++             "coverage_policy_unknown",
++             "critical_evidence_missing",
++             "extraction_review_required",
++             "requirements_review_required",
++           ],
++           "coverage": null,
++           "eligible": false,
++           "id": "job_alignment_required",
++           "value": null,
++         },
++         {
++           "blockers": [
++             "calibration_not_approved",
++             "coverage_policy_unknown",
++             "critical_evidence_missing",
++             "extraction_review_required",
++             "requirements_review_required",
++           ],
++           "coverage": null,
++           "eligible": false,
++           "id": "job_alignment_preferred",
++           "value": null,
++         },
++       ],
++       "evidenceState": "review_required",
++       "evidenceVersionId": "30000000-0000-4000-8000-000000000006",
++       "id": "47283dd3-e989-47bb-87ec-95ba4c329a98",
++       "inputSha256": "47283dd3e989f7bb17ec95ba4c329a98037c4159b0264f9f88e27f659c1de253",
++       "organizationId": "30000000-0000-4000-8000-000000000002",
++       "ownerId": "30000000-0000-4000-8000-000000000001",
++       "policyId": "software-engineering-en-IN/draft-1.0.0",
++       "producerVersion": "score-v2/typed-1.0.0",
++       "requirementVersionId": "ef9b0e65-0a57-4eb8-b63b-318f3db51694",
++       "retentionPolicyId": "synthetic/1.0.0",
++       "schemaVersion": "score/2.0.0",
++       "state": "withheld",
++     },
++     "strengths": [
++       "Recovered page coverage",
++       "Recognized section structure",
++       "Calendar order in recovered date ranges",
++       "Repeated bullet content",
++     ],
++   },
++   "historical": false,
++   "jdRecommendations": {
++     "binding": {
++       "attemptId": "30000000-0000-4000-8000-000000000006",
++       "canonical": {
++         "contentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
++         "revision": 1,
++         "versionId": "e4b30157-29b3-4b0e-8b72-4b232242270d",
++       },
++       "profiles": {
++         "aliasLexiconSha256": "e5298fd95320299996a4f5eceff3fc7afcd61ed636aaec386e1d4107a7500fa2",
++         "aliasPolicyVersion": "jd-local-aliases/1.0.0",
++         "associationModelVersion": "evidence-entry-associations/1.0.0",
++         "correctionProjectionVersion": "canonical-corrections/1.0.1",
++         "evidenceSchemaVersion": "evidence/2.0.0",
++         "fieldExtractorVersion": "evidence-fields/1.0.1",
++         "jdAdmissionProfileSha256": "e82d68b1e58cf220d3584a8d510128d4428441a2b02815711e7f198adaeaacb8",
++         "readinessPredecessorSha256": "de6e71fed03732a391e35226d20816acd207267eef5f09c27017cee1f054f3fd",
++         "readinessProfileVersion": "requirement-relationship-readiness/1.0.0",
++         "regroupModelVersion": "canonical-entry-regroup/1.0.0",
++         "relationPolicySha256": "fd69dde2640bcdc1cdd76ce622015cb577090d61581515585f7cdfe0cdcd8cdc",
++         "relationPolicyVersion": "jd-local-relation-rules/1.0.0",
++         "targetModelVersion": "evidence-targets/1.0.0",
++         "unicodePolicySha256": "f3f8335d9a957bc16e33d61321f28ed7a12c8c81ff8912f0c17c041d86d95571",
++         "unicodePolicyVersion": "jd-unicode-profile/1.0.0",
++       },
++       "requirements": {
++         "contentSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
++         "inputSha256": "ca70d6ec3a9d1dbd1c14d069260eaf4e5b6d7a85b639166e0a1a9405b4e9e508",
++         "revision": 1,
++         "versionId": "ef9b0e65-0a57-4eb8-b63b-318f3db51694",
++       },
++       "source": {
++         "analysisId": "30000000-0000-4000-8000-000000000004",
++         "attemptId": "30000000-0000-4000-8000-000000000006",
++         "inputSha256": "7d577ab07d6ee21d51d51eec6fd4b1584f25a53d1ac12d18f98d2c20a11ec1dc",
++         "organizationId": "30000000-0000-4000-8000-000000000002",
++         "ownerId": "30000000-0000-4000-8000-000000000001",
++         "resumeId": "30000000-0000-4000-8000-000000000003",
++         "sourceId": "30000000-0000-4000-8000-000000000005",
++       },
++     },
++     "coverageDigest": "fddb0d49df69b03da7d25f41743863cdafeab36642bd619b51fb849a4d0a89a3",
++     "digest": "b0b0e686986f055d136a0811a757d63cadd7142c1d804b1e472907c461e82965",
++     "items": [
++       {
++         "action": "review_claim",
++         "clauseId": "f8f28c6a9d4295ac5532a3aae98234c7b782f4301d3ca90591c2f1a4d5c831da",
++         "effort": "review_required",
++         "expressionKind": "atom",
++         "id": "626da74e389cbc95e5875fb0fafcab738531971423726ba319b90b863e7eb4f9",
++         "importance": "required",
++         "observation": "source_related_claim",
++         "question": null,
++         "reason": "Review this exact current claim against the saved requirement. An exact source contribution is present. Its current claim still needs owner confirmation; proficiency is not independently verified.",
++         "requirementQuote": "PostgreSQL required",
++         "target": {
++           "basis": "source_quote",
++           "factId": "fb0c70ab-e03e-4390-a7c2-7048dcfc199b",
++           "sourceQuote": "Built services using PostgreSQL",
++           "value": "Built services using PostgreSQL",
++         },
++       },
++     ],
++     "qualificationCredit": "not_assessed",
++     "remainingCount": 0,
++     "retainedClauseCount": 1,
++     "schemaVersion": "jd-recommendations/1.0.0",
++     "scoreDelta": null,
++     "scoreValue": null,
++     "total": 1,
++   },
++   "requirements": {
++     "headId": "ef9b0e65-0a57-4eb8-b63b-318f3db51694",
++     "revision": 1,
++     "versionId": "ef9b0e65-0a57-4eb8-b63b-318f3db51694",
++   },
++   "sourceExcerpts": [
++     {
++       "id": "native-page-1-line-1",
++       "text": "Experience",
++       "truncated": false,
++     },
++     {
++       "id": "native-page-1-line-2",
++       "text": "Employer: Synthetic Orchard Labs",
++       "truncated": false,
++     },
++     {
++       "id": "native-page-1-line-3",
++       "text": "Role: Platform Engineer",
++       "truncated": false,
++     },
++     {
++       "id": "native-page-1-line-4",
++       "text": "Dates: 2018-01-01 - 2024-01-01",
++       "truncated": false,
++     },
++     {
++       "id": "native-page-1-line-5",
++       "text": "Built services using PostgreSQL",
++       "truncated": false,
++     },
++     {
++       "id": "native-page-1-line-6",
++       "text": "Skills",
++       "truncated": false,
++     },
++     {
++       "id": "native-page-1-line-7",
++       "text": "PostgreSQL",
++       "truncated": false,
++     },
++   ],
++   "typedCoverage": {
++     "authority": "derived_typed_requirement_diagnostics",
++     "binding": {
++       "attemptId": "30000000-0000-4000-8000-000000000006",
++       "canonical": {
++         "contentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
++         "revision": 1,
++         "versionId": "e4b30157-29b3-4b0e-8b72-4b232242270d",
++       },
++       "profiles": {
++         "aliasLexiconSha256": "e5298fd95320299996a4f5eceff3fc7afcd61ed636aaec386e1d4107a7500fa2",
++         "aliasPolicyVersion": "jd-local-aliases/1.0.0",
++         "associationModelVersion": "evidence-entry-associations/1.0.0",
++         "correctionProjectionVersion": "canonical-corrections/1.0.1",
++         "evidenceSchemaVersion": "evidence/2.0.0",
++         "fieldExtractorVersion": "evidence-fields/1.0.1",
++         "jdAdmissionProfileSha256": "e82d68b1e58cf220d3584a8d510128d4428441a2b02815711e7f198adaeaacb8",
++         "readinessPredecessorSha256": "de6e71fed03732a391e35226d20816acd207267eef5f09c27017cee1f054f3fd",
++         "readinessProfileVersion": "requirement-relationship-readiness/1.0.0",
++         "regroupModelVersion": "canonical-entry-regroup/1.0.0",
++         "relationPolicySha256": "fd69dde2640bcdc1cdd76ce622015cb577090d61581515585f7cdfe0cdcd8cdc",
++         "relationPolicyVersion": "jd-local-relation-rules/1.0.0",
++         "targetModelVersion": "evidence-targets/1.0.0",
++         "unicodePolicySha256": "f3f8335d9a957bc16e33d61321f28ed7a12c8c81ff8912f0c17c041d86d95571",
++         "unicodePolicyVersion": "jd-unicode-profile/1.0.0",
++       },
++       "requirements": {
++         "contentSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
++         "inputSha256": "ca70d6ec3a9d1dbd1c14d069260eaf4e5b6d7a85b639166e0a1a9405b4e9e508",
++         "revision": 1,
++         "versionId": "ef9b0e65-0a57-4eb8-b63b-318f3db51694",
++       },
++       "source": {
++         "analysisId": "30000000-0000-4000-8000-000000000004",
++         "attemptId": "30000000-0000-4000-8000-000000000006",
++         "inputSha256": "7d577ab07d6ee21d51d51eec6fd4b1584f25a53d1ac12d18f98d2c20a11ec1dc",
++         "organizationId": "30000000-0000-4000-8000-000000000002",
++         "ownerId": "30000000-0000-4000-8000-000000000001",
++         "resumeId": "30000000-0000-4000-8000-000000000003",
++         "sourceId": "30000000-0000-4000-8000-000000000005",
++       },
++     },
++     "clauses": [
++       {
++         "dedupGroup": "coverage-clause-9199591d55032cbd7614f9d43b751c5b15468544ff6ad4d4dbbcd65772c3f0db",
++         "duplicateOf": null,
++         "durationRequirement": {
++           "candidateEvidence": [],
++           "evaluated": false,
++           "evidence": null,
++           "kind": "not_stated",
++           "lower": null,
++           "operatorEvidence": [],
++           "reason": null,
++           "subjectBinding": "literal_clause_only",
++           "upper": null,
++         },
++         "durationSubjectInterpretation": {
++           "clauseId": "f8f28c6a9d4295ac5532a3aae98234c7b782f4301d3ca90591c2f1a4d5c831da",
++           "duration": {
++             "candidateEvidence": [],
++             "evaluated": false,
++             "evidence": null,
++             "kind": "not_stated",
++             "lower": null,
++             "operatorEvidence": [],
++             "reason": null,
++             "subjectBinding": "literal_clause_only",
++             "upper": null,
++           },
++           "expression": null,
++           "reason": "stored_expression_available",
++           "state": "unresolved",
++           "storedExpressionKind": "atom",
++           "subjectBinding": null,
++         },
++         "evidence": {
++           "end": 32,
++           "quote": "PostgreSQL required",
++           "spanId": "jd-13-32",
++           "start": 13,
++         },
++         "explanation": "An exact source contribution is present. Its current claim still needs owner confirmation; proficiency is not independently verified.",
++         "expressionKind": "atom",
++         "id": "f8f28c6a9d4295ac5532a3aae98234c7b782f4301d3ca90591c2f1a4d5c831da",
++         "operands": [
++           {
++             "additionalFactCount": 0,
++             "additionalWitnessCount": 0,
++             "confirmedSourceDuration": null,
++             "dedupGroup": "coverage-subject-930f8a616a46a0c283f4795edf04d5c91ea872baf54ea762b54c640ce68c70f0",
++             "duplicateOf": null,
++             "duration": null,
++             "evidence": {
++               "end": 23,
++               "quote": "PostgreSQL",
++               "spanId": "jd-13-23",
++               "start": 13,
++             },
++             "explanation": "An exact source contribution is present. Its current claim still needs owner confirmation; proficiency is not independently verified.",
++             "factIds": [
++               "fb0c70ab-e03e-4390-a7c2-7048dcfc199b",
++               "eda88b9b-4056-4bdd-bbfa-455648639a43",
++             ],
++             "id": "coverage-operand-1453b16ec27133f0bd3f8c86fef1bf9bf6811a4284c030c0cf4163011af5be21",
++             "mapping": {
++               "canonicalValue": "PostgreSQL",
++               "conceptId": "local-software:postgresql",
++               "kind": "exact",
++               "policyVersion": "jd-local-aliases/1.0.0",
++               "prospectiveCreditGroup": "22e7c117764a257dad78c41cf7ee0eebc38fb6400c35eee0700931a1a5e0a4be",
++             },
++             "matches": [
++               {
++                 "matchKind": "exact_literal",
++                 "witnessId": "semantic-witness-572aec30467ae1db10ab0e454cc1caf0740064f0b10650a28e4ea0d68cdfc648",
++               },
++               {
++                 "matchKind": "exact_literal",
++                 "witnessId": "semantic-witness-8ffb0ee6fe5f09a07ee1c1036a231a288fe307d8cf7994def57da7c67bf3bf64",
++               },
++             ],
++             "matchingWitnessCount": 2,
++             "proposedState": "candidate_confirmation_required",
++             "reason": "source_confirmation_missing",
++             "sourceRequirementIds": [
++               "53c5789f-8b2c-42c4-9760-28dc0866b98d",
++             ],
++             "state": "not_evaluated",
++             "subjectId": "concept:local-software:postgresql",
++             "tiers": [
++               "source_contribution",
++               "listed",
++             ],
++             "value": "PostgreSQL",
++           },
++         ],
++         "proposedState": "candidate_confirmation_required",
++         "reason": "source_confirmation_missing",
++         "scope": {
++           "importance": "required",
++           "negated": false,
++         },
++         "sourceRequirementIds": [
++           "53c5789f-8b2c-42c4-9760-28dc0866b98d",
++         ],
++         "state": "not_evaluated",
++         "storedExpressionKind": "atom",
++       },
++     ],
++     "digest": "fddb0d49df69b03da7d25f41743863cdafeab36642bd619b51fb849a4d0a89a3",
++     "policy": {
++       "durationSha256": "a886bfc6fb4625a3d87b6f51758de4949c3b76e6916966a541fa238e2f55a046",
++       "durationSubjectSha256": "ef157c501f0f9d10ea9910b1dddc463a06fdb7a989cbb7409eecbea8caf955db",
++       "durationSubjectVersion": "job-duration-subject-rules/1.0.0",
++       "durationVersion": "requirement-duration/1.0.0",
++       "semanticSha256": "88751c86a58ae71d433e9795b146f78987202373f7f9a439d2daea14d965edea",
++       "semanticVersion": "requirement-semantic-rules/1.0.1",
++       "sha256": "197bb86275f3b27042e09326001ddb13c8fa9cd697f3dd9f65f39070f9c34e49",
++       "version": "typed-fact-coverage/1.0.1",
++     },
++     "retainedClauses": [
++       {
++         "evidence": {
++           "end": 32,
++           "quote": "PostgreSQL required",
++           "spanId": "jd-13-32",
++           "start": 13,
++         },
++         "importance": "required",
++         "interpretation": "partial_vocabulary",
++         "negated": false,
++         "requirementIds": [
++           "53c5789f-8b2c-42c4-9760-28dc0866b98d",
++         ],
++         "reviewRequired": true,
++       },
++     ],
++     "schemaVersion": "requirement-coverage/1.0.0",
++     "scoringEligible": false,
++     "semanticUnresolved": [
++       {
++         "factId": "fbadc465-8bc0-4dfd-8860-e9023f91403d",
++         "locations": [
++           {
++             "bulletId": null,
++             "entryId": "0e9aeb43-a1ec-43c9-9467-6f6d7e73da83",
++             "kind": "entry",
++             "sectionId": "908114f5-a0ac-4b49-b98c-d8232ecd1401",
++           },
++         ],
++         "reason": "out_of_scope_fact_type",
++       },
++       {
++         "factId": "5c01412a-440b-42d3-b275-4349a28f2e00",
++         "locations": [
++           {
++             "bulletId": null,
++             "entryId": "0e9aeb43-a1ec-43c9-9467-6f6d7e73da83",
++             "kind": "entry",
++             "sectionId": "908114f5-a0ac-4b49-b98c-d8232ecd1401",
++           },
++         ],
++         "reason": "out_of_scope_fact_type",
++       },
++       {
++         "factId": "be5af021-1c9e-4992-bd61-74de11426146",
++         "locations": [
++           {
++             "bulletId": null,
++             "entryId": "0e9aeb43-a1ec-43c9-9467-6f6d7e73da83",
++             "kind": "entry",
++             "sectionId": "908114f5-a0ac-4b49-b98c-d8232ecd1401",
++           },
++         ],
++         "reason": "unbound_job_dates",
++       },
++     ],
++     "state": "available",
++     "unavailableReason": null,
++     "witnessCounts": {
++       "additionalMatching": 0,
++       "deduplicated": 2,
++       "displayed": 2,
++       "matching": 2,
++       "semantic": 2,
++       "unmatched": 0,
++     },
++     "witnesses": [
++       {
++         "action": {
++           "end": 5,
++           "start": 0,
++           "value": "Built",
++         },
++         "actor": "resume_author_claim",
++         "basis": "source_quote",
++         "clause": {
++           "end": 31,
++           "start": 0,
++           "value": "Built services using PostgreSQL",
++         },
++         "confirmation": null,
++         "confirmationScope": "current_fact",
++         "currentSourceCitations": [
++           {
++             "attemptId": "30000000-0000-4000-8000-000000000006",
++             "end": 31,
++             "method": "native_text",
++             "pageEnd": 130,
++             "pageId": "page-1",
++             "pageStart": 99,
++             "spanId": "native-page-1-line-5",
++             "start": 0,
++           },
++         ],
++         "evidenceGroupId": "semantic-evidence-db2367fd14da68059d1432e41a5188bfa061350499532855f3bd046469ba3c2d",
++         "factId": "fb0c70ab-e03e-4390-a7c2-7048dcfc199b",
++         "factType": "contribution",
++         "id": "semantic-witness-572aec30467ae1db10ab0e454cc1caf0740064f0b10650a28e4ea0d68cdfc648",
++         "interval": null,
++         "location": {
++           "bulletId": "fbf27185-a2d9-4831-928c-02537a08f971",
++           "entryId": "212c3d65-688b-4e3a-8b28-174029d9f929",
++           "kind": "bullet",
++           "sectionId": "908114f5-a0ac-4b49-b98c-d8232ecd1401",
++         },
++         "object": {
++           "end": 14,
++           "start": 6,
++           "value": "services",
++         },
++         "observedOrigin": {
++           "citations": [
++             {
++               "attemptId": "30000000-0000-4000-8000-000000000006",
++               "end": 31,
++               "method": "native_text",
++               "pageEnd": 130,
++               "pageId": "page-1",
++               "pageStart": 99,
++               "spanId": "native-page-1-line-5",
++               "start": 0,
++             },
++           ],
++           "factId": "fb0c70ab-e03e-4390-a7c2-7048dcfc199b",
++           "value": "Built services using PostgreSQL",
++           "versionId": "e4b30157-29b3-4b0e-8b72-4b232242270d",
++         },
++         "offsetSpace": "current_fact",
++         "skill": {
++           "end": 31,
++           "identity": {
++             "canonicalValue": "PostgreSQL",
++             "conceptId": "local-software:postgresql",
++             "kind": "mapped_concept",
++             "lexiconSha256": "e5298fd95320299996a4f5eceff3fc7afcd61ed636aaec386e1d4107a7500fa2",
++             "literalKey": "postgresql",
++             "mappingKind": "exact",
++             "policyVersion": "jd-local-aliases/1.0.0",
++           },
++           "start": 21,
++           "value": "PostgreSQL",
++         },
++         "sourceClause": null,
++         "tier": "source_contribution",
++       },
++       {
++         "action": null,
++         "actor": "resume_author_claim",
++         "basis": "source_quote",
++         "clause": {
++           "end": 10,
++           "start": 0,
++           "value": "PostgreSQL",
++         },
++         "confirmation": null,
++         "confirmationScope": "current_fact",
++         "currentSourceCitations": [
++           {
++             "attemptId": "30000000-0000-4000-8000-000000000006",
++             "end": 10,
++             "method": "native_text",
++             "pageEnd": 148,
++             "pageId": "page-1",
++             "pageStart": 138,
++             "spanId": "native-page-1-line-7",
++             "start": 0,
++           },
++         ],
++         "evidenceGroupId": "semantic-evidence-b3275250883691a9db52a8b1fb0c2bb795ae14017c7db91164e959d0d83a2a3f",
++         "factId": "eda88b9b-4056-4bdd-bbfa-455648639a43",
++         "factType": "skill",
++         "id": "semantic-witness-8ffb0ee6fe5f09a07ee1c1036a231a288fe307d8cf7994def57da7c67bf3bf64",
++         "interval": null,
++         "location": {
++           "bulletId": "59b8d2a7-a0c1-4439-821c-8192d27c055b",
++           "entryId": "b04e5324-07ed-47e7-9e22-eb25d6fc602c",
++           "kind": "bullet",
++           "sectionId": "34ced9c7-a035-4227-9814-c2b867d63f9b",
++         },
++         "object": null,
++         "observedOrigin": {
++           "citations": [
++             {
++               "attemptId": "30000000-0000-4000-8000-000000000006",
++               "end": 10,
++               "method": "native_text",
++               "pageEnd": 148,
++               "pageId": "page-1",
++               "pageStart": 138,
++               "spanId": "native-page-1-line-7",
++               "start": 0,
++             },
++           ],
++           "factId": "eda88b9b-4056-4bdd-bbfa-455648639a43",
++           "value": "PostgreSQL",
++           "versionId": "e4b30157-29b3-4b0e-8b72-4b232242270d",
++         },
++         "offsetSpace": "current_fact",
++         "skill": {
++           "end": 10,
++           "identity": {
++             "canonicalValue": "PostgreSQL",
++             "conceptId": "local-software:postgresql",
++             "kind": "mapped_concept",
++             "lexiconSha256": "e5298fd95320299996a4f5eceff3fc7afcd61ed636aaec386e1d4107a7500fa2",
++             "literalKey": "postgresql",
++             "mappingKind": "exact",
++             "policyVersion": "jd-local-aliases/1.0.0",
++           },
++           "start": 0,
++           "value": "PostgreSQL",
++         },
++         "sourceClause": null,
++         "tier": "listed",
++       },
++     ],
++   },
+  }
+
+ ❯ tests/unit/jd-recommendations-repository.test.ts:279:84
+    277|  return ok(context);
+    278|  });
+    279|  await expect(loadScoreDiagnostics(store.client,f.owned.analysisId,f.o…
+       |                                                                                    ^
+    280| });
+    281| it("cannot release another owner's recommendation plan",async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/unit/jd-recommendations.test.ts > owned local JD recommendations > does not invent a agents contribution from Python elsewhere
+ FAIL  tests/unit/jd-recommendations.test.ts > owned local JD recommendations > does not invent a cloud contribution from Python elsewhere
+ FAIL  tests/unit/jd-recommendations.test.ts > owned local JD recommendations > does not invent a async contribution from Python elsewhere
+AssertionError: expected { …(11) } to match object { target: null, question: null, …(2) }
+(7 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "action": "review_requirement",
+-   "observation": "evidence_gap",
++   "observation": "review_scope",
+    "question": null,
+    "target": null,
+  }
+
+ ❯ tests/unit/jd-recommendations.test.ts:23:87
+     21|  it.each(["Pydantic","RAG","agents","cloud","async","microservices"])(…
+     22|  const {plan}=await fixture({clauses:["Built services using Python"],s…
+     23|  const missing=plan.items.find(i=>i.requirementQuote.includes(skill));…
+       |                                                                                       ^
+     24|  expect(plan.items.find(i=>i.target)).toHaveProperty("target.value","B…
+     25|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+ FAIL  tests/unit/jd-recommendations.test.ts > owned local JD recommendations > keeps edited confirmed declarations distinct from old source wording
+AssertionError: expected { …(11) } to match object { …(2) }
+(9 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "observation": "recorded_declaration",
+-   "target": {
+-     "basis": "candidate_declaration",
+-     "sourceQuote": null,
+-     "value": "Built pipelines using Python",
+-   },
++   "observation": "evidence_gap",
++   "target": null,
+  }
+
+ ❯ tests/unit/jd-recommendations.test.ts:33:24
+     31|  it("keeps edited confirmed declarations distinct from old source word…
+     32|  const {plan}=await fixture({edit:"Built pipelines using Python",confi…
+     33|  expect(plan.items[0]).toMatchObject({observation:"recorded_declaratio…
+       |                        ^
+     34|  });
+     35|  it("does not promote a listing to contribution",async()=>{
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  5 failed | 28 passed (33)
+   Start at  09:13:57
+   Duration  942ms (transform 203ms, setup 0ms, import 356ms, tests 468ms, environment 0ms)
+

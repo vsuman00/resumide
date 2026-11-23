@@ -1,0 +1,21 @@
+Package: expat
+Binary: libexpat1-dev, libexpat1, libexpat1-udeb, expat
+Version: 2.9.0-1~deb13u1
+Maintainer: Laszlo Boszormenyi (GCS) <gcs@debian.org>
+Build-Depends: debhelper-compat (= 13), docbook-to-man, docbook2x <!stage1>, libbsd-dev [hurd-any]
+Architecture: any
+Standards-Version: 4.7.2
+Format: 3.0 (quilt)
+Checksums-Sha256:
+ 09fe168e2186a2672e077d9fda02287b51fa08f73914fcc425b3307b503df8ff 2157 expat_2.9.0-1~deb13u1.dsc
+ 6e8ce7b52ebbaa423c59becc7cf1e6875c42e49228c062ac8123c10e700cec27 8488503 expat_2.9.0.orig.tar.gz
+ 0c1575a3dc3d039f9e6751821efcdfd5246e04c6af4939defa01226d94541fba 14348 expat_2.9.0-1~deb13u1.debian.tar.xz
+Homepage: https://libexpat.github.io/
+Package-List: 
+ expat deb text optional arch=any
+ libexpat1 deb libs optional arch=any
+ libexpat1-dev deb libdevel optional arch=any
+ libexpat1-udeb udeb debian-installer optional arch=any profile=!noudeb profile:v1=!noudeb
+Directory: pool/updates/main/e/expat
+Priority: optional
+Section: libs

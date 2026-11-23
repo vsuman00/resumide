@@ -1,0 +1,35 @@
+# Writing alignment: bounded repair contract
+
+2026-11-09. **ACK for implementation within the frontend's five-file allocation.** This is local engineering authority for the demonstrated source repair, not factual, representative or release acceptance. This reviewer owns only this document. No source edits, fixtures, behavioral executions, owner-PDF access or network operation occurred here.
+
+## Shared units and right-edge support
+
+Use the support document's existing exact anchored units as the selector's boundary authority. An independent recognized action line is a separate source; a reviewed lowercase wrap or semicolon-linked continuation remains one source. Do not accept an arbitrary quoted prefix merely because it matches the beginning of an anchor. Keep raw source substrings, Unicode-code-point spans, deterministic source IDs, deduplication and the 25–500-character/32-source selection limits. Selection still exposes bounded unknown passages for clarification where existing controls require it; it does not convert them into eligible facts. Duplicate text remains ambiguous at the assessor, even when selection deduplicates it.
+
+Alignment alone is insufficient: a direct assessor call, writer grounding or non-bullet fallback can currently quote an earlier exact anchor while omitting a later uppercase semantic qualification. Add conservative right-edge qualification to the shared support document, before any rewrite/summary admission. Preserve every existing forward qualifier and raw anchor. A trailing unknown continuation must make the preceding contribution require clarification rather than permit a shortened claim.
+
+For each parsed contribution, inspect its unresolved continuation corridor. A following independent recognized contribution is a boundary, including a separately recognized bullet. A complete independently reviewed new entry or explicit role boundary may establish a new unit context; a bare title, heading, blank, contact line or unknown bullet does not. Unknown or semantic text in the unresolved corridor attaches right-edge uncertainty to the preceding contribution. Preserve the actual responsible source anchor IDs. This handling must apply even when the first contribution has terminal punctuation; punctuation alone does not prove a later scope statement is unrelated.
+
+Do not discard a scope statement because it follows cosmetic metadata. `Without production deployment.` after a contribution, or after the finite reference label below, must block both direct and selector-mediated shortening. An unknown bullet such as `- Without production deployment.` is not a recognized-contribution boundary. Existing meaningful scope before a contribution remains in force through every cosmetic boundary. When association cannot be proved, abstain; never call the candidate's claim false merely because support is unknown.
+
+## Sole new finite reference boundary
+
+The reviewed positive exemption is the exact whole trimmed, case-sensitive ASCII line `API reference`, immediately following a recognized contribution inside its already-proved complete `project` layout entry under exact `Projects`. No colon, prose suffix, URL, case variant, arbitrary uppercase label or label outside that complete context is admitted by this leaf.
+
+This line spares only the preceding contribution's right edge. The reference anchor **remains** `qualified_or_unknown`, includes its own qualifier ID, and continues to qualify later material under the existing forward policy. It grants no candidate fact, identity, skill, project ownership or attribution. It is not a corridor terminator: inspect subsequent unresolved units, so `API reference` followed by `Without production deployment.` still qualifies the earlier contribution. The same applies across intervening blanks/headings/contact metadata; none can erase the unresolved risk. Only a separately proved independent unit boundary may end that association.
+
+Keep this finite rule explicit in the versioned support policy. Recommend `legacy-source-transforms/1.0.3` for changed derived context semantics. Retain `writing-support/1.1.0` only if the existing strict shape is sufficient; a new stored/derived field requires a separately reviewed schema/version change. Rebuilding the support document must recompute the same reference/corridor decision and reject tampered context, spans or bindings. No stored evidence, canonical schema, SQL producer, prompt or action equivalence changes are authorized by this contract.
+
+## Acceptance and review
+
+Preserve the frozen 14-case expectations exactly: both useful Built→Created positives must pass, alongside all 12 existing controls. The `API reference` self/forward qualifier assertion stays. Add direct assessor and `groundWriterSuggestions` negatives for trailing scope, both bullet and non-bullet fallback, and for reference-then-scope including a cosmetic intervening boundary. Add negative finite-rule variants and positive adjacent-contribution/wrapped/Unicode cases as needed without changing the original 14. Keep the five frozen semantic failures, both downstream controls, duplicate ambiguity, metrics/agency/negation associations and existing normal-layout usefulness tests. No thresholds, assertions or failed receipts may be removed or relabelled.
+
+Frontend owns exactly: `app/lib/server/rewrite-sources.ts`, `app/lib/server/writing-support.ts`, `tests/unit/writing-source-alignment.test.ts`, `tests/unit/writing-support.test.ts` and new `frontend-writing-alignment-repair.md`. The frozen diagnosis `frontend-writing-alignment.md` stays unchanged. A helper extraction outside those five files requires a coordinated scope split. Keep document/source/anchor/clause limits and source/policy bindings. Prefer bounded corridor passes over rescanning or copying whole entry text per contribution; retain existing dense-output cost controls. Root coordinates the integrated check after focused red/green evidence and source review.
+
+## Source binding and next action
+
+Read authoritative ROOT `writing-support.ts` at `6dcac128e26dec55bd3d462281adb5ee621a9e7421b8e5fe955b40d19f89d261`, `rewrite-sources.ts` at `5ee8b6152298331f702de5dda33bb47b52384e8df330460a95c705a730ef8356`, and `writer-grounding.ts` at `486fd5a945339a4bd9014b780fc43bb8fa9d588bcb34071c745bb7df4e38290b`. The frozen frontend alignment test is `981e5f0f886c1a4e2a022854cd61d24e66c83ad1a724a8963b67aafd1e0a1e0e`.
+
+Current source anchors: selector `rewrite-sources.ts:8–45`; continuation units `writing-support.ts:573–590`; append-only qualifiers `:714–725`; rewrite context gate `:845–846`; summary context gate `:963`; exact unique original and tamper reconstruction `:1031–1084`; actual writer conjunction `writer-grounding.ts:23–38`. These explain why the fix must live in shared support semantics as well as selection.
+
+Next: frontend implements this bounded contract, freezes actual hashes/red-green evidence, then this reviewer inspects that exact diff. This document does not claim the repair or its proposed new tests already pass. A11, owner-file usefulness, actual live writing, canonical admission and full release remain open.

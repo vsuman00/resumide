@@ -1,0 +1,9 @@
+# Cleanup credits in the privacy queue
+
+CR-R17-S09 fixes a production-path gap found while tracing the adopted deletion handoff. Cleanup could requeue after verified progress, but the existing queue claimant still skipped any request after three raw claims. The previous progress fixture simulated reclaim and did not exercise that limit.
+
+The worker now uses one queue claimant that includes verified cleanup credits when it evaluates deletion requests with a recorded handoff. It checks the configured failure limit against raw attempts minus credited handoffs. Lease attempt numbers still increase. The query selects the oldest due request under a row lock and excludes live leases. Ordinary requests retain the existing three-claim cap. The worker falls back to the earlier claimant only when the new RPC is unavailable on an older schema.
+
+Four application regressions failed before the routing change. The focused suite passed 126 tests across five files. The integrated local suite passed 6,796 tests across 323 files, plus formatting, typecheck, lint and both builds. Lint reported four existing warnings. The [PostgreSQL 17 fixture](admission-credit-claim-native-fixture.py.txt) reproduced the sealed claimant skipping attempt four. With the new claimant, real queue calls processed four verified handoffs followed by three genuine failures. The fixture also checked due times, lease exclusion and reclaim, ordinary-request limits and role grants. It used synthetic supporting relations and did not call managed Storage. [Verification receipt](admission-credit-claim-evidence.json).
+
+The [89-migration inventory](managed-schema-inventory-89.json) pins the successor and matches all 88 earlier files. The adopted Storage handoff, exact ledger retirement and managed CR-A01 verification remain open.

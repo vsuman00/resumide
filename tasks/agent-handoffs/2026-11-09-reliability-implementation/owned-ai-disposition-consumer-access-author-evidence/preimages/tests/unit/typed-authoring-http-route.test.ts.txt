@@ -1,0 +1,825 @@
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { TYPED_AUTHORING_READINESS_PROFILE } from "../../app/lib/server/typed-authoring-readiness-profile";
+import {
+  createRequirementContextFixture,
+  requirementFixtureId as id,
+} from "../fixtures/requirement-context";
+import type { RequirementRelationshipContext } from "../../app/lib/server/requirement-relationship-context";
+import { reviseCanonical } from "../../app/lib/server/canonical-content";
+import {
+  buildTypedAuthoringPatch,
+  createTypedAuthoringCommand,
+  typedAuthoringCommandSha256,
+  type TypedAuthoringCommand,
+  type TypedAuthoringReceipt,
+} from "../../app/lib/server/typed-authoring-contract";
+import type { executeTypedAuthoringHttp } from "../../app/lib/server/typed-authoring-http";
+const mocks = vi.hoisted(() => ({
+  flags: {
+    SCORING_V2_ENABLED: true,
+    AUTHORING_ENABLED: true,
+    TYPED_AUTHORING_ENABLED: true,
+    APP_ORIGIN: "https://example.test",
+  },
+  user: vi.fn(),
+  server: vi.fn(),
+  admin: vi.fn(),
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getServerConfig: () => mocks.flags,
+}));
+vi.mock("../../app/lib/server/auth", () => ({
+  getAuthenticatedUser: mocks.user,
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseServerClient: mocks.server,
+  createSupabaseAdminClient: mocks.admin,
+}));
+import { action, loader } from "../../app/routes/analysis.author.typed";
+type Result = { data: unknown; error: unknown };
+type Read = {
+  table: string;
+  columns: string;
+  filters: Record<string, unknown>;
+  single: boolean;
+};
+const ok = (data: unknown): Result => ({ data, error: null });
+function ownedStore(
+  context: RequirementRelationshipContext,
+  override?: (read: Read, sequence: Read[]) => Result | undefined,
+) {
+  const c = context.canonical,
+    s = context.source,
+    r = context.requirements;
+  const docs = [c, ...context.ancestors];
+  const reads: Read[] = [];
+  const events: Record<string, unknown>[] = [];
+  const head = {
+    version_id: context.heads.canonicalHeadId,
+    revision: context.heads.canonicalHeadRevision,
+  };
+  const root = {
+    id: s.resumeId,
+    owner_id: s.ownerId,
+    organization_id: s.organizationId,
+    status: "active",
+  };
+  const analysis = {
+    id: s.analysisId,
+    owner_id: s.ownerId,
+    organization_id: s.organizationId,
+    resume_version_id: s.sourceId,
+    job_id: r.content.jobId,
+  };
+  const source = {
+    id: s.sourceId,
+    resume_id: s.resumeId,
+    owner_id: s.ownerId,
+    organization_id: s.organizationId,
+    active_resume: root,
+    page_count: context.sourceMetadata.pageCount,
+  };
+  const job = {
+    id: r.content.jobId,
+    title: "Software Engineer",
+    description: r.content.sourceText,
+    owner_id: s.ownerId,
+    organization_id: s.organizationId,
+  };
+  const canonicalRows = docs.map((d) => ({
+    id: d.versionId,
+    resume_id: s.resumeId,
+    owner_id: s.ownerId,
+    organization_id: s.organizationId,
+    source_resume_version_id: s.sourceId,
+    parent_version_id: d.content.parentVersionId,
+    revision: d.revision,
+    content: d.content,
+    created_at: d.content.createdAt,
+  }));
+  const requirementRows = [
+    {
+      id: r.versionId,
+      analysis_id: s.analysisId,
+      job_id: r.content.jobId,
+      owner_id: s.ownerId,
+      organization_id: s.organizationId,
+      parent_version_id: r.content.parentVersionId,
+      revision: r.revision,
+      content: r.content,
+      created_at: r.content.createdAt,
+    },
+  ];
+  const rpc = vi.fn<(name: string, args: unknown) => Promise<Result>>(
+    async (name) => {
+      if (name !== "read_requirement_relationship_context")
+        throw Error("UNEXPECTED_WRITE_RPC");
+      return ok(context);
+    },
+  );
+  function valueAt(row: Record<string, unknown>, path: string): unknown {
+    let value: unknown = row;
+    for (const key of path.split(".")) {
+      if (typeof value !== "object" || value === null) return undefined;
+      value = (value as Record<string, unknown>)[key];
+    }
+    return value;
+  }
+  const from = vi.fn((table: string) => {
+    const read: Read = { table, columns: "", filters: {}, single: false };
+    const query = {
+      select(columns: string) {
+        read.columns = columns;
+        return query;
+      },
+      eq(key: string, value: unknown) {
+        read.filters[key] = value;
+        return query;
+      },
+      neq() {
+        return query;
+      },
+      order() {
+        return query;
+      },
+      limit() {
+        return query;
+      },
+      range() {
+        return query;
+      },
+      maybeSingle() {
+        read.single = true;
+        return query;
+      },
+      then(yes: (result: Result) => unknown, no: (error: unknown) => unknown) {
+        reads.push(read);
+        const replacement = override?.(read, reads);
+        if (replacement) return Promise.resolve(replacement).then(yes, no);
+        let rows: Record<string, unknown>[];
+        if (table === "analyses") rows = [analysis];
+        else if (table === "resume_versions") rows = [source];
+        else if (table === "memberships")
+          rows = [
+            {
+              organization_id: s.organizationId,
+              user_id: s.ownerId,
+              role: "owner",
+            },
+          ];
+        else if (table === "data_requests") rows = [];
+        else if (table === "authoring_events") rows = events;
+        else if (table === "resumes") rows = [root];
+        else if (table === "jobs") rows = [job];
+        else if (table === "canonical_resume_heads")
+          rows = [
+            {
+              resume_id: s.resumeId,
+              owner_id: s.ownerId,
+              organization_id: s.organizationId,
+              version_id: head.version_id,
+              revision: head.revision,
+            },
+          ];
+        else if (table === "canonical_resume_versions") rows = canonicalRows;
+        else if (table === "job_requirement_versions") rows = requirementRows;
+        else if (table === "document_evidence_attempts")
+          rows = [
+            {
+              id: context.attempt.id,
+              analysis_id: s.analysisId,
+              owner_id: s.ownerId,
+              organization_id: s.organizationId,
+              envelope: context.attempt.envelope,
+              resume_version_id: s.sourceId,
+              input_sha256: s.inputSha256,
+              attempt_number: context.attempt.attemptNumber,
+            },
+          ];
+        else throw Error("UNEXPECTED_TABLE_READ");
+        rows = rows.filter((row) =>
+          Object.entries(read.filters).every(
+            ([key, value]) => valueAt(row, key) === value,
+          ),
+        );
+        if (
+          table === "canonical_resume_versions" ||
+          table === "job_requirement_versions"
+        )
+          rows = [...rows].sort(
+            (a, b) => Number(b.revision) - Number(a.revision),
+          );
+        return Promise.resolve(ok(read.single ? (rows[0] ?? null) : rows)).then(
+          yes,
+          no,
+        );
+      },
+    };
+    return query;
+  });
+  return {
+    client: { from, rpc } as unknown as Parameters<
+      typeof executeTypedAuthoringHttp
+    >[0],
+    from,
+    rpc,
+    reads,
+    canonicalRows,
+    requirementRows,
+    source,
+    analysis,
+    job,
+    events,
+    head,
+  };
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  Object.assign(mocks.flags, {
+    SCORING_V2_ENABLED: true,
+    AUTHORING_ENABLED: true,
+    TYPED_AUTHORING_ENABLED: true,
+  });
+  mocks.server.mockImplementation((_request: Request, h: Headers) => {
+    h.append("Set-Cookie", "owned_session=refreshed; Path=/; HttpOnly");
+    return { kind: "auth" };
+  });
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => {
+      throw Error("UNEXPECTED_PROVIDER_REQUEST");
+    }),
+  );
+});
+afterEach(() => vi.unstubAllGlobals());
+function request(
+  fields: Record<string, string> | URLSearchParams | FormData,
+  options: { method?: string; origin?: string } = {},
+) {
+  return new Request(
+    "https://example.test/analysis/" + id(4) + "/author/typed",
+    {
+      method: options.method ?? "POST",
+      headers: { Origin: options.origin ?? "https://example.test" },
+      body:
+        fields instanceof URLSearchParams || fields instanceof FormData
+          ? fields
+          : new URLSearchParams(fields),
+    },
+  );
+}
+function privateResponse(response: Response) {
+  expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+  expect(response.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
+}
+async function setup() {
+  const f = await createRequirementContextFixture({ confirm: true });
+  const selection = {
+    canonicalVersionId: f.context.canonical.versionId,
+    requirementVersionId: f.context.requirements.versionId,
+    clauseId: f.context.requirements.content.relations.clauses[0].id,
+    targetFactId: f.targetFactId,
+  };
+  const patch = buildTypedAuthoringPatch(f.context, selection, "Created");
+  const accept = createTypedAuthoringCommand(patch, "accept", id(700), true),
+    reject = createTypedAuthoringCommand(patch, "reject", id(701), false);
+  const edited = reviseCanonical(f.context.canonical.content, {
+    operation: "edit",
+    factId: f.targetFactId,
+    value: patch.after,
+  });
+  const confirmed = reviseCanonical(edited, {
+    operation: "confirm",
+    factId: f.targetFactId,
+  });
+  const receiptFor = (
+    command: TypedAuthoringCommand,
+  ): TypedAuthoringReceipt => ({
+    schemaVersion: "typed-authoring-receipt/1.0.0",
+    status: "applied",
+    action: command.operation,
+    idempotencyKey: command.idempotencyKey,
+    commandSha256: typedAuthoringCommandSha256(command),
+    baseVersionId: f.context.canonical.versionId,
+    baseRevision: f.context.canonical.revision,
+    requirementVersionId: f.context.requirements.versionId,
+    requirementRevision: f.context.requirements.revision,
+    versionId:
+      command.operation === "accept"
+        ? confirmed.versionId
+        : f.context.canonical.versionId,
+    revision:
+      f.context.canonical.revision + (command.operation === "accept" ? 2 : 0),
+    eventId: id(command.operation === "accept" ? 702 : 703),
+    idempotent: false,
+  });
+  const store = ownedStore(f.context);
+  store.rpc.mockImplementation(async (name, args) => {
+    if (name === "read_requirement_relationship_context") return ok(f.context);
+    if (name === "read_typed_authoring_readiness")
+      return ok({
+        ...TYPED_AUTHORING_READINESS_PROFILE,
+        schemaReady: true,
+        writerExecutable: true,
+      });
+    if (name === "apply_typed_authoring_action")
+      return ok(
+        receiptFor((args as { p_command: TypedAuthoringCommand }).p_command),
+      );
+    throw Error("UNEXPECTED_WRITE_RPC");
+  });
+  mocks.user.mockResolvedValue({ id: f.owned.ownerId });
+  mocks.admin.mockReturnValue(store.client);
+  const args = (req: Request) => ({
+    request: req,
+    params: { id: f.owned.analysisId },
+  });
+  const decisions = (command: TypedAuthoringCommand = accept) =>
+    request({
+      action: "decision",
+      command: JSON.stringify(command),
+      ...(command.operation === "accept"
+        ? { reviewAcknowledgement: "accepted" }
+        : {}),
+    });
+  return {
+    ...f,
+    store,
+    selection,
+    patch,
+    accept,
+    reject,
+    edited,
+    confirmed,
+    receiptFor,
+    args,
+    decisions,
+  };
+}
+type Fixture = Awaited<ReturnType<typeof setup>>;
+function prepareUndo(f: Fixture) {
+  const receipt = f.receiptFor(f.accept);
+  for (const [document, revision] of [
+    [f.edited, receipt.baseRevision + 1],
+    [f.confirmed, receipt.revision],
+  ] as const)
+    f.store.canonicalRows.push({
+      id: document.versionId,
+      resume_id: document.resumeId,
+      owner_id: document.ownerId,
+      organization_id: document.organizationId,
+      source_resume_version_id: f.owned.sourceId,
+      parent_version_id: document.parentVersionId,
+      revision,
+      content: document,
+      created_at: document.createdAt,
+    });
+  f.store.head.version_id = f.confirmed.versionId;
+  f.store.head.revision = receipt.revision;
+  f.store.events.push({
+    id: receipt.eventId,
+    analysis_id: f.owned.analysisId,
+    resume_id: f.owned.resumeId,
+    owner_id: f.owned.ownerId,
+    organization_id: f.owned.organizationId,
+    base_version_id: receipt.baseVersionId,
+    result_version_id: receipt.versionId,
+    idempotency_key: receipt.idempotencyKey,
+    action: "accept",
+    command: f.accept,
+    result: receipt,
+    retention_policy_id: f.confirmed.retentionPolicyId,
+  });
+  const undoReceipt = {
+    status: "applied",
+    action: "undo",
+    versionId: id(710),
+    revision: receipt.revision + 1,
+    eventId: id(711),
+    idempotent: false,
+  };
+  f.store.rpc.mockImplementation(async (name) => {
+    if (name === "apply_authoring_action") return ok(undoReceipt);
+    throw Error("UNEXPECTED_RPC_ON_UNDO");
+  });
+  return {
+    receipt,
+    undoReceipt,
+    undoKey: id(712),
+    form: (r: TypedAuthoringReceipt = receipt) =>
+      request({
+        action: "undo",
+        receipt: JSON.stringify(r),
+        idempotencyKey: id(712),
+      }),
+  };
+}
+it.each([
+  "SCORING_V2_ENABLED",
+  "AUTHORING_ENABLED",
+  "TYPED_AUTHORING_ENABLED",
+] as const)(
+  "denies disabled %s with zero authentication or owned I/O",
+  async (flag) => {
+    const f = await setup();
+    mocks.flags[flag] = false;
+    const response = await action(f.args(f.decisions()));
+    expect(response.status).toBe(404);
+    privateResponse(response);
+    expect(mocks.server).not.toHaveBeenCalled();
+    expect(mocks.user).not.toHaveBeenCalled();
+    expect(mocks.admin).not.toHaveBeenCalled();
+    expect(f.store.rpc).not.toHaveBeenCalled();
+    expect(f.store.from).not.toHaveBeenCalled();
+  },
+);
+it("keeps GET and non-POST methods private and method-rejected without authentication", async () => {
+  const f = await setup();
+  const get = loader();
+  expect(get.status).toBe(405);
+  expect(get.headers.get("Allow")).toBe("POST");
+  privateResponse(get);
+  const put = await action(
+    f.args(
+      request(
+        { action: "preview", selection: JSON.stringify(f.selection) },
+        { method: "PUT" },
+      ),
+    ),
+  );
+  expect(put.status).toBe(405);
+  expect(put.headers.get("Allow")).toBe("POST");
+  expect(mocks.server).not.toHaveBeenCalled();
+  expect(mocks.admin).not.toHaveBeenCalled();
+});
+it("rejects a foreign browser origin before session or admin I/O", async () => {
+  const f = await setup();
+  const response = await action(
+    f.args(
+      request(
+        { action: "preview", selection: JSON.stringify(f.selection) },
+        { origin: "https://foreign.example" },
+      ),
+    ),
+  );
+  expect(response.status).toBe(403);
+  privateResponse(response);
+  expect(mocks.server).not.toHaveBeenCalled();
+  expect(mocks.admin).not.toHaveBeenCalled();
+});
+it("denies an unauthenticated submit and preserves refreshed private cookies", async () => {
+  const f = await setup();
+  mocks.user.mockResolvedValue(null);
+  const response = await action(f.args(f.decisions()));
+  expect(response.status).toBe(401);
+  privateResponse(response);
+  expect(response.headers.getSetCookie()).toEqual([
+    "owned_session=refreshed; Path=/; HttpOnly",
+  ]);
+  expect(mocks.admin).not.toHaveBeenCalled();
+});
+it("rejects an invalid analysis identifier before privileged owned access", async () => {
+  const f = await setup();
+  const response = await action({
+    request: f.decisions(),
+    params: { id: "invalid" },
+  });
+  expect(response.status).toBe(422);
+  expect(mocks.admin).not.toHaveBeenCalled();
+  expect(f.store.rpc).not.toHaveBeenCalled();
+});
+it("previews an actual supported local change without provider or mutation RPC", async () => {
+  const f = await setup();
+  const response = await action(
+    f.args(
+      request({ action: "preview", selection: JSON.stringify(f.selection) }),
+    ),
+  );
+  expect(response.status).toBe(200);
+  const result = await response.json();
+  expect(result.kind).toBe("proposal");
+  expect(result.proposal.patch.before).toBe("Built services using PostgreSQL");
+  expect(result.proposal.patch.after).toBe("Created services using PostgreSQL");
+  expect(result.proposal.acceptCommand.acknowledgement).toBe(true);
+  expect(result.proposal.rejectCommand.acknowledgement).toBe(false);
+  expect(f.store.rpc).toHaveBeenCalledTimes(2);
+  expect(
+    f.store.rpc.mock.calls.every(
+      ([name]) => name === "read_requirement_relationship_context",
+    ),
+  ).toBe(true);
+  expect(f.store.from).not.toHaveBeenCalled();
+  expect(fetch).not.toHaveBeenCalled();
+  privateResponse(response);
+});
+it.each(["foreign", "withdrawn", "stale"] as const)(
+  "does not release a preview for %s owned context",
+  async (kind) => {
+    const f = await setup();
+    const row = structuredClone(f.context);
+    if (kind === "foreign") row.source.ownerId = id(720);
+    if (kind === "stale") {
+      row.heads.canonicalHeadId = id(721);
+      row.heads.canonicalHeadRevision++;
+    }
+    const data =
+      kind === "withdrawn"
+        ? {
+            schemaVersion: "requirement-relationship-context/1.0.0",
+            status: "not_found",
+            scoringEligible: false,
+          }
+        : row;
+    f.store.rpc.mockResolvedValue(ok(data));
+    const response = await action(
+      f.args(
+        request({ action: "preview", selection: JSON.stringify(f.selection) }),
+      ),
+    );
+    expect(response.status).toBeGreaterThanOrEqual(400);
+    expect((await response.json()).kind).toBe("error");
+    expect(fetch).not.toHaveBeenCalled();
+    expect(
+      f.store.rpc.mock.calls.every(
+        ([name]) => name === "read_requirement_relationship_context",
+      ),
+    ).toBe(true);
+  },
+);
+it.each([
+  "missing_ack",
+  "wrong_ack",
+  "reject_ack",
+  "duplicate_field",
+  "unknown_field",
+  "decoded_duplicate",
+  "unknown_command",
+  "file",
+] as const)("rejects malformed %s before owned admin access", async (kind) => {
+  const f = await setup();
+  let body: URLSearchParams | FormData = new URLSearchParams({
+    action: "decision",
+    command: JSON.stringify(f.accept),
+    reviewAcknowledgement: "accepted",
+  });
+  if (kind === "missing_ack") body.delete("reviewAcknowledgement");
+  if (kind === "wrong_ack") body.set("reviewAcknowledgement", "on");
+  if (kind === "reject_ack") body.set("command", JSON.stringify(f.reject));
+  if (kind === "duplicate_field") body.append("action", "decision");
+  if (kind === "unknown_field") body.set("ownerId", f.owned.ownerId);
+  if (kind === "decoded_duplicate")
+    body.set(
+      "command",
+      String.raw`{"operat\u0069on":"accept",` +
+        JSON.stringify(f.accept).slice(1),
+    );
+  if (kind === "unknown_command")
+    body.set("command", JSON.stringify({ ...f.accept, force: true }));
+  if (kind === "file") {
+    body = new FormData();
+    body.set("action", "preview");
+    body.set(
+      "selection",
+      new Blob([JSON.stringify(f.selection)]),
+      "synthetic.json",
+    );
+  }
+  const response = await action(f.args(request(body)));
+  expect(response.status).toBe(422);
+  expect(mocks.admin).not.toHaveBeenCalled();
+  expect(f.store.rpc).not.toHaveBeenCalled();
+});
+it.each(["unsupported_type", "body_cap", "command_cap"] as const)(
+  "rejects %s without admin or provider",
+  async (kind) => {
+    const f = await setup();
+    let req: Request;
+    if (kind === "unsupported_type")
+      req = new Request(
+        "https://example.test/analysis/" + f.owned.analysisId + "/author/typed",
+        {
+          method: "POST",
+          headers: {
+            Origin: "https://example.test",
+            "Content-Type": "application/json",
+          },
+          body: "{}",
+        },
+      );
+    else
+      req = request({
+        action: "decision",
+        command:
+          kind === "body_cap"
+            ? " ".repeat(65537)
+            : JSON.stringify(f.accept) + " ".repeat(16385),
+        reviewAcknowledgement: "accepted",
+      });
+    const response = await action(f.args(req));
+    expect(response.status).toBe(
+      kind === "unsupported_type" ? 415 : kind === "body_cap" ? 413 : 422,
+    );
+    expect(mocks.admin).not.toHaveBeenCalled();
+    expect(fetch).not.toHaveBeenCalled();
+  },
+);
+it.each(["accept", "reject"] as const)(
+  "dispatches exact actual %s command through the single atomic RPC",
+  async (kind) => {
+    const f = await setup();
+    const command = kind === "accept" ? f.accept : f.reject;
+    const response = await action(f.args(f.decisions(command)));
+    expect(response.status).toBe(200);
+    const result = await response.json();
+    expect(result).toEqual({ kind: "applied", receipt: f.receiptFor(command) });
+    expect(result.receipt.revision).toBe(
+      f.context.canonical.revision + (kind === "accept" ? 2 : 0),
+    );
+    expect(
+      f.store.rpc.mock.calls.filter(
+        ([name]) => name !== "read_requirement_relationship_context",
+      ),
+    ).toEqual([
+      ["read_typed_authoring_readiness", {}],
+      [
+        "apply_typed_authoring_action",
+        {
+          p_user_id: f.owned.ownerId,
+          p_analysis_id: f.owned.analysisId,
+          p_command: command,
+          p_request_id: command.idempotencyKey,
+        },
+      ],
+    ]);
+    expect(fetch).not.toHaveBeenCalled();
+  },
+);
+it("retries the exact original command and key without rebasing after a moved head", async () => {
+  const f = await setup();
+  const row = structuredClone(f.context);
+  row.heads.canonicalHeadId = id(730);
+  row.heads.canonicalHeadRevision++;
+  const replay = { ...f.receiptFor(f.accept), idempotent: true };
+  f.store.rpc.mockImplementation(async (name) =>
+    name === "read_requirement_relationship_context"
+      ? ok(row)
+      : name === "read_typed_authoring_readiness"
+        ? ok({
+            ...TYPED_AUTHORING_READINESS_PROFILE,
+            schemaReady: true,
+            writerExecutable: true,
+          })
+        : name === "apply_typed_authoring_action"
+          ? ok(replay)
+          : Promise.reject(Error("UNEXPECTED_RPC")),
+  );
+  const response = await action(f.args(f.decisions()));
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({ kind: "applied", receipt: replay });
+  const writes = f.store.rpc.mock.calls.filter(
+    ([name]) => name === "apply_typed_authoring_action",
+  );
+  expect(writes).toHaveLength(1);
+  expect(writes[0][1]).toEqual({
+    p_user_id: f.owned.ownerId,
+    p_analysis_id: f.owned.analysisId,
+    p_command: f.accept,
+    p_request_id: f.accept.idempotencyKey,
+  });
+  expect(f.store.rpc.mock.calls.map(([name]) => name)).toEqual([
+    "read_requirement_relationship_context",
+    "read_typed_authoring_readiness",
+    "apply_typed_authoring_action",
+  ]);
+  expect(f.store.rpc.mock.calls[0][1]).toEqual({
+    p_user_id: f.owned.ownerId,
+    p_analysis_id: f.owned.analysisId,
+    p_selection: {
+      canonicalVersionId: f.accept.binding.canonical.versionId,
+      requirementVersionId: f.accept.binding.requirements.versionId,
+    },
+  });
+});
+it("returns uncertain denied native writes as retry-exact without claiming a save", async () => {
+  const f = await setup();
+  f.store.rpc.mockImplementation(async (name) =>
+    name === "read_requirement_relationship_context"
+      ? ok(f.context)
+      : name === "read_typed_authoring_readiness"
+        ? ok({
+            ...TYPED_AUTHORING_READINESS_PROFILE,
+            schemaReady: true,
+            writerExecutable: true,
+          })
+        : {
+            data: null,
+            error: { code: "42501", message: "PRIVATE_DATABASE_CANARY" },
+          },
+  );
+  const response = await action(f.args(f.decisions()));
+  expect(response.status).toBe(503);
+  expect(await response.json()).toEqual({
+    kind: "error",
+    reason: "unavailable",
+    recovery: "retry_exact",
+  });
+  privateResponse(response);
+  expect(f.store.rpc.mock.calls.map(([name]) => name)).toEqual([
+    "read_requirement_relationship_context",
+    "read_typed_authoring_readiness",
+    "apply_typed_authoring_action",
+  ]);
+});
+it("refuses an exact but foreign-owner command before any owned read or write", async () => {
+  const f = await setup();
+  const command = structuredClone(f.accept);
+  command.binding.source.ownerId = id(731);
+  const response = await action(f.args(f.decisions(command)));
+  expect(response.status).toBe(422);
+  expect(f.store.rpc).not.toHaveBeenCalled();
+});
+it("does not rebase a changed selected requirement or claim value into the current command", async () => {
+  const f = await setup();
+  const command = structuredClone(f.accept);
+  command.target.currentValueSha256 = "f".repeat(64);
+  const response = await action(f.args(f.decisions(command)));
+  expect(response.status).toBe(409);
+  expect(
+    f.store.rpc.mock.calls.every(
+      ([name]) => name === "read_requirement_relationship_context",
+    ),
+  ).toBe(true);
+});
+it("undoes the actual owned recorded acceptance to its original base via guarded legacy undo", async () => {
+  const f = await setup();
+  const u = prepareUndo(f);
+  const response = await action(
+    f.args(u.form({ ...u.receipt, idempotent: true })),
+  );
+  expect(response.status).toBe(200);
+  expect(await response.json()).toEqual({
+    kind: "undone",
+    receipt: u.undoReceipt,
+    idempotencyKey: u.undoKey,
+  });
+  expect(f.store.rpc).toHaveBeenCalledOnce();
+  const [name, args] = f.store.rpc.mock.calls[0];
+  expect(name).toBe("apply_authoring_action");
+  expect(args).toMatchObject({
+    p_user_id: f.owned.ownerId,
+    p_analysis_id: f.owned.analysisId,
+    p_request_id: u.undoKey,
+    p_command: {
+      action: "undo",
+      expectedVersionId: u.receipt.versionId,
+      idempotencyKey: u.undoKey,
+      targetVersionId: u.receipt.baseVersionId,
+    },
+  });
+  expect(args).toHaveProperty("p_body.parentVersionId", u.receipt.versionId);
+  expect(args).toHaveProperty(
+    "p_body.facts",
+    f.context.canonical.content.facts,
+  );
+  expect(args).toHaveProperty("p_confirmation_body", null);
+  expect(
+    f.store.reads.some(
+      (read) =>
+        read.table === "authoring_events" &&
+        read.filters.id === u.receipt.eventId &&
+        read.filters.owner_id === f.owned.ownerId,
+    ),
+  ).toBe(true);
+  expect(fetch).not.toHaveBeenCalled();
+});
+it.each([
+  "missing_event",
+  "tampered_receipt",
+  "foreign_event",
+  "stale_head",
+  "withdrawn",
+] as const)(
+  "does not undo %s or publish an uncertain success",
+  async (kind) => {
+    const f = await setup();
+    const u = prepareUndo(f);
+    let receipt = u.receipt;
+    if (kind === "missing_event") f.store.events.length = 0;
+    if (kind === "tampered_receipt")
+      receipt = { ...receipt, commandSha256: "f".repeat(64) };
+    if (kind === "foreign_event") f.store.events[0].owner_id = id(740);
+    if (kind === "stale_head") {
+      f.store.head.version_id = id(741);
+      f.store.head.revision++;
+    }
+    if (kind === "withdrawn") f.store.source.active_resume.status = "deleted";
+    const response = await action(f.args(u.form(receipt)));
+    expect(response.status).toBe(
+      kind === "stale_head" ? 409 : kind === "tampered_receipt" ? 422 : 404,
+    );
+    expect((await response.json()).kind).toBe("error");
+    expect(f.store.rpc).not.toHaveBeenCalled();
+    privateResponse(response);
+  },
+);

@@ -1,0 +1,605 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  OwnedAiDispositionExportError,
+  OwnedAiDispositionReadinessSchema,
+  readOwnedAiDispositionExport,
+  validateOwnedAiDispositionExport,
+} from "../../app/lib/server/owned-ai-disposition-export";
+
+const id = (n: number) =>
+  `b0000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const owner = id(1);
+// Explicit synthetic profile; never a production pin or a default reader profile.
+const profile = {
+  schemaVersion: "owned-ai-disposition-readiness/1.0.0" as const,
+  profileVersion: "owned-ai-disposition-profile/1.0.0" as const,
+  checkerSha256: "1".repeat(64),
+  exportSha256: "2".repeat(64),
+  accessSha256: "3".repeat(64),
+  metadataSha256: "4".repeat(64),
+};
+const ready = () => ({
+  ...profile,
+  schemaReady: true,
+  exportExecutable: true,
+  accessExecutable: false,
+});
+const account = () => ({
+  owner_id: owner,
+  first_request_id: id(2),
+  prepared_at: "2026-11-01T00:00:00.123456Z",
+  expires_at: "2026-12-01T00:00:00.123456Z",
+  phase: "prepared",
+});
+function operation(kind: "r03" | "a12" | "a13" = "a13") {
+  return {
+    kind,
+    owner_id: owner,
+    organization_id: id(3),
+    operation_id: id(4),
+    analysis_id: id(5) as string | null,
+    resume_id: id(6) as string | null,
+    resume_version_id: id(7) as string | null,
+    source_scope: "resume_root",
+    phase: "prepared",
+    first_cause: "resume_retirement" as string | null,
+    deletion_request_id: null as string | null,
+    retention_item_id: id(8) as string | null,
+    prepared_at: "2026-10-30T00:00:00.123456Z" as string | null,
+    expires_at: "2026-11-29T00:00:00.123456Z" as string | null,
+    effective_expires_at: "2026-11-29T00:00:00.123456Z" as string | null,
+  };
+}
+function repair(kind: "r03" | "a12" | "a13" = "a13") {
+  return {
+    ...operation(kind),
+    phase: "repair_required",
+    source_scope: "historical_unresolved",
+    first_cause: null,
+    deletion_request_id: null,
+    retention_item_id: null,
+    prepared_at: null,
+    expires_at: null,
+    effective_expires_at: null,
+  };
+}
+const fixture = () => ({
+  schemaVersion: "owned-ai-disposition-export/1.0.0",
+  ownerId: owner,
+  accounts: [account()],
+  operations: [operation()],
+});
+type Reply = { data: unknown; error: unknown };
+function query(reply: Reply | Promise<Reply>, ignoreAbort = false) {
+  let signal: AbortSignal | undefined;
+  const aborted = vi.fn();
+  const chain = {
+    aborted,
+    abortSignal: vi.fn((next: AbortSignal) => {
+      signal = next;
+      return chain;
+    }),
+    then<TResult1 = Reply, TResult2 = never>(
+      resolve?: ((value: Reply) => TResult1 | PromiseLike<TResult1>) | null,
+      reject?: ((error: unknown) => TResult2 | PromiseLike<TResult2>) | null,
+    ): Promise<TResult1 | TResult2> {
+      return new Promise<Reply>((done, fail) => {
+        const cancel = () => {
+          aborted();
+          fail(new Error("PRIVATE_ABORT_DETAIL"));
+        };
+        if (!ignoreAbort && signal?.aborted) cancel();
+        else if (!ignoreAbort)
+          signal?.addEventListener("abort", cancel, { once: true });
+        void Promise.resolve(reply).then(
+          (value) => {
+            signal?.removeEventListener("abort", cancel);
+            done(value);
+          },
+          (error) => {
+            signal?.removeEventListener("abort", cancel);
+            fail(error);
+          },
+        );
+      }).then(resolve, reject);
+    },
+  };
+  return chain;
+}
+function client(data: unknown = fixture(), metadata: unknown = ready()) {
+  const metadataQuery = query({ data: metadata, error: null }),
+    dataQuery = query({ data, error: null });
+  const rpc = vi.fn((name: string) =>
+    name === "read_owned_ai_disposition_readiness" ? metadataQuery : dataQuery,
+  );
+  return { rpc, metadataQuery, dataQuery };
+}
+afterEach(() => vi.useRealTimers());
+describe("owner-wide disposition export", () => {
+  it.each([
+    null,
+    [],
+    {},
+    { ...fixture(), operations: undefined },
+    { ...fixture(), extra: true },
+  ])("refuses missing or incomplete export wire %#", async (data) => {
+    const db = client(data);
+    await expect(
+      readOwnedAiDispositionExport(db, owner, profile),
+    ).rejects.toEqual(new OwnedAiDispositionExportError());
+    expect(db.rpc).toHaveBeenCalledTimes(2);
+  });
+  it("reads only exact metadata and owner-wide export without candidate or policy calls", async () => {
+    const db = client();
+    expect(await readOwnedAiDispositionExport(db, owner, profile)).toEqual(
+      fixture(),
+    );
+    expect(db.rpc.mock.calls).toEqual([
+      ["read_owned_ai_disposition_readiness", {}],
+      ["export_owned_ai_disposition_records", { p_user_id: owner }],
+    ]);
+    expect(db.metadataQuery.abortSignal.mock.calls[0][0]).toBe(
+      db.dataQuery.abortSignal.mock.calls[0][0],
+    );
+    // Access has its own distinct grant; export does not authorize access.
+    expect(
+      OwnedAiDispositionReadinessSchema.parse(ready()).accessExecutable,
+    ).toBe(false);
+  });
+  it("accepts empty complete replies only after actual export capability validation", async () => {
+    const data = { ...fixture(), accounts: [], operations: [] },
+      db = client(data);
+    expect(await readOwnedAiDispositionExport(db, owner, profile)).toEqual(
+      data,
+    );
+    expect(db.rpc).toHaveBeenCalledTimes(2);
+  });
+  it.each(Object.keys(ready()))(
+    "rejects malformed or denied metadata %s",
+    async (key) => {
+      const metadata: Record<string, unknown> = ready();
+      metadata[key] =
+        typeof metadata[key] === "boolean"
+          ? key === "accessExecutable"
+            ? null
+            : false
+          : "wrong-pin";
+      const db = client(fixture(), metadata);
+      await expect(
+        readOwnedAiDispositionExport(db, owner, profile),
+      ).rejects.toBeInstanceOf(OwnedAiDispositionExportError);
+      expect(db.rpc).toHaveBeenCalledTimes(1);
+    },
+  );
+  it.each([
+    null,
+    {},
+    { ...ready(), extra: true },
+    { ...ready(), accessSha256: undefined },
+  ])("rejects incomplete or open metadata %#", async (metadata) => {
+    const db = client(fixture(), metadata);
+    await expect(
+      readOwnedAiDispositionExport(db, owner, profile),
+    ).rejects.toThrow("Owned AI disposition export is unavailable.");
+    expect(db.rpc).toHaveBeenCalledTimes(1);
+  });
+  it.each([
+    "read_owned_ai_disposition_readiness",
+    "export_owned_ai_disposition_records",
+  ])("refuses denied/unavailable %s with fixed error", async (name) => {
+    const db = client(),
+      original = db.rpc.getMockImplementation()!;
+    db.rpc.mockImplementation((called) =>
+      called === name
+        ? query({ data: null, error: { message: "PRIVATE_DATABASE_DETAIL" } })
+        : original(called),
+    );
+    await expect(
+      readOwnedAiDispositionExport(db, owner, profile),
+    ).rejects.toEqual(new OwnedAiDispositionExportError());
+  });
+  it.each(["r03", "a12", "a13"] as const)(
+    "preserves prepared and unresolved actual %s identities",
+    (kind) => {
+      const data = {
+        ...fixture(),
+        operations: [
+          operation(kind),
+          { ...repair(kind), operation_id: id(10) },
+        ],
+      };
+      expect(validateOwnedAiDispositionExport(data, owner)).toEqual(data);
+    },
+  );
+  it("keeps unbound R03 account-only without guessing a root", () => {
+    const data = fixture();
+    data.operations = [
+      {
+        ...operation("r03"),
+        source_scope: "account_only",
+        first_cause: "account_preparation",
+        analysis_id: null,
+        resume_id: null,
+        resume_version_id: null,
+        deletion_request_id: account().first_request_id,
+        retention_item_id: null,
+        prepared_at: account().prepared_at,
+        expires_at: account().expires_at,
+        effective_expires_at: account().expires_at,
+      },
+    ];
+    expect(validateOwnedAiDispositionExport(data, owner)).toEqual(data);
+  });
+  it("uses typed composite A12 identity rather than conflating operation UUIDs", () => {
+    const data = fixture();
+    data.operations = [
+      operation("a12"),
+      { ...operation("a12"), analysis_id: id(99) },
+      operation("a13"),
+      operation("r03"),
+    ];
+    expect(validateOwnedAiDispositionExport(data, owner)).toEqual(data);
+  });
+  it("takes an earlier account deadline without changing the immutable own clock", () => {
+    const data = fixture();
+    Object.assign(data.operations[0], {
+      prepared_at: "2026-11-02T00:00:00.123456Z",
+      expires_at: "2026-12-02T00:00:00.123456Z",
+      effective_expires_at: account().expires_at,
+    });
+    expect(validateOwnedAiDispositionExport(data, owner)).toEqual(data);
+  });
+  it("preserves exact first clocks on repeated export without rewriting timestamps", async () => {
+    const data = fixture(),
+      db = client(data);
+    expect(await readOwnedAiDispositionExport(db, owner, profile)).toEqual(
+      data,
+    );
+    expect(await readOwnedAiDispositionExport(db, owner, profile)).toEqual(
+      data,
+    );
+    expect(data.operations[0].prepared_at).toBe("2026-10-30T00:00:00.123456Z");
+  });
+  it("accepts a source-only retirement without an account disposition", () => {
+    const data = { ...fixture(), accounts: [] };
+    expect(validateOwnedAiDispositionExport(data, owner)).toEqual(data);
+  });
+  const invalid: Array<[string, (data: ReturnType<typeof fixture>) => void]> = [
+    [
+      "foreign envelope owner",
+      (d) => {
+        d.ownerId = id(99);
+      },
+    ],
+    [
+      "foreign account owner",
+      (d) => {
+        d.accounts[0].owner_id = id(99);
+      },
+    ],
+    [
+      "foreign operation owner",
+      (d) => {
+        d.operations[0].owner_id = id(99);
+      },
+    ],
+    [
+      "duplicate account",
+      (d) => {
+        d.accounts.push(account());
+      },
+    ],
+    [
+      "duplicate typed operation",
+      (d) => {
+        d.operations.push(operation());
+      },
+    ],
+    [
+      "account expiry microsecond extension",
+      (d) => {
+        d.accounts[0].expires_at = "2026-12-01T00:00:00.123457Z";
+      },
+    ],
+    [
+      "own expiry microsecond extension",
+      (d) => {
+        d.operations[0].expires_at = "2026-11-29T00:00:00.123457Z";
+      },
+    ],
+    [
+      "effective expiry microsecond extension",
+      (d) => {
+        d.operations[0].effective_expires_at = "2026-11-29T00:00:00.123457Z";
+      },
+    ],
+    [
+      "effective expiry invented shortening",
+      (d) => {
+        d.operations[0].effective_expires_at = "2026-11-29T00:00:00.123455Z";
+      },
+    ],
+    [
+      "late own effective expiry instead of earlier account",
+      (d) => {
+        Object.assign(d.operations[0], {
+          prepared_at: "2026-11-02T00:00:00.123456Z",
+          expires_at: "2026-12-02T00:00:00.123456Z",
+          effective_expires_at: "2026-12-02T00:00:00.123456Z",
+        });
+      },
+    ],
+    [
+      "root missing analysis",
+      (d) => {
+        d.operations[0].analysis_id = null;
+      },
+    ],
+    [
+      "root missing resume",
+      (d) => {
+        d.operations[0].resume_id = null;
+      },
+    ],
+    [
+      "root missing version",
+      (d) => {
+        d.operations[0].resume_version_id = null;
+      },
+    ],
+    [
+      "invented account-only A13",
+      (d) => {
+        Object.assign(d.operations[0], {
+          source_scope: "account_only",
+          analysis_id: null,
+          resume_id: null,
+          resume_version_id: null,
+        });
+      },
+    ],
+    [
+      "missing retirement cause",
+      (d) => {
+        d.operations[0].retention_item_id = null;
+      },
+    ],
+    [
+      "two cause references",
+      (d) => {
+        d.operations[0].deletion_request_id = id(66);
+      },
+    ],
+    [
+      "account cause missing first request",
+      (d) => {
+        d.operations[0].first_cause = "account_preparation";
+      },
+    ],
+    [
+      "account cause without captured account",
+      (d) => {
+        d.accounts = [];
+        d.operations[0].first_cause = "account_preparation";
+      },
+    ],
+    [
+      "prepared historical scope",
+      (d) => {
+        d.operations[0].source_scope = "historical_unresolved";
+      },
+    ],
+    [
+      "repair invented clock",
+      (d) => {
+        Object.assign(d.operations[0], repair(), {
+          prepared_at: account().prepared_at,
+        });
+      },
+    ],
+    [
+      "repair invented cause",
+      (d) => {
+        Object.assign(d.operations[0], repair(), {
+          first_cause: "resume_retirement",
+        });
+      },
+    ],
+    [
+      "repair invented request",
+      (d) => {
+        Object.assign(d.operations[0], repair(), {
+          deletion_request_id: id(22),
+        });
+      },
+    ],
+    [
+      "repair pretends resolved root",
+      (d) => {
+        Object.assign(d.operations[0], repair(), {
+          source_scope: "resume_root",
+        });
+      },
+    ],
+    [
+      "invalid calendar day",
+      (d) => {
+        d.operations[0].prepared_at = "2026-02-30T00:00:00.123456Z";
+      },
+    ],
+    [
+      "millisecond-hidden seventh digit",
+      (d) => {
+        d.operations[0].prepared_at = "2026-10-30T00:00:00.1234567Z";
+      },
+    ],
+    [
+      "timezone offset instead of UTC",
+      (d) => {
+        d.operations[0].prepared_at = "2026-10-30T00:00:00.123456+00:00";
+      },
+    ],
+    [
+      "missing field",
+      (d) => {
+        Reflect.deleteProperty(d.operations[0], "resume_version_id");
+      },
+    ],
+    [
+      "unknown field",
+      (d) => {
+        Reflect.set(d.operations[0], "private_extra", "not-exportable");
+      },
+    ],
+  ];
+  it.each(invalid)("refuses invalid closure: %s", (_, change) => {
+    const data = fixture();
+    change(data);
+    expect(() => validateOwnedAiDispositionExport(data, owner)).toThrow(
+      OwnedAiDispositionExportError,
+    );
+  });
+  it("accepts the combined 4096-row bound and refuses 4097 without truncation", () => {
+    const data = fixture();
+    data.operations = Array.from({ length: 4095 }, (_, i) => ({
+      ...repair("r03"),
+      operation_id: id(i + 100),
+      analysis_id: null,
+      resume_id: null,
+      resume_version_id: null,
+    }));
+    expect(
+      validateOwnedAiDispositionExport(data, owner).operations,
+    ).toHaveLength(4095);
+    data.operations.push({ ...data.operations[0], operation_id: id(99999) });
+    expect(() => validateOwnedAiDispositionExport(data, owner)).toThrow(
+      OwnedAiDispositionExportError,
+    );
+  });
+  it("refuses oversized raw JSON before schema traversal", () => {
+    const data = { ...fixture(), excessive: "x".repeat(33554432) };
+    expect(() => validateOwnedAiDispositionExport(data, owner)).toThrow(
+      OwnedAiDispositionExportError,
+    );
+  });
+  it("does not evaluate object or array accessors", () => {
+    const getter = vi.fn(() => {
+      throw new Error("PRIVATE_GETTER");
+    });
+    const object = fixture();
+    Object.defineProperty(object, "excessive", {
+      get: getter,
+      enumerable: true,
+    });
+    expect(() => validateOwnedAiDispositionExport(object, owner)).toThrow(
+      OwnedAiDispositionExportError,
+    );
+    const array = fixture();
+    Object.defineProperty(array.operations, "0", {
+      get: getter,
+      enumerable: true,
+    });
+    expect(() => validateOwnedAiDispositionExport(array, owner)).toThrow(
+      OwnedAiDispositionExportError,
+    );
+    expect(getter).not.toHaveBeenCalled();
+  });
+  it.each(["metadata", "data"])(
+    "bounds a hung %s RPC and aborts its signal",
+    async (phase) => {
+      vi.useFakeTimers();
+      const db = client(),
+        original = db.rpc.getMockImplementation()!;
+      const pending = query(new Promise<Reply>(() => {}));
+      db.rpc.mockImplementation((name) =>
+        name ===
+        (phase === "metadata"
+          ? "read_owned_ai_disposition_readiness"
+          : "export_owned_ai_disposition_records")
+          ? pending
+          : original(name),
+      );
+      const result = readOwnedAiDispositionExport(db, owner, profile, {
+        timeoutMs: 20,
+      }).catch((error: unknown) => error);
+      await vi.advanceTimersByTimeAsync(20);
+      expect(await result).toEqual(new OwnedAiDispositionExportError());
+      expect(pending.abortSignal.mock.calls[0][0].aborted).toBe(true);
+      expect(pending.aborted).toHaveBeenCalledTimes(1);
+      expect(vi.getTimerCount()).toBe(0);
+    },
+  );
+  it("cannot extend a shared deadline with a fresh data timeout", async () => {
+    vi.useFakeTimers();
+    const db = client();
+    const meta = query(
+        new Promise<Reply>((resolve) =>
+          setTimeout(() => resolve({ data: ready(), error: null }), 15),
+        ),
+      ),
+      pending = query(new Promise<Reply>(() => {}));
+    db.rpc.mockImplementation((name) =>
+      name === "read_owned_ai_disposition_readiness" ? meta : pending,
+    );
+    const result = readOwnedAiDispositionExport(db, owner, profile, {
+      timeoutMs: 20,
+    }).catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(20);
+    expect(await result).toEqual(new OwnedAiDispositionExportError());
+    expect(pending.aborted).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it("cancels before any read and refuses late success after cancellation", async () => {
+    vi.useFakeTimers();
+    const db = client(),
+      controller = new AbortController();
+    controller.abort();
+    await expect(
+      readOwnedAiDispositionExport(db, owner, profile, {
+        signal: controller.signal,
+      }),
+    ).rejects.toEqual(new OwnedAiDispositionExportError());
+    expect(db.rpc).not.toHaveBeenCalled();
+    const live = new AbortController();
+    let resolve!: (reply: Reply) => void;
+    const pending = query(
+      new Promise<Reply>((done) => {
+        resolve = done;
+      }),
+      true,
+    );
+    db.rpc.mockImplementation(() => pending);
+    const result = readOwnedAiDispositionExport(db, owner, profile, {
+      signal: live.signal,
+      timeoutMs: 20,
+    }).catch((error: unknown) => error);
+    await vi.advanceTimersByTimeAsync(0);
+    live.abort();
+    expect(await result).toEqual(new OwnedAiDispositionExportError());
+    resolve({ data: ready(), error: null });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(db.rpc).toHaveBeenCalledTimes(1);
+    expect(await result).toEqual(new OwnedAiDispositionExportError());
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it.each([undefined, { ...profile, checkerSha256: "wrong" }])(
+    "requires explicit valid source pins before RPC %#",
+    async (expected) => {
+      const db = client();
+      await expect(
+        readOwnedAiDispositionExport(db, owner, expected as never),
+      ).rejects.toEqual(new OwnedAiDispositionExportError());
+      expect(db.rpc).not.toHaveBeenCalled();
+    },
+  );
+  it("rejects a malformed or backwards injected clock without accepting data", async () => {
+    const db = client();
+    let calls = 0;
+    await expect(
+      readOwnedAiDispositionExport(db, owner, profile, {
+        now: () => (++calls === 1 ? 10 : 9),
+      }),
+    ).rejects.toEqual(new OwnedAiDispositionExportError());
+    expect(db.rpc).not.toHaveBeenCalled();
+  });
+});

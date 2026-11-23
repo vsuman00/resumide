@@ -1,0 +1,643 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-07",
+  "status": "BOUNDED_ENGINEERING_HANDOFF_NOT_RELEASE_ACCEPTANCE",
+  "image": "sha256:4b83ffec76083b02a79df7addf5ff1f8e09b6d90135d73915b890b38b7753b16",
+  "sourceScope": {
+    "codeInputs": 588,
+    "runtimeInputs": 61
+  },
+  "reviewMode": "Existing evidence and small current-source/hash reads only; no Docker, scanner, vendor execution, DB, provider, build, or production source mutation. Coordinator requested stop to open-ended review.",
+  "confirmedCurrentFunctionalDefect": null,
+  "coordinatorReportedCurrentVerification": {
+    "runtimeGroups": "28 PASS",
+    "profiles": "6 PASS",
+    "otherChecks": "Rollback/render/fresh scan coordinated separately; not inferred complete here."
+  },
+  "historicalRaw": {
+    "path": "docs/evaluation/AA7_FC8_HIGH_EVIDENCE_MATRIX_20261106.json",
+    "sha256": "b913c7934964f13b4271d83433aa4999015013ed283b1600bff0023958215d8e",
+    "image": "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203",
+    "allMatches": 947,
+    "highPackageMatches": 80,
+    "highCves": 28,
+    "freshFinalImageScan": "PENDING_SEPARATE_RECEIPT; do not relabel historical raw as current"
+  },
+  "closureBinding": {
+    "packageCount": 216,
+    "closureFiles": 1974,
+    "onlyPackageDelta": "libfreetype6 local source backport",
+    "onlyClosureDelta": "/usr/lib/aarch64-linux-gnu/libfreetype.so.6.20.2",
+    "newLibrarySHA256": "eab220e08a609b989d86d98f7b1c97ea24277fd2012f7c73093fbadca1398ead",
+    "sevenCryptoLibrariesUnchanged": true,
+    "fivePopplerMetadataFilesUnchanged": true
+  },
+  "highRows": [
+    {
+      "cve": "CVE-2026-76642",
+      "historicalHighPackageMatches": 8,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "A privileged mount/libmount path processes fstab/restricted-user X-mount inputs and performs the named mount/helper/post-hook operation; this route is absent from the documented compiler workflow.",
+      "historicalStatus": "INDEPENDENTLY_CONCURRED_PRIOR_IMAGE",
+      "evidenceRefs": [
+        "utilityProposal",
+        "coordinatorConcurrence",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-78408",
+      "historicalHighPackageMatches": 8,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "nsenter --join-cgroup must open cgroup.procs as root then leak that privileged descriptor across namespace/credential changes; fixed subprocesses never execute nsenter and close_fds/launcher descriptor closure are retained.",
+      "historicalStatus": "INDEPENDENTLY_CONCURRED_PRIOR_IMAGE",
+      "evidenceRefs": [
+        "utilityProposal",
+        "coordinatorConcurrence",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-78409",
+      "historicalHighPackageMatches": 8,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "A privileged mount/libmount path processes fstab/restricted-user X-mount inputs and performs the named mount/helper/post-hook operation; this route is absent from the documented compiler workflow.",
+      "historicalStatus": "INDEPENDENTLY_CONCURRED_PRIOR_IMAGE",
+      "evidenceRefs": [
+        "utilityProposal",
+        "coordinatorConcurrence",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-78410",
+      "historicalHighPackageMatches": 8,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "A privileged mount/libmount path processes fstab/restricted-user X-mount inputs and performs the named mount/helper/post-hook operation; this route is absent from the documented compiler workflow.",
+      "historicalStatus": "INDEPENDENTLY_CONCURRED_PRIOR_IMAGE",
+      "evidenceRefs": [
+        "utilityProposal",
+        "coordinatorConcurrence",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2025-69720",
+      "historicalHighPackageMatches": 4,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "progs/infocmp.c:analyze_string in infocmp program",
+      "historicalStatus": "INDEPENDENTLY_CONCURRED_PRIOR_IMAGE",
+      "evidenceRefs": [
+        "utilityProposal",
+        "coordinatorConcurrence",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-9538",
+      "historicalHighPackageMatches": 4,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "Archive::Tar::_read_tar",
+      "historicalStatus": "INDEPENDENTLY_CONCURRED_PRIOR_IMAGE",
+      "evidenceRefs": [
+        "utilityProposal",
+        "coordinatorConcurrence",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2022-4055",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "xdg-email Thunderbird mailto argument/header handling",
+      "historicalStatus": "INDEPENDENTLY_CONCURRED_PRIOR_IMAGE",
+      "evidenceRefs": [
+        "utilityProposal",
+        "coordinatorConcurrence",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-24882",
+      "historicalHighPackageMatches": 2,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "standalone tpm2daemon PKDECRYPT -> tpm2_rsa_decrypt/tpm2_ecc_decrypt",
+      "historicalStatus": "INDEPENDENTLY_CONCURRED_PRIOR_IMAGE",
+      "evidenceRefs": [
+        "utilityProposal",
+        "coordinatorConcurrence",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, loader or immutable closure",
+        "New trusted subprocess, shell execution, arbitrary command/argument/module/plugin loading",
+        "Wider compiler read/exec grants or additional unreviewed entrypoint",
+        "Root/elevated capability/setuid execution, host mounts or privileged inherited descriptors",
+        "New package/component or runtime configuration path that meets the recorded preconditions"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-76844",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "Only XeTeX in125 measured ELFs imports gzip-file APIs; no gzclearerr import. Exact failed-write/clear/retry prerequisite reconciled with aborting format/SyncTeX paths.",
+      "historicalStatus": "INDEPENDENTLY_CONCURRED_PRIOR_IMAGE",
+      "evidenceRefs": [
+        "zlibProposal",
+        "zlibSymbols",
+        "coordinatorConcurrence"
+      ],
+      "invalidators": [
+        "Different immutable image, source, package, policy or closure requires exact rebinding.",
+        "New native/Python helper, plugin, subprocess, command argument or externally selected entrypoint.",
+        "Wider read/exec rights, host mounts, inherited descriptors, elevated UID/capabilities or disabled NNP.",
+        "Changed INITEX/SyncTeX/gzip recovery path or dynamically loaded consumer."
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-15308",
+      "historicalHighPackageMatches": 4,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "No HTMLParser construction/feed/goahead in the documented PDF inspector. Current geometry transport also no longer parses bbox XML; that older sentence is retired.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "pythonX11Proposal",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, source/config or pypdf version",
+        "New URL/HTML/archive/TLS/server/plugin or external-viewer feature",
+        "User-controlled imports/sys.path/configuration or new subprocess backend",
+        "X server/display/socket forwarding, new GUI/Tk/Xlib consumer or loader path",
+        "Wider read/exec grants, host mounts/privileges, or another container entrypoint"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-19445",
+      "historicalHighPackageMatches": 4,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "Worker is a bounded stdin JSON/PDF process with no TLS listener/server or SNI callback registration; no SSLContext wrapping in the fixed caller/reader route.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "pythonX11Proposal",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, source/config or pypdf version",
+        "New URL/HTML/archive/TLS/server/plugin or external-viewer feature",
+        "User-controlled imports/sys.path/configuration or new subprocess backend",
+        "X server/display/socket forwarding, new GUI/Tk/Xlib consumer or loader path",
+        "Wider read/exec grants, host mounts/privileges, or another container entrypoint"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-19553",
+      "historicalHighPackageMatches": 4,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "No SSLContext/wrap_bio/client connection is created by the fixed BytesIO PDF parser. Network isolation is supporting evidence, not the reason a local MemoryBIO API cannot be called.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "pythonX11Proposal",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, source/config or pypdf version",
+        "New URL/HTML/archive/TLS/server/plugin or external-viewer feature",
+        "User-controlled imports/sys.path/configuration or new subprocess backend",
+        "X server/display/socket forwarding, new GUI/Tk/Xlib consumer or loader path",
+        "Wider read/exec grants, host mounts/privileges, or another container entrypoint"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-82049",
+      "historicalHighPackageMatches": 4,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "No tarfile/TarFile/extract/extractall route: PDF stream decompression and generic object resolution are not tar extraction; file attachments are not extracted by inspector.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "pythonX11Proposal",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, source/config or pypdf version",
+        "New URL/HTML/archive/TLS/server/plugin or external-viewer feature",
+        "User-controlled imports/sys.path/configuration or new subprocess backend",
+        "X server/display/socket forwarding, new GUI/Tk/Xlib consumer or loader path",
+        "Wider read/exec grants, host mounts/privileges, or another container entrypoint"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-88806",
+      "historicalHighPackageMatches": 2,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "No libX11 or X client imports in fixed125 graph; no DISPLAY, X server, host socket mount or external X server route; compiler cannot read omitted X libraries.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "pythonX11Proposal",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, source/config or pypdf version",
+        "New URL/HTML/archive/TLS/server/plugin or external-viewer feature",
+        "User-controlled imports/sys.path/configuration or new subprocess backend",
+        "X server/display/socket forwarding, new GUI/Tk/Xlib consumer or loader path",
+        "Wider read/exec grants, host mounts/privileges, or another container entrypoint"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-109089",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "Same exact X client/server/library/entrypoint boundary; source-specific reply type retained without inventing an unauthenticated C function mapping.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "pythonX11Proposal",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, source/config or pypdf version",
+        "New URL/HTML/archive/TLS/server/plugin or external-viewer feature",
+        "User-controlled imports/sys.path/configuration or new subprocess backend",
+        "X server/display/socket forwarding, new GUI/Tk/Xlib consumer or loader path",
+        "Wider read/exec grants, host mounts/privileges, or another container entrypoint"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-109090",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "Same exact X client/server/library/entrypoint boundary; no generic image-decoder dismissal.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "pythonX11Proposal",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, source/config or pypdf version",
+        "New URL/HTML/archive/TLS/server/plugin or external-viewer feature",
+        "User-controlled imports/sys.path/configuration or new subprocess backend",
+        "X server/display/socket forwarding, new GUI/Tk/Xlib consumer or loader path",
+        "Wider read/exec grants, host mounts/privileges, or another container entrypoint"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-88807",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "Same exact X client/server/library/entrypoint boundary; headless Poppler bbox is not an X rendering server session.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "pythonX11Proposal",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different image, policy, source/config or pypdf version",
+        "New URL/HTML/archive/TLS/server/plugin or external-viewer feature",
+        "User-controlled imports/sys.path/configuration or new subprocess backend",
+        "X server/display/socket forwarding, new GUI/Tk/Xlib consumer or loader path",
+        "Wider read/exec grants, host mounts/privileges, or another container entrypoint"
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-12064",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "Vendor limits this defect to curl CLI; actual match is libcurl library, no curl tool package.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "remainingSix",
+        "remainingImports",
+        "remainingPopplerSource",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different immutable image, source, package, policy or closure requires exact rebinding.",
+        "New native/Python helper, plugin, subprocess, command argument or externally selected entrypoint.",
+        "Wider read/exec rights, host mounts, inherited descriptors, elevated UID/capabilities or disabled NNP.",
+        "Adding curl CLI, SSH URL fetching or another consumer of the affected CLI path."
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-8458",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "Poppler imports curl APIs, but fixed local /scratch/main.pdf selects no URL builder; reviewed HTTP/HTTPS cache sets no Negotiate/service options.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "remainingSix",
+        "remainingImports",
+        "remainingPopplerSource",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different immutable image, source, package, policy or closure requires exact rebinding.",
+        "New native/Python helper, plugin, subprocess, command argument or externally selected entrypoint.",
+        "Wider read/exec rights, host mounts, inherited descriptors, elevated UID/capabilities or disabled NNP.",
+        "Remote-document URL/authenticated-connection features or changed builder options."
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-16742",
+      "historicalHighPackageMatches": 2,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "Shared library source matches do not supply systemd-homed/homework daemon function. No measured fixed-graph sd/udev API.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "remainingSix",
+        "remainingImports",
+        "remainingPopplerSource",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different immutable image, source, package, policy or closure requires exact rebinding.",
+        "New native/Python helper, plugin, subprocess, command argument or externally selected entrypoint.",
+        "Wider read/exec rights, host mounts, inherited descriptors, elevated UID/capabilities or disabled NNP.",
+        "Adding homed/homework daemon or a newly reachable helper."
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-54369",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "No ACL API imports among measured125 files; nonroot/caps-empty fixed graph is not an ACL-management workflow. Proposal remains qualified by helper/transitive-route review.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "remainingSix",
+        "remainingImports",
+        "remainingPopplerSource",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different immutable image, source, package, policy or closure requires exact rebinding.",
+        "New native/Python helper, plugin, subprocess, command argument or externally selected entrypoint.",
+        "Wider read/exec rights, host mounts, inherited descriptors, elevated UID/capabilities or disabled NNP.",
+        "New pathname ACL or privileged helper route."
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-119373",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "NO_REPRODUCED_FAILURE_RESIDUAL_NATIVE_CALLER_UNCERTAINTY",
+      "basis": "FTS5 reduced-detail prefix query with negative rowids is the recorded vulnerable prerequisite. The 59 installed pypdf bodies contain no SQL path; Poppler explicit NSS DB initialization is signature/signing/certificate enumeration, outside fixed pdftotext text dispatch. NSS/softoken internal initialization was not fully audited. No such FTS5 query has been established in this worker.",
+      "historicalStatus": "OPEN_UNKNOWN_APPLICABILITY",
+      "evidenceRefs": [
+        "remainingSix",
+        "remainingImports"
+      ],
+      "invalidators": [
+        "Different immutable image, source, package, policy or closure requires exact rebinding.",
+        "New native/Python helper, plugin, subprocess, command argument or externally selected entrypoint.",
+        "Wider read/exec rights, host mounts, inherited descriptors, elevated UID/capabilities or disabled NNP.",
+        "Any SQLite/FTS5 query route in current or new helpers."
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-52490",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "Affected tiffcrop command-line option parser is not supplied by the libtiff shared-library match.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "tiffProposal",
+        "tiffImports",
+        "tiffSource",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different immutable image, source, package, policy or closure requires exact rebinding.",
+        "New native/Python helper, plugin, subprocess, command argument or externally selected entrypoint.",
+        "Wider read/exec rights, host mounts, inherited descriptors, elevated UID/capabilities or disabled NNP.",
+        "Installing/invoking TIFF tools or another affected component."
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-36849",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "PRIOR_SCOPED_CALLER_EVIDENCE_REBOUND_NO_NEW_APPLICABILITY_ACCEPTANCE",
+      "basis": "Only Poppler imports TIFF APIs in measured graph; exact TiffWriter opens mode w and uses fixed-format scanline writing, not vulnerable strip/tile read allocation.",
+      "historicalStatus": "SCOPED_PROPOSAL",
+      "evidenceRefs": [
+        "tiffProposal",
+        "tiffImports",
+        "tiffSource",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different immutable image, source, package, policy or closure requires exact rebinding.",
+        "New native/Python helper, plugin, subprocess, command argument or externally selected entrypoint.",
+        "Wider read/exec rights, host mounts, inherited descriptors, elevated UID/capabilities or disabled NNP.",
+        "New TIFF reader, image/Python backend or another read/codec helper; cannot rely on source literal screening."
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-113351",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "SOURCE_FIXED_RAW_FINDING_RETAINED",
+      "basis": "Authenticated native Expat2.10 complete source-fix cohort installed; current fc8 verifier binds source/test receipt, both library hashes and fresh Python mapping. Raw distro/package match remains affected.",
+      "historicalStatus": "SOURCE_FIXED_RAW_PRESENT",
+      "evidenceRefs": [
+        "nativeExpatSourceTests",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different native package/source/library digest or mapping.",
+        "Regression in inherited upstream/ABI/consumer evidence; unresolved66382 is separate."
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-117610",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "SOURCE_FIXED_RAW_FINDING_RETAINED",
+      "basis": "Authenticated native Expat2.10 complete source-fix cohort installed; current fc8 verifier binds source/test receipt, both library hashes and fresh Python mapping. Raw distro/package match remains affected.",
+      "historicalStatus": "SOURCE_FIXED_RAW_PRESENT",
+      "evidenceRefs": [
+        "nativeExpatSourceTests",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different native package/source/library digest or mapping.",
+        "Regression in inherited upstream/ABI/consumer evidence; unresolved66382 is separate."
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-118370",
+      "historicalHighPackageMatches": 1,
+      "currentEngineeringStatus": "SOURCE_FIXED_RAW_FINDING_RETAINED",
+      "basis": "Authenticated native Expat2.10 complete source-fix cohort installed; current fc8 verifier binds source/test receipt, both library hashes and fresh Python mapping. Raw distro/package match remains affected.",
+      "historicalStatus": "SOURCE_FIXED_RAW_PRESENT",
+      "evidenceRefs": [
+        "nativeExpatSourceTests",
+        "currentRuntime"
+      ],
+      "invalidators": [
+        "Different native package/source/library digest or mapping.",
+        "Regression in inherited upstream/ABI/consumer evidence; unresolved66382 is separate."
+      ],
+      "rawFindingRetained": true
+    },
+    {
+      "cve": "CVE-2026-7210",
+      "historicalHighPackageMatches": 4,
+      "currentEngineeringStatus": "FORMER_DIRECT_INPUT_ROUTE_REMOVED_PYTHON_COMPONENT_NOT_PATCHED",
+      "basis": "Current supervisor uses native_geometry.parse_geometry on a private frame, not ElementTree.fromstring. Fixed pypdf traversal does not request lazy xmp_metadata. This removes the established candidate-XML route; it is not a Python source fix or a whole-library safety claim.",
+      "historicalStatus": "MATERIAL_OPEN",
+      "evidenceRefs": [
+        "currentSupervisor",
+        "currentRuntime",
+        "pythonX11Proposal"
+      ],
+      "invalidators": [
+        "Different immutable image, source, package, policy or closure requires exact rebinding.",
+        "New native/Python helper, plugin, subprocess, command argument or externally selected entrypoint.",
+        "Wider read/exec rights, host mounts, inherited descriptors, elevated UID/capabilities or disabled NNP.",
+        "Adopted source-bound Python repair or verified removal of every applicable untrusted XML route requires new review."
+      ],
+      "rawFindingRetained": true
+    }
+  ],
+  "additionalTrackedRows": [
+    {
+      "cve": "CVE-2025-66382",
+      "severity": "MEDIUM",
+      "status": "UPSTREAM_OPEN_TRIGGER_UNKNOWN_RAW_RETAINED",
+      "basis": "Expat 2.10 source record does not claim this fix. No bbox XML remains; XMP is lazy/unrequested; native Fontconfig uses sealed config and immutable HOME. These are input-route constraints, not proof about non-public bug conditions or source remediation."
+    },
+    {
+      "cve": "CVE-2023-39327",
+      "severity": "LOW",
+      "status": "OPENJPEG_ROUTE_REMOVED_NOT_WHOLE_PACKAGE_CLEARANCE",
+      "basis": "Native Poppler was built with ENABLE_LIBOPENJPEG=none; 14-ELF dependency proof is retained. Current approved compiler closure has no openjp path. Early pypdf image/resource/inline guards prevent supported image admission. None-JPX dispatch is EOF plus error, not guaranteed entire-PDF rejection. Raw package finding remains."
+    },
+    {
+      "cve": "CVE-2026-95512",
+      "severity": "MEDIUM",
+      "status": "SOURCE_FIXED_AND_FINAL_LIBRARY_BOUND_RAW_RETAINED",
+      "basis": "Authenticated nine-line cid_read_subrs allocation-budget fix, normal native Debian build, 220 exports, original dynamic/static client and fixed-font metrics evidence. Final library hash and only-lib6 cohort/closure change bound. Actual malicious-font CVE reproduction and optional external-font Meson issue1063 test NOT_RUN."
+    }
+  ],
+  "knownRetainedFailures": [
+    {
+      "scope": "Historical original Poppler vendor CTest",
+      "actual": "70/71; Qt class 11 passed/1 failed; 56 Qt summaries retained",
+      "disposition": "Named E-010 exact unchanged PGP signer-name assertion; later assertions 312\u2013315 not executed. Not a fabricated 71/71 or a current converter failure; historical tests were under original FreeType."
+    },
+    {
+      "scope": "FreeType V3 source build ordering",
+      "actual": "Adapter generation attempted after normal dpkg-source --after-build unapplied patches",
+      "disposition": "Fixed by source-bound early generation in V4; actual V4 build/client/font/budget checks pass; V3 failure retained."
+    }
+  ],
+  "remainingActionableCodeGapsEstablishedByThisReview": [],
+  "unresolvedEvidenceOrAcceptance": [
+    "Fresh unsuppressed exact-final-image scan and its raw report must remain separate from historical947.",
+    "SQLite NSS/softoken internal SQL applicability and non-public Expat66382 conditions are unresolved evidence questions, not reproduced functional defects.",
+    "Engineering closure does not imply zero vulnerabilities, formal security/legal/accessibility acceptance, representative validity or release approval."
+  ],
+  "sourceBindings": [
+    {
+      "path": "scripts/latex-runtime/supervisor.py",
+      "sha256": "dc37bb22b043d5947d766776a4b09d8d390fd1a36e429289145d5393857cb559"
+    },
+    {
+      "path": "scripts/latex-runtime/inspect_pdf.py",
+      "sha256": "6d3a6fc67be9bd719d62c317cf7960fb6bf38aff14597c52dbf3f3249e245b5f"
+    },
+    {
+      "path": "scripts/latex-runtime/native_geometry.py",
+      "sha256": "8399d3432cde87c92f55771f272bad82c42b26856f3b4096fc1f76bc88249da1"
+    },
+    {
+      "path": "scripts/latex-runtime/build-fontconfig.py",
+      "sha256": "005e348a5342057ec43901e0be1e5b5ac254165f79930be26f0ee1f077d90b3e"
+    },
+    {
+      "path": "tasks/agent-handoffs/2026-11-07-aa7-freetype-final-worker-build/root-binding-review.json",
+      "sha256": "8db7d575f5623e2be9b567da2ad8faaf802b3dc5e8fe8185d3c172624f0a14bc"
+    },
+    {
+      "path": "tasks/agent-handoffs/2026-11-06-aa7-pdf-inspector-call-path/body-review.json",
+      "sha256": "9659b99d74891d54ad734502d80b9cea4a7d0798557bf8a9ae767a7d0198891e"
+    },
+    {
+      "path": "tasks/agent-handoffs/2026-11-06-aa7-pdf-inspector-call-path/poppler-nss-source-review.json",
+      "sha256": "9a738baf75091f4f528487f84e0e00103bf71e11c0dfb0f8f56eb8d7f6a573a4"
+    }
+  ],
+  "suppressedFindings": 0,
+  "acceptedFindings": 0
+}

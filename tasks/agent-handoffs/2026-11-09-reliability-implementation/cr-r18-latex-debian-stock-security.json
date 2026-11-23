@@ -1,0 +1,490 @@
+{
+  "status": "stock-debian-security-overlay-and-freetype-backport-verified-locally",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty workspace, independently reviewed source and context, exact synthetic local compiler",
+  "ids": [
+    "CR-R18-S08",
+    "CR-R14-S06",
+    "CR-R13-S03",
+    "CR-U11-S03"
+  ],
+  "imageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a",
+  "platform": "linux/arm64",
+  "priorImageId": "sha256:9cb37dc1261bcf9018d007db04554c4c5bc02443237f60b0139a761bc31ca865",
+  "signedMetadata": [
+    {
+      "suite": "trixie",
+      "inReleaseUrl": "https://deb.debian.org/debian/dists/trixie/InRelease",
+      "inReleaseSha256": "bfacad4ca61899ce20d4a0d439f29339f66541561b67506364efb88e27dee870",
+      "authenticatedCleartextSha256": "ea59205d3cf9e586b3360349c9eaf66cd2f0bf0f1cd6c938c117a91325a58f9f",
+      "packagesArm64Sha256": "5b9a010e6730e4019e90fcb81c92ad59f061955890d691b7d111637d3f8d3dab",
+      "verification": "Debian archive keyring with sqv from the prior isolated worker"
+    },
+    {
+      "suite": "trixie-security",
+      "inReleaseUrl": "https://deb.debian.org/debian-security/dists/trixie-security/InRelease",
+      "inReleaseSha256": "3d31c58caa2397eda1af459a0db092bb3b8f5abb31c67e50e1dd491958c2ddb9",
+      "authenticatedCleartextSha256": "09cdd79f8e595c677da958b7a16432fee4b6195d0edf3cab87b920aea91d6f39",
+      "packagesArm64Sha256": "d0be9fca9a3b56472c57942e7ae400c2bd221140cbf1e3665273a56b1b81b884",
+      "verification": "Debian archive keyring with sqv from the prior isolated worker"
+    }
+  ],
+  "reviewedBuild": {
+    "fingerprint": "fce34e39c5955f5869046f701178d6e03ed6a111336aab427f2a472eb7fef202",
+    "independentAgentReview": "Reviewed and cleared the exact bounded local build",
+    "sourceCount": 66,
+    "contextCount": 61,
+    "sourceSha256": {
+      "scripts/latex-runtime/Dockerfile": "7eccef736952a0f7a59fb651e0ef7f22766c409c5e38e3ed8325721bccde9920",
+      "tests/unit/latex-build-inputs.test.ts": "5e0bf154dde99815ef3ecb501144141b0b6d414d3a71faf577b56d49731a9053"
+    },
+    "packetSha256": "42230852df7500887a59a91892879dba330592931615f451f127fd45681917cb",
+    "receiptSha256": "d409b2a30c588cdd3755903ae5b8bac2b57811f67b642886ec20afce16c3e8d4",
+    "daemonOutcome": "completed",
+    "clientGroupExited": true,
+    "networkDisabledDuringInstall": true,
+    "aptPlanMatchesPinnedSet": true,
+    "aptAutoAndHeldMarksPreserved": true
+  },
+  "inventory": {
+    "debianBinaryPackages": 216,
+    "unchangedDebianBinaries": 210,
+    "vendoredPython": [
+      {
+        "metadataSha256": "ba172e01943c9bf5452fa33a2de42d90284f18f5505d8dc17567f8533079c345",
+        "name": "pypdf",
+        "version": "7.1.1"
+      }
+    ],
+    "sbom": {
+      "file": "docs/evaluation/RESUMIDE_LATEX_WORKER_SBOM_20261122_STOCK_SECURITY.cdx.json",
+      "schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+      "schemaSha256": "1ebcb88a2c845ecb6ff7bee7aeabdff9422cb0347f3d6875b241bd444b7e098f",
+      "schemaStructureValidated": true,
+      "purlIdentityValidated": true,
+      "components": 217,
+      "uniquenessVerified": true,
+      "sha256": "d413307f85482e64cf0e8628fd62c7e25e36be074409a2add7cfad6ef960b279"
+    },
+    "hashes": {
+      "closureSha256": "73f1ce3246110b75c3075564f8ec51366e98fd5d46460a86e39b25b1c893e765",
+      "packageLockSha256": "ee89c834707bfe73dfe374c5ede12c18fd60935009ab7cee0d10589e80eb66b5",
+      "dpkgStatusSha256": "fae1b1d2193c0dcc750666a426f6bf1fbf564baab3e9d2e854b335948ee5a4ac"
+    },
+    "updatedPackages": [
+      {
+        "name": "libc-bin",
+        "source": "glibc",
+        "previousBinaryVersion": "2.41-12+deb13u4",
+        "previousSourceVersion": "2.41-12+deb13u4",
+        "installed": {
+          "architecture": "arm64",
+          "name": "libc-bin",
+          "source": "glibc",
+          "sourceVersion": "2.41-12+deb13u5",
+          "version": "2.41-12+deb13u5"
+        },
+        "archiveSha256": "889850625c686a6d0b26a8baee5fb96f33e9f3305882f3a6751bb4c9433063e1",
+        "archiveBytes": 552664,
+        "archiveUrl": "https://deb.debian.org/debian/pool/main/g/glibc/libc-bin_2.41-12+deb13u5_arm64.deb",
+        "copyrightSha256": "f5788886720a2605a946e81d571e6c8162b09f58d2e2ceb8d36e5768fccd850d"
+      },
+      {
+        "name": "libc6",
+        "source": "glibc",
+        "previousBinaryVersion": "2.41-12+deb13u4",
+        "previousSourceVersion": "2.41-12+deb13u4",
+        "installed": {
+          "architecture": "arm64",
+          "name": "libc6",
+          "source": "glibc",
+          "sourceVersion": "2.41-12+deb13u5",
+          "version": "2.41-12+deb13u5"
+        },
+        "archiveSha256": "0966fc3da1a26cc57647c68b5736f791b6e7eb498173a7993f63b6c89b4ed4f5",
+        "archiveBytes": 2488872,
+        "archiveUrl": "https://deb.debian.org/debian/pool/main/g/glibc/libc6_2.41-12+deb13u5_arm64.deb",
+        "copyrightSha256": "f5788886720a2605a946e81d571e6c8162b09f58d2e2ceb8d36e5768fccd850d"
+      },
+      {
+        "name": "libgpgme11t64",
+        "source": "gpgme1.0",
+        "previousBinaryVersion": "1.24.2-3",
+        "previousSourceVersion": "1.24.2-3",
+        "installed": {
+          "architecture": "arm64",
+          "name": "libgpgme11t64",
+          "source": "gpgme1.0",
+          "sourceVersion": "1.24.2-3+deb13u1",
+          "version": "1.24.2-3+deb13u1"
+        },
+        "archiveSha256": "ef220aa7b8437c08066d872e8a53af1f35217fb9f5f893f63c31a2ab05428e38",
+        "archiveBytes": 329088,
+        "archiveUrl": "https://deb.debian.org/debian-security/pool/updates/main/g/gpgme1.0/libgpgme11t64_1.24.2-3+deb13u1_arm64.deb",
+        "copyrightSha256": "634b667cb8c01f73d9d59ce522faee9f6c7e910f431b084e247d5e07634cbb03"
+      },
+      {
+        "name": "libgpgmepp6t64",
+        "source": "gpgme1.0",
+        "previousBinaryVersion": "1.24.2-3",
+        "previousSourceVersion": "1.24.2-3",
+        "installed": {
+          "architecture": "arm64",
+          "name": "libgpgmepp6t64",
+          "source": "gpgme1.0",
+          "sourceVersion": "1.24.2-3+deb13u1",
+          "version": "1.24.2-3+deb13u1"
+        },
+        "archiveSha256": "c3a2b53ac0d2c9bb1b5a9100b65694c0637a6200fe3cefe65702583c51da6cfa",
+        "archiveBytes": 327776,
+        "archiveUrl": "https://deb.debian.org/debian-security/pool/updates/main/g/gpgme1.0/libgpgmepp6t64_1.24.2-3+deb13u1_arm64.deb",
+        "copyrightSha256": "634b667cb8c01f73d9d59ce522faee9f6c7e910f431b084e247d5e07634cbb03"
+      },
+      {
+        "name": "libnghttp2-14",
+        "source": "nghttp2",
+        "previousBinaryVersion": "1.64.0-1.1+deb13u1",
+        "previousSourceVersion": "1.64.0-1.1+deb13u1",
+        "installed": {
+          "architecture": "arm64",
+          "name": "libnghttp2-14",
+          "source": "nghttp2",
+          "sourceVersion": "1.64.0-1.1+deb13u2",
+          "version": "1.64.0-1.1+deb13u2"
+        },
+        "archiveSha256": "968f022ccb34f89c7ac4df0567b4d916f05f9235ad39fe2cf1ab6a12bacf5d80",
+        "archiveBytes": 71608,
+        "archiveUrl": "https://deb.debian.org/debian/pool/main/n/nghttp2/libnghttp2-14_1.64.0-1.1+deb13u2_arm64.deb",
+        "copyrightSha256": "a34ae32a5eba61e535835a8de7c398f47e420247d339bc400a3b9c618ba29a3d"
+      },
+      {
+        "name": "zlib1g",
+        "source": "zlib",
+        "previousBinaryVersion": "1:1.3.dfsg+really1.3.1-1+b1",
+        "previousSourceVersion": "1:1.3.dfsg+really1.3.1-1",
+        "installed": {
+          "architecture": "arm64",
+          "name": "zlib1g",
+          "source": "zlib",
+          "sourceVersion": "1:1.3.dfsg+really1.3.1-1+deb13u1",
+          "version": "1:1.3.dfsg+really1.3.1-1+deb13u1"
+        },
+        "archiveSha256": "0e41b3d7ad8ad7fcd36dd4d61ca91a70018478fc4af652e044f4be770784ddff",
+        "archiveBytes": 85028,
+        "archiveUrl": "https://deb.debian.org/debian-security/pool/updates/main/z/zlib/zlib1g_1.3.dfsg+really1.3.1-1+deb13u1_arm64.deb",
+        "copyrightSha256": "9e5b96d63773a5d177ba264254390f792be07e41748ebd94730981c6cac31cc6"
+      }
+    ],
+    "previousVersionFlags": [
+      {
+        "id": "CVE-2026-95512",
+        "source": "freetype",
+        "sourceVersion": "2.13.3+dfsg-1+deb13u1+resumide1",
+        "fixedVersion": "2.13.3+dfsg-1+deb13u2",
+        "urgency": "not yet assigned",
+        "customBuild": true,
+        "disposition": "reviewed-source-backport-linked-in-actual-worker",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-18374",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-19499",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-19542",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-5435",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-6238",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-6368",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-6791",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-77117",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-80489",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-8674",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-86805",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-89092",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-95818",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-97399",
+        "source": "glibc",
+        "sourceVersion": "2.41-12+deb13u4",
+        "fixedVersion": "2.41-12+deb13u5",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-129975",
+        "source": "gpgme1.0",
+        "sourceVersion": "1.24.2-3",
+        "fixedVersion": "1.24.2-3+deb13u1",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-58055",
+        "source": "nghttp2",
+        "sourceVersion": "1.64.0-1.1+deb13u1",
+        "fixedVersion": "1.64.0-1.1+deb13u2",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-27171",
+        "source": "zlib",
+        "sourceVersion": "1:1.3.dfsg+really1.3.1-1",
+        "fixedVersion": "1:1.3.dfsg+really1.3.1-1+deb13u1",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      },
+      {
+        "id": "CVE-2026-85091",
+        "source": "zlib",
+        "sourceVersion": "1:1.3.dfsg+really1.3.1-1",
+        "fixedVersion": "1:1.3.dfsg+really1.3.1-1+deb13u1",
+        "urgency": "not yet assigned",
+        "customBuild": false,
+        "disposition": "stock-security-package-installed",
+        "releaseAccepted": false
+      }
+    ],
+    "freetype": {
+      "fullCveReproduction": false,
+      "fullUpstreamSuite": "NOT_RUN_EXTERNAL_FONT_UNAVAILABLE",
+      "installedLibrarySha256": "eab220e08a609b989d86d98f7b1c97ea24277fd2012f7c73093fbadca1398ead",
+      "packageSha256": "53977736031a58794116fc26694eb1beb0d768dca53c2e619bee10c6c9f571c6",
+      "pinsSha256": "48e6f0ddb0dbf88acbba24714208005632fcf9a6e4d9a64ac99fa631aeb3c271",
+      "sourceReceiptSha256": "65b315d86c7619769a31a766c14ca6d2abb5562a5200fa050dc3b71f2a582338",
+      "vendorPatch": {
+        "name": "CVE-2026-95512.patch",
+        "onlyNineSourceLinesAdded": true,
+        "primaryDebianBug": "https://bugs.debian.org/1149953",
+        "primaryUpstreamCommit": "https://gitlab.freedesktop.org/freetype/freetype/-/commit/f3ca71c9900fe860849b3163a6e2c1e765b291d9",
+        "publishedDebianPatchArchiveSha256": "3f0e24e23973f3b51a579ccac9b2612f41f871df23853267bd967bf8de66dd60",
+        "sha256": "a72556e95acbdb6d6156cf38e89c66f072180e17634cadbb5f861737b14e3b1e",
+        "upstreamCommit": "f3ca71c9900fe860849b3163a6e2c1e765b291d9",
+        "upstreamMirrorAndDebianAdditionsEqual": true
+      },
+      "version": "2.13.3+dfsg-1+deb13u1+resumide1"
+    }
+  },
+  "verification": {
+    "focusedUnitTestsPassed": 145,
+    "focusedUnitTestFiles": 5,
+    "typecheckPassed": true,
+    "sourceChecksPassed": true,
+    "lintErrors": 0,
+    "existingJdHookWarnings": 4,
+    "compiler": {
+      "profilePaperCombinations": [
+        {
+          "profile": "early-career",
+          "paper": "A4",
+          "pages": 1,
+          "headingOrderPass": true
+        },
+        {
+          "profile": "early-career",
+          "paper": "LETTER",
+          "pages": 1,
+          "headingOrderPass": true
+        },
+        {
+          "profile": "experienced",
+          "paper": "A4",
+          "pages": 1,
+          "headingOrderPass": true
+        },
+        {
+          "profile": "experienced",
+          "paper": "LETTER",
+          "pages": 1,
+          "headingOrderPass": true
+        },
+        {
+          "profile": "document",
+          "paper": "A4",
+          "pages": 1,
+          "headingOrderPass": true
+        },
+        {
+          "profile": "document",
+          "paper": "LETTER",
+          "pages": 1,
+          "headingOrderPass": true
+        }
+      ],
+      "localSampleP95Ms": 813,
+      "nativeLinkage": {
+        "/usr/bin/pdftotext": true,
+        "/usr/bin/xdvipdfmx": true,
+        "/usr/bin/xetex": true
+      },
+      "receiptSha256": "b6444c5f7070fc8c048f922e23e4364c8bc07f65a368d3f1620cf15d1f4027ac"
+    },
+    "render": {
+      "pages": 2,
+      "fonts": 8,
+      "replacementGlyphs": 0,
+      "visualReview": "Both synthetic pages inspected",
+      "baselineComparisonRun": false,
+      "receiptSha256": "e6c44552bfb08801ad44e8689e093b868865b3c0da79aa4d7354f8c3b1e598e9"
+    },
+    "chrome": {
+      "browser": "Google Chrome",
+      "zoomPercent": 200,
+      "verifiedPdfHashes": [
+        "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f",
+        "3ec3c5e17be268457834e91528b760dd8b1f9c206effd64040db2a4810d195f0",
+        "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f"
+      ],
+      "verifiedSignInNewTabAndRetry": true,
+      "canvasAndTextVerified": true,
+      "rejectedEmptyPdf": true,
+      "authRateAndAi": "fixture services",
+      "receiptSha256": "7b0972071f5a1938bdbe7603321924879398eaba70126baf60f0f8223073a5fd"
+    },
+    "remainingOwnedCompilerContainers": 0,
+    "rollback": {
+      "flagOffUnitHttpBoundary": "pass",
+      "stoppedOwnedContainerRefusesAdmission": "pass",
+      "exactOwnedContainerRemoved": "pass",
+      "sameProcessRetainsQuarantine": "pass",
+      "freshProcessCompile": "pass",
+      "pdfBytes": 14077,
+      "pages": 2,
+      "pdfSha256": "d649b6b2bedbd7622f95a919e994b40ece49c1df268bc1a4c98ba07756c32926",
+      "ownedContainersRemaining": 0,
+      "receiptSha256": "d022267c1d064dc47237758a9a7817bad9d24248e5264b12b80914f7864b1a20",
+      "localCompilerArtifact": "Reviewed successor image after known absence of the former image",
+      "missingImageEvidence": "tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-u11-real-missing-compiler-browser.json"
+    }
+  },
+  "remaining": [
+    "Trusted scanner admission and complete unsuppressed exact-image reports for main, OCR and LaTeX",
+    "Main and OCR image-bound SBOMs",
+    "Disposition of other open or undetermined advisories, including runtime applicability and formal acceptance",
+    "Live Auth and AI acceptance"
+  ],
+  "releaseAccepted": false
+}

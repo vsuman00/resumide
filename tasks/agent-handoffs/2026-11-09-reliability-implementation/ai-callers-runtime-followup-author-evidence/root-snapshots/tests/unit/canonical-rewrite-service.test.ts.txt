@@ -1,0 +1,699 @@
+import { AI_BUDGET_SOURCE_PROFILE } from "../../app/lib/server/ai-budget-source-profile";
+import { createSourceBoundAiBudgetOperationId } from "../../app/lib/server/ai-budget-source";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  createRequirementContextFixture,
+  requirementFixtureId as id,
+} from "../fixtures/requirement-context";
+import { buildTypedAuthoringPatch } from "../../app/lib/server/typed-authoring-protocol";
+import { CANONICAL_REWRITE_READINESS_PROFILE as profile } from "../../app/lib/server/canonical-rewrite-readiness-profile";
+import { INITIAL_FEEDBACK_PROFILE as usageProfile } from "../../app/lib/server/initial-feedback-profile";
+import {
+  buildCanonicalRewriteWorkspace,
+  createCanonicalRewriteRequest,
+  reconstructCanonicalRewrite,
+  type CanonicalRewriteRequest,
+  type CanonicalRewriteOperation,
+} from "../../app/lib/server/canonical-rewrite-contract";
+const mocks = vi.hoisted(() => ({
+  config: {
+    CANONICAL_REWRITE_ENABLED: true,
+    AUTHORING_ENABLED: true,
+    SCORING_V2_ENABLED: true,
+    AI_ENABLED: true,
+    AI_BUDGET_ENABLED: false,
+    AI_BUDGET_POLICY_VERSION: "unit-budget/1",
+    APP_ORIGIN: "https://example.test",
+    OPENAI_MODEL: "unit-model",
+    OPENAI_TIMEOUT_MS: 1000,
+    OPENAI_MAX_OUTPUT_TOKENS: 100,
+    AI_MONTHLY_TOKEN_LIMIT: 100000,
+  },
+  user: vi.fn(),
+  server: vi.fn(),
+  admin: vi.fn(),
+  consent: vi.fn(),
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getServerConfig: () => mocks.config,
+}));
+vi.mock("../../app/lib/server/auth", () => ({
+  getAuthenticatedUser: mocks.user,
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseServerClient: mocks.server,
+  createSupabaseAdminClient: mocks.admin,
+}));
+vi.mock("../../app/lib/server/privacy", () => ({
+  requireAndRecordAiConsent: mocks.consent,
+}));
+import {
+  readCanonicalRewriteForm,
+  canonicalRewriteAction,
+} from "../../app/lib/server/canonical-rewrite-service";
+
+const requestValue: CanonicalRewriteRequest = {
+  schemaVersion: "canonical-rewrite-request/1.0.0",
+  operationId: id(701),
+  canonicalVersionId: id(702),
+  requirementVersionId: id(703),
+  draftId: id(704),
+  expectedDraftUpdatedAt: "2026-11-15T00:00:00.000001Z",
+};
+function formRequest(form: URLSearchParams | FormData, signal?: AbortSignal) {
+  return new Request("https://example.test/analysis/" + id(705) + "/rewrite", {
+    method: "POST",
+    body: form,
+    signal,
+    headers: { Origin: "https://example.test" },
+  });
+}
+function encoded(value = JSON.stringify(requestValue)) {
+  return new URLSearchParams({ request: value, aiConsent: "accepted" });
+}
+let fetchTrap: ReturnType<typeof vi.spyOn>;
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.config.AI_BUDGET_ENABLED = false;
+  fetchTrap = vi
+    .spyOn(globalThis, "fetch")
+    .mockRejectedValue(new Error("UNEXPECTED_TEST_NETWORK"));
+});
+afterEach(() => {
+  expect(fetchTrap).not.toHaveBeenCalled();
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
+
+describe("canonical rewrite actual bounded form parser", () => {
+  it.each(["urlencoded", "multipart"])(
+    "preserves exact valid request and microseconds from %s",
+    async (kind) => {
+      const form = kind === "urlencoded" ? encoded() : new FormData();
+      if (form instanceof FormData) {
+        form.set("request", JSON.stringify(requestValue));
+        form.set("aiConsent", "accepted");
+      }
+      expect(await readCanonicalRewriteForm(formRequest(form))).toEqual(
+        requestValue,
+      );
+    },
+  );
+  it.each([
+    "duplicate form",
+    "escaped duplicate JSON",
+    "missing",
+    "extra",
+    "file",
+  ])("refuses %s without service IO", async (kind) => {
+    let form: URLSearchParams | FormData = encoded();
+    if (kind === "duplicate form")
+      form.append("request", JSON.stringify(requestValue));
+    if (kind === "escaped duplicate JSON")
+      form.set(
+        "request",
+        JSON.stringify(requestValue).replace(
+          '"operationId":',
+          '"\\u006fperationId":"' +
+            requestValue.operationId +
+            '","operationId":',
+        ),
+      );
+    if (kind === "missing") form.delete("request");
+    if (kind === "extra") form.set("extra", "forbidden");
+    if (kind === "file") {
+      form = new FormData();
+      form.set(
+        "request",
+        new Blob([JSON.stringify(requestValue)]),
+        "request.json",
+      );
+      form.set("aiConsent", "accepted");
+    }
+    await expect(
+      readCanonicalRewriteForm(formRequest(form)),
+    ).rejects.toMatchObject({ status: 422 });
+    expect(mocks.admin).not.toHaveBeenCalled();
+    expect(mocks.user).not.toHaveBeenCalled();
+  });
+  it("requires the exact native consent acknowledgement", async () => {
+    const form = encoded();
+    form.set("aiConsent", "true");
+    await expect(
+      readCanonicalRewriteForm(formRequest(form)),
+    ).rejects.toMatchObject({ status: 403 });
+  });
+  it("rejects malformed UTF8 and both encoded and decoded byte overflows", async () => {
+    const req = (body: Uint8Array<ArrayBuffer> | string) =>
+      new Request("https://example.test/rewrite", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body,
+      });
+    await expect(
+      readCanonicalRewriteForm(req(new Uint8Array([0xc3, 0x28]))),
+    ).rejects.toMatchObject({ status: 422 });
+    await expect(
+      readCanonicalRewriteForm(req("x".repeat(65537))),
+    ).rejects.toMatchObject({ status: 413 });
+    const raw = JSON.stringify(requestValue),
+      padded = " ".repeat(16385 - raw.length) + raw;
+    await expect(
+      readCanonicalRewriteForm(formRequest(encoded(padded))),
+    ).rejects.toMatchObject({ status: 422 });
+  });
+  it.each(["resolve", "reject"])(
+    "settles stalled body deadline and releases reader when cancel %s",
+    async (kind) => {
+      vi.useFakeTimers();
+      const cancel = vi.fn(() =>
+        kind === "reject"
+          ? Promise.reject(new Error("SYNTHETIC_CANCEL_FAILURE"))
+          : undefined,
+      );
+      const stream = new ReadableStream<Uint8Array>({
+        pull: () => new Promise<void>(() => {}),
+        cancel,
+      });
+      const request = new Request("https://example.test/rewrite", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: stream,
+        duplex: "half",
+      } as RequestInit & { duplex: "half" });
+      const pending = readCanonicalRewriteForm(request, 5).catch(
+        (error) => error,
+      );
+      await vi.advanceTimersByTimeAsync(6);
+      expect(await pending).toMatchObject({
+        reason: "unavailable",
+        recovery: "retry_exact",
+      });
+      expect(cancel).toHaveBeenCalledTimes(1);
+      expect(stream.locked).toBe(false);
+    },
+  );
+  it("settles caller cancellation during a pending read and releases its reader", async () => {
+    const controller = new AbortController(),
+      cancel = vi.fn();
+    let enterRead = () => {};
+    const reading = new Promise<void>((resolve) => {
+      enterRead = resolve;
+    });
+    const stream = new ReadableStream<Uint8Array>(
+      {
+        pull: () => {
+          enterRead();
+          return new Promise<void>(() => {});
+        },
+        cancel,
+      },
+      { highWaterMark: 0 },
+    );
+    const request = new Request("https://example.test/rewrite", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      signal: controller.signal,
+      body: stream,
+      duplex: "half",
+    } as RequestInit & { duplex: "half" });
+    const pending = readCanonicalRewriteForm(request).catch((error) => error);
+    await reading;
+    expect(stream.locked).toBe(true);
+    controller.abort();
+    expect(await pending).toMatchObject({
+      reason: "unavailable",
+      recovery: "retry_exact",
+    });
+    expect(cancel).toHaveBeenCalledTimes(1);
+    expect(stream.locked).toBe(false);
+  });
+});
+
+async function handlerFixture(
+  usageCounter: unknown,
+  budgetDenial?: string,
+  recorded: {
+    canonicalTokens: string;
+    unknownClaims: string;
+    initialFeedbackTokens?: string;
+  } = { canonicalTokens: "0", unknownClaims: "0" },
+) {
+  const f = await createRequirementContextFixture({
+    edit: "Built database services using PostgreSQL",
+    confirm: true,
+  });
+  const clauseId = f.context.requirements.content.relations.clauses[0].id;
+  const patch = buildTypedAuthoringPatch(
+    f.context,
+    {
+      canonicalVersionId: f.context.canonical.versionId,
+      requirementVersionId: f.context.requirements.versionId,
+      clauseId,
+      targetFactId: f.targetFactId,
+    },
+    "Created",
+  );
+  const fact = f.context.canonical.content.facts.find(
+    (value) => value.id === f.targetFactId,
+  )!;
+  const row = {
+    schemaVersion: "canonical-rewrite-context/1.0.0",
+    status: "available",
+    relationshipContext: f.context,
+    draft: {
+      id: id(711),
+      updatedAt: "2026-11-15T00:00:00.000001Z",
+      contentSha256: "1".repeat(64),
+      versionId: null,
+      revision: 0,
+      headId: null,
+    },
+    bindingSha256: "2".repeat(64),
+    manifest: [
+      {
+        sourceId: 0,
+        factId: fact.id,
+        valueSha256: patch.target.currentValueSha256,
+        location: {
+          sectionId: patch.target.sectionId,
+          entryId: patch.target.entryId,
+          bulletId: patch.target.bulletId,
+        },
+        confirmation: fact.confirmation,
+        basis: patch.support.basis,
+        currentCitations: patch.sourceCitations,
+        clauseIds: [clauseId],
+        authoringVersion: patch.policies.authoringVersion,
+      },
+    ],
+    saved: {
+      state: "legacy_unbound",
+      publication: null,
+      legacyDraft: { summary: null, bullets: [] },
+    },
+    readiness: { ...profile, schemaReady: true, mutatorsExecutable: true },
+  };
+  const workspace = buildCanonicalRewriteWorkspace(row, "unit-model", profile),
+    request = createCanonicalRewriteRequest(workspace, id(712));
+  let operation: CanonicalRewriteOperation | undefined;
+  const control = {
+    usagePatch: {} as Record<string, unknown>,
+    readinessPatch: {} as Record<string, unknown>,
+  };
+  const client = {
+    rpc: vi.fn(async (name: string, args: Record<string, unknown>) => {
+      if (name === "read_ai_budget_source_readiness")
+        return {
+          data: {
+            ...AI_BUDGET_SOURCE_PROFILE,
+            schemaReady: true,
+            reserveExecutable: true,
+            exportExecutable: false,
+          },
+          error: null,
+        };
+      if (name === "ai_budget_reserve_next")
+        throw Error("GENERIC_RESERVE_FORBIDDEN");
+      if (name === "prepare_canonical_rewrite") {
+        operation = {
+          schemaVersion: "canonical-rewrite-operation/1.0.0",
+          operationId: request.operationId,
+          ownerId: f.owned.ownerId,
+          analysisId: f.owned.analysisId,
+          request,
+          policy: workspace.binding.policy,
+          bindingSha256: workspace.bindingSha256,
+          state: "reserved",
+          dispatchAllowed: false,
+          publication: null,
+        };
+        return {
+          data: {
+            status: "prepared",
+            operation,
+            context: {
+              ...row,
+              readiness: { ...row.readiness, ...control.readinessPatch },
+            },
+          },
+          error: null,
+        };
+      }
+      if (name === "ai_budget_reserve_source_next" && budgetDenial) {
+        const source = {
+          schemaVersion: "ai-budget-source/2.0.0" as const,
+          kind: "canonical_rewrite" as const,
+          analysisId: f.owned.analysisId,
+          resumeVersionId: f.owned.sourceId,
+          operationId: request.operationId,
+          bindingSha256: workspace.bindingSha256,
+        };
+        expect(args.p_source).toEqual(source);
+        expect(args).toMatchObject({
+          p_user_id: f.owned.ownerId,
+          p_organization_id: f.owned.organizationId,
+          p_request: {
+            operationId: createSourceBoundAiBudgetOperationId({
+              userId: f.owned.ownerId,
+              organizationId: f.owned.organizationId,
+              source,
+            }),
+            surface: "rewrite",
+            payloadSha256: workspace.bindingSha256,
+          },
+        });
+        return {
+          data: {
+            schemaVersion: "ai-budget/1.0.0",
+            status: "denied",
+            code: budgetDenial,
+          },
+          error: null,
+        };
+      }
+      if (name === "consume_analysis_rate_limit")
+        return { data: true, error: null };
+      if (name === "get_organization_ai_tokens_used")
+        return { data: usageCounter, error: null };
+      if (name === "read_initial_feedback_usage") {
+        // This fake row uses the actual released successor pin when queried.
+        // The before-fix caller never queries it: it sees legacy counter zero.
+        const usageSha256 = usageProfile.usageSha256;
+        if (typeof usageSha256 !== "string")
+          throw Error("EXPECTED_RELEASED_USAGE_PROFILE");
+        if (
+          typeof usageCounter !== "number" ||
+          !Number.isSafeInteger(usageCounter) ||
+          usageCounter < 0
+        )
+          return { data: usageCounter, error: null };
+        const now = new Date(),
+          year = now.getUTCFullYear(),
+          month = now.getUTCMonth();
+        const date = (v: Date) => v.toISOString().slice(0, 10);
+        return {
+          data: {
+            schemaVersion: "initial-feedback-usage/1.0.0",
+            profileVersion: "initial-feedback-readiness-profile/1.0.0",
+            usageSha256,
+            ownerId: f.owned.ownerId,
+            organizationId: f.owned.organizationId,
+            analysisId: f.owned.analysisId,
+            periodStart: date(new Date(Date.UTC(year, month, 1))),
+            periodEnd: date(new Date(Date.UTC(year, month + 1, 1))),
+            legacyUnlinkedTokens: String(usageCounter),
+            canonicalTokens: recorded.canonicalTokens,
+            initialFeedbackTokens: recorded.initialFeedbackTokens ?? "0",
+            totalTokens: String(
+              BigInt(usageCounter) +
+                BigInt(recorded.canonicalTokens) +
+                BigInt(recorded.initialFeedbackTokens ?? "0"),
+            ),
+            unknownClaims: recorded.unknownClaims,
+            ...control.usagePatch,
+          },
+          error: null,
+        };
+      }
+      if (name === "claim_canonical_rewrite_dispatch") {
+        operation = {
+          ...operation!,
+          state: "dispatched",
+          dispatchAllowed: true,
+        };
+        return { data: { operation, budget: null }, error: null };
+      }
+      if (name === "settle_canonical_rewrite_attempt")
+        return {
+          data: {
+            schemaVersion: "canonical-rewrite-settlement/1.0.0",
+            operationId: request.operationId,
+            bindingSha256: workspace.bindingSha256,
+            usage: args.p_usage,
+            state: args.p_error_code ? "rejected" : "dispatched",
+          },
+          error: null,
+        };
+      if (name === "read_canonical_rewrite_context")
+        return { data: row, error: null };
+      if (name === "finish_canonical_rewrite") {
+        const result = reconstructCanonicalRewrite(
+          workspace,
+          request.operationId,
+          args.p_plan,
+        );
+        return {
+          data: {
+            result,
+            receipt: {
+              schemaVersion: "canonical-rewrite-receipt/1.0.0",
+              state: "saved_proposals",
+              operationId: request.operationId,
+              bindingSha256: workspace.bindingSha256,
+              runId: id(713),
+              draftId: request.draftId,
+              draftVersionId: id(714),
+              revision: 1,
+              draftUpdatedAt: "2026-11-15T00:00:01.000002Z",
+              resultSha256: "3".repeat(64),
+              projectionSha256: "4".repeat(64),
+              idempotent: false,
+            },
+          },
+          error: null,
+        };
+      }
+      throw new Error("UNEXPECTED_UNIT_RPC");
+    }),
+  };
+  const transport = {
+    execute: vi.fn(async () => ({
+      output: {
+        summarySourceId: null,
+        bullets: [
+          {
+            sourceId: 0,
+            clauseId,
+            operation: "equivalent_action",
+            replacementAction: "Created",
+          },
+        ],
+      },
+      usage: { inputTokens: 8, outputTokens: 3 },
+    })),
+  };
+  mocks.user.mockResolvedValue({ id: f.owned.ownerId });
+  mocks.server.mockReturnValue({});
+  mocks.admin.mockReturnValue(client);
+  mocks.consent.mockResolvedValue(undefined);
+  const response = () =>
+    canonicalRewriteAction(
+      new Request(
+        "https://example.test/analysis/" + f.owned.analysisId + "/rewrite",
+        {
+          method: "POST",
+          headers: { Origin: "https://example.test" },
+          body: new URLSearchParams({
+            request: JSON.stringify(request),
+            aiConsent: "accepted",
+          }),
+        },
+      ),
+      f.owned.analysisId,
+      transport,
+    );
+  return { client, transport, response, control };
+}
+describe("actual action organization usage admission", () => {
+  it.each([
+    null,
+    false,
+    "",
+    " ",
+    "12",
+    -1,
+    1.5,
+    Number.NaN,
+    Number.POSITIVE_INFINITY,
+  ])(
+    "denies unknown or malformed counter %s before dispatch",
+    async (counter) => {
+      const f = await handlerFixture(counter),
+        response = await f.response();
+      expect(response.status).toBe(503);
+      expect(f.transport.execute).not.toHaveBeenCalled();
+      expect(
+        f.client.rpc.mock.calls.some(
+          (call) => call[0] === "claim_canonical_rewrite_dispatch",
+        ),
+      ).toBe(false);
+    },
+  );
+  it.each([0, 12])(
+    "retains legitimate nonnegative numeric counter %s",
+    async (counter) => {
+      const f = await handlerFixture(counter),
+        response = await f.response();
+      expect(response.status).toBe(200);
+      expect((await response.json()).kind).toBe("saved");
+      expect(f.transport.execute).toHaveBeenCalledTimes(1);
+    },
+  );
+});
+
+describe("actual action closed budget recovery", () => {
+  it.each([
+    ["AI_BUDGET_EXHAUSTED", 429, "review_again"],
+    ["AI_BUDGET_BLOCKED", 429, "review_again"],
+    ["AI_BUDGET_DENIED", 503, "unavailable"],
+    ["AI_BUDGET_DISABLED", 503, "unavailable"],
+    ["AI_BUDGET_UNAVAILABLE", 503, "retry_exact"],
+  ] as const)(
+    "preserves %s without provider dispatch",
+    async (code, status, recovery) => {
+      mocks.config.AI_BUDGET_ENABLED = true;
+      const f = await handlerFixture(0, code),
+        response = await f.response();
+      expect(response.status).toBe(status);
+      expect(await response.json()).toMatchObject({
+        kind: "error",
+        reason: "unavailable",
+        recovery,
+      });
+      expect(f.transport.execute).not.toHaveBeenCalled();
+      expect(f.client.rpc).toHaveBeenCalledWith(
+        "read_ai_budget_source_readiness",
+        {},
+      );
+      expect(f.client.rpc).not.toHaveBeenCalledWith(
+        "ai_budget_reserve_next",
+        expect.anything(),
+      );
+      expect(
+        f.client.rpc.mock.calls.some(
+          (call) => call[0] === "claim_canonical_rewrite_dispatch",
+        ),
+      ).toBe(false);
+    },
+  );
+});
+
+describe("actual caller canonical usage forward compatibility", () => {
+  it.each([
+    { canonicalTokens: "100000", unknownClaims: "0" },
+    { canonicalTokens: "0", unknownClaims: "1" },
+  ])(
+    "refuses canonical known spend or unknown holds ignored by legacy counter $canonicalTokens/$unknownClaims",
+    async (recorded) => {
+      const f = await handlerFixture(0, undefined, recorded),
+        response = await f.response();
+      expect(response.status).toBe(503);
+      expect(f.transport.execute).not.toHaveBeenCalled();
+      expect(
+        f.client.rpc.mock.calls.some(
+          (call) => call[0] === "claim_canonical_rewrite_dispatch",
+        ),
+      ).toBe(false);
+      expect(
+        f.client.rpc.mock.calls.some(
+          (call) => call[0] === "get_organization_ai_tokens_used",
+        ),
+      ).toBe(false);
+    },
+  );
+});
+
+it.each([
+  ["foreign owner", { ownerId: id(750) }],
+  ["foreign organization", { organizationId: id(751) }],
+  ["foreign analysis", { analysisId: id(752) }],
+  ["wrong usage profile", { usageSha256: "f".repeat(64) }],
+  ["inconsistent component total", { totalTokens: "1" }],
+])(
+  "refuses %s usage metadata through the actual caller",
+  async (_name, patch) => {
+    const f = await handlerFixture(0);
+    f.control.usagePatch = patch;
+    const response = await f.response();
+    expect(response.status).toBe(503);
+    expect(f.transport.execute).not.toHaveBeenCalled();
+    expect(
+      f.client.rpc.mock.calls.some(
+        (call) => call[0] === "claim_canonical_rewrite_dispatch",
+      ),
+    ).toBe(false);
+  },
+);
+it("refuses a prior-month usage snapshot instead of using it as this month's capacity", async () => {
+  const f = await handlerFixture(0),
+    now = new Date(),
+    year = now.getUTCFullYear(),
+    month = now.getUTCMonth();
+  f.control.usagePatch = {
+    periodStart: new Date(Date.UTC(year, month - 1, 1))
+      .toISOString()
+      .slice(0, 10),
+    periodEnd: new Date(Date.UTC(year, month, 1)).toISOString().slice(0, 10),
+  };
+  expect((await f.response()).status).toBe(503);
+  expect(f.transport.execute).not.toHaveBeenCalled();
+});
+it.each([
+  [
+    "old profile",
+    { profileVersion: "canonical-rewrite-readiness-profile/1.0.0" },
+  ],
+  ["missing usage function hash", { usageSha256: undefined }],
+])(
+  "refuses %s readiness metadata before counter/provider dispatch",
+  async (_name, patch) => {
+    const f = await handlerFixture(0);
+    f.control.readinessPatch = patch;
+    expect((await f.response()).status).toBe(503);
+    expect(f.transport.execute).not.toHaveBeenCalled();
+    expect(
+      f.client.rpc.mock.calls.some(
+        (call) =>
+          call[0] === "read_canonical_rewrite_usage" ||
+          call[0] === "claim_canonical_rewrite_dispatch",
+      ),
+    ).toBe(false);
+  },
+);
+
+// Coupled actual caller control: old counter cannot observe A13 rejected claims.
+it("refuses initial feedback known spend before any canonical provider dispatch", async () => {
+  const f = await handlerFixture(0, undefined, {
+    canonicalTokens: "0",
+    unknownClaims: "0",
+    initialFeedbackTokens: "100000",
+  });
+  const response = await f.response();
+  expect(response.status).toBe(503);
+  expect(f.transport.execute).not.toHaveBeenCalled();
+  expect(
+    f.client.rpc.mock.calls.some(
+      (call) => call[0] === "claim_canonical_rewrite_dispatch",
+    ),
+  ).toBe(false);
+});
+
+it("uses the new shared counter even when hard R03 reservation is enabled", async () => {
+  const f = await handlerFixture(0, "AI_BUDGET_DENIED");
+  mocks.config.AI_BUDGET_ENABLED = true;
+  expect((await f.response()).status).toBe(503);
+  expect(
+    f.client.rpc.mock.calls.filter(
+      (call) => call[0] === "read_initial_feedback_usage",
+    ),
+  ).toHaveLength(1);
+  expect(
+    f.client.rpc.mock.calls.some(
+      (call) =>
+        call[0] === "read_canonical_rewrite_usage" ||
+        call[0] === "get_organization_ai_tokens_used",
+    ),
+  ).toBe(false);
+  expect(f.transport.execute).not.toHaveBeenCalled();
+});

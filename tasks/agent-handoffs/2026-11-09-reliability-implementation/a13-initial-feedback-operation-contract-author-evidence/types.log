@@ -1,0 +1,16 @@
+[96mtests/unit/initial-feedback-operation-contract.test.ts[0m:[93m317[0m:[93m43[0m - [91merror[0m[90m TS2345: [0mArgument of type '{ resultChecksum: string; score: number; parseView: ParseViewData; ruleTrace: RuleTrace[]; keywordCoverage: { taxonomyVersion: string; job: string[]; matched: string[]; missing: string[]; uncertain: string[]; evidence: MatchEvidence[]; }; ... 4 more ...; taxonomyVersion: string; }' is not assignable to parameter of type '{ resultChecksum: string; parserVersion: "parse-sim-v1"; rulesetVersion: "ats-rules-v4"; normalizerVersion: "normalizer-v1"; taxonomyVersion: "skills-taxonomy-v1"; score: number; parseView: { ...; }; ruleTrace: { ...; }[]; keywordCoverage: { ...; }; inputTextChecksum: string; }'.
+  Types of property 'parserVersion' are incompatible.
+    Type 'string' is not assignable to type '"parse-sim-v1"'.
+
+[7m317[0m     expect(initialFeedbackPartialFeedback(d)).toEqual(
+[7m   [0m [91m                                          ~[0m
+[96mtests/unit/initial-feedback-operation-contract.test.ts[0m:[93m568[0m:[93m9[0m - [91merror[0m[90m TS2322: [0mType '1' is not assignable to type '0'.
+
+[7m568[0m         p.compatibility.feedback.skills.score = 1;
+[7m   [0m [91m        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+[96mtests/unit/initial-feedback-publication-policy.test.ts[0m:[93m17[0m:[93m10[0m - [91merror[0m[90m TS2724: [0m'"../../app/lib/server/config"' has no exported member named 'AnalysisConfigSchema'. Did you mean 'AnalysisConfig'?
+
+[7m17[0m import { AnalysisConfigSchema } from "../../app/lib/server/config";
+[7m  [0m [91m         ~~~~~~~~~~~~~~~~~~~~[0m
+
+{"rootFiles":7,"sourceFiles":47,"diagnostics":3}

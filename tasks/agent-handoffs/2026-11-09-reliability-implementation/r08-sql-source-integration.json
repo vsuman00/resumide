@@ -1,0 +1,33 @@
+{
+  "status": "SOURCE_INTEGRATED_SQL_UNEXECUTED",
+  "files": [
+    {
+      "owner": "runtime",
+      "file": "supabase/migrations/20261110080810_lease_fencing_and_verification_scope.sql",
+      "priorSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sha256": "b9aa6cf52db69b5658a279442949fd3f0a0f4aa26dddba78671f28705884e1b4"
+    },
+    {
+      "owner": "runtime",
+      "file": "scripts/verify-lease-fencing.sql",
+      "priorSha256": null,
+      "sha256": "e59831953a563cb82e7705a828a8f0193cd6357d581bd8041b99f4ff32f52b4c"
+    },
+    {
+      "owner": "runtime",
+      "file": "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-lease-fence.md",
+      "priorSha256": null,
+      "sha256": "98092591d9174ca6ad4d6d197258440d1cd40b273c32cca49bcf8951f82dd1ff"
+    }
+  ],
+  "sqlParsed": false,
+  "sqlExecuted": false,
+  "amendments": [
+    {
+      "file": "supabase/migrations/20261110080810_lease_fencing_and_verification_scope.sql",
+      "priorSha256": "b9aa6cf52db69b5658a279442949fd3f0a0f4aa26dddba78671f28705884e1b4",
+      "sha256": "1c85475124f8d1093c0cae280af8f2f8e272abae908b6e62e9126cef51b669b2",
+      "reason": "Deny current owner deletion request before candidate limit and under lease ownership"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "status": "FROZEN_SOURCE_IMPLEMENTATION_SUPPLEMENT",
+  "baseContractSha256": "344f757eea580be82a06adcdbce8b2a429965083152f9f3abef758ee67c48f74",
+  "purpose": "Exact catalogue readiness without inventing PostgreSQL expression normalization under source-only authorization.",
+  "design": "One private owner-only nonpersonal singleton catalogue-seal relation initialized from the freshly created clock tables in the SAME future migration transaction. Record actual constraint definitions, index keys/uniqueness/NULLSNOTDISTINCT and predicates, trigger definitions/properties, columns/defaults/types/nullability and ownership/security properties. Readiness compares exact current catalogue against the sealed expected catalogue, plus explicit independent source contract.",
+  "authority": "Migration installer only; capture after declared DDL and before external grants. Not learned or refreshed by readiness, runtime callers, repair, retries, or user input. No general bypass or role-check loophole. New table/guard/ACL/schema/singleton content and count are themselves checked and manifest-pinned. No owner or candidate record identifiers/values.",
+  "immutability": "Initialize once before installing closed insert/update/delete guard; deny all client and service writes and function EXECUTE. No runtime resealing. Changed/missing/extra constraints/indexes/guards/seal rows must refuse readiness.",
+  "verification": "Source text/contract tests can validate mechanism and intended exact comparisons; actual normalized forms and mutation catalogue tests remain Native UNPARSED/UNEXECUTED until authorized. Do not present source checks as installation proof.",
+  "scope": "Existing migration and source test allocation; separate default-off metadata shape unchanged. No database call or release grant authorized."
+}

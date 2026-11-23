@@ -1,0 +1,20 @@
+import {runCommand} from "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats/scripts/verify-private-aa7.mjs";
+import {openSync,closeSync,readFileSync,writeFileSync,readdirSync,statSync} from "node:fs";
+import {createHash} from "node:crypto";
+const root="/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats",out="/private/tmp/resumide-decisions-native-final";
+const node="/Users/vaibhavsuman/.codex/tools/resumide-node22/v22.23.4-darwin-arm64/node";
+const env={HOME:out+"/home",PATH:"/Users/vaibhavsuman/.codex/tools/resumide-node22/v22.23.4-darwin-arm64:/usr/bin:/bin:/usr/sbin:/sbin",LANG:"C",TZ:"UTC",NO_COLOR:"1",RESUMIDE_PRIVATE_VERIFY:"aa7-owned-synthetic",AI_ENABLED:"false",GIT_CONFIG_NOSYSTEM:"1",GIT_CONFIG_GLOBAL:"/dev/null",GIT_OPTIONAL_LOCKS:"0"};
+const hash=p=>createHash("sha256").update(readFileSync(p)).digest("hex");
+const files=['supabase/migrations/20261116192537_jd_clause_order_decisions.sql','tests/unit/jd-clause-order-native-contract.test.ts','scripts/generate-jd-clause-order-character-profile.mjs','app/lib/jd-clause-order-character-profile.json','app/lib/jd-clause-order-decision-policy.json','app/lib/server/clause-order-command-codec.ts','tasks/agent-handoffs/2026-11-09-reliability-implementation/decisions-golden-vectors.json','tasks/agent-handoffs/2026-11-09-reliability-implementation/decisions-contract.json'];
+const oldMigrations=readdirSync(root+'/supabase/migrations').filter(x=>x.endsWith('.sql')&&x!=='20261116192537_jd_clause_order_decisions.sql').map(x=>'supabase/migrations/'+x);
+const inputs=()=>Object.fromEntries([...files,...oldMigrations].map(p=>[p,hash(root+'/'+p)]));
+const roots=['/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats',root];
+const policy=["(version 1)","(allow default)","(deny network*)",...roots.flatMap(r=>[...['.env','.env.local','.env.test','.env.test.local','.env.development','.env.development.local','.env.production','.env.production.local'].map(f=>`(deny file-read* (literal ${JSON.stringify(r+'/'+f)}))`),`(deny file-write* (literal ${JSON.stringify(r+'/.git')}))`,`(deny file-write* (subpath ${JSON.stringify(r+'/.git')}))`]),`(deny file-write* (subpath "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/.git"))`].join('\n');
+const phase=process.argv[2];
+const action=phase.replace(/-final$/,'');
+const args=action==='format'?[root+'/node_modules/prettier/bin/prettier.cjs','--write',files[1]]:action==='format-check'?[root+'/node_modules/prettier/bin/prettier.cjs','--check',files[1],files[2],files[3]]:action==='lint'?[root+'/node_modules/eslint/bin/eslint.js',files[1]]:['red','green'].includes(phase)?[root+'/node_modules/vitest/vitest.mjs','run',files[1],'--maxWorkers=4']:null;
+if(!args)throw Error('UNALLOCATED_PHASE');
+const log=out+'/'+phase+'.log',fd=openSync(log,'wx',0o600),receipt={phase,node:process.version,environment:'sealed minimal fake env/emptyHOME/OS network, Root+WT dotenv and commonGit/pointer writes denied',inputsBefore:inputs(),log,commands:[]};
+try{receipt.commands.push(await runCommand('/usr/bin/sandbox-exec',['-p',policy,node,...args],{cwd:root,env,logFd:fd,timeoutMs:120000,maxLogBytes:8388608,onStart:x=>receipt.start=x,onClose:x=>receipt.close=x}));}finally{closeSync(fd);receipt.inputsAfter=inputs();receipt.inputStable=JSON.stringify(receipt.inputsBefore)===JSON.stringify(receipt.inputsAfter);receipt.logSha256=hash(log);writeFileSync(out+'/'+phase+'.json',JSON.stringify(receipt,null,2)+'\n');}
+console.log(JSON.stringify({phase,commands:receipt.commands,inputStable:receipt.inputStable,start:receipt.start,close:receipt.close}));
+if(receipt.commands.some(x=>x.code!==0||x.signal||x.startFailed||x.abortRequested||!x.groupCleanupConfirmed))process.exitCode=1;

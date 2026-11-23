@@ -1,0 +1,2009 @@
+
+> verify:latex
+> vite-node --config vitest.config.ts scripts/verify-latex-sandbox.ts sha256:4b83ffec76083b02a79df7addf5ff1f8e09b6d90135d73915b890b38b7753b16
+
+{
+  "policyVersion": "latex-source/1.0.0",
+  "imageId": "sha256:4b83ffec76083b02a79df7addf5ff1f8e09b6d90135d73915b890b38b7753b16",
+  "sourceHashes": {
+    "app/lib/server/latex-source.ts": "10e3975858dbd91a7de04724d2cf452d358364ce11cf840aaa0bbd9b3496116f",
+    "app/lib/server/latex-sandbox.ts": "e7b0b41aee2d83553c29437264524cf71f4fbb9a6bf8b1f760e4041d5eea2477",
+    "scripts/latex-runtime/Dockerfile": "0294a84200019fff8c56f3d5d85106d9a5973607d87b3dbe07639514a9948567",
+    "scripts/latex-runtime/landlock.c": "b2f89ef5bbe0b7af4f09c70b9b01186f29b4b2812443bd071328365dc01da62d",
+    "scripts/latex-runtime/supervisor.py": "dc37bb22b043d5947d766776a4b09d8d390fd1a36e429289145d5393857cb559",
+    "scripts/latex-runtime/inspect_pdf.py": "6d3a6fc67be9bd719d62c317cf7960fb6bf38aff14597c52dbf3f3249e245b5f",
+    "scripts/latex-runtime/verify-jbig2.py": "a66f573877dd919d7788bd8ccfa0a955f1c520245fac8ec0c7cb76d595539ef7",
+    "scripts/latex-runtime/verify-image-admission.py": "0bb61b482794de3d26818c9c59c8df79285d7b8de2fae1c80d83570e6cb5ca25",
+    "scripts/latex-runtime/verify-image-boundaries-mock.py": "f98895cfc59ad9fe22dbdbab67deb8afe150b97ed10eb92f8b6c8f22adc10089",
+    "scripts/latex-runtime/verify-fontconfig-home.py": "9757360e4346be68fbd544afdaab05983621b5af938dc18abc35f6dc3dc37940",
+    "scripts/latex-runtime/verify-native-frame.py": "7581f911e1e7b85c48cb03430abf86b417a44bbe390221eb05e8f939499a2c8d",
+    "scripts/latex-runtime/build-closure.py": "dd25c526769167236927eb4fee308894e6d7e2883e3affb71990794044df187f",
+    "scripts/latex-runtime/build-fontconfig.py": "005e348a5342057ec43901e0be1e5b5ac254165f79930be26f0ee1f077d90b3e",
+    "scripts/latex-runtime/native-expat/pins.json": "1b67434115d44f1f3f37692683059b9ea6a8a7601143c2892a7e5bc341d7eb6a",
+    "scripts/latex-runtime/native-expat/prepare.py": "1f0e50caf5b1cb91b891a2d484feae3187746f0d5e45484f62255356747fa59a",
+    "scripts/latex-runtime/native-expat/build.py": "5e9d68b2fa15053fbf28ff579e01f57db74d529ed37a2d1f50a51f7e172eda70",
+    "scripts/latex-runtime/native-expat/apt-transport.py": "8b831a59cd8f2f89925b755973c1ef764daa2722207bfd24742114c67d31ded8",
+    "scripts/latex-runtime/native-expat/abi-smoke.c": "ba66c40a6b264c068f8fab1731a61dd074605c6bc208985b5fd3519bca9e5d76",
+    "scripts/latex-runtime/native-expat/native-utf16-tests.patch": "63e11268ce40526c1b71cf0851e0f00a1bb2c5ced3a49648f0f70ad2faf82bb6",
+    "scripts/latex-runtime/native-expat/utf16-adapter-check.c": "6d7eb0b7a6ac565a5b1e07a07439b24a38411ed667abbcef0134950c406dc8f7",
+    "scripts/latex-runtime/native-expat/provenance/trixie-security.InRelease": "d0dbede32d80c3e9462e037ede87b138bdd5e44be10145acf46c9f643388836d",
+    "scripts/latex-runtime/native-expat/provenance/sid.InRelease": "1c071f93406d63d72960a3d5257603839f7aafc59feba4244c9e372110c29d6d",
+    "scripts/latex-runtime/texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa",
+    "scripts/latex-runtime/requirements.lock": "6c3793776e6b3c3d9a955e11b1eb2de1f192aa0990305fef4bb065f70b402261",
+    "scripts/latex-runtime/native_geometry.py": "8399d3432cde87c92f55771f272bad82c42b26856f3b4096fc1f76bc88249da1",
+    "scripts/latex-runtime/native-poppler/install-runtime.py": "915c35260f1a226a96ab19984f7d4ed9971dc438764c3e3f7ae08e85da09d30f",
+    "scripts/latex-runtime/native-poppler/pins.json": "027af4d5ecb67bde9219a198255445bcc0236c0bc26287a3f25c0f00a65115c9",
+    "scripts/latex-runtime/native-poppler/build-pins.json": "2bb3f7c717b2aaad314d2680700529a6da985d35542ac93ea934d65fbad9e923",
+    "scripts/latex-runtime/native-poppler/prepare_build.py": "5af903308f9766af820ba83c0fff329a49d0e341258c0c79172855101c9d9676",
+    "scripts/latex-runtime/native-poppler/build-v5.py": "7c67c7cd42e039b90665c8af300218dfc4f8678e0cb9658ad09c632376dfe701",
+    "scripts/latex-runtime/native-poppler/verify_native_v6.py": "dc78b988b5c8ee75e79226c6aa6005264935b66e880f9286cebf67ccd41a53f2",
+    "scripts/latex-runtime/native-poppler/verify_install.py": "eed986532c80a9283ea82e9a155e45c39260253420c5bf018299729b443e480b",
+    "scripts/latex-runtime/native-poppler/native_geometry.py": "8399d3432cde87c92f55771f272bad82c42b26856f3b4096fc1f76bc88249da1",
+    "scripts/latex-runtime/native-poppler/verify_consumer.py": "8d36bb9de1fcf0cf900e0d8c08c05a255b05e165bab7c40aeef28ffc6386bd1d",
+    "scripts/latex-runtime/native-poppler/abi-smoke.cc": "0dd27d2f0eb61ae224cd8feab30dbef0a4a6c96cc6f10d91a956522514f96e6e",
+    "scripts/latex-runtime/native-poppler/disable-openjpeg-packaging.diff": "345a3fd7c226c58f4035deca564bb03427585c348ccd0d1f66d53dfc2c337f0d",
+    "scripts/latex-runtime/native-poppler/changelog-proposal.diff": "42efa400ae4778029d57ee2ea93524d02fff040c1067a2d568a55a72a6c6e9dc",
+    "scripts/latex-runtime/native-poppler/series-proposal.diff": "3d530b35a8e8f1f85a4a2ac0d39940ea29ce27584f779d18b95980c7d699dee9",
+    "scripts/latex-runtime/native-poppler/patches/resumide-native-geometry-v1.patch": "b5b3f124fc2a6e08b0d732ad2312c651ce33e7fe2e1ed61dc7f7316959d31553",
+    "scripts/latex-runtime/native-poppler/provenance/trixie-main.InRelease": "0584fba32e13e0ab8285fb16c27adea1ec03a73669c18702821094fd6ca86675",
+    "scripts/latex-runtime/native-poppler/provenance/testdata-files.json": "73ba00c5f6c5a1c38320720de975dffd5c9d2ed8ba733e93e4fe4f09aa5c4a16",
+    "scripts/latex-runtime/native-poppler/inputs/poppler-testdata.tar.xz": "79a6904104e3be7640f9ce27f8cc5e5c43cdeb6a2755c911afa0e55dd10b2b90",
+    "scripts/latex-runtime/native-poppler/Dockerfile.plan-lock-v6": "0b3216adaf53b99b5f3c04263d2149ca204e1b8cdb68529e44b7f4d279b369a6",
+    "scripts/latex-runtime/native-poppler/Dockerfile.plan-lock-v6.dockerignore": "55c3f79e85e018697769843ea4fbdc44fb1580ac639b1f538dd6c713c452b9c1",
+    "scripts/latex-runtime/native-poppler/apt_transport_poppler.py": "f9b8b632348510d34a04f5ef305bb3ce4d0275ef88cb3dda1569bb80aa78275c",
+    "scripts/latex-runtime/native-poppler/dependency-plan.lock.json": "44bddc307273b684a4830b10bd5ff2d94dada706d3972dbb5b0f12597217af01",
+    "scripts/latex-runtime/native-poppler/ctest_v5.py": "8c76f1cfa6c820a021d2219b6d5d0b66be466f49013955625de7dc39e8797f67",
+    "scripts/latex-runtime/native-poppler/ctest_v5_baseline.json": "625407fe6970d4952aeac54e2ffad947f356428b91fe2e4775456205bcaf5e34",
+    "scripts/latex-runtime/verify-native-freetype.py": "544eb87e8b6a00289d26d2327f4c6d9e2fcfec5184d3e4e7fd55c2521a81a0e1",
+    "scripts/latex-runtime/native-freetype/Dockerfile.v4": "bee29191624cefacc03f6b3218a7472c2dd943ae51dff4c1e2dd91e353788018",
+    "scripts/latex-runtime/native-freetype/Dockerfile.v4.dockerignore": "bcc33cd4d9fa2c0d27119c2233856b2e2451f4bb71fd20dff26b976326042839",
+    "scripts/latex-runtime/native-freetype/pins-v3.json": "48e6f0ddb0dbf88acbba24714208005632fcf9a6e4d9a64ac99fa631aeb3c271",
+    "scripts/latex-runtime/native-freetype/prepare.py": "d14027f91fe263b649019fc42123bb9a5ec16dc22a319a5f90e36ab757918910",
+    "scripts/latex-runtime/native-freetype/build-v4.py": "8d75fd0f41cc2f12308ad351fc8fb77d46e28c7cca1065184e57b2926f6a6ad0",
+    "scripts/latex-runtime/native-freetype/budget_adapter.py": "8768a2d8167f34fe50ac3aebedc3c417fb8f3851c40d3a7d081d4aea7390401c",
+    "scripts/latex-runtime/native-freetype/abi-fonts.c": "8befb4da78db15a2f317d7cd5173847761a868c6ec0ad544e9934606470c3039",
+    "scripts/latex-runtime/native-freetype/verify_install.py": "636b48e88cd3579b20fa5e0786756ab6c930b434241feca465452f5cec9f5f9d",
+    "scripts/latex-runtime/native-freetype/install-runtime-v3.py": "de7bd821fd03a417a6eef6cccf35afc15b377e24333c36defea56cf24f24f5d2",
+    "scripts/latex-runtime/native-freetype/patches/CVE-2026-95512.patch": "a72556e95acbdb6d6156cf38e89c66f072180e17634cadbb5f861737b14e3b1e",
+    "scripts/latex-runtime/native-freetype/provenance/trixie-security.InRelease": "d0dbede32d80c3e9462e037ede87b138bdd5e44be10145acf46c9f643388836d",
+    "scripts/latex-runtime/native-freetype/provenance/budget-adapter-source-binding.json": "11373bf3b285f0e265f73316c40acf9e789290fe5d862e50883b32a354d73531"
+  },
+  "configuration": {
+    "user": "65532:65532",
+    "network": "none",
+    "memory": 536870912,
+    "memorySwap": 536870912,
+    "cpus": 2000000000,
+    "pids": 64,
+    "readOnly": true,
+    "mounts": [],
+    "security": [
+      "no-new-privileges"
+    ],
+    "logDriver": "none"
+  },
+  "limits": {
+    "sourceBytes": 49152,
+    "pdfBytes": 5242880,
+    "pages": 10,
+    "timeoutMs": 20000,
+    "concurrency": 2
+  },
+  "checks": [
+    {
+      "name": "actual-landlock-rights-and-exec",
+      "abi": 8,
+      "deniedReads": 2,
+      "approvedRead": 1,
+      "scratchWrite": 1,
+      "outsideWriteDenied": 1,
+      "shellExecDenied": 1
+    },
+    {
+      "name": "image-runtime-and-closure-binding",
+      "runtimeHashes": {
+        "landlock.c": "b2f89ef5bbe0b7af4f09c70b9b01186f29b4b2812443bd071328365dc01da62d",
+        "supervisor.py": "dc37bb22b043d5947d766776a4b09d8d390fd1a36e429289145d5393857cb559",
+        "inspect_pdf.py": "6d3a6fc67be9bd719d62c317cf7960fb6bf38aff14597c52dbf3f3249e245b5f",
+        "native_geometry.py": "8399d3432cde87c92f55771f272bad82c42b26856f3b4096fc1f76bc88249da1",
+        "build-closure.py": "dd25c526769167236927eb4fee308894e6d7e2883e3affb71990794044df187f",
+        "build-fontconfig.py": "005e348a5342057ec43901e0be1e5b5ac254165f79930be26f0ee1f077d90b3e",
+        "texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa",
+        "requirements.lock": "6c3793776e6b3c3d9a955e11b1eb2de1f192aa0990305fef4bb065f70b402261"
+      },
+      "manifestSha256": "c338372d853097590c6db2a533db45f27c01948d1a073adc3e3dcaff1189b1d7",
+      "closureFiles": 1974,
+      "snapshot": "20261106T000000Z",
+      "packagesSha256": "72a9c99d73b84d730265fac634fc6e2948f0d99da760f94c2356a8e49d0bca04",
+      "requiredStyles": {
+        "amssymb.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/amsfonts/amssymb.sty",
+          "sha256": "70838b061b56569dd3ed9f339b1bdd1c78ba185de49f27ceae331c97f48b5986"
+        },
+        "amsmath.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/amsmath/amsmath.sty",
+          "sha256": "bcb034eb1b9ba90d62b9c33bb3d20ce3c906d00ae74a9f9baef81ddf14168458"
+        },
+        "latexsym.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/base/latexsym.sty",
+          "sha256": "8ea53855692048df939608c0f0d8f723eda51b72963704bd6e7d1aa9449424b3"
+        },
+        "enumitem.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/enumitem/enumitem.sty",
+          "sha256": "628ef5b6916c682f586a066e735ceb6191e73fe3216dfb2fb4aa8e2f4c819dba"
+        },
+        "geometry.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/geometry/geometry.sty",
+          "sha256": "d5d36ad74051ad36288242b51438e2d9a5db2bd6c063b9b5704d0931fbc9f439"
+        },
+        "hyperref.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/hyperref/hyperref.sty",
+          "sha256": "cc2605545116df536759dc2fba3ce8bbe9ae02d08ebf4789a970e1ec2ae3b082"
+        },
+        "titlesec.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/titlesec/titlesec.sty",
+          "sha256": "82a440377f90231b37433ae1ab7d8b16479be7bc47f302064b53e85d70d59a39"
+        },
+        "xcolor.sty": {
+          "path": "/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty",
+          "sha256": "478888f8e8f00345fd645b6cdd6fa7db1e9efdd6f585b25c89bb3665d9029295"
+        }
+      },
+      "requiredFonts": {
+        "computerModernMetrics": {
+          "files": 1,
+          "inventorySha256": "66dc46e9a3247e36fe2a7a619e8b5fdc41311cbbf0c1cd27e29b66fcce6bbf58"
+        },
+        "computerModernType1": {
+          "files": 1,
+          "inventorySha256": "6077d37ab1c2c8093cdde317a07b5cb4ab5ead0e9810b5730012c00ca5d36702"
+        },
+        "latinModernEncodings": {
+          "files": 34,
+          "inventorySha256": "78f119a7b3256c5f513ac1be83d82179c1761c7bfabad62bb34190592752702f"
+        },
+        "latinModernMetrics": {
+          "files": 596,
+          "inventorySha256": "216e7c2d57cb0ea7a8f675ceee766f758c41ef651d734624fed22929366f5e62"
+        },
+        "latinModernOpenType": {
+          "files": 72,
+          "inventorySha256": "914bdaefdccfff85edcd85a2727348057e845b4dcf877800d50db772e02ec5ff"
+        },
+        "latinModernType1": {
+          "files": 92,
+          "inventorySha256": "5f0049f3c4b89aafcdfdb9532e7da2dcad23e47383d2f5d41d08ec5ecd0279bb"
+        }
+      },
+      "requiredRuntime": {
+        "/etc/ld.so.cache": "51838a00c9a88aca67281b45725a93868ff73999b160190b9ab6898a598afc32",
+        "/opt/latex/fontconfig/fonts.conf": "8e28bb9e8e5d792ff2c091da8dbcc1efff3d6d27d2171464fdb3229e1b61a33e",
+        "/opt/latex/texmf.cnf": "009649358cdd53aa590d041516d64b91bf155799d6ca887aa6d3a1bd8184dafa",
+        "/var/lib/texmf/web2c/xetex/xelatex.fmt": "9209cbb405ff0eaa6672b776da88edc395d46802b37a505ecd63f15ef918c8e3"
+      },
+      "requiredTransitiveFiles": {
+        "/etc/paperspecs": "d335af4a3d4a834d8b4156a8f7ae435a6463b78e83d34d774622b0aab3ae8962",
+        "/usr/share/texlive/texmf-dist/tex/latex/etoolbox/etoolbox.sty": "23e5277f81dc963963081c91b1f674055914bd2ab1b479c522ed3e747fa9d10e"
+      },
+      "engineLoaders": {
+        "/usr/bin/xetex": {
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1": "1b882eddacd494b060413a8aa4f0a4754ee3f84775e68cecbf8a86092b59cca6"
+        },
+        "/usr/bin/xdvipdfmx": {
+          "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1": "1b882eddacd494b060413a8aa4f0a4754ee3f84775e68cecbf8a86092b59cca6"
+        }
+      },
+      "fontconfig": {
+        "config": "/opt/latex/fontconfig/fonts.conf",
+        "files": {
+          "/opt/latex/fontconfig/001-10-hinting-slight.conf": "288223cec58427e07cae43fc14c2d615d16aa5e8377b715b80e94cc6b7f1f999",
+          "/opt/latex/fontconfig/002-10-scale-bitmap-fonts.conf": "b42aefbbd7bb211abf1deb9942b1fa4a42bff83cd13ce4448d04aaf4d6b8d2b3",
+          "/opt/latex/fontconfig/003-10-sub-pixel-none.conf": "c735817f005a04d95a42ee68b957649275024944eb102c0ab7fbe191fddb0e85",
+          "/opt/latex/fontconfig/004-10-yes-antialias.conf": "2ced31e0cc0ce42e15fdc1ca7fe970c01535b3a5fcf6907855945d3a2512cd9d",
+          "/opt/latex/fontconfig/005-11-lcdfilter-default.conf": "8879978bebeb63950fce4b5026abcd02e3a2a3cf9e88252d4cde7a02d0ae1cd4",
+          "/opt/latex/fontconfig/006-20-unhint-small-dejavu-lgc-sans-mono.conf": "f6b6f5ef22b1acefd8799876f95df2971ab605524b4dae0ea54f1008d12fc482",
+          "/opt/latex/fontconfig/007-20-unhint-small-dejavu-lgc-sans.conf": "f738d1f0de0b874ef2926a7be6cadb4dfc5db1032f408165378d3d0088c23b57",
+          "/opt/latex/fontconfig/008-20-unhint-small-dejavu-lgc-serif.conf": "523459fb06cc1b1cfbf83c7c87de29e6824caf398696ded21ffd8a9211055311",
+          "/opt/latex/fontconfig/009-20-unhint-small-dejavu-sans-mono.conf": "c23c54cb20c34ab32faafd11445ffda6663129000a7f76ead0e007068363eab2",
+          "/opt/latex/fontconfig/010-20-unhint-small-dejavu-sans.conf": "94339aeb5bb7e8d09cd4ce76cf3bf4ac51e98344a5bf6c9a1d525a0edd1101a7",
+          "/opt/latex/fontconfig/011-20-unhint-small-dejavu-serif.conf": "dcf65c731db743bae5faf296f9f0325a0a2cdb12fc408f41fb21d7fcb7720f55",
+          "/opt/latex/fontconfig/012-20-unhint-small-vera.conf": "e311f4fd5410423cad0be413e9dc60b086a8d6dda70fa71b92f1ed6da8c80d9f",
+          "/opt/latex/fontconfig/013-30-metric-aliases.conf": "8c5daf7430b284d9908151340b22938a62e806a1e3b9939b419a4a2a72eeadb8",
+          "/opt/latex/fontconfig/014-40-nonlatin.conf": "b4bcf965ebedf5d20aba7e2ff26e2145cbf3eeb19a175f6ddf9c31c38e773e1a",
+          "/opt/latex/fontconfig/015-45-generic.conf": "36b7d99e93529f20ee1b05f5480d6106fe25133f7ea80cafa828d3b186a3cdd5",
+          "/opt/latex/fontconfig/016-45-latin.conf": "e4383b4abe3652b2c8a3417debe91cff81a781b70ee3468e965340f18a9fb4d4",
+          "/opt/latex/fontconfig/017-48-spacing.conf": "018613d8989c350c01ebb05aca656aaea664d9073127b342c214745e32790fe8",
+          "/opt/latex/fontconfig/018-49-sansserif.conf": "ca11efcfe41e229227f1a469614e90a113ad0e98167f68ce5e639a58e790c766",
+          "/opt/latex/fontconfig/019-50-user.conf": "f37fe100e000c163a01f3aa1f4c08c361429c79ccf02365451e41ff7b8e896be",
+          "/opt/latex/fontconfig/020-51-local.conf": "9ece60f1616084ae0c92a93f36831969d78cdf0c11db64d6e6d0a02804b89b02",
+          "/opt/latex/fontconfig/021-57-dejavu-sans-mono.conf": "7d3e007092ae66fdf664c28bf0ae7f2f737da87f2d3dd80d9343414beb024f16",
+          "/opt/latex/fontconfig/022-57-dejavu-sans.conf": "3f176d95a37001501ebfd5a15ea4eb53a14c278e6cdd1d6d20c7aa23a3cf541b",
+          "/opt/latex/fontconfig/023-57-dejavu-serif.conf": "6d32e02469ec0ed5d0aa3e8a984867dfaf781bf8d4bc279c0c50471e31c8d375",
+          "/opt/latex/fontconfig/024-58-dejavu-lgc-sans-mono.conf": "b15884ec6383031b6716f3a1ccc9a6ea088dbb69b355735f5310af0a4decb202",
+          "/opt/latex/fontconfig/025-58-dejavu-lgc-sans.conf": "8a9005adcda31a73b07c782dbf0804fdeb18a5a6ff8ef16c3a2272971bf97bd2",
+          "/opt/latex/fontconfig/026-58-dejavu-lgc-serif.conf": "aac9d359cd62f997c453b108d70bedb24382b95e135b865e0c69968d718ef9a2",
+          "/opt/latex/fontconfig/027-60-generic.conf": "ca04e98e1d5d42be490d258c17d9ac5621a0b838c1a3250a4e7707031aa07bd7",
+          "/opt/latex/fontconfig/028-60-latin.conf": "d019155b1bef9d2911f2aa21eba025eeae70ea290a5ef5e3929880fd76193195",
+          "/opt/latex/fontconfig/029-65-fonts-lmodern.conf": "a288ed03176f3f719639287daf71c2e39cbd279658f47bb1a4275d87d3b6cbae",
+          "/opt/latex/fontconfig/030-65-fonts-persian.conf": "0c2d0104cf804060c095f6d7448d3cd5417baaa23339ca992090a8deffa21f77",
+          "/opt/latex/fontconfig/031-65-nonlatin.conf": "85b31e6b14e70c5726af8c465a65762ae8efeb6a139babd9882f56922eb36119",
+          "/opt/latex/fontconfig/032-69-unifont.conf": "96a5cc3a8c44f5ced5e5c9ef9d2de9562bece71840635c19bcf35a4bc1f36f83",
+          "/opt/latex/fontconfig/033-70-no-bitmaps-except-emoji.conf": "a904be7017c45c3d0e37c92570b384561164b8152cb7a0f685df64a8e8486439",
+          "/opt/latex/fontconfig/034-80-delicious.conf": "aef89a364b1bb356980e3869d9da24f7d20d752ee1b2a474e0a99494afcd1e30",
+          "/opt/latex/fontconfig/035-90-synthetic.conf": "b0b4df292e9778bc8f44bbf72a266930f22ee673e5887eb102d33a01d74b71ea",
+          "/opt/latex/fontconfig/fonts.conf": "8e28bb9e8e5d792ff2c091da8dbcc1efff3d6d27d2171464fdb3229e1b61a33e"
+        },
+        "fontReadPermissionsAdded": false,
+        "missingOptionalIncludes": [
+          {
+            "resolvedPath": "/etc/fonts/local.conf",
+            "source": "/etc/fonts/conf.d/51-local.conf",
+            "value": "local.conf"
+          }
+        ],
+        "policy": "latex-fontconfig/1.0.0",
+        "removedUserEntries": [
+          {
+            "attributes": {
+              "prefix": "xdg"
+            },
+            "index": 5,
+            "reason": "HOME/XDG/user path",
+            "source": "/etc/fonts/fonts.conf",
+            "tag": "dir",
+            "value": "fonts"
+          },
+          {
+            "attributes": {},
+            "index": 7,
+            "reason": "HOME/XDG/user path",
+            "source": "/etc/fonts/fonts.conf",
+            "tag": "dir",
+            "value": "~/.fonts"
+          },
+          {
+            "attributes": {
+              "ignore_missing": "yes",
+              "prefix": "xdg"
+            },
+            "index": 2,
+            "reason": "HOME/XDG/user path",
+            "source": "/etc/fonts/conf.d/50-user.conf",
+            "tag": "include",
+            "value": "fontconfig/conf.d"
+          },
+          {
+            "attributes": {
+              "ignore_missing": "yes",
+              "prefix": "xdg"
+            },
+            "index": 3,
+            "reason": "HOME/XDG/user path",
+            "source": "/etc/fonts/conf.d/50-user.conf",
+            "tag": "include",
+            "value": "fontconfig/fonts.conf"
+          },
+          {
+            "attributes": {
+              "deprecated": "yes",
+              "ignore_missing": "yes"
+            },
+            "index": 5,
+            "reason": "HOME/XDG/user path",
+            "source": "/etc/fonts/conf.d/50-user.conf",
+            "tag": "include",
+            "value": "~/.fonts.conf.d"
+          },
+          {
+            "attributes": {
+              "deprecated": "yes",
+              "ignore_missing": "yes"
+            },
+            "index": 6,
+            "reason": "HOME/XDG/user path",
+            "source": "/etc/fonts/conf.d/50-user.conf",
+            "tag": "include",
+            "value": "~/.fonts.conf"
+          },
+          {
+            "attributes": {
+              "prefix": "xdg"
+            },
+            "index": 23,
+            "reason": "HOME/XDG/user path",
+            "source": "/etc/fonts/fonts.conf",
+            "tag": "cachedir",
+            "value": "fontconfig"
+          },
+          {
+            "attributes": {},
+            "index": 25,
+            "reason": "HOME/XDG/user path",
+            "source": "/etc/fonts/fonts.conf",
+            "tag": "cachedir",
+            "value": "~/.fontconfig"
+          }
+        ],
+        "searchPath": "/opt/latex/fontconfig",
+        "sourceOrder": [
+          {
+            "output": "/opt/latex/fontconfig/fonts.conf",
+            "path": "/etc/fonts/fonts.conf",
+            "resolvedPath": "/etc/fonts/fonts.conf",
+            "sha256": "93a23ba073996edb8b42d6c89ebc2ec5fd2101ce82cb65ba0db358dabf55ca22"
+          },
+          {
+            "output": "/opt/latex/fontconfig/001-10-hinting-slight.conf",
+            "path": "/etc/fonts/conf.d/10-hinting-slight.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/10-hinting-slight.conf",
+            "sha256": "d138eca2bac3f78d45ff7cfb649ad792caa4a6e61f73cea7cf0ea54b091f1ef4"
+          },
+          {
+            "output": "/opt/latex/fontconfig/002-10-scale-bitmap-fonts.conf",
+            "path": "/etc/fonts/conf.d/10-scale-bitmap-fonts.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/10-scale-bitmap-fonts.conf",
+            "sha256": "df8e99abb6f82384c61978906a45a95794940545da95790d87f01d9391e0894b"
+          },
+          {
+            "output": "/opt/latex/fontconfig/003-10-sub-pixel-none.conf",
+            "path": "/etc/fonts/conf.d/10-sub-pixel-none.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/10-sub-pixel-none.conf",
+            "sha256": "0f00b5cf0ce07062ec65b9b340aa888f6c5fbc215aafebd26781be2d5a13ff6a"
+          },
+          {
+            "output": "/opt/latex/fontconfig/004-10-yes-antialias.conf",
+            "path": "/etc/fonts/conf.d/10-yes-antialias.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/10-yes-antialias.conf",
+            "sha256": "e6d82a642d1b37f7d24dc37f938b999f00ff7aa4303b2602d04164d53f221005"
+          },
+          {
+            "output": "/opt/latex/fontconfig/005-11-lcdfilter-default.conf",
+            "path": "/etc/fonts/conf.d/11-lcdfilter-default.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/11-lcdfilter-default.conf",
+            "sha256": "76aec9d8dac48faabe1bbde9e887cfb09fa45f30be5f8826e945a394a0097e48"
+          },
+          {
+            "output": "/opt/latex/fontconfig/006-20-unhint-small-dejavu-lgc-sans-mono.conf",
+            "path": "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans-mono.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/20-unhint-small-dejavu-lgc-sans-mono.conf",
+            "sha256": "0a6b0f1c1f5d1c06a811b517a3d2690700bba8e961cd55dd2c7648cde3605a21"
+          },
+          {
+            "output": "/opt/latex/fontconfig/007-20-unhint-small-dejavu-lgc-sans.conf",
+            "path": "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/20-unhint-small-dejavu-lgc-sans.conf",
+            "sha256": "144619057c0a040de247c74cf09f230d737b9c1c534f3ba8804fdd3ddeded8b0"
+          },
+          {
+            "output": "/opt/latex/fontconfig/008-20-unhint-small-dejavu-lgc-serif.conf",
+            "path": "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-serif.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/20-unhint-small-dejavu-lgc-serif.conf",
+            "sha256": "977c24eb43f10d21263bbdb624649e5edf63147bd7bb4f84db97ce7d53bb9054"
+          },
+          {
+            "output": "/opt/latex/fontconfig/009-20-unhint-small-dejavu-sans-mono.conf",
+            "path": "/etc/fonts/conf.d/20-unhint-small-dejavu-sans-mono.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/20-unhint-small-dejavu-sans-mono.conf",
+            "sha256": "3e90c9c36beef46f10d1529251f8683b9c4ac900695adbb4a23a4b6036f938a5"
+          },
+          {
+            "output": "/opt/latex/fontconfig/010-20-unhint-small-dejavu-sans.conf",
+            "path": "/etc/fonts/conf.d/20-unhint-small-dejavu-sans.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/20-unhint-small-dejavu-sans.conf",
+            "sha256": "0d9c177b6a85daa9957ed6750d4eb26122604da18d340e7ba31e6f4d24f963ed"
+          },
+          {
+            "output": "/opt/latex/fontconfig/011-20-unhint-small-dejavu-serif.conf",
+            "path": "/etc/fonts/conf.d/20-unhint-small-dejavu-serif.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/20-unhint-small-dejavu-serif.conf",
+            "sha256": "68777b1705ec7a05a86430def4be093668e84e305cc7e11291df52403a7318cc"
+          },
+          {
+            "output": "/opt/latex/fontconfig/012-20-unhint-small-vera.conf",
+            "path": "/etc/fonts/conf.d/20-unhint-small-vera.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/20-unhint-small-vera.conf",
+            "sha256": "278732c68c16177f2aa3c7e4ea318b9f720aee13a433c32eb15ba626806c609d"
+          },
+          {
+            "output": "/opt/latex/fontconfig/013-30-metric-aliases.conf",
+            "path": "/etc/fonts/conf.d/30-metric-aliases.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/30-metric-aliases.conf",
+            "sha256": "3baf25c82e1a14c606d45c212296852be06ae9795d60e84aab573226151450a2"
+          },
+          {
+            "output": "/opt/latex/fontconfig/014-40-nonlatin.conf",
+            "path": "/etc/fonts/conf.d/40-nonlatin.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/40-nonlatin.conf",
+            "sha256": "9c56aeed6490db1d29602d7f8e028742b5e7a0268eaaa60de2fde582c6403715"
+          },
+          {
+            "output": "/opt/latex/fontconfig/015-45-generic.conf",
+            "path": "/etc/fonts/conf.d/45-generic.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/45-generic.conf",
+            "sha256": "24de9f68189d544bb4cc084d9bd8f3a59d8b988a9dc44b11e9877d5add5fc948"
+          },
+          {
+            "output": "/opt/latex/fontconfig/016-45-latin.conf",
+            "path": "/etc/fonts/conf.d/45-latin.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/45-latin.conf",
+            "sha256": "807638284032d8d8f6ed8b014a0edae79a4d4f3c4e70317fdb0bfa8edd66779e"
+          },
+          {
+            "output": "/opt/latex/fontconfig/017-48-spacing.conf",
+            "path": "/etc/fonts/conf.d/48-spacing.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/48-spacing.conf",
+            "sha256": "99d839cd8aa28854e8f54f26e7200b6e57951f39f56791a0ed473662488bcef6"
+          },
+          {
+            "output": "/opt/latex/fontconfig/018-49-sansserif.conf",
+            "path": "/etc/fonts/conf.d/49-sansserif.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/49-sansserif.conf",
+            "sha256": "7849a11ce5243e8bb3d06bcad558737a8682e5122e73c8e427f4c011a2054818"
+          },
+          {
+            "output": "/opt/latex/fontconfig/019-50-user.conf",
+            "path": "/etc/fonts/conf.d/50-user.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/50-user.conf",
+            "sha256": "449137ccce57d60bca178d57519ba54e1942d757ad171f3a88cd78df2161c970"
+          },
+          {
+            "output": "/opt/latex/fontconfig/020-51-local.conf",
+            "path": "/etc/fonts/conf.d/51-local.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/51-local.conf",
+            "sha256": "dca9d917e1f66f73bfa495943b4d1eaab2d93810a51bc8e600cf4d4e9df03e67"
+          },
+          {
+            "output": "/opt/latex/fontconfig/021-57-dejavu-sans-mono.conf",
+            "path": "/etc/fonts/conf.d/57-dejavu-sans-mono.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/57-dejavu-sans-mono.conf",
+            "sha256": "1f2ead86f8203d809abfc9d88d92b04316edd67b6291795ea74ea8a0c3c2e04d"
+          },
+          {
+            "output": "/opt/latex/fontconfig/022-57-dejavu-sans.conf",
+            "path": "/etc/fonts/conf.d/57-dejavu-sans.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/57-dejavu-sans.conf",
+            "sha256": "f6285e2d336f93086acfa2ac7895ef75ef5ff34f833ba5a63c09fb2841aedc27"
+          },
+          {
+            "output": "/opt/latex/fontconfig/023-57-dejavu-serif.conf",
+            "path": "/etc/fonts/conf.d/57-dejavu-serif.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/57-dejavu-serif.conf",
+            "sha256": "7c596f7e202090ded38fded904c4a17d5a189b6c9cc914a2e88554116f6474ca"
+          },
+          {
+            "output": "/opt/latex/fontconfig/024-58-dejavu-lgc-sans-mono.conf",
+            "path": "/etc/fonts/conf.d/58-dejavu-lgc-sans-mono.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/58-dejavu-lgc-sans-mono.conf",
+            "sha256": "807e5222c6d11a72ad527ebc088f42daf2a807e7718c8f7ff227cbfecafd3d70"
+          },
+          {
+            "output": "/opt/latex/fontconfig/025-58-dejavu-lgc-sans.conf",
+            "path": "/etc/fonts/conf.d/58-dejavu-lgc-sans.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/58-dejavu-lgc-sans.conf",
+            "sha256": "ecde2093f005c73d7da21cdd7b80c791910050609db36cb5eea84a4ba8da5cef"
+          },
+          {
+            "output": "/opt/latex/fontconfig/026-58-dejavu-lgc-serif.conf",
+            "path": "/etc/fonts/conf.d/58-dejavu-lgc-serif.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/58-dejavu-lgc-serif.conf",
+            "sha256": "e685632c3edbb6868a7ca5275e7c71f25486a8cfd16113a478194a5631205619"
+          },
+          {
+            "output": "/opt/latex/fontconfig/027-60-generic.conf",
+            "path": "/etc/fonts/conf.d/60-generic.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/60-generic.conf",
+            "sha256": "195bc8605dd23289d42c10d79cc13a5ce4a4b3cf965df5b30ecc0b7149bb951f"
+          },
+          {
+            "output": "/opt/latex/fontconfig/028-60-latin.conf",
+            "path": "/etc/fonts/conf.d/60-latin.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/60-latin.conf",
+            "sha256": "2de7c687e03b1fedf9fd016aa14ed8088f52578896a73f06158dda8acd264f09"
+          },
+          {
+            "output": "/opt/latex/fontconfig/029-65-fonts-lmodern.conf",
+            "path": "/etc/fonts/conf.d/65-fonts-lmodern.conf",
+            "resolvedPath": "/etc/fonts/conf.avail/65-fonts-lmodern.conf",
+            "sha256": "dc252715b7a0e1988a895268543f2552fdc35afec39cdfd0db9d838184c1ef42"
+          },
+          {
+            "output": "/opt/latex/fontconfig/030-65-fonts-persian.conf",
+            "path": "/etc/fonts/conf.d/65-fonts-persian.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/65-fonts-persian.conf",
+            "sha256": "c675fab143a3638346874798be45f51f6878ebec591b4362d83cfffb828ec4ca"
+          },
+          {
+            "output": "/opt/latex/fontconfig/031-65-nonlatin.conf",
+            "path": "/etc/fonts/conf.d/65-nonlatin.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/65-nonlatin.conf",
+            "sha256": "e309e38d7fb47cc3f639f4313b19e72c9be4d1f2db92d7d892ea65bfdd0cbd30"
+          },
+          {
+            "output": "/opt/latex/fontconfig/032-69-unifont.conf",
+            "path": "/etc/fonts/conf.d/69-unifont.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/69-unifont.conf",
+            "sha256": "fa97c0cf5f79d70e2dc3dc48155d4c9220cd7c6a8bc95b89c4ebcc517f97479e"
+          },
+          {
+            "output": "/opt/latex/fontconfig/033-70-no-bitmaps-except-emoji.conf",
+            "path": "/etc/fonts/conf.d/70-no-bitmaps-except-emoji.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/70-no-bitmaps-except-emoji.conf",
+            "sha256": "bb5df65896bf3011b2f2935b63ab12db1ecf078674ff73a533123445f122a92b"
+          },
+          {
+            "output": "/opt/latex/fontconfig/034-80-delicious.conf",
+            "path": "/etc/fonts/conf.d/80-delicious.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/80-delicious.conf",
+            "sha256": "34f27b7fe9cd83b2b6d46f16ef9c477412f2d7ef63634f86b9b38b79bc4f81ad"
+          },
+          {
+            "output": "/opt/latex/fontconfig/035-90-synthetic.conf",
+            "path": "/etc/fonts/conf.d/90-synthetic.conf",
+            "resolvedPath": "/usr/share/fontconfig/conf.avail/90-synthetic.conf",
+            "sha256": "cdd0aac7840c664a7127b64db66bdfe8dc22be3774d10bc22f4a41c98de5d85e"
+          }
+        ]
+      }
+    },
+    {
+      "name": "native-expat-and-reviewed-package-purge",
+      "pinsSha256": "1b67434115d44f1f3f37692683059b9ea6a8a7601143c2892a7e5bc341d7eb6a",
+      "metadataHashes": {
+        "source-and-test-receipt.json": "b129a1e379211993415fb294d0df596d3b329f9032fb959cbc27428fe00eca35",
+        "build-outcome.json": "f69147ca345d7e65f2385ad2a5e061feeeb6e61563dd365040a61f3d415fe315",
+        "installed-package.json": "1592625ac7f92e0489646fa2cf32898cf7d03fad4f900a65d51a229c2438918b"
+      },
+      "version": "2.10.0-1~deb13u1+resumide1",
+      "nativeVersion": "expat_2.10.0",
+      "libraries": {
+        "libexpat.so.1": {
+          "path": "/usr/lib/aarch64-linux-gnu/libexpat.so.1.13.1",
+          "sha256": "412785950405602c14248340928f1b088244007ba842e691d3b2425ca391998a"
+        },
+        "libexpatw.so.1": {
+          "path": "/usr/lib/aarch64-linux-gnu/libexpatw.so.1.13.1",
+          "sha256": "b8267c1766f21a681a0cae9794b2e36630bd34ee54a35962805ffd7c74ff9c87"
+        }
+      },
+      "upstreamChecks": {
+        "build": {
+          "summaryRecords": 1,
+          "checks": 5328,
+          "failures": 0,
+          "logSha256": "a98e99d858103067df7f14ee2d14961ba47cab7e9b963e8f5f53bb55079915d0"
+        },
+        "buildw": {
+          "summaryRecords": 1,
+          "checks": 5328,
+          "failures": 0,
+          "logSha256": "a98e99d858103067df7f14ee2d14961ba47cab7e9b963e8f5f53bb55079915d0"
+        }
+      },
+      "testAdapterSha256": "63e11268ce40526c1b71cf0851e0f00a1bb2c5ced3a49648f0f70ad2faf82bb6",
+      "freshBuildConsumerVerified": true,
+      "currentMappedLibraryVerified": true,
+      "removed": [
+        "dirmngr",
+        "gnupg",
+        "gnupg-l10n",
+        "gpg-agent",
+        "gpgsm",
+        "mount"
+      ],
+      "retained": {
+        "login": "1:4.16.0-2+really2.41.5-0+deb13u1",
+        "gpg": "2.4.7-21+deb13u1+b5",
+        "gpgconf": "2.4.7-21+deb13u1+b5",
+        "libgpgme11t64": "1.24.2-3",
+        "libgpgmepp6t64": "1.24.2-3",
+        "libpoppler147": "25.03.0-5+deb13u4+resumide1",
+        "poppler-utils": "25.03.0-5+deb13u4+resumide1"
+      },
+      "unresolved": [
+        "CVE-2025-66382"
+      ]
+    },
+    {
+      "name": "native-frame-provenance-and-frozen-consumer",
+      "passed": true,
+      "protocol": "RESUMIDE_BBOX/1",
+      "producerOption": "-resumide-bbox",
+      "currentPackageVersion": "25.03.0-5+deb13u4+resumide1",
+      "installedCohort": [
+        "libpoppler147",
+        "poppler-utils"
+      ],
+      "sourceVersion": "25.03.0-5+deb13u4",
+      "metadataSha256": {
+        "source-and-test-receipt.json": "67fae3e10fac94b768a1aaa7ac3c086040636ffc831e817f93f3e8537fde1b7a",
+        "build-outcome.json": "a9f29eda2d208e02b081e071b4d9c2a19f9a2bd663693cfda92da7558ab615ba",
+        "install-verification.json": "7c84a33e82919632131f763a5f0641c68eb22d353e36246efac46d9abddd136d",
+        "candidate-signature-binding.json": "117726ac4299d004e1578a342feb9f41c687e98a9803bf3de4c4dfbdb87b2644",
+        "pins.json": "2bb3f7c717b2aaad314d2680700529a6da985d35542ac93ea934d65fbad9e923"
+      },
+      "installedElfHashes": {
+        "usr/bin/pdfattach": "ef0a9c3f91140572a6882b2bed9da0deb04793439316c03eff82445924aa6f6d",
+        "usr/bin/pdfdetach": "bb0b7afe5003b85c3e5a6f3af899325fd7c4d8b535826e5c3d49cca63e32813f",
+        "usr/bin/pdffonts": "e561ac1d3ec532373e87b0f4335c24dc778be7a1027198663997ac17a83f733b",
+        "usr/bin/pdfimages": "2bfb11f356ef1a3cfe548e7cc41542280c300c41b6869aef9c7bdb595e708a70",
+        "usr/bin/pdfinfo": "9e05f4854079fc6beb9510d77a55dfc0c289a370a612e6b98b55bf8b9c343108",
+        "usr/bin/pdfseparate": "89924a538e16c70ea442336c7f8347aa2a260786980608e114432666dd66733e",
+        "usr/bin/pdfsig": "de48ae57930220565d40d3505e6e01795f0441105a420c488f0ab7bf9c424a20",
+        "usr/bin/pdftocairo": "65f19033c69bf908f57cdb185747b3c803970c020222101f3e40a4c3b15bea89",
+        "usr/bin/pdftohtml": "500fc4f048784d79f81062d3652a107e86d56274094c987dcf8965b006c829ef",
+        "usr/bin/pdftoppm": "55b02f4edb32e98344bbe3b89dd86c17dcf9578a585afb8bda44210a07f4fee1",
+        "usr/bin/pdftops": "9a043429cdb8c360efa3659ef5c754ab0afc7d6af2a34f63cb2bdcd9c2491628",
+        "usr/bin/pdftotext": "ab4f361acc35210371eeecb2a11ee45487f143f39c3d0d37d998c04bb66313c5",
+        "usr/bin/pdfunite": "b68860ccf2f0a13c583ad45cad7acdf46013048fc353e4a1b36f1534cc6ab43c",
+        "usr/lib/aarch64-linux-gnu/libpoppler.so.147.0.0": "b5daf4231741a16c9c16ff64112976fd0abab4fecb7c05d941ee43fff713dca6"
+      },
+      "installedElfCount": 14,
+      "pdftotextNoOpenJpegBinding": true,
+      "supervisorFrameWiring": true,
+      "consumerSha256": "8399d3432cde87c92f55771f272bad82c42b26856f3b4096fc1f76bc88249da1",
+      "consumerSuite": {
+        "passed": true,
+        "cases": 107,
+        "testMethods": 6,
+        "consumerStable": true,
+        "suiteSha256": "8d36bb9de1fcf0cf900e0d8c08c05a255b05e165bab7c40aeef28ffc6386bd1d",
+        "consumerSha256": "8399d3432cde87c92f55771f272bad82c42b26856f3b4096fc1f76bc88249da1",
+        "receiptSha256": "629c1e9553fea67413c40f0ff1ee5335afa22c15ffb4a32f2f76b17c137d59a8",
+        "logSha256": "af09ad6f1ca1bec1a04b783277f339a8ae7694ab5cf7faa548f50913993fa8c9",
+        "originalReceiptTier": "neutral-source-prototype-only",
+        "executionContext": "actual immutable worker; unchanged frame-only neutral suite"
+      },
+      "upstream": {
+        "executed": 71,
+        "passed": 70,
+        "failed": 1,
+        "actualCtestExitCode": 8,
+        "allNativeTestsPassed": false,
+        "qtCompleteClasses": 56,
+        "engineeringException": {
+          "id": "E010",
+          "scope": "private engineering only; not release acceptance",
+          "class": "check_qt6_signature_basics",
+          "method": "testPgp",
+          "backend": "gpg",
+          "sourceLine": 311,
+          "actualSigner": "",
+          "expectedSigner": "Sune Vuorela",
+          "originalTestStillFailed": true,
+          "sourceOrKeyOrClockChanged": false,
+          "unexecutedLaterAssertionLines": [
+            312,
+            313,
+            314,
+            315
+          ],
+          "pgpVerificationDisabledClaim": false,
+          "baselineOnlyRemovedLibrary": {
+            "path": "/usr/lib/aarch64-linux-gnu/libopenjp2.so.2.5.3",
+            "sha256": "4aef3d9074095224e3fe50176cdd3a72390ab7d134ccd1d05c7ea4b30dcfee7d"
+          }
+        },
+        "junitSha256": "a70a24fbdbe04670352b7f30a4ed3170031f0f122caaaa7c756297c54be3e5d8"
+      },
+      "installedMetadataSha256": "ceabe69a3abc7633df57d8255a7151f49329977830ad921a4c05e92ccfe62db1",
+      "runtimeInstallVerifierSha256": "915c35260f1a226a96ab19984f7d4ed9971dc438764c3e3f7ae08e85da09d30f",
+      "samePdfNativeFixtures": 7,
+      "nativeAbiExports": 2716,
+      "pdfInputsGenerated": false,
+      "pdfNativeDecodingRequested": false,
+      "sourceBuildsRequested": false,
+      "temporaryFilesRemoved": true,
+      "durationMs": 343
+    },
+    {
+      "name": "native-freetype-source-abi-font-and-mapped-library",
+      "passed": true,
+      "sourceVersion": "2.13.3+dfsg-1+deb13u1",
+      "packageVersion": "2.13.3+dfsg-1+deb13u1+resumide1",
+      "runtimeCohort": [
+        "libfreetype6"
+      ],
+      "pinsSha256": "48e6f0ddb0dbf88acbba24714208005632fcf9a6e4d9a64ac99fa631aeb3c271",
+      "installerSha256": "de7bd821fd03a417a6eef6cccf35afc15b377e24333c36defea56cf24f24f5d2",
+      "patchSha256": "a72556e95acbdb6d6156cf38e89c66f072180e17634cadbb5f861737b14e3b1e",
+      "metadataSha256": {
+        "pins.json": "48e6f0ddb0dbf88acbba24714208005632fcf9a6e4d9a64ac99fa631aeb3c271",
+        "source-and-test-receipt.json": "27194f4c3f3455dd655a7582f50210aa9e940c484c4982576e57c197262e5591",
+        "build-outcome.json": "4a0e095a9d75af584ada49e3e82c81ea7f6f4007d0692ba47d6163252f9736cb",
+        "install-verification.json": "6a6e19dc82a4e0664484a2f7337ef5eee3e8c3356fce037aabf8b0c78bc94318",
+        "installed-package.json": "994cdddf8333e7e28755b937d6c269edf6899e591ecf9837df5c90bf1e50b094"
+      },
+      "runtimeLibrarySha256": "eab220e08a609b989d86d98f7b1c97ea24277fd2012f7c73093fbadca1398ead",
+      "xetexMapping": {
+        "actualExecutable": "/usr/bin/xetex",
+        "mappedLibrary": "/usr/lib/aarch64-linux-gnu/libfreetype.so.6.20.2",
+        "mappedLibrarySha256": "eab220e08a609b989d86d98f7b1c97ea24277fd2012f7c73093fbadca1398ead",
+        "inputBytesSent": 0,
+        "fontOrPdfInputProvided": false,
+        "ownedProcessStopped": true,
+        "ownedProcessGroupAbsent": true
+      },
+      "nativeAbiExports": 220,
+      "knownFontCases": 2,
+      "literalBudgetComparativeControls": 5,
+      "oldHeaderDynamicProof": true,
+      "postBuildCidSha256": "ca5b9411a9f617db795a432cada72032e2fcf7c89947095f1697c8689963b2ab",
+      "originalFreshSdkDynamicAndStaticProof": true,
+      "upstreamMeson": {
+        "status": "NOT_RUN_EXTERNAL_FONT_UNAVAILABLE",
+        "registeredTests": 1,
+        "originalDisabledByDefault": true,
+        "fixture": "As.I.Lay.Dying.ttf",
+        "fixtureFetchedOrSubstituted": false
+      },
+      "actualCveFontReproduction": "not-run; unavailable and no new font fixture authorized",
+      "fullUpstreamSuitePassedClaim": false,
+      "newFontOrPdfInputProvided": false,
+      "durationMs": 170
+    },
+    {
+      "name": "sealed-fontconfig-user-canary",
+      "nativeMatches": 40,
+      "allNativeMatchesPreserved": true,
+      "positiveUserCanaryChangedControl": true,
+      "sealedCanaryUnchanged": true,
+      "configFiles": [
+        "/opt/latex/fontconfig/fonts.conf",
+        "/opt/latex/fontconfig/001-10-hinting-slight.conf",
+        "/opt/latex/fontconfig/002-10-scale-bitmap-fonts.conf",
+        "/opt/latex/fontconfig/003-10-sub-pixel-none.conf",
+        "/opt/latex/fontconfig/004-10-yes-antialias.conf",
+        "/opt/latex/fontconfig/005-11-lcdfilter-default.conf",
+        "/opt/latex/fontconfig/006-20-unhint-small-dejavu-lgc-sans-mono.conf",
+        "/opt/latex/fontconfig/007-20-unhint-small-dejavu-lgc-sans.conf",
+        "/opt/latex/fontconfig/008-20-unhint-small-dejavu-lgc-serif.conf",
+        "/opt/latex/fontconfig/009-20-unhint-small-dejavu-sans-mono.conf",
+        "/opt/latex/fontconfig/010-20-unhint-small-dejavu-sans.conf",
+        "/opt/latex/fontconfig/011-20-unhint-small-dejavu-serif.conf",
+        "/opt/latex/fontconfig/012-20-unhint-small-vera.conf",
+        "/opt/latex/fontconfig/013-30-metric-aliases.conf",
+        "/opt/latex/fontconfig/014-40-nonlatin.conf",
+        "/opt/latex/fontconfig/015-45-generic.conf",
+        "/opt/latex/fontconfig/016-45-latin.conf",
+        "/opt/latex/fontconfig/017-48-spacing.conf",
+        "/opt/latex/fontconfig/018-49-sansserif.conf",
+        "/opt/latex/fontconfig/019-50-user.conf",
+        "/opt/latex/fontconfig/020-51-local.conf",
+        "/opt/latex/fontconfig/021-57-dejavu-sans-mono.conf",
+        "/opt/latex/fontconfig/022-57-dejavu-sans.conf",
+        "/opt/latex/fontconfig/023-57-dejavu-serif.conf",
+        "/opt/latex/fontconfig/024-58-dejavu-lgc-sans-mono.conf",
+        "/opt/latex/fontconfig/025-58-dejavu-lgc-sans.conf",
+        "/opt/latex/fontconfig/026-58-dejavu-lgc-serif.conf",
+        "/opt/latex/fontconfig/027-60-generic.conf",
+        "/opt/latex/fontconfig/028-60-latin.conf",
+        "/opt/latex/fontconfig/029-65-fonts-lmodern.conf",
+        "/opt/latex/fontconfig/030-65-fonts-persian.conf",
+        "/opt/latex/fontconfig/031-65-nonlatin.conf",
+        "/opt/latex/fontconfig/032-69-unifont.conf",
+        "/opt/latex/fontconfig/033-70-no-bitmaps-except-emoji.conf",
+        "/opt/latex/fontconfig/034-80-delicious.conf",
+        "/opt/latex/fontconfig/035-90-synthetic.conf"
+      ],
+      "fontDirs": [
+        "/usr/share/fonts",
+        "/usr/local/share/fonts",
+        "/usr/share/texmf/fonts/opentype/public/lm",
+        "/usr/share/texmf/fonts/opentype/public/lm-math",
+        "/usr/share/fonts/X11",
+        "/usr/share/fonts/truetype",
+        "/usr/share/fonts/type1",
+        "/usr/share/fonts/X11/Type1",
+        "/usr/share/fonts/X11/encodings",
+        "/usr/share/fonts/X11/util",
+        "/usr/share/fonts/truetype/dejavu",
+        "/usr/share/fonts/type1/texlive-fonts-recommended",
+        "/usr/share/fonts/X11/encodings/large"
+      ],
+      "cacheDirs": [
+        "/var/cache/fontconfig"
+      ],
+      "matchesSha256": "c31c5021c5ac17764c2ac72709e5f9104f76d6696677f072448c918877473348",
+      "scope": "Trusted native-library canary inside hardened worker; production Landlock engine probes remain separate"
+    },
+    {
+      "name": "fontconfig-failure-branch-immutable-home",
+      "probeSha256": "9757360e4346be68fbd544afdaab05983621b5af938dc18abc35f6dc3dc37940",
+      "actualHome": "/opt/latex/home",
+      "actualHomeFailureConfigFiles": [
+        "/etc/fonts/conf.d",
+        "/etc/fonts/conf.d/10-hinting-slight.conf",
+        "/etc/fonts/conf.d/10-scale-bitmap-fonts.conf",
+        "/etc/fonts/conf.d/10-sub-pixel-none.conf",
+        "/etc/fonts/conf.d/10-yes-antialias.conf",
+        "/etc/fonts/conf.d/11-lcdfilter-default.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans-mono.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-serif.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-sans-mono.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-sans.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-serif.conf",
+        "/etc/fonts/conf.d/20-unhint-small-vera.conf",
+        "/etc/fonts/conf.d/30-metric-aliases.conf",
+        "/etc/fonts/conf.d/40-nonlatin.conf",
+        "/etc/fonts/conf.d/45-generic.conf",
+        "/etc/fonts/conf.d/45-latin.conf",
+        "/etc/fonts/conf.d/48-spacing.conf",
+        "/etc/fonts/conf.d/49-sansserif.conf",
+        "/etc/fonts/conf.d/50-user.conf",
+        "/etc/fonts/conf.d/51-local.conf",
+        "/etc/fonts/conf.d/57-dejavu-sans-mono.conf",
+        "/etc/fonts/conf.d/57-dejavu-sans.conf",
+        "/etc/fonts/conf.d/57-dejavu-serif.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-sans-mono.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-sans.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-serif.conf",
+        "/etc/fonts/conf.d/60-generic.conf",
+        "/etc/fonts/conf.d/60-latin.conf",
+        "/etc/fonts/conf.d/65-fonts-lmodern.conf",
+        "/etc/fonts/conf.d/65-fonts-persian.conf",
+        "/etc/fonts/conf.d/65-nonlatin.conf",
+        "/etc/fonts/conf.d/69-unifont.conf",
+        "/etc/fonts/conf.d/70-no-bitmaps-except-emoji.conf",
+        "/etc/fonts/conf.d/80-delicious.conf",
+        "/etc/fonts/conf.d/90-synthetic.conf"
+      ],
+      "actualHomeFailureConsumedCanary": false,
+      "actualHomeFailureNoCandidateXml": true,
+      "canaryRemoved": true,
+      "immutableHomeMetadata": {
+        "empty": true,
+        "gid": 0,
+        "mode": "0o555",
+        "uid": 0
+      },
+      "ordinary40MatchesPreserved": true,
+      "ordinaryMatchesSha256": "c31c5021c5ac17764c2ac72709e5f9104f76d6696677f072448c918877473348",
+      "ordinarySealedDirectoriesPreserved": true,
+      "ordinarySealedFilesPreserved": true,
+      "ordinarySealedMatches": 40,
+      "passed": true,
+      "productionSourceHomeFixed": true,
+      "proposedHomeFailureConfigFiles": [
+        "/etc/fonts/conf.d",
+        "/etc/fonts/conf.d/10-hinting-slight.conf",
+        "/etc/fonts/conf.d/10-scale-bitmap-fonts.conf",
+        "/etc/fonts/conf.d/10-sub-pixel-none.conf",
+        "/etc/fonts/conf.d/10-yes-antialias.conf",
+        "/etc/fonts/conf.d/11-lcdfilter-default.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans-mono.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-serif.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-sans-mono.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-sans.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-serif.conf",
+        "/etc/fonts/conf.d/20-unhint-small-vera.conf",
+        "/etc/fonts/conf.d/30-metric-aliases.conf",
+        "/etc/fonts/conf.d/40-nonlatin.conf",
+        "/etc/fonts/conf.d/45-generic.conf",
+        "/etc/fonts/conf.d/45-latin.conf",
+        "/etc/fonts/conf.d/48-spacing.conf",
+        "/etc/fonts/conf.d/49-sansserif.conf",
+        "/etc/fonts/conf.d/50-user.conf",
+        "/etc/fonts/conf.d/51-local.conf",
+        "/etc/fonts/conf.d/57-dejavu-sans-mono.conf",
+        "/etc/fonts/conf.d/57-dejavu-sans.conf",
+        "/etc/fonts/conf.d/57-dejavu-serif.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-sans-mono.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-sans.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-serif.conf",
+        "/etc/fonts/conf.d/60-generic.conf",
+        "/etc/fonts/conf.d/60-latin.conf",
+        "/etc/fonts/conf.d/65-fonts-lmodern.conf",
+        "/etc/fonts/conf.d/65-fonts-persian.conf",
+        "/etc/fonts/conf.d/65-nonlatin.conf",
+        "/etc/fonts/conf.d/69-unifont.conf",
+        "/etc/fonts/conf.d/70-no-bitmaps-except-emoji.conf",
+        "/etc/fonts/conf.d/80-delicious.conf",
+        "/etc/fonts/conf.d/90-synthetic.conf"
+      ],
+      "proposedHomeFailureNoCandidateXml": true,
+      "scope": "Benign native config-load failure branch; not OOM, hostile-TeX mkdir or unknown-CVE reproduction",
+      "sealedXmlHashesStable": true,
+      "writableFailureControlConsumedCanary": true
+    },
+    {
+      "name": "maintained-parser-and-no-runtime-build-tools",
+      "parser": "pypdf",
+      "version": "6.21.4",
+      "legacyParserPresent": false,
+      "buildTools": {
+        "gcc": null,
+        "cc": null,
+        "make": null
+      }
+    },
+    {
+      "name": "actual-docker-network-and-resource-limits",
+      "networkErrno": 101,
+      "openFilesLimited": true,
+      "processesLimited": true,
+      "fileLimitBytes": 8388608,
+      "memoryChildReturn": -9,
+      "cpuChildReturn": -9,
+      "cpuUserSeconds": 10,
+      "tmpfsLimited": true
+    },
+    {
+      "name": "actual-pdf-parser-active-content-and-bounds",
+      "cases": 20,
+      "failures": []
+    },
+    {
+      "name": "pdf-optional-decoder-disabled-and-context-restored",
+      "probeSha256": "a66f573877dd919d7788bd8ccfa0a955f1c520245fac8ec0c7cb76d595539ef7",
+      "cases": [
+        {
+          "case": "explicit-configuration",
+          "errorClass": "PdfReadError",
+          "incomingConfigurationRestored": true,
+          "rejected": true,
+          "subprocessAttempts": 0,
+          "temporaryDirectories": 0
+        },
+        {
+          "case": "legacy-configuration",
+          "errorClass": "PdfReadError",
+          "incomingConfigurationRestored": true,
+          "rejected": true,
+          "subprocessAttempts": 0,
+          "temporaryDirectories": 0
+        }
+      ],
+      "expectBlocked": true,
+      "externalBinaryExecuted": false,
+      "malformedBytes": 154,
+      "malformedSha256": "7d4c277d98e05af7da3e1fd56683e16b17d5710eb53194c78f4166dd54dbdb8b",
+      "neutralConfigurationRestored": true,
+      "neutralPages": 1,
+      "outerConfigurationRestored": true
+    },
+    {
+      "name": "pdf-raster-inline-image-and-font-admission",
+      "probeSha256": "0bb61b482794de3d26818c9c59c8df79285d7b8de2fae1c80d83570e6cb5ca25",
+      "cases": 49,
+      "passed": true,
+      "imageDecoderAttempts": 0,
+      "inlineScannerAttempts": 0,
+      "imageExtractionAttempts": 0,
+      "configurationRestored": true,
+      "getDataHookRestored": true,
+      "checks": [
+        {
+          "name": "ordinary-text-and-embedded-font",
+          "mustReject": false,
+          "rejected": false,
+          "pages": 1,
+          "errorClass": null,
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "valid-XRef-stream-control",
+          "mustReject": false,
+          "rejected": false,
+          "pages": 1,
+          "errorClass": null,
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {
+            "/XRef": 1
+          },
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "valid-ObjStm-control",
+          "mustReject": false,
+          "rejected": false,
+          "pages": 1,
+          "errorClass": null,
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {
+            "/XRef": 1,
+            "/ObjStm": 1
+          },
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "ordinary-Flate-text-and-font",
+          "mustReject": false,
+          "rejected": false,
+          "pages": 1,
+          "errorClass": null,
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "malformed-reader-restores-context",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "PdfReadError",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "literal-and-comment-BI-are-not-images",
+          "mustReject": false,
+          "rejected": false,
+          "pages": 1,
+          "errorClass": null,
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "ordinary-content-array-with-literal-BI",
+          "mustReject": false,
+          "rejected": false,
+          "pages": 1,
+          "errorClass": null,
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "ordinary-Type0-CID-embedded-font",
+          "mustReject": false,
+          "rejected": false,
+          "pages": 1,
+          "errorClass": null,
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "image-xobject",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "escaped-image-name",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "direct-JPX-filter",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "escaped-JPX-filter",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "array-JPX-filter",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "DCT-alias",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "CCITT-alias",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "JBIG2-filter",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "null-filter",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "string-filter",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "nested-filter-array",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "indirect-image-subtype",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "indirect-JPX-filter",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "indirect-filter-array-name",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "chained-filter-name",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": "AttributeError",
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "cyclic-filter-name",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": "AttributeError",
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "inline-page",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 1,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "inline-Form",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 1,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "inline-tiling-pattern",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 1,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "inline-BI-split-between-page-streams",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 1,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "nonstream-content-array",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "null-content-array-member",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "unsupported-annotation-appearance",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "font-resource-missing-Type",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "font-resource-mismatched-Type",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "indirect-Type3-font",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "indirect-nonlink-annotation",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "indirect-Filespec",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "fontfile-null",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "fontfile-not-stream",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "fontfile-empty",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "fontfile-decoded-empty",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "invalid-font-alternative-cannot-hide",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "Type0-missing-descendant",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "Type0-empty-descendants",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "Type0-invalid-descendant",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "Type0-multiple-descendants",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "Type0-unembedded-CID",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "decoded-font-byte-bound",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {},
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "early-XRef-raster-filter",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "PdfReadError",
+          "causeClass": "UnsafePDF",
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {
+            "/XRef": 1
+          },
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "early-ObjStm-raster-filter",
+          "mustReject": true,
+          "rejected": true,
+          "pages": null,
+          "errorClass": "UnsafePDF",
+          "causeClass": null,
+          "expectedErrorBoundary": true,
+          "imageDecoderAttempts": 0,
+          "inlineScannerAttempts": 0,
+          "imageExtractionAttempts": 0,
+          "strictInlineEntries": 0,
+          "earlyGuardStreamTypes": {
+            "/ObjStm": 1
+          },
+          "requiredBranchObserved": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        }
+      ],
+      "nativeImageOrFontDecoderExecuted": false
+    },
+    {
+      "name": "pdf-image-boundaries-mock-policy-checks",
+      "probeSha256": "f98895cfc59ad9fe22dbdbab67deb8afe150b97ed10eb92f8b6c8f22adc10089",
+      "tier": "MOCK policy-boundary checks; ordinary pypdf dictionaries only",
+      "cases": 4,
+      "passed": true,
+      "checks": [
+        {
+          "name": "parser-success-after-policy-error",
+          "mustReject": true,
+          "rejected": true,
+          "errorClass": "UnsafePDF",
+          "pages": null,
+          "mockParserCaughtPolicyThenReturnedSuccess": true,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "SMask-None-supported",
+          "mustReject": false,
+          "rejected": false,
+          "errorClass": null,
+          "pages": 1,
+          "mockParserCaughtPolicyThenReturnedSuccess": false,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "SMask-G-missing-Subtype",
+          "mustReject": true,
+          "rejected": true,
+          "errorClass": "UnsafePDF",
+          "pages": null,
+          "mockParserCaughtPolicyThenReturnedSuccess": false,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        },
+        {
+          "name": "SMask-G-valid-Form",
+          "mustReject": false,
+          "rejected": false,
+          "errorClass": null,
+          "pages": 1,
+          "mockParserCaughtPolicyThenReturnedSuccess": false,
+          "configurationRestored": true,
+          "getDataHookRestored": true,
+          "pass": true
+        }
+      ],
+      "attempts": {
+        "originalEncodedData": 0,
+        "imageDecoder": 0
+      },
+      "pdfBytesGenerated": false,
+      "realPdfReaderCalled": false,
+      "nativeDecoderExecuted": false
+    },
+    {
+      "name": "real-macro-math-layout-pdf",
+      "pages": 2,
+      "pdfBytes": 14077,
+      "pdfSha256": "d649b6b2bedbd7622f95a919e994b40ece49c1df268bc1a4c98ba07756c32926",
+      "sourceSha256": "7bb2f9d426e4bec5030315c809d823618e8ef65c876e927a26d040464f3901d0",
+      "taggedPages": 0,
+      "durationMs": 1060
+    },
+    {
+      "name": "negative-wrapper-control",
+      "pass": true
+    },
+    {
+      "name": "direct-file-read",
+      "code": "compile_failed",
+      "durationMs": 458
+    },
+    {
+      "name": "constructed-file-read",
+      "code": "compile_failed",
+      "durationMs": 448
+    },
+    {
+      "name": "outside-write",
+      "code": "compile_failed",
+      "durationMs": 458
+    },
+    {
+      "name": "unsupported-package",
+      "code": "compile_failed",
+      "durationMs": 437
+    },
+    {
+      "name": "unsafe-pdf-link",
+      "code": "output_invalid",
+      "durationMs": 651
+    },
+    {
+      "name": "unbounded-pages",
+      "code": "output_invalid",
+      "durationMs": 461
+    },
+    {
+      "name": "overfull-layout",
+      "code": "layout_overflow",
+      "durationMs": 448
+    },
+    {
+      "name": "recursive-macro",
+      "code": "compile_failed",
+      "durationMs": 10329
+    },
+    {
+      "name": "cpu-loop",
+      "code": "compile_failed",
+      "durationMs": 10345
+    },
+    {
+      "name": "production-cancel-cleanup",
+      "pass": true
+    },
+    {
+      "name": "active-production-cancellation-cleanup",
+      "pass": true
+    },
+    {
+      "name": "real-paused-worker-wall-timeout-cleanup",
+      "pass": true
+    },
+    {
+      "name": "actual-two-active-admission-and-cleanup",
+      "pass": true
+    }
+  ],
+  "checksExecuted": 28,
+  "accessibility": "Structural inspection only; assistive-technology and PDF/UA acceptance unrun",
+  "evidence": "Local synthetic engineering; no production or security-owner acceptance"
+}

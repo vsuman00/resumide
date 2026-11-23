@@ -1,0 +1,73 @@
+{
+  "id": "CR-U08-S04",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_LOCAL_HTTP_AND_CHROME_WITH_REAL_COMPILER_RETRY",
+  "before": {
+    "focusedRegressionsFailed": 3,
+    "finding": "An already-cancelled request called both buckets. A late first response could start the second bucket, delaying cancellation or admission failure until body handling."
+  },
+  "after": {
+    "focusedTestFilesPassed": 5,
+    "focusedTestsPassed": 121,
+    "sharedAdmissionTimeoutMs": 5000,
+    "sdkTransportAbortVerified": true,
+    "typecheck": "pass",
+    "check:latex:source": "pass",
+    "lint": {
+      "errors": 0,
+      "warnings": 4
+    },
+    "fixtureLint": "pass",
+    "webBuild": "pass",
+    "workerBuild": "pass"
+  },
+  "browser": {
+    "status": "build_pdf_lifecycle_verified_with_real_compiler",
+    "compilerImage": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "compilations": [
+      "77f4f8dc66cc1e103f8d7c503b1d0aba38d3ee9e7f1b9b5bb26531533d425f49",
+      "14c765c47ab01e9eb72699038538b5e15849b1df5807507fd450c6d59b9a982d",
+      "77f4f8dc66cc1e103f8d7c503b1d0aba38d3ee9e7f1b9b5bb26531533d425f49"
+    ],
+    "verifiedPdfHashes": [
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f",
+      "3ec3c5e17be268457834e91528b760dd8b1f9c206effd64040db2a4810d195f0",
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f"
+    ],
+    "rateAdmissions": 6,
+    "admissionExpiryMs": 5001,
+    "suggestionCalls": 1,
+    "compileAttempts": 6,
+    "verifiedSignInNewTabAndRetry": true,
+    "rejectedEmptyPdf": true,
+    "canvasAndTextVerified": true,
+    "verifiedBrowserZoom": true,
+    "browser": "Google Chrome",
+    "expiryHttpStatus": 503,
+    "expiryErrorCode": "runtime_unavailable",
+    "completedAdmissionsOnExpiredRequest": 0,
+    "authRateAndSuggestionBackend": "Synthetic transport through the built application and installed Supabase SDK",
+    "ownedConverterContainersRemaining": 0
+  },
+  "sourceHashes": {
+    "app/lib/server/latex-converter-service.ts": "a5622c3858bb0c25c6e5e03f0ffeca2690fd2a0283a4dd627e4d261c92e25ee9",
+    "tests/unit/latex-service.test.ts": "2aa8bc7382658167366ee34c25ae13fa0d2b3800d52eb2800fa0d7b7c9c3c3f9",
+    "scripts/verify-local-build-pdf-lifecycle.ts": "b846cde457396690601c00e11281384e987e6232b5d368bd4e2c12826b61cf68"
+  },
+  "logHashes": {
+    "before": "08b5f3d49fc4186354419f8c40bd7005d22f0174d543d29c1fce369cdf4dd6f0",
+    "tests": "893568f2b12e25261715a42f0abcfcb8e37e2ebcdd4362ee6fed941ee4bb685f",
+    "types": "b63c0de51fcb1526e23a41bde9c50d3e1af56b2b08d9bfe50e3d977251642455",
+    "source": "5c93e85bf5abf88f1aead1916a1974f59b7f3a6c62f76efdf1af2c75cfdf4c6c",
+    "web": "34763c637f42544afc41a32f94915b34938efde52707f20f99db4eeae4b19e11",
+    "worker": "0974910665619bb31567e7047118d9612e2971f36b425895e62f9f845ddeac3e",
+    "lint": "44f8e8569eab5563a615e4a095db9b679e65d71f39119c3b700b380df224aa6f",
+    "browser-lint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "chrome": "23ab54913eb4a16b0a9cdd1d2e838ebde09a239743ed25aa8bbf69a77bd33948"
+  },
+  "open": [
+    "Managed Auth, stored rate counters and live AI remain unverified in this run."
+  ]
+}

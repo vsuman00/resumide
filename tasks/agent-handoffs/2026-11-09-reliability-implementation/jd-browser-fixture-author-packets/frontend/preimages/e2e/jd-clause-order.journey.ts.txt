@@ -1,0 +1,213 @@
+import { randomUUID } from "node:crypto";
+import { isDeepStrictEqual } from "node:util";
+import { expect, test, type Page } from "@playwright/test";
+import { z } from "zod";
+import {
+  JdClauseOrderCommandSchema,
+  JdClauseOrderHttpErrorSchema,
+  JdClauseOrderHttpSuccessSchema,
+  validateClauseOrderReceipt,
+  validateClauseOrderUndoReceipt,
+} from "../app/lib/jd-clause-order-decisions";
+import {
+  clauseOrderRequestForm,
+  clauseOrderResponseBody,
+  createJdClauseOrderSession,
+  isClauseOrderResponse,
+  readJdClauseOrderState,
+} from "./jd-clause-order-session";
+
+// Dedicated config only: these are required future journeys, not executed by the
+// legacy *.spec.ts campaign. API ingestion does not test the browser upload UI.
+test.setTimeout(180_000);
+type Session = Awaited<ReturnType<typeof createJdClauseOrderSession>>;
+const review = (page: Page) => page.getByRole("region", { name: "Review clause-order decision", exact: true });
+
+async function openReview(page: Page, session: Session) {
+  const f = session.fixture;
+  const response = await page.goto(`${session.baseURL}/analysis/${f.analysisId}/score`);
+  expect(response?.status()).toBe(200);
+  expect(response?.headers()["cache-control"]).toContain("no-store");
+  const panel = review(page);
+  await expect(panel.getByLabel("Complete current wording", { exact: true })).toHaveText(f.expected.before);
+  await expect(panel.getByLabel("Complete proposed wording", { exact: true })).toHaveText(f.expected.after);
+  await expect(panel.getByLabel("Exact saved JD quote", { exact: true })).toHaveText(f.expected.jdQuote);
+  await expect(panel.getByLabel("Whole quoted source claim", { exact: true })).toHaveText(f.expected.sourceQuote);
+  await expect(panel.getByRole("list", { name: "Proposed clause order" })).toBeVisible();
+  await expect(panel.getByRole("list", { name: "Current source citations" }).getByRole("link").first()).toHaveAttribute("href", new RegExp(`^/analysis/${f.analysisId}/evidence#source-`));
+  await expect(panel.getByRole("link", { name: "Inspect the current fact and pinned version" })).toHaveAttribute("href", `/analysis/${f.analysisId}/canonical?version=${f.canonical.versionId}#fact-${f.targetFactId}`);
+  await expect(panel.getByRole("link", { name: "Inspect the saved job requirements" })).toHaveAttribute("href", `/analysis/${f.analysisId}/requirements?version=${f.requirements.versionId}`);
+  await expect(panel.getByText("Numeric score and score change: unavailable.", { exact: false })).toBeVisible();
+  await expect(panel.getByRole("checkbox")).not.toBeChecked();
+  await expect(panel.getByRole("button", { name: "Accept reviewed wording", exact: true })).toBeDisabled();
+  return panel;
+}
+
+function observedCommand(form: URLSearchParams, session: Session, operation: "accept" | "reject") {
+  expect(form.get("action")).toBe("decision");
+  expect(form.get("reviewAcknowledgement")).toBe(operation === "accept" ? "accepted" : null);
+  const raw = form.get("command");
+  if (!raw || Buffer.byteLength(raw) > 65_536) throw new Error("Observed decision command is unavailable");
+  let value: unknown;
+  try { value = JSON.parse(raw); } catch { throw new Error("Observed decision command is invalid"); }
+  const parsed = JdClauseOrderCommandSchema.safeParse(value);
+  if (!parsed.success) throw new Error("Observed decision command is invalid");
+  const c = parsed.data, f = session.fixture;
+  expect(c.operation).toBe(operation);
+  expect(c.binding.source.ownerId === f.ownerId && c.binding.source.organizationId === f.organizationId && c.binding.source.analysisId === f.analysisId && c.binding.source.resumeId === f.resumeId && c.binding.source.sourceId === f.sourceId && c.binding.source.attemptId === f.attemptId).toBe(true);
+  expect(c.binding.canonical.versionId).toBe(f.canonical.versionId);
+  expect(c.binding.canonical.revision).toBe(f.canonical.revision);
+  expect(c.binding.requirements.versionId).toBe(f.requirements.versionId);
+  expect(c.binding.requirements.revision).toBe(f.requirements.revision);
+  expect(c.target.factId).toBe(f.targetFactId);
+  expect(c.jdClauseId).toBe(f.requirements.clauseId);
+  return c;
+}
+
+async function decide(page: Page, session: Session, operation: "accept" | "reject") {
+  const panel = review(page);
+  if (operation === "accept") {
+    await panel.getByRole("checkbox").focus();
+    await page.keyboard.press("Space");
+    await expect(panel.getByRole("checkbox")).toBeChecked();
+  }
+  const responsePromise = page.waitForResponse((r) => isClauseOrderResponse(r, session.fixture.analysisId));
+  await panel.getByRole("button", { name: operation === "accept" ? "Accept reviewed wording" : "Reject this proposal", exact: true }).focus();
+  await page.keyboard.press("Enter");
+  const response = await responsePromise;
+  expect(response.status()).toBe(200);
+  expect(response.headers()["cache-control"]).toContain("no-store");
+  const command = observedCommand(clauseOrderRequestForm(response), session, operation);
+  const parsed = JdClauseOrderHttpSuccessSchema.safeParse(await clauseOrderResponseBody(response));
+  if (!parsed.success || parsed.data.kind !== "applied") throw new Error("Decision confirmation is invalid");
+  let receipt;
+  try { receipt = await validateClauseOrderReceipt(parsed.data.receipt, command); }
+  catch { throw new Error("Decision confirmation is not correlated"); }
+  expect(receipt.idempotent).toBe(false);
+  return { command, receipt };
+}
+
+test("genuine API-ingested source: keyboard accept records the owned change and guarded undo restores its original base", async ({ page, context }) => {
+  const session = await createJdClauseOrderSession(context);
+  try {
+    const f = session.fixture, before = await readJdClauseOrderState(f);
+    expect(before.head.version_id).toBe(f.canonical.versionId);
+    await openReview(page, session);
+    const { command, receipt } = await decide(page, session, "accept");
+    await expect(review(page).getByText("The exact decision was confirmed as saved.", { exact: false })).toBeVisible();
+    const saved = await readJdClauseOrderState(f);
+    expect(saved.head.version_id).toBe(receipt.versionId);
+    expect(saved.head.revision).toBe(before.head.revision + 2);
+    expect(saved.versions.length).toBe(before.versions.length + 2);
+    expect(saved.events.length).toBe(before.events.length + 1);
+    const event = saved.events.find((e) => e.id === receipt.eventId);
+    expect(event?.action).toBe("accept");
+    expect(event?.base_version_id).toBe(f.canonical.versionId);
+    expect(event?.result_version_id).toBe(receipt.versionId);
+    expect(event?.idempotency_key).toBe(command.idempotencyKey);
+    expect(isDeepStrictEqual(event?.command, command)).toBe(true);
+    expect(isDeepStrictEqual(event?.result, receipt)).toBe(true);
+    const fact = saved.current.content.facts.find((v) => v.id === f.targetFactId);
+    expect(fact?.value).toBe(f.expected.after);
+    expect(fact?.state).toBe("candidate_confirmed");
+    expect(fact?.confirmation?.actorId).toBe(f.ownerId);
+    expect(fact?.confirmation?.value).toBe(f.expected.after);
+    expect(fact?.sources.length).toBe(0);
+    const edit = saved.versions.find((v) => v.id === saved.current.parent_version_id);
+    expect(edit?.parent_version_id).toBe(f.canonical.versionId);
+    expect(edit?.revision).toBe(before.head.revision + 1);
+    expect(edit?.content.facts.find((v) => v.id === f.targetFactId)?.state).toBe("unconfirmed");
+
+    const responsePromise = page.waitForResponse((r) => isClauseOrderResponse(r, f.analysisId));
+    await page.getByRole("button", { name: "Undo this saved change", exact: true }).click();
+    const response = await responsePromise;
+    expect(response.status()).toBe(200);
+    const form = clauseOrderRequestForm(response);
+    expect(form.get("action")).toBe("undo");
+    const key = z.uuid().safeParse(form.get("idempotencyKey"));
+    if (!key.success) throw new Error("Observed undo key is invalid");
+    expect(key.data).not.toBe(command.idempotencyKey);
+    expect(form.get("receipt")).toBe(JSON.stringify(receipt));
+    const result = JdClauseOrderHttpSuccessSchema.safeParse(await clauseOrderResponseBody(response));
+    if (!result.success || result.data.kind !== "undone") throw new Error("Undo confirmation is invalid");
+    let undone;
+    try { undone = validateClauseOrderUndoReceipt(result.data.receipt, receipt, key.data); }
+    catch { throw new Error("Undo confirmation is not correlated"); }
+    await expect(page.getByText("Undo was confirmed.", { exact: false })).toBeVisible();
+    const restored = await readJdClauseOrderState(f);
+    expect(restored.head.version_id).toBe(undone.versionId);
+    expect(restored.head.revision).toBe(receipt.revision + 1);
+    expect(restored.versions.length).toBe(before.versions.length + 3);
+    expect(restored.events.length).toBe(before.events.length + 2);
+    expect(restored.current.parent_version_id).toBe(receipt.versionId);
+    expect(isDeepStrictEqual(restored.current.content.facts, before.current.content.facts)).toBe(true);
+    expect(isDeepStrictEqual(restored.current.content.sections, before.current.content.sections)).toBe(true);
+    const undoEvent = restored.events.find((e) => e.id === undone.eventId);
+    expect(undoEvent?.action).toBe("undo");
+    expect(undoEvent?.base_version_id).toBe(receipt.versionId);
+    expect(undoEvent?.result_version_id).toBe(undone.versionId);
+    expect(undoEvent?.idempotency_key).toBe(key.data);
+    const undoCommand = z.object({ action: z.literal("undo"), expectedVersionId: z.uuid(), targetVersionId: z.uuid(), idempotencyKey: z.uuid() }).safeParse(undoEvent?.command);
+    expect(undoCommand.success && undoCommand.data.expectedVersionId === receipt.versionId && undoCommand.data.targetVersionId === receipt.baseVersionId && undoCommand.data.idempotencyKey === key.data).toBe(true);
+  } finally { await session.cleanup(); }
+});
+
+test("genuine API-ingested source: rejection needs no acceptance acknowledgement and creates no canonical child", async ({ page, context }) => {
+  const session = await createJdClauseOrderSession(context);
+  try {
+    const before = await readJdClauseOrderState(session.fixture);
+    await openReview(page, session);
+    const { command, receipt } = await decide(page, session, "reject");
+    await expect(review(page).getByText("Rejection was confirmed.", { exact: false })).toBeVisible();
+    const after = await readJdClauseOrderState(session.fixture);
+    expect(isDeepStrictEqual(after.head, before.head)).toBe(true);
+    expect(isDeepStrictEqual(after.versions, before.versions)).toBe(true);
+    expect(after.events.length).toBe(before.events.length + 1);
+    const event = after.events.find((e) => e.id === receipt.eventId);
+    expect(event?.action).toBe("reject");
+    expect(event?.result_version_id).toBeNull();
+    expect(event?.base_version_id).toBe(before.head.version_id);
+    expect(event?.idempotency_key).toBe(command.idempotencyKey);
+    expect(isDeepStrictEqual(event?.command, command)).toBe(true);
+    expect(isDeepStrictEqual(event?.result, receipt)).toBe(true);
+    await expect(page.getByRole("button", { name: "Undo this saved change", exact: true })).toHaveCount(0);
+  } finally { await session.cleanup(); }
+});
+
+test("genuine API-ingested source: an original proposal refuses after a real concurrent owned confirmation without a decision child", async ({ page, context }) => {
+  const session = await createJdClauseOrderSession(context);
+  try {
+    const f = session.fixture, before = await readJdClauseOrderState(f);
+    const panel = await openReview(page, session);
+    // A separate authenticated HTTP command, not a fabricated head or local DTO.
+    // Reconfirm the actual known source fact; the current page keeps its old pair.
+    const concurrent = await context.request.post(`${session.baseURL}/analysis/${f.analysisId}/canonical`, {
+      headers: { Origin: session.baseURL },
+      form: { operation: "confirm", expectedVersionId: f.canonical.versionId, factId: f.targetFactId, idempotencyKey: randomUUID() },
+    });
+    expect(concurrent.status()).toBe(200);
+    const moved = await readJdClauseOrderState(f);
+    expect(moved.head.version_id).not.toBe(before.head.version_id);
+    expect(moved.head.revision).toBe(before.head.revision + 1);
+    expect(moved.versions.length).toBe(before.versions.length + 1);
+    expect(moved.current.content.facts.find((v) => v.id === f.targetFactId)?.confirmation?.value).toBe(f.expected.before);
+    expect(moved.events.length).toBe(before.events.length);
+    await panel.getByRole("checkbox").check();
+    const responsePromise = page.waitForResponse((r) => isClauseOrderResponse(r, f.analysisId));
+    await panel.getByRole("button", { name: "Accept reviewed wording", exact: true }).click();
+    const response = await responsePromise;
+    expect(response.status()).toBe(409);
+    const command = observedCommand(clauseOrderRequestForm(response), session, "accept");
+    const error = JdClauseOrderHttpErrorSchema.safeParse(await clauseOrderResponseBody(response));
+    expect(error.success && error.data.reason === "stale_inputs" && error.data.recovery === "review_again").toBe(true);
+    await expect(panel.getByRole("button", { name: "Retry exact acceptance", exact: true })).toBeVisible();
+    await expect(panel.getByRole("checkbox")).not.toBeChecked();
+    await expect(panel.getByLabel("Complete current wording", { exact: true })).toHaveText(f.expected.before);
+    await expect(panel.getByLabel("Complete proposed wording", { exact: true })).toHaveText(f.expected.after);
+    await expect(page.getByRole("link", { name: "Review current inputs", exact: true })).toBeVisible();
+    const after = await readJdClauseOrderState(f);
+    expect(isDeepStrictEqual(after, moved)).toBe(true);
+    expect(after.events.some((e) => e.idempotency_key === command.idempotencyKey)).toBe(false);
+    await expect(page.getByRole("button", { name: "Undo this saved change", exact: true })).toHaveCount(0);
+  } finally { await session.cleanup(); }
+});

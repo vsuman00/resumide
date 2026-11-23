@@ -1,0 +1,89 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/initial-feedback-publication-repository.test.ts (14 tests | 2 failed) 181ms
+     ✓ reads actual strict available current without inventing currentness 67ms
+     ✓ reads actual strict available historical without inventing currentness 26ms
+     ✓ retains explicit legacy_unbound and pending, not an empty assessed publication 5ms
+     ✓ refuses staged reader capability and malformed/missing full metadata before data RPC 12ms
+     ✓ correlates publication owner/org/analysis, including self-consistent foreign receipt 2ms
+     ✓ finishes exact deterministic-only and unchanged producer numbers using actual native parameter names 6ms
+     ✓ finishes an actual useful compiled plan without changing content-only support authority 26ms
+     ✓ refuses another completion or receipt binding rather than accepting nonempty saved prose 4ms
+     × refuses invalid audit/foreign operation before any mutation 6ms
+     × exports complete strict owner rows without current-org/analysis filtering or JSONB digest emulation 2ms
+     ✓ keeps empty owner export versioned and refuses missing/denied results instead of fallback 2ms
+     ✓ refuses whole export on foreign owner, incomplete member rows or duplicate publication 3ms
+     ✓ fails oversized export whole without returning a prefix 2ms
+     ✓ bounds stalled read without an ignored-abort follow-on data call 17ms
+ ❯ tests/unit/initial-feedback-service.test.ts (16 tests | 1 failed) 232ms
+     ✓ replays exact owned historical publication before authorization/quota/budget/provider 60ms
+     ✓ returns pending without constructing SDK or mutating another active attempt 28ms
+     ✓ AIoff creates honest deterministic-only with no consent/rate/quota/budget/SDK effects 13ms
+     ✓ fixed known Native claim refusal finishes pre_dispatch_unavailable without SDK 9ms
+     ✓ requires remaining quota to cover captured maximum output before dispatch 5ms
+     ✓ budgetoff over-cap output stays accounted and never becomes assessed 31ms
+     ✓ settles known usage before one actual compiler call on exact original text 20ms
+     ✓ false claim has no SDK, technical settlement, finish or generic loser mutation 4ms
+     ✓ malformed JSON with known usage preserves GenerationFailure and no fake observation 5ms
+     ✓ refused output is charged and retained as explicit failure, never supported prose 8ms
+     ✓ lost finish response is resolved through exact owned read before any storage_failed marker 13ms
+     ✓ shared unknown usage prevents dispatch with no old counter fallback 5ms
+     ✓ budgeton intercepts generic claim into actual atomic claim and debits only through R03 14ms
+     ✓ budgeton false claim never settles/releases/marks the winner or constructs transport 3ms
+     ✓ missing observed usage remains a technical unknown hold, never zero or assessed 4ms
+     × lossless reference failure keeps full generation failure and known accounting, no fake support 10ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-publication-repository.test.ts > initial-feedback publication RPC boundary (synthetic catalog/rows only) > refuses invalid audit/foreign operation before any mutation
+InitialFeedbackOperationError: Initial feedback operation is unavailable.
+ ❯ parse app/lib/server/initial-feedback-publication-repository.ts:196:9
+    194|     /* No raw decode errors. */
+    195|   }
+    196|   throw new InitialFeedbackOperationError(
+       |         ^
+    197|     submitted ? "unavailable" : "invalid",
+    198|     submitted ? "unknown" : "not_sent",
+ ❯ Object.finish app/lib/server/initial-feedback-publication-repository.ts:553:17
+ ❯ tests/unit/initial-feedback-publication-repository.test.ts:539:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/unit/initial-feedback-publication-repository.test.ts > initial-feedback publication RPC boundary (synthetic catalog/rows only) > exports complete strict owner rows without current-org/analysis filtering or JSONB digest emulation
+InitialFeedbackOperationError: Initial feedback operation is unavailable.
+ ❯ parse app/lib/server/initial-feedback-publication-repository.ts:196:9
+    194|     /* No raw decode errors. */
+    195|   }
+    196|   throw new InitialFeedbackOperationError(
+       |         ^
+    197|     submitted ? "unavailable" : "invalid",
+    198|     submitted ? "unknown" : "not_sent",
+ ❯ app/lib/server/initial-feedback-publication-repository.ts:389:23
+ ❯ run app/lib/server/initial-feedback-publication-repository.ts:345:22
+ ❯ tests/unit/initial-feedback-publication-repository.test.ts:582:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/unit/initial-feedback-service.test.ts > initial feedback service, real compiler and installed SDK/fake fetch > lossless reference failure keeps full generation failure and known accounting, no fake support
+AssertionError: expected 'schema_invalid' to be 'source_reference_invalid' // Object.is equality
+
+Expected: "source_reference_invalid"
+Received: "schema_invalid"
+
+ ❯ tests/unit/initial-feedback-service.test.ts:825:60
+    823|     ];
+    824|     await h.run();
+    825|     expect(h.state.publication?.generationFailure?.reason).toBe(
+       |                                                            ^
+    826|       "source_reference_invalid",
+    827|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  3 failed | 27 passed (30)
+   Start at  14:12:36
+   Duration  804ms (transform 463ms, setup 0ms, import 828ms, tests 412ms, environment 0ms)
+

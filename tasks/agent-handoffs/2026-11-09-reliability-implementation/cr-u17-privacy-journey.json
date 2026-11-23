@@ -1,0 +1,54 @@
+{
+  "id": "CR-U17-S02",
+  "status": "VERIFIED_LOCAL_PRIVACY_JOURNEY_WITH_SIMULATED_SUPABASE",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR build on loopback, real SDK, synthetic Auth and Data API",
+  "sources": {
+    "app/routes/api.privacy-export.ts": "fc4dec05f81a8638a375299b7ecca86bf20ef00853447bd2a8c945bffd06cc25",
+    "app/routes/privacy.tsx": "716fd82b5125478b612788773c0c03c25088dbdd2ca445c744887e367d7d4763",
+    "app/lib/server/privacy.ts": "9a5c3fc1af3a61a4c1105f32f8f4d7e1c89153f4dc62e3ecd756dcded9b24943",
+    "app/lib/server/privacy-deletion-policy.ts": "3664d8c44ba93dedf15505bb7ef7e9c660c57673806e3e34194dec99e5cedf5a",
+    "app/lib/server/supabase.ts": "ba72b9a96c9d49137eb83a4097f4ccd0a3aa88e53d3274a47eada13a97b8394c",
+    "app/lib/server/auth.ts": "48f40dde12fb0fd0b5bd496d0b216de42bf30a450e3367e3e6d16a786631abf6",
+    "app/lib/server/response-security.ts": "5db5b13ca424f451e41f1ebd633752c4ab004f1d891457cecd8aa2af932e1b8a",
+    "tests/unit/privacy-export-route.test.ts": "7fe1dd694e66cf19b6d1870466811d989c39d958a39bb074a7a323bd7aff3597",
+    "scripts/verify-local-privacy-journey.ts": "0a48b4e47f29d78b4ffb4a3200d02b1d3cd8f0988d87b7f604ed08d02e0ee08c",
+    "scripts/local-fixture-browser.ts": "372fa419ba68e5c15b742dbb4acd267a0359b67c1b8eb8b9ea5319a5c36e22f4",
+    "package-lock.json": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41"
+  },
+  "baseline": {
+    "failedTests": 4,
+    "unchangedTestsPassed": 38,
+    "logSha256": "e03b82cf6f84300b163d640afb1dc8742fa1bc36ae11e904efc04d53fa13b969"
+  },
+  "focusedTests": {
+    "passed": 237,
+    "files": 9,
+    "logSha256": "ca11e2e0a0ad911ed78aaedf18bb13ed1f6969116222e9f4522169534fd5e05a"
+  },
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed with four existing warnings",
+    "fixtureLint": "passed",
+    "webBuildLogSha256": "0b9013bb24e813e7e9f372ebb2469d445a6f24b8c2c8670af49271e4e0585d21",
+    "workerBuildLogSha256": "cbbbc73f9879621996b6ebd5e1b89e9320a14e740170adf07312d9714a5f7f94"
+  },
+  "browser": {
+    "reportSha256": "59ec2deb850357d01a4217bff340f960885e27d542eba26aef6877510b2f481c",
+    "result": {
+      "browser": "Chromium",
+      "refreshCalls": 1,
+      "exactNativeDownload": true,
+      "queuedAndPreparedDeletionBlockedDownload": true,
+      "cancelledDeletionRestoredDownload": true,
+      "completionCopyDistinguishedFromErasure": true,
+      "physicalDeletionVerified": false,
+      "managedSupabaseVerified": false
+    }
+  },
+  "remaining": [
+    "Idempotent request intake",
+    "Deletion re-authentication",
+    "Managed runtime and exact cleanup"
+  ]
+}

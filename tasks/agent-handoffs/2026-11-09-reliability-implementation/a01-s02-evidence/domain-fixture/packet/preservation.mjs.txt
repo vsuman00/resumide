@@ -1,0 +1,9 @@
+import {sourceHashes} from './source-hashes.mjs';
+import {readFileSync,writeFileSync} from 'node:fs';
+const root='/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats';
+const before=JSON.parse(readFileSync(new URL('before-sources.json',import.meta.url),'utf8')),after=sourceHashes(root);
+const changed=[...new Set([...Object.keys(before),...Object.keys(after)])].filter(f=>before[f]!==after[f]);
+if(JSON.stringify(changed)!==JSON.stringify(['tests/unit/canonical-corrections.test.ts']))throw Error('UNALLOCATED_SOURCE_DRIFT');
+const report={changed,productionFiles:Object.keys(before).filter(f=>f.startsWith('app/')).length,allProductionHashesPreserved:true};
+writeFileSync(new URL('production-preservation.json',import.meta.url),JSON.stringify(report,null,2)+'\n');
+process.stdout.write(JSON.stringify(report)+'\n');

@@ -1,0 +1,55 @@
+{
+  "id": "CR-R16-S17",
+  "relatedGate": "CR-G01",
+  "status": "VERIFIED",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated worktree, source assertions and public production SSR on loopback",
+  "sources": {
+    "tests/fixtures/pre-regroup-profile-source.ts": "46692497ae7b53b9440ef3cfd750fd0da17b90c1f566a5285c6e87667252659f",
+    "tests/unit/mandatory-ai-budget-sql.test.ts": "779d41b235258c8af9e1f641c30b553a4fd871a088c8ed86217bf2de76d3899a",
+    "tests/unit/owned-ai-expiry-sql.test.ts": "3eea477e17c818978dc0b24aa6798bfd64bf86164923469859080e5cdfbd1abe",
+    "tests/unit/privacy-export-generation-sql.test.ts": "a7422d7dc4fa518e79525ece78050218447a38ccf411f45b90a03d45b93a7e1a"
+  },
+  "baseline": {
+    "passed": 7157,
+    "failed": 3,
+    "failingSuites": [
+      "mandatory-ai-budget-sql",
+      "owned-ai-expiry-sql",
+      "privacy-export-generation-sql"
+    ],
+    "cause": "The historical reconstructions reversed earlier hash replacements, but still included the later regroup declarations.",
+    "logSha256": "555e7d768d50dd3e84d30224acf7ad201453fa53572ac9baa515456d7a18968b"
+  },
+  "verification": {
+    "node": "22.23.4",
+    "command": "npm run verify",
+    "testFilesPassed": 339,
+    "testsPassed": 7161,
+    "frozenPredecessorDigestsPreserved": true,
+    "alteredRegroupBlockRejected": true,
+    "migrationAndRuntimeProfileChanges": 0,
+    "lintWarnings": 4,
+    "webEntrySha256": "f7e375ecbf001800a49c24a580fa5fc9a6c513556f3ca4a3ead8d4358d003503",
+    "workerBundleSha256": "8a33bf7ce0e4ac5624f5ab969972dfef993869a6478249824ba02ff038a3c80d",
+    "logSha256": "e34dc0e20edb23eac328f4cd986b476e7a1ba0d22d0e93a5e1fe873eb429916e",
+    "additionalChecksPassed": [
+      "npm run test:load",
+      "npm run test:restore",
+      "npm run check:alerts",
+      "npm run check:container"
+    ]
+  },
+  "browser": {
+    "googleChromeVersion": "157.0.8103.80",
+    "configuration": "The public Playwright config with a temporary channel override to chrome. The zoom case uses its existing disposable Chrome for Testing profile.",
+    "publicTestsPassed": 53,
+    "ssrRebuiltDuringBrowserTest": false,
+    "webAndWorkerStillPresent": true,
+    "serverStopped": true,
+    "logSha256": "26aa0039d9106b3bba0670588b45593416e673bafd5aaccda3427b3d40c597c6"
+  },
+  "managedSupabaseVerified": false,
+  "liveProviderOrRuntimeVerified": false,
+  "fullConsumerGatePassed": false
+}

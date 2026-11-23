@@ -1,0 +1,1514 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+(node:22460) PromiseRejectionHandledWarning: Promise rejection was handled asynchronously (rejection id: 2)
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:22460) PromiseRejectionHandledWarning: Promise rejection was handled asynchronously (rejection id: 5)
+(node:22460) PromiseRejectionHandledWarning: Promise rejection was handled asynchronously (rejection id: 8)
+(node:22460) PromiseRejectionHandledWarning: Promise rejection was handled asynchronously (rejection id: 16)
+(node:22460) PromiseRejectionHandledWarning: Promise rejection was handled asynchronously (rejection id: 25)
+ ❯ tests/unit/privacy.test.ts (35 tests | 2 failed) 187ms
+     ✓ uses an explicit versioned AI consent policy 1ms
+     ✓ denies AI transfer before any database call when consent is absent 1ms
+     ✓ maps actual request creation contention to a safe retryable 503 1ms
+     ✓ maps actual cancellation contention while retaining exact owner and queued predicates 0ms
+     ✓ keeps unknown SQL failures as fixed generic errors without attaching private details 0ms
+     × includes complete original scoring snapshots across the same owner's historical organizations 57ms
+     × accepts an explicitly versioned empty export and still reads the native collection 1ms
+     ✓ refuses missing response without manufacturing an empty or partial collection 1ms
+     ✓ refuses missing collection without manufacturing an empty or partial collection 1ms
+     ✓ refuses wrong version without manufacturing an empty or partial collection 1ms
+     ✓ refuses nonarray collection without manufacturing an empty or partial collection 1ms
+     ✓ refuses unknown envelope field without manufacturing an empty or partial collection 1ms
+     ✓ refuses foreign row owner and does not complete a misleading export 1ms
+     ✓ refuses foreign embedded owner and does not complete a misleading export 3ms
+     ✓ refuses embedded organization and does not complete a misleading export 1ms
+     ✓ refuses binding organization and does not complete a misleading export 1ms
+     ✓ refuses extraction identity and does not complete a misleading export 1ms
+     ✓ refuses source resume identity and does not complete a misleading export 2ms
+     ✓ refuses source version identity and does not complete a misleading export 1ms
+     ✓ refuses job identity and does not complete a misleading export 1ms
+     ✓ refuses input binding digest and does not complete a misleading export 1ms
+     ✓ refuses extraction content digest and does not complete a misleading export 1ms
+     ✓ refuses exact source checksum and does not complete a misleading export 1ms
+     ✓ refuses result checksum shape and does not complete a misleading export 2ms
+     ✓ refuses native content digest shape and does not complete a misleading export 1ms
+     ✓ refuses unsafe worker identity and does not complete a misleading export 1ms
+     ✓ refuses attempt bounds and does not complete a misleading export 1ms
+     ✓ refuses timestamp shape and does not complete a misleading export 1ms
+     ✓ refuses invalid calendar date and does not complete a misleading export 1ms
+     ✓ requires all row and nested fields and rejects unknown row fields 8ms
+     ✓ fails the whole collection on duplicate analysis identity or row-count overflow 3ms
+     ✓ rejects the oversized envelope without returning partial snapshots 84ms
+     ✓ refuses staged or missing native export 42501 with no flag-off omission or private error 2ms
+     ✓ refuses staged or missing native export 42883 with no flag-off omission or private error 1ms
+     ✓ bounds a native export that never settles, without retrying or leaking its body 5ms
+ ❯ tests/unit/repository-read-scheduling.test.ts (21 tests | 16 failed) 180ms
+   × starts known canonical version and history reads while its head is pending 54ms
+   × starts known requirement version and history reads while its head is pending 7ms
+   × starts authoring events while canonical authorization/head loading is pending 8ms
+   ✓ keeps foreign canonical scope closed before version/history reads 5ms
+   × keeps deleted canonical scope closed before version/history reads 6ms
+   ✓ keeps the head failure ahead of a rejected speculative version read 7ms
+   × keeps canonical conflict precedence and handles a concurrent event rejection 5ms
+   × preserves historical authoring as read-only 4ms
+   × preserves a valid idempotent receipt even after the head advances 7ms
+   × keeps a history rejection ahead of concurrent requirement read failures 6ms
+   × retains requirement immutable-row binding validation 5ms
+   ✓ keeps foreign job scope closed before requirement-version reads 7ms
+   × keeps deleted job scope closed before requirement-version reads 6ms
+   × authorizes canonical in two query waves without a separate parent request 5ms
+   × authorizes requirements in two query waves without a separate parent request 5ms
+   × closes invalid source or nullable parent scope for canonical 21ms
+   × closes invalid source or nullable parent scope for requirements 4ms
+   ✓ handles a rejected speculative memberships read without replacing a foreign-source failure 5ms
+   ✓ handles a rejected speculative data_requests read without replacing a foreign-source failure 4ms
+   × keeps membership/deletion guards and scope-error precedence over a missing parent for canonical 4ms
+   × keeps membership/deletion guards and scope-error precedence over a missing parent for requirements 4ms
+ ❯ tests/unit/typed-score-repository.test.ts (26 tests | 21 failed) 198ms
+   × loads real typed coverage through the owned repository pipeline 64ms
+   × keeps typed SHA clauses outside legacy alignment and all authoritative numbers withheld 9ms
+   × preserves owned declared page metadata null without inference or clamp 8ms
+   × preserves owned declared page metadata 21 without inference or clamp 5ms
+   × rejects a stale expected canonical head before relationship transport 7ms
+   × rejects a stale expected requirements head before relationship transport 6ms
+   ✓ rejects owned input failure foreign_owner before relationship transport 4ms
+   × rejects owned input failure membership before relationship transport 5ms
+   × rejects owned input failure deletion before relationship transport 8ms
+   × rejects owned input failure source before relationship transport 5ms
+   ✓ fails closed on a missing relationship migration without exposing raw errors or falling back 5ms
+   ✓ rejects malformed owned relationship owner binding 4ms
+   ✓ rejects malformed owned relationship source binding 5ms
+   ✓ rejects malformed owned relationship profile binding 4ms
+   × keeps an explicit real historical canonical selection separate from the captured current head 4ms
+   × keeps a real historical typed JD selected when the current JD head advances 5ms
+   × rechecks privacy/source access on the final owned read: not_found 5ms
+   × rechecks privacy/source access on the final owned read: unavailable 4ms
+   × rejects changed final pair metadata: head 4ms
+   × rejects changed final pair metadata: page_count 5ms
+   × rejects changed final pair metadata: native_digest 4ms
+   × rejects a changed final analysis-to-JD link 4ms
+   × preserves the real legacy diagnostics path without relationship RPC or typed sidecar 7ms
+   × pauses typed proposals in shared builders and loadAuthoring before any authoring read 5ms
+   × pauses a genuine old accept proposal before any write RPC 6ms
+   × pauses a genuine old reject proposal before any write RPC 5ms
+ ❯ tests/unit/job-requirement-admission-repository.test.ts (13 tests | 9 failed) 11ms
+   × loads a handbuilt immutable relation snapshot through the existing owned reader 4ms
+   × roundtrips complete typed meaning through actual repository constructor, writer and reader with only owned DB mocked 1ms
+   × dispatches exact old-key retries before fresh-head admission without rewinding newer snapshots 1ms
+   × passes valid changed or semantics to the RPC and preserves its same-key conflict 0ms
+   × passes valid changed bounds semantics to the RPC and preserves its same-key conflict 0ms
+   × passes valid changed source semantics to the RPC and preserves its same-key conflict 0ms
+   × keeps initial legacy dispatch and v1-parent receipts while refusing a flag-off v1 child of typed v2 0ms
+   × reports unsupported Unicode runtime as unavailable for v2 while retaining the legacy reader 0ms
+   × fails closed on an unknown legacy-parent discriminator without mutating 2ms
+   ✓ rejects a client-selected policy before any writer RPC 0ms
+   ✓ rejects a client-selected producer before any writer RPC 0ms
+   ✓ rejects a client-selected scoringEligible before any writer RPC 0ms
+   ✓ does not accept a mismatched server replay hash as successful 0ms
+ ❯ tests/unit/canonical-correction-repository.test.ts (41 tests | 35 failed) 82ms
+     ✓ allows a reviewed initial-import employer assertion before SQL allocates its entry 12ms
+     ✓ allows a reviewed initial-import dates assertion before SQL allocates its entry 2ms
+     × requires explicit review instead of silently importing original values over active corrections 7ms
+     × permits a reviewed original import after a later exact confirmation supersedes the correction 3ms
+     × binds an unchanged original import to the captured review instead of the legacy writer 3ms
+     × keeps an original-import replay reachable with newer pending corrections and a newer head 1ms
+     × rejects original-import review binding drift before mutation 1ms
+     × rejects original-import attempt binding drift before mutation 1ms
+     × rejects original-import extractor binding drift before mutation 1ms
+     × keeps original imports unavailable without authoritative write readiness 1ms
+     × maps original-import invalid outcomes without exposing raw details 1ms
+     × maps original-import unavailable outcomes without exposing raw details 1ms
+     × maps original-import not_found outcomes without exposing raw details 2ms
+     × maps original-import malformed outcomes without exposing raw details 1ms
+     × maps original-import transport outcomes without exposing raw details 1ms
+     × preserves legacy raw import when the new feature is off 1ms
+     × projects exact original quotes and initial-import choices without granting confirmation 1ms
+     × offers both existing targets for multiple employer observations without duplicate Add choices 4ms
+     × never reuses a selected employer's fact mapping for another source assertion 2ms
+     × distinguishes initial employer choices and the saved target using their exact source context 1ms
+     × saves an explicit target separately from applying a corrected version 1ms
+     × sends only the sourced original for atomic corrected initial import 2ms
+     × uses one authoritative apply RPC without JavaScript child writes 1ms
+     × uses one authoritative add RPC without JavaScript child writes 2ms
+     × uses one authoritative reapply RPC without JavaScript child writes 1ms
+     × makes real SQL readiness a prerequisite while leaving review available 1ms
+     × discloses applied value provenance and keeps canonical confirmation separate 2ms
+     × requires a fresh current-head assignment after a manual edit, then explicit reapply 2ms
+     × exposes restore history without overlaying a past correction 1ms
+     × provides explicit absent-field add placement and unobserved source status 1ms
+     ✓ retains all producer readers and preserves producer2 on edit/confirm/restore 1ms
+     × fails closed on foreign ledger metadata 1ms
+     × fails closed on gap ledger metadata 1ms
+     × fails closed on unknown ledger metadata 1ms
+     × fails closed on snapshot_policy ledger metadata 1ms
+     × preserves safe conflict mutation outcomes 1ms
+     ✓ preserves safe unavailable mutation outcomes 1ms
+     × preserves safe invalid mutation outcomes 1ms
+     × preserves safe not_found mutation outcomes 1ms
+     ✓ rejects malformed command receipts and exposes no raw transport errors 1ms
+     ✓ parses the strict correction form and rejects hidden authority or duplicate JSON keys 12ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 83 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > requires explicit review instead of silently importing original values over active corrections
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 409 }
+
+- Expected
++ Received
+
+- {
+-   "status": 409,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/canonical-correction-repository.test.ts:522:5
+    520|         "synthetic-correction-import",
+    521|       ),
+    522|     ).rejects.toMatchObject({ status: 409 });
+       |     ^
+    523|     expect(rpc).not.toHaveBeenCalledWith(
+    524|       "save_canonical_version",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > permits a reviewed original import after a later exact confirmation supersedes the correction
+AssertionError: promise rejected "Error: Structured resume is unavailable. … { status: … }" instead of resolving
+ ❯ tests/unit/canonical-correction-repository.test.ts:565:5
+    563|         "confirmed-original",
+    564|       ),
+    565|     ).resolves.toMatchObject({ status: "applied" });
+       |     ^
+    566|     const [[name, args]] = mutationCalls(rpc);
+    567|     expect(name).toBe("import_canonical_original");
+
+Caused by: Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.mutateCanonical app/lib/server/canonical-repository.ts:405:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:553:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { status: 503 }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > binds an unchanged original import to the captured review instead of the legacy writer
+AssertionError: promise rejected "Error: Structured resume is unavailable. … { status: … }" instead of resolving
+ ❯ tests/unit/canonical-correction-repository.test.ts:611:5
+    609|         "unchanged-original",
+    610|       ),
+    611|     ).resolves.toMatchObject({ status: "applied", scoringEligible: fal…
+       |     ^
+    612|     const [[name, args]] = mutationCalls(db.rpc);
+    613|     expect(name).toBe("import_canonical_original");
+
+Caused by: Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.mutateCanonical app/lib/server/canonical-repository.ts:405:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:599:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { status: 503 }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > keeps an original-import replay reachable with newer pending corrections and a newer head
+AssertionError: promise rejected "Error: Structured resume is unavailable. … { status: … }" instead of resolving
+ ❯ tests/unit/canonical-correction-repository.test.ts:666:5
+    664|         "replayed-original",
+    665|       ),
+    666|     ).resolves.toEqual({
+       |     ^
+    667|       status: "applied",
+    668|       versionId: id(20),
+
+Caused by: Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.mutateCanonical app/lib/server/canonical-repository.ts:405:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:654:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { status: 503 }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > rejects original-import review binding drift before mutation
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > rejects original-import attempt binding drift before mutation
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > rejects original-import extractor binding drift before mutation
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 409 }
+
+- Expected
++ Received
+
+- {
+-   "status": 409,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/canonical-correction-repository.test.ts:706:7
+    704|           "stale-original",
+    705|         ),
+    706|       ).rejects.toMatchObject({ status: 409 });
+       |       ^
+    707|       expect(mutationCalls(db.rpc)).toEqual([]);
+    708|     },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > keeps original imports unavailable without authoritative write readiness
+AssertionError: expected [ [ …(2) ] ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   [
++     "read_owned_ai_disposition_readiness",
++     {},
++   ],
++ ]
+
+ ❯ tests/unit/canonical-correction-repository.test.ts:728:35
+    726|       ),
+    727|     ).rejects.toMatchObject({ status: 503 });
+    728|     expect(mutationCalls(db.rpc)).toEqual([]);
+       |                                   ^
+    729|   });
+    730|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > maps original-import invalid outcomes without exposing raw details
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 422 }
+
+- Expected
++ Received
+
+- {
+-   "status": 422,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/canonical-correction-repository.test.ts:769:7
+    767|           "original-outcome",
+    768|         ),
+    769|       ).rejects.toMatchObject({ status });
+       |       ^
+    770|       expect(mutationCalls(db.rpc).map(([name]) => name)).toEqual([
+    771|         "import_canonical_original",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > maps original-import unavailable outcomes without exposing raw details
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > maps original-import malformed outcomes without exposing raw details
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > maps original-import transport outcomes without exposing raw details
+AssertionError: expected [ Array(1) ] to deeply equal [ 'import_canonical_original' ]
+
+- Expected
++ Received
+
+  [
+-   "import_canonical_original",
++   "read_owned_ai_disposition_readiness",
+  ]
+
+ ❯ tests/unit/canonical-correction-repository.test.ts:770:59
+    768|         ),
+    769|       ).rejects.toMatchObject({ status });
+    770|       expect(mutationCalls(db.rpc).map(([name]) => name)).toEqual([
+       |                                                           ^
+    771|         "import_canonical_original",
+    772|       ]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > maps original-import not_found outcomes without exposing raw details
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 404 }
+
+- Expected
++ Received
+
+- {
+-   "status": 404,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/canonical-correction-repository.test.ts:769:7
+    767|           "original-outcome",
+    768|         ),
+    769|       ).rejects.toMatchObject({ status });
+       |       ^
+    770|       expect(mutationCalls(db.rpc).map(([name]) => name)).toEqual([
+    771|         "import_canonical_original",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > preserves legacy raw import when the new feature is off
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.mutateCanonical app/lib/server/canonical-repository.ts:405:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:779:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > projects exact original quotes and initial-import choices without granting confirmation
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.loadCanonicalCorrectionWorkspace app/lib/server/canonical-repository.ts:989:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:800:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > offers both existing targets for multiple employer observations without duplicate Add choices
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.loadCanonicalCorrectionWorkspace app/lib/server/canonical-repository.ts:989:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:837:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > never reuses a selected employer's fact mapping for another source assertion
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.loadCanonicalCorrectionWorkspace app/lib/server/canonical-repository.ts:989:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:882:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > distinguishes initial employer choices and the saved target using their exact source context
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.loadCanonicalCorrectionWorkspace app/lib/server/canonical-repository.ts:989:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:910:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > saves an explicit target separately from applying a corrected version
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.loadCanonicalCorrectionWorkspace app/lib/server/canonical-repository.ts:989:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:952:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > sends only the sourced original for atomic corrected initial import
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.mutateCanonicalCorrection app/lib/server/canonical-repository.ts:1404:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:984:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > uses one authoritative apply RPC without JavaScript child writes
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > uses one authoritative add RPC without JavaScript child writes
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > uses one authoritative reapply RPC without JavaScript child writes
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.mutateCanonicalCorrection app/lib/server/canonical-repository.ts:1404:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:1015:22
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > makes real SQL readiness a prerequisite while leaving review available
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.loadCanonicalCorrectionWorkspace app/lib/server/canonical-repository.ts:989:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:1041:8
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > discloses applied value provenance and keeps canonical confirmation separate
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.loadCanonicalCorrectionWorkspace app/lib/server/canonical-repository.ts:989:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:1059:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > requires a fresh current-head assignment after a manual edit, then explicit reapply
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.loadCanonicalCorrectionWorkspace app/lib/server/canonical-repository.ts:989:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:1085:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > exposes restore history without overlaying a past correction
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.loadCanonicalCorrectionWorkspace app/lib/server/canonical-repository.ts:989:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:1143:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > provides explicit absent-field add placement and unobserved source status
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ Module.loadCanonicalCorrectionWorkspace app/lib/server/canonical-repository.ts:989:20
+ ❯ tests/unit/canonical-correction-repository.test.ts:1170:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > fails closed on foreign ledger metadata
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > fails closed on gap ledger metadata
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > fails closed on unknown ledger metadata
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > fails closed on snapshot_policy ledger metadata
+AssertionError: expected [ [ …(2) ] ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   [
++     "read_owned_ai_disposition_readiness",
++     {},
++   ],
++ ]
+
+ ❯ tests/unit/canonical-correction-repository.test.ts:1260:37
+    1258|         loadCanonicalCorrectionWorkspace(db.client, id(3), id(2)),
+    1259|       ).rejects.toMatchObject({ status: 503 });
+    1260|       expect(mutationCalls(db.rpc)).toEqual([]);
+       |                                     ^
+    1261|     },
+    1262|   );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > preserves safe conflict mutation outcomes
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 409 }
+
+- Expected
++ Received
+
+- {
+-   "status": 409,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/canonical-correction-repository.test.ts:1283:7
+    1281|           "bounded-outcome",
+    1282|         ),
+    1283|       ).rejects.toMatchObject({
+       |       ^
+    1284|         status: {
+    1285|           conflict: 409,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > preserves safe invalid mutation outcomes
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 422 }
+
+- Expected
++ Received
+
+- {
+-   "status": 422,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/canonical-correction-repository.test.ts:1283:7
+    1281|           "bounded-outcome",
+    1282|         ),
+    1283|       ).rejects.toMatchObject({
+       |       ^
+    1284|         status: {
+    1285|           conflict: 409,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/83]⎯
+
+ FAIL  tests/unit/canonical-correction-repository.test.ts > canonical correction repository admission > preserves safe not_found mutation outcomes
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 404 }
+
+- Expected
++ Received
+
+- {
+-   "status": 404,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/canonical-correction-repository.test.ts:1283:7
+    1281|           "bounded-outcome",
+    1282|         ),
+    1283|       ).rejects.toMatchObject({
+       |       ^
+    1284|         status: {
+    1285|           conflict: 409,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/83]⎯
+
+ FAIL  tests/unit/job-requirement-admission-repository.test.ts > loads a handbuilt immutable relation snapshot through the existing owned reader
+Error: Job requirements are unavailable.
+ ❯ unavailable app/lib/server/job-requirement-repository.ts:27:3
+     25| const missing = () => new CanonicalError(404, "Job requirements not fo…
+     26| const unavailable = () =>
+     27|   new CanonicalError(503, "Job requirements are unavailable.");
+       |   ^
+     28| function unsupportedRuntime(error: unknown) {
+     29|   if (
+ ❯ ownedJob app/lib/server/job-requirement-repository.ts:100:11
+ ❯ Module.loadJobRequirements app/lib/server/job-requirement-repository.ts:154:36
+ ❯ tests/unit/job-requirement-admission-repository.test.ts:340:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/83]⎯
+
+ FAIL  tests/unit/job-requirement-admission-repository.test.ts > roundtrips complete typed meaning through actual repository constructor, writer and reader with only owned DB mocked
+Error: Job requirements are unavailable.
+ ❯ unavailable app/lib/server/job-requirement-repository.ts:27:3
+     25| const missing = () => new CanonicalError(404, "Job requirements not fo…
+     26| const unavailable = () =>
+     27|   new CanonicalError(503, "Job requirements are unavailable.");
+       |   ^
+     28| function unsupportedRuntime(error: unknown) {
+     29|   if (
+ ❯ ownedJob app/lib/server/job-requirement-repository.ts:100:11
+ ❯ Module.saveJobRequirements app/lib/server/job-requirement-repository.ts:255:44
+ ❯ tests/unit/job-requirement-admission-repository.test.ts:350:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/83]⎯
+
+ FAIL  tests/unit/job-requirement-admission-repository.test.ts > dispatches exact old-key retries before fresh-head admission without rewinding newer snapshots
+Error: Job requirements are unavailable.
+ ❯ unavailable app/lib/server/job-requirement-repository.ts:27:3
+     25| const missing = () => new CanonicalError(404, "Job requirements not fo…
+     26| const unavailable = () =>
+     27|   new CanonicalError(503, "Job requirements are unavailable.");
+       |   ^
+     28| function unsupportedRuntime(error: unknown) {
+     29|   if (
+ ❯ ownedJob app/lib/server/job-requirement-repository.ts:100:11
+ ❯ Module.saveJobRequirements app/lib/server/job-requirement-repository.ts:255:44
+ ❯ tests/unit/job-requirement-admission-repository.test.ts:406:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/83]⎯
+
+ FAIL  tests/unit/job-requirement-admission-repository.test.ts > passes valid changed or semantics to the RPC and preserves its same-key conflict
+ FAIL  tests/unit/job-requirement-admission-repository.test.ts > passes valid changed bounds semantics to the RPC and preserves its same-key conflict
+ FAIL  tests/unit/job-requirement-admission-repository.test.ts > passes valid changed source semantics to the RPC and preserves its same-key conflict
+Error: Job requirements are unavailable.
+ ❯ unavailable app/lib/server/job-requirement-repository.ts:27:3
+     25| const missing = () => new CanonicalError(404, "Job requirements not fo…
+     26| const unavailable = () =>
+     27|   new CanonicalError(503, "Job requirements are unavailable.");
+       |   ^
+     28| function unsupportedRuntime(error: unknown) {
+     29|   if (
+ ❯ ownedJob app/lib/server/job-requirement-repository.ts:100:11
+ ❯ Module.saveJobRequirements app/lib/server/job-requirement-repository.ts:255:44
+ ❯ tests/unit/job-requirement-admission-repository.test.ts:441:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/83]⎯
+
+ FAIL  tests/unit/job-requirement-admission-repository.test.ts > keeps initial legacy dispatch and v1-parent receipts while refusing a flag-off v1 child of typed v2
+Error: Job requirements are unavailable.
+ ❯ unavailable app/lib/server/job-requirement-repository.ts:27:3
+     25| const missing = () => new CanonicalError(404, "Job requirements not fo…
+     26| const unavailable = () =>
+     27|   new CanonicalError(503, "Job requirements are unavailable.");
+       |   ^
+     28| function unsupportedRuntime(error: unknown) {
+     29|   if (
+ ❯ ownedJob app/lib/server/job-requirement-repository.ts:100:11
+ ❯ Module.saveJobRequirements app/lib/server/job-requirement-repository.ts:255:44
+ ❯ tests/unit/job-requirement-admission-repository.test.ts:469:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/83]⎯
+
+ FAIL  tests/unit/job-requirement-admission-repository.test.ts > reports unsupported Unicode runtime as unavailable for v2 while retaining the legacy reader
+Error: Job requirements are unavailable.
+ ❯ unavailable app/lib/server/job-requirement-repository.ts:27:3
+     25| const missing = () => new CanonicalError(404, "Job requirements not fo…
+     26| const unavailable = () =>
+     27|   new CanonicalError(503, "Job requirements are unavailable.");
+       |   ^
+     28| function unsupportedRuntime(error: unknown) {
+     29|   if (
+ ❯ ownedJob app/lib/server/job-requirement-repository.ts:100:11
+ ❯ Module.saveJobRequirements app/lib/server/job-requirement-repository.ts:255:44
+ ❯ tests/unit/job-requirement-admission-repository.test.ts:543:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/83]⎯
+
+ FAIL  tests/unit/job-requirement-admission-repository.test.ts > fails closed on an unknown legacy-parent discriminator without mutating
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "read_owned_ai_disposition_readiness",
+      Object {},
+    ]
+
+
+Number of calls: 1
+
+ ❯ tests/unit/job-requirement-admission-repository.test.ts:590:21
+    588|     ),
+    589|   ).rejects.toMatchObject({ status: 503 });
+    590|   expect(f.rpc).not.toHaveBeenCalled();
+       |                     ^
+    591| });
+    592| it.each(["policy", "producer", "scoringEligible"])(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/83]⎯
+
+ FAIL  tests/unit/privacy.test.ts > original legacy scoring-input privacy export > includes complete original scoring snapshots across the same owner's historical organizations
+Error: Privacy export data is unavailable.
+ ❯ exportUnavailable app/lib/server/privacy-worker.ts:119:3
+    117| });
+    118| const exportUnavailable = () =>
+    119|   new Error("Privacy export data is unavailable.");
+       |   ^
+    120| async function readOwnedAiPrivacyExport(
+    121|   admin: ReturnType<typeof createSupabaseAdminClient>,
+ ❯ readOwnedAiPrivacyExport app/lib/server/privacy-worker.ts:163:11
+ ❯ SupabasePrivacyRequestRepository.buildExportManifest app/lib/server/privacy-worker.ts:360:9
+ ❯ tests/unit/privacy.test.ts:406:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/83]⎯
+
+ FAIL  tests/unit/privacy.test.ts > original legacy scoring-input privacy export > accepts an explicitly versioned empty export and still reads the native collection
+Error: Privacy export data is unavailable.
+ ❯ exportUnavailable app/lib/server/privacy-worker.ts:119:3
+    117| });
+    118| const exportUnavailable = () =>
+    119|   new Error("Privacy export data is unavailable.");
+       |   ^
+    120| async function readOwnedAiPrivacyExport(
+    121|   admin: ReturnType<typeof createSupabaseAdminClient>,
+ ❯ readOwnedAiPrivacyExport app/lib/server/privacy-worker.ts:163:11
+ ❯ SupabasePrivacyRequestRepository.buildExportManifest app/lib/server/privacy-worker.ts:360:9
+ ❯ tests/unit/privacy.test.ts:446:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > starts known canonical version and history reads while its head is pending
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > starts known requirement version and history reads while its head is pending
+Error: Job requirements are unavailable.
+ ❯ unavailable app/lib/server/job-requirement-repository.ts:27:3
+     25| const missing = () => new CanonicalError(404, "Job requirements not fo…
+     26| const unavailable = () =>
+     27|   new CanonicalError(503, "Job requirements are unavailable.");
+       |   ^
+     28| function unsupportedRuntime(error: unknown) {
+     29|   if (
+ ❯ ownedJob app/lib/server/job-requirement-repository.ts:100:11
+ ❯ loadJobRequirements app/lib/server/job-requirement-repository.ts:154:36
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > starts authoring events while canonical authorization/head loading is pending
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ loadAuthoring app/lib/server/authoring-repository.ts:172:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > keeps deleted canonical scope closed before version/history reads
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 404 }
+
+- Expected
++ Received
+
+- {
+-   "status": 404,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/repository-read-scheduling.test.ts:259:5
+    257|         versionId: f.canonical.versionId,
+    258|       }),
+    259|     ).rejects.toMatchObject({ status: 404 });
+       |     ^
+    260|     expect(f.reads.some((r) => r.table === "canonical_resume_versions"…
+    261|       false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > keeps canonical conflict precedence and handles a concurrent event rejection
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 409 }
+
+- Expected
++ Received
+
+- {
+-   "status": 409,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/repository-read-scheduling.test.ts:307:35
+    305|     { ...f.model, canonical: { ...f.model.canonical, headId: randomUUI…
+    306|   );
+    307|   const assertion = expect(pending).rejects.toMatchObject({ status: 40…
+       |                                   ^
+    308|   await setImmediate();
+    309|   if (f.reads.some((r) => r.table === "authoring_events"))
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > preserves historical authoring as read-only
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ loadAuthoring app/lib/server/authoring-repository.ts:172:13
+ ❯ tests/unit/repository-read-scheduling.test.ts:323:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[41/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > preserves a valid idempotent receipt even after the head advances
+AssertionError: promise rejected "Error: Structured resume is unavailable. … { status: … }" instead of resolving
+ ❯ tests/unit/repository-read-scheduling.test.ts:383:3
+    381|       "scheduling-retry",
+    382|     ),
+    383|   ).resolves.toMatchObject({ idempotent: true, versionId: headId });
+       |   ^
+    384|   expect(f.rawClient.rpc).not.toHaveBeenCalled();
+    385| });
+
+Caused by: Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ applyAuthoring app/lib/server/authoring-repository.ts:259:21
+ ❯ tests/unit/repository-read-scheduling.test.ts:369:3
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { status: 503 }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[42/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > keeps a history rejection ahead of concurrent requirement read failures
+AssertionError: expected [Function] to throw error including 'history unavailable' but got 'Job requirements are unavailable.'
+
+Expected: "history unavailable"
+Received: "Job requirements are unavailable."
+
+ ❯ tests/unit/repository-read-scheduling.test.ts:406:35
+    404|     { versionId: f.requirements.id },
+    405|   );
+    406|   const assertion = expect(pending).rejects.toThrow("history unavailab…
+       |                                   ^
+    407|   await setImmediate();
+    408|   history.reject(Error("history unavailable"));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[43/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > retains requirement immutable-row binding validation
+AssertionError: expected Error: Job requirements are unavailable. { status: … } to match object { status: 422 }
+
+- Expected
++ Received
+
+- {
+-   "status": 422,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/repository-read-scheduling.test.ts:446:3
+    444|       { versionId: f.requirements.id },
+    445|     ),
+    446|   ).rejects.toMatchObject({ status: 422 });
+       |   ^
+    447| });
+    448|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[44/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > keeps deleted job scope closed before requirement-version reads
+AssertionError: expected Error: Job requirements are unavailable. { status: … } to match object { status: 404 }
+
+- Expected
++ Received
+
+- {
+-   "status": 404,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/repository-read-scheduling.test.ts:468:5
+    466|         },
+    467|       ),
+    468|     ).rejects.toMatchObject({ status: 404 });
+       |     ^
+    469|     expect(f.reads.some((r) => r.table === "job_requirement_versions")…
+    470|       false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[45/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > authorizes canonical in two query waves without a separate parent request
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ tests/unit/repository-read-scheduling.test.ts:522:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[46/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > authorizes requirements in two query waves without a separate parent request
+Error: Job requirements are unavailable.
+ ❯ unavailable app/lib/server/job-requirement-repository.ts:27:3
+     25| const missing = () => new CanonicalError(404, "Job requirements not fo…
+     26| const unavailable = () =>
+     27|   new CanonicalError(503, "Job requirements are unavailable.");
+       |   ^
+     28| function unsupportedRuntime(error: unknown) {
+     29|   if (
+ ❯ ownedJob app/lib/server/job-requirement-repository.ts:100:11
+ ❯ loadJobRequirements app/lib/server/job-requirement-repository.ts:154:36
+ ❯ tests/unit/repository-read-scheduling.test.ts:522:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[47/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > closes invalid source or nullable parent scope for canonical
+AssertionError: null parent: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 404 }
+
+- Expected
++ Received
+
+- {
+-   "status": 404,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/repository-read-scheduling.test.ts:593:37
+    591|               f.canonical.ownerId,
+    592|             );
+    593|       await expect(pending, mismatch).rejects.toMatchObject({ status: …
+       |                                     ^
+    594|       expect(
+    595|         f.reads.some(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[48/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > closes invalid source or nullable parent scope for requirements
+AssertionError: null source: expected Error: Job requirements are unavailable. { status: … } to match object { status: 404 }
+
+- Expected
++ Received
+
+- {
+-   "status": 404,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/repository-read-scheduling.test.ts:593:37
+    591|               f.canonical.ownerId,
+    592|             );
+    593|       await expect(pending, mismatch).rejects.toMatchObject({ status: …
+       |                                     ^
+    594|       expect(
+    595|         f.reads.some(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[49/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > keeps membership/deletion guards and scope-error precedence over a missing parent for canonical
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 404 }
+
+- Expected
++ Received
+
+- {
+-   "status": 404,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/repository-read-scheduling.test.ts:673:29
+    671|         await expect(pending).rejects.toBe(rejected);
+    672|       else
+    673|         await expect(pending).rejects.toMatchObject({
+       |                             ^
+    674|           status: state === "scope error" ? 503 : 404,
+    675|         });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[50/83]⎯
+
+ FAIL  tests/unit/repository-read-scheduling.test.ts > keeps membership/deletion guards and scope-error precedence over a missing parent for requirements
+AssertionError: expected Error: Job requirements are unavailable. { status: … } to match object { status: 404 }
+
+- Expected
++ Received
+
+- {
+-   "status": 404,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ tests/unit/repository-read-scheduling.test.ts:673:29
+    671|         await expect(pending).rejects.toBe(rejected);
+    672|       else
+    673|         await expect(pending).rejects.toMatchObject({
+       |                             ^
+    674|           status: state === "scope error" ? 503 : 404,
+    675|         });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[51/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > loads real typed coverage through the owned repository pipeline
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ loadScoreDiagnostics app/lib/server/score-v2-repository.ts:56:33
+ ❯ tests/unit/typed-score-repository.test.ts:219:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[52/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > keeps typed SHA clauses outside legacy alignment and all authoritative numbers withheld
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ loadScoreDiagnostics app/lib/server/score-v2-repository.ts:56:33
+ ❯ tests/unit/typed-score-repository.test.ts:257:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[53/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > preserves owned declared page metadata null without inference or clamp
+ FAIL  tests/unit/typed-score-repository.test.ts > preserves owned declared page metadata 21 without inference or clamp
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ loadScoreDiagnostics app/lib/server/score-v2-repository.ts:56:33
+ ❯ tests/unit/typed-score-repository.test.ts:289:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[54/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > rejects a stale expected canonical head before relationship transport
+ FAIL  tests/unit/typed-score-repository.test.ts > rejects a stale expected requirements head before relationship transport
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 409 }
+
+- Expected
++ Received
+
+- {
+-   "status": 409,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ rejectStatus tests/unit/typed-score-repository.test.ts:246:24
+    244|
+    245| function rejectStatus(promise: Promise<unknown>, status: number) {
+    246|   return expect(promise).rejects.toMatchObject({ status });
+       |                        ^
+    247| }
+    248| const privateFailure = (status: "not_found" | "unavailable") => ({
+ ❯ tests/unit/typed-score-repository.test.ts:309:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[55/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > rejects owned input failure membership before relationship transport
+ FAIL  tests/unit/typed-score-repository.test.ts > rejects owned input failure deletion before relationship transport
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 404 }
+
+- Expected
++ Received
+
+- {
+-   "status": 404,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ rejectStatus tests/unit/typed-score-repository.test.ts:246:24
+    244|
+    245| function rejectStatus(promise: Promise<unknown>, status: number) {
+    246|   return expect(promise).rejects.toMatchObject({ status });
+       |                        ^
+    247| }
+    248| const privateFailure = (status: "not_found" | "unavailable") => ({
+ ❯ tests/unit/typed-score-repository.test.ts:336:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[56/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > rejects owned input failure source before relationship transport
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      "read_owned_ai_disposition_readiness",
+      Object {},
+    ]
+
+
+Number of calls: 1
+
+ ❯ tests/unit/typed-score-repository.test.ts:346:27
+    344|       404,
+    345|     );
+    346|     expect(store.rpc).not.toHaveBeenCalled();
+       |                           ^
+    347|   },
+    348| );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[57/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > keeps an explicit real historical canonical selection separate from the captured current head
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ loadScoreDiagnostics app/lib/server/score-v2-repository.ts:56:33
+ ❯ tests/unit/typed-score-repository.test.ts:407:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[58/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > keeps a real historical typed JD selected when the current JD head advances
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ loadScoreDiagnostics app/lib/server/score-v2-repository.ts:56:33
+ ❯ tests/unit/typed-score-repository.test.ts:458:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[59/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > rechecks privacy/source access on the final owned read: not_found
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 404 }
+
+- Expected
++ Received
+
+- {
+-   "status": 404,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ rejectStatus tests/unit/typed-score-repository.test.ts:246:24
+    244|
+    245| function rejectStatus(promise: Promise<unknown>, status: number) {
+    246|   return expect(promise).rejects.toMatchObject({ status });
+       |                        ^
+    247| }
+    248| const privateFailure = (status: "not_found" | "unavailable") => ({
+ ❯ tests/unit/typed-score-repository.test.ts:483:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[60/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > rechecks privacy/source access on the final owned read: unavailable
+AssertionError: expected "vi.fn()" to be called 2 times, but got 1 times
+ ❯ tests/unit/typed-score-repository.test.ts:487:23
+    485|       status === "not_found" ? 404 : 503,
+    486|     );
+    487|     expect(store.rpc).toHaveBeenCalledTimes(2);
+       |                       ^
+    488|   },
+    489| );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[61/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > rejects changed final pair metadata: head
+ FAIL  tests/unit/typed-score-repository.test.ts > rejects changed final pair metadata: page_count
+ FAIL  tests/unit/typed-score-repository.test.ts > rejects changed final pair metadata: native_digest
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 409 }
+
+- Expected
++ Received
+
+- {
+-   "status": 409,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ rejectStatus tests/unit/typed-score-repository.test.ts:246:24
+    244|
+    245| function rejectStatus(promise: Promise<unknown>, status: number) {
+    246|   return expect(promise).rejects.toMatchObject({ status });
+       |                        ^
+    247| }
+    248| const privateFailure = (status: "not_found" | "unavailable") => ({
+ ❯ tests/unit/typed-score-repository.test.ts:509:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[62/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > rejects a changed final analysis-to-JD link
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 409 }
+
+- Expected
++ Received
+
+- {
+-   "status": 409,
++ CanonicalError {
++   "status": 503,
+  }
+
+ ❯ rejectStatus tests/unit/typed-score-repository.test.ts:246:24
+    244|
+    245| function rejectStatus(promise: Promise<unknown>, status: number) {
+    246|   return expect(promise).rejects.toMatchObject({ status });
+       |                        ^
+    247| }
+    248| const privateFailure = (status: "not_found" | "unavailable") => ({
+ ❯ tests/unit/typed-score-repository.test.ts:526:9
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[63/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > preserves the real legacy diagnostics path without relationship RPC or typed sidecar
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ loadScoreDiagnostics app/lib/server/score-v2-repository.ts:56:33
+ ❯ tests/unit/typed-score-repository.test.ts:572:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[64/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > pauses typed proposals in shared builders and loadAuthoring before any authoring read
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ loadScoreDiagnostics app/lib/server/score-v2-repository.ts:56:33
+ ❯ tests/unit/typed-score-repository.test.ts:585:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[65/83]⎯
+
+ FAIL  tests/unit/typed-score-repository.test.ts > pauses a genuine old accept proposal before any write RPC
+ FAIL  tests/unit/typed-score-repository.test.ts > pauses a genuine old reject proposal before any write RPC
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 503, …(1) }
+
+- Expected
++ Received
+
+- {
+-   "message": "Typed requirement coverage is available for review. Coverage-driven proposals remain paused; use the canonical review page for independent corrections.",
++ CanonicalError {
+    "status": 503,
+  }
+
+ ❯ tests/unit/typed-score-repository.test.ts:650:5
+    648|         requirementFixtureId(997),
+    649|       ),
+    650|     ).rejects.toMatchObject({
+       |     ^
+    651|       status: 503,
+    652|       message: TYPED_AUTHORING_PAUSED_MESSAGE,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[66/83]⎯
+
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 6 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ processTicksAndRejections node:internal/process/task_queues:103:5
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { status: 503 }
+This error originated in "tests/unit/repository-read-scheduling.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "starts known canonical version and history reads while its head is pending". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+Error: Job requirements are unavailable.
+ ❯ unavailable app/lib/server/job-requirement-repository.ts:27:3
+     25| const missing = () => new CanonicalError(404, "Job requirements not fo…
+     26| const unavailable = () =>
+     27|   new CanonicalError(503, "Job requirements are unavailable.");
+       |   ^
+     28| function unsupportedRuntime(error: unknown) {
+     29|   if (
+ ❯ ownedJob app/lib/server/job-requirement-repository.ts:100:11
+ ❯ loadJobRequirements app/lib/server/job-requirement-repository.ts:154:36
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { status: 503 }
+This error originated in "tests/unit/repository-read-scheduling.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "starts known requirement version and history reads while its head is pending". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+Error: Structured resume is unavailable. Try again later.
+ ❯ unavailable app/lib/server/canonical-repository.ts:99:3
+     97| }
+     98| const unavailable = () =>
+     99|   new CanonicalError(503, "Structured resume is unavailable. Try again…
+       |   ^
+    100| const missing = () => new CanonicalError(404, "Structured resume not f…
+    101| const rowSchema = z.object({
+ ❯ ownedAnalysis app/lib/server/canonical-repository.ts:204:66
+ ❯ loadCanonical app/lib/server/canonical-repository.ts:253:20
+ ❯ loadAuthoring app/lib/server/authoring-repository.ts:172:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { status: 503 }
+This error originated in "tests/unit/repository-read-scheduling.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "starts authoring events while canonical authorization/head loading is pending". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+AssertionError: expected Error: Structured resume is unavailable. … { status: … } to match object { status: 409 }
+ ❯ _Assertion.__VITEST_REJECTS__ ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/expect/dist/index.js:1747:17
+ ❯ _Assertion.propertyGetter ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1607:27
+ ❯ Object.proxyGetter [as get] ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1696:22
+ ❯ tests/unit/repository-read-scheduling.test.ts:307:35
+    305|     { ...f.model, canonical: { ...f.model.canonical, headId: randomUUI…
+    306|   );
+    307|   const assertion = expect(pending).rejects.toMatchObject({ status: 40…
+       |                                   ^
+    308|   await setImmediate();
+    309|   if (f.reads.some((r) => r.table === "authoring_events"))
+ ❯ ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+ ❯ ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+ ❯ ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+ ❯ runWithCancel ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10
+
+This error originated in "tests/unit/repository-read-scheduling.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "keeps canonical conflict precedence and handles a concurrent event rejection". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+AssertionError: expected [Function] to throw error including 'history unavailable' but got 'Job requirements are unavailable.'
+ ❯ _Assertion.__VITEST_REJECTS__ ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/expect/dist/index.js:1747:17
+ ❯ _Assertion.propertyGetter ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1607:27
+ ❯ Object.proxyGetter [as get] ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/chai/index.js:1696:22
+ ❯ tests/unit/repository-read-scheduling.test.ts:406:35
+    404|     { versionId: f.requirements.id },
+    405|   );
+    406|   const assertion = expect(pending).rejects.toThrow("history unavailab…
+       |                                   ^
+    407|   await setImmediate();
+    408|   history.reject(Error("history unavailable"));
+ ❯ ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:302:11
+ ❯ ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:26
+ ❯ ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2326:20
+ ❯ runWithCancel ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:2323:10
+
+This error originated in "tests/unit/repository-read-scheduling.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "keeps a history rejection ahead of concurrent requirement read failures". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+
+⎯⎯⎯⎯ Unhandled Rejection ⎯⎯⎯⎯⎯
+Error: history unavailable
+ ❯ tests/unit/repository-read-scheduling.test.ts:408:18
+    406|   const assertion = expect(pending).rejects.toThrow("history unavailab…
+    407|   await setImmediate();
+    408|   history.reject(Error("history unavailable"));
+       |                  ^
+    409|   if (
+    410|     f.reads.some(
+ ❯ ../../../../Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+This error originated in "tests/unit/repository-read-scheduling.test.ts" test file. It doesn't mean the error was thrown inside the file itself, but while it was running.
+The latest test that might've caused the error is "authorizes canonical in two query waves without a separate parent request". It might mean one of the following:
+- The error was thrown, while Vitest was running this test.
+- If the error occurred after the test had been completed, this was the last documented test before it was thrown.
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  5 failed (5)
+      Tests  83 failed | 53 passed (136)
+     Errors  6 errors
+   Start at  19:23:03
+   Duration  746ms (transform 667ms, setup 0ms, import 1.07s, tests 658ms, environment 0ms)
+
+JSON report written to /tmp/resumide-disposition-consumer-runtime-gMQRMy/tests.json

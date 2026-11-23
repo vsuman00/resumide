@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { DocumentEvidenceSchema } from "./document-evidence";
 import { CRITICAL_FIELDS } from "./evidence-fields";
+import {
+  deriveEvidenceReviewTargets,
+  EVIDENCE_TARGET_MODEL_VERSION,
+} from "./evidence-targets";
+import { deriveNativePageDiagnostics } from "./ocr/pdf-detection";
 import type { createSupabaseAdminClient } from "./supabase";
 
 export type EvidenceReviewClient = Pick<
@@ -39,6 +44,56 @@ const correctionSchema = z.object({
   candidate_id: z.string().min(1).max(100).nullable(),
   created_at: z.iso.datetime({ offset: true }),
 });
+const HISTORY_READ_LIMITS = {
+  events: 1000,
+  pageSize: 100,
+  pages: 32,
+  valueTextUnits: 2_000_000,
+  deadlineMs: 5000,
+};
+export const EvidenceHistoryAttestationSchema = z
+  .strictObject({
+    schemaVersion: z.literal("evidence-review-history/1.0.0"),
+    state: z.literal("complete_captured_prefix"),
+    binding: z.strictObject({
+      ownerId: uuid,
+      analysisId: uuid,
+      sourceId: uuid,
+      inputSha256: z.string().regex(/^[a-f0-9]{64}$/u),
+      attemptId: uuid,
+      evidenceSchemaVersion: z.literal("evidence/2.0.0"),
+      fieldExtractorVersion: z.string().min(1).max(100).nullable(),
+      targetModelVersion: z.literal(EVIDENCE_TARGET_MODEL_VERSION),
+    }),
+    highWaterRevision: z
+      .number()
+      .int()
+      .nonnegative()
+      .max(HISTORY_READ_LIMITS.events),
+    highWaterEventId: uuid.nullable(),
+    receivedCount: z
+      .number()
+      .int()
+      .nonnegative()
+      .max(HISTORY_READ_LIMITS.events),
+    pageCount: z.number().int().nonnegative().max(HISTORY_READ_LIMITS.pages),
+  })
+  .superRefine((value, context) => {
+    if (
+      value.receivedCount !== value.highWaterRevision ||
+      (value.highWaterRevision === 0) !== (value.highWaterEventId === null) ||
+      (value.highWaterRevision === 0) !== (value.pageCount === 0) ||
+      value.pageCount > value.receivedCount ||
+      value.receivedCount > value.pageCount * HISTORY_READ_LIMITS.pageSize
+    )
+      context.addIssue({
+        code: "custom",
+        message: "History attestation contradicts its captured prefix",
+      });
+  });
+export type EvidenceHistoryAttestation = z.infer<
+  typeof EvidenceHistoryAttestationSchema
+>;
 export const EvidenceCorrectionInputSchema = z
   .strictObject({
     attemptId: uuid,
@@ -68,15 +123,17 @@ async function requireOwnedAnalysis(
   client: EvidenceReviewClient,
   analysisId: string,
   ownerId: string,
+  signal?: AbortSignal,
 ) {
   if (!uuid.safeParse(analysisId).success || !uuid.safeParse(ownerId).success)
     throw new EvidenceReviewError(404, "Evidence not found.");
-  const { data, error } = await client
+  const query = client
     .from("analyses")
     .select("id, owner_id, resume_version_id")
     .eq("id", analysisId)
-    .eq("owner_id", ownerId)
-    .maybeSingle();
+    .eq("owner_id", ownerId);
+  if (signal) query.abortSignal(signal);
+  const { data, error } = await query.maybeSingle();
   if (error)
     throw new EvidenceReviewError(
       503,
@@ -92,6 +149,131 @@ async function requireOwnedAnalysis(
   )
     throw new EvidenceReviewError(404, "Evidence not found.");
   return parsed.data;
+}
+
+const historyUnavailable = () =>
+  new EvidenceReviewError(
+    503,
+    "Review history is unavailable. Try again later.",
+  );
+const historyContinuationRequired = () =>
+  new EvidenceReviewError(
+    503,
+    "Additional review history must be loaded before this operation can continue.",
+  );
+const historyInvalid = () =>
+  new EvidenceReviewError(
+    422,
+    "Stored review history cannot be safely displayed.",
+  );
+function checkReadSignal(signal: AbortSignal) {
+  if (signal.aborted) throw historyUnavailable();
+}
+function matchesCorrectionScope(
+  event: z.infer<typeof correctionSchema>,
+  analysisId: string,
+  ownerId: string,
+  revision: number,
+) {
+  return (
+    event.analysis_id === analysisId &&
+    event.owner_id === ownerId &&
+    event.actor_id === ownerId &&
+    event.revision === revision &&
+    event.expected_revision === revision - 1 &&
+    (event.operation === "confirm") === (event.candidate_id !== null)
+  );
+}
+async function readCorrectionPrefix(
+  client: EvidenceReviewClient,
+  analysisId: string,
+  ownerId: string,
+  signal: AbortSignal,
+) {
+  const columns =
+    "id, attempt_id, analysis_id, owner_id, actor_id, revision, expected_revision, field, operation, value, candidate_id, created_at";
+  const { data: rawHead, error: headError } = await client
+    .from("evidence_corrections")
+    .select(columns)
+    .eq("analysis_id", analysisId)
+    .eq("owner_id", ownerId)
+    .order("revision", { ascending: false })
+    .limit(1)
+    .abortSignal(signal)
+    .maybeSingle();
+  checkReadSignal(signal);
+  if (headError) throw historyUnavailable();
+  const parsedHead =
+    rawHead === null ? null : correctionSchema.safeParse(rawHead);
+  if (
+    parsedHead &&
+    (!parsedHead.success ||
+      !matchesCorrectionScope(
+        parsedHead.data,
+        analysisId,
+        ownerId,
+        parsedHead.data.revision,
+      ))
+  )
+    throw historyInvalid();
+  const head = parsedHead?.success ? parsedHead.data : null;
+  if (head && head.revision > HISTORY_READ_LIMITS.events)
+    throw historyContinuationRequired();
+  const highWaterRevision = head?.revision ?? 0;
+  const corrections: Array<z.infer<typeof correctionSchema>> = [];
+  const ids = new Set<string>();
+  let pageCount = 0,
+    valueTextUnits = 0;
+  while (corrections.length < highWaterRevision) {
+    checkReadSignal(signal);
+    if (pageCount >= HISTORY_READ_LIMITS.pages)
+      throw historyContinuationRequired();
+    const { data: rawPage, error: pageError } = await client
+      .from("evidence_corrections")
+      .select(columns)
+      .eq("analysis_id", analysisId)
+      .eq("owner_id", ownerId)
+      .gt("revision", corrections.length)
+      .lte("revision", highWaterRevision)
+      .order("revision", { ascending: true })
+      .limit(HISTORY_READ_LIMITS.pageSize)
+      .abortSignal(signal);
+    pageCount++;
+    checkReadSignal(signal);
+    if (pageError) throw historyUnavailable();
+    if (
+      !Array.isArray(rawPage) ||
+      rawPage.length > HISTORY_READ_LIMITS.pageSize ||
+      rawPage.length > highWaterRevision - corrections.length
+    )
+      throw historyInvalid();
+    if (!rawPage.length) throw historyUnavailable();
+    for (const event of rawPage) {
+      if (event && typeof event === "object" && typeof event.value === "string")
+        valueTextUnits += event.value.length;
+      if (valueTextUnits > HISTORY_READ_LIMITS.valueTextUnits)
+        throw historyContinuationRequired();
+    }
+    const page = z.array(correctionSchema).safeParse(rawPage);
+    if (!page.success) throw historyInvalid();
+    for (const event of page.data) {
+      if (
+        !matchesCorrectionScope(
+          event,
+          analysisId,
+          ownerId,
+          corrections.length + 1,
+        ) ||
+        ids.has(event.id)
+      )
+        throw historyInvalid();
+      ids.add(event.id);
+      corrections.push(event);
+    }
+  }
+  if (head && JSON.stringify(corrections.at(-1)) !== JSON.stringify(head))
+    throw historyInvalid();
+  return { corrections, head, pageCount };
 }
 function replayAttempt(
   raw: unknown,
@@ -127,64 +309,80 @@ export async function loadEvidenceReview(
   client: EvidenceReviewClient,
   analysisId: string,
   ownerId: string,
+  options: { signal?: AbortSignal } = {},
 ) {
-  const analysis = await requireOwnedAnalysis(client, analysisId, ownerId);
-  const { data: attempt, error } = await client
-    .from("document_evidence_attempts")
-    .select(
-      "id, analysis_id, owner_id, resume_version_id, input_sha256, attempt_number, envelope",
-    )
-    .eq("analysis_id", analysisId)
-    .eq("owner_id", ownerId)
-    .order("attempt_number", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error)
-    throw new EvidenceReviewError(
-      503,
-      "Evidence is unavailable. Try again later.",
+  const deadline = AbortSignal.timeout(HISTORY_READ_LIMITS.deadlineMs);
+  const signal = options.signal
+    ? AbortSignal.any([deadline, options.signal])
+    : deadline;
+  try {
+    checkReadSignal(signal);
+    const analysis = await requireOwnedAnalysis(
+      client,
+      analysisId,
+      ownerId,
+      signal,
     );
-  if (!attempt) throw new EvidenceReviewError(404, "Evidence not found.");
-  const replayed = replayAttempt(attempt, analysis);
-  const { data: events, error: eventError } = await client
-    .from("evidence_corrections")
-    .select(
-      "id, attempt_id, analysis_id, owner_id, actor_id, revision, expected_revision, field, operation, value, candidate_id, created_at",
-    )
-    .eq("analysis_id", analysisId)
-    .eq("owner_id", ownerId)
-    .order("revision", { ascending: true });
-  if (eventError)
-    throw new EvidenceReviewError(
-      503,
-      "Review history is unavailable. Try again later.",
+    const { data: attempt, error } = await client
+      .from("document_evidence_attempts")
+      .select(
+        "id, analysis_id, owner_id, resume_version_id, input_sha256, attempt_number, envelope",
+      )
+      .eq("analysis_id", analysisId)
+      .eq("owner_id", ownerId)
+      .order("attempt_number", { ascending: false })
+      .limit(1)
+      .abortSignal(signal)
+      .maybeSingle();
+    checkReadSignal(signal);
+    if (error)
+      throw new EvidenceReviewError(
+        503,
+        "Evidence is unavailable. Try again later.",
+      );
+    if (!attempt) throw new EvidenceReviewError(404, "Evidence not found.");
+    const replayed = replayAttempt(attempt, analysis);
+    const { corrections, head, pageCount } = await readCorrectionPrefix(
+      client,
+      analysisId,
+      ownerId,
+      signal,
     );
-  const corrections = z.array(correctionSchema).safeParse(events);
-  if (
-    !corrections.success ||
-    corrections.data.some(
-      (event, index) =>
-        event.analysis_id !== analysisId ||
-        event.owner_id !== ownerId ||
-        event.actor_id !== ownerId ||
-        event.revision !== index + 1 ||
-        event.expected_revision !== index ||
-        (event.operation === "confirm") !== (event.candidate_id !== null),
-    )
-  )
-    throw new EvidenceReviewError(
-      422,
-      "Stored review history cannot be safely displayed.",
-    );
-  return {
-    analysisId,
-    attemptId: replayed.attempt.id,
-    attemptNumber: replayed.attempt.attempt_number,
-    evidence: replayed.envelope,
-    corrections: corrections.data,
-    revision: corrections.data.at(-1)?.revision ?? 0,
-    scoringEligible: false as const,
-  };
+    checkReadSignal(signal);
+    const targets = deriveEvidenceReviewTargets(replayed.envelope, {
+      ownerId: analysis.owner_id,
+      analysisId: analysis.id,
+      sourceId: analysis.resume_version_id,
+      inputSha256: replayed.attempt.input_sha256,
+      attemptId: replayed.attempt.id,
+    });
+    const historyAttestation: EvidenceHistoryAttestation = {
+      schemaVersion: "evidence-review-history/1.0.0",
+      state: "complete_captured_prefix",
+      binding: { ...targets.binding, targetModelVersion: targets.modelVersion },
+      highWaterRevision: head?.revision ?? 0,
+      highWaterEventId: head?.id ?? null,
+      receivedCount: corrections.length,
+      pageCount,
+    };
+    return {
+      analysisId,
+      attemptId: replayed.attempt.id,
+      attemptNumber: replayed.attempt.attempt_number,
+      evidence: replayed.envelope,
+      corrections,
+      revision: head?.revision ?? 0,
+      scoringEligible: false as const,
+      nativePageDiagnostics: deriveNativePageDiagnostics(
+        replayed.envelope.nativeSource,
+      ),
+      targets,
+      historyAttestation,
+    };
+  } catch (error) {
+    if (error instanceof EvidenceReviewError) throw error;
+    throw historyUnavailable();
+  }
 }
 
 export async function correctEvidenceReview(

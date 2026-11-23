@@ -1,0 +1,879 @@
+import { createHash } from "node:crypto";
+import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+import { scoreExtractedResume } from "../../app/lib/server/scoring-stage";
+import { createInitialFeedbackPublicationPolicy } from "../../app/lib/server/initial-feedback-publication-policy";
+
+import { INITIAL_FEEDBACK_OPERATION_PROFILE } from "../../app/lib/server/initial-feedback-operation-profile";
+import {
+  InitialFeedbackPrepareSchema,
+  InitialFeedbackPublicationSchema,
+  initialFeedbackPartialFeedback,
+  type InitialFeedbackCompletion,
+} from "../../app/lib/server/initial-feedback-operation-contract";
+import { renderInitialFeedbackPlan } from "../../app/lib/server/initial-feedback-plan";
+import {
+  BASELINE_SEMANTICS,
+  legacyCategoryFromProse,
+  ProseGenerationSchema,
+} from "../../app/lib/server/qualitative-prose";
+const uuid = (n: number) =>
+  `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const sha = (s: string) => createHash("sha256").update(s).digest("hex");
+// Explicit test-only opaque expected pins. Not an installed Native/source profile.
+const SYNTHETIC_RPC_PROFILE = {
+  schemaVersion: "initial-feedback-readiness/1.0.0",
+  profileVersion: "initial-feedback-readiness-profile/1.0.0",
+  checkerSha256: "0".repeat(64),
+  readerSha256: "1".repeat(64),
+  prepareSha256: "2".repeat(64),
+  claimSha256: "3".repeat(64),
+  settleSha256: "4".repeat(64),
+  finishSha256: "5".repeat(64),
+  usageSha256: "6".repeat(64),
+  exportSha256: "7".repeat(64),
+  metadataSha256: "8".repeat(64),
+} as const;
+const ready = () => ({
+  ...SYNTHETIC_RPC_PROFILE,
+  schemaReady: true,
+  readerExecutable: true,
+  prepareExecutable: true,
+  claimExecutable: true,
+  settleExecutable: true,
+  finishExecutable: true,
+  usageExecutable: true,
+  exportExecutable: true,
+});
+function fixture(budgetOn = false) {
+  const text = "Built services using Python";
+  const policy = createInitialFeedbackPublicationPolicy({
+    model: "unit-model",
+    maxOutputTokens: 1200,
+    attemptLimit: 3,
+    budgetPolicyVersion: budgetOn ? "unit-budget/1" : null,
+  });
+  // Real scorer/checksum and strict context validation. UUIDs and Native JSONB
+  // digests are synthetic opaque RPC metadata, never JS emulation/native proof.
+  const result = scoreExtractedResume({
+    text,
+    pageCount: 1,
+    pageTexts: [text],
+    textChecksum: sha(text),
+    jobDescription: "Python required",
+  });
+  const context = {
+    scoringContext: {
+      schemaVersion: "legacy-scoring-input/1.0.0",
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      requestId: null,
+      source: {
+        resumeId: uuid(4),
+        resumeVersionId: uuid(5),
+        fileChecksum: "a".repeat(64),
+        bytes: 1000,
+        mediaType: "application/pdf",
+      },
+      extraction: {
+        text,
+        pageCount: 1,
+        pageTexts: [text],
+        textChecksum: sha(text),
+        extractorVersion: "unpdf-v1",
+        contentSha256: "b".repeat(64),
+      },
+      job: {
+        kind: "owned_job",
+        id: uuid(6),
+        title: "Unit role",
+        description: "Python required",
+        companyName: "",
+        contentSha256: "c".repeat(64),
+      },
+      producer: {
+        parserVersion: "parse-sim-v1",
+        rulesetVersion: "ats-rules-v4",
+        normalizerVersion: "normalizer-v1",
+        taxonomyVersion: "skills-taxonomy-v1",
+      },
+      binding: {
+        schemaVersion: "legacy-scoring-binding/1.0.0",
+        analysisId: uuid(1),
+        ownerId: uuid(2),
+        organizationId: uuid(3),
+        resumeId: uuid(4),
+        resumeVersionId: uuid(5),
+        fileChecksum: "a".repeat(64),
+        textChecksum: sha(text),
+        extractionSha256: "b".repeat(64),
+        jobId: uuid(6),
+        jobSha256: "c".repeat(64),
+        inputBindingSha256: "d".repeat(64),
+      },
+    },
+    deterministicResult: result,
+    currentness: "current",
+    generationEligibility: "eligible",
+  };
+  const attempt = {
+    attemptId: uuid(8),
+    ordinal: 1,
+    state: "reserved",
+    claimedAt: null,
+    usage: null,
+    errorCode: null,
+    budgetAttemptId: null,
+  };
+  const operation = {
+    schemaVersion: "initial-feedback-operation/1.0.0",
+    operationId: uuid(7),
+    analysisId: uuid(1),
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    binding: {
+      schemaVersion: "initial-feedback-binding/1.0.0",
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      resumeId: uuid(4),
+      resumeVersionId: uuid(5),
+      scoringInputSha256: "d".repeat(64),
+      deterministicContentSha256: "e".repeat(64),
+      resultChecksum: result.resultChecksum,
+      sourceTextSha256: sha(text),
+      jobId: uuid(6),
+      jobSha256: "c".repeat(64),
+      policy,
+    },
+    bindingSha256: "f".repeat(64),
+    state: "open",
+    attemptLimit: 3,
+    attempts: [attempt],
+    publicationId: null,
+  };
+  const prepared = InitialFeedbackPrepareSchema.parse({
+    schemaVersion: "initial-feedback-prepare/1.0.0",
+    status: "prepared",
+    operation,
+    attempt,
+    context,
+    dispatchAllowed: false,
+    replayed: false,
+  });
+  const scope = {
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    analysisId: uuid(1),
+    lease: { workerId: "unit-worker", attempt: 2, leaseFence: uuid(10) },
+    policy,
+  };
+  return { prepared, scope };
+}
+
+function producePublication(
+  f: ReturnType<typeof fixture>,
+  completion: InitialFeedbackCompletion,
+  attemptId: string | null,
+) {
+  // Synthetic RPC metadata only. Real compiler/render/scorer own all content,
+  // support, original-index mappings and deterministic checksums. Not Native proof.
+  const d = f.prepared.context!.deterministicResult,
+    b = f.prepared.operation.binding;
+  const render =
+    completion.kind === "assessed"
+      ? renderInitialFeedbackPlan(
+          f.prepared.context!.scoringContext.extraction.text,
+          completion.plan,
+        )
+      : null;
+  return InitialFeedbackPublicationSchema.parse({
+    schemaVersion: "initial-feedback-publication/1.0.0",
+    publicationId: uuid(90),
+    state: completion.kind === "assessed" ? "assessed" : "deterministic_only",
+    reason: completion.kind === "assessed" ? null : completion.reason,
+    binding: b,
+    plan: completion.plan,
+    recordedObservation: completion.observation,
+    generationFailure: completion.generationFailure,
+    ownedSupport: render
+      ? {
+          schemaVersion: "initial-feedback-native-support/1.0.0",
+          scope: "retained_output_only",
+          bindingSha256: f.prepared.operation.bindingSha256,
+          planSha256: "1".repeat(64),
+          parts: render.parts,
+          mapping: render.mapping,
+        }
+      : null,
+    prose: render?.prose ?? null,
+    compatibility: {
+      deterministicResult: d,
+      feedback: render
+        ? {
+            scoreSemantics: BASELINE_SEMANTICS,
+            overallScore: d.score,
+            ATS: {
+              score: d.score,
+              tips: d.ruleTrace.slice(0, 4).map((r) => ({
+                type: r.passed ? "good" : "improve",
+                tip: r.detail,
+              })),
+            },
+            toneAndStyle: legacyCategoryFromProse(render.prose.toneAndStyle),
+            content: legacyCategoryFromProse(render.prose.content),
+            structure: legacyCategoryFromProse(render.prose.structure),
+            skills: legacyCategoryFromProse(render.prose.skills),
+          }
+        : initialFeedbackPartialFeedback(d),
+      writer: render?.prose.writer ?? null,
+    },
+    receipt: {
+      schemaVersion: "initial-feedback-receipt/1.0.0",
+      operationId: f.prepared.operation.operationId,
+      attemptId,
+      publicationId: uuid(90),
+      analysisId: b.analysisId,
+      ownerId: b.ownerId,
+      bindingSha256: f.prepared.operation.bindingSha256,
+      publicationSha256: "2".repeat(64),
+      resultSha256: "3".repeat(64),
+      writerSha256: render ? "4".repeat(64) : null,
+      runId: render ? uuid(91) : null,
+      createdAt: "2026-11-15T00:00:00.123456Z",
+      replayed: false,
+    },
+  });
+}
+const noAi: InitialFeedbackCompletion = {
+  kind: "deterministic_only",
+  reason: "ai_disabled",
+  plan: null,
+  observation: null,
+  generationFailure: null,
+};
+import * as planModule from "../../app/lib/server/initial-feedback-plan";
+import { runInitialFeedbackService } from "../../app/lib/server/initial-feedback-service";
+import { createInitialFeedbackRawTransport } from "../../app/lib/server/initial-feedback-ai";
+import {
+  calculateAiBudgetCost,
+  hashAiBudgetBinding,
+} from "../../app/lib/server/ai-budget";
+import type { InitialFeedbackOperationClient } from "../../app/lib/server/initial-feedback-operation-repository";
+beforeEach(() =>
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(() => Promise.reject(Error("Offline-only test"))),
+  ),
+);
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+const at = Date.parse("2026-11-15T00:00:00Z");
+const generation = () =>
+  ProseGenerationSchema.parse({
+    toneAndStyle: {
+      tips: [
+        {
+          type: "good",
+          tip: "Created services using Python",
+          explanation: "Clarifies wording.",
+          quote: "Built services using Python",
+        },
+      ],
+    },
+    content: { tips: [] },
+    structure: { tips: [] },
+    skills: { tips: [] },
+    writer: { summary: null, bullets: [] },
+  });
+function harness(budgetOn = false) {
+  const f = fixture(budgetOn),
+    op = structuredClone(f.prepared.operation),
+    events: string[] = [];
+  const state: {
+    publication: ReturnType<typeof producePublication> | null;
+    readPending: boolean;
+    claimFalse: boolean;
+    claimError: string | null;
+    finishLost: boolean;
+    finishCount: number;
+    tokens: string;
+    unknown: string;
+    outputTokens: number;
+    content: string | null;
+    refused: boolean;
+    fetchError: boolean;
+    generation: ReturnType<typeof generation>;
+    budgetRequest: Record<string, unknown> | null;
+    budgetUsage: { inputTokens: string; outputTokens: string } | null;
+  } = {
+    publication: null,
+    readPending: false,
+    claimFalse: false,
+    claimError: null,
+    finishLost: false,
+    finishCount: 0,
+    tokens: "0",
+    unknown: "0",
+    outputTokens: 7,
+    content: null,
+    refused: false,
+    fetchError: false,
+    generation: generation(),
+    budgetRequest: null,
+    budgetUsage: null,
+  };
+  const fullReady = ready();
+  function budgetReceipt(
+    request: Record<string, unknown>,
+    status: string,
+    dispatchAllowed = false,
+  ) {
+    const input = {
+      userId: f.scope.ownerId,
+      organizationId: f.scope.organizationId,
+      operationId: String(request.operationId),
+      attemptId: String(request.attemptId),
+      attemptOrdinal: Number(request.attemptOrdinal ?? 1),
+      surface: "qualitative" as const,
+      payloadSha256: String(request.payloadSha256),
+      model: String(request.model),
+      promptPolicyVersion: String(request.promptPolicyVersion),
+      policyVersion: String(request.policyVersion),
+      reservedInputTokens: Number(request.reservedInputTokens),
+      reservedOutputTokens: Number(request.reservedOutputTokens),
+    };
+    const cost = (a: number, b: number) =>
+      calculateAiBudgetCost({
+        inputTokens: a,
+        outputTokens: b,
+        inputMicrousdPerMillion: "1",
+        outputMicrousdPerMillion: "1",
+      });
+    return {
+      schemaVersion: "ai-budget/1.0.0",
+      status: "ok",
+      receipt: {
+        schemaVersion: "ai-budget/1.0.0",
+        ...input,
+        reservedInputTokens: String(input.reservedInputTokens),
+        reservedOutputTokens: String(input.reservedOutputTokens),
+        bindingSha256: hashAiBudgetBinding(input),
+        poolPolicyVersion: "unit-pool/1",
+        attemptLimit: 3,
+        period: "2026-11-01",
+        state: status,
+        inputMicrousdPerMillion: "1",
+        outputMicrousdPerMillion: "1",
+        reservedCostMicrousd: cost(
+          input.reservedInputTokens,
+          input.reservedOutputTokens,
+        ),
+        actualInputTokens:
+          status === "settled" ? state.budgetUsage?.inputTokens : null,
+        actualOutputTokens:
+          status === "settled" ? state.budgetUsage?.outputTokens : null,
+        actualCostMicrousd:
+          status === "settled"
+            ? cost(
+                Number(state.budgetUsage?.inputTokens),
+                Number(state.budgetUsage?.outputTokens),
+              )
+            : null,
+        replayed: false,
+        dispatchAllowed,
+        poolBlocked:
+          status === "settled" &&
+          Number(state.budgetUsage?.outputTokens) > input.reservedOutputTokens,
+      },
+    };
+  }
+  const rpc = vi.fn<InitialFeedbackOperationClient["rpc"]>(
+    async (name, args) => {
+      events.push(name);
+      if (name === "read_initial_feedback_readiness")
+        return { data: fullReady, error: null };
+      if (name === "read_initial_feedback_operation_readiness")
+        return {
+          data: {
+            ...INITIAL_FEEDBACK_OPERATION_PROFILE,
+            schemaReady: true,
+            prepareExecutable: true,
+            claimExecutable: true,
+            settleExecutable: true,
+          },
+          error: null,
+        };
+      if (name === "read_initial_feedback_usage")
+        return {
+          data: {
+            schemaVersion: "initial-feedback-usage/1.0.0",
+            profileVersion: SYNTHETIC_RPC_PROFILE.profileVersion,
+            usageSha256: SYNTHETIC_RPC_PROFILE.usageSha256,
+            ownerId: f.scope.ownerId,
+            organizationId: f.scope.organizationId,
+            analysisId: f.scope.analysisId,
+            periodStart: "2026-11-01",
+            periodEnd: "2026-12-01",
+            legacyUnlinkedTokens: state.tokens,
+            canonicalTokens: "0",
+            initialFeedbackTokens: "0",
+            totalTokens: state.tokens,
+            unknownClaims: state.unknown,
+          },
+          error: null,
+        };
+      if (name === "read_initial_feedback")
+        return {
+          data: state.publication
+            ? {
+                schemaVersion: "initial-feedback-read/1.0.0",
+                status: "available",
+                currentness: "historical",
+                publication: state.publication,
+              }
+            : state.readPending
+              ? {
+                  schemaVersion: "initial-feedback-read/1.0.0",
+                  status: "pending",
+                  operation: op,
+                  attempt: op.attempts.at(-1),
+                }
+              : {
+                  schemaVersion: "initial-feedback-read/1.0.0",
+                  status: "legacy_unbound",
+                  analysisId: f.scope.analysisId,
+                  reason: "original_input_or_publication_missing",
+                },
+          error: null,
+        };
+      if (name === "prepare_initial_feedback")
+        return { data: f.prepared, error: null };
+      if (name === "claim_initial_feedback_dispatch") {
+        if (state.claimError)
+          return {
+            data: null,
+            error: {
+              code: state.claimError,
+              message: "private refused detail",
+            },
+          };
+        const a = op.attempts[0];
+        a.state = "dispatched";
+        a.claimedAt = "2026-11-15T00:00:00Z";
+        if (budgetOn) a.budgetAttemptId = a.attemptId;
+        const request = state.budgetRequest;
+        return {
+          data: {
+            schemaVersion: "initial-feedback-claim/1.0.0",
+            operation: op,
+            attempt: a,
+            dispatchAllowed: !state.claimFalse,
+            replayed: state.claimFalse,
+            budget:
+              budgetOn && request
+                ? budgetReceipt(request, "dispatched", !state.claimFalse)
+                : null,
+          },
+          error: null,
+        };
+      }
+      if (name === "settle_initial_feedback_attempt") {
+        const a = op.attempts[0];
+        a.usage = a.usage ?? (args.p_usage as typeof a.usage);
+        a.errorCode = a.errorCode ?? (args.p_error_code as typeof a.errorCode);
+        a.state =
+          a.usage === null
+            ? "held_unknown"
+            : a.errorCode === null
+              ? "known"
+              : "failed";
+        return {
+          data: {
+            schemaVersion: "initial-feedback-settlement/1.0.0",
+            operationId: op.operationId,
+            attemptId: a.attemptId,
+            bindingSha256: op.bindingSha256,
+            state: a.state,
+            usage: a.usage,
+            errorCode: a.errorCode,
+            replayed: false,
+          },
+          error: null,
+        };
+      }
+      if (name === "finish_initial_feedback") {
+        state.finishCount++;
+        state.publication = producePublication(
+          f,
+          args.p_completion as InitialFeedbackCompletion,
+          args.p_attempt_id as string | null,
+        );
+        if (state.finishLost) throw Error("lost response");
+        return {
+          data: {
+            schemaVersion: "initial-feedback-finish/1.0.0",
+            status: "published",
+            publication: state.publication,
+          },
+          error: null,
+        };
+      }
+      if (name === "ai_budget_reserve_next") {
+        state.budgetRequest = args.p_request as Record<string, unknown>;
+        return {
+          data: budgetReceipt(state.budgetRequest, "reserved"),
+          error: null,
+        };
+      }
+      if (name === "ai_budget_settle") {
+        const r = args.p_request as Record<string, unknown>;
+        state.budgetUsage = r.usage as typeof state.budgetUsage;
+        return { data: budgetReceipt(r, "settled"), error: null };
+      }
+      if (name === "ai_budget_mark_unknown")
+        return {
+          data: budgetReceipt(
+            args.p_request as Record<string, unknown>,
+            "held_unknown",
+          ),
+          error: null,
+        };
+      if (name === "ai_budget_release")
+        return {
+          data: budgetReceipt(
+            args.p_request as Record<string, unknown>,
+            "released",
+          ),
+          error: null,
+        };
+      throw Error("Unexpected RPC");
+    },
+  );
+  const fetch = vi.fn<typeof globalThis.fetch>(async () => {
+    events.push("sdk_fetch");
+    if (state.fetchError) throw Error("private network failure");
+    return new Response(
+      JSON.stringify({
+        id: "fixture-chat",
+        object: "chat.completion",
+        created: 1,
+        model: f.scope.policy.model,
+        choices: [
+          {
+            index: 0,
+            finish_reason: "stop",
+            message: {
+              role: "assistant",
+              content: state.content ?? JSON.stringify(state.generation),
+              refusal: state.refused ? "refused" : null,
+            },
+          },
+        ],
+        usage: { prompt_tokens: 11, completion_tokens: state.outputTokens },
+      }),
+      { status: 200, headers: { "content-type": "application/json" } },
+    );
+  });
+  const authorize = vi.fn(async () => {
+    events.push("authorize");
+  });
+  const createTransport = vi.fn(() =>
+    createInitialFeedbackRawTransport(
+      {
+        apiKey: "offline-no-live-key",
+        model: f.scope.policy.model,
+        maxOutputTokens: f.scope.policy.maxOutputTokens,
+        timeoutMs: 1000,
+      },
+      { fetch, now: () => at },
+    ),
+  );
+  const options = {
+    scope: f.scope,
+    expectedProfile: SYNTHETIC_RPC_PROFILE,
+    aiEnabled: true,
+    tokenLimit: "1000000",
+    audit: { processId: "unit-process", requestId: "unit-request" },
+    authorize,
+    createTransport,
+    now: () => at,
+  };
+  return {
+    f,
+    op,
+    state,
+    rpc,
+    fetch,
+    authorize,
+    createTransport,
+    events,
+    options,
+    run: () => runInitialFeedbackService({ rpc }, options),
+  };
+}
+describe("initial feedback service, real compiler and installed SDK/fake fetch", () => {
+  it("replays exact owned historical publication before authorization/quota/budget/provider", async () => {
+    const h = harness();
+    h.state.publication = producePublication(h.f, noAi, null);
+    expect(await h.run()).toEqual({
+      kind: "published",
+      publication: h.state.publication,
+    });
+    expect(h.authorize).not.toHaveBeenCalled();
+    expect(h.createTransport).not.toHaveBeenCalled();
+    expect(h.rpc.mock.calls.map(([n]) => n)).toEqual([
+      "read_initial_feedback_readiness",
+      "read_initial_feedback",
+    ]);
+    const raced=harness(),publication=producePublication(raced.f,noAi,null),operation=structuredClone(raced.f.prepared.operation);
+    publication.receipt.replayed=true;operation.state='published';operation.publicationId=publication.publicationId;operation.attempts[0].state='cancelled_before_dispatch';
+    const published={schemaVersion:'initial-feedback-prepare/1.0.0',status:'published',operation,publication,context:null,dispatchAllowed:false,replayed:true};
+    expect(InitialFeedbackPrepareSchema.safeParse(published).success).toBe(true);
+    const actual=raced.rpc.getMockImplementation();if(!actual)throw Error('RPC fixture');
+    raced.rpc.mockImplementation((name,args)=>{if(name==='prepare_initial_feedback'){raced.state.publication=publication;return Promise.resolve({data:published,error:null});}return actual(name,args);});
+    expect(await raced.run()).toEqual({kind:'published',publication});expect(raced.authorize).not.toHaveBeenCalled();expect(raced.createTransport).not.toHaveBeenCalled();
+  });
+  it("returns pending without constructing SDK or mutating another active attempt", async () => {
+    const h = harness();
+    h.state.readPending = true;
+    expect((await h.run()).kind).toBe("pending");
+    expect(h.rpc).toHaveBeenCalledTimes(2);
+    expect(h.authorize).not.toHaveBeenCalled();
+  });
+  it("AIoff creates honest deterministic-only with no consent/rate/quota/budget/SDK effects", async () => {
+    const h = harness();
+    h.options.aiEnabled = false;
+    const result = await h.run();
+    expect(result.kind).toBe("published");
+    expect(h.state.publication?.reason).toBe("ai_disabled");
+    expect(h.authorize).not.toHaveBeenCalled();
+    expect(h.createTransport).not.toHaveBeenCalled();
+    expect(
+      h.events.some(
+        (x) =>
+          x === "read_initial_feedback_usage" ||
+          x.startsWith("ai_budget_") ||
+          x === "claim_initial_feedback_dispatch",
+      ),
+    ).toBe(false);
+  });
+  it("fixed known Native claim refusal finishes pre_dispatch_unavailable without SDK", async () => {
+    const h = harness();
+    h.state.claimError = "42501";
+    const result = await h.run();
+    expect(result.kind).toBe("published");
+    expect(h.state.publication?.reason).toBe("pre_dispatch_unavailable");
+    expect(h.fetch).not.toHaveBeenCalled();
+  });
+  it("requires remaining quota to cover captured maximum output before dispatch", async () => {
+    const h = harness();
+    h.options.tokenLimit = "2000";
+    h.state.tokens = "1000";
+    const result = await h.run();
+    expect(result.kind).toBe("published");
+    expect(h.state.publication?.reason).toBe("pre_dispatch_unavailable");
+    expect(h.events).not.toContain("claim_initial_feedback_dispatch");
+    expect(h.fetch).not.toHaveBeenCalled();
+  });
+  it("budgetoff over-cap output stays accounted and never becomes assessed", async () => {
+    const h = harness();
+    h.state.outputTokens = 1201;
+    const result = await h.run();
+    expect(result.kind).toBe("published");
+    expect(h.state.publication?.state).toBe("deterministic_only");
+    expect(h.op.attempts[0].usage).toEqual({
+      inputTokens: "11",
+      outputTokens: "1201",
+    });
+    expect(h.fetch).toHaveBeenCalledTimes(1);
+  });
+  it("settles known usage before one actual compiler call on exact original text", async () => {
+    const h = harness();
+    const actual = planModule.compileInitialFeedbackPlan;
+    const spy = vi.spyOn(planModule, "compileInitialFeedbackPlan");
+    spy.mockImplementation((...args) => {
+      h.events.push("compiler");
+      return actual(...args);
+    });
+    const result = await h.run();
+    expect(result.kind).toBe("published");
+    expect(h.state.publication?.state).toBe("assessed");
+    expect(h.fetch).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(h.events.indexOf("settle_initial_feedback_attempt")).toBeLessThan(
+      h.events.indexOf("compiler"),
+    );
+    expect(h.state.publication?.compatibility.deterministicResult).toEqual(
+      h.f.prepared.context!.deterministicResult,
+    );
+    spy.mockRestore();
+  });
+  it("false claim has no SDK, technical settlement, finish or generic loser mutation", async () => {
+    const h = harness();
+    h.state.claimFalse = true;
+    expect((await h.run()).kind).toBe("pending");
+    expect(h.fetch).not.toHaveBeenCalled();
+    expect(h.events).not.toContain("settle_initial_feedback_attempt");
+    expect(h.events).not.toContain("finish_initial_feedback");
+  });
+  it("malformed JSON with known usage preserves GenerationFailure and no fake observation", async () => {
+    const h = harness();
+    h.state.content = '{"duplicate":1,"duplicate":2}';
+    const result = await h.run();
+    expect(result.kind).toBe("published");
+    expect(h.state.publication?.generationFailure?.reason).toBe(
+      "malformed_json",
+    );
+    expect(h.state.publication?.recordedObservation).toBe(null);
+    expect(h.op.attempts[0].usage).toEqual({
+      inputTokens: "11",
+      outputTokens: "7",
+    });
+    expect(h.fetch).toHaveBeenCalledTimes(1);
+  });
+  it("refused output is charged and retained as explicit failure, never supported prose", async () => {
+    const h = harness();
+    h.state.refused = true;
+    await h.run();
+    expect(h.state.publication?.generationFailure?.reason).toBe("refused");
+    expect(h.state.publication?.prose).toBe(null);
+    expect(h.op.attempts[0].usage).toEqual({
+      inputTokens: "11",
+      outputTokens: "7",
+    });
+  });
+  it("lost finish response is resolved through exact owned read before any storage_failed marker", async () => {
+    const h = harness();
+    h.state.finishLost = true;
+    const result = await h.run();
+    expect(result.kind).toBe("published");
+    expect(h.state.finishCount).toBe(1);
+    expect(h.events.lastIndexOf("read_initial_feedback")).toBeGreaterThan(
+      h.events.indexOf("finish_initial_feedback"),
+    );
+    expect(
+      h.rpc.mock.calls.some(
+        ([n, a]) =>
+          n === "settle_initial_feedback_attempt" &&
+          a.p_error_code === "storage_failed",
+      ),
+    ).toBe(false);
+    expect(h.fetch).toHaveBeenCalledTimes(1);
+  });
+  it("shared unknown usage prevents dispatch with no old counter fallback", async () => {
+    const h = harness();
+    h.state.unknown = "1";
+    await h.run();
+    expect(h.state.publication?.reason).toBe("pre_dispatch_unavailable");
+    expect(h.events).not.toContain("claim_initial_feedback_dispatch");
+    expect(h.fetch).not.toHaveBeenCalled();
+    expect(
+      h.events.some(
+        (x) =>
+          x === "get_organization_ai_tokens_used" ||
+          x === "read_canonical_rewrite_usage",
+      ),
+    ).toBe(false);
+  });
+  it("budgeton intercepts generic claim into actual atomic claim and debits only through R03", async () => {
+    const h = harness(true);
+    const result = await h.run();
+    expect(result.kind).toBe("published");
+    expect(h.state.publication?.state).toBe("assessed");
+    expect(h.fetch).toHaveBeenCalledTimes(1);
+    expect(h.events).toContain("ai_budget_reserve_next");
+    expect(h.events).toContain("claim_initial_feedback_dispatch");
+    expect(h.events).not.toContain("ai_budget_claim_dispatch");
+    expect(h.events.filter((x) => x === "ai_budget_settle")).toHaveLength(1);
+    expect(h.state.budgetUsage).toEqual({
+      inputTokens: "11",
+      outputTokens: "7",
+    });
+    const over = harness(true);
+    over.state.outputTokens = 1201;
+    expect((await over.run()).kind).toBe("published");
+    expect(over.state.publication?.state).toBe("deterministic_only");
+    expect(over.op.attempts[0].usage).toEqual({
+      inputTokens: "11",
+      outputTokens: "1201",
+    });
+    expect(over.state.budgetUsage).toEqual({
+      inputTokens: "11",
+      outputTokens: "1201",
+    });
+    expect(over.fetch).toHaveBeenCalledTimes(1);
+    const replaced = harness(true);
+    replaced.state.refused = true;
+    const actual = replaced.rpc.getMockImplementation();
+    if (!actual) throw Error("RPC fixture");
+    replaced.rpc.mockImplementation((name, args) =>
+      name === "ai_budget_settle"
+        ? Promise.resolve({
+            data: null,
+            error: { code: "P0C03", message: "private accounting unavailable" },
+          })
+        : actual(name, args),
+    );
+    expect(await replaced.run()).toMatchObject({
+      kind: "pending",
+      reason: "accounting_unavailable",
+    });
+    expect(replaced.op.attempts[0].usage).toEqual({
+      inputTokens: "11",
+      outputTokens: "7",
+    });
+    expect(replaced.state.publication).toBe(null);
+    expect(replaced.fetch).toHaveBeenCalledTimes(1);
+    expect(replaced.events).not.toContain("ai_budget_mark_unknown");
+    expect(replaced.events).not.toContain("ai_budget_release");
+  });
+  it("budgeton false claim never settles/releases/marks the winner or constructs transport", async () => {
+    const h = harness(true);
+    h.state.claimFalse = true;
+    expect((await h.run()).kind).toBe("pending");
+    expect(h.fetch).not.toHaveBeenCalled();
+    expect(
+      h.events.some((x) =>
+        [
+          "ai_budget_settle",
+          "ai_budget_mark_unknown",
+          "ai_budget_release",
+          "settle_initial_feedback_attempt",
+          "finish_initial_feedback",
+        ].includes(x),
+      ),
+    ).toBe(false);
+  });
+  it("missing observed usage remains a technical unknown hold, never zero or assessed", async () => {
+    const h = harness();
+    h.state.outputTokens = Number.NaN;
+    await h.run();
+    expect(h.op.attempts[0].usage).toBe(null);
+    expect(h.op.attempts[0].state).toBe("held_unknown");
+    expect(h.state.publication?.state).toBe("deterministic_only");
+    expect(h.state.publication?.recordedObservation).toBe(null);
+  });
+  it("lossless reference failure keeps full generation failure and known accounting, no fake support", async () => {
+    const h = harness();
+    h.state.generation.writer.bullets = [
+      {
+        sourceId: 31,
+        rewrite: "Created services using Python",
+        reasoning: "Clarifies wording.",
+      },
+    ];
+    await h.run();
+    expect(h.state.publication?.generationFailure?.reason).toBe(
+      "source_reference_invalid",
+    );
+    expect(h.state.publication?.recordedObservation).toBe(null);
+    expect(h.op.attempts[0].usage).toEqual({
+      inputTokens: "11",
+      outputTokens: "7",
+    });
+    expect(h.fetch).toHaveBeenCalledTimes(1);
+  });
+});

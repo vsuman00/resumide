@@ -1,0 +1,61 @@
+{
+  "id": "CR-U19-S07",
+  "status": "VERIFIED_LOCAL_AUTHORING_BROWSER_ZOOM",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR on loopback, simulated Supabase Auth and Data API transport, and disposable PostgreSQL 17.11",
+  "sources": {
+    "scripts/local-fixture-browser.ts": "3dc69146dd1110a262c95154f4d86663f16d1c480a1d7957e4bfe071e0ccd15b",
+    "scripts/verify-local-clarification-browser.ts": "3d5f442dcdb8638f6250d3d912cd1483d6fcd4f296b459792b945369c8115c12",
+    "scripts/verify-local-typed-authoring-journey.ts": "55a6ed8ba785d3912ed37e435655175d4c0dde7ce68066cf343f517cdfc23bb8",
+    "scripts/verify-local-typed-score-browser.ts": "2f3dbf0ef59c13822956e6012b8e45b09466965a453a2c8ad11b2e42b9daf8f6",
+    "scripts/verify-local-typed-score.py": "552f8c385d7de1c4a7258ef3bdaa899ad7d6d0023d043d68b862723e2ddd4c4c",
+    "app/components/AuthoringWorkspace.tsx": "359db5e04015d69e75efc63c57202ce54273e514a4e1c74fe385658e6e11cb7a",
+    "app/components/TypedAuthoringReview.tsx": "f68fbe6230bb0326c9bd91267b3c3ce2a4c890736b333300f374ebcc68cd0169"
+  },
+  "browser": {
+    "version": "Chromium 153.0.8010.12",
+    "mechanism": "Set Page zoom to 200% in Chromium Appearance settings in a disposable profile. Verify effective viewport width, device pixel ratio 2, and visual viewport scale 1 on the application page.",
+    "effectiveViewportWidthsCssPx": [390, 320],
+    "schemaOperations": 100,
+    "orderedDigest": "4e253744226912aab1c9411cb03e528f8fbdaa10984aa5933a88ff380601293a",
+    "ssrEntrySha256": "a6ca7cb24568314b15bcfbf50ce0d2620c1410f0c412c43ee9839bf6ee33d3ad",
+    "clarification": {
+      "command": "scripts/verify-local-typed-score.py --browser --clarification --browser-zoom",
+      "logSha256": "c8ab09cbb8b66cc0807f0ddbd43ee5fd64baa4a7f8d014e6b59172e0aaa40262",
+      "keyboardPreviewAndStaleRecovery": true,
+      "confirmationControlsFitAt320": true,
+      "previewSeriousOrCriticalAxeViolations": 0,
+      "staleAttemptStatus": 409,
+      "staleAttemptLeftHeadAndLedgerUnchanged": true,
+      "exactReviewedFactSavedAfterFreshAcknowledgement": true,
+      "scoresRemainedUnavailable": true
+    },
+    "typedWording": {
+      "command": "scripts/verify-local-typed-score.py --browser --authoring --browser-zoom",
+      "logSha256": "490157a2c33d138f7d5b16bc01efcf0fdaf7171d31663e58bbfc6ef438c4c491",
+      "keyboardPreviewAndStaleRecovery": true,
+      "confirmationControlsFitAt320": true,
+      "previewSeriousOrCriticalAxeViolations": 0,
+      "stalePreviewStatus": 409,
+      "acceptAndExactRetryStatuses": [503, 503],
+      "exactCommandAndSavedVersionPreserved": true,
+      "scoresRemainedUnavailable": true
+    },
+    "defaultProfile": {
+      "command": "scripts/verify-local-typed-score.py --browser",
+      "logSha256": "7cf8ed2af6f97a07a265828a9b397fc14aa5c8a9d280094419f65e1a512512f2",
+      "pinnedScoreReviewPassed": true
+    }
+  },
+  "checks": {
+    "node": "22.23.4",
+    "typecheck": "passed",
+    "fixtureLint": "passed",
+    "changedTypeScriptFormatting": "passed",
+    "argumentHelp": "passed after escaping the percent sign in the new option description",
+    "gitDiffCheck": "passed"
+  },
+  "manualScreenReaderVerified": false,
+  "otherConsumerSurfaceZoomVerified": false,
+  "managedSupabaseVerified": false
+}

@@ -1,0 +1,35 @@
+{
+  "status": "ANNOTATION_PARTITION_INTEGRATED_TEST_PENDING",
+  "ownerScope": "ADR0018 solo prerelease",
+  "files": [
+    {
+      "path": "app/lib/server/evaluation-annotation.ts",
+      "sha256": "d3f7246c22f8bbbffc127646689468de752d9b0ab20b43a6e7e10c4dd0509c2c",
+      "owner": "aa7-20261106-licenses"
+    },
+    {
+      "path": "tests/unit/evaluation-annotation.test.ts",
+      "sha256": "09ee9c5a1291bc91608da34cb268a8df4b03c725044955e5f7b47afd5829c684",
+      "owner": "aa7-20261106-licenses"
+    },
+    {
+      "path": "app/lib/server/evaluation-partitions.ts",
+      "sha256": "199ce3fa9ec714d8c7dbcd7d9167bea7388606ce342072a84b0bd25a97c9ffe9",
+      "owner": "aa7-20261030-sandbox"
+    },
+    {
+      "path": "tests/unit/evaluation-partitions.test.ts",
+      "sha256": "a58d4c902ca9e73001d86043e5bddaa3c5b25316b4116bd76d2217f665866aab",
+      "owner": "aa7-20261030-sandbox"
+    }
+  ],
+  "integratedVerification": {
+    "command": "RESUMIDE_PRIVATE_VERIFY=aa7-owned-synthetic npm test -- tests/unit/evaluation-annotation.test.ts tests/unit/evaluation-partitions.test.ts",
+    "node": "22.23.4",
+    "exitCode": 0,
+    "testFiles": 2,
+    "passedTests": 43,
+    "tier": "synthetic_engineering",
+    "globalCiRun": false
+  }
+}

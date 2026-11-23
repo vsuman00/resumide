@@ -11,6 +11,7 @@ import {
   isRouteErrorResponse,
   type HeadersFunction,
 } from "react-router";
+import { z } from "zod";
 import WorkspaceShell from "~/components/WorkspaceShell";
 import { getServerConfig } from "~/lib/server/config";
 import { getAuthenticatedUser } from "~/lib/server/auth";
@@ -45,13 +46,24 @@ export const headers: HeadersFunction = ({
 export const meta = () => [{ title: "Preview and export | Resumide" }];
 export async function loader({ request, params }: Args) {
   const h = privateArtifactHeaders();
+  const url = new URL(request.url);
   try {
     const user = await artifactIdentity(request, h);
+    const versions = url.searchParams.getAll("version");
+    if (
+      versions.length > 1 ||
+      (versions.length === 1 && !z.uuid().safeParse(versions[0]).success)
+    )
+      throw new CanonicalError(
+        422,
+        "Choose one saved resume version to preview.",
+      );
     return data(
       await loadArtifactPreview(
         createSupabaseAdminClient(),
         params.id ?? "",
         user.id,
+        versions[0]?.toLowerCase(),
       ),
       { headers: h },
     );
@@ -68,7 +80,7 @@ export async function loader({ request, params }: Args) {
       );
       if (!user)
         throw redirect(
-          `/auth?next=${encodeURIComponent(`/analysis/${params.id ?? ""}/export`)}`,
+          `/auth?next=${encodeURIComponent(`/analysis/${params.id ?? ""}/export${url.search}`)}`,
           { headers: h },
         );
     }
@@ -234,7 +246,7 @@ export function ErrorBoundary() {
           </p>
         </>
       ) : (
-        <Link to="/">Return to analyses</Link>
+        <Link to="/analyses">Return to analyses</Link>
       )}
     </WorkspaceShell>
   );

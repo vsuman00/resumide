@@ -1,0 +1,41 @@
+{
+  "id": "CR-R12-S07",
+  "date": "2026-11-22",
+  "status": "VERIFIED_CURRENT_LOCAL_DAEMON_CANCELLATION",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty main checkout. One neutral local worker build probe on the admitted Docker toolchain.",
+  "localOciSource": {
+    "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+    "archiveBytes": 96254976,
+    "archiveSha256": "12fe7bfb96e0f40d8e14b3fb82ad9690e8588877da26360adc37ee996dd648e4",
+    "selectedManifest": "sha256:8829fd735519259880d845285b55ad24fba0ef2b16cc8c2d69f32a692870488a",
+    "layoutSha256": "c2e7a81ccde0b80c97980298a2190825cbd64892f0eb9939d099eeb5d985f4d9",
+    "verifiedLayoutFiles": 11,
+    "platform": "linux/arm64"
+  },
+  "toolchain": {
+    "dockerClientAndServer": "29.9.3",
+    "buildx": "v0.38.1",
+    "buildkit": "v0.34.2",
+    "daemonAndSocketIdentityMatched": true
+  },
+  "focusedTestsPassed": 133,
+  "scopedLint": "PASS",
+  "typecheck": "PASS",
+  "independentReview": "The reviewer reproduced both packet fingerprints, checked the exact source and layout files and verified the local endpoint binding and disk floor. The daemon identity, log limit race and private Buildx state findings were fixed before execution.",
+  "probe": {
+    "fingerprint": "d1a3b01cc8882b7395d5fee7149458ae10651fb7629a8d6cd687c5854d873a6d",
+    "ownedReference": "default/default/v5nx8hhahfe9yw5zlb80g8fp8",
+    "durationMs": 704.459292,
+    "retainedLogBytes": 861,
+    "markerSeen": true,
+    "cancelSignalDelivered": true,
+    "daemonTerminalState": "canceled",
+    "clientGroupExited": true,
+    "clientExitCode": 130,
+    "cancellationProofSha256": "aa8a0bec1d70f2454a9bacc1ddf55de5db9bb2988268a75faf46ec7adc41dfe1"
+  },
+  "compilerPacketFingerprint": "426f0a634fd45ed226ba8e6c8a1399a53163bd34a4f7ec7c78cbf2106b8cc849",
+  "compilerPacketSha256": "6f255c8751a12acba347b5b208476332c62c92f85abea739c7eeef596c45d0ea",
+  "runtimeAccepted": false
+}

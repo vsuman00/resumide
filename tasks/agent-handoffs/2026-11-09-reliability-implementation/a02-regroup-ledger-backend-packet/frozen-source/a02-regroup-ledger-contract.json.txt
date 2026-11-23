@@ -1,0 +1,45 @@
+{
+  "task": "CR-A02-S02/C02 versioned whole-entry regroup metadata foundation and paired privacy",
+  "status": "FROZEN_SOURCE_FOUNDATION_CONTRACT",
+  "at": "2026-11-13T16:01:18.936778+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "migration": "supabase/migrations/20261113155247_entry_regroup_ledger_foundation.sql",
+  "scope": "Exactly5new versioned stores plus real stable new5 metadata exporter, paired15-array worker and exact ready69->70 successor. Foundation only: no semantic validator stub, no missing-helper calls, prefix helper, new writer, producer.4/schema adoption, oldsave dispatch, native/parser/DB actions or route. Do not reinterpret oldv1 rows/bytes/policies.",
+  "tables": {
+    "candidate_entry_regroup_batches": "UUIDid; owned org/resume/analysis/source/attempt/hash tuple; regroup_revision1..1000 and previous_batch_id iff revision>1; outeridempotency UUID; bounded JSONcommand<=262144 bytes; A02OP1command_bytes<=131072 and hash/codec_version; immutable base_version_id/base_revision/base_content_sha256, result_version_id/result_revision/result_content_sha256, distinct generated storage_key,created_at. Distinct base/result; result_revision=base_revision+1 with overflow-safe check. Unique resume+outerkey,analysis+revision,resultversion,storagekey; same-scopeprevious FK and base/resultownedcanonical FKs; resultFK deferred. Command/base/result digests are metadata, not semantic authority. SQLjsonb content digests must never be compared to the pure JS preview contentDigest.",
+    "candidate_entry_regroup_groups": "UUIDid,batch and full owned scope/base/result; group_order1..32,page_id,method native_text|local_ocr,section_id,anchor_entry_id,insertion_index BEFORE0..99, ordered affected_entry_ids1..3 containinganchor (retirements derive ordered exclusion), structural source_selection boundedJSON without candidate values. Unique batch+grouporder and destinationsection+entry. Composite FK to exactbatch/result/base/scope; no duplicate/NULL affected IDs. UUID placements require futuresemantic validation.",
+    "candidate_entry_regroup_members": "UUIDid,group/batch and full ownedscope/base/result; source_order1..3,assertion_id,typed employer|role|dates field,selected stable fact_id; exact citations array1,bounded; original_entry_id/location_kind entry|bullet and optional original_bullet_id iffbullet; mapped_through current_citations|owned_ancestor_chain and optional paired origin_version_id/origin_fact_id iffancestor,originfact=currentfact. Multiple members MAY share an original entry: DO NOT port v1 unique(batch,originalentry) or entry_order<=3 as whole-carried-layout meaning. Composite source/result/group and base/resultfact FKs, owner/source-bound optional origin version/fact; deferredresultfact FK. Unique group/sourceorder,batch/assertion,batch/selectedfact. Carried unselected references remain in immutable base/result bodies, not duplicated/limited to3member rows.",
+    "canonical_entry_regroup_snapshots": "Percanonicalversion UUIDPK and full ownedsource/attempt/hash tuple; composition_version entry-regroup-composition/1.0.0; creation_kind regroup|inherited|restore|legacy_bridge; optional creating_regroup_batch_id iffregroup, inherited_from_version_id iffinherited,restored_from_version_id iffrestore, allthree nullforbridge. creatingbatch identifies creatingoperation ONLY, never everylinkorigin. Composite canonical/source/evidence and same-scopeparent/target/batch FKs; no selfinherit/restore. Empty active composition remains explicit header; fullapprovalhistory survives independently. A bridge cannot self-authenticate; actual bridge/inherit/TARGET semantics remain futurevalidator/atomicwriter work.",
+    "canonical_entry_regroup_links": "Perdestination canonical snapshot+full ownedscope; composition_order1..1000,section_id/entry_id; origin_family association|regroup; nullable association_group_id/association_batch_id OR regroup_group_id/regroup_batch_id with exact typed XORpair, original_approval_version_id. Composite FK to destinationheader and each typed ORIGINAL group/batch/result/owner/org/resume/source tuple. Unique compositionposition,typedorigin and destinationsection+entry perversion. Keep eachretainedapproval origin; never copy oldapproval into newbatch/reapprove implicitly. Fullattempt/body/placement/liveness correspondence beyond availableFKs requires futuresemantic proof. Preserve nullable XORfields inexport."
+  },
+  "integrity": "Every new table: RLSenabled, nopolicies, revokeall includingservice_role; inherited immutable-update and candidateprivacy-insert/update guards, ownership/source/attempt/canonical/approval cascades and usefulFKindexes. Explicit shortFK/index/trigger names; preserve all oldDDL/function bodies except named guardedexport/readiness changes. No write authority from these constraints. CheckmetadataJSON/array/scalar bounds without truncation or deduplication. All preparednativefixtures are privileged metadata tests only, not proof of valid regroup admission.",
+  "export": {
+    "newHelper": "private.entry_regroup_export_records(uuid) returns jsonb; SQLSTABLE SECURITYINVOKER emptysearch_path,allrolesEXECUTErevoked; owner-qualified ordered complete aggregates ofnew5tables, no directclienttable grants. No prefix or semanticvalidator inthisleaf.",
+    "newKeys": [
+      "candidateEntryRegroupBatches",
+      "candidateEntryRegroupGroups",
+      "candidateEntryRegroupMembers",
+      "canonicalEntryRegroupSnapshots",
+      "canonicalEntryRegroupLinks"
+    ],
+    "old10": "private.entry_association_export_records(uuid) body8daff2f43d41cab99ef417a55fdfc73cc17930dcd45923c82c6ac6004c49c1ff BYTEUNCHANGED, old10fields/order/ACLs retained.",
+    "publicSuccessor": "Guard ACTUAL public.export_resume_workspace_records(uuid) prosrc7e84db73e326a2d372fd3cbbd8315e0c53a24d52f3a5ced9dd25900d5b9d56cd and fullSTABLE/DEFINER/searchpath/ACLproperties; append newhelper to existing one stable snapshot expression after alloldcollections. Preserve owner/privacy checks delegated to existingexportfunctions and32MiB failclosed bound AFTERappend.",
+    "profile": "Guard actualready69 bodyc2098f91ee32e4035ff30dd5db71c4d7e95944cef24e4b137c8c489841edd5db. Exactly70routines: preserve allold69 properties, change ONLY workspaceexport fingerprint and add actualnewprivateexporter with serviceExecute=false. Extend existing table/column/FK/trigger/ACL checking for actual5newstores without droppingoldchecks; compute actualcounts/hashes fromsource, externally pin finalreadiness. No self-hashcycle. Writer remains denied. Oldexport_authoring_records5bb5345d is a DIFFERENT unchanged routine.",
+    "worker": "Require allold10+new5 arrays with existingownedMetadataRow.passthrough; neverdefault missing[] orstripnewfields. Preserve everyrowfield and nullable XORidentities, ownerqualificationloop/privatefailures unchanged. Oldserverresponsemissingnewarrays failsclosed, requiring pairedSQL/application rollout beforeuse.",
+    "tests": "Actual oldconsumer omissionRED with nonemptynew5 metadata rows, then exactpreservation and finite missing/malformed/foreignowner refusals. Existingold10tests/assertions/sourcecontracts stay unchanged; fixture-only validemptynew5 additions permitted. SourceSQLtests independently replay actualguarded69->70transform and assert completeexpectedproperties/ACLs/FKs/fixtures, label UNPARSED/UNAPPLIED/UNEXECUTED. Nativeprivilegedrollback verifier preparedwith exactadmission guards, neverrun."
+  },
+  "futureNotCompleted": [
+    "Strict durablecommand/normalizer/content-parity and semanticbatch validation",
+    "Perwhole-group activepolicy independent of global previewdigest: confirmation/rename retain, affected content/value/source/add invalidates, unrelated changes do notdropotherorigins",
+    "Exactimmutable-original-base replay beforefreshCAS, complete newcomposition with explicitselected supersession and retained originalorigins",
+    "TARGET restore includinglegacyempty, .2add metadata-dispatch, oldC02 replay and freshassignmentmapping",
+    "Producer.4/action/import/retag guards, ownedreader/repository/route/whole-entryack/exactretry and nativeconsumeracceptance"
+  ],
+  "verification": "Authors scoped sealed Node22 tests/types/lint/format in separate WTs; runtimeprivate0700 packets with originalfailures/.txt codearchives. Rootoneintegrated affectedgate plus fulltypes/lint/web/worker after peerreview. No repeated unchangedcampaigns. No SQLparser/native/DB/provider/env/PII/Docker/Git/dependency/upgrade/deploy.",
+  "references": [
+    "https://supabase.com/changelog.md",
+    "https://supabase.com/changelog/supabase-cli-v3",
+    "https://supabase.com/docs/guides/database/postgres/row-level-security.md",
+    "https://supabase.com/docs/guides/database/functions.md"
+  ]
+}

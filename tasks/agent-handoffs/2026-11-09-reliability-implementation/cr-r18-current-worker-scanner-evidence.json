@@ -1,0 +1,771 @@
+{
+  "id": "CR-R18-S12",
+  "status": "exact-worker-scanner-reports-retained-local-only",
+  "date": "2026-11-22T08:20:24.267612+00:00",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scanner": {
+    "version": "0.76.2",
+    "binarySha256": "7a15c426f963473a485a4f315e21f8e2c881269d500bf0de35da13a4421fa108",
+    "releaseCommit": "3f6334d223b52188324af3b9923b4249cd206652",
+    "workflowSourceSha256": "54229276f973dd59455b77373c24080f1b9aba18f448083a5310620d9c8318e4",
+    "bundle": {
+      "status": "METADATA_STAGED_UNTRUSTED",
+      "sha256": "82014df63f12ffe65bf49c6fd844d7fe39efa7e7abdc12bfe1f5a69682a56747",
+      "bytes": 10415,
+      "summary": {
+        "mediaType": "application/vnd.dev.sigstore.bundle.v0.3+json",
+        "contentKind": "messageSignature",
+        "digestAlgorithm": "SHA2_256",
+        "certificatePresent": true,
+        "publicKeyHintPresent": false,
+        "certificateCount": 0,
+        "tlogEntryCount": 1,
+        "rfc3161TimestampCount": 1,
+        "signaturePresent": true
+      },
+      "exchanges": [
+        {
+          "host": "github.com",
+          "http": "302",
+          "clientExit": 0
+        },
+        {
+          "host": "release-assets.githubusercontent.com",
+          "http": "200",
+          "clientExit": 0
+        }
+      ],
+      "signatureVerified": false
+    },
+    "assets": {
+      "status": "PINNED_RELEASE_ASSETS_STAGED_UNTRUSTED",
+      "assets": [
+        {
+          "asset": "trivy_0.76.2_macOS-ARM64.tar.gz",
+          "status": "IDENTITY_MATCHED_UNTRUSTED",
+          "exchanges": [
+            {
+              "host": "github.com",
+              "http": "302",
+              "clientExit": 0
+            },
+            {
+              "host": "release-assets.githubusercontent.com",
+              "http": "200",
+              "clientExit": 0
+            }
+          ],
+          "bytes": 49840394,
+          "sha256": "ae7ea358326960406b703c77b2ac490190797d80b306b5b50c2a27221da0a5b8"
+        },
+        {
+          "asset": "trivy_0.76.2_checksums.txt",
+          "status": "IDENTITY_MATCHED_UNTRUSTED",
+          "exchanges": [
+            {
+              "host": "github.com",
+              "http": "302",
+              "clientExit": 0
+            },
+            {
+              "host": "release-assets.githubusercontent.com",
+              "http": "200",
+              "clientExit": 0
+            }
+          ],
+          "bytes": 2121,
+          "sha256": "802e4ac1418ed967cd3c4b901f4f71ca00b7363ede67778665a22d9f13f58c83"
+        }
+      ],
+      "signatureVerified": false
+    },
+    "tuf": {
+      "status": "TRUST_TARGET_AUTHENTICATED",
+      "initialRoot": {
+        "version": 14,
+        "threshold": 3,
+        "sha256": "c8c41ec13f06ccabf5b48541ee2550098b4c7b5349e1d180390c29a7d5c2642c"
+      },
+      "metadata": {
+        "root": {
+          "version": 16,
+          "expires": "2027-04-22T19:27:31Z",
+          "sha256": "27aea7e372aa7864065174f0661784fcf8b0e28b1dbfebeada31a0f1fb19167f"
+        },
+        "timestamp": {
+          "version": 841,
+          "expires": "2026-11-29T01:19:39Z",
+          "sha256": "89db5feb99a51a0f377af63dc0711a2ac6a745b94a34cb6b94f39c4973868152"
+        },
+        "snapshot": {
+          "version": 166,
+          "expires": "2036-10-04T08:51:19Z",
+          "sha256": "6d61405faa993ba3d07556b79d1e319627cdc06ff879a7b5700967dc25d1d224"
+        },
+        "targets": {
+          "version": 14,
+          "expires": "2036-05-09T09:00:52Z",
+          "sha256": "6a697f7f8908c8ab26c11786ecb490b54acec97fa8c802e399f065f8a0cc1acd"
+        }
+      },
+      "trustTarget": {
+        "sha256": "6494e21ea73fa7ee769f85f57d5a3e6a08725eae1e38c755fc3517c9e6bc0b66",
+        "bytes": 6787
+      },
+      "transferred": 25200,
+      "fetches": [
+        {
+          "path": "/15.root.json",
+          "status": 200,
+          "bytes": 5630,
+          "sha256": "73747011d0857ada15479a16c4cae0f3ed03aac698b523b97e1de314ac9d9ca8",
+          "root": {
+            "version": 15,
+            "threshold": 3,
+            "expires": "2026-11-20T13:58:18Z"
+          }
+        },
+        {
+          "path": "/16.root.json",
+          "status": 200,
+          "bytes": 5630,
+          "sha256": "27aea7e372aa7864065174f0661784fcf8b0e28b1dbfebeada31a0f1fb19167f",
+          "root": {
+            "version": 16,
+            "threshold": 3,
+            "expires": "2027-04-22T19:27:31Z"
+          }
+        },
+        {
+          "path": "/17.root.json",
+          "status": 404
+        },
+        {
+          "path": "/timestamp.json",
+          "status": 200,
+          "bytes": 451,
+          "sha256": "89db5feb99a51a0f377af63dc0711a2ac6a745b94a34cb6b94f39c4973868152"
+        },
+        {
+          "path": "/166.snapshot.json",
+          "status": 200,
+          "bytes": 1760,
+          "sha256": "6d61405faa993ba3d07556b79d1e319627cdc06ff879a7b5700967dc25d1d224"
+        },
+        {
+          "path": "/14.targets.json",
+          "status": 200,
+          "bytes": 4942,
+          "sha256": "6a697f7f8908c8ab26c11786ecb490b54acec97fa8c802e399f065f8a0cc1acd"
+        },
+        {
+          "path": "/targets/6494e21ea73fa7ee769f85f57d5a3e6a08725eae1e38c755fc3517c9e6bc0b66.trusted_root.json",
+          "status": 200,
+          "bytes": 6787,
+          "sha256": "6494e21ea73fa7ee769f85f57d5a3e6a08725eae1e38c755fc3517c9e6bc0b66"
+        }
+      ]
+    },
+    "publisherSignature": {
+      "status": "PUBLISHER_SIGNATURE_VERIFIED",
+      "archiveSha256": "ae7ea358326960406b703c77b2ac490190797d80b306b5b50c2a27221da0a5b8",
+      "trustTargetSha256": "6494e21ea73fa7ee769f85f57d5a3e6a08725eae1e38c755fc3517c9e6bc0b66",
+      "identity": "https://github.com/aquasecurity/trivy/.github/workflows/reusable-release.yaml@refs/tags/v0.76.2",
+      "issuer": "https://token.actions.githubusercontent.com",
+      "thresholds": {
+        "ctlogThreshold": 1,
+        "tlogThreshold": 1,
+        "timestampThreshold": 1
+      },
+      "wrongIssuerRejected": true,
+      "wrongSubjectRejected": true,
+      "independentArchiveSignatureVerified": true
+    },
+    "verificationScriptsSha256": {
+      "refresh-root.cjs": "6fd3b07dabb01d109569a1244c95f9e6ae5313f09c2eb6002802996862c83bbd",
+      "verify-asset.cjs": "527b2e97968169525c275d3736cd90a55650e39059e3b6e8a8dc57a3ca66c50f"
+    },
+    "dependencyGraphFingerprints": {
+      "refresh": {
+        "packages": 42,
+        "files": 380,
+        "bytes": 2292503,
+        "canonicalSha256": "ff462ce6d9220f6f686e6dcc213dd21119607caf5da54d162d755dd6a920a449"
+      },
+      "verify": {
+        "packages": 4,
+        "files": 76,
+        "bytes": 384101,
+        "canonicalSha256": "4aa1a148af6f98eca3ade08451720f0480f52608470209d3896caac862521d3f"
+      }
+    },
+    "nodeRuntimeSha256": "2cc28a1880d0774616959f2210ee739bffa6ac695c887e8988a496a21271f6c0"
+  },
+  "catalogs": {
+    "vuln": {
+      "status": "FRESH_DIGEST_BOUND_CATALOG_READY",
+      "decodedBytes": 1811578880,
+      "decodedByteCap": 3221225472,
+      "files": {
+        "trivy.db": {
+          "sha256": "d2dffa97d0215c2033c810802488b1b1bc27a105ef52eb7d76a7713f4d2d590b",
+          "bytes": 1811566592
+        },
+        "metadata.json": {
+          "sha256": "c1fdcc933890714ac0e89b24fe20b9482e4d57a5bb8dcfa5e8451f091fe3b1e9",
+          "bytes": 143
+        }
+      },
+      "metadata": {
+        "Version": 2,
+        "NextUpdate": "2026-11-23T07:05:02.616712075Z",
+        "UpdatedAt": "2026-11-22T07:05:02.616712326Z",
+        "DownloadedAt": "0001-01-01T00:00:00Z"
+      },
+      "manifestDigest": "sha256:22a49dab560f08526084381bb4dcb523c66bb6a32ae7162fa2fca5aa3aae5368",
+      "layerDigest": "sha256:2c3545a8c59ccdc8060b15cd80c896f4f407762de68f55c3c6b94a1b4041a0ba"
+    },
+    "java": {
+      "status": "FRESH_DIGEST_BOUND_CATALOG_READY",
+      "decodedBytes": 1586769920,
+      "decodedByteCap": 4294967296,
+      "files": {
+        "trivy-java.db": {
+          "sha256": "c37684e9e526820eb11f5b2713c086210f2b704d669aeeacde64e7f1de1f284c",
+          "bytes": 1586765824
+        },
+        "metadata.json": {
+          "sha256": "eb518b5b49ffdaf9b0c445d97fbc3b198c08898e13a3e620ff5ad66cbac2917c",
+          "bytes": 143
+        }
+      },
+      "metadata": {
+        "Version": 1,
+        "NextUpdate": "2026-11-25T00:57:27.468407618Z",
+        "UpdatedAt": "2026-11-22T00:57:27.468407779Z",
+        "DownloadedAt": "0001-01-01T00:00:00Z"
+      },
+      "manifestDigest": "sha256:b9db05b95a080cb13caf4a461986168924e6c36387f72b31a813d65b65719ebe",
+      "layerDigest": "sha256:ea1c5df99d7b4d42cc209c241ebfbef6348361b78a6c297ad07f179335b5e9f7"
+    }
+  },
+  "workerReports": {
+    "latex-arm64": {
+      "imageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a",
+      "platform": "linux/arm64",
+      "imageExport": {
+        "bytes": 266903040,
+        "sha256": "a9b83aef95a05ce6c2800dae7b84354bd90f8f8f2340cdce87a849c1c9bbd7be"
+      },
+      "platformManifestDigest": "sha256:b898e9556f7c25fe7197dd19558bf09aa3dfcf6277a412964dab66cde4eb3c9f",
+      "scannerConfigDigest": "sha256:7fb482dabc6e086a3c3b8ea1a1faf170f8e306bee1cb86ee85d8a6e5a2985fa0",
+      "layersVerified": 17,
+      "mode": "precise",
+      "scannerRun": {
+        "status": "EXACT_IMAGE_SCAN_COMPLETE",
+        "image": "latex-arm64",
+        "dockerImageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a",
+        "scannerImageId": "sha256:7fb482dabc6e086a3c3b8ea1a1faf170f8e306bee1cb86ee85d8a6e5a2985fa0",
+        "exitCode": 0,
+        "elapsedSeconds": 4.262,
+        "rawBytes": 5622309,
+        "rawSha256": "27e9b37793f2b1701af2d1aaa1093c4c1cd056e95fb8d304a2611ee476503aba",
+        "scannerArguments": [
+          "image",
+          "--input",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/latex-arm64.tar",
+          "--cache-dir",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/scan-cache",
+          "--cache-backend",
+          "memory",
+          "--config",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/scan-config.yaml",
+          "--ignorefile",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/no-ignores",
+          "--scanners",
+          "vuln",
+          "--pkg-types",
+          "os,library",
+          "--severity",
+          "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+          "--offline-scan",
+          "--disable-telemetry",
+          "--skip-version-check",
+          "--skip-db-update",
+          "--skip-java-db-update",
+          "--skip-check-update",
+          "--skip-vex-repo-update",
+          "--list-all-pkgs",
+          "--show-suppressed",
+          "--ignore-unfixed=false",
+          "--format",
+          "json",
+          "--exit-code",
+          "0",
+          "--timeout",
+          "2m",
+          "--parallel",
+          "2",
+          "--max-image-size",
+          "2GB",
+          "--no-progress"
+        ],
+        "dbFilesVerifiedUnchanged": true
+      },
+      "groupSummary": [
+        {
+          "class": "os-pkgs",
+          "type": "debian",
+          "packages": 216,
+          "advisories": 1075
+        },
+        {
+          "class": "lang-pkgs",
+          "type": "python-pkg",
+          "packages": 1,
+          "advisories": 0
+        }
+      ],
+      "findings": {
+        "matches": 1075,
+        "uniqueVulnerabilityIds": 389,
+        "severity": {
+          "CRITICAL": 0,
+          "HIGH": 142,
+          "MEDIUM": 218,
+          "LOW": 694,
+          "UNKNOWN": 21
+        },
+        "highOrCriticalWithScannerFixedVersion": 0
+      },
+      "durableReport": {
+        "file": "docs/evaluation/RESUMIDE_WORKER_TRIVY_20261122_LATEX_ARM64.json.gz",
+        "gzipSha256": "a1004f13b1f73ce3132a7b3c65ba5aad4a63b7fd8171af4ef448bff0cd7c64c5",
+        "resultsCanonicalSha256": "d9494d92e9c663adfd25646e654eac862816cdc2cd82cfbe53a89ad1827b87df",
+        "imageConfigRemoved": true,
+        "resultsUnchanged": true
+      }
+    },
+    "latex-arm64-comprehensive": {
+      "imageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a",
+      "platform": "linux/arm64",
+      "imageExport": {
+        "bytes": 266903040,
+        "sha256": "a9b83aef95a05ce6c2800dae7b84354bd90f8f8f2340cdce87a849c1c9bbd7be"
+      },
+      "platformManifestDigest": "sha256:b898e9556f7c25fe7197dd19558bf09aa3dfcf6277a412964dab66cde4eb3c9f",
+      "scannerConfigDigest": "sha256:7fb482dabc6e086a3c3b8ea1a1faf170f8e306bee1cb86ee85d8a6e5a2985fa0",
+      "layersVerified": 17,
+      "mode": "comprehensive",
+      "scannerRun": {
+        "status": "EXACT_IMAGE_SCAN_COMPLETE",
+        "image": "latex-arm64",
+        "dockerImageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a",
+        "scannerImageId": "sha256:7fb482dabc6e086a3c3b8ea1a1faf170f8e306bee1cb86ee85d8a6e5a2985fa0",
+        "exitCode": 0,
+        "elapsedSeconds": 4.273,
+        "rawBytes": 5624172,
+        "rawSha256": "48fc236630cca80955581d4f9b94347ae0fb5545cda97674ab52dbf014f0d075",
+        "scannerArguments": [
+          "image",
+          "--input",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/latex-arm64.tar",
+          "--cache-dir",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/scan-cache",
+          "--cache-backend",
+          "memory",
+          "--config",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/scan-config.yaml",
+          "--ignorefile",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/no-ignores",
+          "--scanners",
+          "vuln",
+          "--pkg-types",
+          "os,library",
+          "--severity",
+          "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+          "--detection-priority",
+          "comprehensive",
+          "--offline-scan",
+          "--disable-telemetry",
+          "--skip-version-check",
+          "--skip-db-update",
+          "--skip-java-db-update",
+          "--skip-check-update",
+          "--skip-vex-repo-update",
+          "--list-all-pkgs",
+          "--show-suppressed",
+          "--ignore-unfixed=false",
+          "--format",
+          "json",
+          "--exit-code",
+          "0",
+          "--timeout",
+          "2m",
+          "--parallel",
+          "2",
+          "--max-image-size",
+          "2GB",
+          "--no-progress"
+        ],
+        "dbFilesVerifiedUnchanged": true
+      },
+      "groupSummary": [
+        {
+          "class": "os-pkgs",
+          "type": "debian",
+          "packages": 216,
+          "advisories": 1075
+        },
+        {
+          "class": "lang-pkgs",
+          "type": "jar",
+          "packages": 3,
+          "advisories": 0
+        },
+        {
+          "class": "lang-pkgs",
+          "type": "python-pkg",
+          "packages": 1,
+          "advisories": 0
+        }
+      ],
+      "findings": {
+        "matches": 1075,
+        "uniqueVulnerabilityIds": 389,
+        "severity": {
+          "CRITICAL": 0,
+          "HIGH": 142,
+          "MEDIUM": 218,
+          "LOW": 694,
+          "UNKNOWN": 21
+        },
+        "highOrCriticalWithScannerFixedVersion": 0
+      },
+      "durableReport": {
+        "file": "docs/evaluation/RESUMIDE_WORKER_TRIVY_20261122_LATEX_ARM64_COMPREHENSIVE.json.gz",
+        "gzipSha256": "e08dc201940e23665f8cc385cdf89569bc25d9acc0a24094a848158d8eeed3d4",
+        "resultsCanonicalSha256": "b3084aab35ee9b1cc7bbc3db8ff6d983e1163ab8ebe8e386967821ffbfa44cb3",
+        "imageConfigRemoved": true,
+        "resultsUnchanged": true
+      }
+    },
+    "ocr-arm64": {
+      "imageId": "sha256:ed396e851755d5d3158bb931b158193fb246afb9b07b4797088b3c26f0a047d5",
+      "platform": "linux/arm64",
+      "imageExport": {
+        "bytes": 100445696,
+        "sha256": "e3758240c559fd8cf08b822aa358c2bb0e9a7a6a5e2252f9d5bcd6018409202a"
+      },
+      "platformManifestDigest": "sha256:50341943559e1b285450e2c10b1927985d88015baf09b753b69cbfe4e1935d81",
+      "scannerConfigDigest": "sha256:fd9975f3b2c61e1fead1e0ae0dc02353958688061843de0b5d6051d9ce6f4582",
+      "layersVerified": 9,
+      "mode": "precise",
+      "scannerRun": {
+        "status": "EXACT_IMAGE_SCAN_COMPLETE",
+        "image": "ocr-arm64",
+        "dockerImageId": "sha256:ed396e851755d5d3158bb931b158193fb246afb9b07b4797088b3c26f0a047d5",
+        "scannerImageId": "sha256:fd9975f3b2c61e1fead1e0ae0dc02353958688061843de0b5d6051d9ce6f4582",
+        "exitCode": 0,
+        "elapsedSeconds": 1.608,
+        "rawBytes": 3078658,
+        "rawSha256": "7a6afe70d3658573d13a3ee178c60e27de656d343642497f645e8ffc37f007c0",
+        "scannerArguments": [
+          "image",
+          "--input",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/ocr-arm64.tar",
+          "--cache-dir",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/scan-cache",
+          "--cache-backend",
+          "memory",
+          "--config",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/scan-config.yaml",
+          "--ignorefile",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/no-ignores",
+          "--scanners",
+          "vuln",
+          "--pkg-types",
+          "os,library",
+          "--severity",
+          "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+          "--offline-scan",
+          "--disable-telemetry",
+          "--skip-version-check",
+          "--skip-db-update",
+          "--skip-java-db-update",
+          "--skip-check-update",
+          "--skip-vex-repo-update",
+          "--list-all-pkgs",
+          "--show-suppressed",
+          "--ignore-unfixed=false",
+          "--format",
+          "json",
+          "--exit-code",
+          "0",
+          "--timeout",
+          "2m",
+          "--parallel",
+          "2",
+          "--max-image-size",
+          "2GB",
+          "--no-progress"
+        ],
+        "dbFilesVerifiedUnchanged": true
+      },
+      "groupSummary": [
+        {
+          "class": "os-pkgs",
+          "type": "debian",
+          "packages": 170,
+          "advisories": 671
+        }
+      ],
+      "findings": {
+        "matches": 671,
+        "uniqueVulnerabilityIds": 370,
+        "severity": {
+          "CRITICAL": 4,
+          "HIGH": 145,
+          "MEDIUM": 254,
+          "LOW": 244,
+          "UNKNOWN": 24
+        },
+        "highOrCriticalWithScannerFixedVersion": 0
+      },
+      "durableReport": {
+        "file": "docs/evaluation/RESUMIDE_WORKER_TRIVY_20261122_OCR_ARM64.json.gz",
+        "gzipSha256": "595f8809092954569ca76acd04e68bdaef22e6b10e7cda3bd16d78029cc42150",
+        "resultsCanonicalSha256": "b0190fcc2fdaec9e5607e1ce78e093e6f62fb67be853de022d2858409c37309a",
+        "imageConfigRemoved": true,
+        "resultsUnchanged": true
+      }
+    },
+    "ocr-amd64": {
+      "imageId": "sha256:ff7372bd6ba689b17d76928f86136a7d71defc613367cb551a87d45b54c4dab3",
+      "platform": "linux/amd64",
+      "imageExport": {
+        "bytes": 101277184,
+        "sha256": "46792e8e9f7e2fa23dd9c64533220fe35b82d774ab1b1bb29baac12ef53a0801"
+      },
+      "platformManifestDigest": "sha256:341551c4671814f92168972d8396c8bba8217e9bb751d5e84e883cc1483d10d7",
+      "scannerConfigDigest": "sha256:c87d33c741bca65c047c2189cba3b6ca55931b857b11605948eb0238060b435c",
+      "layersVerified": 9,
+      "mode": "precise",
+      "scannerRun": {
+        "status": "EXACT_IMAGE_SCAN_COMPLETE",
+        "image": "ocr-amd64",
+        "dockerImageId": "sha256:ff7372bd6ba689b17d76928f86136a7d71defc613367cb551a87d45b54c4dab3",
+        "scannerImageId": "sha256:c87d33c741bca65c047c2189cba3b6ca55931b857b11605948eb0238060b435c",
+        "exitCode": 0,
+        "elapsedSeconds": 1.495,
+        "rawBytes": 3077487,
+        "rawSha256": "f93ef0154504bb67cd8ae18c3ea7c398c36b3558657d82c4a54f8f979805c52c",
+        "scannerArguments": [
+          "image",
+          "--input",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/ocr-amd64.tar",
+          "--cache-dir",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/scan-cache",
+          "--cache-backend",
+          "memory",
+          "--config",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/scan-config.yaml",
+          "--ignorefile",
+          "/private/tmp/resumide-r18-scanner-trust.3GSoHm/no-ignores",
+          "--scanners",
+          "vuln",
+          "--pkg-types",
+          "os,library",
+          "--severity",
+          "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+          "--offline-scan",
+          "--disable-telemetry",
+          "--skip-version-check",
+          "--skip-db-update",
+          "--skip-java-db-update",
+          "--skip-check-update",
+          "--skip-vex-repo-update",
+          "--list-all-pkgs",
+          "--show-suppressed",
+          "--ignore-unfixed=false",
+          "--format",
+          "json",
+          "--exit-code",
+          "0",
+          "--timeout",
+          "2m",
+          "--parallel",
+          "2",
+          "--max-image-size",
+          "2GB",
+          "--no-progress"
+        ],
+        "dbFilesVerifiedUnchanged": true
+      },
+      "groupSummary": [
+        {
+          "class": "os-pkgs",
+          "type": "debian",
+          "packages": 170,
+          "advisories": 671
+        }
+      ],
+      "findings": {
+        "matches": 671,
+        "uniqueVulnerabilityIds": 370,
+        "severity": {
+          "CRITICAL": 4,
+          "HIGH": 145,
+          "MEDIUM": 254,
+          "LOW": 244,
+          "UNKNOWN": 24
+        },
+        "highOrCriticalWithScannerFixedVersion": 0
+      },
+      "durableReport": {
+        "file": "docs/evaluation/RESUMIDE_WORKER_TRIVY_20261122_OCR_AMD64.json.gz",
+        "gzipSha256": "8124c1863f50d3b14e0fe87e9acca50214a04ab00e83ed393dd9e5c1c4c259b0",
+        "resultsCanonicalSha256": "94acbd1a99d279205732c3a4fdba45e4376980eb2c83bcc0a5f746c0344fc427",
+        "imageConfigRemoved": true,
+        "resultsUnchanged": true
+      }
+    }
+  },
+  "runtimeReachability": {
+    "latexArm64": {
+      "architecture": "arm64",
+      "dynamicDependencies": {
+        "python": [
+          "libz.so.1"
+        ],
+        "tex": [
+          "libglib-2.0.so.0",
+          "libz.so.1"
+        ],
+        "pdfRenderer": [
+          "libz.so.1"
+        ],
+        "pdfText": [
+          "libgnutls.so.30",
+          "libtiff.so.6",
+          "libz.so.1"
+        ],
+        "pdfInfo": [
+          "libgnutls.so.30",
+          "libtiff.so.6",
+          "libz.so.1"
+        ]
+      },
+      "javaExecutablePresent": false,
+      "javaArchiveInTexReadClosure": false
+    },
+    "ocrArm64": {
+      "architecture": "arm64",
+      "dynamicDependencies": {
+        "ocr": [
+          "libxml2.so.2",
+          "libz.so.1"
+        ],
+        "pdfInfo": [
+          "libz.so.1"
+        ],
+        "pdfRenderer": [
+          "libz.so.1"
+        ],
+        "pdfText": [
+          "libz.so.1"
+        ],
+        "python": [
+          "libz.so.1"
+        ]
+      },
+      "minizipPackageMatches": [],
+      "zlibBinaryListsMiniZip": false
+    },
+    "ocrCriticalInitialDisposition": [
+      {
+        "vulnerabilityId": "CVE-2026-58016",
+        "vendorDisposition": "bookworm_fix_postponed",
+        "runtimeEvidence": "Not loaded in the measured OCR ELF dependency graphs. Runtime feature reachability remains open.",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-58016"
+      },
+      {
+        "vulnerabilityId": "CVE-2025-7458",
+        "vendorDisposition": "bookworm_affected_no_vendor_fix",
+        "runtimeEvidence": "Not loaded in the measured OCR ELF dependency graphs. Runtime feature reachability remains open.",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2025-7458"
+      },
+      {
+        "vulnerabilityId": "CVE-2026-6653",
+        "vendorDisposition": "bookworm_fix_postponed",
+        "runtimeEvidence": "The Tesseract dependency graph loads libxml2. Reachability of the affected XML parser operation remains open.",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2026-6653"
+      },
+      {
+        "vulnerabilityId": "CVE-2023-45853",
+        "vendorDisposition": "bookworm_zlib_does_not_ship_minizip",
+        "runtimeEvidence": "Debian ships MiniZip separately. No MiniZip binary package appears in either exact OCR inventory. The ARM64 zlib package file list contains no MiniZip files.",
+        "source": "https://security-tracker.debian.org/tracker/CVE-2023-45853"
+      }
+    ]
+  },
+  "isolation": {
+    "networkDeniedByMacSandbox": true,
+    "loopbackDenialConfirmed": true,
+    "sandboxSha256": "c25a3afc6648d20f02bd03c3c6b4b95c0eef3bb2250910c528fabb98b1020009",
+    "imageArchivesGivenToScanner": true,
+    "dockerSocketGivenToScanner": false,
+    "combinedLogAndReportCapBytes": 33554432,
+    "scratchFileCapBytes": 2147483648,
+    "durableReportsRetainEveryResultsEntry": true,
+    "rawOriginalRetainedPrivately": true
+  },
+  "recoveries": [
+    {
+      "condition": "Previous metadata helper timed out with no terminal receipt",
+      "correction": "Bounded direct HTTPS transport recovered the same pinned bundle without mutating the prior receipt"
+    },
+    {
+      "condition": "Inherited per-file limit also capped the scanner scratch decompression",
+      "correction": "Separate process scratch and combined report/log limits",
+      "initialLogSha256": "9edfc0c856eedbe32c4e9cd16036d6c8ef15cf3c344f72fe53c1c46ea22fdaca"
+    },
+    {
+      "condition": "Java catalog transfer reached its initial 90-second deadline",
+      "correction": "A single bounded transfer completed under 180 seconds using the same pinned digest and byte ceiling",
+      "initialReceipt": {
+        "status": "CATALOG_STAGE_FAILED",
+        "reason": "AssertionError",
+        "line": 36,
+        "exchanges": [
+          {
+            "host": "ghcr.io",
+            "http": "200",
+            "clientExit": 0
+          },
+          {
+            "host": "ghcr.io",
+            "http": "307",
+            "clientExit": 0
+          },
+          {
+            "host": "pkg-containers.githubusercontent.com",
+            "http": "200",
+            "clientExit": 28
+          }
+        ]
+      }
+    },
+    {
+      "condition": "Precise mode treats OS-managed Java archives as Debian packages",
+      "correction": "A separate comprehensive scan retained the Java group as well"
+    }
+  ],
+  "remaining": [
+    "Actual main production-image CI scan and SBOM",
+    "Runtime applicability and high and critical advisory disposition",
+    "Release gate review"
+  ],
+  "releaseAccepted": false,
+  "deployed": false
+}

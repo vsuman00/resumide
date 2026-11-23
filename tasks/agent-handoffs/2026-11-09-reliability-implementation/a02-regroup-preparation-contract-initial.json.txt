@@ -1,0 +1,39 @@
+{
+  "task": "CR-A02-S02 existing-head whole-entry regroup",
+  "status": "FROZEN_PURE_PREPARATION_AND_DIFF_LEAF",
+  "at": "2026-11-13T15:20:45.008514+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Implement complete deterministic whole-entry regroup preparation on an owned current snapshot, including edited/confirmed fields, partially grouped entries, carried content and already-grouped no-layout-change plans. Render the actual resulting structural preview. This leaf grants no persistence and does not replace later durable composition/admission/repository/route work.",
+  "api": {
+    "path": "app/lib/server/canonical-entry-regroup.ts",
+    "function": "prepareCanonicalEntryRegroup(input:CanonicalCorrectionProjectionInput,intent:unknown):CanonicalEntryRegroupPreparation",
+    "input": "Existing server-owned correction projection input with nonnull canonicalSnapshot; reuse projectCanonicalCorrectionSourceChoices for strict source/history/owned lineage mapping. Browser may never supply snapshot/history. Intent strict canonical-entry-regroup-intent/1.0.0, operation preview_whole_entry_merge, baseVersionId lowercaseUUID, baseRevision integer1..2147483647, selections1..32 of {groupId:actual association lookup ID,members:complete2..3 array of {assertionId,factId:lowercaseUUID}}; no values/citations/locale/draft/persisted approval. Refuse unknown/duplicate/oversized fields before expensive parsing.",
+    "output": "Discriminated prepared|unavailable; both modelVersion canonical-entry-regroup/1.0.0, authority derived_preparation_only, persistable:false, scoringEligible:false, requiresDurableAdmission:true. Prepared carries baseVersionId,baseRevision,locale,unchanged facts,beforeSections,afterSections,groups/mappings,retiredEntryIds,changed:boolean,contentDigest and previewHash. Unavailable carries fixed reason and no candidate data. Required future producer canonical-engine/1.0.4 is metadata only; do not widen draft schema or manufacture canonical child/event/time now. Publish exact exported DTO type once actual module coherent, before UI tests."
+  },
+  "mapping": {
+    "source": "Derive actual evidence-entry-associations/1.0.0 groups from same admitted evidence/context. Intent member set must exactly match selected source group; explicit fact choice resolves only an actual current choice for that assertion/target. No source value matching against edited current text or legacy reimporter.",
+    "lineage": "Reuse exact current citations or uninterrupted owned same-fact-ID/type ancestry. Missing/ambiguous/foreign/type-discontinuous source or placement refuses entire request. Selected fact has exactly one current location inside an experience entry: direct fact or an unchanged bullet; never promote or duplicate it. No contact/section-only/cross-section placements. Preserve source versus current values/provenance distinctly.",
+    "conflicts": "No repeated group/assertion/selected fact, shared affected entry across independent groups, or nonselected employer/role/dates facts anywhere in affected entries. Do not deduplicate valid carried references: repeated nonselected facts in distinct bullets remain unchanged. Refuse duplicate resulting direct fact refs or duplicate structural IDs. Preserve existing schema/resource floors."
+  },
+  "transform": {
+    "meaning": "Explicit WHOLE-entry merge, not merely approving typed fields. Carry every direct fact reference and unchanged bullet object from each affected entry. Facts array including order,value,state,sources,confirmation remains byte-equivalent. Contact refs, locale, titles, section refs, unaffected objects and relative order remain unchanged. No source-supported association or fact confirmation is granted.",
+    "order": "For each group, sort distinct affected entries by CURRENT entry index, concatenate direct factIds in that order and concatenate unchanged bullet objects in that order. Use employer member entry ID as anchor ID; place merged entry at EARLIEST affected entry position, remove the other affected entries, record every retired donor->anchor mapping. Unselected entries retain relative order but selected content may cross them; complete before/after affected sections expose this. Header-vs-bullet traversal order can change because arrays are separate; never claim global rendered order is unchanged.",
+    "bounds": "Schema entry limits (100 direct refs/100 bullets) remain; refuse overflow rather than truncate or deduplicate. Multiple groups deterministic in source group order and disjoint affected entries. Already-grouped groups return prepared changed:false if valid; do not blanket-refuse mixed/bullet/partial entries. No generated IDs or timestamps in pure preparation.",
+    "identity": "Compute contentDigest from fixed-order array serialization of complete facts,before/after sections and full group mappings/retired IDs. Semantic previewHash uses unchanged A02OP1 framing with distinct canonical-entry-regroup-preview/1.0.0 and preview_whole_entry_merge domain atoms, exact owned binding/baseVersionId/baseRevision/locale and contentDigest. No comparison to SQL jsonb::text digest or authentication claim."
+  },
+  "ui": {
+    "path": "app/components/CanonicalEntryRegroupDiff.tsx",
+    "props": "Real prepared CanonicalEntryRegroupPreparation only; type-only import from server module. Pure display, no request/form/save/ack authority in this leaf. Future route consumer will wrap diff in separately reviewed whole-entry acknowledgement. No new advertised route or stub endpoint.",
+    "display": "Show exact base identity, whole-entry-move explanation, unchanged-fact/confirmation limits, full ordered before/after AFFECTED sections including untouched entries crossed by moved content, all carried fact values/states/bullets and retired donor/anchor mappings. Resolve labels from actual prepared facts; source citations must not be reused to support changed current text. Clearly preview only, nothing saved, no scoring claim. changed:false states no placement changes without calling it approved. Preserve identifiers/order, use existing brand tokens/classes and accessible lists/sections.",
+    "tests": "Wait for coherent real core module and generate DTO through it with neutral evidence/current edited+confirmed snapshot. No missing-module/placeholder RED. Cover partial entries/carried bullets, noncontiguous ordering, edited/current provenance, retired IDs, already-grouped state and escaping; no browser service."
+  },
+  "futureDurableRequirements": [
+    "Separate whole-entry regroup command/policy/producer.4; frozen first-import bytes/semantics unchanged.",
+    "Versioned multi-origin composition proof, retaining eligible old groups with original origins, no implicit reapproval. New whole-entry proof cannot reuse v1 bullet-free/singleton assumptions.",
+    "Immutable original-base replay before fresh CAS; old location-sensitive C02 assignments require fresh explicit remapping, successful prior operation replay unchanged.",
+    "Paired privacy/export/delete/retention/restore plus guarded profile69 successor and plain-import/retag denial before any writes.",
+    "Owned reader/repository and actual route/named whole-entry acknowledgement/exact retry; native admission and complete consumer acceptance remain required."
+  ],
+  "verification": "Sealed Node22 actual core/projection and DOM unit tests, no dotenv/live credentials. Authors scoped only; Root one affected integrated gate plus full types/lint/web/worker after peer review. Preserve actual failures/receipts; no repeated unchanged green campaign.",
+  "boundaries": "No SQL/parser/DB/host writes/browser/provider/actualenv/key/PII/Docker/dependencies/Git/deployment or schema/old semantics changes. Default flags and denied writer stay unchanged. Root owns shared docs/contracts; separate writing worktrees and at most5 files per leaf."
+}

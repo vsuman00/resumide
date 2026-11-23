@@ -1,0 +1,36 @@
+--- a/verify-image-admission.py
++++ b/verify-image-admission.py
+@@ -227,12 +227,14 @@
+                 configuration = get_configuration()
+                 rejected = False
+                 error_class = None
++                cause_class = None
+                 pages = None
+                 try:
+                     pages = inspect(data)
+                 except Exception as error:
+                     rejected = True
+                     error_class = type(error).__name__
++                    cause_class = type(error.__cause__).__name__ if error.__cause__ is not None else None
+                 restored = get_configuration() is configuration
+             decoders = attempts['decoder'] - before['decoder']
+             scanners = attempts['inlineScanner'] - before['inlineScanner']
+@@ -249,8 +251,16 @@
+             if label == 'early-ObjStm-raster-filter':
+                 branch = types_observed.get('/ObjStm', 0) > 0
+             hook_restored = EncodedStreamObject.get_data is original
+-            good = rejected == must_reject and (rejected or pages == 1) and decoders == scanners == extractions == 0 and restored and hook_restored and branch
+-            observations.append({'name': label, 'mustReject': must_reject, 'rejected': rejected, 'pages': pages, 'errorClass': error_class, 'imageDecoderAttempts': decoders, 'inlineScannerAttempts': scanners, 'imageExtractionAttempts': extractions, 'strictInlineEntries': strict_inline, 'earlyGuardStreamTypes': types_observed, 'requiredBranchObserved': branch, 'configurationRestored': restored, 'getDataHookRestored': hook_restored, 'pass': good})
++            typed_error = True
++            if must_reject:
++                if label == 'malformed-reader-restores-context':
++                    typed_error = error_class == 'PdfReadError'
++                elif label == 'early-XRef-raster-filter':
++                    typed_error = error_class == 'PdfReadError' and cause_class == 'UnsafePDF'
++                else:
++                    typed_error = error_class == 'UnsafePDF'
++            good = rejected == must_reject and (rejected or pages == 1) and decoders == scanners == extractions == 0 and restored and hook_restored and branch and typed_error
++            observations.append({'name': label, 'mustReject': must_reject, 'rejected': rejected, 'pages': pages, 'errorClass': error_class, 'causeClass': cause_class, 'expectedErrorBoundary': typed_error, 'imageDecoderAttempts': decoders, 'inlineScannerAttempts': scanners, 'imageExtractionAttempts': extractions, 'strictInlineEntries': strict_inline, 'earlyGuardStreamTypes': types_observed, 'requiredBranchObserved': branch, 'configurationRestored': restored, 'getDataHookRestored': hook_restored, 'pass': good})
+     return {'cases': len(observations), 'passed': all(item['pass'] for item in observations), 'imageDecoderAttempts': attempts['decoder'], 'inlineScannerAttempts': attempts['inlineScanner'], 'imageExtractionAttempts': attempts['imageExtraction'], 'configurationRestored': all(item['configurationRestored'] for item in observations), 'getDataHookRestored': all(item['getDataHookRestored'] for item in observations), 'checks': observations, 'nativeImageOrFontDecoderExecuted': False}
+ 
+ 

@@ -1,0 +1,41 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/owned-ai-disposition-sql.test.ts (8 tests | 1 failed) 10ms
+     ✓ checks exact composed terminal preimages and fixed postimages, including guarded historical successors 5ms
+     × pins every changed checker from actual postimages without reshaping existing profile wires 3ms
+     ✓ captures the first account clock within actual preparation before candidate deletion and preserves retries 0ms
+     ✓ captures every version/operation at first root claim before tombstoning, independently of storage completion 0ms
+     ✓ retains composite A12 selectors and never rebinds generic R03 by owner/hash guesses 0ms
+     ✓ keeps the durable DB barrier and cancellation race authoritative without changing pre-preparation failed/cancelled semantics 0ms
+     ✓ exports the entire bounded owner closure with microseconds and effective minimum, failing incomplete captures 0ms
+     ✓ preserves exact historical policy validation while fresh Native selection requires current descriptor 0ms
+ ✓ tests/unit/initial-feedback-publication-policy.test.ts (19 tests) 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/owned-ai-disposition-sql.test.ts > ADR0020 first-preparation clock/closure SOURCE ONLY, SQL unparsed/unexecuted > pins every changed checker from actual postimages without reshaping existing profile wires
+AssertionError: expected [ 'schemaVersion', …(10) ] to have a length of 12 but got 11
+
+- Expected
++ Received
+
+- 12
++ 11
+
+ ❯ tests/unit/owned-ai-disposition-sql.test.ts:73:115
+     71|    ["public.read_owned_ai_disposition_readiness",OWNED_AI_DISPOSITION_…
+     72|   ])expect(hash(body(migration,name))).toBe(pin);
+     73|   expect(Object.keys(OWNED_AI_DISPOSITION_PROFILE)).toHaveLength(6);ex…
+       |                                                                                                                   ^
+     74|  });
+     75|  it("captures the first account clock within actual preparation before…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 26 passed (27)
+   Start at  13:30:45
+   Duration  252ms (transform 64ms, setup 0ms, import 113ms, tests 23ms, environment 0ms)
+

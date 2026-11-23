@@ -1,0 +1,99 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE",
+  "task": "CR-A11 authenticated HTTP and score-page coupling",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "predecessorReceipt": "a11-typed-path-integrated-25bc0d85-2742-45a9-aadd-bc8e798a1d63.json",
+  "predecessorInputs": 790,
+  "predecessorChangedAtAdmission": [],
+  "sourceOnly": true,
+  "productionActivation": false,
+  "endpoint": "/analysis/:id/author/typed",
+  "config": "TYPED_AUTHORING_ENABLED defaults false; AUTHORING_ENABLED and SCORING_V2_ENABLED also required",
+  "wire": {
+    "transport": "Native URLencoded/multipart forms;64KiB streamed body and5s parser deadline, duplicate/unknown/file fields and duplicate JSON keys rejected;16KiB command/frame budgets",
+    "preview": {
+      "action": "preview",
+      "selection": "TypedAuthoringSelection JSON"
+    },
+    "decision": {
+      "action": "decision",
+      "command": "TypedAuthoringCommand JSON",
+      "reviewAcknowledgement": "accepted for accept only; omitted for reject"
+    },
+    "undo": {
+      "action": "undo",
+      "receipt": "TypedAuthoringReceipt JSON",
+      "idempotencyKey": "Fresh UUID retained for that undo attempt"
+    },
+    "responses": [
+      "{kind:proposal,proposal}",
+      "{kind:applied,receipt}",
+      "{kind:undone,receipt:legacyUndoReceipt,idempotencyKey:submittedUndoKey}",
+      "{kind:error,reason,recovery}"
+    ],
+    "previewAuthority": "Explicit local equivalent-word rule through actual owned preflight/producer/fresh-read; no AI/provider claim",
+    "receiptAuthority": "Owned server validates full A11OP1 receipt; browser correlates safe structural fields without Node crypto or invented proof",
+    "undoReceiptAuthority": "Owned immutable typed event and original full Node command/result validated; idempotent replay flag may differ without changing receipt identity. Undo invokes existing guarded authoring undo at exact accepted version and requires result revision+1/actionundo/newversion."
+  },
+  "acceptance": [
+    "Private no-store/noindex JSON resource; POST/origin/flags/sessionowner before owned admin IO",
+    "Exact bound commands and fresh explicit form acknowledgement; original retry never rebased",
+    "Undo validates actual owned immutable event/result, acceptedversion and originalbase; existing guarded manual undo path, CAS against recordedacceptedversion",
+    "Current-only score workspace binds exact diagnostic versions/heads; historical/disabled views pause actions. Incomplete evidence may retain an owned explanation-only workspace, but actual preview/write remains refused.",
+    "Preview makes no provider request or write; atomic command uses actual new RPC via server-only capability; native grants remain denied",
+    "One integrated affected gate after frozen combined source; no old campaigns without affected changes"
+  ],
+  "ownership": {
+    "backend": [
+      "app/routes/analysis.author.typed.ts",
+      "app/lib/server/typed-authoring-http.ts",
+      "app/lib/server/config.ts",
+      ".env.example",
+      "tests/unit/config.test.ts",
+      "tests/unit/typed-authoring-http.test.ts",
+      "backend-a11-http.md"
+    ],
+    "frontend": [
+      "app/components/TypedAuthoringBridge.tsx",
+      "tests/components/TypedAuthoringBridge.test.tsx",
+      "app/routes/analysis.score.tsx",
+      "frontend-a11-http.md"
+    ],
+    "runtime": [
+      "tests/unit/typed-authoring-http-route.test.ts",
+      "tests/unit/typed-authoring-score-route.test.ts",
+      "runtime-a11-http.md"
+    ],
+    "root": [
+      "app/routes.ts",
+      "shared contract and integration receipts",
+      "CONTEXT.md and canonical plans"
+    ]
+  },
+  "boundary": "Source/synthetic/DOM/fakeRPC only; no SQL parse/execution/advisors/DB/hosted writes, provider/env/keys/PII, services/browser/compiler/Docker, dependency/Git/deployment. Old SQL/138 manifests/writer unchanged in this allocation. Full native readiness/legacy cutover and broader usefulness remain required.",
+  "clientBounds": "Whole fetch/body attempt30s;128KiB streamed UTF8 JSON cap; ambiguous decision/undo retains exact command/key without automatic retry",
+  "frozenAt": "2026-11-14T16:38:36.929143+00:00",
+  "releasedSourceHashes": {
+    "app/lib/server/typed-authoring-http.ts": "7beb93b7a7579ca4eaf74b7a2147c4917b6fa48ad5a85f4b363b247e3c3e5f7b",
+    "app/routes/analysis.author.typed.ts": "6a2c764e9c851bc3343e36147145f88b64b4bdb4867265667ce59a7330bc0bdd",
+    "app/lib/server/config.ts": "5eb4396c49a3f88bfffd2db7675243c62514a8b3e463177e2c1bee7cea5c5fa3",
+    ".env.example": "a48417d7623501d962fee42914922bffd3643deb8c461c026ec5964b01f4af24",
+    "tests/unit/config.test.ts": "f9bdc2d57bfbc66bf7b2d0a4c944f642833218ccd57aeb0c467825ba051dd4d6",
+    "tests/unit/typed-authoring-http.test.ts": "ac4b75bee4d358e866dcd9c8aa2439326c4c34d654b11e366b285786ffde7ecd",
+    "app/components/TypedAuthoringBridge.tsx": "1d96b4831dceb5f92e4ce1f4b80f080a73d9715360f718eecf27274fe3cf1be5",
+    "app/routes/analysis.score.tsx": "8c6b061977217a55c6736e88cff54692b3294c9359b679950199cdf197ca749d",
+    "tests/components/TypedAuthoringBridge.test.tsx": "9471b76d5aa19e0dd1f9a89ff2af012a12dabca1034d1b4c2da9cfeb004803ad",
+    "tests/unit/typed-authoring-http-route.test.ts": "ed3a0cdeedbd347cbd92322d102997fe0cce8df9e856ce7af4123cb6076d6c30",
+    "tests/unit/typed-authoring-score-route.test.ts": "e223ead0cae2ff567fee54303bfdb77d853730dc235b2f770d2865a1e4679ebb",
+    "app/routes.ts": "7cecfb645cd53cc619add4035762781ca59ddea5b29dd4372e5a1992cdf3d2ff"
+  },
+  "authorizedPredecessorChanges": [
+    "app/lib/server/config.ts",
+    "app/routes.ts",
+    "app/routes/analysis.score.tsx",
+    "tests/unit/config.test.ts",
+    ".env.example"
+  ],
+  "unchangedPredecessorInputFiles": 785,
+  "nodeSha256": "2cc28a1880d0774616959f2210ee739bffa6ac695c887e8988a496a21271f6c0"
+}

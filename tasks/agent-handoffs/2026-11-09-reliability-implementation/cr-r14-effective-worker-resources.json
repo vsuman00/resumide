@@ -1,0 +1,81 @@
+{
+  "id": "CR-R14-S14",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_EXACT_IMAGE_KERNEL_RESOURCE_SETTINGS",
+  "evidenceTier": "Actual immutable local worker with a neutral Python probe under the compiler container configuration",
+  "initialFailure": "The assertion counted dormant kernel interface entries. The corrected probe checks active flags plus IPv4 and IPv6 route tables.",
+  "worker": {
+    "imageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "profile": "focused-resources",
+    "checks": [
+      {
+        "name": "effective-worker-resource-settings",
+        "pass": true,
+        "cpuQuotaMicros": 200000,
+        "cpuPeriodMicros": 100000,
+        "cpuTimeLimitSeconds": [10, 10],
+        "memoryMaxBytes": 536870912,
+        "swapMaxBytes": 0,
+        "pidsMax": 64,
+        "childProcessesBeforeDenial": 63,
+        "descriptorLimit": [64, 64],
+        "openDescriptorsBeforeDenial": 61,
+        "fileSizeLimitBytes": 8388608,
+        "fileSizePlusOneDenied": true,
+        "scratchCapacityBytes": 134217728,
+        "scratchNoExec": true,
+        "scratchNoDevice": true,
+        "scratchNoSetUid": true,
+        "rootReadOnly": true,
+        "interfaces": [
+          "erspan0",
+          "gre0",
+          "gretap0",
+          "ip6_vti0",
+          "ip6gre0",
+          "ip6tnl0",
+          "ip_vti0",
+          "lo",
+          "sit0",
+          "tunl0"
+        ],
+        "interfacesUp": ["lo"],
+        "nonLoopbackIpv4RouteCount": 0,
+        "nonLoopbackIpv6RouteCount": 0,
+        "routeDeniedWithoutSending": true,
+        "uid": 65532,
+        "gid": 65532,
+        "effectiveCapabilities": 0,
+        "noNewPrivileges": 1,
+        "seccompMode": 2
+      }
+    ],
+    "checksExecuted": 1
+  },
+  "ownedConverterContainersRemaining": 0,
+  "focusedTestsPassed": 123,
+  "checks": {
+    "typecheck": "pass",
+    "check:latex:source": "pass"
+  },
+  "sourceHashes": {
+    "scripts/latex-runtime/verify-resource-settings.py": "ba42f0f8fc7e5cb111da38fe380ab917710a486c9e6c7ba6de8c7ebf662491d9",
+    "scripts/verify-latex-boundaries.ts": "31facb7904928ca8c77f0b791fce8f34a902cde800654a1bf26ee70daa5fc1fc",
+    "scripts/verify-latex-sandbox.ts": "8716d583c2aa62defc40feece5bfc6abed0c9d7325a3dcb4f4ce593095a7197f",
+    "scripts/latex-test-fixtures.ts": "5b909f80b7aff132e2e352a5be72547e2110171ce8ff28484e71e7d448717107",
+    "app/lib/server/latex-sandbox.ts": "100252a580c6fe5579040b2e99253b710517ba7a117a691c2b0694305af41096"
+  },
+  "logHashes": {
+    "first": "a688f387adb868df2ed314967bf27af6247dd326c11fa406e8d2213e9fed15d8",
+    "final": "34d17a3dcd451dc893d273d7b3a0c04e68e396e0264013fdf4a74dff57818b92",
+    "tests": "7e8825fc67df318bb8eb8bcc1a4a9824a1a6fc9e4999b66477fc1c1b0e896f67",
+    "source": "d776806e187eca963fdefcf38f373b00add5ba121afdc2841112e7f3d25cbb9a",
+    "types": "b63c0de51fcb1526e23a41bde9c50d3e1af56b2b08d9bfe50e3d977251642455"
+  },
+  "open": [
+    "Exact-worker CPU, memory and scratch saturation tests remain open.",
+    "Managed verification and release acceptance remain open."
+  ]
+}

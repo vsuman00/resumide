@@ -1,0 +1,55 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx (17 tests | 1 failed) 124ms
+   × keeps historical review links bound to the selected input versions 56ms
+   ✓ keeps the missing-job-description review link unversioned without inventing a selected requirement 5ms
+   ✓ covers the actual existing score blocker vocabulary 0ms
+   ✓ explains the observed calibration_not_approved blocker in plain language 4ms
+   ✓ explains the observed coverage_policy_unknown blocker in plain language 4ms
+   ✓ explains the observed extraction_review_required blocker in plain language 3ms
+   ✓ explains the observed critical_evidence_missing blocker in plain language 2ms
+   ✓ explains the observed unsupported_input blocker in plain language 2ms
+   ✓ explains the observed requirements_review_required blocker in plain language 2ms
+   ✓ explains the observed job_description_missing blocker in plain language 2ms
+   ✓ combines actual dimension and readiness blockers once without inventing other reasons 3ms
+   ✓ separates candidate review from service validation and offers only the supplied owned workspaces 9ms
+   ✓ does not suggest candidate actions can complete policy validation when review blockers are absent 3ms
+   ✓ provides a safe explanation for an unknown blocker without echoing its raw code 1ms
+   ✓ adds no inferred blockers or review controls when no blocker is supplied 1ms
+   ✓ keeps review links keyboard accessible without a form, mutation or score output 24ms
+   ✓ uses distinct heading labels when more than one notice is rendered 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > keeps historical review links bound to the selected input versions
+AssertionError: expected [ …(3) ] to deeply equal [ …(3) ]
+
+- Expected
++ Received
+
+  [
+    "/analysis/60000000-0000-4000-8000-000000000001/evidence",
+-   "/analysis/60000000-0000-4000-8000-000000000001/canonical?version=60000000-0000-4000-8000-000000000002",
+-   "/analysis/60000000-0000-4000-8000-000000000001/requirements?version=60000000-0000-4000-8000-000000000003",
++   "/analysis/60000000-0000-4000-8000-000000000001/canonical",
++   "/analysis/60000000-0000-4000-8000-000000000001/requirements",
+  ]
+
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:54:80
+     52|     requirementVersionId: "60000000-0000-4000-8000-000000000003",
+     53|   });
+     54|   expect(screen.getAllByRole("link").map((link) => link.getAttribute("…
+       |                                                                                ^
+     55|     `${base}/evidence`,
+     56|     `${base}/canonical?version=60000000-0000-4000-8000-000000000002`,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 16 passed (17)
+   Start at  08:53:56
+   Duration  871ms (transform 37ms, setup 0ms, import 183ms, tests 124ms, environment 499ms)
+
+JSON report written to /private/tmp/resumide-score-admission-frontend-mafipu1p/historical-red/tests.json

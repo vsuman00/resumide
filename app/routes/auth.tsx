@@ -1,15 +1,17 @@
 import { z } from "zod";
+import { useEffect, useRef } from "react";
 import {
   Form,
   Link,
   useActionData,
   useNavigation,
   useSearchParams,
+  type HeadersFunction,
 } from "react-router";
 import type { Route } from "./+types/auth";
 import PublicShell from "~/components/PublicShell";
 import EvidenceScene3D from "~/components/EvidenceScene3D";
-import { safeReturnTo } from "~/lib/server/auth";
+import { authResponseHeaders, safeReturnTo } from "~/lib/server/auth";
 import { getServerConfig } from "~/lib/server/config";
 import { assertSameOrigin } from "~/lib/server/security";
 import { createSupabaseServerClient } from "~/lib/server/supabase";
@@ -18,6 +20,7 @@ const EmailSchema = z.string().trim().email();
 
 interface AuthActionData {
   error?: string;
+  errorField?: "email";
   success?: string;
 }
 
@@ -25,36 +28,42 @@ export function meta() {
   return [{ title: "Resumide | Sign in" }];
 }
 
-export async function action({
-  request,
-}: Route.ActionArgs): Promise<AuthActionData | Response> {
+export const headers: HeadersFunction = ({ actionHeaders }) =>
+  authResponseHeaders(actionHeaders);
+
+export async function action({ request }: Route.ActionArgs): Promise<Response> {
   assertSameOrigin(request, getServerConfig().APP_ORIGIN);
   const form = await request.formData();
   const email = EmailSchema.safeParse(form.get("email"));
   const next = form.get("next");
   const returnTo = safeReturnTo(typeof next === "string" ? next : null);
+  const responseHeaders = new Headers();
+  const reply = (data: AuthActionData) =>
+    Response.json(data, { headers: authResponseHeaders(responseHeaders) });
 
   if (!email.success) {
-    return { error: "Enter a valid email address." };
+    return reply({
+      error: "Enter a valid email address.",
+      errorField: "email",
+    });
   }
 
-  const responseHeaders = new Headers();
-  const client = createSupabaseServerClient(request, responseHeaders);
   const callbackUrl = new URL("/auth/callback", getServerConfig().APP_ORIGIN);
   callbackUrl.searchParams.set("next", returnTo);
-  const { error } = await client.auth.signInWithOtp({
-    email: email.data,
-    options: { emailRedirectTo: callbackUrl.toString() },
-  });
-
-  if (error) {
-    return { error: "We could not send a sign-in link. Try again shortly." };
+  const failed = () =>
+    reply({ error: "We could not send a sign-in link. Try again shortly." });
+  try {
+    const client = createSupabaseServerClient(request, responseHeaders);
+    const { error } = await client.auth.signInWithOtp({
+      email: email.data,
+      options: { emailRedirectTo: callbackUrl.toString() },
+    });
+    if (error) return failed();
+  } catch {
+    return failed();
   }
 
-  return Response.json(
-    { success: "Check your email for a secure sign-in link." },
-    { headers: responseHeaders },
-  );
+  return reply({ success: "Check your email for a secure sign-in link." });
 }
 
 export default function Auth() {
@@ -65,6 +74,21 @@ export default function Auth() {
   const next = safeReturnTo(searchParams.get("next"));
   const invalidLink = searchParams.get("error") === "invalid_link";
   const isSubmitting = navigation.state === "submitting";
+  const emailInvalid = actionData?.errorField === "email";
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const successHeadingRef = useRef<HTMLHeadingElement>(null);
+  const recoveryHeadingRef = useRef<HTMLHeadingElement>(null);
+  const sendErrorRef = useRef<HTMLParagraphElement>(null);
+  const showedConfirmation = useRef(false);
+
+  useEffect(() => {
+    const returningToForm = showedConfirmation.current;
+    showedConfirmation.current = Boolean(actionData?.success);
+    if (actionData?.success) successHeadingRef.current?.focus();
+    else if (emailInvalid || returningToForm) emailInputRef.current?.focus();
+    else if (actionData?.error) sendErrorRef.current?.focus();
+    else if (invalidLink) recoveryHeadingRef.current?.focus();
+  }, [actionData, emailInvalid, invalidLink]);
 
   return (
     <PublicShell>
@@ -102,14 +126,19 @@ export default function Auth() {
           <section className="auth-form-panel">
             {actionData?.success ? (
               <div className="auth-success-state">
-                <p className="workspace-eyebrow">Secure link sent</p>
-                <h1 id="sign-in-title">Check your email</h1>
-                <p role="status" aria-live="polite">
+                <h1
+                  id="sign-in-title"
+                  ref={successHeadingRef}
+                  tabIndex={-1}
+                  aria-describedby="sign-in-confirmation"
+                >
+                  Check your email
+                </h1>
+                <p id="sign-in-confirmation" role="status" aria-live="polite">
                   {actionData.success}
                 </p>
                 <p>
-                  Open the link from the same browser to return safely to your
-                  analysis.
+                  Open the link in this browser to continue where you left off.
                 </p>
                 <Link
                   to={`/auth?next=${encodeURIComponent(next)}`}
@@ -120,7 +149,6 @@ export default function Auth() {
               </div>
             ) : (
               <>
-                <p className="workspace-eyebrow">Welcome back</p>
                 <h1 id="sign-in-title">Sign in to Resumide</h1>
                 <p className="auth-form-intro">
                   Enter your email address and we will send a secure,
@@ -129,13 +157,29 @@ export default function Auth() {
 
                 {invalidLink ? (
                   <section className="auth-message is-error" role="alert">
-                    <h2>Your sign-in link has expired</h2>
-                    <p>
-                      Request a new one below and we will send it to your email.
+                    <h2
+                      ref={recoveryHeadingRef}
+                      tabIndex={-1}
+                      aria-describedby="sign-in-recovery"
+                    >
+                      This sign-in link could not be used
+                    </h2>
+                    <p id="sign-in-recovery">
+                      Request a new link below, then open it in this browser.
                     </p>
                   </section>
                 ) : null}
 
+                {actionData?.error && !emailInvalid ? (
+                  <p
+                    ref={sendErrorRef}
+                    className="field-error"
+                    tabIndex={-1}
+                    role="alert"
+                  >
+                    {actionData.error}
+                  </p>
+                ) : null}
                 <Form
                   method="post"
                   className="auth-form"
@@ -146,16 +190,17 @@ export default function Auth() {
                     <label htmlFor="email">Email address</label>
                     <input
                       id="email"
+                      ref={emailInputRef}
                       name="email"
                       type="email"
                       autoComplete="email"
                       required
                       aria-describedby={
-                        actionData?.error ? "email-error" : undefined
+                        emailInvalid ? "email-error" : undefined
                       }
-                      aria-invalid={Boolean(actionData?.error)}
+                      aria-invalid={emailInvalid || undefined}
                     />
-                    {actionData?.error ? (
+                    {emailInvalid ? (
                       <p id="email-error" className="field-error" role="alert">
                         {actionData.error}
                       </p>

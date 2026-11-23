@@ -1,0 +1,68 @@
+{
+  "slices": {
+    "CR-U17-S05": "VERIFIED_LOCAL_DELETION_EMAIL_REAUTHENTICATION",
+    "CR-U17-S06": "VERIFIED_LOCAL_DELETION_AND_AUTH_BROWSER_JOURNEYS"
+  },
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR build on loopback with the installed Supabase SDK and simulated Auth and Data API",
+  "sources": {
+    "app/lib/server/deletion-verification.ts": "18d4718d6dd8041dec26cf7f3cc0b9857607c775095aa783798ca93e3aa5b143",
+    "app/lib/server/supabase.ts": "eb671fadfa28256c506393c213715cfcf6d984cec34c5b216f813da1ab21eab1",
+    "app/routes/auth.callback.ts": "ce72df3edc097fd534a9e249020b2906ad21ecb248dae980e038115d8df7c578",
+    "app/routes/privacy.tsx": "1545aa5bd3efe0bb0dcb838a1b5c9ff5c3d9407c7017b7d42906cf86815256e9",
+    "app/lib/server/privacy.ts": "f565fa960c0a83edfb16c2f6457d96fcc93693f65293c979b7c407e7d057d28c",
+    "tests/unit/privacy-route.test.ts": "cddb2fb34cacf3920c250c08e5e471c4316fc59c52e81d2e6b2c41f68cace1af",
+    "scripts/verify-local-privacy-journey.ts": "5610ad7c993f1d482d005468b77f9ae2dd8a6b17befa8c5ea2b2c020d7466bd1",
+    "scripts/verify-local-auth-recovery.ts": "99ae8d0df323b2ddaff3cef330b6ba0ccb19912d3c26707b44ff105886ce20b7",
+    "package-lock.json": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41"
+  },
+  "baseline": {
+    "failedTests": 1,
+    "logSha256": "c4798c2e6ff7cf4ff8a4085d1f22c361fe63e268c52cd005fb7dd2e8c4880264"
+  },
+  "focusedTests": {
+    "passed": 248,
+    "files": 9,
+    "logSha256": "44cdfc4c783aef36ff8a06f65508fef97a06b7bdb0d1c05edf5843be20d80ad8"
+  },
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed with four existing warnings",
+    "fixtureLint": "passed",
+    "webBuildLogSha256": "e99300606a5d47578d81bba13a08d8fc0a83e7643d2a60959f642872e9558b7b",
+    "workerBuildLogSha256": "a0071a7dc922972da7f6cf1f72a6b40d740f55c9474bd0e919d2372e78dfa6c1"
+  },
+  "browser": {
+    "deletionVerification": {
+      "browser": "Chromium",
+      "refreshCalls": 1,
+      "missingAuditRecoveredOnRetry": true,
+      "deletionReplaysKeptSingleRequest": true,
+      "unverifiedDeletionDenied": true,
+      "wrongBrowserDidNotConsumeLink": true,
+      "staleAndMismatchedIdentityRejected": true,
+      "callbackAloneCreatedNoDeletion": true,
+      "verificationCookieMaxAgeBounded": true,
+      "newFormMadeIndependentRequest": true,
+      "exactNativeDownload": true,
+      "queuedAndPreparedDeletionBlockedDownload": true,
+      "cancelledDeletionRestoredDownload": true,
+      "completionCopyDistinguishedFromErasure": true,
+      "physicalDeletionVerified": false,
+      "managedSupabaseVerified": false
+    },
+    "ordinarySignInRecovery": {
+      "browser": "Chromium",
+      "otpCalls": 3,
+      "exchangeCalls": 2,
+      "logoutCalls": 1,
+      "invalidLinkKeptDestination": true,
+      "failedResendKeptDestination": true,
+      "sameBrowserPKCE": true,
+      "replayDeclined": true,
+      "hostedDelivery": false
+    }
+  },
+  "managedEmailDeliveryVerified": false,
+  "physicalCleanupVerified": false
+}

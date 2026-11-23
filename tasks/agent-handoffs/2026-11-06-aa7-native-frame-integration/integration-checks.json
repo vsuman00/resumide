@@ -1,0 +1,476 @@
+{
+  "passed": true,
+  "tests": 10,
+  "cases": [
+    {
+      "label": "decoder-failure",
+      "output": {
+        "error": "output_invalid"
+      },
+      "trace": {
+        "commands": [
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xetex",
+            "-progname=xelatex",
+            "-fmt=xelatex",
+            "-no-pdf",
+            "-no-shell-escape",
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            "-file-line-error",
+            "-output-directory=/scratch",
+            "main.tex"
+          ],
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xdvipdfmx",
+            "-q",
+            "-o",
+            "/scratch/main.pdf",
+            "/scratch/main.xdv"
+          ],
+          [
+            "/usr/bin/pdftotext",
+            "-resumide-bbox",
+            "/scratch/main.pdf",
+            "/scratch/text.frame"
+          ]
+        ],
+        "events": [
+          "inspect",
+          "extract"
+        ],
+        "parseExpectedPages": [],
+        "frameReads": 0,
+        "writtenPaths": [
+          "/scratch/main.tex"
+        ]
+      }
+    },
+    {
+      "label": "oversize-before-read",
+      "output": {
+        "error": "output_invalid"
+      },
+      "trace": {
+        "commands": [
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xetex",
+            "-progname=xelatex",
+            "-fmt=xelatex",
+            "-no-pdf",
+            "-no-shell-escape",
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            "-file-line-error",
+            "-output-directory=/scratch",
+            "main.tex"
+          ],
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xdvipdfmx",
+            "-q",
+            "-o",
+            "/scratch/main.pdf",
+            "/scratch/main.xdv"
+          ],
+          [
+            "/usr/bin/pdftotext",
+            "-resumide-bbox",
+            "/scratch/main.pdf",
+            "/scratch/text.frame"
+          ]
+        ],
+        "events": [
+          "inspect",
+          "extract"
+        ],
+        "parseExpectedPages": [],
+        "frameReads": 0,
+        "writtenPaths": [
+          "/scratch/main.tex"
+        ]
+      }
+    },
+    {
+      "label": "layout-category",
+      "output": {
+        "error": "layout_overflow"
+      },
+      "trace": {
+        "commands": [
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xetex",
+            "-progname=xelatex",
+            "-fmt=xelatex",
+            "-no-pdf",
+            "-no-shell-escape",
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            "-file-line-error",
+            "-output-directory=/scratch",
+            "main.tex"
+          ],
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xdvipdfmx",
+            "-q",
+            "-o",
+            "/scratch/main.pdf",
+            "/scratch/main.xdv"
+          ],
+          [
+            "/usr/bin/pdftotext",
+            "-resumide-bbox",
+            "/scratch/main.pdf",
+            "/scratch/text.frame"
+          ]
+        ],
+        "events": [
+          "inspect",
+          "extract"
+        ],
+        "parseExpectedPages": [
+          1
+        ],
+        "frameReads": 1,
+        "writtenPaths": [
+          "/scratch/main.tex"
+        ]
+      }
+    },
+    {
+      "label": "growth-after-stat",
+      "output": {
+        "error": "output_invalid"
+      },
+      "trace": {
+        "commands": [
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xetex",
+            "-progname=xelatex",
+            "-fmt=xelatex",
+            "-no-pdf",
+            "-no-shell-escape",
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            "-file-line-error",
+            "-output-directory=/scratch",
+            "main.tex"
+          ],
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xdvipdfmx",
+            "-q",
+            "-o",
+            "/scratch/main.pdf",
+            "/scratch/main.xdv"
+          ],
+          [
+            "/usr/bin/pdftotext",
+            "-resumide-bbox",
+            "/scratch/main.pdf",
+            "/scratch/text.frame"
+          ]
+        ],
+        "events": [
+          "inspect",
+          "extract"
+        ],
+        "parseExpectedPages": [
+          1
+        ],
+        "frameReads": 1,
+        "writtenPaths": [
+          "/scratch/main.tex"
+        ]
+      }
+    },
+    {
+      "label": "independent-page-count",
+      "output": {
+        "error": "output_invalid"
+      },
+      "trace": {
+        "commands": [
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xetex",
+            "-progname=xelatex",
+            "-fmt=xelatex",
+            "-no-pdf",
+            "-no-shell-escape",
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            "-file-line-error",
+            "-output-directory=/scratch",
+            "main.tex"
+          ],
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xdvipdfmx",
+            "-q",
+            "-o",
+            "/scratch/main.pdf",
+            "/scratch/main.xdv"
+          ],
+          [
+            "/usr/bin/pdftotext",
+            "-resumide-bbox",
+            "/scratch/main.pdf",
+            "/scratch/text.frame"
+          ]
+        ],
+        "events": [
+          "inspect",
+          "extract"
+        ],
+        "parseExpectedPages": [
+          2
+        ],
+        "frameReads": 1,
+        "writtenPaths": [
+          "/scratch/main.tex"
+        ]
+      }
+    },
+    {
+      "label": "missing-frame",
+      "output": {
+        "error": "output_invalid"
+      },
+      "trace": {
+        "commands": [
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xetex",
+            "-progname=xelatex",
+            "-fmt=xelatex",
+            "-no-pdf",
+            "-no-shell-escape",
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            "-file-line-error",
+            "-output-directory=/scratch",
+            "main.tex"
+          ],
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xdvipdfmx",
+            "-q",
+            "-o",
+            "/scratch/main.pdf",
+            "/scratch/main.xdv"
+          ],
+          [
+            "/usr/bin/pdftotext",
+            "-resumide-bbox",
+            "/scratch/main.pdf",
+            "/scratch/text.frame"
+          ]
+        ],
+        "events": [
+          "inspect",
+          "extract"
+        ],
+        "parseExpectedPages": [],
+        "frameReads": 0,
+        "writtenPaths": [
+          "/scratch/main.tex"
+        ]
+      }
+    },
+    {
+      "label": "xml-not-frame",
+      "output": {
+        "error": "output_invalid"
+      },
+      "trace": {
+        "commands": [
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xetex",
+            "-progname=xelatex",
+            "-fmt=xelatex",
+            "-no-pdf",
+            "-no-shell-escape",
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            "-file-line-error",
+            "-output-directory=/scratch",
+            "main.tex"
+          ],
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xdvipdfmx",
+            "-q",
+            "-o",
+            "/scratch/main.pdf",
+            "/scratch/main.xdv"
+          ],
+          [
+            "/usr/bin/pdftotext",
+            "-resumide-bbox",
+            "/scratch/main.pdf",
+            "/scratch/text.frame"
+          ]
+        ],
+        "events": [
+          "inspect",
+          "extract"
+        ],
+        "parseExpectedPages": [
+          1
+        ],
+        "frameReads": 1,
+        "writtenPaths": [
+          "/scratch/main.tex"
+        ]
+      }
+    },
+    {
+      "label": "pdf-policy-failure",
+      "output": {
+        "error": "output_invalid"
+      },
+      "trace": {
+        "commands": [
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xetex",
+            "-progname=xelatex",
+            "-fmt=xelatex",
+            "-no-pdf",
+            "-no-shell-escape",
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            "-file-line-error",
+            "-output-directory=/scratch",
+            "main.tex"
+          ],
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xdvipdfmx",
+            "-q",
+            "-o",
+            "/scratch/main.pdf",
+            "/scratch/main.xdv"
+          ]
+        ],
+        "events": [
+          "inspect"
+        ],
+        "parseExpectedPages": [],
+        "frameReads": 0,
+        "writtenPaths": [
+          "/scratch/main.tex"
+        ]
+      }
+    },
+    {
+      "label": "success",
+      "output": {
+        "pdf": "JVBERi1uZXV0cmFsLWZpeHR1cmU=",
+        "pages": 1,
+        "text": "neutral",
+        "diagnostics": []
+      },
+      "trace": {
+        "commands": [
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xetex",
+            "-progname=xelatex",
+            "-fmt=xelatex",
+            "-no-pdf",
+            "-no-shell-escape",
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            "-file-line-error",
+            "-output-directory=/scratch",
+            "main.tex"
+          ],
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xdvipdfmx",
+            "-q",
+            "-o",
+            "/scratch/main.pdf",
+            "/scratch/main.xdv"
+          ],
+          [
+            "/usr/bin/pdftotext",
+            "-resumide-bbox",
+            "/scratch/main.pdf",
+            "/scratch/text.frame"
+          ]
+        ],
+        "events": [
+          "inspect",
+          "extract"
+        ],
+        "parseExpectedPages": [
+          1
+        ],
+        "frameReads": 1,
+        "writtenPaths": [
+          "/scratch/main.tex"
+        ]
+      }
+    },
+    {
+      "label": "decoder-timeout",
+      "output": {
+        "error": "timeout"
+      },
+      "trace": {
+        "commands": [
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xetex",
+            "-progname=xelatex",
+            "-fmt=xelatex",
+            "-no-pdf",
+            "-no-shell-escape",
+            "-interaction=nonstopmode",
+            "-halt-on-error",
+            "-file-line-error",
+            "-output-directory=/scratch",
+            "main.tex"
+          ],
+          [
+            "/opt/latex/confine",
+            "/usr/bin/xdvipdfmx",
+            "-q",
+            "-o",
+            "/scratch/main.pdf",
+            "/scratch/main.xdv"
+          ],
+          [
+            "/usr/bin/pdftotext",
+            "-resumide-bbox",
+            "/scratch/main.pdf",
+            "/scratch/text.frame"
+          ]
+        ],
+        "events": [
+          "inspect",
+          "extract"
+        ],
+        "parseExpectedPages": [],
+        "frameReads": 0,
+        "writtenPaths": [
+          "/scratch/main.tex"
+        ]
+      }
+    }
+  ],
+  "tier": "neutral trusted supervisor main with fake files/processes/PDF inspector",
+  "nativeProducerExecuted": false,
+  "pypdfExecuted": false,
+  "realLimitsChanged": false
+}

@@ -1,0 +1,16 @@
+import {execFileSync} from 'node:child_process';
+import {mkdtempSync,mkdirSync,writeFileSync,readFileSync,copyFileSync,readdirSync,existsSync} from 'node:fs';
+import {tmpdir} from 'node:os';import {join,dirname} from 'node:path';import{createHash}from'node:crypto';
+const root=process.cwd(),b=join(root,'tasks/agent-handoffs/2026-11-09-reliability-implementation');
+const allocation=JSON.parse(readFileSync(join(b,'decisions-migration-allocation.json'),'utf8'));if(allocation.status!=='ALLOCATED_ONE_CLI_CREATION')throw Error('Creation not allocated');
+const discovery=JSON.parse(readFileSync(join(b,'decisions-cli-discovery.json'),'utf8'));if(discovery.calls[0].output.trim()!==allocation.cliVersion)throw Error('Wrong CLI');
+const tmp=mkdtempSync(join(tmpdir(),'resumide-decisions-migration-'));mkdirSync(join(tmp,'home'));mkdirSync(join(tmp,'supabase'));copyFileSync(join(root,'supabase/config.toml'),join(tmp,'supabase/config.toml'));
+const env={HOME:join(tmp,'home'),PATH:dirname(process.execPath)+':/usr/bin:/bin:/usr/sbin:/sbin',NO_UPDATE_NOTIFIER:'1',SUPABASE_TELEMETRY_DISABLED:'true',GIT_CONFIG_NOSYSTEM:'1',GIT_CONFIG_GLOBAL:'/dev/null',GIT_OPTIONAL_LOCKS:'0',LANG:'en_US.UTF-8'};
+const log=execFileSync('/usr/bin/sandbox-exec',['-p',discovery.policy,join(root,'node_modules/@supabase/cli-darwin-arm64/bin/supabase'),...allocation.command],{cwd:tmp,env,encoding:'utf8',timeout:10000,maxBuffer:1048576});
+const files=readdirSync(join(tmp,'supabase/migrations'));if(files.length!==1||!/^\d{14}_jd_clause_order_decisions\.sql$/.test(files[0]))throw Error('Unexpected CLI output');
+const file=files[0],target=join(root,'supabase/migrations',file);if(existsSync(target))throw Error('Existing migration collision');
+const hash=p=>createHash('sha256').update(readFileSync(p)).digest('hex');for(const[name,sha]of Object.entries(allocation.beforeMigrations))if(hash(join(root,'supabase/migrations',name))!==sha)throw Error('Prior migration changed');
+if(file<=Object.keys(allocation.beforeMigrations).sort().at(-1))throw Error('Migration order changed');
+copyFileSync(join(tmp,'supabase/migrations',file),target);
+const result={status:'CLI_CREATED_SOURCE_ONLY',temporary:tmp,migration:'supabase/migrations/'+file,creationSha256:hash(target),log,cliVersion:allocation.cliVersion,databaseOperations:0,sqlParsing:'NOT_RUN',sqlExecution:'NOT_RUN',existingMigrationCount:Object.keys(allocation.beforeMigrations).length};
+writeFileSync(join(b,'decisions-migration-creation.json'),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));

@@ -1,0 +1,995 @@
+[
+  {
+    "table": "public.candidate_entry_regroup_batches",
+    "columns": [
+      "owner_id"
+    ],
+    "foreignTable": "auth.users",
+    "foreignColumns": [
+      "id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_batches",
+    "columns": [
+      "organization_id"
+    ],
+    "foreignTable": "public.organizations",
+    "foreignColumns": [
+      "id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_batches",
+    "columns": [
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resumes",
+    "foreignColumns": [
+      "id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_batches",
+    "columns": [
+      "source_resume_version_id",
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_batches",
+    "columns": [
+      "analysis_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.analyses",
+    "foreignColumns": [
+      "id",
+      "resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_batches",
+    "columns": [
+      "evidence_attempt_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id",
+      "input_sha256"
+    ],
+    "foreignTable": "public.document_evidence_attempts",
+    "foreignColumns": [
+      "id",
+      "analysis_id",
+      "resume_version_id",
+      "owner_id",
+      "organization_id",
+      "input_sha256"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_batches",
+    "columns": [
+      "previous_batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256"
+    ],
+    "foreignTable": "public.candidate_entry_regroup_batches",
+    "foreignColumns": [
+      "id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_batches",
+    "columns": [
+      "base_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_batches",
+    "columns": [
+      "result_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": true
+  },
+  {
+    "table": "public.candidate_entry_regroup_groups",
+    "columns": [
+      "owner_id"
+    ],
+    "foreignTable": "auth.users",
+    "foreignColumns": [
+      "id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_groups",
+    "columns": [
+      "organization_id"
+    ],
+    "foreignTable": "public.organizations",
+    "foreignColumns": [
+      "id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_groups",
+    "columns": [
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resumes",
+    "foreignColumns": [
+      "id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_groups",
+    "columns": [
+      "source_resume_version_id",
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_groups",
+    "columns": [
+      "analysis_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.analyses",
+    "foreignColumns": [
+      "id",
+      "resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_groups",
+    "columns": [
+      "evidence_attempt_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id",
+      "input_sha256"
+    ],
+    "foreignTable": "public.document_evidence_attempts",
+    "foreignColumns": [
+      "id",
+      "analysis_id",
+      "resume_version_id",
+      "owner_id",
+      "organization_id",
+      "input_sha256"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_groups",
+    "columns": [
+      "batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256",
+      "base_version_id",
+      "result_version_id"
+    ],
+    "foreignTable": "public.candidate_entry_regroup_batches",
+    "foreignColumns": [
+      "id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256",
+      "base_version_id",
+      "result_version_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_groups",
+    "columns": [
+      "base_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_groups",
+    "columns": [
+      "result_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": true
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "owner_id"
+    ],
+    "foreignTable": "auth.users",
+    "foreignColumns": [
+      "id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "organization_id"
+    ],
+    "foreignTable": "public.organizations",
+    "foreignColumns": [
+      "id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resumes",
+    "foreignColumns": [
+      "id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "source_resume_version_id",
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "analysis_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.analyses",
+    "foreignColumns": [
+      "id",
+      "resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "evidence_attempt_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id",
+      "input_sha256"
+    ],
+    "foreignTable": "public.document_evidence_attempts",
+    "foreignColumns": [
+      "id",
+      "analysis_id",
+      "resume_version_id",
+      "owner_id",
+      "organization_id",
+      "input_sha256"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "group_id",
+      "batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256",
+      "base_version_id",
+      "result_version_id"
+    ],
+    "foreignTable": "public.candidate_entry_regroup_groups",
+    "foreignColumns": [
+      "id",
+      "batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256",
+      "base_version_id",
+      "result_version_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256",
+      "base_version_id",
+      "result_version_id"
+    ],
+    "foreignTable": "public.candidate_entry_regroup_batches",
+    "foreignColumns": [
+      "id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256",
+      "base_version_id",
+      "result_version_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "base_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "result_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": true
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "origin_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "base_version_id",
+      "fact_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resume_facts",
+    "foreignColumns": [
+      "canonical_version_id",
+      "id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "result_version_id",
+      "fact_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resume_facts",
+    "foreignColumns": [
+      "canonical_version_id",
+      "id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": true
+  },
+  {
+    "table": "public.candidate_entry_regroup_members",
+    "columns": [
+      "origin_version_id",
+      "origin_fact_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resume_facts",
+    "foreignColumns": [
+      "canonical_version_id",
+      "id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_snapshots",
+    "columns": [
+      "owner_id"
+    ],
+    "foreignTable": "auth.users",
+    "foreignColumns": [
+      "id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_snapshots",
+    "columns": [
+      "organization_id"
+    ],
+    "foreignTable": "public.organizations",
+    "foreignColumns": [
+      "id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_snapshots",
+    "columns": [
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resumes",
+    "foreignColumns": [
+      "id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_snapshots",
+    "columns": [
+      "source_resume_version_id",
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_snapshots",
+    "columns": [
+      "analysis_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.analyses",
+    "foreignColumns": [
+      "id",
+      "resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_snapshots",
+    "columns": [
+      "evidence_attempt_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id",
+      "input_sha256"
+    ],
+    "foreignTable": "public.document_evidence_attempts",
+    "foreignColumns": [
+      "id",
+      "analysis_id",
+      "resume_version_id",
+      "owner_id",
+      "organization_id",
+      "input_sha256"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_snapshots",
+    "columns": [
+      "canonical_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_snapshots",
+    "columns": [
+      "inherited_from_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_snapshots",
+    "columns": [
+      "restored_from_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_snapshots",
+    "columns": [
+      "creating_regroup_batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256",
+      "canonical_version_id"
+    ],
+    "foreignTable": "public.candidate_entry_regroup_batches",
+    "foreignColumns": [
+      "id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256",
+      "result_version_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "owner_id"
+    ],
+    "foreignTable": "auth.users",
+    "foreignColumns": [
+      "id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "organization_id"
+    ],
+    "foreignTable": "public.organizations",
+    "foreignColumns": [
+      "id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resumes",
+    "foreignColumns": [
+      "id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "source_resume_version_id",
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "analysis_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.analyses",
+    "foreignColumns": [
+      "id",
+      "resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "evidence_attempt_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id",
+      "input_sha256"
+    ],
+    "foreignTable": "public.document_evidence_attempts",
+    "foreignColumns": [
+      "id",
+      "analysis_id",
+      "resume_version_id",
+      "owner_id",
+      "organization_id",
+      "input_sha256"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "canonical_version_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256"
+    ],
+    "foreignTable": "public.canonical_entry_regroup_snapshots",
+    "foreignColumns": [
+      "canonical_version_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "analysis_id",
+      "source_resume_version_id",
+      "evidence_attempt_id",
+      "input_sha256"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "canonical_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "original_approval_version_id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "foreignTable": "public.canonical_resume_versions",
+    "foreignColumns": [
+      "id",
+      "resume_id",
+      "source_resume_version_id",
+      "owner_id",
+      "organization_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "association_group_id",
+      "association_batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "source_resume_version_id",
+      "original_approval_version_id"
+    ],
+    "foreignTable": "public.candidate_entry_association_groups",
+    "foreignColumns": [
+      "id",
+      "batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "source_resume_version_id",
+      "result_version_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "association_batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "source_resume_version_id",
+      "original_approval_version_id"
+    ],
+    "foreignTable": "public.candidate_entry_association_batches",
+    "foreignColumns": [
+      "id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "source_resume_version_id",
+      "result_version_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "regroup_group_id",
+      "regroup_batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "source_resume_version_id",
+      "original_approval_version_id"
+    ],
+    "foreignTable": "public.candidate_entry_regroup_groups",
+    "foreignColumns": [
+      "id",
+      "batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "source_resume_version_id",
+      "result_version_id"
+    ],
+    "deferred": false
+  },
+  {
+    "table": "public.canonical_entry_regroup_links",
+    "columns": [
+      "regroup_batch_id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "source_resume_version_id",
+      "original_approval_version_id"
+    ],
+    "foreignTable": "public.candidate_entry_regroup_batches",
+    "foreignColumns": [
+      "id",
+      "owner_id",
+      "organization_id",
+      "resume_id",
+      "source_resume_version_id",
+      "result_version_id"
+    ],
+    "deferred": false
+  }
+]

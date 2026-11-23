@@ -1,0 +1,75 @@
+{
+  "id": "CR-R14-S13",
+  "related": "CR-R22-S01",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_EXACT_IMAGE_SUPERVISOR_WITH_PADDED_NEUTRAL_OUTPUT",
+  "evidenceTier": "Installed supervisor, real one-page rendering and test-only post-render PDF comment padding",
+  "worker": {
+    "imageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "profile": "focused-output-bytes",
+    "checks": [
+      {
+        "name": "exact-pdf-output-byte-ceiling",
+        "pass": true,
+        "paddingRuns": 1,
+        "outputReads": 1,
+        "textRuns": 1,
+        "outputBytes": 5242880,
+        "supervisorSha256": "dc37bb22b043d5947d766776a4b09d8d390fd1a36e429289145d5393857cb559",
+        "pages": 1,
+        "pdfSha256": "b2411283134e8a5c45a439cfbfe59578b7626d97c390d779b29e0a65accd8045"
+      },
+      {
+        "name": "pdf-output-byte-ceiling-plus-one",
+        "pass": true,
+        "paddingRuns": 1,
+        "outputReads": 0,
+        "textRuns": 0,
+        "outputBytes": 5242881,
+        "supervisorSha256": "dc37bb22b043d5947d766776a4b09d8d390fd1a36e429289145d5393857cb559",
+        "code": "output_invalid"
+      }
+    ],
+    "checksExecuted": 2
+  },
+  "ownedConverterContainersRemaining": 0,
+  "decodedAdapterChecksPassed": 2,
+  "focusedLaTeXAndComponentTestsPassed": 156,
+  "integrated": {
+    "initialPasses": 7214,
+    "initialFailures": 1,
+    "failure": "Restore admission test used a fixed 30 ms sleep before reading the journal while asynchronous quarantine could still be writing.",
+    "repair": "Await the observed quarantine promise and explicitly await stale reopen rejection. Production restore code remained untouched.",
+    "focusedRestoreTestsPassed": 61,
+    "finalTestsPassed": 7215,
+    "finalFilesPassed": 340,
+    "services": "Isolated test environment with no .env loaded"
+  },
+  "sourceHashes": {
+    "scripts/latex-runtime/verify-pdf-output-ceiling.py": "696130ce87154a270e0c9b3269350c0b9407af04b5e78b9b17f1be0ec88a220e",
+    "scripts/latex-runtime/supervisor.py": "dc37bb22b043d5947d766776a4b09d8d390fd1a36e429289145d5393857cb559",
+    "scripts/verify-latex-boundaries.ts": "72426a6fae5ed00d8c224f2af7b36e96beb1749d2e95f148759013b78c0c4ba5",
+    "scripts/verify-latex-sandbox.ts": "b636d943f370c192d729e9f8d41a4d726b3e2f8f2b0a70e45f48acb6187d3ae5",
+    "scripts/latex-test-fixtures.ts": "fea97804ef4d7931dd13c6285393d471135f3b40ad8511773ff4bca8cb59a8f8",
+    "app/lib/server/latex-sandbox.ts": "100252a580c6fe5579040b2e99253b710517ba7a117a691c2b0694305af41096",
+    "tests/unit/latex-sandbox.test.ts": "d4755b13441896eafa6c89421a467a75f652e46a4b9b10f7d4d1e47c14c249c5",
+    "app/lib/server/restore-floor.ts": "e2ea11adbbcf19c50efa72ffc5683d79ab03d1f6fcf803b7969cedecb384f0bf",
+    "app/lib/server/restore-admission.ts": "f308db9ca446442fe98db22f92c2fb66f52102aac52a25abc75aaf1054b0d075",
+    "tests/unit/restore-admission.test.ts": "ca68988ee6481a4d5b1b8f4ac5475bb2521f5db240080a62e681f56194a06b2b"
+  },
+  "logHashes": {
+    "final": "7d2684e35fe24520769ef7c80d84e239949b36148badff7fe6b1182729f1dc46",
+    "tests": "5816b16221783a09652e2d00ef81f10f29a129431b31ca05a18eeed81d785d0d",
+    "source": "d776806e187eca963fdefcf38f373b00add5ba121afdc2841112e7f3d25cbb9a",
+    "restore": "dc79dd65616ccff1c70c001d2a559735dc37f0d8a2166caae26d2b089a4789a5",
+    "integrated": "1237a4434c99b08c1d0bd5740a2dbef7623be082f2b07b8f5ee8377d592eadbf",
+    "integrated-final": "cdf249799faa72599ce36b28e7307d9a648439eee469aa5d381ed68fe98c8755",
+    "types-final": "b63c0de51fcb1526e23a41bde9c50d3e1af56b2b08d9bfe50e3d977251642455",
+    "restore-lint": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "open": [
+    "Broader worker resource enforcement, managed restore and release acceptance remain open."
+  ]
+}

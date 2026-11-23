@@ -1,0 +1,67 @@
+{
+  "id": "CR-R18-S18",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "status": "MEASURED_EXACT_IMAGES_LOCAL_PROMOTION_OPEN",
+  "platform": "linux/arm64",
+  "predecessorImageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+  "candidateImageId": "sha256:32cc4de5007d97d56cc355e435411227c1e0de64b13f3d084960381b2b63a38a",
+  "inputs": {
+    "publicFixtureArchiveSha256": "79a6904104e3be7640f9ce27f8cc5e5c43cdeb6a2755c911afa0e55dd10b2b90",
+    "publicSourceArchiveSha256": "97da4ff88517a6bbd729529f195f85c8d7a0c3bb4a3d57cb0c685cbb052fe837",
+    "publicCmsPdfSha256": "93a4faabd490affd4d1c24132862e7251edeaa35a037dde3ded9c68884a14c9d",
+    "publicPgpPdfSha256": "086c4a90f8a5e15c0ac0e327565eee7c0b771c742d37a14a6e4adc28eaa3adf6",
+    "publicPgpKeySha256": "d4e0bc6969ba06ead202652e35b3e31e3a0ec0e8244185fa67cf2cb7115e8900",
+    "paddingNormalizedPgpPdfSha256": "562ca68a5284efc252ddf1fa594e1312f36923c20a4c2b6e33b272c667e73775",
+    "paddingMethod": "Use the fixture-only normalization in scripts/latex-runtime/native-poppler/build-local-pdf.py."
+  },
+  "method": {
+    "runtime": "Four sequential disposable workers. Runtime network and host mounts disabled. Read-only root, non-root user, all capabilities dropped, no-new-privileges, no pull, no logging and private 8 MiB scratch. Each probe was limited to 192 MiB, one CPU and 32 processes.",
+    "signatures": "Run pdfsig -backend NSS -no-ocsp on the two-signature CMS fixture and use -backend GPG for both OpenPGP PDFs after importing the pinned public key into a private GNUPGHOME. The CMS follow-up supplied -nssdir sql:/scratch/nss after initializing the database through libnss3.",
+    "trustStore": "Read Python ssl.create_default_context().cert_store_stats(). Select a public root certificate from the predecessor store and explicitly load the same certificate as cadata in both fresh contexts. Check its DER membership in get_ca_certs(binary_form=True)."
+  },
+  "identicalSignatureOutcomes": {
+    "normalizedOpenPgp": {
+      "exit": 0,
+      "signature": "Signature is Valid.",
+      "certificate": "Certificate is Trusted."
+    },
+    "originalOpenPgp": {
+      "exit": 0,
+      "signature": "Document isn't signed or corrupted data.",
+      "certificate": null
+    },
+    "cmsDefault": {
+      "exit": 0,
+      "failedSignatures": 2,
+      "signature": "Unknown Validation Failure.",
+      "certificatesAssessed": 0
+    },
+    "cmsWithInitializedNss": {
+      "exit": 0,
+      "failedSignatures": 2,
+      "signature": "Unknown Validation Failure.",
+      "certificatesAssessed": 0
+    }
+  },
+  "certificateStore": {
+    "predecessor": {
+      "defaultSystemBundle": true,
+      "defaultPythonCaCount": 148,
+      "explicitRootAvailable": true
+    },
+    "candidate": {
+      "defaultSystemBundle": false,
+      "defaultPythonCaCount": 0,
+      "explicitRootAvailable": true
+    }
+  },
+  "remainingConverterContainers": 0,
+  "candidateHighMatchesOpen": 79,
+  "open": [
+    "Positive CMS validation with a known accepted fixture and verified trust chain",
+    "Full native signature regression on the candidate",
+    "Runtime promotion and remaining advisory dispositions"
+  ],
+  "scope": "Packaged binary and library observations only. The application compiler contract does not admit signed PDF input or enable signature validation."
+}

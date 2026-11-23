@@ -1,0 +1,113 @@
+{
+  "status": "FROZEN_SOURCE_IMPLEMENTATION",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "policySha256": "804a5454c2d4690c318d74cef2132a9699db9278633b37d4180769ab54d68256",
+  "policyFileSha256": "42b7a47361d08017d51fa33009d658eca00bcfb268c9bfc0cac2a4bd947118ab",
+  "fixedAtomOrder": [
+    "schemaVersion",
+    "operation",
+    "idempotencyKey",
+    "String(acknowledgement)",
+    "draftId",
+    "binding.source.ownerId",
+    "binding.source.organizationId",
+    "binding.source.resumeId",
+    "binding.source.analysisId",
+    "binding.source.sourceId",
+    "binding.source.attemptId",
+    "binding.source.inputSha256",
+    "binding.canonical.versionId",
+    "String(binding.canonical.revision)",
+    "binding.canonical.contentSha256",
+    "binding.requirements.versionId",
+    "String(binding.requirements.revision)",
+    "binding.requirements.inputSha256",
+    "binding.requirements.contentSha256",
+    "binding.heads.canonicalHeadId",
+    "String(binding.heads.canonicalHeadRevision)",
+    "binding.heads.requirementHeadId",
+    "String(binding.heads.requirementHeadRevision)",
+    "binding.profilesSha256",
+    "policies.clauseOrderVersion",
+    "policies.clauseOrderSha256",
+    "policies.writingSupportVersion",
+    "decisionPolicy.version",
+    "decisionPolicy.sha256",
+    "target.factId",
+    "target.sectionId",
+    "target.entryId",
+    "target.bulletId",
+    "target.currentValueSha256",
+    "target.confirmationActorId",
+    "target.confirmedAt",
+    "jdClauseId",
+    "transform.kind",
+    "transform.rendererVersion",
+    "transform.terminal",
+    "String(transform.order[0])",
+    "String(transform.order[1])",
+    "String(sourceClauses.length)",
+    "String(sourceClauses[0].index)",
+    "String(sourceClauses[0].start)",
+    "String(sourceClauses[0].end)",
+    "sourceClauses[0].sha256",
+    "String(sourceClauses[1].index)",
+    "String(sourceClauses[1].start)",
+    "String(sourceClauses[1].end)",
+    "sourceClauses[1].sha256",
+    "afterSha256",
+    "String(sourceCitations.length)"
+  ],
+  "citationAtomOrder": [
+    "attemptId",
+    "spanId",
+    "pageId",
+    "method",
+    "String(start)",
+    "String(end)",
+    "String(pageStart)",
+    "String(pageEnd)"
+  ],
+  "codec": {
+    "header": "A11OP2\n",
+    "null": "N;",
+    "string": "T<UTF8 byte length>:<bytes>;",
+    "reject": [
+      "NUL",
+      "unpaired surrogates",
+      ">256 atoms",
+      ">16384 framed UTF8 bytes"
+    ],
+    "idempotencyKeyInFingerprint": true
+  },
+  "ownership": {
+    "root": [
+      "app/lib/jd-clause-order-decision-policy.json",
+      "shared contracts",
+      "integration",
+      "plans",
+      "CONTEXT.md",
+      "migration filename allocation"
+    ],
+    "backend": [
+      "app/lib/server/jd-clause-order-drafting.ts",
+      "app/lib/server/clause-order-authoring.ts",
+      "app/lib/server/clause-order-command-codec.ts",
+      "app/lib/server/jd-clause-order-writer-scope.ts",
+      "tests/unit/jd-clause-order-decisions.test.ts"
+    ],
+    "frontend": [
+      "app/lib/jd-clause-order-decisions.ts",
+      "app/components/JdClauseOrderDecisionReview.tsx",
+      "tests/unit/jd-clause-order-browser.test.ts",
+      "tests/components/JdClauseOrderDecisionReview.test.tsx"
+    ],
+    "runtime": [
+      "scripts/generate-jd-clause-order-character-profile.mjs",
+      "app/lib/jd-clause-order-character-profile.json",
+      "CLI-created forward migration after Root path allocation",
+      "tests/unit/jd-clause-order-native-contract.test.ts"
+    ]
+  },
+  "testing": "Source/synthetic/jsdom only; sealed empty HOME OS network/dotenv/Git denial. No SQL parsing/execution, DB/provider/browser/services/Docker, Git mutation/deployment. Preserve old protocols and failures. No full feature/Native/release acceptance claimed."
+}

@@ -1,0 +1,27 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/job-requirement-admission-repository.test.ts (1 test | 1 failed) 6ms
+   × loads a handbuilt immutable relation snapshot through the existing owned reader 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/job-requirement-admission-repository.test.ts > loads a handbuilt immutable relation snapshot through the existing owned reader
+Error: Stored requirements failed integrity checks.
+ ❯ loadJobRequirements app/lib/server/job-requirement-repository.ts:211:11
+    209|     doc.data.parentVersionId !== row.data.parent_version_id
+    210|   )
+    211|     throw new CanonicalError(
+       |           ^
+    212|       422,
+    213|       "Stored requirements failed integrity checks.",
+ ❯ tests/unit/job-requirement-admission-repository.test.ts:98:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  01:07:38
+   Duration  252ms (transform 123ms, setup 0ms, import 184ms, tests 6ms, environment 0ms)
+

@@ -1,0 +1,98 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/grouped-import-repository.test.ts (57 tests | 1 failed) 141ms
+     × derives both real two-job groups and bounded source citations without raw envelopes 19ms
+     ✓ denies disabled flag CANONICAL_CORRECTIONS_ENABLED before RPC 1ms
+     ✓ denies disabled flag CANONICAL_AUTHORING_ENABLED before RPC 1ms
+     ✓ denies disabled flag EVIDENCE_REVIEW_ENABLED before RPC 1ms
+     ✓ keeps safe not_found status 1ms
+     ✓ keeps safe unavailable status 1ms
+     ✓ fails closed on malformed or mismatched snapshot 0 1ms
+     ✓ fails closed on malformed or mismatched snapshot 1 1ms
+     ✓ fails closed on malformed or mismatched snapshot 2 1ms
+     ✓ fails closed on malformed or mismatched snapshot 3 1ms
+     ✓ fails closed on malformed or mismatched snapshot 4 1ms
+     ✓ fails closed on malformed or mismatched snapshot 5 1ms
+     ✓ fails closed on malformed or mismatched snapshot 6 1ms
+     ✓ fails closed on malformed or mismatched snapshot 7 1ms
+     ✓ fails closed on malformed or mismatched snapshot 8 1ms
+     ✓ fails closed on malformed or mismatched snapshot 9 1ms
+     ✓ fails closed on malformed or mismatched snapshot 10 3ms
+     ✓ fails closed on malformed or mismatched snapshot 11 1ms
+     ✓ fails closed on malformed or mismatched snapshot 12 1ms
+     ✓ fails closed on malformed or mismatched snapshot 13 1ms
+     ✓ rejects extra RPC keys and malformed argument IDs 2ms
+     ✓ preserves all groups beyond the selected32 work bound 11ms
+     ✓ prepares actual source semantics with one new key and explicit output locale 6ms
+     ✓ denies stale captures and pending original admission only for fresh preview 4ms
+     ✓ denies foreign binding, nonexistent selection and changed preview hash 5ms
+     ✓ denied writer skips constructor and writer even on compatible preview 3ms
+     ✓ calls actual legacy constructor once; exact original command survives moved head/prefix; replay=false 7ms
+     ✓ calls actual legacy constructor once; exact original command survives moved head/prefix; replay=true 4ms
+     ✓ maps fixed SQL refusal invalid 4ms
+     ✓ maps fixed SQL refusal not_found 3ms
+     ✓ maps fixed SQL refusal conflict 3ms
+     ✓ maps fixed SQL refusal unavailable 3ms
+     ✓ keeps exact retry for ambiguous or invalid receipt 0 4ms
+     ✓ keeps exact retry for ambiguous or invalid receipt 1 3ms
+     ✓ keeps exact retry for ambiguous or invalid receipt 2 3ms
+     ✓ keeps exact retry for ambiguous or invalid receipt 3 3ms
+     ✓ keeps exact retry for ambiguous or invalid receipt 4 3ms
+     ✓ keeps exact retry for ambiguous or invalid receipt 5 3ms
+     ✓ keeps exact retry for ambiguous or invalid receipt 6 3ms
+     ✓ keeps exact retry on network read and write failure without automatic retry 4ms
+     ✓ reads preview and explicit named commit acknowledgement once 12ms
+     ✓ hidden ack cannot replace named acceptance undefined 2ms
+     ✓ hidden ack cannot replace named acceptance true 2ms
+     ✓ hidden ack cannot replace named acceptance false 2ms
+     ✓ hidden ack cannot replace named acceptance  2ms
+     ✓ rejects decoded duplicate/unknown/malformed form command=x&command=y 1ms
+     ✓ rejects decoded duplicate/unknown/malformed form command=x&%63ommand=y 0ms
+     ✓ rejects decoded duplicate/unknown/malformed form command=x&unknown=y 1ms
+     ✓ rejects decoded duplicate/unknown/malformed form command=x&relationshipAcknowledgement=accepted&relationshipAcknowledgement=accepted 0ms
+     ✓ rejects decoded duplicate/unknown/malformed form command=%FF 0ms
+     ✓ rejects decoded duplicate/unknown/malformed form command=%ZZ 0ms
+     ✓ rejects duplicate JSON/depth/token budgets 0 0ms
+     ✓ rejects duplicate JSON/depth/token budgets 1 0ms
+     ✓ rejects duplicate JSON/depth/token budgets 2 0ms
+     ✓ rejects duplicate JSON/depth/token budgets 3 0ms
+     ✓ rejects non-urlencoded, fatal UTF8 and encoded16385byte overflow; releases/cancels stream 1ms
+     ✓ returns fixed errors without raw cause 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/grouped-import-repository.test.ts > one owned grouped source snapshot > derives both real two-job groups and bounded source citations without raw envelopes
+AssertionError: expected { assertionId: 'assertion-1', …(3) } to match object { value: 'Synthetic North Labs', …(1) }
+(9 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "citations": [
+      {
+        "attemptId": "10000000-0000-4000-8000-000000000001",
+-       "href": "/analysis/10000000-0000-4000-8000-000000000003/evidence#source-page-1-line-2",
++       "href": "/analysis/10000000-0000-4000-8000-000000000003/evidence#source-native-page-1-line-2",
+      },
+    ],
+    "value": "Synthetic North Labs",
+  }
+
+ ❯ tests/unit/grouped-import-repository.test.ts:62:36
+     60|     expect(w.groups).toHaveLength(2);expect(w.groups.flatMap(g=>g.memb…
+     61|     expect(w).toMatchObject({compatibilityReady:true,canCommit:false,c…
+     62|     expect(w.groups[0].members[0]).toMatchObject({value:"Synthetic Nor…
+       |                                    ^
+     63|     expect(JSON.stringify(w)).not.toMatch(/nativeSource|retentionPolic…
+     64|     expect(row.attempt.envelope.assertions.every(a=>a.state==="review_…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 56 passed (57)
+   Start at  20:10:04
+   Duration  390ms (transform 122ms, setup 0ms, import 182ms, tests 141ms, environment 0ms)
+

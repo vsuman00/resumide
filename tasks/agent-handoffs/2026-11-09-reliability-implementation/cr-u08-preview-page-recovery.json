@@ -1,0 +1,54 @@
+{
+  "id": "CR-U08-S05",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_LOCAL_CHROME_AND_EXACT_WORKER_WITH_SYNTHETIC_SERVICES",
+  "before": "After one canvas failure, PDF.js text could advance to page two while the canvas stayed unavailable. There was no retry for the current page. Both component regressions failed. The first failing run also exposed eager mock rejections. The corrected mocks reject only when render is called.",
+  "after": [
+    "A failure is tied to the current render attempt. A later page or zoom can render independently.",
+    "Keyboard retry keeps the current PDF, restores viewport focus and does not send a new compile request.",
+    "Text extraction and PDF download remain available during a page-only render failure."
+  ],
+  "browser": {
+    "product": "Google Chrome 157.0.8103.80",
+    "zoomPercent": 200,
+    "viewportCssWidths": [390, 320],
+    "workerImageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "workerPlatform": "linux/arm64",
+    "fixture": "One targeted canvas context failure on the first rendered page, synthetic auth and rate transport, a synthetic AI suggestion, and synthetic sign-in and empty-PDF responses.",
+    "realCompilations": 3,
+    "totalCompileRequests": 5,
+    "compileRequestsDuringPageRetry": 0,
+    "downloadsMatched": 3,
+    "responseAndDownloadSha256": [
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f",
+      "3ec3c5e17be268457834e91528b760dd8b1f9c206effd64040db2a4810d195f0",
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f"
+    ],
+    "remainingConverterContainers": 0
+  },
+  "checks": {
+    "focusedPass": 224,
+    "focusedFiles": 9,
+    "integratedPass": 7221,
+    "integratedFiles": 340,
+    "typecheck": "pass",
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 4
+    },
+    "webBuild": "pass",
+    "workerBuild": "pass"
+  },
+  "sourceHashes": {
+    "app/components/LatexPdfPreview.tsx": "62abc23e37d9d5a68db93fe88af906b5fc5a81c4e8b8af18c20388e88ceb3e7a",
+    "tests/components/LatexPdfPreview.test.tsx": "1c0b44e44f3303b8738fc66bae5e469abf1ccfb74d955bc75b2be7a036f89419",
+    "scripts/verify-local-build-pdf-lifecycle.ts": "ed6add08af78e4c1df6b292f2e406ec557393e6600dcac4a0aa91ff494a5d20c"
+  },
+  "open": [
+    "Managed Auth and rate admission",
+    "Live Build AI",
+    "Formal accessibility and release acceptance"
+  ]
+}

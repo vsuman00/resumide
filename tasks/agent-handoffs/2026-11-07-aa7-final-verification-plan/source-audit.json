@@ -1,0 +1,115 @@
+{
+  "observedAt": "2026-11-07T04:34:54Z",
+  "status": "PREPARATION_ONLY_NO_EXECUTION",
+  "sourceHashes": {
+    "package.json": "679f73eb2a40092a91162c1fad57c4020581f8d94567673916b84d1a5377bd6d",
+    "package-lock.json": "d190bf3f360b0b2c4a309853ae00c19cbd39e1e58458e5730fda4a626a80d3a9",
+    "scripts/verify-private-aa7.mjs": "4dcb9e912c94a185dc7f0a3a0ef98c42a896df9f12c631538a8180c5f4d97dd6",
+    "scripts/verify-latex-sandbox.ts": "a7044b72df8af8d3df5196163635ada37bbfd828625a8139b0a61e0e088919c5",
+    "scripts/latex-test-fixtures.ts": "99417cf8a6016dbad7fad5e996d6a644b50d2a0fbd1e16c6b914508147949c07",
+    "playwright.config.ts": "35b73fd0f5d9419c587b87b939a5bcfc86a4a9e2234cf037f290f2fad71da5c4",
+    "playwright.build-ai.config.ts": "e287f32ebe516d5042121bad039d257730fef923fe55cfa2d598960617b5f7f4",
+    ".github/workflows/ci.yml": "1a7023bca5d6409807f1f80d5ebfd0ae3d1ddbb2d05c7a1336fc526534d6e2c1",
+    "scripts/latex-runtime/inspect_pdf.py": "07b6a1bb20579a8fbb25d98aa6c303180b62eb563034bf7733800e7375b89bb2",
+    "scripts/latex-runtime/supervisor.py": "282d4d7e2cbc64d6b8ad1df1c077631dd794929e5977b0273cc0e8619da017e2"
+  },
+  "scripts": {
+    "verify:ci": "npm audit signatures && npm run scan:secrets && npm run check:alerts && npm run check:container && npm run verify && npm run test:load && npm run test:restore && npm run benchmark:phase5 && npm run benchmark:job-intelligence && npm run benchmark:scoring-validity && npm run benchmark:writer-grounding && npm run benchmark:render-parity && npm run test:e2e && npm audit --omit=dev --audit-level=high",
+    "verify": "npm run format:check && npm run format:check:native-layout && npm run check:ocr:pilot-source && npm run check:aa1:source && npm run check:aa2:source && npm run check:aa3:source && npm run check:aa4:source && npm run check:aa5:source && npm run check:aa6:source && npm run lint && npm run test && npm run typecheck && npm run build && npm run build:worker",
+    "verify:private:aa7": "node scripts/verify-private-aa7.mjs",
+    "verify:latex": "vite-node --config vitest.config.ts scripts/verify-latex-sandbox.ts",
+    "verify:latex:rollback": "vite-node --config vitest.config.ts scripts/verify-latex-rollback.ts",
+    "verify:latex:render": "vite-node --config vitest.config.ts scripts/verify-latex-render-parity.ts",
+    "benchmark:latex": "vite-node --config vitest.config.ts scripts/benchmark-latex.ts",
+    "test:latex": "vitest run tests/unit/latex-source.test.ts tests/unit/latex-service.test.ts tests/unit/latex-sandbox.test.ts tests/unit/latex-config.test.ts tests/unit/latex-routes.test.ts",
+    "check:latex:source": "prettier --check scripts/verify-latex-sandbox.ts scripts/verify-latex-rollback.ts scripts/verify-latex-render-parity.ts scripts/benchmark-latex.ts scripts/latex-test-fixtures.ts tests/unit/latex-source.test.ts tests/unit/latex-routes.test.ts tests/unit/latex-config.test.ts tests/unit/latex-service.test.ts tests/unit/latex-sandbox.test.ts tests/fixtures/latex.ts tests/fixtures/latex-auth.ts e2e/latex-converter.spec.ts playwright.latex.config.ts app/lib/latex-converter.ts app/routes/latex.tsx app/routes/latex.compile.ts app/routes/latex.legacy.ts app/routes/latex.compile-legacy.ts app/components/LatexPdfPreview.tsx app/components/LatexConverter.module.css .github/workflows/latex.yml && eslint playwright.latex.config.ts scripts/verify-latex-sandbox.ts scripts/verify-latex-rollback.ts scripts/verify-latex-render-parity.ts scripts/benchmark-latex.ts scripts/latex-test-fixtures.ts tests/unit/latex-source.test.ts tests/unit/latex-routes.test.ts tests/unit/latex-config.test.ts tests/unit/latex-service.test.ts tests/unit/latex-sandbox.test.ts tests/fixtures/latex.ts tests/fixtures/latex-auth.ts e2e/latex-converter.spec.ts && python3 -c 'import ast,pathlib; [ast.parse(p.read_text(), filename=str(p)) for p in pathlib.Path(\"scripts/latex-runtime\").rglob(\"*.py\")]' && python3 scripts/audit-latex-licenses.py --self-test && python3 scripts/latex-runtime/build-fontconfig.py --self-test && python3 scripts/latex-runtime/native-expat/prepare.py",
+    "test:e2e": "npm run build && playwright test",
+    "test:e2e:build-ai": "playwright test --config playwright.build-ai.config.ts"
+  },
+  "privateCommands": [
+    [
+      "npm",
+      [
+        "run",
+        "verify:ci"
+      ]
+    ],
+    [
+      "npm",
+      [
+        "run",
+        "test:e2e:build-ai"
+      ]
+    ],
+    [
+      "npm",
+      [
+        "run",
+        "check:private:aa7:source"
+      ]
+    ],
+    [
+      "npm",
+      [
+        "run",
+        "check:latex:source"
+      ]
+    ],
+    [
+      "npm",
+      [
+        "run",
+        "check:build-ai:source"
+      ]
+    ],
+    [
+      "python3",
+      [
+        "scripts/latex-runtime/build-closure.py",
+        "--self-test"
+      ]
+    ],
+    [
+      "npm",
+      [
+        "audit",
+        "--json"
+      ]
+    ],
+    [
+      "npm",
+      [
+        "audit",
+        "--omit=dev",
+        "--json"
+      ]
+    ],
+    [
+      "npm",
+      [
+        "ls",
+        "minimatch",
+        "--all",
+        "--json"
+      ]
+    ]
+  ],
+  "queueCorrections": [
+    "No final image/source binding exists yet; native candidate fatal assertion remains unknown.",
+    "Atomic integration must bind native_geometry.py in source and runtime hash manifests and add real-image native-frame/provenance regression;24 old groups/20PDF unchanged.",
+    "verify:ci is literal command coverage, not all separate workflow jobs; no Supabase local/reset/DB Docker permitted.",
+    "Runner leaves cleanupRequired true; exact independent fixture/rate/storage/process reconciliation is mandatory before deleting ledgers.",
+    "Final scan needs separately authorized archive restoration and exact database/tool/metadata hashes.",
+    "Final all-severity applicability matrix must be rebound to current image;80 prior HIGH matches are not assumed exploit count or fixed count.",
+    "JPX output/own PDF.js preview admission gap is concrete and root-authorized for minimal fix before final freeze."
+  ],
+  "commandsExecuted": false,
+  "databaseOrDockerOrScannerUsed": false,
+  "privateCleanupRateSelector": "private.analysis_rate_limit_buckets.bucket_key",
+  "prose": {
+    "unicodeChanges": 0,
+    "stylometry": 0.0325,
+    "density": "low",
+    "trailingWhitespaceCheck": true
+  }
+}

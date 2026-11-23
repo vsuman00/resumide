@@ -1,0 +1,35 @@
+{
+  "status": "READ_ONLY_SOURCE_AUDIT_NOT_RUNTIME_REPRODUCTION",
+  "task": "CR-A02-S02",
+  "at": "2026-11-13T10:02:03.975668+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "sourceHashes": {
+    "app/lib/server/evidence-targets.ts": "f6c7295a75ce6f88b9891508a945e72660e338a4f9127548ad0085fc2dfad0b8",
+    "app/lib/server/document-evidence.ts": "f4d16c019146924f2390fa764131e3c6b9f69c65531d90315f0a64645a244e67",
+    "app/lib/server/canonical-content.ts": "b0e4f8d7f0fb032252fbca538ba2207df6cbd27e33b382a5f9ffb29bea511bf5",
+    "app/lib/server/canonical-corrections.ts": "e8d2eb62fcba63e88ad399c6ad75385d786a6d8b2e92c057d8253e853c073955"
+  },
+  "alreadyImplemented": [
+    "Same-span labelled groups and individual contact/entity targets",
+    "Immutable citations and exact source-target/canonical choice pairing",
+    "A04 per-target correction history and guarded materialization"
+  ],
+  "remainingCounterexample": {
+    "sourceShape": "Two explicitly labelled multiline employment blocks, each with employer, role and dates",
+    "sourcePredictedObservations": 6,
+    "sourcePredictedCandidateGroups": 0,
+    "sourcePredictedImportedEntries": 6,
+    "rawAggregateStates": "Global distinct-field values remain conflict; frozen attempts are unchanged",
+    "method": "Code inspection only; no new execution or altered owner-file counts"
+  },
+  "proposedPreparationFiles": [
+    "app/lib/server/evidence-entry-associations.ts",
+    "tests/unit/evidence-entry-associations.test.ts",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a02-entry-associations.md"
+  ],
+  "preparationAcceptance": "Characterize actual existing behavior first; pure separately versioned candidates/import-plan projection with exact target identities/citations, explicit labelled employment anchors and unresolved alternatives. No verified association, contribution attribution by proximity or storage activation.",
+  "admissionBoundary": "Enabling grouped imports needs reviewed canonical producer and reader/SQL admission; current original-import producer guards allow only1.0.0/1.0.1. Raw conflict semantics or evidence-target IDs need separate replay/C02 review.",
+  "implementationAllocation": "NOT_YET_ALLOCATED; Root must reconcile contract and file ownership",
+  "testsRun": 0,
+  "writes": "Only coordinator audit metadata; no app/native/database/provider/realenv/PII/Git/deploy changes"
+}

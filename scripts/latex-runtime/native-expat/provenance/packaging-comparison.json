@@ -1,0 +1,6 @@
+[
+  {
+    "name": "debian/changelog",
+    "diff": "--- trixie/debian/changelog\n+++ sid/debian/changelog\n@@ -1,9 +1,16 @@\n-expat (2.9.0-1~deb13u1) trixie-security; urgency=high\n-\n-  * Non-maintainer upload by the Security Team.\n-  * Rebuild for trixie-security\n-\n- -- Salvatore Bonaccorso <carnil@debian.org>  Sun, 11 Oct 2026 15:25:11 +0200\n+expat (2.10.0-1) unstable; urgency=high\n+\n+  * New upstream release:\n+    - fixes CVE-2026-113351: denial of service with function XML_ParserReset()\n+      (closes: #1151840),\n+    - fixes CVE-2026-115506: denial of service from variations of billion\n+      laughs attacks and parameter laughs attacks (closes: #1151841),\n+    - fixes CVE-2026-117610: denial of service or more from issues with\n+      initial non-final empty subparser parse calls (closes: #1152343),\n+    - fixes CVE-2026-118370: signed integer overflow in function storeAtts()\n+      (closes: #1152337).\n+\n+ -- Laszlo Boszormenyi (GCS) <gcs@debian.org>  Mon, 02 Nov 2026 20:17:03 +0100\n \n expat (2.9.0-1) unstable; urgency=high\n \n"
+  }
+]

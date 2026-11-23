@@ -1,0 +1,107 @@
+{
+  "status": "FROZEN_SOURCE_CONTRACT",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "adr": "docs/decisions/0020-owned-ai-accounting-retention.md",
+  "rpc": {
+    "metadata": "read_owned_ai_disposition_readiness",
+    "export": "export_owned_ai_disposition_records",
+    "access": "read_candidate_privacy_access",
+    "ownerArgument": "p_user_id"
+  },
+  "profile": {
+    "schemaVersion": "owned-ai-disposition-readiness/1.0.0",
+    "profileVersion": "owned-ai-disposition-profile/1.0.0",
+    "pins": [
+      "checkerSha256",
+      "exportSha256",
+      "accessSha256",
+      "metadataSha256"
+    ]
+  },
+  "metadataAdditionalKeys": [
+    "schemaReady",
+    "exportExecutable",
+    "accessExecutable"
+  ],
+  "export": {
+    "schemaVersion": "owned-ai-disposition-export/1.0.0",
+    "keys": [
+      "schemaVersion",
+      "ownerId",
+      "accounts",
+      "operations"
+    ],
+    "maxCombinedRows": 4096,
+    "maxBytes": 33554432,
+    "maxAccountRows": 1,
+    "accountFields": [
+      "owner_id",
+      "first_request_id",
+      "prepared_at",
+      "expires_at",
+      "phase"
+    ],
+    "operationFields": [
+      "kind",
+      "owner_id",
+      "organization_id",
+      "operation_id",
+      "analysis_id",
+      "resume_id",
+      "resume_version_id",
+      "source_scope",
+      "phase",
+      "first_cause",
+      "deletion_request_id",
+      "retention_item_id",
+      "prepared_at",
+      "expires_at",
+      "effective_expires_at"
+    ],
+    "kind": [
+      "r03",
+      "a12",
+      "a13"
+    ],
+    "source_scope": [
+      "account_only",
+      "resume_root",
+      "historical_unresolved"
+    ],
+    "phase": [
+      "prepared",
+      "repair_required"
+    ],
+    "first_cause": [
+      "account_preparation",
+      "resume_retirement",
+      null
+    ],
+    "identity": [
+      "kind",
+      "owner_id",
+      "analysis_id",
+      "operation_id"
+    ]
+  },
+  "access": {
+    "schemaVersion": "candidate-privacy-access/1.0.0",
+    "keys": [
+      "schemaVersion",
+      "ownerId",
+      "deletionPrepared",
+      "blockingRequest"
+    ],
+    "requiresExistingAuthSubject": true,
+    "blockedWhen": "deletionPrepared OR blockingRequest",
+    "missingDeniedMalformedOwnerMismatch": "unavailable; no request-only fallback",
+    "requestOnlySemantics": "failed/cancelled before preparation do not block; all existing other statuses preserve semantics",
+    "durable": "prepared disposition survives request status, plan cleanup, expiry and retry"
+  },
+  "clock": "DB clock; first committed preparation or exact root retention claim; exactly720hours; immutable ownclock; effective minimum(account,own), microseconds retained; rollback leaves no clock",
+  "repair": "No fabricated historical cause/clock: phase repair_required, scope historical_unresolved, cause and both cause references and all three clocks null. Capture actual known identity only. Repair is not successful coverage or a new deadline.",
+  "mapping": "A12 source_id is actual public.resume_versions selector per current producers; A13 explicit immutable resume_version_id; R03 root only exact A12 budgetbinding, A13 budgetattempt linkage or matching legacyqualitative analysis identity/owner/org/surface. Never infer genericrewrite/Build root from owner/hash.",
+  "historicalCompatibility": "Preserve exact old A13 descriptor JSON, policy hashes, replay/export; current admission/readiness uses current realbodies. No historical rewrite or broad unpinned hash acceptance.",
+  "activation": "newdataRPC/access/export denieddefault; expiry mutators absent/denied; no production activation",
+  "boundary": "source/synthetic/fakeRPC/DOM only; no nativeSQL/DB/hosted/providers/actualenv/PII/services/browser/compiler/Docker/deps/workspaceGit/deploy"
+}

@@ -1,0 +1,103 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/jd-clause-order-browser-target.test.ts (78 tests | 1 failed) 182ms
+     ✓ admits only complete synthetic local byte/ledger/environment fixtures 7ms
+     ✓ reads the fixed Root binding with target still unapproved and refuses before local effects 2ms
+     ✓ does not let legacy environment markers override a null or different fixed target 3ms
+     ✓ uses the passed environment independently of ambient browser declarations 3ms
+     ✓ rejects localhost bypass/unsafe target http://127.0.0.1:54321 2ms
+     ✓ rejects localhost bypass/unsafe target http://localhost:54321 2ms
+     ✓ rejects localhost bypass/unsafe target https://synthetic-jd-browser.supabase.co/path 3ms
+     ✓ rejects localhost bypass/unsafe target https://synthetic-jd-browser.supabase.co?x=1 2ms
+     ✓ does not grant global-queue 2ms
+     ✓ does not grant native-sql 2ms
+     ✓ does not grant restore 2ms
+     ✓ requires actual matching BROWSER_TEST_SUPABASE_URL 2ms
+     ✓ requires actual matching BROWSER_SUPABASE_AUTHORIZATION 2ms
+     ✓ requires actual matching BROWSER_TEST_LEDGER 2ms
+     ✓ requires actual matching MANAGED_TEST_AUTHORIZATION 2ms
+     ✓ requires actual matching MANAGED_TEST_PURPOSE 2ms
+     ✓ requires actual matching MANAGED_TEST_RUN_ID 2ms
+     ✓ requires exact ANALYSIS_ADMISSION_BINDING_ENABLED=true 2ms
+     ✓ requires exact ANALYSIS_FENCING_ENABLED=true 2ms
+     ✓ requires exact EVIDENCE_REVIEW_ENABLED=true 2ms
+     ✓ requires exact NATIVE_EVIDENCE_ENABLED=true 2ms
+     ✓ requires exact CANONICAL_AUTHORING_ENABLED=true 2ms
+     ✓ requires exact JOB_INTELLIGENCE_ENABLED=true 2ms
+     ✓ requires exact JOB_RELATIONS_ENABLED=true 2ms
+     ✓ requires exact SCORING_V2_ENABLED=true 3ms
+     ✓ requires exact AUTHORING_ENABLED=true 2ms
+     ✓ requires exact TYPED_AUTHORING_ENABLED=true 2ms
+     ✓ requires exact AI_ENABLED=false 2ms
+     ✓ requires exact AI_BUDGET_ENABLED=false 2ms
+     ✓ requires exact BUILD_AI_ASSIST_ENABLED=false 2ms
+     ✓ requires exact LATEX_CONVERTER_ENABLED=false 2ms
+     ✓ requires exact ARTIFACT_RENDERING_ENABLED=false 2ms
+     ✓ requires exact CANONICAL_REWRITE_ENABLED=false 2ms
+     ✓ requires exact CANONICAL_CORRECTIONS_ENABLED=false 3ms
+     ✓ requires exact INITIAL_FEEDBACK_ENABLED=false 2ms
+     ✓ requires exact LEGACY_SCORING_INPUT_ENABLED=false 2ms
+     ✓ requires exact NATIVE_LAYOUT_ENABLED=false 2ms
+     ✓ rejects hazardous inherited HTTP_PROXY 2ms
+     ✓ rejects hazardous inherited https_proxy 2ms
+     ✓ rejects hazardous inherited ALL_PROXY 2ms
+     ✓ rejects hazardous inherited NO_PROXY 2ms
+     ✓ rejects hazardous inherited NODE_OPTIONS 2ms
+     ✓ rejects hazardous inherited NODE_EXTRA_CA_CERTS 2ms
+     ✓ rejects hazardous inherited NODE_TLS_REJECT_UNAUTHORIZED 2ms
+     ✓ rejects hazardous inherited NODE_USE_ENV_PROXY 2ms
+     ✓ rejects hazardous inherited DATABASE_URL 2ms
+     ✓ rejects hazardous inherited PGHOST 2ms
+     ✓ rejects hazardous inherited DOTENV_CONFIG_PATH 2ms
+     ✓ rejects hazardous inherited OPENAI_ORG_ID 2ms
+     ✓ rejects hazardous inherited AWS_ACCESS_KEY_ID 2ms
+     ✓ rejects hazardous inherited AZURE_OPENAI_API_KEY 2ms
+     ✓ rejects hazardous inherited GOOGLE_APPLICATION_CREDENTIALS 2ms
+     ✓ rejects hazardous inherited ANTHROPIC_API_KEY 2ms
+     ✓ rejects hazardous inherited OCR_PROVIDER 2ms
+     ✓ rejects hazardous inherited BUILD_AI_TEST_HARNESS 2ms
+     ✓ drops unrelated ambient settings from the child allowlist 3ms
+     ✓ rejects wrong pinned node 2ms
+     ✓ rejects wrong pinned unicode 2ms
+     ✓ rejects wrong pinned icu 2ms
+     ✓ rejects wrong pinned v8 2ms
+     ✓ rejects wrong or missing HOST 2ms
+     ✓ rejects wrong or missing PORT 2ms
+     ✓ rejects wrong or missing APP_ORIGIN 2ms
+     ✓ rejects wrong or missing NODE_ENV 2ms
+     ✓ rejects wrong or missing OPENAI_MODEL 2ms
+     ✓ rejects wrong or missing OPENAI_API_KEY 2ms
+     ✓ rejects wrong or missing OPENAI_BASE_URL 2ms
+     ✓ rejects wrong or missing SUPABASE_PUBLISHABLE_KEY 2ms
+     ✓ rejects wrong or missing SUPABASE_SECRET_KEY 2ms
+     ✓ requires a private actual managed ledger 2ms
+     ✓ requires a private actual browser ledger 2ms
+     ✓ rejects symlink ledgers 2ms
+     ✓ rejects missing and altered sources and artifacts 3ms
+     ✓ rejects mismatched artifact byte counts and hashes 3ms
+     ✓ rejects unbound extra build files 3ms
+     ✓ rejects symlink source files and build directories 2ms
+     ✓ rejects path traversal and missing mandatory source/profile closure 2ms
+     × keeps dedicated config and CLI entry isolated from default globs and app imports 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/jd-clause-order-browser-target.test.ts > dedicated JD2 browser local guard, not runtime authorization > keeps dedicated config and CLI entry isolated from default globs and app imports
+AssertionError: expected -1 to be less than -1
+ ❯ tests/unit/jd-clause-order-browser-target.test.ts:363:64
+    361|     );
+    362|     const entry = script.slice(script.indexOf("if (process.argv[1]"));
+    363|     expect(entry.indexOf("requireJdClauseOrderBrowserTarget")).toBeLes…
+       |                                                                ^
+    364|       entry.indexOf("process.env ="),
+    365|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 77 passed (78)
+   Start at  07:07:16
+   Duration  314ms (transform 33ms, setup 0ms, import 69ms, tests 182ms, environment 0ms)
+

@@ -1,0 +1,149 @@
+
+> test
+> vitest run tests/unit/canonical-route.test.ts tests/components/CanonicalCorrections.test.tsx -t U03 resolution
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/canonical-route.test.ts (27 tests | 2 failed | 25 skipped) 18ms
+     ↓ loads the owned correction workspace when correction review is enabled
+     ↓ submits a strictly bound assign command with authenticated identity and precise success copy
+     ↓ submits a strictly bound apply command with authenticated identity and precise success copy
+     ↓ submits a strictly bound add command with authenticated identity and precise success copy
+     ↓ submits a strictly bound reapply command with authenticated identity and precise success copy
+     ↓ rejects authoritative ownerId inside a correction command
+     ↓ rejects authoritative value inside a correction command
+     ↓ does not admit correction writes while the feature is disabled
+     ↓ preserves a correction conflict and private response without claiming success
+     ↓ rejects cross-origin writes before authentication or privileged clients
+     ↓ requires sign-in before privileged calls
+     ↓ keeps authoring disabled by default and rejects unsupported methods
+     ↓ rejects supplied ownerId
+     ↓ rejects supplied organizationId
+     ↓ rejects supplied confirmation
+     ↓ rejects supplied __proto__
+     ↓ rejects duplicate and oversized streamed forms
+     ↓ passes authenticated identity and preserves conflict status
+     ↓ U03 draft retains a parsed authenticated edit after status 409
+     ↓ U03 draft retains a parsed authenticated edit after status 422
+     ↓ U03 draft retains a parsed authenticated rename_section after status 409
+     ↓ U03 draft never reflects unauthenticated, unparsed or successful submissions
+     ↓ rejects invalid read pagination before repository access
+     ↓ does not accept JSON or silently normalize a supplied correction
+     × U03 resolution returns a separate authenticated parsed edit resolution on success 16ms
+     × U03 resolution returns a separate authenticated parsed rename_section resolution on success 1ms
+     ↓ preserves private SSR headers and refreshed cookies
+stderr | tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 resolution retains a rejected edit through unrelated successful and failed actions
+No `HydrateFallback` element provided to render during initial hydration
+
+ ❯ tests/components/CanonicalCorrections.test.tsx (17 tests | 2 failed | 15 skipped) 111ms
+     ↓ U03 draft retains a validated edit in a native server-rendered rejected response
+     ↓ U03 draft retains a validated rename_section in a native server-rendered rejected response
+     ↓ U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery
+     × U03 resolution retains a rejected edit through unrelated successful and failed actions 87ms
+     × U03 resolution preserves separate rejected targets until their own exact successful save 24ms
+     ↓ U03 draft retains text without permitting a historical recovery or inferred replacement target
+     ↓ U03 draft retains text without permitting a missing_target recovery or inferred replacement target
+     ↓ imports a saved correction through the reviewed path and leaves its fact unconfirmed
+     ↓ shows the exact diff and provenance, applies without retyping, and retains the operation key after a retryable failure
+     ↓ requires an explicit employer target and acknowledgement before assignment
+     ↓ reviews an absent-field placement before assigning and then adding an unconfirmed fact
+     ↓ shows undo provenance and requires fresh assignment before explicit reapply
+     ↓ keeps previews available and mutations unavailable when authoritative write readiness is false
+     ↓ keeps original import unavailable until correction write readiness returns
+     ↓ does not apply into a historical selected version or expose technical identifiers as labels
+     ↓ disables correction controls while a submission is pending
+     ↓ preserves the legacy workspace when correction review data is absent
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 resolution retains a rejected edit through unrelated successful and failed actions
+TypeError: router.submit is not a function
+ ❯ tests/components/CanonicalCorrections.test.tsx:448:20
+    446|     });
+    447|     await act(async () => {
+    448|       await router.submit(new URLSearchParams(command), {
+       |                    ^
+    449|         method: "post",
+    450|         action: `/analysis/${model.analysisId}/canonical`,
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/react/dist/act-compat.js:47:24
+ ❯ process.env.NODE_ENV.exports.act ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/react/cjs/react.development.js:790:22
+ ❯ Proxy.<anonymous> ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ perform tests/components/CanonicalCorrections.test.tsx:447:11
+ ❯ tests/components/CanonicalCorrections.test.tsx:639:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 resolution preserves separate rejected targets until their own exact successful save
+TypeError: router.submit is not a function
+ ❯ tests/components/CanonicalCorrections.test.tsx:448:20
+    446|     });
+    447|     await act(async () => {
+    448|       await router.submit(new URLSearchParams(command), {
+       |                    ^
+    449|         method: "post",
+    450|         action: `/analysis/${model.analysisId}/canonical`,
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/react/dist/act-compat.js:47:24
+ ❯ process.env.NODE_ENV.exports.act ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/react/cjs/react.development.js:790:22
+ ❯ Proxy.<anonymous> ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ perform tests/components/CanonicalCorrections.test.tsx:447:11
+ ❯ tests/components/CanonicalCorrections.test.tsx:696:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/unit/canonical-route.test.ts > canonical authorization and bounded forms > U03 resolution returns a separate authenticated parsed edit resolution on success
+AssertionError: expected { success: 'Version 2 saved.', …(1) } to have property "resolved" with value { operation: 'edit', …(4) }
+
+- Expected:
+{
+  "expectedVersionId": "10000000-0000-4000-8000-000000000002",
+  "factId": "10000000-0000-4000-8000-000000000004",
+  "idempotencyKey": "10000000-0000-4000-8000-000000000003",
+  "operation": "edit",
+  "value": "Resolved correction",
+}
+
++ Received:
+undefined
+
+ ❯ tests/unit/canonical-route.test.ts:373:27
+    371|       const result = await action(args(new URLSearchParams(command)));
+    372|       expect(result.init?.status ?? 200).toBe(200);
+    373|       expect(result.data).toHaveProperty("resolved", command);
+       |                           ^
+    374|       expect(result.data).not.toHaveProperty("submitted");
+    375|       expect(new Headers(result.init?.headers).get("Cache-Control")).t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/unit/canonical-route.test.ts > canonical authorization and bounded forms > U03 resolution returns a separate authenticated parsed rename_section resolution on success
+AssertionError: expected { success: 'Version 2 saved.', …(1) } to have property "resolved" with value { operation: 'rename_section', …(4) }
+
+- Expected:
+{
+  "expectedVersionId": "10000000-0000-4000-8000-000000000002",
+  "idempotencyKey": "10000000-0000-4000-8000-000000000003",
+  "operation": "rename_section",
+  "sectionId": "10000000-0000-4000-8000-000000000004",
+  "value": "Resolved title",
+}
+
++ Received:
+undefined
+
+ ❯ tests/unit/canonical-route.test.ts:373:27
+    371|       const result = await action(args(new URLSearchParams(command)));
+    372|       expect(result.init?.status ?? 200).toBe(200);
+    373|       expect(result.data).toHaveProperty("resolved", command);
+       |                           ^
+    374|       expect(result.data).not.toHaveProperty("submitted");
+    375|       expect(new Headers(result.init?.headers).get("Cache-Control")).t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 40 skipped (44)
+   Start at  23:59:30
+   Duration  895ms (transform 276ms, setup 0ms, import 482ms, tests 129ms, environment 493ms)
+

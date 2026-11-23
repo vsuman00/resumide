@@ -1,0 +1,192 @@
+{
+  "schema": "reliability-ai-live/1",
+  "observationPolicy": "BOUNDED_METADATA_OBSERVATION",
+  "runId": "953bd9d9-06ea-4f45-88b2-5bd9ae4930fe",
+  "tier": "production_service_transport_validation_only",
+  "model": "gpt-6-luna",
+  "allocationSha256": "8cb255c3dbebda4ebefb6e84d447c6f3bf788c4ebfae1f0ca16c366908e8a8ab",
+  "sourceHashes": {
+    "scripts/verify-reliability-ai-live.ts": "d47e3c09663ec96f959219d0204e859894cbb56dd0c7c971e5473a43f07c2732",
+    "tests/unit/reliability-ai-live.test.ts": "36cb9c732da363a4e4e404f2fb7375ff3a33745c690b05f23d352942e353aced",
+    "app/lib/server/qualitative-ai.ts": "f673d71f621f994e88f2e120f1b299f28ebd72f6eaea30a0c877afd6b5df1d10",
+    "app/lib/server/qualitative-prose.ts": "a88c869032919317680f3aba633e5fd2cf46cfb79483daea4424b0939b3a654a",
+    "app/lib/server/rewrite-ai.ts": "6ae2e0fdb960be7d6d50b4c9a4b50c875cc1e445dece3109a8ee82a72b063848",
+    "app/lib/server/rewrite-sources.ts": "5ee8b6152298331f702de5dda33bb47b52384e8df330460a95c705a730ef8356",
+    "app/lib/server/writer-proposals.ts": "cc1a8c3fd3e63c64f39463e708d8426bb9d20e35b5c9b59f12c99e7af3675e5c",
+    "app/lib/server/writer-grounding.ts": "486fd5a945339a4bd9014b780fc43bb8fa9d588bcb34071c745bb7df4e38290b",
+    "app/lib/server/writing-support.ts": "6dcac128e26dec55bd3d462281adb5ee621a9e7421b8e5fe955b40d19f89d261",
+    "app/lib/server/build-assist.ts": "fcf452ab04fd247de4374727a3d8e3b0ae551420ce5f5659f6d684e9b65e3b65",
+    "app/lib/build-assist.ts": "85357221026a117c3a22c8512fb6b633e2767c5efc7471fe477d525f138873e3",
+    "app/lib/server/latex-source.ts": "10e3975858dbd91a7de04724d2cf452d358364ce11cf840aaa0bbd9b3496116f",
+    "app/lib/server/openai-model.ts": "d1a1f2ab66cc092d47b515ac995e3e9df2c51d19c28508c89c31608267143856",
+    "app/lib/server/egress-policy.ts": "b814506191c1c47232b4c446ccd392d407e1a61b11a93a47e21cabda4da25883",
+    "app/lib/server/schema.ts": "37b665d4462fe83b88622971d9aa9b52eb36ea41e459003ae2ad13ed782055fb",
+    "app/lib/server/config.ts": "ea89c7992e60de4a68ffd29141428ef5303aaef72ac5397470bb0483141e7570",
+    "app/lib/latex-converter.ts": "79801197c4c7c91957f1391141659780dcf463a89a824b2fab0bf5d87ed79a25",
+    "app/lib/server/iso-datetime.ts": "54ab6f0e2e5754ce8a79304d823ff6cde56f74b51ecb6d77516033144bc1fdb2",
+    "package.json": "1422b25b5c1f193c89a77a64b6892c7263ac4bdc8efd7ed7d0416626b1fb15b4",
+    "package-lock.json": "d190bf3f360b0b2c4a309853ae00c19cbd39e1e58458e5730fda4a626a80d3a9",
+    "vitest.config.ts": "ecd6b6d407a69ebc631187b2d281b7c70675c5f5421d098f190b988eb47af399"
+  },
+  "sourceStable": true,
+  "executionError": null,
+  "fixtureReadiness": {
+    "registeredSources": 2,
+    "knownSupportedChanges": 2,
+    "qualitativeChangedBullets": 2,
+    "rewriteChangedBullets": 2,
+    "validatedBuildModes": 3
+  },
+  "limits": {
+    "maxRequests": 5,
+    "maxRequestedOutputTokens": 4352,
+    "perCaseMs": 30000,
+    "aggregateMs": 120000,
+    "sdkRetries": 0
+  },
+  "fetchDispatches": 5,
+  "requestedOutputTokens": 4352,
+  "cases": [
+    {
+      "name": "qualitative",
+      "classification": "no_useful_change",
+      "dispatchState": "DISPATCHED",
+      "changedBullets": 0,
+      "changedSelection": null,
+      "groundedCitedTips": 0,
+      "responseBindingVerified": null,
+      "outsideBytesUnchanged": null,
+      "resumeConfirmationRequired": null,
+      "irSupported": true,
+      "syntaxRepaired": false,
+      "fetchDispatches": 1,
+      "requestedOutputTokens": 1024,
+      "httpStatuses": [
+        200
+      ],
+      "usage": {
+        "inputTokens": 569,
+        "outputTokens": 45
+      },
+      "responseModel": "gpt-6-luna",
+      "providerError": null,
+      "elapsedMs": 2851,
+      "providerIdempotency": "unique_key",
+      "noScoreClaimObserved": null
+    },
+    {
+      "name": "rewrite",
+      "classification": "no_useful_change",
+      "dispatchState": "DISPATCHED",
+      "changedBullets": 0,
+      "changedSelection": null,
+      "groundedCitedTips": null,
+      "responseBindingVerified": null,
+      "outsideBytesUnchanged": null,
+      "resumeConfirmationRequired": null,
+      "irSupported": true,
+      "syntaxRepaired": false,
+      "fetchDispatches": 1,
+      "requestedOutputTokens": 1024,
+      "httpStatuses": [
+        200
+      ],
+      "usage": {
+        "inputTokens": 383,
+        "outputTokens": 92
+      },
+      "responseModel": "gpt-6-luna",
+      "providerError": null,
+      "elapsedMs": 1974,
+      "providerIdempotency": "unique_key",
+      "noScoreClaimObserved": null
+    },
+    {
+      "name": "build_fix",
+      "classification": "passed",
+      "dispatchState": "DISPATCHED",
+      "changedBullets": 0,
+      "changedSelection": true,
+      "groundedCitedTips": null,
+      "responseBindingVerified": true,
+      "outsideBytesUnchanged": true,
+      "resumeConfirmationRequired": null,
+      "irSupported": false,
+      "syntaxRepaired": true,
+      "fetchDispatches": 1,
+      "requestedOutputTokens": 768,
+      "httpStatuses": [
+        200
+      ],
+      "usage": {
+        "inputTokens": 291,
+        "outputTokens": 37
+      },
+      "responseModel": "gpt-6-luna",
+      "providerError": null,
+      "elapsedMs": 2255,
+      "providerIdempotency": "unsupported",
+      "noScoreClaimObserved": true
+    },
+    {
+      "name": "build_rewrite",
+      "classification": "no_useful_change",
+      "dispatchState": "DISPATCHED",
+      "changedBullets": 0,
+      "changedSelection": null,
+      "groundedCitedTips": null,
+      "responseBindingVerified": true,
+      "outsideBytesUnchanged": null,
+      "resumeConfirmationRequired": null,
+      "irSupported": false,
+      "syntaxRepaired": false,
+      "fetchDispatches": 1,
+      "requestedOutputTokens": 768,
+      "httpStatuses": [
+        200
+      ],
+      "usage": {
+        "inputTokens": 291,
+        "outputTokens": 38
+      },
+      "responseModel": "gpt-6-luna",
+      "providerError": null,
+      "elapsedMs": 2869,
+      "providerIdempotency": "unsupported",
+      "noScoreClaimObserved": null
+    },
+    {
+      "name": "build_resume",
+      "classification": "no_useful_change",
+      "dispatchState": "DISPATCHED",
+      "changedBullets": 0,
+      "changedSelection": null,
+      "groundedCitedTips": null,
+      "responseBindingVerified": true,
+      "outsideBytesUnchanged": null,
+      "resumeConfirmationRequired": null,
+      "irSupported": false,
+      "syntaxRepaired": false,
+      "fetchDispatches": 1,
+      "requestedOutputTokens": 768,
+      "httpStatuses": [
+        200
+      ],
+      "usage": {
+        "inputTokens": 289,
+        "outputTokens": 34
+      },
+      "responseModel": "gpt-6-luna",
+      "providerError": null,
+      "elapsedMs": 1784,
+      "providerIdempotency": "unsupported",
+      "noScoreClaimObserved": null
+    }
+  ],
+  "status": "FAILED_OR_INCOMPLETE",
+  "elapsedMs": 11830,
+  "rawMaterialRetained": false,
+  "productionBuildFactGateAcceptance": false,
+  "durableIdempotencyAcceptance": false,
+  "databaseAuthBrowserCompileAcceptance": false
+}

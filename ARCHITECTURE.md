@@ -6,6 +6,7 @@ AA3 status: **LOCAL IMPLEMENTATION DELIVERED; DOMAIN/DATA ACCEPTANCE OPEN**
 AA4 status: **LOCAL ENGINEERING COMPLETE AND VERIFIED; FORMAL GATE OPEN**
 AA5 status: **LOCAL ENGINEERING COMPLETE, VERIFIED AND OWNER-ACCEPTED 2026-10-14; FORMAL GATE OPEN**
 AA6 status: **LOCAL ENGINEERING COMPLETE AND VERIFIED; FORMAL GATE OPEN**
+AA7 status: **STANDALONE CONVERTER LOCAL ENGINEERING COMPLETE; FORMAL GATE OPEN**
 Canonical execution documents: [`tasks/plan.md`](tasks/plan.md) and [`tasks/todo.md`](tasks/todo.md)
 Accuracy-v2 sources: [`docs/ATS_SCORING_AND_AUTHORING_SPEC.md`](docs/ATS_SCORING_AND_AUTHORING_SPEC.md), [`docs/ATS_SCORING_AND_AUTHORING_RESEARCH.md`](docs/ATS_SCORING_AND_AUTHORING_RESEARCH.md), [`tasks/accuracy-authoring-plan.md`](tasks/accuracy-authoring-plan.md), and [`CONSTRAINTS.md`](CONSTRAINTS.md)
 
@@ -284,6 +285,8 @@ Rules:
 - Retry only transient failures with capped exponential backoff and jitter.
 - Deterministic results may be returned as `PARTIAL` when the LLM provider is unavailable.
 - Permanent errors use stable public codes; internal stack/provider details stay in protected logs.
+
+Implementation status, 2026-11-10: default-off admission binding now records exact input/policy hashes and upload compensation before storage I/O. The opt-in queue uses a fresh per-attempt lease token; stage writes use an explicit typed RPC wrapper that checks ownership and commits within one transaction. Worker shutdown and observed lease loss reach qualitative cancellation, and a cancelled rewrite cannot save after its final source lookup. Source review and mocked integration checks pass; the new SQL has not run. Legacy producer cutover, real transaction races, deletion serialization, recovery and activation remain open. See the [bounded implementation report](tasks/agent-handoffs/2026-11-09-reliability-implementation/r07-r10-admission-worker-closeout.md).
 
 ### Accuracy-v2 and authoring lifecycle
 
@@ -586,3 +589,58 @@ Owner-approved ADR-0014/E-005 permits AA050–AA057 local engineering. The defau
 ### AA6 local verified core rendering (2026-10-14)
 
 Owner-approved [ADR-0015](docs/decisions/0015-aa6-local-engineering-sequencing.md) permits local AA060–AA065 engineering. A private, default-off semantic preview and one shared single-column PDF/DOCX template now render confirmed canonical versions. Independent parse-back blocks missing/changed text, wrong order, links or layout before download. The known-synthetic matrix passes; representative corpus, approved viewer and assistive-technology acceptance remain open. See [AA6 closeout](docs/evaluation/AA6_ENGINEERING_CLOSEOUT.md).
+
+### Standalone LaTeX converter local engineering (2026-10-30)
+
+The owner approved a separate `/build` code editor and PDF visualization tool under [ADR-0016](docs/decisions/0016-standalone-latex-converter.md) and E-007. It preserves supported user source, compiles through a disposable networkless Docker/Landlock worker and returns a transient inspected PDF. It neither calls the analyzer nor persists source/PDF or claims canonical/ATS verification. Supabase remains the managed database/auth/rate boundary; no Docker database or Redis layer is added. Actual synthetic runtime and browser checks pass. The flag defaults off; production activation, hosted worker privilege review, image vulnerability acceptance and document accessibility remain release gates. See the [closeout](docs/evaluation/AA7_ENGINEERING_CLOSEOUT_20261030.md) and [operations runbook](docs/operations/LATEX_CONVERTER.md).
+
+### Build selected-context AI follow-up (2026-10-30)
+
+The standalone editor optionally calls authenticated `/build/suggest` for a bounded, consented edit proposal. Browser-safe hash/range/CRLF helpers bind the request and apply/undo against the exact source. The server forwards only selected lines and nearby context to the configured official OpenAI endpoint, validates the structured proposal and whole candidate source, and records only versioned consent, content-free audit, rate/quota metadata and token metrics. The full source, prompts and outputs remain transient. Resume wording stays an unverified draft requiring candidate fact confirmation; no score or canonical provenance is supplied.
+
+`BUILD_AI_ASSIST_ENABLED` defaults off alongside existing AI/converter controls. Managed Supabase provides deployment-wide per-user/global admission and a conservative organization/month request quota using the existing atomic rate-limit RPC; the existing actual-token analysis ledger is separate. No new migration, dependency, cache or database container is added. See the [design](docs/design/LATEX_CONVERTER.md#inline-ai-assistance-follow-up) and [active packet](tasks/agent-handoffs/2026-10-30-build-ai-coordinator.md). Two HTTP 401 smokes were followed by a successful owner-requested synthetic provider probe; live end-to-end browser behavior remains unverified.
+
+### Checklist baseline correction (2026-10-31)
+
+New deterministic analyses use `ats-rules-v4`: role/accountability headings are retained, recognized keyword credit is proportional and fractional contributions are recorded in the trace. Result pages label retained historical numbers as uncalibrated and do not endorse them with Strong bands. The baseline remains a hand-weighted synthetic heuristic; authoritative v2 job alignment is still withheld. See the [repair evidence](docs/evaluation/SCORE_INFLATION_REPAIR_20261031.md).
+
+### Privately validated worker hardening candidate (2026-11-06)
+
+The standalone compiler recipe now separates builder compiler/header/install tooling from the nonroot runtime and uses wheel-hash-pinned pypdf6.21.4 for fail-closed PDF inspection. The same base digest, snapshot and TeX/source capability policy are retained. An explicit checksum-pinned transport for one identical snapshot-authenticated Debian artifact avoids an unavailable canonical URL; runtime network/host-mount and resource constraints are unchanged. The exact19d2 candidate passed internal runtime, parser, output, rollback, application and browser checks. Paired scans retain unresolved findings; no production/security acceptance or automatic configuration promotion follows. See the [private candidate closeout](docs/evaluation/AA7_PRIVATE_CANDIDATE_CLOSEOUT_20261106.md).
+
+## November 6 AA7 security remediation
+
+The current unpromoted converter recipe uses a dated/digest-pinned Debian Trixie base and authenticated fixed November 6 snapshots, applies available base security updates and retains maintained pypdf with builder-only compiler/install tools. The supported source policy remains unchanged. Required styles, fonts, runtime files and ELF dependencies fail closed; exactly two additional transitive files, etoolbox.sty and native /etc/paperspecs data, restore compatibility without a broad directory read or geometry override.
+
+The exact Linuxarm64 paperfix candidate passes the synthetic runtime, output, examples, rollback, paired visual and dedicated browser checks. Its full scan has zero critical but 89 high matches; the all-vulnerability goal and formal Gate AA7 remain open. No deployment or environment promotion follows from this evidence. See the [current security record](docs/evaluation/AA7_FULL_SECURITY_CLOSEOUT_20261106.md) and [remaining source-maintenance obligations](docs/evaluation/AA7_FULL_SECURITY_ACTIONABILITY_20261106.md).
+
+The next unpromoted candidate builds Expat2.10 from archive-authenticated source with preserved Trixie packaging and upstream/ABI tests. It purges exactly six reviewed optional packages through normal guarded APT; protected and Essential packages remain. A generated, hash-bound Fontconfig clone preserves ordered system aliases while excluding HOME/XDG configuration. Both compiler and inspector children use fixed configuration paths; the Landlock read closure grants only the generated XML files. Supported source, fonts, geometry and output policy remain unchanged. Image38292747 built successfully, including a fresh Python consumer bound to the installed library hash. Its 22 runtime groups, 20 PDF cases, six examples, rollback and paired render pass. Full private application verification passes 1,242 unit tests and 71 browser cases with 557 stable source inputs. The unsuppressed scan retains 947 matches, including 80 high and zero critical; the known upstream issue and Gate AA7 remain open. [Current completion evidence](tasks/agent-handoffs/2026-11-06-aa7-completion-coordinator.md).
+
+Current unpromoted worker `fc8c0ace…` additionally scopes pypdf configuration to disable optional external JBIG2 decoding and legacy overrides, restoring the incoming configuration after inspection. The inspector validation body is unchanged. Its source-bound evidence passes 23 runtime groups, all 20 PDF cases, six examples, rollback, paired rendering, 1,242 unit tests and 71 browser cases; 558 code inputs are stable. Fresh unsuppressed scanning retains 947 matches including 80 high and zero critical, so formal closure remains open. A [native geometry frame](docs/design/NATIVE_GEOMETRY_TRANSPORT.md) and optional JPX-decoder removal are isolated proposals pending native build and parity evidence; the current supervisor still consumes bbox XML.
+
+The subsequent immutable-HOME repair changes only native HOME selection and creates an empty root-owned directory with mode 0555 at `/opt/latex/home`; scratch remains the working/output directory. This closes the measured user-configuration fallback after Fontconfig load failure. Interim fb277061 passes focused native failure/normal-font checks and six actual profile/paper cases. Full final-image verification is still pending; [evidence](docs/evaluation/AA7_IMMUTABLE_HOME_REMEDIATION_20261106.md).
+
+
+## November 7 standalone worker verification
+
+Unpromoted worker `6f623e1c…` replaces candidate-derived geometry XML with the bounded native frame and disables the optional Poppler JPEG2000 decoder. PDF admission rejects raster decoding before reader construction, inline images before scanning, unsupported resources and invalid embedded fonts, with sticky policy failure and indirect-object normalization. The current standalone HTTP/source contract, analyzer separation, managed Supabase boundary and runtime isolation remain unchanged. [Actual verification](docs/evaluation/AA7_ATOMIC_NATIVE_PRIVATE_CI_20261107.json) passes 27 runtime groups, 49 admission cases, 107 frame cases, six profiles, rollback, paired render, 1,242 unit tests and 71 browser cases, with exact cleanup. Four additional boundary tests use mocks and are identified separately. Both npm audits report zero. The native dependency build retains its narrowly reviewed baseline signer failure as 70/71 under E-010; license interpretation and final security acceptance remain open. A minimal source backport for FreeType CVE-2026-95512 is being reviewed separately. No deployment or local configuration promotion occurred.
+
+
+## AA7 bounded engineering closeout (2026-11-07)
+
+The final unpromoted standalone worker is `4b83ffec…`. It adds the source-verified FreeType repair and actual mapped-library check. All 28 runtime groups, six profiles, rollback, render, 1,242 unit tests and 71 browser cases pass with exact managed-Supabase and temporary-resource cleanup. The final image retains 216 packages; versus 6f, only the FreeType package version and its one ELF hash in the 1,974-file compiler closure change. Seven crypto libraries and the Poppler artifact metadata remain unchanged. AA070–AA075 engineering is complete; completed checks remain closed unless changed code or a concrete failure requires reopening them. The 947 raw image advisories, historical vendor-test exception and formal accessibility/security/legal/release acceptance remain separate launch obligations. No environment or deployment was promoted. [Current closeout](docs/evaluation/AA7_FREETYPE_FINAL_CLOSEOUT_20261107.md).
+
+
+## AA8 metadata foundation (2026-11-07)
+
+The owner closed Gate AA7 under [ADR-0017](docs/decisions/0017-aa7-owner-acceptance-and-aa8-start.md) and authorized AA8. The new pure server module assesses synthetic corpus metadata, access-group membership, declared rights/purpose/expiry, lifecycle and exact duplicate identifiers/hashes. A bounded readonly CLI exposes safe counts/reasons. No public API, storage table, database migration, document ingestion or provider is added. Representative/release readiness stays false; source references and hashes are declarations pending verification. [Contract](docs/design/EVALUATION_CORPUS.md), [actual slice evidence](docs/evaluation/AA8_METADATA_ADMISSION_20261107.md).
+
+## AA8/AA9 prerelease evaluation workflow (2026-11-07)
+
+The owner-approved solo prerelease workflow is implemented as internal server modules and bounded CLI tools: corpus byte/access/lifecycle ports, annotation/adjudication, immutable leakage-checked partitions, offline three-dimension calibration, guarded locked evaluation/cluster statistics, versioned evidence/claim monitors and an advisory pilot controller. Trusted current context and exact receipt bindings remain separate from input JSON. No new public route, schema, provider or dependency is added, and production scoring/flags remain unchanged.
+
+The synthetic driver executes application extraction, canonical/JD/diagnostics, grounded writer probes and two real PDF/DOCX exports; missing measurements retain their document slots and fail numeric gates. Pilot roles/adapters are simulations, while the actual separate direct-Supabase storage/audit/deletion drill verifies existing infrastructure and exact cleanup. An actual AI-reviewed metadata successor permits only the synthetic Regression-tested claim, without activation. [Closeout and limitations](docs/evaluation/AA8_AA9_ENGINEERING_CLOSEOUT_20261107.md). Domain/vendor/customer evidence and launch remain owner-deferred; deployment is on hold.
+
+Current AA8/AA9 completion tracking is available in [plan.plan.md](plan.plan.md) and [tutorial.md](tutorial.md); canonical task states stay in [tasks/todo.md](tasks/todo.md). The separate [release-readiness checklist](tasks/aa8-aa9-release-readiness.md) preserves the owner-deferred research and claim gates.
+
+The AA080 completion audit added an optional trusted, exact-record/source/rights/actor/time authority path for future permitted non-synthetic intake and forwards it through the bounded storage drill. Default admission remains synthetic-only; the CLI cannot supply authority. Existing purpose, scope, lifecycle, expiry, membership, byte/hash and fresh read-time controls remain enforced. This closes the missing future-authorized path without activating real-data use or changing numerical claim gates. [Current verification](docs/evaluation/AA8_AA9_COMPLETION_TRACKING_20261107.json).

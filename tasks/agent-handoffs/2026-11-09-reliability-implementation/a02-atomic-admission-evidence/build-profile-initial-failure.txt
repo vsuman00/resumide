@@ -1,0 +1,78 @@
+from pathlib import Path
+import re,json,hashlib
+root=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats');p=Path(__file__).parent
+foundation=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats/supabase/migrations/20261113130533_grouped_original_atomic_import.sql')
+f=root/'supabase/migrations/20261113131538_grouped_original_admission.sql';text=f.read_text().split('\n-- Complete successor profile')[0]
+def sha(s):return hashlib.sha256(s.encode()).hexdigest()
+paths=[root/'supabase/migrations'/n for n in ['20261012054243_canonical_resume_transactions.sql','20261012064727_job_requirement_versions.sql','20261012160703_candidate_authoring_transactions.sql','20261109164851_correction_ledger_foundation.sql','20261110085512_privacy_write_barrier.sql','20261110113245_canonical_correction_materialization.sql','20261113113504_grouped_import_structural_codec.sql','20261113121645_grouped_import_source_validation.sql']]+[foundation]
+known={}
+pat=r'create(?: or replace)? function\s+([a-z_.]+)\(([^)]*)\)\s+returns\s+(\S+)\s+language\s+(\w+)(.*?)\bas\s+(\$[a-z_]*\$)(.*?)\6;'
+for path in paths:
+ for m in re.finditer(pat,path.read_text(),re.S|re.I):
+  types=[]
+  if m[2].strip():
+   for arg in m[2].split(','):
+    words=arg.strip().split();types.append(words[1])
+  signature=m[1]+'('+','.join(types)+')'
+  header=m[5].lower();known[signature]={'signature':signature,'sha256':sha(m[7]),'definer':'security definer' in header,'volatility':'i' if 'immutable' in header else 's' if 'stable' in header else 'v','resultType':m[3],'strict':bool(re.search(r'\bstrict\b',header)),'language':m[4].lower(),'serviceExecute':m[1].startswith('public.')}
+for m in re.finditer(pat,text,re.S|re.I):
+ types=[x.strip().split()[1]for x in m[2].split(',')]if m[2].strip()else[];signature=m[1]+'('+','.join(types)+')';header=m[5].lower()
+ known[signature]={'signature':signature,'sha256':sha(m[7]),'definer':'security definer'inheader,'volatility':'i'if'immutable'inheader else's'if'stable'inheader else'v','resultType':m[3],'strict':bool(re.search(r'\bstrict\b',header)),'language':m[4].lower(),'serviceExecute':False}
+c02=(root/'supabase/migrations/20261110113245_canonical_correction_materialization.sql').read_text()
+rows=re.findall(r"\('([^']+)','([a-f0-9]{64})',(true|false),'([ivs])','([^']+)'::regtype\)",c02);assert len(rows)==37
+patches={x['signature']:x for x in json.loads((p/'patch-manifest.json').read_text())};records=[]
+for sig,old,d,v,t in rows:
+ item={**known[sig],'signature':sig,'sha256':patches.get(sig,{}).get('newSha256',old),'definer':d=='true','volatility':v,'resultType':t,'serviceExecute':sig.startswith('public.')};records.append(item)
+extra=[s for s in known if s.startswith('private.grouped_import_') or s.startswith('private.entry_association_') or s.startswith('private.grouped_original_') or s=='public.import_canonical_grouped_original(uuid,uuid,jsonb,jsonb,text)']
+extra += ['private.reject_correction_ledger_update()','private.guard_candidate_privacy_write()','public.export_resume_workspace_records(uuid)','public.export_canonical_records(uuid)','public.export_job_requirement_records(uuid)','public.export_authoring_records(uuid)']
+assert len(set(extra))==len(extra)
+records += [known[s]for s in extra];assert len({x['signature']for x in records})==len(records)
+(p/'catalog-routines.json').write_text(json.dumps(records,indent=2)+'\n')
+(p/'foundation-fingerprint.json').write_text(json.dumps({'path':str(foundation),'sha256':sha(foundation.read_text()),'routines':[known[s]for s in known if s.startswith('private.entry_association_')]},indent=2)+'\n')
+tables=['canonical_resume_versions','resume_facts','canonical_resume_heads','change_events','authoring_events','candidate_correction_operations','candidate_correction_assignments','candidate_correction_applications','canonical_correction_snapshots','canonical_correction_snapshot_facts']
+newtables=['candidate_entry_association_batches','candidate_entry_association_groups','candidate_entry_association_members','canonical_entry_association_snapshots','canonical_entry_association_links']
+immutable=['entry_batches_immutable','entry_groups_immutable','entry_members_immutable','entry_snapshots_immutable','entry_links_immutable']
+triggers=[]
+for table,name in zip(newtables,immutable):
+ triggers.append({'table':'public.'+table,'name':name,'function':'private.reject_correction_ledger_update()','type':19,'argsHex':'','argumentCount':0})
+ triggers.append({'table':'public.'+table,'name':'zz_candidate_privacy_write','function':'private.guard_candidate_privacy_write()','type':23,'argsHex':'6f776e65725f696400','argumentCount':1})
+(p/'catalog-triggers.json').write_text(json.dumps(triggers,indent=2)+'\n')
+body="""
+declare target jsonb; routine pg_catalog.pg_proc%rowtype; relation_oid oid; role_name text; trigger_row pg_catalog.pg_trigger%rowtype;
+  manifest jsonb:=$catalog_manifest$"""+json.dumps(records,indent=2)+"""$catalog_manifest$::jsonb;
+  triggers jsonb:=$trigger_manifest$"""+json.dumps(triggers,indent=2)+"""$trigger_manifest$::jsonb;
+begin
+  for target in select value from jsonb_array_elements(manifest) loop
+    select * into routine from pg_catalog.pg_proc where oid=to_regprocedure(target->>'signature');
+    if not found or routine.prokind<>'f' or routine.proretset or routine.prorettype<>to_regtype(target->>'resultType')
+      or routine.prosecdef is distinct from (target->>'definer')::boolean or routine.provolatile<>target->>'volatility'
+      or routine.proisstrict is distinct from (target->>'strict')::boolean
+      or (select lanname from pg_catalog.pg_language where oid=routine.prolang) is distinct from target->>'language'
+      or cardinality(routine.proconfig) is distinct from 1
+      or not exists(select 1 from pg_options_to_table(routine.proconfig) where option_name='search_path' and option_value in ('','""'))
+      or encode(extensions.digest(convert_to(routine.prosrc,'UTF8'),'sha256'),'hex')<>target->>'sha256' then return false; end if;
+    foreach role_name in array array['anon','authenticated','service_role'] loop
+      if has_function_privilege(role_name,routine.oid,'EXECUTE') is distinct from
+        (role_name='service_role' and (target->>'serviceExecute')::boolean) then return false; end if;
+    end loop;
+  end loop;
+  foreach role_name in array array['anon','authenticated','service_role'] loop
+"""
+for table in tables+newtables:
+ body+="    relation_oid:=to_regclass('public."+table+"');\n    if not exists(select 1 from pg_catalog.pg_class where oid=relation_oid and relrowsecurity)\n      or has_table_privilege(role_name,relation_oid,'INSERT,UPDATE,DELETE,TRUNCATE')\n      or has_any_column_privilege(role_name,relation_oid,'INSERT,UPDATE') then return false; end if;\n"
+ if table in newtables:body+="    if has_table_privilege(role_name,relation_oid,'SELECT') or has_any_column_privilege(role_name,relation_oid,'SELECT')\n      or exists(select 1 from pg_catalog.pg_policy where polrelid=relation_oid) then return false; end if;\n"
+body+="""  end loop;
+  for target in select value from jsonb_array_elements(triggers) loop
+    select * into trigger_row from pg_catalog.pg_trigger where tgrelid=to_regclass(target->>'table') and tgname=target->>'name' and not tgisinternal;
+    if not found or trigger_row.tgfoid<>to_regprocedure(target->>'function') or trigger_row.tgtype<>(target->>'type')::integer
+      or trigger_row.tgenabled<>'O' or trigger_row.tgdeferrable or trigger_row.tginitdeferred
+      or trigger_row.tgconstraint<>0 or trigger_row.tgqual is not null
+      or trigger_row.tgnargs<>(target->>'argumentCount')::integer or trigger_row.tgargs<>decode(target->>'argsHex','hex') then return false; end if;
+  end loop;
+  return true;
+exception when others then return false;
+end;
+"""
+profile="\n-- Complete successor profile: historical37 preserved; 32 unchanged and five guarded successors.\n-- Explicit ACLs keep the NEW public writer revoked. The checker itself is externally fingerprinted.\ncreate or replace function private.canonical_correction_write_ready() returns boolean\nlanguage plpgsql stable security invoker set search_path='' as $a02_ready$"+body+"$a02_ready$;\nrevoke all on function private.canonical_correction_write_ready() from public,anon,authenticated,service_role;\ncommit;\n"
+f.write_text(text+profile)
+(p/'readiness-successor-sha256.txt').write_text(sha(body)+'\n');print(json.dumps({'routineCount':len(records),'priorA02':sum(s.startswith('private.grouped_import_')for s in extra),'foundationSha256':sha(foundation.read_text()),'readinessSha256':sha(body),'migrationSha256':sha(f.read_text())},indent=2))

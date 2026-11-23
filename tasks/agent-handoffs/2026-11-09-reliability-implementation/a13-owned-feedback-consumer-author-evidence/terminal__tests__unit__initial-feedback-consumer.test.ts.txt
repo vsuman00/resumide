@@ -1,0 +1,599 @@
+import { RouterContextProvider } from "react-router";
+import type { FeedbackZod } from "../../app/lib/server/schema";
+import { beforeEach, expect, it, vi } from "vitest";
+import { scoreExtractedResume } from "../../app/lib/server/scoring-stage";
+import { buildPartialFeedback } from "../../app/lib/server/qualitative-stage";
+import { createHash } from "node:crypto";
+import { INITIAL_FEEDBACK_PROFILE } from "../../app/lib/server/initial-feedback-profile";
+const mocks = vi.hoisted(() => ({
+  user: vi.fn(),
+  admin: vi.fn(),
+  audit: vi.fn(),
+}));
+vi.mock("../../app/lib/server/auth", () => ({
+  getAuthenticatedUser: mocks.user,
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseServerClient: vi.fn(),
+  createSupabaseAdminClient: mocks.admin,
+}));
+vi.mock("../../app/lib/server/privacy", () => ({
+  recordAuditEvent: mocks.audit,
+}));
+vi.mock("../../app/lib/server/layout-read-model", () => ({
+  readOwnedNativeLayout: vi.fn(async () => null),
+}));
+vi.mock("../../app/lib/pdf2img", () => ({ convertPdfToImages: vi.fn() }));
+const uuid = (n: number) =>
+  `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const source = "Built services using Python";
+function harness() {
+  const d = scoreExtractedResume({
+    text: source,
+    pageCount: 1,
+    pageTexts: [source],
+    textChecksum: createHash("sha256").update(source).digest("hex"),
+    jobDescription: "Python required",
+  });
+  const feedback = buildPartialFeedback({
+    score: d.score,
+    ruleTrace: d.ruleTrace,
+  });
+  feedback.content.tips[0] = {
+    type: "good",
+    tip: "Created services using Python",
+    explanation: "Clarifies wording.",
+    quote: source,
+  };
+  const record = {
+    id: uuid(1),
+    organization_id: uuid(3),
+    status: "completed",
+    analysis_results: {
+      feedback,
+      parse_view: d.parseView,
+      rule_trace: d.ruleTrace,
+      keyword_coverage: d.keywordCoverage,
+      created_at: "2026-11-15T00:00:00Z",
+    },
+    analysis_deterministic_results: { ruleset_version: d.rulesetVersion },
+    writer_drafts: [{ draft: { summary: null, bullets: [] } }],
+    resume_versions: { storage_key: "fixture.pdf", organization_id: uuid(3) },
+  };
+  const state: { metadata: unknown; reply: unknown; error: unknown } = {
+    metadata: {
+      ...INITIAL_FEEDBACK_PROFILE,
+      schemaReady: false,
+      readerExecutable: false,
+      prepareExecutable: false,
+      claimExecutable: false,
+      settleExecutable: false,
+      finishExecutable: false,
+      usageExecutable: false,
+      exportExecutable: false,
+    },
+    reply: null,
+    error: null,
+  };
+  const rpc = vi.fn(async (name: string) =>
+    name === "read_initial_feedback_readiness"
+      ? { data: state.metadata, error: null }
+      : { data: state.reply, error: state.error },
+  );
+  const from = vi.fn((table: string) => {
+    const builder = {
+      select: vi.fn(() => builder),
+      eq: vi.fn(() => builder),
+      maybeSingle: vi.fn(async () => ({ data: record, error: null })),
+      limit: vi.fn(async () => ({
+        data: table === "document_evidence_attempts" ? [] : null,
+        error: null,
+      })),
+    };
+    return builder;
+  });
+  mocks.user.mockResolvedValue({ id: uuid(2) });
+  mocks.admin.mockReturnValue({ from, rpc });
+  mocks.audit.mockResolvedValue(undefined);
+  return { d, feedback, record, state, rpc, from };
+}
+async function load() {
+  const { loader } = await import("../../app/routes/resume");
+  const url = new URL(`http://localhost/resume/${uuid(1)}`);
+  const response = await loader({
+    params: { id: uuid(1) },
+    request: new Request(url),
+    url,
+    pattern: "/resume/:id",
+    context: new RouterContextProvider(),
+  });
+  if (response instanceof Response) throw response;
+  return response;
+}
+beforeEach(() => vi.clearAllMocks());
+it("exposes recoverable owned-feedback unavailability without losing legacy result", async () => {
+  const h = harness();
+  const result = await load();
+  expect(result.data.result.feedback).toEqual(h.feedback);
+  expect(result.data).toHaveProperty(
+    "feedbackProvenance.status",
+    "unavailable",
+  );
+  expect(result.init?.headers).toBeTruthy();
+});
+it("refuses actual owned-feedback access denial instead of displaying a stale legacy result", async () => {
+  const h = harness();
+  h.state.metadata = {
+    ...INITIAL_FEEDBACK_PROFILE,
+    schemaReady: true,
+    readerExecutable: true,
+    prepareExecutable: false,
+    claimExecutable: false,
+    settleExecutable: false,
+    finishExecutable: false,
+    usageExecutable: false,
+    exportExecutable: false,
+  };
+  h.state.error = { code: "42501", message: "private access denied" };
+  await expect(load()).rejects.toMatchObject({ status: 404 });
+});
+
+import { compileInitialFeedbackPlan } from "../../app/lib/server/initial-feedback-plan";
+import { createInitialFeedbackPublicationPolicy } from "../../app/lib/server/initial-feedback-publication-policy";
+import { InitialFeedbackPublicationSchema } from "../../app/lib/server/initial-feedback-operation-contract";
+import {
+  BASELINE_SEMANTICS,
+  legacyCategoryFromProse,
+} from "../../app/lib/server/qualitative-prose";
+import {
+  projectInitialFeedbackConsumer,
+  loadInitialFeedbackConsumer,
+} from "../../app/lib/server/initial-feedback-consumer";
+
+// AI-authored neutral synthetic source. Real scorer/compiler/strict Native DTO
+// decoding supply content/mappings; UUIDs and PG digests are fake-RPC metadata.
+function ownedFixture(sourceTip?: { tip: string; explanation: string }) {
+  const text = "Built a dashboard.\nI did not lead a team.";
+  const d = scoreExtractedResume({
+    text,
+    pageCount: 1,
+    pageTexts: [text],
+    textChecksum: createHash("sha256").update(text).digest("hex"),
+    jobDescription: "Python required",
+  });
+  const raw = {
+    toneAndStyle: {
+      tips: [
+        {
+          type: "good" as const,
+          tip: "I led a team.",
+          explanation: "Clarifies wording.",
+          quote: "I did not lead a team.",
+        },
+        {
+          type: "good" as const,
+          tip: sourceTip?.tip ?? "Created a dashboard.",
+          explanation: sourceTip?.explanation ?? "Built a dashboard.",
+          quote: "Built a dashboard.",
+        },
+        {
+          type: "good" as const,
+          tip: "Review the wording.",
+          explanation: "Clarifies wording.",
+          quote: "I did not lead a team.",
+        },
+        {
+          type: "good" as const,
+          tip: "What outcome can you verify?",
+          explanation:
+            "Leave this unanswered if the information is unavailable.",
+          quote: "Built a dashboard.",
+        },
+      ],
+    },
+    content: { tips: [] },
+    structure: { tips: [] },
+    skills: { tips: [] },
+    writer: { summary: null, bullets: [] },
+  };
+  const compiled = compileInitialFeedbackPlan(text, raw);
+  if (compiled.status !== "available")
+    throw Error("Real compiler fixture unavailable");
+  const policy = createInitialFeedbackPublicationPolicy({
+    model: "unit-model",
+    maxOutputTokens: 1200,
+    attemptLimit: 1,
+    budgetPolicyVersion: null,
+  });
+  const binding = {
+    schemaVersion: "initial-feedback-binding/1.0.0",
+    analysisId: uuid(1),
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    resumeId: uuid(4),
+    resumeVersionId: uuid(5),
+    scoringInputSha256: "a".repeat(64),
+    deterministicContentSha256: "b".repeat(64),
+    resultChecksum: d.resultChecksum,
+    sourceTextSha256: d.inputTextChecksum,
+    jobId: uuid(6),
+    jobSha256: "c".repeat(64),
+    policy,
+  };
+  const feedback: FeedbackZod = {
+    scoreSemantics: BASELINE_SEMANTICS,
+    overallScore: d.score,
+    ATS: {
+      score: d.score,
+      tips: d.ruleTrace.slice(0, 4).map((t) => ({
+        type: t.passed ? ("good" as const) : ("improve" as const),
+        tip: t.detail,
+      })),
+    },
+    toneAndStyle: legacyCategoryFromProse(compiled.rendered.prose.toneAndStyle),
+    content: legacyCategoryFromProse(compiled.rendered.prose.content),
+    structure: legacyCategoryFromProse(compiled.rendered.prose.structure),
+    skills: legacyCategoryFromProse(compiled.rendered.prose.skills),
+  };
+  const publication = InitialFeedbackPublicationSchema.parse({
+    schemaVersion: "initial-feedback-publication/1.0.0",
+    publicationId: uuid(9),
+    state: "assessed",
+    reason: null,
+    binding,
+    plan: compiled.plan,
+    recordedObservation: compiled.recordedObservation,
+    generationFailure: null,
+    ownedSupport: {
+      schemaVersion: "initial-feedback-native-support/1.0.0",
+      scope: "retained_output_only",
+      bindingSha256: "d".repeat(64),
+      planSha256: "e".repeat(64),
+      parts: compiled.rendered.parts,
+      mapping: compiled.rendered.mapping,
+    },
+    prose: compiled.rendered.prose,
+    compatibility: {
+      deterministicResult: d,
+      feedback,
+      writer: compiled.rendered.prose.writer,
+    },
+    receipt: {
+      schemaVersion: "initial-feedback-receipt/1.0.0",
+      operationId: uuid(7),
+      attemptId: uuid(8),
+      publicationId: uuid(9),
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      bindingSha256: "d".repeat(64),
+      publicationSha256: "f".repeat(64),
+      resultSha256: "1".repeat(64),
+      writerSha256: "2".repeat(64),
+      runId: uuid(10),
+      createdAt: "2026-11-15T00:00:00.123456Z",
+      replayed: false,
+    },
+  });
+  const scope = {
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    analysisId: uuid(1),
+  };
+  const read = {
+    schemaVersion: "initial-feedback-read/1.0.0",
+    status: "available",
+    currentness: "current",
+    publication,
+  };
+  return { d, compiled, feedback, publication, scope, read };
+}
+import {
+  initialFeedbackPartialFeedback,
+  InitialFeedbackCompatibilitySchema,
+} from "../../app/lib/server/initial-feedback-operation-contract";
+import {
+  visibleFeedbackGroups,
+  isFeedbackStrength,
+  isFeedbackRepair,
+} from "../../app/lib/result-feedback";
+function admit(h: ReturnType<typeof harness>, reply: unknown) {
+  h.state.metadata = {
+    ...INITIAL_FEEDBACK_PROFILE,
+    schemaReady: true,
+    readerExecutable: true,
+    prepareExecutable: false,
+    claimExecutable: false,
+    settleExecutable: false,
+    finishExecutable: false,
+    usageExecutable: false,
+    exportExecutable: false,
+  };
+  h.state.reply = reply;
+  h.state.error = null;
+}
+it.each(["current", "historical"] as const)(
+  "projects actual owned %s publication with retained compatibility indices and no private payload",
+  async (currentness) => {
+    const h = harness(),
+      f = ownedFixture();
+    h.record.analysis_results.feedback = f.feedback;
+    h.feedback = f.feedback;
+    admit(h, { ...f.read, currentness });
+    const response = await load(),
+      p = response.data.feedbackProvenance;
+    expect(p).toMatchObject({
+      status: "available",
+      currentness,
+      publicationState: "assessed",
+    });
+    expect(p.tips.filter((t) => t.category === "toneAndStyle")).toEqual([
+      {
+        category: "toneAndStyle",
+        compatibilityIndex: 0,
+        classification: "source_claim",
+      },
+      {
+        category: "toneAndStyle",
+        compatibilityIndex: 1,
+        classification: "editorial_observation",
+      },
+      {
+        category: "toneAndStyle",
+        compatibilityIndex: 2,
+        classification: "clarification_question",
+      },
+    ]);
+    expect(f.compiled.plan.toneAndStyle.map((t) => t.originalIndex)).toEqual([
+      1, 2, 3,
+    ]);
+    const groups = visibleFeedbackGroups(f.feedback, false, p);
+    expect(
+      groups.flatMap((g) => g.tips).filter(isFeedbackStrength),
+    ).toHaveLength(1);
+    expect(
+      groups
+        .flatMap((g) => g.tips)
+        .filter(isFeedbackRepair)
+        .some(
+          (t) =>
+            t.classification === "clarification_question" ||
+            t.classification === "compatibility_only",
+        ),
+    ).toBe(false);
+    expect(Object.keys(p).sort()).toEqual([
+      "currentness",
+      "publicationState",
+      "status",
+      "tips",
+    ]);
+    for (const key of [
+      "binding",
+      "policy",
+      "recordedObservation",
+      "ownerId",
+      "sourceRefs",
+      "lease",
+    ])
+      expect(JSON.stringify(p)).not.toContain(key);
+    expect(response.data.result.feedback).toEqual(f.feedback);
+    expect(h.rpc.mock.calls.map((c) => c[0])).toEqual([
+      "read_initial_feedback_readiness",
+      "read_initial_feedback",
+    ]);
+    const headers = new Headers(response.init?.headers);
+    expect(headers.get("Cache-Control")).toContain("private");
+    expect(headers.get("X-Robots-Tag")).toContain("noindex");
+  },
+);
+it("does not pair independently fetched altered feedback with valid publication proof", async () => {
+  const h = harness(),
+    f = ownedFixture();
+  h.record.analysis_results.feedback = structuredClone(f.feedback);
+  h.record.analysis_results.feedback.toneAndStyle.tips[0].tip =
+    "Another saved claim";
+  admit(h, f.read);
+  const response = await load();
+  expect(response.data.feedbackProvenance).toMatchObject({
+    status: "unavailable",
+    currentness: null,
+    tips: [],
+  });
+  expect(response.data.result.feedback.toneAndStyle.tips[0].tip).toBe(
+    "Another saved claim",
+  );
+});
+it("malformed mapping and foreign owned data remain unverified without borrowing proof", async () => {
+  for (const variant of ["mapping", "owner"]) {
+    const h = harness(),
+      f = ownedFixture(),
+      read = structuredClone(f.read);
+    h.record.analysis_results.feedback = f.feedback;
+    if (variant === "mapping")
+      read.publication.ownedSupport!.mapping.tips[0].compatibilityIndex = 1;
+    else {
+      read.publication.binding.ownerId = uuid(99);
+      read.publication.receipt.ownerId = uuid(99);
+    }
+    admit(h, read);
+    expect((await load()).data.feedbackProvenance).toMatchObject({
+      status: "unavailable",
+      tips: [],
+    });
+  }
+});
+it("keeps actual pending metadata separate from saved unverified suggestions", async () => {
+  const h = harness(),
+    f = ownedFixture(),
+    a = {
+      attemptId: uuid(8),
+      ordinal: 1,
+      state: "dispatched",
+      claimedAt: "2026-11-15T00:00:00Z",
+      usage: null,
+      errorCode: null,
+      budgetAttemptId: null,
+    };
+  admit(h, {
+    schemaVersion: "initial-feedback-read/1.0.0",
+    status: "pending",
+    operation: {
+      schemaVersion: "initial-feedback-operation/1.0.0",
+      operationId: uuid(7),
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      binding: f.publication.binding,
+      bindingSha256: "d".repeat(64),
+      state: "open",
+      attemptLimit: 1,
+      attempts: [a],
+      publicationId: null,
+    },
+    attempt: a,
+  });
+  const response = await load();
+  expect(response.data.feedbackProvenance).toMatchObject({
+    status: "pending",
+    currentness: null,
+    tips: [],
+  });
+  expect(response.data.result.feedback).toEqual(h.feedback);
+});
+it("retains explicit legacy_unbound from the actual read protocol", async () => {
+  const h = harness();
+  admit(h, {
+    schemaVersion: "initial-feedback-read/1.0.0",
+    status: "legacy_unbound",
+    analysisId: uuid(1),
+    reason: "original_input_or_publication_missing",
+  });
+  expect((await load()).data.feedbackProvenance).toMatchObject({
+    status: "legacy_unbound",
+    tips: [],
+  });
+});
+it("honestly classifies actual deterministic-only publication without completing writing", async () => {
+  const h = harness(),
+    f = ownedFixture(),
+    p = structuredClone(f.publication);
+  p.state = "deterministic_only";
+  p.reason = "ai_disabled";
+  p.plan = null;
+  p.recordedObservation = null;
+  p.ownedSupport = null;
+  p.prose = null;
+  p.compatibility.feedback = InitialFeedbackCompatibilitySchema.parse({
+    deterministicResult: f.publication.compatibility.deterministicResult,
+    feedback: initialFeedbackPartialFeedback(
+      f.publication.compatibility.deterministicResult,
+    ),
+    writer: null,
+  }).feedback;
+  p.compatibility.writer = null;
+  p.receipt.attemptId = null;
+  p.receipt.runId = null;
+  p.receipt.writerSha256 = null;
+  h.record.analysis_results.feedback = p.compatibility.feedback;
+  admit(h, { ...f.read, currentness: "historical", publication: p });
+  const response = await load();
+  expect(response.data.feedbackProvenance).toMatchObject({
+    status: "available",
+    currentness: "historical",
+    publicationState: "deterministic_only",
+    tips: [],
+  });
+  expect(response.data.qualitativeUnavailable).toBe(true);
+  expect(response.data.result.feedback.overallScore).toBe(
+    p.compatibility.feedback.overallScore,
+  );
+});
+it("does not call Native readers before authentication and preserves scoped SQL filters", async () => {
+  const h = harness();
+  mocks.user.mockResolvedValueOnce(null);
+  await expect(load()).rejects.toMatchObject({ status: 302 });
+  expect(h.rpc).not.toHaveBeenCalled();
+  await load();
+  const builder = h.from.mock.results[0].value;
+  expect(builder.eq.mock.calls).toContainEqual(["id", uuid(1)]);
+  expect(builder.eq.mock.calls).toContainEqual(["owner_id", uuid(2)]);
+});
+it("pure server projection fails closed for foreign scope and retained-text swaps", () => {
+  const f = ownedFixture();
+  expect(
+    projectInitialFeedbackConsumer(f.read, f.feedback, {
+      ...f.scope,
+      analysisId: uuid(99),
+    }).status,
+  ).toBe("unavailable");
+  const read = structuredClone(f.read);
+  read.publication.prose!.toneAndStyle.tips[0].tip = "Altered retained text";
+  expect(projectInitialFeedbackConsumer(read, f.feedback, f.scope).status).toBe(
+    "unavailable",
+  );
+});
+it("real read helper propagates access denial and never exposes raw details", async () => {
+  const f = ownedFixture(),
+    rpc = vi.fn(async (name: string) =>
+      name === "read_initial_feedback_readiness"
+        ? {
+            data: {
+              ...INITIAL_FEEDBACK_PROFILE,
+              schemaReady: true,
+              readerExecutable: true,
+              prepareExecutable: false,
+              claimExecutable: false,
+              settleExecutable: false,
+              finishExecutable: false,
+              usageExecutable: false,
+              exportExecutable: false,
+            },
+            error: null,
+          }
+        : {
+            data: null,
+            error: { code: "42501", message: "private denial detail" },
+          },
+    );
+  const error = await loadInitialFeedbackConsumer(
+    { rpc },
+    f.scope,
+    f.feedback,
+  ).catch((e) => e);
+  expect(error.code).toBe("not_found");
+  expect(error.message).not.toContain("private denial detail");
+});
+
+it.each([
+  {
+    tip: "Created a dashboard.",
+    explanation: "Clarifies wording.",
+    kinds: ["source_claim", "editorial_observation"],
+  },
+  {
+    tip: "Review the wording.",
+    explanation: "Created a dashboard.",
+    kinds: ["editorial_observation", "source_claim"],
+  },
+])("mixed source/editorial children remain editorial: $kinds", (vector) => {
+  const f = ownedFixture(vector);
+  const part = f.publication.ownedSupport!.parts.tips.find(
+    (t) => t.originalIndex === 1,
+  )!;
+  expect(part.type).toBe("good");
+  expect([part.title.kind, part.explanation.kind]).toEqual(vector.kinds);
+  const provenance = projectInitialFeedbackConsumer(
+    f.read,
+    f.feedback,
+    f.scope,
+  );
+  expect(
+    provenance.tips.find(
+      (t) => t.category === "toneAndStyle" && t.compatibilityIndex === 0,
+    )?.classification,
+  ).toBe("editorial_observation");
+  expect(
+    visibleFeedbackGroups(f.feedback, false, provenance)
+      .flatMap((g) => g.tips)
+      .filter(isFeedbackStrength),
+  ).toHaveLength(0);
+});

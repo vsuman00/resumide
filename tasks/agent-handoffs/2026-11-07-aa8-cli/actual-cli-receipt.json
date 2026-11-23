@@ -1,0 +1,153 @@
+{
+  "status": "PASS_14_ACTUAL_CLI_SUBPROCESSES",
+  "node": "22.23.4",
+  "sourceHashesBefore": {
+    "scripts/verify-evaluation-corpus.ts": "602407888b65ef05aff2efa5ab096889b1279c43735d8a8f1f2ae08f724e5ab3",
+    "app/lib/server/evaluation-corpus.ts": "212c6dfc732cef2e6d9c7a048ef1d7a8df37058ee5e8b98f2bf5dd5206628fc3",
+    "tests/fixtures/evaluation-corpus.ts": "a39d653b894c7e3dd1b069961c4f6b679bc0025cde9f89764f348049d307313d"
+  },
+  "environmentNames": [
+    "HOME",
+    "LANG",
+    "PATH",
+    "RESUMIDE_PRIVATE_VERIFY",
+    "TMPDIR"
+  ],
+  "cases": [
+    {
+      "name": "deterministic-demo-first",
+      "exitCode": 0,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"assessed\",\"totalRecords\":3,\"admittedCount\":3,\"excludedCount\":0,\"reasonCounts\":{},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "deterministic-demo-second",
+      "exitCode": 0,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"assessed\",\"totalRecords\":3,\"admittedCount\":3,\"excludedCount\":0,\"reasonCounts\":{},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "explicit-manifest-membership",
+      "exitCode": 0,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"assessed\",\"totalRecords\":3,\"admittedCount\":3,\"excludedCount\":0,\"reasonCounts\":{},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "missing-operator-membership",
+      "exitCode": 1,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"rejected\",\"totalRecords\":0,\"admittedCount\":0,\"excludedCount\":0,\"reasonCounts\":{\"INVALID_ARGUMENTS\":1},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "wrong-operator-membership",
+      "exitCode": 1,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"assessed\",\"totalRecords\":3,\"admittedCount\":0,\"excludedCount\":3,\"reasonCounts\":{\"ACCESS_DENIED\":3},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "partial-unauthorized-source",
+      "exitCode": 1,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"assessed\",\"totalRecords\":3,\"admittedCount\":2,\"excludedCount\":1,\"reasonCounts\":{\"UNAUTHORIZED_SOURCE\":1},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "unknown-private-metadata",
+      "exitCode": 1,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"assessed\",\"totalRecords\":3,\"admittedCount\":2,\"excludedCount\":1,\"reasonCounts\":{\"INVALID_RECORD\":1},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "malformed-json",
+      "exitCode": 1,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"rejected\",\"totalRecords\":0,\"admittedCount\":0,\"excludedCount\":0,\"reasonCounts\":{\"MANIFEST_INVALID_JSON\":1},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "invalid-utf8",
+      "exitCode": 1,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"rejected\",\"totalRecords\":0,\"admittedCount\":0,\"excludedCount\":0,\"reasonCounts\":{\"MANIFEST_INVALID_JSON\":1},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "oversized-manifest",
+      "exitCode": 1,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"rejected\",\"totalRecords\":0,\"admittedCount\":0,\"excludedCount\":0,\"reasonCounts\":{\"MANIFEST_TOO_LARGE\":1},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "symlink-refused",
+      "exitCode": 1,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"rejected\",\"totalRecords\":0,\"admittedCount\":0,\"excludedCount\":0,\"reasonCounts\":{\"MANIFEST_UNREADABLE\":1},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "invalid-explicit-clock",
+      "exitCode": 1,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"rejected\",\"totalRecords\":3,\"admittedCount\":0,\"excludedCount\":3,\"reasonCounts\":{\"INVALID_AS_OF\":1},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "unknown-argument-safe",
+      "exitCode": 1,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"rejected\",\"totalRecords\":0,\"admittedCount\":0,\"excludedCount\":0,\"reasonCounts\":{\"INVALID_ARGUMENTS\":1},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    },
+    {
+      "name": "missing-file-safe",
+      "exitCode": 1,
+      "signal": null,
+      "processErrorCode": null,
+      "stdout": "{\"schemaVersion\":1,\"status\":\"rejected\",\"totalRecords\":0,\"admittedCount\":0,\"excludedCount\":0,\"reasonCounts\":{\"MANIFEST_UNREADABLE\":1},\"representativeReady\":false,\"releaseReady\":false}\n",
+      "stderr": "",
+      "passed": true
+    }
+  ],
+  "noDatabaseDockerProviderOrCorpusDocumentOperations": true,
+  "sourceHashesAfter": {
+    "scripts/verify-evaluation-corpus.ts": "602407888b65ef05aff2efa5ab096889b1279c43735d8a8f1f2ae08f724e5ab3",
+    "app/lib/server/evaluation-corpus.ts": "212c6dfc732cef2e6d9c7a048ef1d7a8df37058ee5e8b98f2bf5dd5206628fc3",
+    "tests/fixtures/evaluation-corpus.ts": "a39d653b894c7e3dd1b069961c4f6b679bc0025cde9f89764f348049d307313d"
+  },
+  "sourcesUnchanged": true,
+  "temporaryMetadataFilesRemoved": 7,
+  "temporaryMetadataDirectoryAbsent": true
+}

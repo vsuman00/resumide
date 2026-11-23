@@ -1,0 +1,2048 @@
+{
+  "status": "FEASIBILITY_COMPLETE_WITH_MEASURED_LIMITS_NO_PRODUCTION_CHANGE",
+  "imageId": "sha256:8f7cbabfb247412220b1fa3b27aa9dff8e8c7c316173c0edad6b7690ce082fb8",
+  "command": [
+    "/usr/local/bin/docker",
+    "run",
+    "--rm",
+    "--name",
+    "resumide-aa7-fontconfig-tsv-20261106-native-api",
+    "--platform",
+    "linux/arm64",
+    "--read-only",
+    "--network",
+    "none",
+    "--ipc",
+    "private",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges",
+    "--pids-limit",
+    "64",
+    "--cpus",
+    "2",
+    "--memory",
+    "512m",
+    "--memory-swap",
+    "512m",
+    "--ulimit",
+    "nofile=64:64",
+    "--ulimit",
+    "core=0:0",
+    "--user",
+    "65532:65532",
+    "--tmpfs",
+    "/scratch:rw,noexec,nosuid,nodev,size=128m,uid=65532,gid=65532,mode=0700",
+    "--tmpfs",
+    "/tmp:rw,noexec,nosuid,nodev,size=16m",
+    "--workdir",
+    "/scratch",
+    "--env",
+    "HOME=/scratch",
+    "--env",
+    "LANG=C.UTF-8",
+    "--entrypoint",
+    "/usr/bin/python3",
+    "-i",
+    "sha256:8f7cbabfb247412220b1fa3b27aa9dff8e8c7c316173c0edad6b7690ce082fb8",
+    "-I",
+    "-B",
+    "-"
+  ],
+  "probeSourceSha256": "8d1d659c2f5f7fc4fc1f6a3a13df9f5108125f8734829b3fd7c65382f750e51f",
+  "startedAt": "2026-11-06T08:30:35.789586+00:00",
+  "firstFailedSetupPreserved": "AA7_FONTCONFIG_TSV_FEASIBILITY_ATTEMPT1_20261106.json",
+  "nativeApiHeader": "https://raw.githubusercontent.com/fontconfig/fontconfig/2.15.0/fontconfig/fontconfig.h",
+  "scope": "Same approved neutral fixture task, existing native library API, no install/build/source/production config change",
+  "exitCode": 0,
+  "seconds": 0.77,
+  "stderr": "Fontconfig error: No writable cache directories\n",
+  "metadata": {
+    "mode": "NEUTRAL_DIAGNOSTIC_ONLY",
+    "uid": 65532,
+    "home": "/scratch",
+    "fontconfigEnvironmentInProductionLauncher": "HOME=/scratch with no FONTCONFIG_FILE/PATH override",
+    "closureSha256": "71b7e83e7bebfe4abd634188baeeea0d24cf933339d91742326dfe3ebeaa2e54",
+    "fontconfigXmlInventory": [
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-lgc-sans-mono.conf",
+        "sha256": "0a6b0f1c1f5d1c06a811b517a3d2690700bba8e961cd55dd2c7648cde3605a21",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-lgc-sans.conf",
+        "sha256": "144619057c0a040de247c74cf09f230d737b9c1c534f3ba8804fdd3ddeded8b0",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-lgc-serif.conf",
+        "sha256": "977c24eb43f10d21263bbdb624649e5edf63147bd7bb4f84db97ce7d53bb9054",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-sans-mono.conf",
+        "sha256": "3e90c9c36beef46f10d1529251f8683b9c4ac900695adbb4a23a4b6036f938a5",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-sans.conf",
+        "sha256": "0d9c177b6a85daa9957ed6750d4eb26122604da18d340e7ba31e6f4d24f963ed",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-serif.conf",
+        "sha256": "68777b1705ec7a05a86430def4be093668e84e305cc7e11291df52403a7318cc",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/57-dejavu-sans-mono.conf",
+        "sha256": "1f2ead86f8203d809abfc9d88d92b04316edd67b6291795ea74ea8a0c3c2e04d",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/57-dejavu-sans.conf",
+        "sha256": "f6285e2d336f93086acfa2ac7895ef75ef5ff34f833ba5a63c09fb2841aedc27",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/57-dejavu-serif.conf",
+        "sha256": "7c596f7e202090ded38fded904c4a17d5a189b6c9cc914a2e88554116f6474ca",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/58-dejavu-lgc-sans-mono.conf",
+        "sha256": "807e5222c6d11a72ad527ebc088f42daf2a807e7718c8f7ff227cbfecafd3d70",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/58-dejavu-lgc-sans.conf",
+        "sha256": "ecde2093f005c73d7da21cdd7b80c791910050609db36cb5eea84a4ba8da5cef",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/58-dejavu-lgc-serif.conf",
+        "sha256": "e685632c3edbb6868a7ca5275e7c71f25486a8cfd16113a478194a5631205619",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/65-fonts-lmodern.conf",
+        "sha256": "dc252715b7a0e1988a895268543f2552fdc35afec39cdfd0db9d838184c1ef42",
+        "inReadClosure": true,
+        "pathEntries": [
+          {
+            "tag": "dir",
+            "attributes": {},
+            "text": "/usr/share/texmf/fonts/opentype/public/lm"
+          },
+          {
+            "tag": "dir",
+            "attributes": {},
+            "text": "/usr/share/texmf/fonts/opentype/public/lm-math"
+          }
+        ]
+      },
+      {
+        "path": "/etc/fonts/fonts.conf",
+        "sha256": "93a23ba073996edb8b42d6c89ebc2ec5fd2101ce82cb65ba0db358dabf55ca22",
+        "inReadClosure": true,
+        "pathEntries": [
+          {
+            "tag": "dir",
+            "attributes": {},
+            "text": "/usr/share/fonts"
+          },
+          {
+            "tag": "dir",
+            "attributes": {},
+            "text": "/usr/local/share/fonts"
+          },
+          {
+            "tag": "dir",
+            "attributes": {
+              "prefix": "xdg"
+            },
+            "text": "fonts"
+          },
+          {
+            "tag": "dir",
+            "attributes": {},
+            "text": "~/.fonts"
+          },
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes"
+            },
+            "text": "conf.d"
+          },
+          {
+            "tag": "cachedir",
+            "attributes": {},
+            "text": "/var/cache/fontconfig"
+          },
+          {
+            "tag": "cachedir",
+            "attributes": {
+              "prefix": "xdg"
+            },
+            "text": "fontconfig"
+          },
+          {
+            "tag": "cachedir",
+            "attributes": {},
+            "text": "~/.fontconfig"
+          }
+        ]
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/10-hinting-slight.conf",
+        "sha256": "d138eca2bac3f78d45ff7cfb649ad792caa4a6e61f73cea7cf0ea54b091f1ef4",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/10-scale-bitmap-fonts.conf",
+        "sha256": "df8e99abb6f82384c61978906a45a95794940545da95790d87f01d9391e0894b",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/10-sub-pixel-none.conf",
+        "sha256": "0f00b5cf0ce07062ec65b9b340aa888f6c5fbc215aafebd26781be2d5a13ff6a",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/10-yes-antialias.conf",
+        "sha256": "e6d82a642d1b37f7d24dc37f938b999f00ff7aa4303b2602d04164d53f221005",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/11-lcdfilter-default.conf",
+        "sha256": "76aec9d8dac48faabe1bbde9e887cfb09fa45f30be5f8826e945a394a0097e48",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/20-unhint-small-vera.conf",
+        "sha256": "278732c68c16177f2aa3c7e4ea318b9f720aee13a433c32eb15ba626806c609d",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/30-metric-aliases.conf",
+        "sha256": "3baf25c82e1a14c606d45c212296852be06ae9795d60e84aab573226151450a2",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/40-nonlatin.conf",
+        "sha256": "9c56aeed6490db1d29602d7f8e028742b5e7a0268eaaa60de2fde582c6403715",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/45-generic.conf",
+        "sha256": "24de9f68189d544bb4cc084d9bd8f3a59d8b988a9dc44b11e9877d5add5fc948",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/45-latin.conf",
+        "sha256": "807638284032d8d8f6ed8b014a0edae79a4d4f3c4e70317fdb0bfa8edd66779e",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/48-spacing.conf",
+        "sha256": "99d839cd8aa28854e8f54f26e7200b6e57951f39f56791a0ed473662488bcef6",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/49-sansserif.conf",
+        "sha256": "7849a11ce5243e8bb3d06bcad558737a8682e5122e73c8e427f4c011a2054818",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/50-user.conf",
+        "sha256": "449137ccce57d60bca178d57519ba54e1942d757ad171f3a88cd78df2161c970",
+        "inReadClosure": true,
+        "pathEntries": [
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes",
+              "prefix": "xdg"
+            },
+            "text": "fontconfig/conf.d"
+          },
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes",
+              "prefix": "xdg"
+            },
+            "text": "fontconfig/fonts.conf"
+          },
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes",
+              "deprecated": "yes"
+            },
+            "text": "~/.fonts.conf.d"
+          },
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes",
+              "deprecated": "yes"
+            },
+            "text": "~/.fonts.conf"
+          }
+        ]
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/51-local.conf",
+        "sha256": "dca9d917e1f66f73bfa495943b4d1eaab2d93810a51bc8e600cf4d4e9df03e67",
+        "inReadClosure": true,
+        "pathEntries": [
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes"
+            },
+            "text": "local.conf"
+          }
+        ]
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/60-generic.conf",
+        "sha256": "195bc8605dd23289d42c10d79cc13a5ce4a4b3cf965df5b30ecc0b7149bb951f",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/60-latin.conf",
+        "sha256": "2de7c687e03b1fedf9fd016aa14ed8088f52578896a73f06158dda8acd264f09",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/65-fonts-persian.conf",
+        "sha256": "c675fab143a3638346874798be45f51f6878ebec591b4362d83cfffb828ec4ca",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/65-nonlatin.conf",
+        "sha256": "e309e38d7fb47cc3f639f4313b19e72c9be4d1f2db92d7d892ea65bfdd0cbd30",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/69-unifont.conf",
+        "sha256": "fa97c0cf5f79d70e2dc3dc48155d4c9220cd7c6a8bc95b89c4ebcc517f97479e",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/70-no-bitmaps-except-emoji.conf",
+        "sha256": "bb5df65896bf3011b2f2935b63ab12db1ecf078674ff73a533123445f122a92b",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/80-delicious.conf",
+        "sha256": "34f27b7fe9cd83b2b6d46f16ef9c477412f2d7ef63634f86b9b38b79bc4f81ad",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/90-synthetic.conf",
+        "sha256": "cdd0aac7840c664a7127b64db66bdfe8dc22be3774d10bc22f4a41c98de5d85e",
+        "inReadClosure": true,
+        "pathEntries": []
+      }
+    ],
+    "fontconfigTools": {
+      "fc-match": "NOT_INSTALLED",
+      "fc-conflist": "NOT_INSTALLED",
+      "nativeProbe": "ctypes libfontconfig.so.1 documented API, no installed dependency"
+    },
+    "baselineFontconfig": {
+      "configFiles": [
+        "/etc/fonts/fonts.conf",
+        "/etc/fonts/conf.d",
+        "/etc/fonts/conf.d/10-hinting-slight.conf",
+        "/etc/fonts/conf.d/10-scale-bitmap-fonts.conf",
+        "/etc/fonts/conf.d/10-sub-pixel-none.conf",
+        "/etc/fonts/conf.d/10-yes-antialias.conf",
+        "/etc/fonts/conf.d/11-lcdfilter-default.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans-mono.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-serif.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-sans-mono.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-sans.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-serif.conf",
+        "/etc/fonts/conf.d/20-unhint-small-vera.conf",
+        "/etc/fonts/conf.d/30-metric-aliases.conf",
+        "/etc/fonts/conf.d/40-nonlatin.conf",
+        "/etc/fonts/conf.d/45-generic.conf",
+        "/etc/fonts/conf.d/45-latin.conf",
+        "/etc/fonts/conf.d/48-spacing.conf",
+        "/etc/fonts/conf.d/49-sansserif.conf",
+        "/etc/fonts/conf.d/50-user.conf",
+        "/etc/fonts/conf.d/51-local.conf",
+        "/etc/fonts/conf.d/57-dejavu-sans-mono.conf",
+        "/etc/fonts/conf.d/57-dejavu-sans.conf",
+        "/etc/fonts/conf.d/57-dejavu-serif.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-sans-mono.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-sans.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-serif.conf",
+        "/etc/fonts/conf.d/60-generic.conf",
+        "/etc/fonts/conf.d/60-latin.conf",
+        "/etc/fonts/conf.d/65-fonts-lmodern.conf",
+        "/etc/fonts/conf.d/65-fonts-persian.conf",
+        "/etc/fonts/conf.d/65-nonlatin.conf",
+        "/etc/fonts/conf.d/69-unifont.conf",
+        "/etc/fonts/conf.d/70-no-bitmaps-except-emoji.conf",
+        "/etc/fonts/conf.d/80-delicious.conf",
+        "/etc/fonts/conf.d/90-synthetic.conf"
+      ],
+      "matches": {
+        "Latin Modern Roman": {
+          "result": 0,
+          "family": "Latin Modern Roman",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmroman10-regular.otf"
+        },
+        "Latin Modern Sans": {
+          "result": 0,
+          "family": "Latin Modern Sans",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmsans10-regular.otf"
+        },
+        "Latin Modern Mono": {
+          "result": 0,
+          "family": "Latin Modern Mono",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf"
+        },
+        "serif": {
+          "result": 0,
+          "family": "DejaVu Serif",
+          "file": "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
+        },
+        "sans-serif": {
+          "result": 0,
+          "family": "DejaVu Sans",
+          "file": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+        },
+        "monospace": {
+          "result": 0,
+          "family": "DejaVu Sans Mono",
+          "file": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+        }
+      },
+      "customParseSucceeded": null
+    },
+    "fontconfigLoadedBefore": [
+      "/etc/fonts/fonts.conf",
+      "/etc/fonts/conf.d",
+      "/etc/fonts/conf.d/10-hinting-slight.conf",
+      "/etc/fonts/conf.d/10-scale-bitmap-fonts.conf",
+      "/etc/fonts/conf.d/10-sub-pixel-none.conf",
+      "/etc/fonts/conf.d/10-yes-antialias.conf",
+      "/etc/fonts/conf.d/11-lcdfilter-default.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans-mono.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-serif.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-sans-mono.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-sans.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-serif.conf",
+      "/etc/fonts/conf.d/20-unhint-small-vera.conf",
+      "/etc/fonts/conf.d/30-metric-aliases.conf",
+      "/etc/fonts/conf.d/40-nonlatin.conf",
+      "/etc/fonts/conf.d/45-generic.conf",
+      "/etc/fonts/conf.d/45-latin.conf",
+      "/etc/fonts/conf.d/48-spacing.conf",
+      "/etc/fonts/conf.d/49-sansserif.conf",
+      "/etc/fonts/conf.d/50-user.conf",
+      "/etc/fonts/conf.d/51-local.conf",
+      "/etc/fonts/conf.d/57-dejavu-sans-mono.conf",
+      "/etc/fonts/conf.d/57-dejavu-sans.conf",
+      "/etc/fonts/conf.d/57-dejavu-serif.conf",
+      "/etc/fonts/conf.d/58-dejavu-lgc-sans-mono.conf",
+      "/etc/fonts/conf.d/58-dejavu-lgc-sans.conf",
+      "/etc/fonts/conf.d/58-dejavu-lgc-serif.conf",
+      "/etc/fonts/conf.d/60-generic.conf",
+      "/etc/fonts/conf.d/60-latin.conf",
+      "/etc/fonts/conf.d/65-fonts-lmodern.conf",
+      "/etc/fonts/conf.d/65-fonts-persian.conf",
+      "/etc/fonts/conf.d/65-nonlatin.conf",
+      "/etc/fonts/conf.d/69-unifont.conf",
+      "/etc/fonts/conf.d/70-no-bitmaps-except-emoji.conf",
+      "/etc/fonts/conf.d/80-delicious.conf",
+      "/etc/fonts/conf.d/90-synthetic.conf"
+    ],
+    "baselineFontMatches": {
+      "Latin Modern Roman": {
+        "result": 0,
+        "family": "Latin Modern Roman",
+        "file": "/usr/share/texmf/fonts/opentype/public/lm/lmroman10-regular.otf"
+      },
+      "Latin Modern Sans": {
+        "result": 0,
+        "family": "Latin Modern Sans",
+        "file": "/usr/share/texmf/fonts/opentype/public/lm/lmsans10-regular.otf"
+      },
+      "Latin Modern Mono": {
+        "result": 0,
+        "family": "Latin Modern Mono",
+        "file": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf"
+      },
+      "serif": {
+        "result": 0,
+        "family": "DejaVu Serif",
+        "file": "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
+      },
+      "sans-serif": {
+        "result": 0,
+        "family": "DejaVu Sans",
+        "file": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+      },
+      "monospace": {
+        "result": 0,
+        "family": "DejaVu Sans Mono",
+        "file": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+      }
+    },
+    "baselineCompile": {
+      "engine": {
+        "exitCode": 0,
+        "diagnosticTail": "This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2025/dev/Debian) (preloaded format=xelatex)\nentering extended mode\n(/scratch/baseline/main.tex\nLaTeX2e <2024-11-01> patch level 2\nL3 programming layer <2025-01-18>\n(/usr/share/texlive/texmf-dist/tex/latex/base/article.cls\nDocument Class: article 2024/06/29 v1.4n Standard LaTeX document class\n(/usr/share/texlive/texmf-dist/tex/latex/base/size10.clo))\n(/usr/share/texlive/texmf-dist/tex/latex/geometry/geometry.sty\n(/usr/share/texlive/texmf-dist/tex/latex/graphics/keyval.sty)\n(/usr/share/texlive/texmf-dist/tex/generic/iftex/ifvtex.sty\n(/usr/share/texlive/texmf-dist/tex/generic/iftex/iftex.sty)))\n(/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-xetex.def)\nNo file main.aux.\n*geometry* driver: auto-detecting\n*geometry* detected driver: xetex\n\n[1]\n[2] (/scratch/baseline/main.aux) )\nOutput written on /scratch/baseline/main.xdv (2 pages, 1468 bytes).\nTranscript written on /scratch/baseline/main.log.\n"
+      },
+      "converter": {
+        "exitCode": 0,
+        "diagnosticTail": ""
+      },
+      "pdfBytes": 7268,
+      "pdfSha256": "c25bd789e98f7c71d3a31c127709c6c1cfedfed3e5b34a8f2d60a6496219ab3e",
+      "fonts": {
+        "args": [
+          "pdffonts",
+          "/scratch/baseline/main.pdf"
+        ],
+        "exitCode": 0,
+        "stdout": "name                                 type              encoding         emb sub uni object ID\n------------------------------------ ----------------- ---------------- --- --- --- ---------\nAYVAXG+LMRoman10-Regular-Identity-H  CID Type 0C       Identity-H       yes yes yes      4  0\nHZVCLM+CMMI10                        Type 1C           Builtin          yes yes no       6  0\nXOPQFT+CMR10                         Type 1C           Builtin          yes yes no       7  0\n",
+        "stderr": ""
+      }
+    },
+    "bboxCommand": {
+      "args": [
+        "pdftotext",
+        "-bbox",
+        "/scratch/baseline/main.pdf",
+        "/scratch/baseline/main.xml"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "tsvCommand": {
+      "args": [
+        "pdftotext",
+        "-tsv",
+        "/scratch/baseline/main.pdf",
+        "/scratch/baseline/main.tsv"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "bboxBytes": 2092,
+    "tsvBytes": 1296,
+    "tsvHeaderAndFirstRows": [
+      "level\tpage_num\tpar_num\tblock_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext",
+      "1\t1\t0\t0\t0\t0\t0.000000\t0.000000\t595.280000\t841.890000\t-1\t###PAGE###",
+      "3\t1\t0\t0\t0\t0\t86.944000\t73.933144\t205.966792\t21.917600\t-1\t###FLOW###",
+      "4\t1\t0\t0\t0\t0\t86.944000\t73.933144\t205.966792\t9.962600\t-1\t###LINE###",
+      "5\t1\t0\t0\t0\t0\t86.94\t73.93\t32.97\t9.96\t100\tNeutral",
+      "5\t1\t0\t0\t0\t1\t123.22\t73.93\t40.16\t9.96\t100\tgeometry",
+      "5\t1\t0\t0\t0\t2\t166.69\t73.93\t7.75\t9.96\t100\t&",
+      "5\t1\t0\t0\t0\t3\t177.76\t73.93\t52.60\t9.96\t100\tpunctuation",
+      "5\t1\t0\t0\t0\t4\t233.68\t73.93\t7.75\t9.96\t100\t<",
+      "5\t1\t0\t0\t0\t5\t244.75\t73.93\t7.75\t9.96\t100\t>",
+      "5\t1\t0\t0\t0\t6\t255.82\t73.93\t16.06\t9.96\t100\tand",
+      "5\t1\t0\t0\t0\t7\t275.20\t73.93\t17.71\t9.96\t100\t123."
+    ],
+    "bboxPages": [
+      {
+        "page": 1,
+        "width": 595.28,
+        "height": 841.89
+      },
+      {
+        "page": 2,
+        "width": 595.28,
+        "height": 841.89
+      }
+    ],
+    "bboxWords": [
+      {
+        "page": 1,
+        "text": "Neutral",
+        "xMin": 86.944,
+        "yMin": 73.933144,
+        "xMax": 119.910243,
+        "yMax": 83.895744
+      },
+      {
+        "page": 1,
+        "text": "geometry",
+        "xMin": 123.217827,
+        "yMin": 73.933144,
+        "xMax": 163.377067,
+        "yMax": 83.895744
+      },
+      {
+        "page": 1,
+        "text": "&",
+        "xMin": 166.694613,
+        "yMin": 73.933144,
+        "xMax": 174.445516,
+        "yMax": 83.895744
+      },
+      {
+        "page": 1,
+        "text": "punctuation",
+        "xMin": 177.763062,
+        "yMin": 73.933144,
+        "xMax": 230.36559,
+        "yMax": 83.895744
+      },
+      {
+        "page": 1,
+        "text": "<",
+        "xMin": 233.683135,
+        "yMin": 73.933144,
+        "xMax": 241.434038,
+        "yMax": 83.895744
+      },
+      {
+        "page": 1,
+        "text": ">",
+        "xMin": 244.751584,
+        "yMin": 73.933144,
+        "xMax": 252.502487,
+        "yMax": 83.895744
+      },
+      {
+        "page": 1,
+        "text": "and",
+        "xMin": 255.820033,
+        "yMin": 73.933144,
+        "xMax": 271.879744,
+        "yMax": 83.895744
+      },
+      {
+        "page": 1,
+        "text": "123.",
+        "xMin": 275.19729,
+        "yMin": 73.933144,
+        "xMax": 292.910792,
+        "yMax": 83.895744
+      },
+      {
+        "page": 1,
+        "text": "Math",
+        "xMin": 86.944,
+        "yMin": 85.888144,
+        "xMax": 110.475661,
+        "yMax": 95.850744
+      },
+      {
+        "page": 1,
+        "text": "\u03b1",
+        "xMin": 113.793,
+        "yMin": 87.003956,
+        "xMax": 120.159101,
+        "yMax": 95.850744
+      },
+      {
+        "page": 1,
+        "text": "+",
+        "xMin": 122.417,
+        "yMin": 87.003956,
+        "xMax": 130.15794,
+        "yMax": 95.850744
+      },
+      {
+        "page": 1,
+        "text": "\u03b2",
+        "xMin": 132.38,
+        "yMin": 87.003956,
+        "xMax": 138.008869,
+        "yMax": 95.850744
+      },
+      {
+        "page": 1,
+        "text": "=",
+        "xMin": 141.308,
+        "yMin": 87.003956,
+        "xMax": 149.04894,
+        "yMax": 95.850744
+      },
+      {
+        "page": 1,
+        "text": "3.",
+        "xMin": 151.80858,
+        "yMin": 87.003956,
+        "xMax": 159.574603,
+        "yMax": 95.850744
+      },
+      {
+        "page": 2,
+        "text": "Second",
+        "xMin": 86.944,
+        "yMin": 73.933144,
+        "xMax": 117.389706,
+        "yMax": 83.895744
+      },
+      {
+        "page": 2,
+        "text": "page",
+        "xMin": 120.697289,
+        "yMin": 73.933144,
+        "xMax": 140.622489,
+        "yMax": 83.895744
+      },
+      {
+        "page": 2,
+        "text": "words.",
+        "xMin": 143.949997,
+        "yMin": 73.933144,
+        "xMax": 171.994716,
+        "yMax": 83.895744
+      }
+    ],
+    "tsvRows": [
+      [
+        "level",
+        "page_num",
+        "par_num",
+        "block_num",
+        "line_num",
+        "word_num",
+        "left",
+        "top",
+        "width",
+        "height",
+        "conf",
+        "text"
+      ],
+      [
+        "1",
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0.000000",
+        "0.000000",
+        "595.280000",
+        "841.890000",
+        "-1",
+        "###PAGE###"
+      ],
+      [
+        "3",
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "86.944000",
+        "73.933144",
+        "205.966792",
+        "21.917600",
+        "-1",
+        "###FLOW###"
+      ],
+      [
+        "4",
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "86.944000",
+        "73.933144",
+        "205.966792",
+        "9.962600",
+        "-1",
+        "###LINE###"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "0",
+        "0",
+        "86.94",
+        "73.93",
+        "32.97",
+        "9.96",
+        "100",
+        "Neutral"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "0",
+        "1",
+        "123.22",
+        "73.93",
+        "40.16",
+        "9.96",
+        "100",
+        "geometry"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "0",
+        "2",
+        "166.69",
+        "73.93",
+        "7.75",
+        "9.96",
+        "100",
+        "&"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "0",
+        "3",
+        "177.76",
+        "73.93",
+        "52.60",
+        "9.96",
+        "100",
+        "punctuation"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "0",
+        "4",
+        "233.68",
+        "73.93",
+        "7.75",
+        "9.96",
+        "100",
+        "<"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "0",
+        "5",
+        "244.75",
+        "73.93",
+        "7.75",
+        "9.96",
+        "100",
+        ">"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "0",
+        "6",
+        "255.82",
+        "73.93",
+        "16.06",
+        "9.96",
+        "100",
+        "and"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "0",
+        "7",
+        "275.20",
+        "73.93",
+        "17.71",
+        "9.96",
+        "100",
+        "123."
+      ],
+      [
+        "4",
+        "1",
+        "0",
+        "0",
+        "1",
+        "0",
+        "86.944000",
+        "85.888144",
+        "72.630603",
+        "9.962600",
+        "-1",
+        "###LINE###"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "1",
+        "0",
+        "86.94",
+        "85.89",
+        "23.53",
+        "9.96",
+        "100",
+        "Math"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "1",
+        "1",
+        "113.79",
+        "87.00",
+        "6.37",
+        "8.85",
+        "100",
+        "\u03b1"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "1",
+        "2",
+        "122.42",
+        "87.00",
+        "7.74",
+        "8.85",
+        "100",
+        "+"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "1",
+        "3",
+        "132.38",
+        "87.00",
+        "5.63",
+        "8.85",
+        "100",
+        "\u03b2"
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "1",
+        "4",
+        "141.31",
+        "87.00",
+        "7.74",
+        "8.85",
+        "100",
+        "="
+      ],
+      [
+        "5",
+        "1",
+        "0",
+        "0",
+        "1",
+        "5",
+        "151.81",
+        "87.00",
+        "7.77",
+        "8.85",
+        "100",
+        "3."
+      ],
+      [
+        "1",
+        "2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "151.808580",
+        "87.003956",
+        "595.280000",
+        "841.890000",
+        "-1",
+        "###PAGE###"
+      ],
+      [
+        "3",
+        "2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "86.944000",
+        "73.933144",
+        "85.050716",
+        "9.962600",
+        "-1",
+        "###FLOW###"
+      ],
+      [
+        "4",
+        "2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "86.944000",
+        "73.933144",
+        "85.050716",
+        "9.962600",
+        "-1",
+        "###LINE###"
+      ],
+      [
+        "5",
+        "2",
+        "0",
+        "0",
+        "0",
+        "0",
+        "86.94",
+        "73.93",
+        "30.45",
+        "9.96",
+        "100",
+        "Second"
+      ],
+      [
+        "5",
+        "2",
+        "0",
+        "0",
+        "0",
+        "1",
+        "120.70",
+        "73.93",
+        "19.93",
+        "9.96",
+        "100",
+        "page"
+      ],
+      [
+        "5",
+        "2",
+        "0",
+        "0",
+        "0",
+        "2",
+        "143.95",
+        "73.93",
+        "28.04",
+        "9.96",
+        "100",
+        "words."
+      ]
+    ],
+    "userFontCanarySha256": "7b0edcb36048409c993d05d333ea65913ba261bbffee9968222b831e2c393005",
+    "canaryFontconfig": {
+      "configFiles": [
+        "/etc/fonts/fonts.conf",
+        "/etc/fonts/conf.d",
+        "/etc/fonts/conf.d/10-hinting-slight.conf",
+        "/etc/fonts/conf.d/10-scale-bitmap-fonts.conf",
+        "/etc/fonts/conf.d/10-sub-pixel-none.conf",
+        "/etc/fonts/conf.d/10-yes-antialias.conf",
+        "/etc/fonts/conf.d/11-lcdfilter-default.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans-mono.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-serif.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-sans-mono.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-sans.conf",
+        "/etc/fonts/conf.d/20-unhint-small-dejavu-serif.conf",
+        "/etc/fonts/conf.d/20-unhint-small-vera.conf",
+        "/etc/fonts/conf.d/30-metric-aliases.conf",
+        "/etc/fonts/conf.d/40-nonlatin.conf",
+        "/etc/fonts/conf.d/45-generic.conf",
+        "/etc/fonts/conf.d/45-latin.conf",
+        "/etc/fonts/conf.d/48-spacing.conf",
+        "/etc/fonts/conf.d/49-sansserif.conf",
+        "/etc/fonts/conf.d/50-user.conf",
+        "/scratch/.fonts.conf",
+        "/etc/fonts/conf.d/51-local.conf",
+        "/etc/fonts/conf.d/57-dejavu-sans-mono.conf",
+        "/etc/fonts/conf.d/57-dejavu-sans.conf",
+        "/etc/fonts/conf.d/57-dejavu-serif.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-sans-mono.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-sans.conf",
+        "/etc/fonts/conf.d/58-dejavu-lgc-serif.conf",
+        "/etc/fonts/conf.d/60-generic.conf",
+        "/etc/fonts/conf.d/60-latin.conf",
+        "/etc/fonts/conf.d/65-fonts-lmodern.conf",
+        "/etc/fonts/conf.d/65-fonts-persian.conf",
+        "/etc/fonts/conf.d/65-nonlatin.conf",
+        "/etc/fonts/conf.d/69-unifont.conf",
+        "/etc/fonts/conf.d/70-no-bitmaps-except-emoji.conf",
+        "/etc/fonts/conf.d/80-delicious.conf",
+        "/etc/fonts/conf.d/90-synthetic.conf"
+      ],
+      "matches": {
+        "Latin Modern Roman": {
+          "result": 0,
+          "family": "Latin Modern Sans",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmsans10-regular.otf"
+        },
+        "Latin Modern Sans": {
+          "result": 0,
+          "family": "Latin Modern Sans",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmsans10-regular.otf"
+        },
+        "Latin Modern Mono": {
+          "result": 0,
+          "family": "Latin Modern Mono",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf"
+        },
+        "serif": {
+          "result": 0,
+          "family": "DejaVu Serif",
+          "file": "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
+        },
+        "sans-serif": {
+          "result": 0,
+          "family": "DejaVu Sans",
+          "file": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+        },
+        "monospace": {
+          "result": 0,
+          "family": "DejaVu Sans Mono",
+          "file": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+        }
+      },
+      "customParseSucceeded": null
+    },
+    "fontconfigLoadedWithCanary": [
+      "/etc/fonts/fonts.conf",
+      "/etc/fonts/conf.d",
+      "/etc/fonts/conf.d/10-hinting-slight.conf",
+      "/etc/fonts/conf.d/10-scale-bitmap-fonts.conf",
+      "/etc/fonts/conf.d/10-sub-pixel-none.conf",
+      "/etc/fonts/conf.d/10-yes-antialias.conf",
+      "/etc/fonts/conf.d/11-lcdfilter-default.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans-mono.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-sans.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-lgc-serif.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-sans-mono.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-sans.conf",
+      "/etc/fonts/conf.d/20-unhint-small-dejavu-serif.conf",
+      "/etc/fonts/conf.d/20-unhint-small-vera.conf",
+      "/etc/fonts/conf.d/30-metric-aliases.conf",
+      "/etc/fonts/conf.d/40-nonlatin.conf",
+      "/etc/fonts/conf.d/45-generic.conf",
+      "/etc/fonts/conf.d/45-latin.conf",
+      "/etc/fonts/conf.d/48-spacing.conf",
+      "/etc/fonts/conf.d/49-sansserif.conf",
+      "/etc/fonts/conf.d/50-user.conf",
+      "/scratch/.fonts.conf",
+      "/etc/fonts/conf.d/51-local.conf",
+      "/etc/fonts/conf.d/57-dejavu-sans-mono.conf",
+      "/etc/fonts/conf.d/57-dejavu-sans.conf",
+      "/etc/fonts/conf.d/57-dejavu-serif.conf",
+      "/etc/fonts/conf.d/58-dejavu-lgc-sans-mono.conf",
+      "/etc/fonts/conf.d/58-dejavu-lgc-sans.conf",
+      "/etc/fonts/conf.d/58-dejavu-lgc-serif.conf",
+      "/etc/fonts/conf.d/60-generic.conf",
+      "/etc/fonts/conf.d/60-latin.conf",
+      "/etc/fonts/conf.d/65-fonts-lmodern.conf",
+      "/etc/fonts/conf.d/65-fonts-persian.conf",
+      "/etc/fonts/conf.d/65-nonlatin.conf",
+      "/etc/fonts/conf.d/69-unifont.conf",
+      "/etc/fonts/conf.d/70-no-bitmaps-except-emoji.conf",
+      "/etc/fonts/conf.d/80-delicious.conf",
+      "/etc/fonts/conf.d/90-synthetic.conf"
+    ],
+    "canaryFontMatches": {
+      "Latin Modern Roman": {
+        "result": 0,
+        "family": "Latin Modern Sans",
+        "file": "/usr/share/texmf/fonts/opentype/public/lm/lmsans10-regular.otf"
+      },
+      "Latin Modern Sans": {
+        "result": 0,
+        "family": "Latin Modern Sans",
+        "file": "/usr/share/texmf/fonts/opentype/public/lm/lmsans10-regular.otf"
+      },
+      "Latin Modern Mono": {
+        "result": 0,
+        "family": "Latin Modern Mono",
+        "file": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf"
+      },
+      "serif": {
+        "result": 0,
+        "family": "DejaVu Serif",
+        "file": "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"
+      },
+      "sans-serif": {
+        "result": 0,
+        "family": "DejaVu Sans",
+        "file": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
+      },
+      "monospace": {
+        "result": 0,
+        "family": "DejaVu Sans Mono",
+        "file": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"
+      }
+    },
+    "canaryCompile": {
+      "engine": {
+        "exitCode": 0,
+        "diagnosticTail": "This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2025/dev/Debian) (preloaded format=xelatex)\nentering extended mode\n(/scratch/canary/main.tex\nLaTeX2e <2024-11-01> patch level 2\nL3 programming layer <2025-01-18>\n(/usr/share/texlive/texmf-dist/tex/latex/base/article.cls\nDocument Class: article 2024/06/29 v1.4n Standard LaTeX document class\n(/usr/share/texlive/texmf-dist/tex/latex/base/size10.clo))\n(/usr/share/texlive/texmf-dist/tex/latex/geometry/geometry.sty\n(/usr/share/texlive/texmf-dist/tex/latex/graphics/keyval.sty)\n(/usr/share/texlive/texmf-dist/tex/generic/iftex/ifvtex.sty\n(/usr/share/texlive/texmf-dist/tex/generic/iftex/iftex.sty)))\n(/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-xetex.def)\nNo file main.aux.\n*geometry* driver: auto-detecting\n*geometry* detected driver: xetex\n\n[1]\n[2] (/scratch/canary/main.aux) )\nOutput written on /scratch/canary/main.xdv (2 pages, 1468 bytes).\nTranscript written on /scratch/canary/main.log.\n"
+      },
+      "converter": {
+        "exitCode": 0,
+        "diagnosticTail": ""
+      },
+      "pdfBytes": 7268,
+      "pdfSha256": "8fa7992b5dcb3473889960650c474a9f1cf592387d97b3fec38f924996c40710",
+      "fonts": {
+        "args": [
+          "pdffonts",
+          "/scratch/canary/main.pdf"
+        ],
+        "exitCode": 0,
+        "stdout": "name                                 type              encoding         emb sub uni object ID\n------------------------------------ ----------------- ---------------- --- --- --- ---------\nAYVAXG+LMRoman10-Regular-Identity-H  CID Type 0C       Identity-H       yes yes yes      4  0\nHZVCLM+CMMI10                        Type 1C           Builtin          yes yes no       6  0\nXOPQFT+CMR10                         Type 1C           Builtin          yes yes no       7  0\n",
+        "stderr": ""
+      }
+    },
+    "minimalConfigFeasibility": {
+      "diagnosticOnlyMutablePath": "/scratch/fontconfig-reviewed-only.conf",
+      "config": "<?xml version=\"1.0\"?><fontconfig><dir>/usr/share/texmf/fonts/opentype/public/lm</dir><cachedir>/var/cache/fontconfig</cachedir><config><rescan><int>0</int></rescan></config></fontconfig>",
+      "fontMatches": {
+        "Latin Modern Roman": {
+          "result": 0,
+          "family": "Latin Modern Roman",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmroman10-regular.otf"
+        },
+        "Latin Modern Sans": {
+          "result": 0,
+          "family": "Latin Modern Sans",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmsans10-regular.otf"
+        },
+        "Latin Modern Mono": {
+          "result": 0,
+          "family": "Latin Modern Mono",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf"
+        },
+        "serif": {
+          "result": 0,
+          "family": "Latin Modern Mono",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf"
+        },
+        "sans-serif": {
+          "result": 0,
+          "family": "Latin Modern Mono",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf"
+        },
+        "monospace": {
+          "result": 0,
+          "family": "Latin Modern Mono",
+          "file": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf"
+        }
+      },
+      "loadedConfigFiles": [
+        "/scratch/fontconfig-reviewed-only.conf"
+      ],
+      "apiFactory": "FcConfigCreate/ParseAndLoad/BuildFonts explicit",
+      "notAProductionImmutableOrCompilerOverrideProof": true
+    },
+    "canaryBboxWords": [
+      {
+        "text": "Neutral",
+        "xMin": 86.944,
+        "yMin": 73.933144,
+        "xMax": 119.910243,
+        "yMax": 83.895744
+      },
+      {
+        "text": "geometry",
+        "xMin": 123.217827,
+        "yMin": 73.933144,
+        "xMax": 163.377067,
+        "yMax": 83.895744
+      },
+      {
+        "text": "&",
+        "xMin": 166.694613,
+        "yMin": 73.933144,
+        "xMax": 174.445516,
+        "yMax": 83.895744
+      },
+      {
+        "text": "punctuation",
+        "xMin": 177.763062,
+        "yMin": 73.933144,
+        "xMax": 230.36559,
+        "yMax": 83.895744
+      },
+      {
+        "text": "<",
+        "xMin": 233.683135,
+        "yMin": 73.933144,
+        "xMax": 241.434038,
+        "yMax": 83.895744
+      },
+      {
+        "text": ">",
+        "xMin": 244.751584,
+        "yMin": 73.933144,
+        "xMax": 252.502487,
+        "yMax": 83.895744
+      },
+      {
+        "text": "and",
+        "xMin": 255.820033,
+        "yMin": 73.933144,
+        "xMax": 271.879744,
+        "yMax": 83.895744
+      },
+      {
+        "text": "123.",
+        "xMin": 275.19729,
+        "yMin": 73.933144,
+        "xMax": 292.910792,
+        "yMax": 83.895744
+      },
+      {
+        "text": "Math",
+        "xMin": 86.944,
+        "yMin": 85.888144,
+        "xMax": 110.475661,
+        "yMax": 95.850744
+      },
+      {
+        "text": "\u03b1",
+        "xMin": 113.793,
+        "yMin": 87.003956,
+        "xMax": 120.159101,
+        "yMax": 95.850744
+      },
+      {
+        "text": "+",
+        "xMin": 122.417,
+        "yMin": 87.003956,
+        "xMax": 130.15794,
+        "yMax": 95.850744
+      },
+      {
+        "text": "\u03b2",
+        "xMin": 132.38,
+        "yMin": 87.003956,
+        "xMax": 138.008869,
+        "yMax": 95.850744
+      },
+      {
+        "text": "=",
+        "xMin": 141.308,
+        "yMin": 87.003956,
+        "xMax": 149.04894,
+        "yMax": 95.850744
+      },
+      {
+        "text": "3.",
+        "xMin": 151.80858,
+        "yMin": 87.003956,
+        "xMax": 159.574603,
+        "yMax": 95.850744
+      },
+      {
+        "text": "Second",
+        "xMin": 86.944,
+        "yMin": 73.933144,
+        "xMax": 117.389706,
+        "yMax": 83.895744
+      },
+      {
+        "text": "page",
+        "xMin": 120.697289,
+        "yMin": 73.933144,
+        "xMax": 140.622489,
+        "yMax": 83.895744
+      },
+      {
+        "text": "words.",
+        "xMin": 143.949997,
+        "yMin": 73.933144,
+        "xMax": 171.994716,
+        "yMax": 83.895744
+      }
+    ]
+  },
+  "ownedContainerAbsent": true,
+  "pairedNativeBboxTsv": {
+    "pages": 2,
+    "words": 17,
+    "orderedPageWordTextIdentical": true,
+    "pageDimensionsIdentical": true,
+    "wordCoordinatePrecision": {
+      "bbox": 6,
+      "nativeTsv": 2
+    },
+    "maxAbsoluteWordCoordinateDifferencePoints": {
+      "xMin": 0.004613,
+      "yMin": 0.003956,
+      "xMax": 0.007511,
+      "yMax": 0.005744
+    },
+    "currentGeometryPredicatePassOnNeutralFixture": {
+      "bbox": true,
+      "tsv": true
+    },
+    "nativeTsvIsExactGeometryDropIn": false,
+    "reason": "Wordleft/top/width/height are rounded to2decimals and right/bottom reconstructed from two rounded numbers. Existing1pt geometry boundary must not silently change; neutral equivalence does not prove threshold-edge equivalence.",
+    "textLength": 78,
+    "bboxBytes": 2092,
+    "tsvBytes": 1296,
+    "currentLimitsToPreserve": {
+      "nativeOutputBytes": 2097152,
+      "verifiedTextCharacters": 100000,
+      "pdfBytes": 5242880,
+      "pdfPages": 10,
+      "geometryTolerancePoints": 1
+    },
+    "wordCoordinateRecords": [
+      {
+        "page": 1,
+        "text": "Neutral",
+        "xMin": 86.94,
+        "yMin": 73.93,
+        "xMax": 119.91,
+        "yMax": 83.89000000000001
+      },
+      {
+        "page": 1,
+        "text": "geometry",
+        "xMin": 123.22,
+        "yMin": 73.93,
+        "xMax": 163.38,
+        "yMax": 83.89000000000001
+      },
+      {
+        "page": 1,
+        "text": "&",
+        "xMin": 166.69,
+        "yMin": 73.93,
+        "xMax": 174.44,
+        "yMax": 83.89000000000001
+      },
+      {
+        "page": 1,
+        "text": "punctuation",
+        "xMin": 177.76,
+        "yMin": 73.93,
+        "xMax": 230.35999999999999,
+        "yMax": 83.89000000000001
+      },
+      {
+        "page": 1,
+        "text": "<",
+        "xMin": 233.68,
+        "yMin": 73.93,
+        "xMax": 241.43,
+        "yMax": 83.89000000000001
+      },
+      {
+        "page": 1,
+        "text": ">",
+        "xMin": 244.75,
+        "yMin": 73.93,
+        "xMax": 252.5,
+        "yMax": 83.89000000000001
+      },
+      {
+        "page": 1,
+        "text": "and",
+        "xMin": 255.82,
+        "yMin": 73.93,
+        "xMax": 271.88,
+        "yMax": 83.89000000000001
+      },
+      {
+        "page": 1,
+        "text": "123.",
+        "xMin": 275.2,
+        "yMin": 73.93,
+        "xMax": 292.90999999999997,
+        "yMax": 83.89000000000001
+      },
+      {
+        "page": 1,
+        "text": "Math",
+        "xMin": 86.94,
+        "yMin": 85.89,
+        "xMax": 110.47,
+        "yMax": 95.85
+      },
+      {
+        "page": 1,
+        "text": "\u03b1",
+        "xMin": 113.79,
+        "yMin": 87.0,
+        "xMax": 120.16000000000001,
+        "yMax": 95.85
+      },
+      {
+        "page": 1,
+        "text": "+",
+        "xMin": 122.42,
+        "yMin": 87.0,
+        "xMax": 130.16,
+        "yMax": 95.85
+      },
+      {
+        "page": 1,
+        "text": "\u03b2",
+        "xMin": 132.38,
+        "yMin": 87.0,
+        "xMax": 138.01,
+        "yMax": 95.85
+      },
+      {
+        "page": 1,
+        "text": "=",
+        "xMin": 141.31,
+        "yMin": 87.0,
+        "xMax": 149.05,
+        "yMax": 95.85
+      },
+      {
+        "page": 1,
+        "text": "3.",
+        "xMin": 151.81,
+        "yMin": 87.0,
+        "xMax": 159.58,
+        "yMax": 95.85
+      },
+      {
+        "page": 2,
+        "text": "Second",
+        "xMin": 86.94,
+        "yMin": 73.93,
+        "xMax": 117.39,
+        "yMax": 83.89000000000001
+      },
+      {
+        "page": 2,
+        "text": "page",
+        "xMin": 120.7,
+        "yMin": 73.93,
+        "xMax": 140.63,
+        "yMax": 83.89000000000001
+      },
+      {
+        "page": 2,
+        "text": "words.",
+        "xMin": 143.95,
+        "yMin": 73.93,
+        "xMax": 171.98999999999998,
+        "yMax": 83.89000000000001
+      }
+    ]
+  },
+  "fontconfigAnalysis": {
+    "loadedWritableXmlPaths": [
+      "/scratch/.fonts.conf"
+    ],
+    "currentGlobalXmlAllInventoriedWithHashes": [
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-lgc-sans-mono.conf",
+        "sha256": "0a6b0f1c1f5d1c06a811b517a3d2690700bba8e961cd55dd2c7648cde3605a21",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-lgc-sans.conf",
+        "sha256": "144619057c0a040de247c74cf09f230d737b9c1c534f3ba8804fdd3ddeded8b0",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-lgc-serif.conf",
+        "sha256": "977c24eb43f10d21263bbdb624649e5edf63147bd7bb4f84db97ce7d53bb9054",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-sans-mono.conf",
+        "sha256": "3e90c9c36beef46f10d1529251f8683b9c4ac900695adbb4a23a4b6036f938a5",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-sans.conf",
+        "sha256": "0d9c177b6a85daa9957ed6750d4eb26122604da18d340e7ba31e6f4d24f963ed",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/20-unhint-small-dejavu-serif.conf",
+        "sha256": "68777b1705ec7a05a86430def4be093668e84e305cc7e11291df52403a7318cc",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/57-dejavu-sans-mono.conf",
+        "sha256": "1f2ead86f8203d809abfc9d88d92b04316edd67b6291795ea74ea8a0c3c2e04d",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/57-dejavu-sans.conf",
+        "sha256": "f6285e2d336f93086acfa2ac7895ef75ef5ff34f833ba5a63c09fb2841aedc27",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/57-dejavu-serif.conf",
+        "sha256": "7c596f7e202090ded38fded904c4a17d5a189b6c9cc914a2e88554116f6474ca",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/58-dejavu-lgc-sans-mono.conf",
+        "sha256": "807e5222c6d11a72ad527ebc088f42daf2a807e7718c8f7ff227cbfecafd3d70",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/58-dejavu-lgc-sans.conf",
+        "sha256": "ecde2093f005c73d7da21cdd7b80c791910050609db36cb5eea84a4ba8da5cef",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/58-dejavu-lgc-serif.conf",
+        "sha256": "e685632c3edbb6868a7ca5275e7c71f25486a8cfd16113a478194a5631205619",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/etc/fonts/conf.avail/65-fonts-lmodern.conf",
+        "sha256": "dc252715b7a0e1988a895268543f2552fdc35afec39cdfd0db9d838184c1ef42",
+        "inReadClosure": true,
+        "pathEntries": [
+          {
+            "tag": "dir",
+            "attributes": {},
+            "text": "/usr/share/texmf/fonts/opentype/public/lm"
+          },
+          {
+            "tag": "dir",
+            "attributes": {},
+            "text": "/usr/share/texmf/fonts/opentype/public/lm-math"
+          }
+        ]
+      },
+      {
+        "path": "/etc/fonts/fonts.conf",
+        "sha256": "93a23ba073996edb8b42d6c89ebc2ec5fd2101ce82cb65ba0db358dabf55ca22",
+        "inReadClosure": true,
+        "pathEntries": [
+          {
+            "tag": "dir",
+            "attributes": {},
+            "text": "/usr/share/fonts"
+          },
+          {
+            "tag": "dir",
+            "attributes": {},
+            "text": "/usr/local/share/fonts"
+          },
+          {
+            "tag": "dir",
+            "attributes": {
+              "prefix": "xdg"
+            },
+            "text": "fonts"
+          },
+          {
+            "tag": "dir",
+            "attributes": {},
+            "text": "~/.fonts"
+          },
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes"
+            },
+            "text": "conf.d"
+          },
+          {
+            "tag": "cachedir",
+            "attributes": {},
+            "text": "/var/cache/fontconfig"
+          },
+          {
+            "tag": "cachedir",
+            "attributes": {
+              "prefix": "xdg"
+            },
+            "text": "fontconfig"
+          },
+          {
+            "tag": "cachedir",
+            "attributes": {},
+            "text": "~/.fontconfig"
+          }
+        ]
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/10-hinting-slight.conf",
+        "sha256": "d138eca2bac3f78d45ff7cfb649ad792caa4a6e61f73cea7cf0ea54b091f1ef4",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/10-scale-bitmap-fonts.conf",
+        "sha256": "df8e99abb6f82384c61978906a45a95794940545da95790d87f01d9391e0894b",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/10-sub-pixel-none.conf",
+        "sha256": "0f00b5cf0ce07062ec65b9b340aa888f6c5fbc215aafebd26781be2d5a13ff6a",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/10-yes-antialias.conf",
+        "sha256": "e6d82a642d1b37f7d24dc37f938b999f00ff7aa4303b2602d04164d53f221005",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/11-lcdfilter-default.conf",
+        "sha256": "76aec9d8dac48faabe1bbde9e887cfb09fa45f30be5f8826e945a394a0097e48",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/20-unhint-small-vera.conf",
+        "sha256": "278732c68c16177f2aa3c7e4ea318b9f720aee13a433c32eb15ba626806c609d",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/30-metric-aliases.conf",
+        "sha256": "3baf25c82e1a14c606d45c212296852be06ae9795d60e84aab573226151450a2",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/40-nonlatin.conf",
+        "sha256": "9c56aeed6490db1d29602d7f8e028742b5e7a0268eaaa60de2fde582c6403715",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/45-generic.conf",
+        "sha256": "24de9f68189d544bb4cc084d9bd8f3a59d8b988a9dc44b11e9877d5add5fc948",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/45-latin.conf",
+        "sha256": "807638284032d8d8f6ed8b014a0edae79a4d4f3c4e70317fdb0bfa8edd66779e",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/48-spacing.conf",
+        "sha256": "99d839cd8aa28854e8f54f26e7200b6e57951f39f56791a0ed473662488bcef6",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/49-sansserif.conf",
+        "sha256": "7849a11ce5243e8bb3d06bcad558737a8682e5122e73c8e427f4c011a2054818",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/50-user.conf",
+        "sha256": "449137ccce57d60bca178d57519ba54e1942d757ad171f3a88cd78df2161c970",
+        "inReadClosure": true,
+        "pathEntries": [
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes",
+              "prefix": "xdg"
+            },
+            "text": "fontconfig/conf.d"
+          },
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes",
+              "prefix": "xdg"
+            },
+            "text": "fontconfig/fonts.conf"
+          },
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes",
+              "deprecated": "yes"
+            },
+            "text": "~/.fonts.conf.d"
+          },
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes",
+              "deprecated": "yes"
+            },
+            "text": "~/.fonts.conf"
+          }
+        ]
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/51-local.conf",
+        "sha256": "dca9d917e1f66f73bfa495943b4d1eaab2d93810a51bc8e600cf4d4e9df03e67",
+        "inReadClosure": true,
+        "pathEntries": [
+          {
+            "tag": "include",
+            "attributes": {
+              "ignore_missing": "yes"
+            },
+            "text": "local.conf"
+          }
+        ]
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/60-generic.conf",
+        "sha256": "195bc8605dd23289d42c10d79cc13a5ce4a4b3cf965df5b30ecc0b7149bb951f",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/60-latin.conf",
+        "sha256": "2de7c687e03b1fedf9fd016aa14ed8088f52578896a73f06158dda8acd264f09",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/65-fonts-persian.conf",
+        "sha256": "c675fab143a3638346874798be45f51f6878ebec591b4362d83cfffb828ec4ca",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/65-nonlatin.conf",
+        "sha256": "e309e38d7fb47cc3f639f4313b19e72c9be4d1f2db92d7d892ea65bfdd0cbd30",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/69-unifont.conf",
+        "sha256": "fa97c0cf5f79d70e2dc3dc48155d4c9220cd7c6a8bc95b89c4ebcc517f97479e",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/70-no-bitmaps-except-emoji.conf",
+        "sha256": "bb5df65896bf3011b2f2935b63ab12db1ecf078674ff73a533123445f122a92b",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/80-delicious.conf",
+        "sha256": "34f27b7fe9cd83b2b6d46f16ef9c477412f2d7ef63634f86b9b38b79bc4f81ad",
+        "inReadClosure": true,
+        "pathEntries": []
+      },
+      {
+        "path": "/usr/share/fontconfig/conf.avail/90-synthetic.conf",
+        "sha256": "cdd0aac7840c664a7127b64db66bdfe8dc22be3774d10bc22f4a41c98de5d85e",
+        "inReadClosure": true,
+        "pathEntries": []
+      }
+    ],
+    "scratchRuleProvidesReadWriteForAllScratchFiles": true,
+    "sourceAdmissionIsNotUsedAsProof": true,
+    "currentLauncherHome": "/scratch",
+    "currentLauncherFontconfigFileOverride": null,
+    "nativeLibraryUserXmlActivationObserved": true,
+    "apiFontSelectionChangedWithBenignCanary": true,
+    "actualConfinedCompilerFontSelectionChanged": false,
+    "actualConfinedCompilerNeutralGeometryChanged": false,
+    "actualEngineXmlFileOpenTraceProven": false,
+    "qualification": "Unchanged embedded fonts/geometry do not prove XML was not parsed. Current upstream XeTeX initializes Fontconfig then enumerates fonts rather than applying this alias matching rule; exact installed-source/file-open provenance not established.",
+    "upstreamXeTeXCallsite": "https://raw.githubusercontent.com/TeX-Live/texlive-source/trunk/texk/web2c/xetexdir/XeTeXFontMgr_FC.cpp",
+    "upstreamCallsiteNotExactInstalledByteProof": true,
+    "minimalConfigFontComparisons": {
+      "Latin Modern Roman": {
+        "baseline": "/usr/share/texmf/fonts/opentype/public/lm/lmroman10-regular.otf",
+        "canary": "/usr/share/texmf/fonts/opentype/public/lm/lmsans10-regular.otf",
+        "minimalConfig": "/usr/share/texmf/fonts/opentype/public/lm/lmroman10-regular.otf",
+        "minimalMatchesBaseline": true
+      },
+      "Latin Modern Sans": {
+        "baseline": "/usr/share/texmf/fonts/opentype/public/lm/lmsans10-regular.otf",
+        "canary": "/usr/share/texmf/fonts/opentype/public/lm/lmsans10-regular.otf",
+        "minimalConfig": "/usr/share/texmf/fonts/opentype/public/lm/lmsans10-regular.otf",
+        "minimalMatchesBaseline": true
+      },
+      "Latin Modern Mono": {
+        "baseline": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf",
+        "canary": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf",
+        "minimalConfig": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf",
+        "minimalMatchesBaseline": true
+      },
+      "serif": {
+        "baseline": "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
+        "canary": "/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf",
+        "minimalConfig": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf",
+        "minimalMatchesBaseline": false
+      },
+      "sans-serif": {
+        "baseline": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "canary": "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+        "minimalConfig": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf",
+        "minimalMatchesBaseline": false
+      },
+      "monospace": {
+        "baseline": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+        "canary": "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
+        "minimalConfig": "/usr/share/texmf/fonts/opentype/public/lm/lmmono10-regular.otf",
+        "minimalMatchesBaseline": false
+      }
+    },
+    "minimalConfigIsApprovedDropIn": false,
+    "minimalConfigReasonRejected": "LM-only/no-alias config changes all three generic families toLMMono despite preserving three explicitly namedLMfaces."
+  },
+  "sealedFontconfigProposal": {
+    "status": "REVIEW_REQUIRED_NO_SOURCE_CONFIG_CHANGE",
+    "immutableFile": "/opt/latex/fontconfig/fonts.conf",
+    "constantsForBothNativeEnvironments": {
+      "FONTCONFIG_FILE": "/opt/latex/fontconfig/fonts.conf",
+      "FONTCONFIG_PATH": "/opt/latex/fontconfig"
+    },
+    "construction": "Preserve ordered existing immutable alias/match/raster rules; replace directory includes with explicit reviewed immutable/hash-bound includes, excluding50-user and every HOME/XDG/tilde/user include. Keep reviewed fixed font directories/cache only; drop all user font/cache paths. Do not replace font families or inject TeX font/geometry.",
+    "mustHashAndCheck": "Exact config and each include/font/cache runtime input must be inventoried, immutable and verified before hostile source. No permissive fallback or broad filesystem grant.",
+    "minimumChangesAfterReview": [
+      "Reviewed immutable config asset/build artifact and exact read closure entry",
+      "Fixed Fontconfig constants in Landlock child env and supervisor native-child env",
+      "Build fail-closed config/include/fontinventory checks and runtime manifest hashes"
+    ],
+    "requiredProof": [
+      "Exact native loaded-config paths exclude writable scratch/home/XDG files even after benign canary writes",
+      "Actual confined engine and native PDF helpers use fixed config with no fallback",
+      "All supported font-family/face paths and embedded fonts matchbaseline",
+      "Paired text/page/word bounds/render across approved profiles unchanged",
+      "All existing hostile parser/output/timeout/cleanup probes remain"
+    ],
+    "noCurrentCveNonApplicabilityClaim": true
+  },
+  "xmlDecoderProposal": {
+    "nativeTsv": "Reject as immediate substitute due measured geometryprecision loss; no widened tolerance.",
+    "possiblePrecisionPreservingAlternatives": [
+      "Review maintained Poppler source change for adequate TSV precision and boundary equivalence before adopting",
+      "Separately review a strict bounded pure-Python parser of the existing native bbox XHTML, preserving its six-decimal coordinates and text/entity/page hierarchy without Expat; retain all current output/geometry bounds and fail closed on malformed producer output"
+    ],
+    "neitherAlternativeImplementedOrAccepted": true,
+    "pypdfStructureFontsLinksPagesChecksMustStayBeforeNativeText": true,
+    "scopeRemainsInternalVerificationAndPdfOnlyDownload": true,
+    "otherExpatCallersNotCleared": true
+  },
+  "updatedAt": "2026-11-06T08:42:53.678708+00:00",
+  "cleanup": {
+    "status": "EXACT_DIAGNOSTIC_TEMP_REMOVED",
+    "directory": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-fontconfig-tsv-edoa1_y8",
+    "temporaryArtifactManifest": [
+      {
+        "path": "native-api.stderr",
+        "bytes": 48,
+        "sha256": "e0a46db3e7d086b6ed55477f9c8cc5ec4dbe4b6ef804e1372e9a4a6dc5a6b01a"
+      },
+      {
+        "path": "probe-native-api.py",
+        "bytes": 7631,
+        "sha256": "8d1d659c2f5f7fc4fc1f6a3a13df9f5108125f8734829b3fd7c65382f750e51f"
+      },
+      {
+        "path": "native-api.stdout",
+        "bytes": 28530,
+        "sha256": "7df87b3ee9862c1ee9696bcbf5bba69d56a79417b6c40806b757ad507df59180"
+      },
+      {
+        "path": "probe.py",
+        "bytes": 5774,
+        "sha256": "49ae3e98e4788a9d817c6d949de55786a4a0cca19dcc823a5503994ed863b198"
+      },
+      {
+        "path": "probe.stdout",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "probe.stderr",
+        "bytes": 977,
+        "sha256": "5e837157a1a82e3a98de6649a74050c70199a6ecb7b4e61502e93329b947042b"
+      }
+    ],
+    "removedBytes": 42960,
+    "successfulAndFirstFailedOwnedContainersAbsent": true,
+    "pdfAndXmlCanaryArtifacts": "Only inside removed hardened worker scratch; no document artifact persisted tohost",
+    "scope": "Only exact new diagnostic directory; no worker images, old scanner receipts or unrelatedtmp touched",
+    "directoryAbsentVerified": true
+  }
+}

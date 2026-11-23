@@ -1,0 +1,22 @@
+--- before/app/routes/analysis.canonical.tsx
++++ after/app/routes/analysis.canonical.tsx
+@@ -14,6 +14,7 @@
+   type ShouldRevalidateFunction,
+ } from "react-router";
+ import WorkspaceShell from "~/components/WorkspaceShell";
++import WritingDiagnosticComparison from "~/components/WritingDiagnosticComparison";
+ import CanonicalCorrectionReview from "~/components/CanonicalCorrectionReview";
+ import CanonicalEntryRegroupReview, {
+   type CanonicalEntryRegroupFeedback,
+@@ -1070,6 +1071,11 @@
+           {model.comparison !== null && (
+             <section aria-labelledby="compare-heading">
+               <h2 id="compare-heading">Fact comparison</h2>
++              {model.writingComparison && (
++                <WritingDiagnosticComparison
++                  comparison={model.writingComparison}
++                />
++              )}
+               {model.comparison.length ? (
+                 <ul>
+                   {model.comparison.map((change) => (

@@ -1,0 +1,103 @@
+{
+  "status": "FROZEN_SOURCE_IMPLEMENTATION",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "sourceInputs": 973,
+  "coreCommandPolicyUnchanged": true,
+  "trustedProfileModule": "app/lib/server/jd-clause-order-readiness-profile.ts",
+  "trustedProfileExport": "JD_CLAUSE_ORDER_READINESS_PROFILE",
+  "workspace": {
+    "schemaVersion": "jd-clause-order-workspace/2.0.0",
+    "fields": [
+      "schemaVersion",
+      "binding",
+      "proposals",
+      "inspectedPairCount",
+      "truncated"
+    ],
+    "binding": "Exact existing v2 binding; every proposal exactly same binding and unique draftId; no caller boolean authority",
+    "proposalsMax": 5,
+    "inspectedPairCountMax": 50,
+    "load": "loadJdClauseOrderWorkspace(client,analysisId,ownerId,selection,{enabled,signal?}) -> workspace|null; disabled returns before RPC; pinned selection required; fresh owned pair, actual readiness and complete final owned reread before publication"
+  },
+  "endpoint": "/analysis/:id/author/clause-order",
+  "flags": [
+    "SCORING_V2_ENABLED",
+    "AUTHORING_ENABLED",
+    "TYPED_AUTHORING_ENABLED"
+  ],
+  "request": {
+    "decision": "form action=decision, command=exact v2 JSON, reviewAcknowledgement=accepted exactly for accept; reject omits acknowledgement",
+    "undo": "form action=undo, receipt=accepted v2 receipt JSON, idempotencyKey=new canonical lowercase UUID",
+    "limits": "65536 UTF8 bytes whole body, max5000ms bounded body/read flow, strict form fields/no files/no duplicates, strict nested JSON duplicate detection/no extras; v2 command framed bound unchanged"
+  },
+  "success": {
+    "decision": "{kind:applied,receipt:strict accepted/rejected v2 receipt}",
+    "undo": "{kind:undone,receipt:strict undo2 receipt}"
+  },
+  "undoReceiptExact": {
+    "schemaVersion": "jd-clause-order-undo-receipt/2.0.0",
+    "status": "applied",
+    "action": "undo",
+    "idempotencyKey": "new canonical lowercase UUID, not accepted idempotencyKey",
+    "acceptedEventId": "accepted receipt eventId",
+    "acceptedCommandSha256": "accepted receipt commandSha256",
+    "acceptedVersionId": "accepted receipt versionId",
+    "baseVersionId": "accepted receipt baseVersionId",
+    "versionId": "new rollback version UUID, not accepted or original base",
+    "revision": "accepted receipt revision + 1",
+    "eventId": "actual new undo event UUID, not accepted event",
+    "idempotent": "boolean"
+  },
+  "undoServerProof": "Current owned access, actual owner-filtered accepted event/command2/receipt2 and immutable accepted version; existing guarded applyAuthoring undo must restore accepted event base, not confirmation parent. Verify actual new undo event/command/receipt target and correlations after RPC before wrapping undo2. Legacy receipt is internal implementation data only, never accepted as public v2 wire fallback. Exact undo key/payload retained across unknown outcome; current access before replay.",
+  "errors": {
+    "shape": "{kind:error,reason,recovery}",
+    "reason": "Existing closed typed-authoring reasons; no raw error/provider/SQL/candidate text",
+    "recovery": [
+      "retry_exact",
+      "review_again",
+      "unavailable"
+    ],
+    "mapping": "Transport/timeout/malformed post-dispatch receipt =>retry_exact. Known pre-dispatch invalid input/current-access denial or rolled-back Native conflict may permit review_again/unavailable. No automatic key/request regeneration."
+  },
+  "browserExports": [
+    "JdClauseOrderWorkspaceSchema",
+    "JdClauseOrderUndoReceiptSchema",
+    "JdClauseOrderHttpSuccessSchema",
+    "JdClauseOrderHttpErrorSchema",
+    "validateClauseOrderWorkspace",
+    "validateClauseOrderUndoReceipt"
+  ],
+  "bridgeProps": "{analysisId,source:exact v2 binding.source,workspace:workspace|null,previewPlan:existing plan|null}. Mount under3flags with actual owned source even if fresh workspace null, so same-source pending retries survive head movement. Never key by version/draft/clause. Cross-source/access loss clears. Bridge owns readonly preview fallback to avoid contradictory cannot-save copy beside live pending review.",
+  "browserRecovery": "Optional additive JdClauseOrderRequestFailure class carrying validated reason/recovery; raw errors stay unknown/exact. Existing raw onDecision callback remains supported. No undo is enabled without strict accepted2 and correlated undo2. No automatic revalidation that destroys original pending/accepted review.",
+  "ownership": {
+    "root": [
+      "trusted profile module",
+      "app/routes.ts one route registration",
+      "contracts/plans/CONTEXT/integration"
+    ],
+    "backend": [
+      "app/lib/server/jd-clause-order-readiness.ts",
+      "app/lib/server/jd-clause-order-repository.ts",
+      "tests/unit/jd-clause-order-readiness.test.ts",
+      "tests/unit/jd-clause-order-mutation-repository.test.ts"
+    ],
+    "runtime": [
+      "app/lib/server/jd-clause-order-http.ts",
+      "app/routes/analysis.author.clause-order.ts",
+      "tests/unit/jd-clause-order-http.test.ts",
+      "tests/unit/jd-clause-order-http-route.test.ts"
+    ],
+    "frontend": [
+      "app/lib/jd-clause-order-decisions.ts",
+      "app/components/JdClauseOrderDecisionReview.tsx",
+      "app/components/JdClauseOrderBridge.tsx",
+      "app/routes/analysis.score.tsx",
+      "tests/components/JdClauseOrderBridge.test.tsx",
+      "tests/unit/jd-clause-order-consumer-route.test.ts",
+      "tests/unit/jd-clause-order-browser.test.ts"
+    ]
+  },
+  "authorization": "Same source/synthetic/jsdom/fakeRPC/emptyHOME OS network/dotenv/Git denied; no SQL parsing/execution or actual DB/provider/services/browser/Docker/Git/deployment. Supabase direct only. No fake capabilities/placeholder hashes/flag activations.",
+  "validation": "Meaningful real producer/source-bound/replay/unknown/undo tests and affected checks, then Root integrated types/lint/web/worker. Newfeature missingmodule failure is not a product RED. Retain all assertions and actual failures.",
+  "allocationCorrection": "Preserve existing preview repository test; new mutation repository tests use unique jd-clause-order-mutation-repository.test.ts path."
+}

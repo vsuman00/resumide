@@ -1,0 +1,26 @@
+// Exact fingerprints for the export-generation and regroup-repair catalogs.
+export const AI_BUDGET_SOURCE_PROFILE = Object.freeze({
+  schemaVersion: "ai-budget-source-readiness/2.0.0",
+  profileVersion: "ai-budget-source-profile/2.0.0",
+  checkerSha256:
+    "29e517d543f3f7fad264dcaff52a1cf949a06e7c476879cb34ecb1256d6106a0",
+  reserveSha256:
+    "0d586a4e782fec52f6fba3545de80e9f3a4f2a1eaaed3e489f4ed273ec9160f7",
+  exportSha256:
+    "7b98b91f31f88bc22676754657d36be536ef5c6a67a0455be6a9fd368ac801fe",
+  metadataSha256:
+    "b9a9685504c1e45316e63366f02fcd5499a0ea0d65a3bfcaf36f9d4741b781cf",
+});
+
+export const AI_BUDGET_SOURCE_REGROUP_PROFILE = Object.freeze({
+  ...AI_BUDGET_SOURCE_PROFILE,
+  checkerSha256:
+    "4ec263219e63f63d33a064d74a6d42cb380d8d4ae51f980a9c0c0f78b6d6d16f",
+  reserveSha256:
+    "74c85ce6f0c83e529231a53dbbdf9ab8b8504d7844c6df2d1067047b60f0ab53",
+});
+
+export const AI_BUDGET_SOURCE_PROFILES = Object.freeze([
+  AI_BUDGET_SOURCE_PROFILE,
+  AI_BUDGET_SOURCE_REGROUP_PROFILE,
+]);

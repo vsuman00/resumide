@@ -1,0 +1,31 @@
+{
+  "ocr-cli": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/ocr/ocr-pilot-cli.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "env-probe": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-offline-suite-seal-zjgqr5dy/env-probe.mjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "tests/unit/ocr/ocr-pilot-cli.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "tests/unit/ocr/ocr-pilot-cli.test.ts"
+    ],
+    "expectedExit": 0
+  }
+}

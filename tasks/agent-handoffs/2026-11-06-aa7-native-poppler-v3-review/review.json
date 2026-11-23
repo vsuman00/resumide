@@ -1,0 +1,150 @@
+{
+  "status": "INDEPENDENT_SCOPED_REVIEW_PASS_NOT_BUILD_AUTHORIZATION",
+  "manifestSha256": "57383aba269ed5c9354f7adb61daeaacc46f16259c242809aa1353cb5d9fc134",
+  "manifestFilesVerified": 59,
+  "v1ManifestPreserved": "f6f3a3bbe7a55c6a8e1f4e4c534499e1d9e94a18b768b129be2d8be0ec7ab54d",
+  "v2ManifestPreserved": "ef124759f7e4e69ea139a8d314e7a5ad84024cde250979ce31b99f60077a2f57",
+  "oldBuilderSha256": "4c0db0a63b451fb83cf69b3395a4e03bfc12a470ed8fc7b19802d9b170c34ec8",
+  "newBuilderSha256": "e5f624f1b27ed41b8fec4a5058e1c98cf2b30485ee9e8f0589a39921802525ce",
+  "exactOriginalAstRecoveredAfterOneAssignmentRemoved": true,
+  "sevenNeutralFlagCases": [
+    {
+      "name": "installed-poppler",
+      "before": [
+        "-I/usr/include/poppler",
+        "-lpoppler"
+      ],
+      "after": [
+        "-isystem/usr/include/poppler",
+        "-lpoppler"
+      ],
+      "passed": true
+    },
+    {
+      "name": "separate-include",
+      "before": [
+        "-I",
+        "/usr/include/poppler"
+      ],
+      "after": [
+        "-isystem",
+        "/usr/include/poppler"
+      ],
+      "passed": true
+    },
+    {
+      "name": "include-path-with-space",
+      "before": [
+        "-I/a path/poppler"
+      ],
+      "after": [
+        "-isystem/a path/poppler"
+      ],
+      "passed": true
+    },
+    {
+      "name": "warnings-untouched",
+      "before": [
+        "-Wall",
+        "-Wextra",
+        "-Werror"
+      ],
+      "after": [
+        "-Wall",
+        "-Wextra",
+        "-Werror"
+      ],
+      "passed": true
+    },
+    {
+      "name": "existing-system-untouched",
+      "before": [
+        "-isystem",
+        "/usr/include/poppler"
+      ],
+      "after": [
+        "-isystem",
+        "/usr/include/poppler"
+      ],
+      "passed": true
+    },
+    {
+      "name": "legacy-delimiter",
+      "before": [
+        "-I-"
+      ],
+      "after": [
+        "-I-"
+      ],
+      "passed": true
+    },
+    {
+      "name": "embedded-I-not-option",
+      "before": [
+        "-Wl,-Ifoo"
+      ],
+      "after": [
+        "-Wl,-Ifoo"
+      ],
+      "passed": true
+    }
+  ],
+  "compiler": "/usr/bin/clang++",
+  "compilerVersion": "Apple clang version 21.0.0 (clang-2100.1.1.101)\nTarget: arm64-apple-darwin27.2.0\nThread model: posix\nInstalledDir: /Library/Developer/CommandLineTools/usr/bin\n",
+  "hostSyntaxOnlyProbes": [
+    {
+      "label": "baseline-vendor-header",
+      "argv": [
+        "/usr/bin/clang++",
+        "-std=c++20",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fsyntax-only",
+        "-I/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-accessible-preview/resume_ats/tasks/agent-handoffs/2026-11-06-aa7-poppler-v3-review/neutral vendor includes",
+        "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-accessible-preview/resume_ats/tasks/agent-handoffs/2026-11-06-aa7-poppler-v3-review/client-good.cc"
+      ],
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "logSha256": "d4c9ae3e447eb6e3ecaa45cd1ee7f728de8c18b4526da3b4252cb73e4bd7582e"
+    },
+    {
+      "label": "system-vendor-header",
+      "argv": [
+        "/usr/bin/clang++",
+        "-std=c++20",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fsyntax-only",
+        "-isystem/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-accessible-preview/resume_ats/tasks/agent-handoffs/2026-11-06-aa7-poppler-v3-review/neutral vendor includes",
+        "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-accessible-preview/resume_ats/tasks/agent-handoffs/2026-11-06-aa7-poppler-v3-review/client-good.cc"
+      ],
+      "exitCode": 0,
+      "expectedExitCode": 0,
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "label": "system-own-client-warning",
+      "argv": [
+        "/usr/bin/clang++",
+        "-std=c++20",
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-fsyntax-only",
+        "-isystem/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-accessible-preview/resume_ats/tasks/agent-handoffs/2026-11-06-aa7-poppler-v3-review/neutral vendor includes",
+        "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-accessible-preview/resume_ats/tasks/agent-handoffs/2026-11-06-aa7-poppler-v3-review/client-warning.cc"
+      ],
+      "exitCode": 1,
+      "expectedExitCode": 1,
+      "logSha256": "b601844d2105399a3fc3c5bc94c745c663fab91434d2d16a0ae6a0ba061a65a2"
+    }
+  ],
+  "vendorSourceExecuted": false,
+  "nativeOrDockerExecution": false,
+  "compiledOutputExecuted": false,
+  "sourceFilesChanged": false,
+  "allManifestFilesRecheckedAtEnd": true,
+  "remainingAuthorization": "Root owns E009 renewal/disk admission and the one native retry; Linux/compiler/full tests remain pending"
+}

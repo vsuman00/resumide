@@ -1,0 +1,57 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ✓ tests/unit/canonical-writing-comparison.test.ts (14 tests) 138ms
+ ❯ tests/unit/writing-comparison.test.ts (29 tests | 1 failed) 172ms
+     ✓ keeps projected wording unsaved even for confirmed current text: Built useful services 56ms
+     ✓ keeps projected wording unsaved even for confirmed current text: Built services using PostgreSQL 8ms
+     × reports exact existing warning differences and Unicode word counts, not quality gain 9ms
+     ✓ shows resolved punctuation and repetition warnings without asserting factual support 5ms
+     ✓ preserves actual saved identity and revisions in either direction 5ms
+     ✓ same-version comparison is an empty saved observation, not an accepted edit 4ms
+     ✓ separates confirmation-only records from wording changes 5ms
+     ✓ reports saved type metadata without wording gains 4ms
+     ✓ reports saved citation metadata without wording gains 6ms
+     ✓ location-only changes preserve the unchanged raw fact comparison semantics 4ms
+     ✓ keeps added and removed absence explicit 4ms
+     ✓ caps diagnostics at50 but preserves raw ordering, total, remaining and immutable input 5ms
+     ✓ refuses a saved ownerId mismatch 4ms
+     ✓ refuses a saved organizationId mismatch 4ms
+     ✓ refuses a saved resumeId mismatch 3ms
+     ✓ refuses a saved analysisId mismatch 4ms
+     ✓ refuses a saved inputSha256 mismatch 3ms
+     ✓ refuses a saved sourceEvidenceVersionId mismatch 4ms
+     ✓ refuses a saved retentionPolicyId mismatch 3ms
+     ✓ rejects omitted comparison rows 3ms
+     ✓ rejects duplicated comparison rows 4ms
+     ✓ rejects substituted comparison rows 4ms
+     ✓ rejects unbounded or empty proposed text 3ms
+     ✓ rejects unbounded or empty proposed text 3ms
+     ✓ rejects unbounded or empty proposed text 3ms
+     ✓ rejects invalid saved revision 0 4ms
+     ✓ rejects invalid saved revision -1 3ms
+     ✓ rejects invalid saved revision 1.5 3ms
+     ✓ rejects invalid saved revision Infinity 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/writing-comparison.test.ts > writing observations without score or factual authority > reports exact existing warning differences and Unicode word counts, not quality gain
+AssertionError: expected 7 to be 8 // Object.is equality
+
+- Expected
++ Received
+
+- 8
++ 7
+
+ ❯ tests/unit/writing-comparison.test.ts:21:129
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 42 passed (43)
+   Start at  09:54:48
+   Duration  760ms (transform 174ms, setup 0ms, import 311ms, tests 311ms, environment 0ms)
+

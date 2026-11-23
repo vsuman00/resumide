@@ -1,0 +1,109 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/privacy-claim-fence.test.ts (6 tests | 4 failed) 7ms
+     × sends actual attempt to deletion preparation 4ms
+     × sends actual attempt to completion 1ms
+     × sends actual attempt to failure bookkeeping 0ms
+     × keeps the old attempt when the same worker has reclaimed another attempt 1ms
+     ✓ throws on a refused completion and rebuilds rather than reusing a stale manifest on a fresh claim 1ms
+     ✓ does not treat error or nontrue acknowledgement as completion 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/privacy-claim-fence.test.ts > actual privacy repository claim fencing > sends actual attempt to deletion preparation
+AssertionError: expected "vi.fn()" to be called with arguments: [ Array(2) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    "prepare_deletion_request",
+    {
+-     "p_attempt": 2,
+      "p_request_id": "00000000-0000-4000-8000-000000000001",
+      "p_worker_id": "same-worker",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ tests/unit/privacy-claim-fence.test.ts:9:150
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/unit/privacy-claim-fence.test.ts > actual privacy repository claim fencing > sends actual attempt to completion
+AssertionError: expected "vi.fn()" to be called with arguments: [ Array(2) ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -1,9 +1,8 @@
+  [
+    "complete_privacy_request",
+    {
+-     "p_attempt": 2,
+      "p_manifest": {
+        "deleted": true,
+      },
+      "p_request_id": "00000000-0000-4000-8000-000000000001",
+      "p_worker_id": "same-worker",
+
+
+Number of calls: 1
+
+ ❯ tests/unit/privacy-claim-fence.test.ts:10:148
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/unit/privacy-claim-fence.test.ts > actual privacy repository claim fencing > sends actual attempt to failure bookkeeping
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'fail_privacy_request', { …(5) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -1,9 +1,8 @@
+  [
+    "fail_privacy_request",
+    {
+-     "p_attempt": 2,
+      "p_error_code": "EXPORT_FAILED",
+      "p_max_attempts": 3,
+      "p_request_id": "00000000-0000-4000-8000-000000000001",
+      "p_worker_id": "same-worker",
+    },
+
+
+Number of calls: 1
+
+ ❯ tests/unit/privacy-claim-fence.test.ts:11:154
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/unit/privacy-claim-fence.test.ts > actual privacy repository claim fencing > keeps the old attempt when the same worker has reclaimed another attempt
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/unit/privacy-claim-fence.test.ts:12:381
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 2 passed (6)
+   Start at  07:57:00
+   Duration  254ms (transform 121ms, setup 0ms, import 183ms, tests 7ms, environment 0ms)
+

@@ -1,0 +1,1392 @@
+{
+  "fixture": {
+    "id": "two_jobs_overlap",
+    "envelope": {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "analysisId": "10000000-0000-4000-8000-000000000003",
+      "sourceId": "10000000-0000-4000-8000-000000000004",
+      "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "createdAt": "2026-11-13T00:00:00.000Z",
+      "retentionPolicyId": "synthetic/1.0.0",
+      "schemaVersion": "evidence/2.0.0",
+      "fieldExtractorVersion": "evidence-fields/1.0.1",
+      "nativeSource": {
+        "schemaVersion": "native-evidence-v1",
+        "extractorVersion": "unpdf-v1",
+        "offsetUnit": "unicode_code_point",
+        "pages": [
+          {
+            "id": "page-1",
+            "pageNumber": 1,
+            "text": "Experience\nEmployer: Synthetic Alpha Labs\nRole: Platform Engineer\nDates: 2020 - 2022\nEmployer: Synthetic Beta Labs\nRole: Data Engineer\nDates: 2021 - 2023",
+            "method": "native_text",
+            "confidence": "uncalibrated"
+          }
+        ],
+        "spans": [
+          {
+            "id": "page-1-line-1",
+            "pageId": "page-1",
+            "start": 0,
+            "end": 10,
+            "text": "Experience"
+          },
+          {
+            "id": "page-1-line-2",
+            "pageId": "page-1",
+            "start": 11,
+            "end": 41,
+            "text": "Employer: Synthetic Alpha Labs"
+          },
+          {
+            "id": "page-1-line-3",
+            "pageId": "page-1",
+            "start": 42,
+            "end": 65,
+            "text": "Role: Platform Engineer"
+          },
+          {
+            "id": "page-1-line-4",
+            "pageId": "page-1",
+            "start": 66,
+            "end": 84,
+            "text": "Dates: 2020 - 2022"
+          },
+          {
+            "id": "page-1-line-5",
+            "pageId": "page-1",
+            "start": 85,
+            "end": 114,
+            "text": "Employer: Synthetic Beta Labs"
+          },
+          {
+            "id": "page-1-line-6",
+            "pageId": "page-1",
+            "start": 115,
+            "end": 134,
+            "text": "Role: Data Engineer"
+          },
+          {
+            "id": "page-1-line-7",
+            "pageId": "page-1",
+            "start": 135,
+            "end": 153,
+            "text": "Dates: 2021 - 2023"
+          }
+        ],
+        "assertions": [
+          {
+            "field": "name",
+            "value": null,
+            "state": "not_evaluated",
+            "confidence": "uncalibrated",
+            "evidence": null
+          },
+          {
+            "field": "email",
+            "value": null,
+            "state": "not_evaluated",
+            "confidence": "uncalibrated",
+            "evidence": null
+          },
+          {
+            "field": "phone",
+            "value": null,
+            "state": "not_evaluated",
+            "confidence": "uncalibrated",
+            "evidence": null
+          }
+        ]
+      },
+      "ocrSource": null,
+      "ocrFailure": null,
+      "status": "review_required",
+      "scoringEligible": false,
+      "confidence": {
+        "kind": "uncalibrated",
+        "reason": "calibration_not_approved"
+      },
+      "spans": [
+        {
+          "id": "native-page-1-line-1",
+          "pageId": "page-1",
+          "method": "native_text",
+          "text": "Experience",
+          "start": 0,
+          "end": 10,
+          "box": null,
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        },
+        {
+          "id": "native-page-1-line-2",
+          "pageId": "page-1",
+          "method": "native_text",
+          "text": "Employer: Synthetic Alpha Labs",
+          "start": 11,
+          "end": 41,
+          "box": null,
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        },
+        {
+          "id": "native-page-1-line-3",
+          "pageId": "page-1",
+          "method": "native_text",
+          "text": "Role: Platform Engineer",
+          "start": 42,
+          "end": 65,
+          "box": null,
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        },
+        {
+          "id": "native-page-1-line-4",
+          "pageId": "page-1",
+          "method": "native_text",
+          "text": "Dates: 2020 - 2022",
+          "start": 66,
+          "end": 84,
+          "box": null,
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        },
+        {
+          "id": "native-page-1-line-5",
+          "pageId": "page-1",
+          "method": "native_text",
+          "text": "Employer: Synthetic Beta Labs",
+          "start": 85,
+          "end": 114,
+          "box": null,
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        },
+        {
+          "id": "native-page-1-line-6",
+          "pageId": "page-1",
+          "method": "native_text",
+          "text": "Role: Data Engineer",
+          "start": 115,
+          "end": 134,
+          "box": null,
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        },
+        {
+          "id": "native-page-1-line-7",
+          "pageId": "page-1",
+          "method": "native_text",
+          "text": "Dates: 2021 - 2023",
+          "start": 135,
+          "end": 153,
+          "box": null,
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        }
+      ],
+      "assertions": [
+        {
+          "id": "assertion-1",
+          "field": "employer",
+          "value": "Synthetic Alpha Labs",
+          "evidence": [
+            {
+              "spanId": "native-page-1-line-2",
+              "start": 10,
+              "end": 30
+            }
+          ],
+          "state": "review_required",
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        },
+        {
+          "id": "assertion-2",
+          "field": "role",
+          "value": "Platform Engineer",
+          "evidence": [
+            {
+              "spanId": "native-page-1-line-3",
+              "start": 6,
+              "end": 23
+            }
+          ],
+          "state": "review_required",
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        },
+        {
+          "id": "assertion-3",
+          "field": "dates",
+          "value": "2020 - 2022",
+          "evidence": [
+            {
+              "spanId": "native-page-1-line-4",
+              "start": 7,
+              "end": 18
+            }
+          ],
+          "state": "review_required",
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        },
+        {
+          "id": "assertion-4",
+          "field": "employer",
+          "value": "Synthetic Beta Labs",
+          "evidence": [
+            {
+              "spanId": "native-page-1-line-5",
+              "start": 10,
+              "end": 29
+            }
+          ],
+          "state": "review_required",
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        },
+        {
+          "id": "assertion-5",
+          "field": "role",
+          "value": "Data Engineer",
+          "evidence": [
+            {
+              "spanId": "native-page-1-line-6",
+              "start": 6,
+              "end": 19
+            }
+          ],
+          "state": "review_required",
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        },
+        {
+          "id": "assertion-6",
+          "field": "dates",
+          "value": "2021 - 2023",
+          "evidence": [
+            {
+              "spanId": "native-page-1-line-7",
+              "start": 7,
+              "end": 18
+            }
+          ],
+          "state": "review_required",
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          }
+        }
+      ],
+      "fields": [
+        {
+          "field": "name",
+          "state": "not_evaluated"
+        },
+        {
+          "field": "email",
+          "state": "not_evaluated"
+        },
+        {
+          "field": "phone",
+          "state": "not_evaluated"
+        },
+        {
+          "field": "employer",
+          "state": "conflict"
+        },
+        {
+          "field": "role",
+          "state": "conflict"
+        },
+        {
+          "field": "dates",
+          "state": "conflict"
+        },
+        {
+          "field": "education",
+          "state": "not_evaluated"
+        },
+        {
+          "field": "certification",
+          "state": "not_evaluated"
+        }
+      ],
+      "blockers": [
+        "uncalibrated_confidence",
+        "missing_critical_fields",
+        "conflicting_critical_fields"
+      ]
+    },
+    "binding": {
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "analysisId": "10000000-0000-4000-8000-000000000003",
+      "sourceId": "10000000-0000-4000-8000-000000000004",
+      "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "attemptId": "10000000-0000-4000-8000-000000000001",
+      "resumeId": "10000000-0000-4000-8000-000000000005",
+      "organizationId": "10000000-0000-4000-8000-000000000006",
+      "evidenceSchemaVersion": "evidence/2.0.0",
+      "fieldExtractorVersion": "evidence-fields/1.0.1",
+      "targetModelVersion": "evidence-targets/1.0.0",
+      "associationModelVersion": "evidence-entry-associations/1.0.0",
+      "producerVersion": "canonical-engine/1.0.3",
+      "admissionPolicyVersion": "grouped-original-admission/1.0.0",
+      "structuralTextProfileVersion": "a02-structural-text/1.0.0",
+      "correctionProjectionModelVersion": "canonical-corrections/1.0.1",
+      "correctionAdmissionPolicyVersion": "candidate-correction-admission/1.0.0",
+      "effectiveLocale": "en-IN"
+    },
+    "projected": [
+      {
+        "pageId": "page-1",
+        "method": "native_text",
+        "members": [
+          {
+            "assertionId": "assertion-1",
+            "field": "employer",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-2",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 10,
+                "end": 30,
+                "pageStart": 21,
+                "pageEnd": 41
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-2",
+            "field": "role",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-3",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 6,
+                "end": 23,
+                "pageStart": 48,
+                "pageEnd": 65
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-3",
+            "field": "dates",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-4",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 7,
+                "end": 18,
+                "pageStart": 73,
+                "pageEnd": 84
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "pageId": "page-1",
+        "method": "native_text",
+        "members": [
+          {
+            "assertionId": "assertion-4",
+            "field": "employer",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-5",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 10,
+                "end": 29,
+                "pageStart": 95,
+                "pageEnd": 114
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-5",
+            "field": "role",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-6",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 6,
+                "end": 19,
+                "pageStart": 121,
+                "pageEnd": 134
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-6",
+            "field": "dates",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-7",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 7,
+                "end": 18,
+                "pageStart": 142,
+                "pageEnd": 153
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "selections": [
+      {
+        "pageId": "page-1",
+        "method": "native_text",
+        "members": [
+          {
+            "assertionId": "assertion-1",
+            "field": "employer",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-2",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 10,
+                "end": 30,
+                "pageStart": 21,
+                "pageEnd": 41
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-2",
+            "field": "role",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-3",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 6,
+                "end": 23,
+                "pageStart": 48,
+                "pageEnd": 65
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-3",
+            "field": "dates",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-4",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 7,
+                "end": 18,
+                "pageStart": 73,
+                "pageEnd": 84
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "pageId": "page-1",
+        "method": "native_text",
+        "members": [
+          {
+            "assertionId": "assertion-4",
+            "field": "employer",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-5",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 10,
+                "end": 29,
+                "pageStart": 95,
+                "pageEnd": 114
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-5",
+            "field": "role",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-6",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 6,
+                "end": 19,
+                "pageStart": 121,
+                "pageEnd": 134
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-6",
+            "field": "dates",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-7",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 7,
+                "end": 18,
+                "pageStart": 142,
+                "pageEnd": 153
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "original": {
+      "schemaVersion": "canonical-resume/1.0.0",
+      "producerVersion": "canonical-engine/1.0.1",
+      "analysisId": "10000000-0000-4000-8000-000000000003",
+      "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "retentionPolicyId": "synthetic/1.0.0",
+      "resumeId": "10000000-0000-4000-8000-000000000005",
+      "versionId": "40000000-0000-4000-8000-000000000001",
+      "parentVersionId": null,
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "organizationId": "10000000-0000-4000-8000-000000000006",
+      "locale": "en-IN",
+      "createdAt": "2026-11-13T00:00:00.000Z",
+      "state": "review_required",
+      "sourceEvidenceVersionId": "10000000-0000-4000-8000-000000000001",
+      "contactFactIds": [],
+      "facts": [
+        {
+          "id": "40000000-0000-4000-8000-000000000002",
+          "type": "employer",
+          "value": "Synthetic Alpha Labs",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-2",
+              "start": 10,
+              "end": 30
+            }
+          ],
+          "confirmation": null
+        },
+        {
+          "id": "40000000-0000-4000-8000-000000000003",
+          "type": "role",
+          "value": "Platform Engineer",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-3",
+              "start": 6,
+              "end": 23
+            }
+          ],
+          "confirmation": null
+        },
+        {
+          "id": "40000000-0000-4000-8000-000000000004",
+          "type": "dates",
+          "value": "2020 - 2022",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-4",
+              "start": 7,
+              "end": 18
+            }
+          ],
+          "confirmation": null
+        },
+        {
+          "id": "40000000-0000-4000-8000-000000000005",
+          "type": "employer",
+          "value": "Synthetic Beta Labs",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-5",
+              "start": 10,
+              "end": 29
+            }
+          ],
+          "confirmation": null
+        },
+        {
+          "id": "40000000-0000-4000-8000-000000000006",
+          "type": "role",
+          "value": "Data Engineer",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-6",
+              "start": 6,
+              "end": 19
+            }
+          ],
+          "confirmation": null
+        },
+        {
+          "id": "40000000-0000-4000-8000-000000000007",
+          "type": "dates",
+          "value": "2021 - 2023",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-7",
+              "start": 7,
+              "end": 18
+            }
+          ],
+          "confirmation": null
+        }
+      ],
+      "sections": [
+        {
+          "id": "40000000-0000-4000-8000-000000000008",
+          "type": "experience",
+          "title": "Experience",
+          "factIds": [],
+          "entries": [
+            {
+              "id": "40000000-0000-4000-8000-000000000009",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000002"
+              ],
+              "bullets": []
+            },
+            {
+              "id": "40000000-0000-4000-8000-00000000000a",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000003"
+              ],
+              "bullets": []
+            },
+            {
+              "id": "40000000-0000-4000-8000-00000000000b",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000004"
+              ],
+              "bullets": []
+            },
+            {
+              "id": "40000000-0000-4000-8000-00000000000c",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000005"
+              ],
+              "bullets": []
+            },
+            {
+              "id": "40000000-0000-4000-8000-00000000000d",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000006"
+              ],
+              "bullets": []
+            },
+            {
+              "id": "40000000-0000-4000-8000-00000000000e",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000007"
+              ],
+              "bullets": []
+            }
+          ]
+        }
+      ],
+      "changes": [
+        {
+          "id": "40000000-0000-4000-8000-00000000000f",
+          "actorId": "10000000-0000-4000-8000-000000000002",
+          "action": "import",
+          "targetId": "40000000-0000-4000-8000-000000000001",
+          "priorValue": null,
+          "createdAt": "2026-11-13T00:00:00.000Z"
+        }
+      ]
+    },
+    "placement": {
+      "schemaVersion": "grouped-original-placement/1.0.0",
+      "authority": "derived_preparation_only",
+      "persistable": false,
+      "scoringEligible": false,
+      "requiresDurableAdmission": true,
+      "document": {
+        "schemaVersion": "canonical-resume/1.0.0",
+        "producerVersion": "canonical-engine/1.0.3",
+        "analysisId": "10000000-0000-4000-8000-000000000003",
+        "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "retentionPolicyId": "synthetic/1.0.0",
+        "resumeId": "10000000-0000-4000-8000-000000000005",
+        "versionId": "40000000-0000-4000-8000-000000000001",
+        "parentVersionId": null,
+        "ownerId": "10000000-0000-4000-8000-000000000002",
+        "organizationId": "10000000-0000-4000-8000-000000000006",
+        "locale": "en-IN",
+        "createdAt": "2026-11-13T00:00:00.000Z",
+        "state": "review_required",
+        "sourceEvidenceVersionId": "10000000-0000-4000-8000-000000000001",
+        "contactFactIds": [],
+        "facts": [
+          {
+            "id": "40000000-0000-4000-8000-000000000002",
+            "type": "employer",
+            "value": "Synthetic Alpha Labs",
+            "state": "unconfirmed",
+            "sources": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-2",
+                "start": 10,
+                "end": 30
+              }
+            ],
+            "confirmation": null
+          },
+          {
+            "id": "40000000-0000-4000-8000-000000000003",
+            "type": "role",
+            "value": "Platform Engineer",
+            "state": "unconfirmed",
+            "sources": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-3",
+                "start": 6,
+                "end": 23
+              }
+            ],
+            "confirmation": null
+          },
+          {
+            "id": "40000000-0000-4000-8000-000000000004",
+            "type": "dates",
+            "value": "2020 - 2022",
+            "state": "unconfirmed",
+            "sources": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-4",
+                "start": 7,
+                "end": 18
+              }
+            ],
+            "confirmation": null
+          },
+          {
+            "id": "40000000-0000-4000-8000-000000000005",
+            "type": "employer",
+            "value": "Synthetic Beta Labs",
+            "state": "unconfirmed",
+            "sources": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-5",
+                "start": 10,
+                "end": 29
+              }
+            ],
+            "confirmation": null
+          },
+          {
+            "id": "40000000-0000-4000-8000-000000000006",
+            "type": "role",
+            "value": "Data Engineer",
+            "state": "unconfirmed",
+            "sources": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-6",
+                "start": 6,
+                "end": 19
+              }
+            ],
+            "confirmation": null
+          },
+          {
+            "id": "40000000-0000-4000-8000-000000000007",
+            "type": "dates",
+            "value": "2021 - 2023",
+            "state": "unconfirmed",
+            "sources": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-7",
+                "start": 7,
+                "end": 18
+              }
+            ],
+            "confirmation": null
+          }
+        ],
+        "sections": [
+          {
+            "id": "40000000-0000-4000-8000-000000000008",
+            "type": "experience",
+            "title": "Experience",
+            "factIds": [],
+            "entries": [
+              {
+                "id": "40000000-0000-4000-8000-000000000009",
+                "factIds": [
+                  "40000000-0000-4000-8000-000000000002",
+                  "40000000-0000-4000-8000-000000000003",
+                  "40000000-0000-4000-8000-000000000004"
+                ],
+                "bullets": []
+              },
+              {
+                "id": "40000000-0000-4000-8000-00000000000c",
+                "factIds": [
+                  "40000000-0000-4000-8000-000000000005",
+                  "40000000-0000-4000-8000-000000000006",
+                  "40000000-0000-4000-8000-000000000007"
+                ],
+                "bullets": []
+              }
+            ]
+          }
+        ],
+        "changes": [
+          {
+            "id": "40000000-0000-4000-8000-00000000000f",
+            "actorId": "10000000-0000-4000-8000-000000000002",
+            "action": "import",
+            "targetId": "40000000-0000-4000-8000-000000000001",
+            "priorValue": null,
+            "createdAt": "2026-11-13T00:00:00.000Z"
+          }
+        ]
+      },
+      "mappings": [
+        {
+          "selection": {
+            "pageId": "page-1",
+            "method": "native_text",
+            "members": [
+              {
+                "assertionId": "assertion-1",
+                "field": "employer",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-2",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 10,
+                    "end": 30,
+                    "pageStart": 21,
+                    "pageEnd": 41
+                  }
+                ]
+              },
+              {
+                "assertionId": "assertion-2",
+                "field": "role",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-3",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 6,
+                    "end": 23,
+                    "pageStart": 48,
+                    "pageEnd": 65
+                  }
+                ]
+              },
+              {
+                "assertionId": "assertion-3",
+                "field": "dates",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-4",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 7,
+                    "end": 18,
+                    "pageStart": 73,
+                    "pageEnd": 84
+                  }
+                ]
+              }
+            ]
+          },
+          "sectionId": "40000000-0000-4000-8000-000000000008",
+          "entryId": "40000000-0000-4000-8000-000000000009",
+          "members": [
+            {
+              "assertionId": "assertion-1",
+              "field": "employer",
+              "factId": "40000000-0000-4000-8000-000000000002",
+              "originalEntryId": "40000000-0000-4000-8000-000000000009",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-2",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 10,
+                  "end": 30,
+                  "pageStart": 21,
+                  "pageEnd": 41
+                }
+              ]
+            },
+            {
+              "assertionId": "assertion-2",
+              "field": "role",
+              "factId": "40000000-0000-4000-8000-000000000003",
+              "originalEntryId": "40000000-0000-4000-8000-00000000000a",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-3",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 6,
+                  "end": 23,
+                  "pageStart": 48,
+                  "pageEnd": 65
+                }
+              ]
+            },
+            {
+              "assertionId": "assertion-3",
+              "field": "dates",
+              "factId": "40000000-0000-4000-8000-000000000004",
+              "originalEntryId": "40000000-0000-4000-8000-00000000000b",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-4",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 7,
+                  "end": 18,
+                  "pageStart": 73,
+                  "pageEnd": 84
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "selection": {
+            "pageId": "page-1",
+            "method": "native_text",
+            "members": [
+              {
+                "assertionId": "assertion-4",
+                "field": "employer",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-5",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 10,
+                    "end": 29,
+                    "pageStart": 95,
+                    "pageEnd": 114
+                  }
+                ]
+              },
+              {
+                "assertionId": "assertion-5",
+                "field": "role",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-6",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 6,
+                    "end": 19,
+                    "pageStart": 121,
+                    "pageEnd": 134
+                  }
+                ]
+              },
+              {
+                "assertionId": "assertion-6",
+                "field": "dates",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-7",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 7,
+                    "end": 18,
+                    "pageStart": 142,
+                    "pageEnd": 153
+                  }
+                ]
+              }
+            ]
+          },
+          "sectionId": "40000000-0000-4000-8000-000000000008",
+          "entryId": "40000000-0000-4000-8000-00000000000c",
+          "members": [
+            {
+              "assertionId": "assertion-4",
+              "field": "employer",
+              "factId": "40000000-0000-4000-8000-000000000005",
+              "originalEntryId": "40000000-0000-4000-8000-00000000000c",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-5",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 10,
+                  "end": 29,
+                  "pageStart": 95,
+                  "pageEnd": 114
+                }
+              ]
+            },
+            {
+              "assertionId": "assertion-5",
+              "field": "role",
+              "factId": "40000000-0000-4000-8000-000000000006",
+              "originalEntryId": "40000000-0000-4000-8000-00000000000d",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-6",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 6,
+                  "end": 19,
+                  "pageStart": 121,
+                  "pageEnd": 134
+                }
+              ]
+            },
+            {
+              "assertionId": "assertion-6",
+              "field": "dates",
+              "factId": "40000000-0000-4000-8000-000000000007",
+              "originalEntryId": "40000000-0000-4000-8000-00000000000e",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-7",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 7,
+                  "end": 18,
+                  "pageStart": 142,
+                  "pageEnd": 153
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "prototypeState": "prepared"
+  },
+  "normalForm": {
+    "schemaVersion": "grouped-original-command/1.0.0",
+    "operation": "approve_and_import_grouped_original",
+    "binding": {
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "analysisId": "10000000-0000-4000-8000-000000000003",
+      "sourceId": "10000000-0000-4000-8000-000000000004",
+      "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "attemptId": "10000000-0000-4000-8000-000000000001",
+      "resumeId": "10000000-0000-4000-8000-000000000005",
+      "organizationId": "10000000-0000-4000-8000-000000000006",
+      "evidenceSchemaVersion": "evidence/2.0.0",
+      "fieldExtractorVersion": "evidence-fields/1.0.1",
+      "targetModelVersion": "evidence-targets/1.0.0",
+      "associationModelVersion": "evidence-entry-associations/1.0.0",
+      "producerVersion": "canonical-engine/1.0.3",
+      "admissionPolicyVersion": "grouped-original-admission/1.0.0",
+      "structuralTextProfileVersion": "a02-structural-text/1.0.0",
+      "correctionProjectionModelVersion": "canonical-corrections/1.0.1",
+      "correctionAdmissionPolicyVersion": "candidate-correction-admission/1.0.0",
+      "effectiveLocale": "en-IN"
+    },
+    "expected": {
+      "reviewRevision": 0,
+      "reviewHeadId": null,
+      "assignmentRevision": 0,
+      "assignmentHeadId": null,
+      "associationRevision": 0,
+      "associationHeadId": null,
+      "canonicalHeadId": null
+    },
+    "acknowledgementPolicy": "relationship_only_not_fact_confirmation",
+    "acknowledgement": true,
+    "unselectedDisposition": "retain_original",
+    "selections": [
+      {
+        "pageId": "page-1",
+        "method": "native_text",
+        "members": [
+          {
+            "assertionId": "assertion-1",
+            "field": "employer",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-2",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 10,
+                "end": 30,
+                "pageStart": 21,
+                "pageEnd": 41
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-2",
+            "field": "role",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-3",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 6,
+                "end": 23,
+                "pageStart": 48,
+                "pageEnd": 65
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-3",
+            "field": "dates",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-4",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 7,
+                "end": 18,
+                "pageStart": 73,
+                "pageEnd": 84
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "pageId": "page-1",
+        "method": "native_text",
+        "members": [
+          {
+            "assertionId": "assertion-4",
+            "field": "employer",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-5",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 10,
+                "end": 29,
+                "pageStart": 95,
+                "pageEnd": 114
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-5",
+            "field": "role",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-6",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 6,
+                "end": 19,
+                "pageStart": 121,
+                "pageEnd": 134
+              }
+            ]
+          },
+          {
+            "assertionId": "assertion-6",
+            "field": "dates",
+            "citations": [
+              {
+                "attemptId": "10000000-0000-4000-8000-000000000001",
+                "spanId": "native-page-1-line-7",
+                "pageId": "page-1",
+                "method": "native_text",
+                "start": 7,
+                "end": 18,
+                "pageStart": 142,
+                "pageEnd": 153
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "atoms": [
+    "grouped-original-command/1.0.0",
+    "approve_and_import_grouped_original",
+    "10000000-0000-4000-8000-000000000002",
+    "10000000-0000-4000-8000-000000000006",
+    "10000000-0000-4000-8000-000000000005",
+    "10000000-0000-4000-8000-000000000003",
+    "10000000-0000-4000-8000-000000000004",
+    "10000000-0000-4000-8000-000000000001",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "evidence/2.0.0",
+    "evidence-fields/1.0.1",
+    "evidence-targets/1.0.0",
+    "evidence-entry-associations/1.0.0",
+    "canonical-engine/1.0.3",
+    "grouped-original-admission/1.0.0",
+    "a02-structural-text/1.0.0",
+    "canonical-corrections/1.0.1",
+    "candidate-correction-admission/1.0.0",
+    "en-IN",
+    "0",
+    null,
+    "0",
+    null,
+    "0",
+    null,
+    null,
+    "relationship_only_not_fact_confirmation",
+    "1",
+    "retain_original",
+    "2",
+    "page-1",
+    "native_text",
+    "3",
+    "assertion-1",
+    "employer",
+    "1",
+    "10000000-0000-4000-8000-000000000001",
+    "native-page-1-line-2",
+    "page-1",
+    "native_text",
+    "10",
+    "30",
+    "21",
+    "41",
+    "assertion-2",
+    "role",
+    "1",
+    "10000000-0000-4000-8000-000000000001",
+    "native-page-1-line-3",
+    "page-1",
+    "native_text",
+    "6",
+    "23",
+    "48",
+    "65",
+    "assertion-3",
+    "dates",
+    "1",
+    "10000000-0000-4000-8000-000000000001",
+    "native-page-1-line-4",
+    "page-1",
+    "native_text",
+    "7",
+    "18",
+    "73",
+    "84",
+    "page-1",
+    "native_text",
+    "3",
+    "assertion-4",
+    "employer",
+    "1",
+    "10000000-0000-4000-8000-000000000001",
+    "native-page-1-line-5",
+    "page-1",
+    "native_text",
+    "10",
+    "29",
+    "95",
+    "114",
+    "assertion-5",
+    "role",
+    "1",
+    "10000000-0000-4000-8000-000000000001",
+    "native-page-1-line-6",
+    "page-1",
+    "native_text",
+    "6",
+    "19",
+    "121",
+    "134",
+    "assertion-6",
+    "dates",
+    "1",
+    "10000000-0000-4000-8000-000000000001",
+    "native-page-1-line-7",
+    "page-1",
+    "native_text",
+    "7",
+    "18",
+    "142",
+    "153"
+  ]
+}

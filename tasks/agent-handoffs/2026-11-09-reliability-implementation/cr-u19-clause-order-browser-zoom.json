@@ -1,0 +1,51 @@
+{
+  "id": "CR-U19-S13",
+  "status": "VERIFIED_LOCAL_CLAUSE_ORDER_BROWSER_ZOOM",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR on loopback with simulated Supabase Auth and Data API transport and disposable PostgreSQL 17.11",
+  "sources": {
+    "app/components/JdClauseOrderDecisionReview.tsx": "8b8407c9e1d5f8ee0e501c41e67a307d649e452188064bcefbb3db769222f1fd",
+    "app/components/JdClauseOrderBridge.tsx": "bf8362f1222772c418cfb1d07b532cb759d5f18fc727421903f80235890f8afe",
+    "scripts/verify-local-jd-clause-order-browser.ts": "0c8f5ec4e4fff3f3fef418c4b0118f2f02bee86b8b632a425a0fbcac4d54b2d9",
+    "scripts/verify-local-typed-score-browser.ts": "2f3dbf0ef59c13822956e6012b8e45b09466965a453a2c8ad11b2e42b9daf8f6",
+    "scripts/verify-local-typed-score.py": "adaab955077c485c17c9cef858041555d11a6070db5889a8e5353765a0469897",
+    "scripts/local-fixture-browser.ts": "e8f78771b4545f1ec7cdf4145a9412f0c94f01f46e44f2f5a2e36d427a177609"
+  },
+  "baseline": {
+    "observed": "A confirmed rejection replaced the focused button, but its status message did not receive focus.",
+    "logSha256": "ec1bcf884f8a5080628504ed7c974d6474433f972370884fadf633783d76ff00"
+  },
+  "browser": {
+    "version": "Chromium 153.0.8010.12",
+    "command": "scripts/verify-local-typed-score.py --browser --browser-zoom --clause-order",
+    "pageZoomPercent": 200,
+    "effectiveViewportWidthsCssPx": [390, 320],
+    "schemaOperations": 100,
+    "orderedDigest": "4e253744226912aab1c9411cb03e528f8fbdaa10984aa5933a88ff380601293a",
+    "ssrEntrySha256": "f7e375ecbf001800a49c24a580fa5fc9a6c513556f3ca4a3ead8d4358d003503",
+    "logSha256": "08eae5e2535fdd3934d50e11a1be68a111900d4f35b5403ff773d25ed56cddc7",
+    "result": {
+      "controlsFitAt320": true,
+      "acceptanceRequiredAcknowledgement": true,
+      "rejectAcceptAndUndoConfirmationsFocused": true,
+      "tabsReachedSavedVersionCurrentInputsAndUndo": true,
+      "decisionRegionSeriousOrCriticalAxeViolations": 0,
+      "exactReplayAndStaleRefusal": true,
+      "originalWordingAndCitationsRestored": true,
+      "numericScoresWithheld": true,
+      "writerGrantRevokedAfterFixture": true
+    }
+  },
+  "checks": {
+    "node": "22.23.4",
+    "focusedTestsPassed": 238,
+    "focusedTestFiles": 10,
+    "focusedTestsLogSha256": "141e3ba807a9230b884c2f7f6ee196b38e2ba937efb3b6a428733d520189dd1c",
+    "typecheck": "passed",
+    "lint": "passed with four existing hook warnings",
+    "webBuildLogSha256": "9d915d551a39b4ca6d6186be746349014897a89bcf69abd65b4ccd5bb8dd588d",
+    "workerBuildLogSha256": "dfcd2d7ac05330dac3440b3b6593bb38de39ea5eedeb648ff35573e68e5316ba"
+  },
+  "manualScreenReaderVerified": false,
+  "managedSupabaseVerified": false
+}

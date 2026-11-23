@@ -1,0 +1,11 @@
+# CR-A01 database lifecycle verified locally
+
+The first claim against the clean schema failed inside terminal recovery. SQL table aliases collided with PL/pgSQL row variables in the recovery and claim routines. A forward migration qualifies the queue selections with distinct aliases. It checks the original and revised function bodies and keeps the existing permission and lease checks.
+
+The recovered worker then persisted evidence, but deletion preparation stopped. The retained AI usage reader was `STABLE`, while the sealed readiness catalogue expected `VOLATILE`. A second forward migration aligns that attribute after validating the exact function body and roles. The legacy usage, AI source, owner disposition and privacy generation readiness checks all passed afterward.
+
+The fixture executed the full 93-operation successor on disposable PostgreSQL 17. The service role passed fenced worker startup checks, recorded tracked upload admission, and recovered a real expired lease with a fresh token. The old token and a mismatched page count were refused. The current worker persisted two pages, including the blank page, exactly once. The owner could read the evidence and a second authenticated user could not. The database produced no score or AI run.
+
+The privacy worker's SQL path prepared the exact object plan and refused finalization until a matching synthetic absence receipt arrived. It then retired the application rows and admission ledger, preserved the durable owner barrier, and left the unrelated Auth user intact. Rollback removed all fixtures. [Native fixture](cr-a01-native-worker-lifecycle.py.txt) · [SQL assertions](cr-a01-native-worker-lifecycle.sql.txt) · [Verification receipt](cr-a01-native-worker-lifecycle-evidence.json)
+
+The [93-operation inventory](managed-schema-worker-successor-93.json) extends the frozen 91-operation successor with both forward migrations. Materialize it into a new directory with `python3 scripts/materialize-managed-schema-successor.py --worker-lifecycle OUTPUT_DIRECTORY`. The SQL fixture uses synthetic Auth and Storage scaffolding and a fail-closed JSON Schema stand-in. The approved managed replay and the HTTP upload, real PDF extraction, worker and Storage cleanup run are still required. Deployment stays on hold.

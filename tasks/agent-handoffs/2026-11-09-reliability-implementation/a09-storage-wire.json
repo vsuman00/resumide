@@ -1,0 +1,135 @@
+{
+  "task": "CR-A09",
+  "status": "WIRE_INTERFACE_AND_UNICODE_PROFILE_FROZEN",
+  "at": "2026-11-10T19:32:42.227676+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "producer": {
+    "schemaVersion": "requirements/2.0.0",
+    "producerVersion": "jd-relations/1.0.0",
+    "storagePolicyVersion": "jd-relation-admission/1.0.0",
+    "semanticCodecVersion": "jd-relation-command/1.0.0",
+    "legacy": "requirements/1.0.0 and all jd-parser1.0.0-1.0.2 schemas/parsers/RPC remain unchanged"
+  },
+  "storedEnvelopeFields": [
+    "schemaVersion",
+    "producerVersion",
+    "id",
+    "parentVersionId",
+    "ownerId",
+    "organizationId",
+    "analysisId",
+    "jobId",
+    "createdAt",
+    "retentionPolicyId",
+    "inputSha256",
+    "locale",
+    "domain",
+    "state",
+    "sourceText",
+    "scoringEligible",
+    "mappingPolicy",
+    "relationPolicy",
+    "requirements",
+    "retainedClauses",
+    "relations",
+    "warnings"
+  ],
+  "envelope": {
+    "common": "Keep existing literal/source/identity/state fields; scoringEligible literalfalse; strict no extra/local authority/persistable/model fields.",
+    "requirements": "All existing item fields plus mapping and tokenEvidence. Literal value never replaced by canonical label. derivation exact, confidence value null, all offsets/minimumYears integerbounded. mapping null for non-skills, registered alias/exact/unmapped for skills.",
+    "mappingPolicy": "Exact jd-local-aliases/1.0.0 +JOB_ALIAS_LEXICON_SHA256+externalTaxonomy:null",
+    "relationPolicy": "Exact jd-local-relation-rules/1.0.0 +LOCAL_JOB_RELATION_POLICY_SHA256",
+    "retainedClauses": "exact evidence,importance,negated,interpretation(unmapped|partial_vocabulary),reviewRequired:true,requirementIds",
+    "relations": "Object with clauses only. Each clause exact id(lowercaseSHA),evidence,reviewRequired:true,scope{importance,negated},skillExpression,duration,prospectiveCreditGroups,numericCredit:null. No local scope authority.",
+    "expressions": "Same A08 atom/any_of/all_of/unknown tagged grammar and exact operator/operand evidence; never flatten groups.",
+    "durations": "Same A08 typed kind/evidence/lower/upper/operator/candidate/reason, integer0-100 inclusive bounds, literal_clause_only and evaluated:false. Unsupported/mixed/inverted/negated/ambiguous forms remain explicit unknown.",
+    "warnings": "Preserve deterministic source warnings/ambiguities/reasons, within reviewed bounded schema; do not silently truncate. Stored producer remains review-only and non-scoring. The retained local_alias_policy_not_admitted code is source-discovery/scoring-adoption status; persistent review admission does not grant taxonomy or numerical adoption."
+  },
+  "budgets": {
+    "sourceUtf16": 20000,
+    "clauseUtf16": 2000,
+    "requirements": 300,
+    "clauses": 300,
+    "tokens": 1000,
+    "operands": 32,
+    "nodes": 1024,
+    "rawDepth": 8,
+    "durationCandidates": 8,
+    "bodyJsonbUtf8Bytes": 1048576
+  },
+  "unicode": {
+    "wellformed": "Reject NUL and unpaired surrogates; preserve raw Unicode, no NFC/NFKC. Quote offsets codepoints; limit lengths UTF16units.",
+    "profileVersion": "jd-unicode-profile/1.0.0",
+    "module": "app/lib/server/job-relation-unicode.ts",
+    "profileSha256": "f3f8335d9a957bc16e33d61321f28ed7a12c8c81ff8912f0c17c041d86d95571",
+    "metadata": "Pin actual Node22/Unicode/ICU/rule profile and exact data hash; reject unsupported write-runtime drift.",
+    "parity": "Separate L/N/M identifier sets, alias dollar/underscore/asymmetricdot, duration boundary, JS regex-word iu, whitespace/trim, default lowercase inclFinalSigma and relevant Unicode regex case-folds. Never substitute PG locale lower/word/space class.",
+    "policyBinding": "Stored producer1.0.0 registers exact profile and codec in immutable admission descriptor used by TS and SQL. Descriptor hash includes alias/relation hashes and Unicode profile. No caller policy override.",
+    "moduleSha256": "a04123ca90d4db15e8840492378e0a5cd9948a253dfecb917fe1789df2f41354",
+    "runtime": {
+      "node": "v22.23.4",
+      "unicode": "17.0",
+      "icu": "78.3",
+      "v8": "12.4.254.21-node.57"
+    }
+  },
+  "semanticProjection": {
+    "exclude": [
+      "root id",
+      "root createdAt",
+      "root parentVersionId (separate expected parent)",
+      "requirement IDs",
+      "clause IDs",
+      "validated redundant span IDs"
+    ],
+    "include": "All source/scope/producer/policy/state/warning/ambiguity/mapping/quote/OR-AND/duration/inclusive/unknown interpretation content. Owner/org/analysis/job IDs remain authority bindings.",
+    "ordering": "Requirements sorted start,end,type,value with UTF8 byte tie order; reject duplicate observation keys. Map requirementIDs to /requirements/<ordinal> in all references; reject dangling/duplicate/cross-kind refs and sort refs byordinal. Clauses/retainedclauses byspan; token/candidate spans byposition; operands/operators stay sourceorder; uniquecredit hashes lexical. Warnings/reasons keep registered deterministic order.",
+    "spanId": "Validate exact jd-<start>-<end> before excluding redundant field.",
+    "encoding": "Recursive sorted fixedASCII object keys, no structural whitespace, UTF8 JSON; integers decimal(-0/1.0 canonical0/1), exact JSON.stringify string escapes inclcontrol lowercasehex, preserve nonBMP andU2028/U2029, no slash escaping."
+  },
+  "rpc": {
+    "name": "save_job_requirement_relations",
+    "arguments": [
+      "p_user_id",
+      "p_analysis_id",
+      "p_body",
+      "p_expected_version",
+      "p_idempotency_key",
+      "p_request_id"
+    ],
+    "result": "Existing applied/versionId/revision/idempotent or conflict/not_found; optional serverderived semantic hash only.",
+    "storage": "Same immutable job_requirement_versions/job_requirements tables, revision/head and keyspace; preserve RLS/export/delete/retention.",
+    "legacyBoundary": "Replace only version-table stored CHECK with exact legacyORv2 validator; retain legacy shape function/RPC bodies. New command has operation/codec/producer/profile discriminator so cross-RPC key collision conflicts.",
+    "admissionOrder": "Strict complete body/policy/source-internal semantic validation; owner mutex/current privacy and active analysis/job/source membership scope; exact prior semantic command replay before fresh head CAS. Existing receipt never inserts or rewinds head. New write additionally requires current job source equality/hash, expected parent and atomicversion/items/audit.",
+    "provenance": "Body own sourceHash/quotes must validate even for replay. Prior receipt permits only same owned scope/exact semantics; changed source/body/policy/key content conflicts. Invalid scope never replayed.",
+    "policyValidation": "Independent SQL alias/concept/boundary/importance/OR-AND/bounds/unknown checks, no trusted allow booleans. StructuralJSONSchema is not semantic proof."
+  },
+  "readerWriter": {
+    "reader": "Strict v1|v2 union unconditionally on stored discriminator, independent of new writer flag; validate rows and recorded policy, preserve historical source not reinterpret under current policies.",
+    "writer": "Server-selected JOB_RELATIONS_ENABLED requires JOB_INTELLIGENCE_ENABLED, defaultfalse. Flagoff legacyparser/RPC; flagon explicit newconstructor and newRPC. No client producer/score/policy choice.",
+    "exports": [
+      "JobRequirementRelationsSchema",
+      "StoredJobRequirementsSchema",
+      "JobRequirementRelations",
+      "StoredJobRequirements",
+      "createJobRequirementRelations",
+      "projectJobRelationSemantics",
+      "encodeJobRelationSemantics",
+      "jobRelationSemanticSha256"
+    ],
+    "rollbackNoDowngrade": "Flagoff retains legacy writes for legacy/initial heads only. A known typed-v2 parent/head must not silently receive a v1 child and lose OR/bound semantics. Application guards typed parent with actionable conflict/unavailable; migration insert guard independently denies v1 child ofv2 without changing legacy RPC body. Owned exact legacy receipt replay from its legacy parent remains available; no new head rewinding."
+  },
+  "consumers": {
+    "requirements": "Explicit v2 rendering of literal+mapping+typedexpressions/bounds/unknowns+recorded policy/version/hash. Preserve historicalreadonly/currentnativeform/privacy. When currentstoredv2 and newwriterflagoff, show savespaused/read-only instead of offering legacy Save; historicalnavigation/readerremain.",
+    "scoreAuthoring": "Explicit actionable abstention forv2 before legacy engine/proposals until A10typedconsumer isimplemented. Never stripnewrecordintov1 or create independentkeywordcredit. Preserve ownedread/freshhead/privacy checks; no diagnostics-null cascade.",
+    "fullPair": "U04 canonical/JD proposal pair identity/selector semantics remain next separate contract; factual clarification remains canonical-only until explicit decision."
+  },
+  "ownership": {
+    "Root": "shared wire/configadoption/migrationordering/integration/DAG",
+    "a04_backend": "newadmissionmodule+repo+2tests+handoff (5)",
+    "a04_runtime": "sharedUnicodeassetleaf first; then SQLmigration/sourceverifier/rollbackdraft/SQLcontracttest/handoff (5)",
+    "a04_frontend": "config4fileleaf then typedrequirements3fileleaf and explicitabstention4fileleaf sequential"
+  },
+  "validation": "Actual oldreader newstoredrow RED before newhelper import; real repository writerdispatch mocks only ownedDB; semantic ID/time invariance and changedpolicy/OR/bounds conflictvectors. Full TS/schema/sourcechecks then integrated relevant tests/types/lint/web/worker. NativeSQL differential/tampering/concurrency/RLS/cleanup remain separate authorizedmanagedgate.",
+  "authorization": "Local source/synthetic only; no nativeSQL parsing/application/DB/provider/DockerDB/key/ownerfile/Git/deployment action."
+}

@@ -1,0 +1,601 @@
+
+> test
+> vitest run tests/unit/canonical-route.test.ts tests/components/CanonicalCorrections.test.tsx
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ✓ tests/unit/canonical-route.test.ts (25 tests) 27ms
+stderr | tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery
+No `HydrateFallback` element provided to render during initial hydration
+
+ ❯ tests/components/CanonicalCorrections.test.tsx (15 tests | 1 failed) 1595ms
+     ✓ U03 draft retains a validated edit in a native server-rendered rejected response 100ms
+     ✓ U03 draft retains a validated rename_section in a native server-rendered rejected response 30ms
+     × U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery 1075ms
+     ✓ U03 draft retains text without permitting a historical recovery or inferred replacement target 30ms
+     ✓ U03 draft retains text without permitting a missing_target recovery or inferred replacement target 17ms
+     ✓ imports a saved correction through the reviewed path and leaves its fact unconfirmed 35ms
+     ✓ shows the exact diff and provenance, applies without retyping, and retains the operation key after a retryable failure 42ms
+     ✓ requires an explicit employer target and acknowledgement before assignment 28ms
+     ✓ reviews an absent-field placement before assigning and then adding an unconfirmed fact 50ms
+     ✓ shows undo provenance and requires fresh assignment before explicit reapply 44ms
+     ✓ keeps previews available and mutations unavailable when authoritative write readiness is false 20ms
+     ✓ keeps original import unavailable until correction write readiness returns 10ms
+     ✓ does not apply into a historical selected version or expose technical identifiers as labels 18ms
+     ✓ disables correction controls while a submission is pending 84ms
+     ✓ preserves the legacy workspace when correction review data is absent 12ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery
+AssertionError: expected '10000000-0000-4000-8000-000000000072' to be '10000000-0000-4000-8000-000000000073' // Object.is equality
+
+Ignored nodes: comments, script, style
+[36m<html[39m
+  [33mdata-theme[39m=[32m"light"[39m
+  [33mdata-theme-preference[39m=[32m"system"[39m
+  [33mstyle[39m=[32m"color-scheme: light;"[39m
+[36m>[39m
+  [36m<head />[39m
+  [36m<body>[39m
+    [36m<div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"workspace-shell _shell_6777b6"[39m
+      [36m>[39m
+        [36m<header[39m
+          [33mclass[39m=[32m"site-navigation workspace-floating-header _bar_a67a5d"[39m
+        [36m>[39m
+          [36m<a[39m
+            [33maria-label[39m=[32m"Resumide home"[39m
+            [33mclass[39m=[32m"workspace-brand _brand_a67a5d"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mhref[39m=[32m"/"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"brand-lockup is-compact"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"brand-wordmark"[39m
+              [36m>[39m
+                [0mResumide[0m
+                [36m<svg[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"brand-leaf"[39m
+                  [33mfocusable[39m=[32m"false"[39m
+                  [33mviewBox[39m=[32m"0 0 28 34"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M25.2 1.8C13.5 3.4 4.6 9.4 2.1 20.5c-1.2 5.1 1.1 9.2 5.8 11.2 8.8-4.5 15.2-13.1 17.3-29.9Z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M5.4 29.8C10.1 22.1 15 15.7 22 8.9"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</span>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"brand-descriptor"[39m
+              [36m>[39m
+                [0mEvidence desk[0m
+              [36m</span>[39m
+            [36m</span>[39m
+          [36m</a>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Main navigation"[39m
+            [33mclass[39m=[32m"_primary_a67a5d"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/"[39m
+            [36m>[39m
+              [0mHome[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/analyses"[39m
+            [36m>[39m
+              [0mAnalyses[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/upload"[39m
+            [36m>[39m
+              [0mNew analysis[0m
+            [36m</a>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"_link_a67a5d"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/build"[39m
+            [36m>[39m
+              [0mBuild[0m
+            [36m</a>[39m
+          [36m</nav>[39m
+          [36m<details[39m
+            [33mclass[39m=[32m"_menu_a67a5d"[39m
+          [36m>[39m
+            [36m<summary[39m
+              [33maria-label[39m=[32m"Open site menu"[39m
+            [36m>[39m
+              [0mMenu [0m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+              [36m>[39m
+                [0m☰[0m
+              [36m</span>[39m
+            [36m</summary>[39m
+            [36m<nav[39m
+              [33maria-label[39m=[32m"Site menu"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"_mobileLinks_a67a5d"[39m
+              [36m>[39m
+                [36m<a[39m
+                  [33mclass[39m=[32m"_link_a67a5d"[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/"[39m
+                [36m>[39m
+                  [0mHome[0m
+                [36m</a>[39m
+                [36m<a[39m
+                  [33mclass[39m=[32m"_link_a67a5d"[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/analyses"[39m
+                [36m>[39m
+                  [0mAnalyses[0m
+                [36m</a>[39m
+                [36m<a[39m
+                  [33mclass[39m=[32m"_link_a67a5d"[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/upload"[39m
+                [36m>[39m
+                  [0mNew analysis[0m
+                [36m</a>[39m
+                [36m<a[39m
+                  [33mclass[39m=[32m"_link_a67a5d"[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mhref[39m=[32m"/build"[39m
+                [36m>[39m
+                  [0mBuild[0m
+                [36m</a>[39m
+              [36m</div>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/privacy"[39m
+              [36m>[39m
+                [0mPrivacy[0m
+              [36m</a>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/account"[39m
+              [36m>[39m
+                [0mAccount[0m
+              [36m</a>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"_theme_a67a5d"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"theme-control"[39m
+                  [33mtitle[39m=[32m"Choose color theme"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"theme-control-icon"[39m
+                  [36m>[39m
+                    [0m◐[0m
+                  [36m</span>[39m
+                  [36m<span[39m
+                    [33mclass[39m=[32m"sr-only"[39m
+                  [36m>[39m
+                    [0mColor theme[0m
+                  [36m</span>[39m
+                  [36m<select[39m
+                    [33maria-label[39m=[32m"Color theme"[39m
+                  [36m>[39m
+                    [36m<option[39m
+                      [33mvalue[39m=[32m"light"[39m
+                    [36m>[39m
+                      [0mLight[0m
+                    [36m</option>[39m
+                    [36m<option[39m
+                      [33mvalue[39m=[32m"dark"[39m
+                    [36m>[39m
+                      [0mDark[0m
+                    [36m</option>[39m
+                    [36m<option[39m
+                      [33mvalue[39m=[32m"system"[39m
+                    [36m>[39m
+                      [0mSystem[0m
+                    [36m</option>[39m
+                  [36m</select>[39m
+                [36m</label>[39m
+              [36m</div>[39m
+              [36m<a[39m
+                [33mclass[39m=[32m"_link_a67a5d"[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/auth"[39m
+              [36m>[39m
+                [0mSign in[0m
+              [36m</a>[39m
+            [36m</nav>[39m
+          [36m</details>[39m
+        [36m</header>[39m
+        [36m<main[39m
+          [33mclass[39m=[32m"workspace-stage _stage_6777b6"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"workspace-page-header"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"workspace-page-heading"[39m
+            [36m>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"workspace-eyebrow"[39m
+              [36m>[39m
+                [0mStructured resume[0m
+              [36m</p>[39m
+              [36m<h1>[39m
+                [0mReview your resume facts[0m
+              [36m</h1>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"workspace-page-description"[39m
+              [36m>[39m
+                [0mReview imported content, confirm facts and keep a history of your changes.[0m
+              [36m</p>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"workspace-main"[39m
+          [36m>[39m
+            [36m<p[39m
+              [33mrole[39m=[32m"status"[39m
+            [36m>[39m
+              [0mImported facts need your review. Confirmation records your decision. Scoring is unavailable.[0m
+            [36m</p>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"back-button"[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/canonical"[39m
+            [36m>[39m
+              [0mReload latest version[0m
+            [36m</a>[39m
+            [0m [0m
+            [36m<a[39m
+              [33mdata-discover[39m=[32m"true"[39m
+              [33mhref[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/evidence"[39m
+            [36m>[39m
+              [0mView source evidence[0m
+            [36m</a>[39m
+            [36m<section[39m
+              [33maria-busy[39m=[32m"false"[39m
+              [33maria-labelledby[39m=[32m"canonical-corrections-heading"[39m
+            [36m>[39m
+              [36m<h2[39m
+                [33mid[39m=[32m"canonical-corrections-heading"[39m
+              [36m>[39m
+                [0mSaved evidence corrections[0m
+              [36m</h2>[39m
+              [36m<p>[39m
+                [0mReview each saved correction and its target before creating a new resume version. Original evidence stays in your source review.[0m
+              [36m</p>[39m
+              [36m<a[39m
+                [33mdata-discover[39m=[32m"true"[39m
+                [33mhref[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/canonical"[39m
+              [36m>[39m
+                [0mReload correction review[0m
+              [36m</a>[39m
+              [36m<article[39m
+                [33maria-labelledby[39m=[32m"«r2»-heading"[39m
+                [33mclass[39m=[32m"account-card"[39m
+              [36m>[39m
+                [36m<h3[39m
+                  [33mid[39m=[32m"«r2»-heading"[39m
+                [36m>[39m
+                  [0memployer[0m
+                  [0m correction[0m
+                [36m</h3>[39m
+                [36m<p>[39m
+                  [0mYour saved correction · review [0m
+                  [0m1[0m
+                [36m</p>[39m
+                [36m<p>[39m
+                  [36m<time[39m
+                    [33mdatetime[39m=[32m"2026-11-10T00:00:00Z"[39m
+                  [36m>[39m
+                    [0m2026-11-10T00:00:00Z[0m
+                  [36m</time>[39m
+                [36m</p>[39m
+                [36m<dl>[39m
+                  [36m<dt>[39m
+                    [0mCurrent resume value[0m
+                  [36m</dt>[39m
+                  [36m<dd>[39m
+                    [0mCedar Labs[0m
+                  [36m</dd>[39m
+                  [36m<dt>[39m
+                    [0mProposed value[0m
+                  [36m</dt>[39m
+                  [36m<dd>[39m
+                    [0mHarbor Labs[0m
+                  [36m</dd>[39m
+                [36m</dl>[39m
+                [36m<p>[39m
+                  [0mChoose the source and resume target before applying this correction.[0m
+                [36m</p>[39m
+                [36m<p>[39m
+                  [0mApplying a correction saves an unconfirmed fact. Confirm the new fact separately in the resume workspace.[0m
+                [36m</p>[39m
+                [36m<section[39m
+                  [33maria-label[39m=[32m"Source context"[39m
+                [36m>[39m
+                  [36m<h4>[39m
+                    [0mOriginal source context[0m
+                  [36m</h4>[39m
+                  [36m<div>[39m
+                    [36m<p>[39m
+                      [0mEmployer in source[0m
+                    [36m</p>[39m
+                    [36m<blockquote>[39m
+                      [0mEmployer: Cedar Labs[0m
+                    [36m</blockquote>[39m
+                    [36m<ul>[39m
+                      [36m<li>[39m
+                        [36m<a[39m
+                          [33mdata-discover[39m=[32m"true"[39m
+                          [33mhref[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/evidence#source-employer-span"[39m
+                        [36m>[39m
+                          [0mView cited source ([0m
+                          [0mnative text[0m
+                          [0m, characters [0m
+                          [0m10[0m
+                          [0m–[0m
+                          [0m20[0m
+                          [0m)[0m
+                        [36m</a>[39m
+                      [36m</li>[39m
+                    [36m</ul>[39m
+                  [36m</div>[39m
+                [36m</section>[39m
+                [36m<form[39m
+                  [33maction[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/canonical"[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mmethod[39m=[32m"post"[39m
+                [36m>[39m
+                  [36m<input[39m
+                    [33mname[39m=[32m"operation"[39m
+                    [33mtype[39m=[32m"hidden"[39m
+                    [33mvalue[39m=[32m"correction"[39m
+                  [36m/>[39m
+                  [36m<input[39m
+                    [33mname[39m=[32m"command"[39m
+                    [33mtype[39m=[32m"hidden"[39m
+                    [33mvalue[39m=[32m""[39m
+                  [36m/>[39m
+                  [36m<label[39m
+                    [33mfor[39m=[32m"«r2»-target"[39m
+                  [36m>[39m
+                    [0mChoose the source and resume target[0m
+                  [36m</label>[39m
+                  [36m<select[39m
+                    [33mid[39m=[32m"«r2»-target"[39m
+                    [33mrequired[39m=[32m""[39m
+                  [36m>[39m
+                    [36m<option[39m
+                      [33mvalue[39m=[32m""[39m
+                    [36m>[39m
+                      [0mChoose a target[0m
+                    [36m</option>[39m
+                    [36m<option[39m
+                      [33mvalue[39m=[32m"choose-cedar"[39m
+                    [36m>[39m
+                      [0mExperience: Cedar Labs — employer[0m
+                    [36m</option>[39m
+                  [36m</select>[39m
+                  [36m<label[39m
+                    [33mfor[39m=[32m"«r2»-acknowledgement"[39m
+                  [36m>[39m
+                    [36m<input[39m
+                      [33mid[39m=[32m"«r2»-acknowledgement"[39m
+                      [33mrequired[39m=[32m""[39m
+                      [33mtype[39m=[32m"checkbox"[39m
+                    [36m/>[39m
+                    [0mI reviewed this target and proposed change.[0m
+                  [36m</label>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"back-button"[39m
+                    [33mdisabled[39m=[32m""[39m
+                    [33mtype[39m=[32m"submit"[39m
+                  [36m>[39m
+                    [0mSave correction target[0m
+                  [36m</button>[39m
+                [36m</form>[39m
+              [36m</article>[39m
+            [36m</section>[39m
+            [36m<h2>[39m
+              [0mVersion [0m
+              [0m1[0m
+            [36m</h2>[39m
+            [36m<section[39m
+              [33maria-labelledby[39m=[32m"facts-heading"[39m
+            [36m>[39m
+              [36m<h2[39m
+                [33mid[39m=[32m"facts-heading"[39m
+              [36m>[39m
+                [0mFacts and confirmation[0m
+              [36m</h2>[39m
+              [36m<article[39m
+                [33mclass[39m=[32m"account-card"[39m
+                [33mid[39m=[32m"fact-10000000-0000-4000-8000-000000000008"[39m
+              [36m>[39m
+                [36m<h3>[39m
+                  [0memployer[0m
+                  [0m: [0m
+                  [0mConcurrent saved employer[0m
+                [36m</h3>[39m
+                [36m<p>[39m
+                  [0mState: [0m
+                  [0munconfirmed[0m
+                [36m</p>[39m
+                [36m<ul />[39m
+                [36m<form[39m
+                  [33maction[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/canonical"[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mmethod[39m=[32m"post"[39m
+                [36m>[39m
+                  [36m<input[39m
+                    [33mname[39m=[32m"operation"[39m
+                    [33mtype[39m=[32m"hidden"[39m
+                    [33mvalue[39m=[32m"confirm"[39m
+                  [36m/>[39m
+                  [36m<input[39m
+                    [33mname[39m=[32m"expectedVersionId"[39m
+                    [33mtype[39m=[32m"hidden"[39m
+                    [33mvalue[39m=[32m"10000000-0000-4000-8000-000000000073"[39m
+                  [36m/>[39m
+                  [36m<input[39m
+                    [33mname[39m=[32m"idempotencyKey"[39m
+                    [33mtype[39m=[32m"hidden"[39m
+                    [33mvalue[39m=[32m"10000000-0000-4000-8000-000000000028"[39m
+                  [36m/>[39m
+                  [36m<input[39m
+                    [33mname[39m=[32m"factId"[39m
+                    [33mtype[39m=[32m"hidden"[39m
+                    [33mvalue[39m=[32m"10000000-0000-4000-8000-000000000008"[39m
+                  [36m/>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"back-button"[39m
+                    [33mtype[39m=[32m"submit"[39m
+                  [36m>[39m
+                    [0mConfirm [0m
+                    [0memployer[0m
+                    [0m: [0m
+                    [0mConcurrent saved employer[0m
+                  [36m</button>[39m
+                [36m</form>[39m
+                [36m<form[39m
+                  [33maction[39m=[32m"/analysis/10000000-0000-4000-8000-000000000004/canonical"[39m
+                  [33mdata-discover[39m=[32m"true"[39m
+                  [33mmethod[39m=[32m"post"[39m
+                [36m>[39m
+                  [36m<input[39m
+                    [33mname[39m=[32m"operation"[39m
+                    [33mtype[39m=[32m"hidden"[39m
+                    [33mvalue[39m=[32m"edit"[39m
+                  [36m/>[39m
+                  [36m<input[39m
+                    [33mname[39m=[32m"expectedVersionId"[39m
+                    [33mtype[39m=[32m"hidden"[39m
+                    [33mvalue[39m=[32m"10000000-0000-4000-8000-000000000073"[39m
+                  [36m/>[39m
+                  [36m<input[39m
+                    [33mname[39m=[32m"idempotencyKey"[39m
+                    [33mtype[39m=[32m"hidden"[39m
+                    [33mvalue[39m=[32m"10000000-0000-4000-8000-000000000027"[39m
+                  [36m/>[39m
+                  [36m<input[39m
+                    [33mname[39m=[32m"factId"[39m
+                    [33mtype[39m=[32m"hidden"[39m
+                    [33mvalue[39m=[32m"10000000-0000-4000-8000-000000000008"[39m
+                  [36m/>[39m
+                  [36m<label[39m
+                    [33mfor[39m=[32m"edit-10000000-0000-4000-8000-000000000008"[39m
+                  [36m>[39m
+                    [0mCorrect [0m
+                    [0memployer[0m
+                    [0m: [0m
+                    [0mConcurrent saved employer[0m
+                  [36m</label>[39m
+                  [36m<textarea[39m
+                    [33mid[39m=[32m"edit-10000000-0000-4000-8000-000000000008"[39m
+                    [33mmaxlength[39m=[32m"2000"[39m
+                    [33mname[39m=[32m"value"[39m
+                    [33mrequired[39m=[32m""[39m
+                  [36m>[39m
+                    [0mConcurrent saved employer[0m
+                  [36m</textarea>[39m
+                  [36m<button[39m
+                    [33mclass[39m=[32m"back-button"[39m
+                    [33mtype[39m=[32m"submit"[39m
+                  [36m>[39m
+                    [0mSave correction for [0m
+                    [0memployer[0m
+                    [0m: [0m
+                    [0mConcurrent saved employer[0m
+                  [36m</button>[39m
+                [36m</form>[39m
+              [36m</article>[39m
+            [36m</section>[39m
+            [36m<section[39m
+              [33maria-labelledby[39m=[32m"preview-heading"[39m
+            [36m>[39m
+              [36m<h2[39m
+                [33mid[39m=[32m"preview-heading"[39m
+              [36m>[39m
+                [0mContent preview[0m
+              [36m</h2>[39m
+              [36m<section>[39m
+                [36m<h3>[39m
+                  [0mExperience[0m
+                [36m</h3>[39m
+                [36m<ul>[39m
+                  [36m<li>[39m
+                    [0memployer[0m
+                    [0m: [0m
+                    [0mConcurrent saved employer[0m
+                  [36m</li>[39m
+                [36m</ul>[39m
+              [36m</section>[39m
+            [36m</section>[39m
+            [36m<section[39m
+              [33maria-labelledby[39m=[32m"changes-heading"[39m
+            [36m>[39m
+              [36m<h2[39m
+                [33mid[39m=[32m"changes-heading"[39m
+              [36m>[39m
+                [0mVersion change record[0m
+              [36m</h2>[39m
+              [36m<ol />[39m
+            [36m</section>[39m
+            [36m<section[39m
+              [33maria-labelledby[39m=[32m"history-heading"[39m
+            [36m>[39m
+              [36m<h2[39m
+                [33mid[39m=[32m"history-heading"[39m
+              [36m>[39m
+                [0mVersion history[0m
+              [36m</h2>[39m
+              [36m<ol />[39m
+            [36m</section>[39m
+          [36m</div>[39m
+        [36m</main>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</body>[39m
+[36m</html>[39m
+
+Expected: "10000000-0000-4000-8000-000000000073"
+Received: "10000000-0000-4000-8000-000000000072"
+
+ ❯ tests/components/CanonicalCorrections.test.tsx:507:68
+    505|         .getByRole("button", { name: "Save reviewed correction" })
+    506|         .closest("form")!;
+    507|       expect(new FormData(currentReview).get("expectedVersionId")).toB…
+       |                                                                    ^
+    508|     });
+    509|     const renewed = within(region)
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 39 passed (40)
+   Start at  23:46:14
+   Duration  2.23s (transform 264ms, setup 0ms, import 452ms, tests 1.62s, environment 352ms)
+

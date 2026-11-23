@@ -1,5 +1,6 @@
 import {
   ArtifactOptionsSchema,
+  ArtifactPlanError,
   buildRenderPlan,
   hash,
   type ArtifactOptions,
@@ -13,7 +14,18 @@ type Client = Pick<
   ReturnType<typeof createSupabaseAdminClient>,
   "from" | "rpc"
 >;
+function buildOwnedRenderPlan(document: unknown) {
+  try {
+    return buildRenderPlan(document);
+  } catch (error) {
+    if (error instanceof ArtifactPlanError)
+      throw new CanonicalError(422, error.message);
+    throw error;
+  }
+}
+
 async function checkSourceLinks(
+  client: Client,
   model: Awaited<ReturnType<typeof loadCanonical>>,
   plan: ReturnType<typeof buildRenderPlan>,
 ) {
@@ -31,7 +43,18 @@ async function checkSourceLinks(
       hash(source) !== current.document.inputSha256
     )
       throw new Error("SOURCE_LINK_CHECK_FAILED");
-    await assertSourceLinksPreserved(source, plan);
+    await assertSourceLinksPreserved(source, plan, {
+      current,
+      loadParent: async (versionId) => {
+        const parent = await loadCanonical(
+          client,
+          model.analysisId,
+          current.document.ownerId,
+          { versionId },
+        );
+        return parent.current;
+      },
+    });
   } catch (error) {
     throw new CanonicalError(
       422,
@@ -45,27 +68,30 @@ export async function loadArtifactPreview(
   client: Client,
   analysisId: string,
   ownerId: string,
+  expectedVersionId?: string,
 ) {
   const model = await loadCanonical(client, analysisId, ownerId);
+  if (
+    expectedVersionId !== undefined &&
+    (model.headId !== expectedVersionId ||
+      model.current?.document.versionId !== expectedVersionId)
+  )
+    throw new CanonicalError(
+      409,
+      "Your resume changed. Review the current saved version before exporting.",
+    );
   if (!model.current)
     throw new CanonicalError(
       422,
       "Import and review your structured resume before exporting.",
     );
-  try {
-    const plan = buildRenderPlan(model.current.document);
-    await checkSourceLinks(model, plan);
-    return {
-      analysisId,
-      plan,
-      headId: model.headId,
-    };
-  } catch (e) {
-    throw new CanonicalError(
-      422,
-      e instanceof Error ? e.message : "Review your resume before exporting.",
-    );
-  }
+  const plan = buildOwnedRenderPlan(model.current.document);
+  await checkSourceLinks(client, model, plan);
+  return {
+    analysisId,
+    plan,
+    headId: model.headId,
+  };
 }
 export async function renderOwnedArtifact(
   client: Client,
@@ -92,7 +118,11 @@ export async function renderOwnedArtifact(
       "Your resume changed. Review the current saved version before exporting.",
     );
   let result;
-  await checkSourceLinks(model, buildRenderPlan(model.current.document));
+  await checkSourceLinks(
+    client,
+    model,
+    buildOwnedRenderPlan(model.current.document),
+  );
   try {
     result = await renderArtifact(model.current.document, options, signal);
   } catch {

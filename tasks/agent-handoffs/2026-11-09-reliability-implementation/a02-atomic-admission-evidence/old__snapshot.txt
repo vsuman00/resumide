@@ -1,0 +1,36 @@
+
+declare v public.canonical_resume_versions%rowtype; application public.candidate_correction_applications%rowtype;
+  source_operation uuid; origin text; inherited uuid; restored uuid;
+begin
+  select * into strict v from public.canonical_resume_versions where id=p_version_id;
+  if exists(select 1 from public.canonical_correction_snapshots where canonical_version_id=v.id) then perform private.correction_fail('conflict'); end if;
+  select * into application from public.candidate_correction_applications where result_version_id=v.id;
+  if found then
+    source_operation:=application.operation_id; origin:='correction'; inherited:=v.parent_version_id;
+  elsif v.parent_version_id is null then
+    origin:='raw_import';
+    select id into source_operation from public.candidate_correction_operations where initial_import_version_id=v.id;
+  elsif p_command->>'operation'='rollback' then
+    restored:=(p_command->>'targetVersionId')::uuid;
+    origin:=case when exists(select 1 from public.canonical_correction_snapshots where canonical_version_id=restored) then 'restore' else 'legacy_restore' end;
+  else origin:='inherited'; inherited:=v.parent_version_id;
+  end if;
+  insert into public.canonical_correction_snapshots(canonical_version_id,owner_id,organization_id,resume_id,source_resume_version_id,
+    source_operation_id,origin_kind,inherited_from_version_id,restored_from_version_id,admission_policy_version)
+    values(v.id,v.owner_id,v.organization_id,v.resume_id,v.source_resume_version_id,source_operation,origin,inherited,restored,'candidate-correction-admission/1.0.0');
+  insert into public.canonical_correction_snapshot_facts(canonical_version_id,fact_id,owner_id,organization_id,application_id)
+    select v.id,old.fact_id,v.owner_id,v.organization_id,old.application_id
+      from public.canonical_correction_snapshot_facts old
+      join public.resume_facts fact on fact.canonical_version_id=v.id and fact.id=old.fact_id
+      join public.candidate_correction_applications applied on applied.id=old.application_id
+      join public.resume_facts original on original.canonical_version_id=applied.result_version_id and original.id=applied.result_fact_id
+    where old.canonical_version_id=coalesce(inherited,restored) and old.owner_id=v.owner_id and old.organization_id=v.organization_id
+      and fact.type=original.type and fact.value=original.value
+      and (p_command->>'operation' is distinct from 'edit' or old.fact_id::text is distinct from p_command->>'factId')
+      and (application.id is null or old.fact_id<>application.result_fact_id)
+      and (application.supersedes_application_id is null or old.application_id<>application.supersedes_application_id);
+  if application.id is not null then
+    insert into public.canonical_correction_snapshot_facts(canonical_version_id,fact_id,owner_id,organization_id,application_id)
+      values(v.id,application.result_fact_id,v.owner_id,v.organization_id,application.id);
+  end if;
+end;

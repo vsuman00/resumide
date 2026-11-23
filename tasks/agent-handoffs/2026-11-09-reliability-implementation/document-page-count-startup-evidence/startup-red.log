@@ -1,0 +1,117 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/worker-startup.test.ts (9 tests | 6 failed) 127ms
+   ✓ stops the actual loop CLI before queue construction when readiness fails 7ms
+   ✓ stops the actual once CLI before queue construction when readiness fails 3ms
+   ✓ waits for capability readiness before starting the actual loop and forwards shutdown 106ms
+   × forwards required document metadata readiness before loop queue when fencing=false 4ms
+   × forwards required document metadata readiness before loop queue when fencing=true 1ms
+   × forwards required document metadata readiness before once queue when fencing=false 1ms
+   × forwards required document metadata readiness before once queue when fencing=true 1ms
+   × forwards explicit false review selection to the actual loop CLI readiness 1ms
+   × forwards explicit false review selection to the actual once CLI readiness 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/worker-startup.test.ts > forwards required document metadata readiness before loop queue when fencing=false
+ FAIL  tests/unit/worker-startup.test.ts > forwards required document metadata readiness before once queue when fencing=false
+AssertionError: expected { analysisFencingEnabled: false, …(8) } to match object { analysisFencingEnabled: false, …(1) }
+(15 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "analysisFencingEnabled": false,
+-   "evidenceReviewEnabled": true,
+  }
+
+ ❯ tests/unit/worker-startup.test.ts:164:40
+    162|   await load[mode]();
+    163|   expect(mocks.ready).toHaveBeenCalledTimes(1);
+    164|   expect(mocks.ready.mock.calls[0][1]).toMatchObject({ analysisFencing…
+       |                                        ^
+    165|   expect(mocks.construct).not.toHaveBeenCalled();
+    166|   expect(mocks.claim).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  tests/unit/worker-startup.test.ts > forwards required document metadata readiness before loop queue when fencing=true
+ FAIL  tests/unit/worker-startup.test.ts > forwards required document metadata readiness before once queue when fencing=true
+AssertionError: expected { analysisFencingEnabled: true, …(8) } to match object { analysisFencingEnabled: true, …(1) }
+(15 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "analysisFencingEnabled": true,
+-   "evidenceReviewEnabled": true,
+  }
+
+ ❯ tests/unit/worker-startup.test.ts:164:40
+    162|   await load[mode]();
+    163|   expect(mocks.ready).toHaveBeenCalledTimes(1);
+    164|   expect(mocks.ready.mock.calls[0][1]).toMatchObject({ analysisFencing…
+       |                                        ^
+    165|   expect(mocks.construct).not.toHaveBeenCalled();
+    166|   expect(mocks.claim).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  tests/unit/worker-startup.test.ts > forwards explicit false review selection to the actual loop CLI readiness
+ FAIL  tests/unit/worker-startup.test.ts > forwards explicit false review selection to the actual once CLI readiness
+AssertionError: expected "vi.fn()" to be called once with arguments: [ …(2) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    {
+      "from": [Function Mock],
+      "rpc": [Function Mock],
+    },
+-   ObjectContaining {
++   {
++     "aiBudgetEnabled": true,
++     "aiBudgetPolicyVersion": "synthetic-policy/1",
++     "aiEnabled": true,
+      "analysisFencingEnabled": false,
+-     "evidenceReviewEnabled": false,
++     "initialFeedbackEnabled": undefined,
++     "legacyScoringInputEnabled": undefined,
++     "model": "synthetic-model",
++     "signal": AbortSignal {
++       Symbol(kEvents): Map {},
++       Symbol(events.maxEventTargetListeners): 0,
++       Symbol(events.maxEventTargetListenersWarned): false,
++       Symbol(kHandlers): Map {},
++       Symbol(kAborted): false,
++       Symbol(kReason): undefined,
++       Symbol(kComposite): false,
++     },
++     "timeoutMs": 250,
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ tests/unit/worker-startup.test.ts:175:23
+    173|   mocks.config.mockReturnValue({ ...mocks.config(), ANALYSIS_FENCING_E…
+    174|   await load[mode]();
+    175|   expect(mocks.ready).toHaveBeenCalledExactlyOnceWith(mocks.admin, exp…
+       |                       ^
+    176|   expect(mocks.construct).toHaveBeenCalledTimes(1);
+    177| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 3 passed (9)
+   Start at  06:10:03
+   Duration  233ms (transform 29ms, setup 0ms, import 29ms, tests 127ms, environment 0ms)
+

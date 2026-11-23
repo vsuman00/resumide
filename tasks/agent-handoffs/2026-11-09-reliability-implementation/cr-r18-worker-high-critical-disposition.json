@@ -1,0 +1,5003 @@
+{
+  "id": "CR-R18-S13",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "status": "VERIFIED_LOCAL_VENDOR_CROSSWALK_AND_EXACT_EXPAT_FIX",
+  "scope": "Every high and critical package match was joined to the official Debian source-package feed. ELF loader metadata and package ownership on each exact local image supply distinct linkage evidence. Python extension linkage was measured separately from worker entry points. No exploit tests, user documents, uploads, or deployments.",
+  "linkageLimits": "Dependency graphs do not prove affected function reachability or rule out optional runtime library loads. The listed Python extension roots were inspected without importing them in the linkage pass. A separate ordinary XML check verified the actually loaded Expat library.",
+  "immutableScanReceiptSha256": "5d2be25928895f845d6ac35ed477390bd3f56057d1ec48fc5e41ae510d307c4a",
+  "vendorFeed": {
+    "url": "https://security-tracker.debian.org/tracker/data/json",
+    "sha256": "5e4aeb30c9ed9a70785c6315b61b3632b864947bba85f57f7c19e07ea6a46338",
+    "bytes": 92194458
+  },
+  "upstreamExpat": {
+    "changes": "https://github.com/libexpat/libexpat/blob/R_2_10_0/expat/Changes",
+    "debian": "https://security-tracker.debian.org/tracker/source-package/expat",
+    "fixedCohort": [
+      "CVE-2026-113351",
+      "CVE-2026-115506",
+      "CVE-2026-117610",
+      "CVE-2026-118370"
+    ],
+    "installedVersion": "2.10.0-1~deb13u1+resumide1",
+    "libraries": {
+      "/usr/lib/aarch64-linux-gnu/libexpat.so.1.13.1": "412785950405602c14248340928f1b088244007ba842e691d3b2425ca391998a",
+      "/usr/lib/aarch64-linux-gnu/libexpatw.so.1.13.1": "b8267c1766f21a681a0cae9794b2e36630bd34ee54a35962805ffd7c74ff9c87"
+    },
+    "loadedLibraries": [
+      "/usr/lib/aarch64-linux-gnu/libexpat.so.1.13.1"
+    ],
+    "nativeChecks": {
+      "build": {
+        "checks": 5328,
+        "failures": 0,
+        "logSha256": "a98e99d858103067df7f14ee2d14961ba47cab7e9b963e8f5f53bb55079915d0",
+        "summaryRecords": 1
+      },
+      "buildw": {
+        "checks": 5328,
+        "failures": 0,
+        "logSha256": "a98e99d858103067df7f14ee2d14961ba47cab7e9b963e8f5f53bb55079915d0",
+        "summaryRecords": 1
+      }
+    },
+    "ordinaryXmlParse": true,
+    "sourceArchive": {
+      "expat_2.10.0.orig.tar.gz": "b3644a12f62d7762b62c444f69d169ba0234f13138d0240244bca64cbe35286f"
+    },
+    "sourceReceiptSha256": "dec21d5e6588d693e834384445eca439be813fab41691f11d62ea21e256471a9",
+    "sourceVersion": "2.10.0",
+    "imageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a"
+  },
+  "workers": {
+    "latex-arm64": {
+      "imageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a",
+      "debianSuite": "trixie",
+      "inputReportSha256": "a1004f13b1f73ce3132a7b3c65ba5aad4a63b7fd8171af4ef448bff0cd7c64c5",
+      "sourceAdvisoryPairs": 46,
+      "matchingReportRows": {
+        "HIGH": 142
+      },
+      "rowsWithMeasuredElfOwner": {
+        "HIGH": 78
+      },
+      "byDisposition": {
+        "OPEN": 138,
+        "FIX_VERIFIED_IN_CUSTOM_EXPAT_BUILD": 4
+      },
+      "elfRoots": {
+        "/opt/latex/confine": "executable",
+        "/usr/bin/pdfinfo": "executable",
+        "/usr/bin/pdftoppm": "executable",
+        "/usr/bin/pdftotext": "executable",
+        "/usr/bin/python3": "executable",
+        "/usr/bin/xdvipdfmx": "executable",
+        "/usr/bin/xetex": "executable",
+        "/usr/lib/python3.13/lib-dynload/_bz2.cpython-313-aarch64-linux-gnu.so": "_bz2",
+        "/usr/lib/python3.13/lib-dynload/_hashlib.cpython-313-aarch64-linux-gnu.so": "_hashlib",
+        "/usr/lib/python3.13/lib-dynload/_lzma.cpython-313-aarch64-linux-gnu.so": "_lzma",
+        "/usr/lib/python3.13/lib-dynload/_sqlite3.cpython-313-aarch64-linux-gnu.so": "_sqlite3",
+        "/usr/lib/python3.13/lib-dynload/_ssl.cpython-313-aarch64-linux-gnu.so": "_ssl"
+      },
+      "elfOwnerPackageCount": 70,
+      "unownedPaths": [
+        {
+          "path": "/opt/latex/confine",
+          "root": "/opt/latex/confine"
+        }
+      ],
+      "matchesBySource": {
+        "acl": [
+          {
+            "package": "libacl1",
+            "installedVersion": "2.3.2-2+b1",
+            "id": "CVE-2026-54369",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "curl": [
+          {
+            "package": "libcurl3t64-gnutls",
+            "installedVersion": "8.14.1-2+deb13u7",
+            "id": "CVE-2026-12064",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libcurl3t64-gnutls",
+            "installedVersion": "8.14.1-2+deb13u7",
+            "id": "CVE-2026-8458",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "expat": [
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.10.0-1~deb13u1+resumide1",
+            "id": "CVE-2026-113351",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext",
+              "/usr/bin/python3",
+              "/usr/bin/xetex"
+            ],
+            "disposition": "FIX_VERIFIED_IN_CUSTOM_EXPAT_BUILD"
+          },
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.10.0-1~deb13u1+resumide1",
+            "id": "CVE-2026-115506",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext",
+              "/usr/bin/python3",
+              "/usr/bin/xetex"
+            ],
+            "disposition": "FIX_VERIFIED_IN_CUSTOM_EXPAT_BUILD"
+          },
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.10.0-1~deb13u1+resumide1",
+            "id": "CVE-2026-117610",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext",
+              "/usr/bin/python3",
+              "/usr/bin/xetex"
+            ],
+            "disposition": "FIX_VERIFIED_IN_CUSTOM_EXPAT_BUILD"
+          },
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.10.0-1~deb13u1+resumide1",
+            "id": "CVE-2026-118370",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext",
+              "/usr/bin/python3",
+              "/usr/bin/xetex"
+            ],
+            "disposition": "FIX_VERIFIED_IN_CUSTOM_EXPAT_BUILD"
+          }
+        ],
+        "gnupg2": [
+          {
+            "package": "gpg",
+            "installedVersion": "2.4.7-21+deb13u1+b5",
+            "id": "CVE-2026-24882",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "gpgconf",
+            "installedVersion": "2.4.7-21+deb13u1+b5",
+            "id": "CVE-2026-24882",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "krb5": [
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.21.3-5+deb13u1",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "libfontenc": [
+          {
+            "package": "libfontenc1",
+            "installedVersion": "1:1.1.8-1+b2",
+            "id": "CVE-2026-109908",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "libx11": [
+          {
+            "package": "libx11-6",
+            "installedVersion": "2:1.8.12-1",
+            "id": "CVE-2026-88806",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libx11-data",
+            "installedVersion": "2:1.8.12-1",
+            "id": "CVE-2026-88806",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "libxi": [
+          {
+            "package": "libxi6",
+            "installedVersion": "2:1.8.2-1",
+            "id": "CVE-2026-109089",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxi6",
+            "installedVersion": "2:1.8.2-1",
+            "id": "CVE-2026-109090",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "libxrender": [
+          {
+            "package": "libxrender1",
+            "installedVersion": "1:0.9.12-1",
+            "id": "CVE-2026-88807",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "ncurses": [
+          {
+            "package": "libncursesw6",
+            "installedVersion": "6.5+20250216-2",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtinfo6",
+            "installedVersion": "6.5+20250216-2",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "ncurses-base",
+            "installedVersion": "6.5+20250216-2",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "ncurses-bin",
+            "installedVersion": "6.5+20250216-2",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "openssl": [
+          {
+            "package": "libssl3t64",
+            "installedVersion": "3.5.7-1~deb13u3",
+            "id": "CVE-2026-124709",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext",
+              "_hashlib",
+              "_ssl"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "openssl",
+            "installedVersion": "3.5.7-1~deb13u3",
+            "id": "CVE-2026-124709",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "openssl-provider-legacy",
+            "installedVersion": "3.5.7-1~deb13u3",
+            "id": "CVE-2026-124709",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "perl": [
+          {
+            "package": "libperl5.40",
+            "installedVersion": "5.40.1-6+deb13u1",
+            "id": "CVE-2026-9538",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "perl",
+            "installedVersion": "5.40.1-6+deb13u1",
+            "id": "CVE-2026-9538",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "perl-base",
+            "installedVersion": "5.40.1-6+deb13u1",
+            "id": "CVE-2026-9538",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "perl-modules-5.40",
+            "installedVersion": "5.40.1-6+deb13u1",
+            "id": "CVE-2026-9538",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "python3.13": [
+          {
+            "package": "libpython3.13-minimal",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-15308",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_hashlib",
+              "_ssl"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpython3.13-minimal",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-19445",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_hashlib",
+              "_ssl"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpython3.13-minimal",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-19553",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_hashlib",
+              "_ssl"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpython3.13-minimal",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_hashlib",
+              "_ssl"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpython3.13-minimal",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-82049",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_hashlib",
+              "_ssl"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpython3.13-stdlib",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-15308",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_bz2",
+              "_lzma",
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpython3.13-stdlib",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-19445",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_bz2",
+              "_lzma",
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpython3.13-stdlib",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-19553",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_bz2",
+              "_lzma",
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpython3.13-stdlib",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_bz2",
+              "_lzma",
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpython3.13-stdlib",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-82049",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_bz2",
+              "_lzma",
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.13",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-15308",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.13",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-19445",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.13",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-19553",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.13",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.13",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-82049",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.13-minimal",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-15308",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.13-minimal",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-19445",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.13-minimal",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-19553",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.13-minimal",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.13-minimal",
+            "installedVersion": "3.13.5-2+deb13u5",
+            "id": "CVE-2026-82049",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "sqlite3": [
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.46.1-7+deb13u2",
+            "id": "CVE-2026-119373",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.46.1-7+deb13u2",
+            "id": "CVE-2026-119374",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.46.1-7+deb13u2",
+            "id": "CVE-2026-119379",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "systemd": [
+          {
+            "package": "libsystemd0",
+            "installedVersion": "257.13-1~deb13u1",
+            "id": "CVE-2026-16742",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libudev1",
+            "installedVersion": "257.13-1~deb13u1",
+            "id": "CVE-2026-16742",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "tiff": [
+          {
+            "package": "libtiff6",
+            "installedVersion": "4.7.0-3+deb13u3",
+            "id": "CVE-2026-36849",
+            "severity": "HIGH",
+            "debianDeferral": "ignored",
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtiff6",
+            "installedVersion": "4.7.0-3+deb13u3",
+            "id": "CVE-2026-52490",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/pdftotext"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "util-linux": [
+          {
+            "package": "bsdutils",
+            "installedVersion": "1:2.41.5-0+deb13u1",
+            "id": "CVE-2026-76642",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "bsdutils",
+            "installedVersion": "1:2.41.5-0+deb13u1",
+            "id": "CVE-2026-78408",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "bsdutils",
+            "installedVersion": "1:2.41.5-0+deb13u1",
+            "id": "CVE-2026-78409",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "bsdutils",
+            "installedVersion": "1:2.41.5-0+deb13u1",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libblkid1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-76642",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libblkid1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78408",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libblkid1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78409",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libblkid1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "liblastlog2-2",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-76642",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "liblastlog2-2",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78408",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "liblastlog2-2",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78409",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "liblastlog2-2",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libmount1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-76642",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libmount1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78408",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libmount1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78409",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libmount1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsmartcols1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-76642",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsmartcols1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78408",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsmartcols1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78409",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsmartcols1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libuuid1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-76642",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libuuid1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78408",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libuuid1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78409",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libuuid1",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "login",
+            "installedVersion": "1:4.16.0-2+really2.41.5-0+deb13u1",
+            "id": "CVE-2026-76642",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "login",
+            "installedVersion": "1:4.16.0-2+really2.41.5-0+deb13u1",
+            "id": "CVE-2026-78408",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "login",
+            "installedVersion": "1:4.16.0-2+really2.41.5-0+deb13u1",
+            "id": "CVE-2026-78409",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "login",
+            "installedVersion": "1:4.16.0-2+really2.41.5-0+deb13u1",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-76642",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78408",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78409",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux",
+            "installedVersion": "2.41.5-0+deb13u1",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "xdg-utils": [
+          {
+            "package": "xdg-utils",
+            "installedVersion": "1.2.1-2",
+            "id": "CVE-2022-4055",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ]
+      }
+    },
+    "ocr-arm64": {
+      "imageId": "sha256:ed396e851755d5d3158bb931b158193fb246afb9b07b4797088b3c26f0a047d5",
+      "debianSuite": "bookworm",
+      "inputReportSha256": "595f8809092954569ca76acd04e68bdaef22e6b10e7cda3bd16d78029cc42150",
+      "sourceAdvisoryPairs": 69,
+      "matchingReportRows": {
+        "HIGH": 145,
+        "CRITICAL": 4
+      },
+      "rowsWithMeasuredElfOwner": {
+        "HIGH": 97,
+        "CRITICAL": 3
+      },
+      "byDisposition": {
+        "OPEN": 148,
+        "DEBIAN_MINIZIP_COMPONENT_ABSENT": 1
+      },
+      "elfRoots": {
+        "/usr/bin/pdfinfo": "executable",
+        "/usr/bin/pdftoppm": "executable",
+        "/usr/bin/python3": "executable",
+        "/usr/bin/tesseract": "executable",
+        "/usr/lib/python3.11/lib-dynload/_bz2.cpython-311-aarch64-linux-gnu.so": "_bz2",
+        "/usr/lib/python3.11/lib-dynload/_hashlib.cpython-311-aarch64-linux-gnu.so": "_hashlib",
+        "/usr/lib/python3.11/lib-dynload/_lzma.cpython-311-aarch64-linux-gnu.so": "_lzma",
+        "/usr/lib/python3.11/lib-dynload/_sqlite3.cpython-311-aarch64-linux-gnu.so": "_sqlite3",
+        "/usr/lib/python3.11/lib-dynload/_ssl.cpython-311-aarch64-linux-gnu.so": "_ssl"
+      },
+      "elfOwnerPackageCount": 62,
+      "unownedPaths": [],
+      "matchesBySource": {
+        "acl": [
+          {
+            "package": "libacl1",
+            "installedVersion": "2.3.1-3",
+            "id": "CVE-2026-54369",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "curl": [
+          {
+            "package": "libcurl4",
+            "installedVersion": "7.88.1-10+deb12u15",
+            "id": "CVE-2026-12064",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libcurl4",
+            "installedVersion": "7.88.1-10+deb12u15",
+            "id": "CVE-2026-6276",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libcurl4",
+            "installedVersion": "7.88.1-10+deb12u15",
+            "id": "CVE-2026-8286",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libcurl4",
+            "installedVersion": "7.88.1-10+deb12u15",
+            "id": "CVE-2026-8458",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libcurl4",
+            "installedVersion": "7.88.1-10+deb12u15",
+            "id": "CVE-2026-8927",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "expat": [
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.5.0-1+deb12u5",
+            "id": "CVE-2026-113351",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.5.0-1+deb12u5",
+            "id": "CVE-2026-115506",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.5.0-1+deb12u5",
+            "id": "CVE-2026-117610",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.5.0-1+deb12u5",
+            "id": "CVE-2026-118370",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "glib2.0": [
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58016",
+            "severity": "CRITICAL",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58010",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58011",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58012",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58013",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58014",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58015",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "gzip": [
+          {
+            "package": "gzip",
+            "installedVersion": "1.12-1",
+            "id": "CVE-2026-41992",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "harfbuzz": [
+          {
+            "package": "libharfbuzz0b",
+            "installedVersion": "6.0.0+dfsg-3",
+            "id": "CVE-2023-25193",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "krb5": [
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "libx11": [
+          {
+            "package": "libx11-6",
+            "installedVersion": "2:1.8.4-2+deb12u2",
+            "id": "CVE-2026-88806",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libx11-data",
+            "installedVersion": "2:1.8.4-2+deb12u2",
+            "id": "CVE-2026-88806",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "libxml2": [
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-6653",
+            "severity": "CRITICAL",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-74860",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-86138",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-86140",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-86142",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-86143",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-86144",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "libxrender": [
+          {
+            "package": "libxrender1",
+            "installedVersion": "1:0.9.10-1.1",
+            "id": "CVE-2026-88807",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "ncurses": [
+          {
+            "package": "libncursesw6",
+            "installedVersion": "6.4-4",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtinfo6",
+            "installedVersion": "6.4-4",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "ncurses-base",
+            "installedVersion": "6.4-4",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "ncurses-bin",
+            "installedVersion": "6.4-4",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "openldap": [
+          {
+            "package": "libldap-2.5-0",
+            "installedVersion": "2.5.13+dfsg-5",
+            "id": "CVE-2023-2953",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "pam": [
+          {
+            "package": "libpam-modules",
+            "installedVersion": "1.5.2-6+deb12u2",
+            "id": "CVE-2025-6020",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpam-modules-bin",
+            "installedVersion": "1.5.2-6+deb12u2",
+            "id": "CVE-2025-6020",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpam-runtime",
+            "installedVersion": "1.5.2-6+deb12u2",
+            "id": "CVE-2025-6020",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpam0g",
+            "installedVersion": "1.5.2-6+deb12u2",
+            "id": "CVE-2025-6020",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "perl": [
+          {
+            "package": "perl-base",
+            "installedVersion": "5.36.0-7+deb12u4",
+            "id": "CVE-2026-9538",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "python3.11": [
+          {
+            "package": "libpython3.11-minimal",
+            "installedVersion": "3.11.2-6+deb12u9",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_hashlib",
+              "_ssl"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpython3.11-stdlib",
+            "installedVersion": "3.11.2-6+deb12u9",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_bz2",
+              "_lzma",
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.11",
+            "installedVersion": "3.11.2-6+deb12u9",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.11-minimal",
+            "installedVersion": "3.11.2-6+deb12u9",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "sqlite3": [
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2025-7458",
+            "severity": "CRITICAL",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2026-11822",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2026-11824",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2026-119373",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2026-119374",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2026-119379",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "systemd": [
+          {
+            "package": "libsystemd0",
+            "installedVersion": "252.39-1~deb12u2",
+            "id": "CVE-2026-16742",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libudev1",
+            "installedVersion": "252.39-1~deb12u2",
+            "id": "CVE-2026-16742",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "tesseract": [
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-73066",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88047",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88048",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88051",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88052",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88053",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-73066",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88047",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88048",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88051",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88052",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88053",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "tiff": [
+          {
+            "package": "libtiff6",
+            "installedVersion": "4.5.0-6+deb12u4",
+            "id": "CVE-2023-52355",
+            "severity": "HIGH",
+            "debianDeferral": "ignored",
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtiff6",
+            "installedVersion": "4.5.0-6+deb12u4",
+            "id": "CVE-2026-12912",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtiff6",
+            "installedVersion": "4.5.0-6+deb12u4",
+            "id": "CVE-2026-36849",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtiff6",
+            "installedVersion": "4.5.0-6+deb12u4",
+            "id": "CVE-2026-52490",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "util-linux": [
+          {
+            "package": "bsdutils",
+            "installedVersion": "1:2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "bsdutils",
+            "installedVersion": "1:2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "bsdutils",
+            "installedVersion": "1:2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libblkid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libblkid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libblkid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libmount1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libmount1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libmount1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsmartcols1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsmartcols1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsmartcols1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libuuid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libuuid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libuuid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "mount",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "mount",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "mount",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux-extra",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux-extra",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux-extra",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "zlib": [
+          {
+            "package": "zlib1g",
+            "installedVersion": "1:1.2.13.dfsg-1",
+            "id": "CVE-2023-45853",
+            "severity": "CRITICAL",
+            "debianDeferral": "ignored",
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "DEBIAN_MINIZIP_COMPONENT_ABSENT"
+          },
+          {
+            "package": "zlib1g",
+            "installedVersion": "1:1.2.13.dfsg-1",
+            "id": "CVE-2026-85091",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ]
+      }
+    },
+    "ocr-amd64": {
+      "imageId": "sha256:ff7372bd6ba689b17d76928f86136a7d71defc613367cb551a87d45b54c4dab3",
+      "debianSuite": "bookworm",
+      "inputReportSha256": "8124c1863f50d3b14e0fe87e9acca50214a04ab00e83ed393dd9e5c1c4c259b0",
+      "sourceAdvisoryPairs": 69,
+      "matchingReportRows": {
+        "HIGH": 145,
+        "CRITICAL": 4
+      },
+      "rowsWithMeasuredElfOwner": {
+        "HIGH": 97,
+        "CRITICAL": 3
+      },
+      "byDisposition": {
+        "OPEN": 148,
+        "DEBIAN_MINIZIP_COMPONENT_ABSENT": 1
+      },
+      "elfRoots": {
+        "/usr/bin/pdfinfo": "executable",
+        "/usr/bin/pdftoppm": "executable",
+        "/usr/bin/python3": "executable",
+        "/usr/bin/tesseract": "executable",
+        "/usr/lib/python3.11/lib-dynload/_bz2.cpython-311-x86_64-linux-gnu.so": "_bz2",
+        "/usr/lib/python3.11/lib-dynload/_hashlib.cpython-311-x86_64-linux-gnu.so": "_hashlib",
+        "/usr/lib/python3.11/lib-dynload/_lzma.cpython-311-x86_64-linux-gnu.so": "_lzma",
+        "/usr/lib/python3.11/lib-dynload/_sqlite3.cpython-311-x86_64-linux-gnu.so": "_sqlite3",
+        "/usr/lib/python3.11/lib-dynload/_ssl.cpython-311-x86_64-linux-gnu.so": "_ssl"
+      },
+      "elfOwnerPackageCount": 62,
+      "unownedPaths": [],
+      "matchesBySource": {
+        "acl": [
+          {
+            "package": "libacl1",
+            "installedVersion": "2.3.1-3",
+            "id": "CVE-2026-54369",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "curl": [
+          {
+            "package": "libcurl4",
+            "installedVersion": "7.88.1-10+deb12u15",
+            "id": "CVE-2026-12064",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libcurl4",
+            "installedVersion": "7.88.1-10+deb12u15",
+            "id": "CVE-2026-6276",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libcurl4",
+            "installedVersion": "7.88.1-10+deb12u15",
+            "id": "CVE-2026-8286",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libcurl4",
+            "installedVersion": "7.88.1-10+deb12u15",
+            "id": "CVE-2026-8458",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libcurl4",
+            "installedVersion": "7.88.1-10+deb12u15",
+            "id": "CVE-2026-8927",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "expat": [
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.5.0-1+deb12u5",
+            "id": "CVE-2026-113351",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.5.0-1+deb12u5",
+            "id": "CVE-2026-115506",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.5.0-1+deb12u5",
+            "id": "CVE-2026-117610",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libexpat1",
+            "installedVersion": "2.5.0-1+deb12u5",
+            "id": "CVE-2026-118370",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "glib2.0": [
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58016",
+            "severity": "CRITICAL",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58010",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58011",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58012",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58013",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58014",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libglib2.0-0",
+            "installedVersion": "2.74.6-2+deb12u9",
+            "id": "CVE-2026-58015",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "gzip": [
+          {
+            "package": "gzip",
+            "installedVersion": "1.12-1",
+            "id": "CVE-2026-41992",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "harfbuzz": [
+          {
+            "package": "libharfbuzz0b",
+            "installedVersion": "6.0.0+dfsg-3",
+            "id": "CVE-2023-25193",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "krb5": [
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libgssapi-krb5-2",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libk5crypto3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5-3",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-107364",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112315",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112316",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112317",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112318",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112319",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112320",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112321",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112322",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-112323",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-118380",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-119079",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71199",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libkrb5support0",
+            "installedVersion": "1.20.1-2+deb12u5",
+            "id": "CVE-2026-71200",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "libx11": [
+          {
+            "package": "libx11-6",
+            "installedVersion": "2:1.8.4-2+deb12u2",
+            "id": "CVE-2026-88806",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libx11-data",
+            "installedVersion": "2:1.8.4-2+deb12u2",
+            "id": "CVE-2026-88806",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "libxml2": [
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-6653",
+            "severity": "CRITICAL",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-74860",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-86138",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-86140",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-86142",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-86143",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libxml2",
+            "installedVersion": "2.9.14+dfsg-1.3~deb12u6",
+            "id": "CVE-2026-86144",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "libxrender": [
+          {
+            "package": "libxrender1",
+            "installedVersion": "1:0.9.10-1.1",
+            "id": "CVE-2026-88807",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "ncurses": [
+          {
+            "package": "libncursesw6",
+            "installedVersion": "6.4-4",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtinfo6",
+            "installedVersion": "6.4-4",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "ncurses-base",
+            "installedVersion": "6.4-4",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "ncurses-bin",
+            "installedVersion": "6.4-4",
+            "id": "CVE-2025-69720",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "openldap": [
+          {
+            "package": "libldap-2.5-0",
+            "installedVersion": "2.5.13+dfsg-5",
+            "id": "CVE-2023-2953",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "pam": [
+          {
+            "package": "libpam-modules",
+            "installedVersion": "1.5.2-6+deb12u2",
+            "id": "CVE-2025-6020",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpam-modules-bin",
+            "installedVersion": "1.5.2-6+deb12u2",
+            "id": "CVE-2025-6020",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpam-runtime",
+            "installedVersion": "1.5.2-6+deb12u2",
+            "id": "CVE-2025-6020",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpam0g",
+            "installedVersion": "1.5.2-6+deb12u2",
+            "id": "CVE-2025-6020",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "perl": [
+          {
+            "package": "perl-base",
+            "installedVersion": "5.36.0-7+deb12u4",
+            "id": "CVE-2026-9538",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "python3.11": [
+          {
+            "package": "libpython3.11-minimal",
+            "installedVersion": "3.11.2-6+deb12u9",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_hashlib",
+              "_ssl"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libpython3.11-stdlib",
+            "installedVersion": "3.11.2-6+deb12u9",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_bz2",
+              "_lzma",
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.11",
+            "installedVersion": "3.11.2-6+deb12u9",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "python3.11-minimal",
+            "installedVersion": "3.11.2-6+deb12u9",
+            "id": "CVE-2026-7210",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "sqlite3": [
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2025-7458",
+            "severity": "CRITICAL",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2026-11822",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2026-11824",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2026-119373",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2026-119374",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsqlite3-0",
+            "installedVersion": "3.40.1-2+deb12u2",
+            "id": "CVE-2026-119379",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "_sqlite3"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "systemd": [
+          {
+            "package": "libsystemd0",
+            "installedVersion": "252.39-1~deb12u2",
+            "id": "CVE-2026-16742",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libudev1",
+            "installedVersion": "252.39-1~deb12u2",
+            "id": "CVE-2026-16742",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "tesseract": [
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-73066",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88047",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88048",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88051",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88052",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtesseract5",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88053",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-73066",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88047",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88048",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88051",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88052",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "tesseract-ocr",
+            "installedVersion": "5.3.0-2",
+            "id": "CVE-2026-88053",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "tiff": [
+          {
+            "package": "libtiff6",
+            "installedVersion": "4.5.0-6+deb12u4",
+            "id": "CVE-2023-52355",
+            "severity": "HIGH",
+            "debianDeferral": "ignored",
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtiff6",
+            "installedVersion": "4.5.0-6+deb12u4",
+            "id": "CVE-2026-12912",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtiff6",
+            "installedVersion": "4.5.0-6+deb12u4",
+            "id": "CVE-2026-36849",
+            "severity": "HIGH",
+            "debianDeferral": "postponed",
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libtiff6",
+            "installedVersion": "4.5.0-6+deb12u4",
+            "id": "CVE-2026-52490",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ],
+        "util-linux": [
+          {
+            "package": "bsdutils",
+            "installedVersion": "1:2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "bsdutils",
+            "installedVersion": "1:2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "bsdutils",
+            "installedVersion": "1:2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libblkid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libblkid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libblkid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libmount1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libmount1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libmount1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsmartcols1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsmartcols1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libsmartcols1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libuuid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libuuid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "libuuid1",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "mount",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "mount",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "mount",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux-extra",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53613",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux-extra",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-53615",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          },
+          {
+            "package": "util-linux-extra",
+            "installedVersion": "2.38.1-5+deb12u3",
+            "id": "CVE-2026-78410",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [],
+            "disposition": "OPEN"
+          }
+        ],
+        "zlib": [
+          {
+            "package": "zlib1g",
+            "installedVersion": "1:1.2.13.dfsg-1",
+            "id": "CVE-2023-45853",
+            "severity": "CRITICAL",
+            "debianDeferral": "ignored",
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "DEBIAN_MINIZIP_COMPONENT_ABSENT"
+          },
+          {
+            "package": "zlib1g",
+            "installedVersion": "1:1.2.13.dfsg-1",
+            "id": "CVE-2026-85091",
+            "severity": "HIGH",
+            "debianDeferral": null,
+            "measuredElfRoots": [
+              "/usr/bin/pdfinfo",
+              "/usr/bin/pdftoppm",
+              "/usr/bin/python3",
+              "/usr/bin/tesseract"
+            ],
+            "disposition": "OPEN"
+          }
+        ]
+      }
+    }
+  },
+  "ocrArchitectureRiskSignatureMatches": true,
+  "releaseAccepted": false
+}

@@ -1,0 +1,73 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/jd-clause-order-decisions.test.ts (47 tests | 1 failed) 315ms
+   ✓ rebuilds the actual original owned pair after later canonical and JD heads move 72ms
+   ✓ keeps current-pair original and fresh draft bytes identical 8ms
+   ✓ rejects original proof with wrong expected ownerId 6ms
+   ✓ rejects original proof with wrong expected analysisId 5ms
+   ✓ does not waive source integrity for historical proof 6ms
+   ✓ does not waive canonical-hash integrity for historical proof 5ms
+   ✓ does not waive requirement-hash integrity for historical proof 5ms
+   ✓ does not waive confirmation integrity for historical proof 6ms
+   ✓ does not waive selection integrity for historical proof 6ms
+   ✓ retains unconfirmed refusal in original mode 3ms
+   ✓ retains declaration-only refusal in original mode 3ms
+   ✓ retains first-only-relevance refusal in original mode 4ms
+   ✓ retains missing-relevance refusal in original mode 3ms
+   ✓ retains incomplete-source refusal in original mode 2ms
+   ✓ builds an actual owned proposal and verifies its original commands after heads move 23ms
+   ✓ binds the actual policy body and current imported producer profiles 1ms
+   ✓ matches independent UTF8 framing vector 'a51af1ae335c8ebcc2bbdde83b45ffec12f17…' 0ms
+   ✓ matches independent UTF8 framing vector 'df71f1bc66cc89d3fe504d9946ae2ea8300f8…' 0ms
+   ✓ matches the independent complete 53+8N command vector 1ms
+   ✓ refuses non-Postgres scalar text "\u0000" 0ms
+   ✓ refuses non-Postgres scalar text "\ud800" 0ms
+   ✓ refuses non-Postgres scalar text "\udc00" 0ms
+   ✓ enforces finite byte and atom bounds without ambiguous null/empty framing 0ms
+   ✓ generates distinct validated keys and preserves nonidentity review bytes 15ms
+   ✓ a rehashed draftId mutation supplies no original authority 10ms
+   ✓ a rehashed afterSha256 mutation supplies no original authority 8ms
+   ✓ a rehashed clauseRange mutation supplies no original authority 6ms
+   ✓ a rehashed clauseHash mutation supplies no original authority 8ms
+   ✓ a rehashed citation mutation supplies no original authority 9ms
+   ✓ a rehashed policy mutation supplies no original authority 6ms
+   ✓ a rehashed profiles mutation supplies no original authority 7ms
+   ✓ a rehashed head mutation supplies no original authority 6ms
+   ✓ a rehashed owner mutation supplies no original authority 5ms
+   ✓ a rehashed uppercase mutation supplies no original authority 6ms
+   ✓ validates only the exact accept receipt and revision semantics 7ms
+   ✓ validates only the exact reject receipt and revision semantics 6ms
+   ✓ refuses unsupported full-stream writer scope: Experience
+Full Stack Engineer at Orchard Labs 3ms
+   ✓ refuses unsupported full-stream writer scope: Experience
+Machine  Learning Engineer at Orchard Labs 2ms
+   ✓ refuses unsupported full-stream writer scope: Candidate Name
+Experience
+Software Engineer at Orchard Labs 3ms
+   ✓ refuses unsupported full-stream writer scope: https://example.invalid
+Experience
+Software Engineer at Orchard Labs 5ms
+   ✓ refuses whole-source canonical letter-skeleton collision Built cafés using Python; Developed tools using Git / Built cafes using Python; Developed tools using Git 6ms
+   ✓ refuses whole-source canonical letter-skeleton collision Built cafés using Python; Developed tools using Git / Built cafés using Python; Developed tools using Git 7ms
+   ✓ refuses whole-source canonical letter-skeleton collision Built café using Python; Developed tools using Git / Built cafè using Python; Developed tools using Git 5ms
+   ✓ refuses whole-source canonical letter-skeleton collision Built 가 using Python; Developed tools using Git / Built 가 using Python; Developed tools using Git 5ms
+   ✓ refuses adjacent lower-case action continuation but permits a real sentence boundary 8ms
+   × requires a singleton target bullet even when a compound bullet is otherwise schema-valid 3ms
+   ✓ binds citation order as semantic atoms, even when a forged reordered list is rehashed 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/jd-clause-order-decisions.test.ts > requires a singleton target bullet even when a compound bullet is otherwise schema-valid
+AssertionError: expected undefined to be defined
+ ❯ tests/unit/jd-clause-order-decisions.test.ts:283:45
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 46 passed (47)
+   Start at  19:36:31
+   Duration  725ms (transform 234ms, setup 0ms, import 344ms, tests 315ms, environment 0ms)
+

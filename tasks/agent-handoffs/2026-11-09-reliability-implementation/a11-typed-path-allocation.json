@@ -1,0 +1,128 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "predecessorReceipt": "a11-preflight-integrated-0ef776da-2327-42a7-8a8c-2e0d271a763c.json",
+  "predecessorInputs": 778,
+  "predecessorChangedAtAdmission": [],
+  "rootOwns": [
+    "CONTEXT.md",
+    "tasks/reliability-remediation-plan.json",
+    "shared contract and integration receipts"
+  ],
+  "lanes": {
+    "backend": {
+      "agent": "a01_page_backend",
+      "worktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats",
+      "files": [
+        "app/lib/server/typed-authoring-contract.ts",
+        "app/lib/server/typed-authoring-repository.ts",
+        "tests/unit/typed-authoring-contract.test.ts",
+        "tests/unit/typed-authoring-repository.test.ts",
+        "backend-a11-typed-path.md"
+      ]
+    },
+    "frontend": {
+      "agent": "a01_page_frontend",
+      "worktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats",
+      "files": [
+        "app/components/TypedAuthoringReview.tsx",
+        "tests/components/TypedAuthoringReview.test.tsx",
+        "frontend-a11-typed-review.md"
+      ]
+    },
+    "runtime": {
+      "agent": "pricing_validation",
+      "worktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats",
+      "files": [
+        "supabase/migrations/20261114143053_typed_authoring_transactions.sql",
+        "app/lib/server/typed-authoring-command-codec.ts",
+        "tests/unit/typed-authoring-command-codec.test.ts",
+        "scripts/verify-typed-authoring.sql",
+        "runtime-a11-typed-transactions.md"
+      ]
+    }
+  },
+  "acceptance": [
+    "All proposal fields bound to owned current immutable context, exact location and value, explicit typed clause, no proof booleans",
+    "Actual Node writing-support plus independently constrained portable transformation",
+    "Recheck owned context after async proposal work; no provider default",
+    "Atomic source RPC derives replacement, replay first, dual-head and privacy checks; default denied",
+    "Accessible explicit review with full before/after, acknowledgement, exact retries, receipt/undo callbacks",
+    "Root integrates and runs affected tests plus types/lint/web/worker once; SQL/native/browser/provider remain unverified"
+  ],
+  "contractDependency": "Backend publishes shared exact schema; runtime and frontend acknowledge before finalizing dependent code. Root reviews and records interface before integration.",
+  "productionActivation": false,
+  "boundary": "Source/synthetic/DOM/fakeRPC only; no SQL parse or execution, DB/advisors, services, actual credentials or PII, providers, Docker, Git or deployment. Legacy production typed pause preserved.",
+  "sharedInterfaceDecision": {
+    "rpc": "public.apply_typed_authoring_action(p_user_id uuid,p_analysis_id uuid,p_command jsonb,p_request_id text) -> jsonb",
+    "commandSchema": "typed-authoring-command/1.0.0",
+    "codecVersion": "a11-command-bytes/1.0.0",
+    "codecDomain": "A11OP1\\n",
+    "maxAtoms": 256,
+    "maxBytes": 16384,
+    "commandFields": [
+      "schemaVersion",
+      "operation",
+      "idempotencyKey",
+      "acknowledgement",
+      "binding.source",
+      "binding.canonical",
+      "binding.requirements",
+      "binding.heads",
+      "binding.profilesSha256",
+      "diagnosticDigest",
+      "coverageDigest",
+      "semanticDigest",
+      "policies",
+      "target",
+      "clauseIds",
+      "transform",
+      "sourceCitations"
+    ],
+    "operations": [
+      "accept",
+      "reject"
+    ],
+    "transform": "Leading Built/Created/Developed equivalence; lowercase or title case only; every remaining UTF8 byte preserved; exact copy is a no-op; actual writing-support must also pass",
+    "authority": "Native DB values and independent structural proof, never JavaScript diagnostic/coverage/semantic correlation digests",
+    "wireExcludes": [
+      "supplied before text",
+      "supplied replacement text",
+      "caller eligibility/proof booleans",
+      "numeric score or delta"
+    ],
+    "productionPausePreserved": true,
+    "schemaOwner": "a01_page_backend",
+    "dependentAgreementRequired": [
+      "pricing_validation",
+      "a01_page_frontend"
+    ],
+    "persistenceFactoryDecision": {
+      "accept": "Existing edit then confirm factories in one atomic transaction; final revision base+2, both immutable children retained",
+      "reject": "Event only; revision unchanged",
+      "confirmation": "Edit clears sources and prior confirmation under unchanged factory; explicit acknowledgement confirms resulting value. Original source tuples retained in command/audit and ancestry.",
+      "receipt": "References final confirmed child for accept, current unchanged base for reject",
+      "revisionGuard": "Reject base with insufficient two-step PostgreSQL integer headroom"
+    },
+    "dtoCheckpointSha256": "eb40c29b272189109165099f252723ac7435300a8289be6255fa1b0e5a54b9b3",
+    "sourceCitationsDecision": "0..20 exact current citations. Candidate declarations with no current quotation stay labelled declarations; no borrowing historical quotations. Actual whole-current semantic witness remains mandatory."
+  },
+  "openUsefulness": "Current semantic producer does not emit whole-current witnesses for citationless Built/Created/Developed declarations. Preserve explanation-only state now; actual versioned declaration grammar regression/repair remains required before full A11 completion.",
+  "frozenAt": "2026-11-14T15:48:49.693079+00:00",
+  "releasedSourceHashes": {
+    "app/lib/server/typed-authoring-contract.ts": "7665fa9676069fe25b202d9440d46e693d61a095af4d981d7800d1539db26ff3",
+    "app/lib/server/typed-authoring-repository.ts": "c0cb217cda8eec5f24fc88c4fb5e9cc76f812a9a9a416c3c74cc21aa5b12ca24",
+    "app/lib/server/typed-authoring-command-codec.ts": "e0ef1c5dbac49fbf73c2915f5bd7350074802137b071c5675d65ad5f5915f8a6",
+    "app/components/TypedAuthoringReview.tsx": "7e037d1854931c6a38b7eb027969ff5b3a7dfb667d00651c82567768a3140e93",
+    "tests/unit/typed-authoring-contract.test.ts": "f504fa96b1135bba9f248866eb8f791cf6ac53f220d863e6c3404835aaec2aac",
+    "tests/unit/typed-authoring-repository.test.ts": "876f3de7850dc867903a591907b896b2f9411f088e36b27d38e7a7a503a051dc",
+    "tests/unit/typed-authoring-command-codec.test.ts": "39526e4ff96c288eff5b6b819d7fc82ac2bd6de081eefcf754a494625aa4cfb5",
+    "tests/components/TypedAuthoringReview.test.tsx": "f0bd4ce117983021f6109d284b7ef72fefa84737b32cf30eea41930dec02ac0d",
+    "supabase/migrations/20261114143053_typed_authoring_transactions.sql": "27ce81ef16a03c05c9665b55b440d99f7e25f6249926d7f67ad4073324f173b1",
+    "scripts/verify-typed-authoring.sql": "6749ad57b231f7ab0f439550cc68b7fe035fd0ecd2eca94fbd167a6447996154"
+  },
+  "currentContractSha256": "7665fa9676069fe25b202d9440d46e693d61a095af4d981d7800d1539db26ff3",
+  "nodeSha256": "2cc28a1880d0774616959f2210ee739bffa6ac695c887e8988a496a21271f6c0",
+  "predecessorChangedAtCandidateFreeze": [],
+  "verification": "One Root affected-test/types/lint/web/worker gate; SQL/native/browser/provider NOTRUN. Captured allocation immutable after start."
+}

@@ -1,0 +1,54 @@
+{
+  "id": "CR-U19-S08",
+  "status": "VERIFIED_LOCAL_CORRECTION_BROWSER_ZOOM",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR on loopback with simulated Supabase Auth, Storage and Data API transport and disposable PostgreSQL 17.11",
+  "sources": {
+    "scripts/local-fixture-browser.ts": "4ff34f88080793085ad7bb64bdeebbd89ba3a39472f45319187a3e386fb3cdb2",
+    "scripts/verify-local-correction-browser.ts": "c114e36d5908b454279fceb37cb108368ad65b930959b066e5aa24bf0d0d05b0",
+    "scripts/verify-local-correction-journey.ts": "5ec7e2ce46543db363183faee988bad71de2454a0e48f347204b28f15e7afeb2",
+    "scripts/verify-local-correction-journey.py": "fc048405990d2670629e7724180ab7d3a9e965a01ce593cc37b1e1835bd587ca",
+    "scripts/verify-local-clarification-browser.ts": "68d7d7fca837c86c7f66c5e505cc8f2713164809036d5f68c8774dbfea9fd5ec",
+    "scripts/verify-local-typed-authoring-journey.ts": "43fc134f56168af5a59bfc725ed8c4fbef483a01dd3c3d090a68684f65061f79",
+    "app/components/CanonicalCorrectionReview.tsx": "8a0d33c7244c8a24d7ebcc3bbfce589867fd721084bc89f2d2082d675e16c3f1",
+    "app/routes/analysis.evidence.tsx": "b24488f5a817ee14e19bef4d79d1819adc1848636c707d6c84435b8e86b3b682",
+    "app/routes/analysis.canonical.tsx": "d6e1c8056bd19059549bf1d6860a8a4afbc8cd4a370b934874b1f89eb5ec1f3f",
+    "app/routes/analysis.export.tsx": "998a6a5f17d523677f83cc6fd35c3dc34787dad3a9e6f4dbe8bf3552e78c83c8"
+  },
+  "browser": {
+    "version": "Chromium 153.0.8010.12",
+    "command": "scripts/verify-local-correction-journey.py --browser --browser-zoom",
+    "effectiveViewportWidthsCssPx": [390, 320],
+    "pageZoomPercent": 200,
+    "schemaOperations": 100,
+    "orderedDigest": "4e253744226912aab1c9411cb03e528f8fbdaa10984aa5933a88ff380601293a",
+    "ssrEntrySha256": "a6ca7cb24568314b15bcfbf50ce0d2620c1410f0c412c43ee9839bf6ee33d3ad",
+    "logSha256": "704b0b605bed7ef09229efd05284b4f48922314ed97a8b8cf322a671c22d66e5",
+    "result": {
+      "keyboardCorrectionSavedAndApplied": true,
+      "threeFeedbackMessagesFocused": true,
+      "targetAndControlsFitNarrowWidths": true,
+      "forcedColorsAndReducedMotion": true,
+      "correctionReviewBlockingAxeViolations": 0,
+      "confirmedAndDownloadedAtNarrowZoom": true,
+      "pdfAndDocxContainOnlyCorrectedValue": true,
+      "staleSaveKeptExactDraft": true,
+      "keyboardReviewedFreshVersion": true,
+      "conflictAndSuccessFocused": true,
+      "retainedReviewBlockingAxeViolations": 0
+    }
+  },
+  "sharedFixtureRegression": {
+    "clarificationLogSha256": "c8ab09cbb8b66cc0807f0ddbd43ee5fd64baa4a7f8d014e6b59172e0aaa40262",
+    "typedWordingLogSha256": "490157a2c33d138f7d5b16bc01efcf0fdaf7171d31663e58bbfc6ef438c4c491"
+  },
+  "checks": {
+    "node": "22.23.4",
+    "typecheck": "passed",
+    "fixtureLint": "passed",
+    "changedTypeScriptFormatting": "passed",
+    "argumentHelp": "passed"
+  },
+  "manualScreenReaderVerified": false,
+  "managedSupabaseVerified": false
+}

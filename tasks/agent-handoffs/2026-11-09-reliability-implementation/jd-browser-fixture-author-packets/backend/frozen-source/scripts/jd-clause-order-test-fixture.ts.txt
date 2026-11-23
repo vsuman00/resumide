@@ -1,0 +1,695 @@
+import { createHash, randomUUID } from "node:crypto";
+import { setTimeout as delay } from "node:timers/promises";
+import { createClient } from "@supabase/supabase-js";
+import { createServerClient, serializeCookieHeader } from "@supabase/ssr";
+import { z } from "zod";
+import {
+  createJdClauseOrderBrowserTestRequest,
+  JD_CLAUSE_ORDER_BROWSER_FEATURES,
+  readJdClauseOrderBrowserBuildBinding,
+  requireJdClauseOrderBrowserTarget,
+} from "./jd-clause-order-browser-target";
+import { appendPrivateTestLedger } from "./managed-test-target";
+
+// Deliberately neutral, synthetic input for the closed JD2 writer grammar.
+export const JD_CLAUSE_ORDER_FIXTURE_BEFORE =
+  "Built services using Python; Developed tools using Git";
+export const JD_CLAUSE_ORDER_FIXTURE_AFTER =
+  "Developed tools using Git; Built services using Python";
+export const JD_CLAUSE_ORDER_FIXTURE_TEXT =
+  "Experience\nSoftware Engineer at Orchard Labs\n" +
+  JD_CLAUSE_ORDER_FIXTURE_BEFORE;
+export const JD_CLAUSE_ORDER_FIXTURE_JD = "Requirements\nGit required";
+export const JD_CLAUSE_ORDER_FIXTURE_JOB_TITLE = "Software Engineer";
+const refused = () => new Error("JD clause-order fixture unavailable");
+const id = z.uuid();
+const hash = (bytes: Uint8Array) =>
+  createHash("sha256").update(bytes).digest("hex");
+
+/** Cleanup is deliberately not asserted from an Auth cascade. */
+export class JdClauseOrderFixtureCleanupError extends Error {
+  constructor(
+    readonly reason:
+      | "unknown_or_inflight"
+      | "owned_work_active"
+      | "admission_retirement_unavailable"
+      | "cleanup_unverified",
+  ) {
+    super(
+      `JD clause-order cleanup refused: ${reason}; private ledger retained`,
+    );
+  }
+}
+export class JdClauseOrderFixtureSetupError extends Error {
+  constructor(readonly cleanup: () => Promise<void>) {
+    super(
+      "JD clause-order fixture setup failed; use private ledger for recovery",
+    );
+  }
+}
+
+type Options = {
+  pdf: Uint8Array;
+  syntheticConsent: true;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  pollIntervalMs?: number;
+};
+
+/** Cancellable total deadline, including SDK promises that ignore cancellation. */
+function scope(timeoutMs: number, external?: AbortSignal) {
+  const controller = new AbortController();
+  const cancel = () => controller.abort();
+  external?.addEventListener("abort", cancel, { once: true });
+  if (external?.aborted) cancel();
+  const timer = setTimeout(cancel, timeoutMs);
+  const active = () => {
+    if (controller.signal.aborted) throw refused();
+  };
+  const run = async <T>(work: () => PromiseLike<T>): Promise<T> => {
+    active();
+    let stop!: () => void;
+    const stopped = new Promise<never>((_, reject) => {
+      stop = () => reject(refused());
+    });
+    controller.signal.addEventListener("abort", stop, { once: true });
+    try {
+      const result = await Promise.race([
+        Promise.resolve().then(() => {
+          active();
+          return work();
+        }),
+        stopped,
+      ]);
+      active();
+      return result;
+    } finally {
+      controller.signal.removeEventListener("abort", stop);
+    }
+  };
+  return {
+    signal: controller.signal,
+    active,
+    run,
+    close: () => {
+      clearTimeout(timer);
+      external?.removeEventListener("abort", cancel);
+      cancel();
+    },
+  };
+}
+
+/** No server, queue worker, PDF parser or fixture writes run at module import. */
+export async function createJdClauseOrderTestFixture(options: Options) {
+  const environment = { ...process.env };
+  const admitted = requireJdClauseOrderBrowserTarget(
+    createJdClauseOrderBrowserTestRequest(environment),
+    environment,
+    readJdClauseOrderBrowserBuildBinding(),
+  );
+  const timeoutMs = options.timeoutMs ?? 120_000;
+  const pollIntervalMs = options.pollIntervalMs ?? 100;
+  if (
+    options.syntheticConsent !== true ||
+    !(options.pdf instanceof Uint8Array) ||
+    options.pdf.byteLength < 8 ||
+    options.pdf.byteLength > 10 * 1024 * 1024 ||
+    !Number.isInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > 180_000 ||
+    !Number.isInteger(pollIntervalMs) ||
+    pollIntervalMs < 1 ||
+    pollIntervalMs > 1000 ||
+    options.signal?.aborted
+  )
+    throw refused();
+
+  const setup = scope(timeoutMs, options.signal);
+  // These imports cannot read configuration or create clients before admission.
+  const { getServerConfig } = await setup
+    .run(() => import("../app/lib/server/config"))
+    .catch(() => {
+      setup.close();
+      throw refused();
+    });
+  let config: ReturnType<typeof getServerConfig>;
+  try {
+    config = getServerConfig();
+  } catch {
+    setup.close();
+    throw refused();
+  }
+  if (
+    config.SUPABASE_URL !== admitted.targetUrl ||
+    config.APP_ORIGIN !== admitted.baseURL ||
+    [
+      "SUPABASE_PUBLISHABLE_KEY",
+      "SUPABASE_SECRET_KEY",
+      "SUPABASE_RESUME_BUCKET",
+      "OPENAI_API_KEY",
+      "OPENAI_BASE_URL",
+      "OPENAI_MODEL",
+    ].some(
+      (key) => config[key as keyof typeof config] !== admitted.serverEnv[key],
+    ) ||
+    Object.entries(JD_CLAUSE_ORDER_BROWSER_FEATURES).some(
+      ([key, value]) =>
+        config[key as keyof typeof config] !== (value === "true"),
+    )
+  ) {
+    setup.close();
+    throw refused();
+  }
+  const ownerId = randomUUID(),
+    email = `jd2-${randomUUID()}@example.test`,
+    password = randomUUID() + randomUUID(),
+    uploadKey = randomUUID();
+  let operationScope = setup;
+  let inFlight = 0,
+    unknown = false,
+    ownerCreated = false,
+    uploadAttempted = false,
+    cleaned = false,
+    cleanupRunning = false,
+    returned = false;
+  let analysisId: string | undefined, organizationId: string | undefined;
+  const ledger = (state: string, extra: Record<string, unknown> = {}) => {
+    operationScope.active();
+    appendPrivateTestLedger(
+      admitted.ledgerPath,
+      JSON.stringify({
+        purpose: "jd-clause-order-browser",
+        runId: admitted.runId,
+        ownerId,
+        uploadKey,
+        state,
+        ...extra,
+      }) + "\n",
+    );
+  };
+  const fetchBounded: typeof fetch = async (input, init) => {
+    if (unknown || cleaned) throw refused();
+    const ownScope =
+      returned && !cleanupRunning ? scope(5000, options.signal) : null;
+    const current = ownScope ?? operationScope;
+    const requestSignal = input instanceof Request ? input.signal : undefined;
+    const signal = AbortSignal.any([
+      current.signal,
+      ...(init?.signal ? [init.signal] : requestSignal ? [requestSignal] : []),
+    ]);
+    current.active();
+    inFlight++;
+    let nativeSettled = false;
+    const pending = Promise.resolve()
+      .then(() => {
+        current.active();
+        return fetch(input, { ...init, signal });
+      })
+      .finally(() => {
+        nativeSettled = true;
+      });
+    try {
+      const response = await current.run(() => pending);
+      // Keep the deadline through SDK/HTTP body consumption, not just headers.
+      // Buffer only bounded, private response bytes and never log their content.
+      if (!response.body) return response;
+      const reader = response.body.getReader();
+      const chunks: Uint8Array[] = [];
+      let bytes = 0;
+      try {
+        for (;;) {
+          const part = await current.run(() => reader.read());
+          if (part.done) break;
+          bytes += part.value.byteLength;
+          if (bytes > 16 * 1024 * 1024) throw refused();
+          chunks.push(part.value);
+        }
+      } catch {
+        void reader.cancel().catch(() => undefined);
+        throw refused();
+      } finally {
+        reader.releaseLock();
+      }
+      const body = new Uint8Array(bytes);
+      let offset = 0;
+      for (const chunk of chunks) {
+        body.set(chunk, offset);
+        offset += chunk.byteLength;
+      }
+      return new Response(body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+      });
+    } catch {
+      unknown = true;
+      throw refused();
+    } finally {
+      if (nativeSettled) inFlight--;
+      else
+        void pending.then(
+          () => {
+            inFlight--;
+          },
+          () => {
+            inFlight--;
+          },
+        );
+      ownScope?.close();
+    }
+  };
+  const admin = createClient(config.SUPABASE_URL, config.SUPABASE_SECRET_KEY, {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      persistSession: false,
+    },
+    global: { fetch: fetchBounded },
+  });
+  const cookies = new Map<string, string>();
+  const user = createServerClient(
+    config.SUPABASE_URL,
+    config.SUPABASE_PUBLISHABLE_KEY,
+    {
+      global: { fetch: fetchBounded },
+      cookies: {
+        getAll: () => [...cookies].map(([name, value]) => ({ name, value })),
+        setAll: (values) => {
+          for (const { name, value } of values) cookies.set(name, value);
+        },
+      },
+    },
+  );
+  const mutation = async <T>(work: () => PromiseLike<T>) => {
+    try {
+      return await operationScope.run(work);
+    } catch {
+      unknown = true;
+      throw refused();
+    }
+  };
+  const jobsSettled = async () => {
+    if (!analysisId) return false;
+    // analysis_jobs has no owner column. Resolve owned analysis first, then query
+    // this one exact primary key; no global queue read or global claim exists.
+    const owned = await operationScope.run(() =>
+      admin
+        .from("analyses")
+        .select("id")
+        .eq("id", analysisId!)
+        .eq("owner_id", ownerId)
+        .maybeSingle(),
+    );
+    if (owned.error || owned.data?.id !== analysisId) throw refused();
+    const job = await operationScope.run(() =>
+      admin
+        .from("analysis_jobs")
+        .select("analysis_id,lease_owner,lease_expires_at,dead_lettered_at")
+        .eq("analysis_id", analysisId!)
+        .maybeSingle(),
+    );
+    if (job.error) throw refused();
+    return (
+      job.data === null ||
+      (job.data.analysis_id === analysisId &&
+        job.data.dead_lettered_at !== null &&
+        job.data.lease_owner === null &&
+        job.data.lease_expires_at === null)
+    );
+  };
+  const cleanup = async () => {
+    if (cleaned) return;
+    if (cleanupRunning || inFlight || unknown)
+      throw new JdClauseOrderFixtureCleanupError("unknown_or_inflight");
+    cleanupRunning = true;
+    const cleanupScope = scope(15_000, options.signal);
+    operationScope = cleanupScope;
+    try {
+      ledger("cleanup_requested", { analysisId: analysisId ?? null });
+      if (uploadAttempted) {
+        if (!analysisId)
+          throw new JdClauseOrderFixtureCleanupError("unknown_or_inflight");
+        if (!(await jobsSettled()))
+          throw new JdClauseOrderFixtureCleanupError("owned_work_active");
+        // Bound admission history is immutable and RESTRICTs owner deletion.
+        // There is no existing exact retirement API. Refuse before deleting an
+        // object, rate key or owner; keep the recovery ledger intact.
+        ledger("cleanup_blocked_admission_retirement", { analysisId });
+        throw new JdClauseOrderFixtureCleanupError(
+          "admission_retirement_unavailable",
+        );
+      }
+      if (ownerCreated) {
+        const rows = await cleanupScope.run(() =>
+          admin.from("analyses").select("id").eq("owner_id", ownerId).limit(1),
+        );
+        if (rows.error || !Array.isArray(rows.data) || rows.data.length !== 0)
+          throw new JdClauseOrderFixtureCleanupError("unknown_or_inflight");
+        const deleted = await mutation(() =>
+          admin.auth.admin.deleteUser(ownerId),
+        );
+        if (deleted.error)
+          throw new JdClauseOrderFixtureCleanupError("cleanup_unverified");
+        const absent = await cleanupScope.run(() =>
+          admin.auth.admin.getUserById(ownerId),
+        );
+        if (absent.data.user || (absent.error && absent.error.status !== 404))
+          throw new JdClauseOrderFixtureCleanupError("cleanup_unverified");
+      }
+      for (const [table, column] of [
+        ["organizations", "owner_id"],
+        ["memberships", "user_id"],
+        ["profiles", "id"],
+      ] as const) {
+        const result = await cleanupScope.run(() =>
+          admin.from(table).select("*").eq(column, ownerId).limit(1),
+        );
+        if (
+          result.error ||
+          !Array.isArray(result.data) ||
+          result.data.length !== 0
+        )
+          throw new JdClauseOrderFixtureCleanupError("cleanup_unverified");
+      }
+      ledger("cleanup_verified_no_ingestion");
+      cleaned = true;
+      cookies.clear();
+    } catch (error) {
+      if (error instanceof JdClauseOrderFixtureCleanupError) throw error;
+      throw new JdClauseOrderFixtureCleanupError("cleanup_unverified");
+    } finally {
+      cleanupScope.close();
+      cleanupRunning = false;
+    }
+  };
+  try {
+    ledger("owner_creation_planned");
+    const created = await mutation(() =>
+      admin.auth.admin.createUser({
+        id: ownerId,
+        email,
+        password,
+        email_confirm: true,
+      }),
+    );
+    if (created.error || created.data.user?.id !== ownerId) {
+      unknown = true;
+      throw refused();
+    }
+    ownerCreated = true;
+    ledger("owner_created");
+    if (
+      (await mutation(() => user.auth.signInWithPassword({ email, password })))
+        .error
+    )
+      throw refused();
+    const org = await setup.run(() =>
+      admin.from("organizations").select("id").eq("owner_id", ownerId).single(),
+    );
+    if (org.error || !id.safeParse(org.data?.id).success) throw refused();
+    organizationId = org.data!.id as string;
+    const { loadEvidenceReview } = await setup.run(
+      () => import("../app/lib/server/evidence-review"),
+    );
+    const { loadCanonical, mutateCanonical } = await setup.run(
+      () => import("../app/lib/server/canonical-repository"),
+    );
+    const { saveJobRequirements } = await setup.run(
+      () => import("../app/lib/server/job-requirement-repository"),
+    );
+    const { loadRequirementRelationshipContext } = await setup.run(
+      () => import("../app/lib/server/requirement-relationship-context"),
+    );
+    const { loadJdClauseOrderWorkspace } = await setup.run(
+      () => import("../app/lib/server/jd-clause-order-repository"),
+    );
+    const pdf = Uint8Array.from(options.pdf),
+      checksum = hash(pdf);
+    const form = new FormData();
+    form.set(
+      "file",
+      new Blob([pdf], { type: "application/pdf" }),
+      "neutral-synthetic.pdf",
+    );
+    form.set("jobTitle", JD_CLAUSE_ORDER_FIXTURE_JOB_TITLE);
+    form.set("jobDescription", JD_CLAUSE_ORDER_FIXTURE_JD);
+    form.set("aiConsent", "accepted");
+    form.set("idempotencyKey", uploadKey);
+    ledger("upload_planned", { organizationId });
+    uploadAttempted = true;
+    const response = await mutation(() =>
+      fetchBounded(new URL("/api/analyze", admitted.baseURL), {
+        method: "POST",
+        redirect: "error",
+        signal: setup.signal,
+        body: form,
+        headers: {
+          Origin: admitted.baseURL,
+          Cookie: [...cookies]
+            .map(
+              ([name, value]) =>
+                serializeCookieHeader(name, value).split(";")[0],
+            )
+            .join("; "),
+          "X-Request-Id": uploadKey,
+        },
+      }),
+    );
+    if (response.status !== 202) {
+      unknown = true;
+      throw refused();
+    }
+    const body = z
+      .object({ id, status: z.literal("quarantined") })
+      .parse(await setup.run(() => response.json()));
+    analysisId = body.id;
+    ledger("analysis_admitted", { organizationId, analysisId });
+    let sourceId = "",
+      resumeId = "",
+      attemptId = "";
+    for (;;) {
+      setup.active();
+      const analysis = await setup.run(() =>
+        admin
+          .from("analyses")
+          .select("id,owner_id,organization_id,resume_version_id,status")
+          .eq("id", analysisId!)
+          .eq("owner_id", ownerId)
+          .eq("organization_id", organizationId!)
+          .maybeSingle(),
+      );
+      if (
+        analysis.error ||
+        !analysis.data ||
+        analysis.data.id !== analysisId ||
+        analysis.data.owner_id !== ownerId ||
+        analysis.data.organization_id !== organizationId
+      )
+        throw refused();
+      const source = await setup.run(() =>
+        admin
+          .from("resume_versions")
+          .select(
+            "id,resume_id,owner_id,organization_id,checksum,page_count,storage_key",
+          )
+          .eq("id", analysis.data!.resume_version_id)
+          .eq("owner_id", ownerId)
+          .eq("organization_id", organizationId!)
+          .maybeSingle(),
+      );
+      if (
+        source.error ||
+        !source.data ||
+        source.data.owner_id !== ownerId ||
+        source.data.organization_id !== organizationId ||
+        source.data.id !== analysis.data.resume_version_id ||
+        source.data.checksum !== checksum
+      )
+        throw refused();
+      sourceId = id.parse(source.data.id);
+      resumeId = id.parse(source.data.resume_id);
+      let review: Awaited<ReturnType<typeof loadEvidenceReview>> | undefined;
+      try {
+        review = await setup.run(() =>
+          loadEvidenceReview(admin, analysisId!, ownerId, {
+            signal: setup.signal,
+          }),
+        );
+      } catch (error) {
+        setup.active();
+        if (!(
+          error &&
+          typeof error === "object" &&
+          "status" in error &&
+          error.status === 404
+        ))
+          throw refused();
+      }
+      if (review) {
+        const evidence = review.evidence;
+        if (
+          evidence.ownerId !== ownerId ||
+          evidence.analysisId !== analysisId ||
+          evidence.sourceId !== sourceId ||
+          evidence.inputSha256 !== checksum ||
+          evidence.id !== review.attemptId ||
+          evidence.status !== "review_required" ||
+          !Number.isInteger(source.data.page_count) ||
+          source.data.page_count < 1 ||
+          evidence.nativeSource.pages.length !== source.data.page_count ||
+          evidence.nativeSource.pages
+            .map((page) => page.text)
+            .join("\n\n")
+            .trim() !== JD_CLAUSE_ORDER_FIXTURE_TEXT
+        )
+          throw refused();
+        if (await jobsSettled()) {
+          attemptId = evidence.id;
+          ledger("owned_evidence_settled", {
+            analysisId,
+            sourceId,
+            resumeId,
+            attemptId,
+            storageKey: source.data.storage_key,
+          });
+          break;
+        }
+      }
+      if (["failed", "cancelled", "rejected"].includes(analysis.data.status))
+        throw refused();
+      await setup.run(() =>
+        delay(pollIntervalMs, undefined, { signal: setup.signal }),
+      );
+    }
+    const imported = await mutation(() =>
+      mutateCanonical(
+        admin,
+        analysisId!,
+        ownerId,
+        {
+          operation: "import",
+          expectedVersionId: null,
+          idempotencyKey: randomUUID(),
+        },
+        randomUUID(),
+      ),
+    );
+    const original = await setup.run(() =>
+      loadCanonical(admin, analysisId!, ownerId),
+    );
+    if (original.current?.document.versionId !== imported.versionId)
+      throw refused();
+    const targets = original.current.document.facts.filter(
+      (fact) =>
+        fact.type === "contribution" &&
+        fact.value === JD_CLAUSE_ORDER_FIXTURE_BEFORE,
+    );
+    if (targets.length !== 1) throw refused();
+    const targetFactId = targets[0].id;
+    const canonical = await mutation(() =>
+      mutateCanonical(
+        admin,
+        analysisId!,
+        ownerId,
+        {
+          operation: "confirm",
+          expectedVersionId: imported.versionId,
+          factId: targetFactId,
+          idempotencyKey: randomUUID(),
+        },
+        randomUUID(),
+      ),
+    );
+    const requirements = await mutation(() =>
+      saveJobRequirements(
+        admin,
+        analysisId!,
+        ownerId,
+        { expectedVersionId: null, idempotencyKey: randomUUID() },
+        randomUUID(),
+      ),
+    );
+    const selection = {
+      canonicalVersionId: canonical.versionId,
+      requirementVersionId: requirements.versionId,
+    };
+    const context = await setup.run(() =>
+      loadRequirementRelationshipContext(
+        admin,
+        analysisId!,
+        ownerId,
+        selection,
+      ),
+    );
+    if (
+      context.status !== "available" ||
+      context.source.attemptId !== attemptId ||
+      context.source.inputSha256 !== checksum ||
+      context.sourceMetadata.pageCount !== 1
+    )
+      throw refused();
+    const workspace = await setup.run(() =>
+      loadJdClauseOrderWorkspace(admin, analysisId!, ownerId, selection, {
+        enabled: true,
+        signal: setup.signal,
+      }),
+    );
+    const proposals = workspace?.proposals.filter(
+      (proposal) =>
+        proposal.draft.target.factId === targetFactId &&
+        proposal.draft.before === JD_CLAUSE_ORDER_FIXTURE_BEFORE &&
+        proposal.draft.after === JD_CLAUSE_ORDER_FIXTURE_AFTER,
+    );
+    if (proposals?.length !== 1) throw refused();
+    const draft = proposals[0].draft;
+    ledger("fixture_ready", {
+      analysisId,
+      sourceId,
+      resumeId,
+      attemptId,
+      targetFactId,
+      canonicalVersionId: canonical.versionId,
+      requirementVersionId: requirements.versionId,
+    });
+    returned = true;
+    return {
+      admin,
+      email,
+      password,
+      ownerId,
+      organizationId,
+      resumeId,
+      sourceId,
+      analysisId,
+      attemptId,
+      targetFactId,
+      canonical: {
+        versionId: canonical.versionId,
+        revision: canonical.revision,
+      },
+      requirements: {
+        versionId: requirements.versionId,
+        revision: requirements.revision,
+        clauseId: draft.selection.clauseId,
+      },
+      expected: {
+        before: draft.before,
+        after: draft.after,
+        jdQuote: draft.relevance.quote,
+        sourceQuote: draft.before,
+      },
+      cleanup,
+    };
+  } catch {
+    // Any upload may have committed despite a lost response. Recovery is never
+    // retried automatically and no Auth cascade is reported as full cleanup.
+    try {
+      await cleanup();
+    } catch {
+      throw new JdClauseOrderFixtureSetupError(cleanup);
+    }
+    throw refused();
+  } finally {
+    setup.close();
+  }
+}

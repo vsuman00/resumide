@@ -1,0 +1,23 @@
+import {sourceHashes,runCommand} from "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/scripts/verify-private-aa7.mjs";
+import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,openSync,closeSync} from "node:fs";
+import {createHash} from "node:crypto";
+const root="/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats", output="/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-budget-required-backend-ab7dh9vh";
+const env={HOME:output+"/home",PATH:"/Users/vaibhavsuman/.codex/tools/resumide-node22/v22.23.4-darwin-arm64:/usr/bin:/bin:/usr/sbin:/sbin",LANG:"en_US.UTF-8",TZ:"UTC",NO_COLOR:"1",RESUMIDE_PRIVATE_VERIFY:"aa7-owned-synthetic",GIT_CONFIG_NOSYSTEM:"1",GIT_CONFIG_GLOBAL:"/dev/null",GIT_OPTIONAL_LOCKS:"0",AI_ENABLED:"false",OPENAI_API_KEY:"offline-no-live-key",SUPABASE_URL:"https://fixture.supabase.co",SUPABASE_PUBLISHABLE_KEY:"offline-publishable",SUPABASE_SECRET_KEY:"offline-secret",SUPABASE_RESUME_BUCKET:"resumes",APP_ORIGIN:"http://127.0.0.1:3110"};
+try{mkdirSync(env.HOME)}catch(e){if(e.code!=="EEXIST")throw e}
+const phase=process.argv[2], files=process.argv.slice(3);
+const policy=`(version 1)\n(allow default)\n(deny network*)\n`+[".env",".env.local",".env.test",".env.test.local",".env.development",".env.development.local",".env.production",".env.production.local"].map(f=>`(deny file-read* (literal ${JSON.stringify(root+"/"+f)}))\n`).join("")+`(deny file-write* (subpath "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/.git"))\n`;
+let argumentsForCommand = [root+"/node_modules/vitest/vitest.mjs","run",...files,"--maxWorkers=1"];
+if (phase === "statics-typegen") argumentsForCommand=[root+"/node_modules/@react-router/dev/bin.js","typegen"];
+if (phase.startsWith("statics-types")) argumentsForCommand=[root+"/node_modules/typescript/bin/tsc"];
+if (phase.startsWith("statics-lint")) argumentsForCommand=[root+"/node_modules/eslint/bin/eslint.js",...files];
+if (phase.startsWith("statics-format")) argumentsForCommand=[root+"/node_modules/prettier/bin/prettier.cjs","--check",...files];
+if(phase.startsWith("format-write")) argumentsForCommand=[root+"/node_modules/prettier/bin/prettier.cjs","--write",...files];
+if(phase.startsWith("cli-")) argumentsForCommand=[];
+const binary=phase.startsWith("cli-")?root+"/node_modules/@supabase/cli-darwin-arm64/bin/supabase":process.execPath;
+if(phase==="cli-version") argumentsForCommand=["--version"];
+if(phase==="cli-help") argumentsForCommand=["migration","new","--help"];
+if(phase==="cli-new") argumentsForCommand=["migration","new","mandatory_ai_budget_dispatch"];
+const log=output+"/"+phase+".log", fd=openSync(log,"wx",0o600);
+const receipt={phase,sourceBefore:sourceHashes(root,env),commands:[],environment:"sealed fake env, empty HOME, OS network/env/Git write denied",node:process.version,log};
+try{receipt.commands.push(await runCommand("/usr/bin/sandbox-exec",["-p",policy,binary,...argumentsForCommand],{cwd:root,env,logFd:fd,timeoutMs:120000,maxLogBytes:8388608,onStart:x=>receipt.start=x,onClose:x=>receipt.close=x}));}finally{closeSync(fd);receipt.sourceAfter=sourceHashes(root,env);receipt.sourceStable=JSON.stringify(receipt.sourceBefore)===JSON.stringify(receipt.sourceAfter);receipt.logSha256=createHash("sha256").update(readFileSync(log)).digest("hex");writeFileSync(output+"/"+phase+".json",JSON.stringify(receipt,null,2)+"\n");}
+console.log(JSON.stringify({output,command:receipt.commands,stable:receipt.sourceStable,start:receipt.start,close:receipt.close}));

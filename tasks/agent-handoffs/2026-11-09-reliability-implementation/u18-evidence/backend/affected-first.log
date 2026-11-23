@@ -1,0 +1,62 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ✓ tests/unit/artifact-repository.test.ts (6 tests) 128ms
+ ❯ tests/unit/artifact-source-links.test.ts (29 tests | 1 failed) 287ms
+   ✓ blocks hidden annotation targets absent from the canonical render plan 88ms
+   ✓ permits only a confirmed stable-fact email replacement with cited source lineage 15ms
+   ✓ permits only a confirmed stable-fact link replacement with cited source lineage 11ms
+   ✓ rejects owner lineage drift instead of authorizing a missing annotation 8ms
+   ✓ rejects organization lineage drift instead of authorizing a missing annotation 8ms
+   ✓ rejects resume lineage drift instead of authorizing a missing annotation 7ms
+   ✓ rejects analysis lineage drift instead of authorizing a missing annotation 7ms
+   ✓ rejects hash lineage drift instead of authorizing a missing annotation 8ms
+   ✓ rejects attempt lineage drift instead of authorizing a missing annotation 8ms
+   ✓ rejects source lineage drift instead of authorizing a missing annotation 6ms
+   ✓ rejects revision lineage drift instead of authorizing a missing annotation 7ms
+   ✓ rejects parent lineage drift instead of authorizing a missing annotation 6ms
+   ✓ does not bridge missing_fact when proving a replacement 8ms
+   ✓ does not bridge changed_type when proving a replacement 6ms
+   ✓ does not bridge missing_parent when proving a replacement 6ms
+   ✓ does not bridge cycle when proving a replacement 6ms
+   ✓ does not bridge uncited_origin when proving a replacement 7ms
+   ✓ does not bridge borrowed_citation when proving a replacement 5ms
+   ✓ keeps actor mismatch blocked despite a historical email 6ms
+   ✓ keeps value mismatch blocked despite a historical email 6ms
+   ✓ keeps unconfirmed mismatch blocked despite a historical email 6ms
+   ✓ keeps plan_version mismatch blocked despite a historical email 5ms
+   ✓ keeps plan_content mismatch blocked despite a historical email 5ms
+   ✓ keeps plan_link mismatch blocked despite a historical email 4ms
+   ✓ keeps source_bytes mismatch blocked despite a historical email 5ms
+   ✓ keeps every unexplained or unsafe annotation blocked beside a valid replacement 10ms
+   × does not render an unsafe replacement email after candidate confirmation 6ms
+   ✓ restores the selected old link without fetching or reapplying later corrections 5ms
+   ✓ bounds history traversal rather than accepting an origin beyond the admitted work 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/artifact-source-links.test.ts > does not render an unsafe replacement email after candidate confirmation
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/artifact-source-links.test.ts:290:44
+    288|     factId: f.factId,
+    289|   });
+    290|   expect(() => buildRenderPlan(confirmed)).toThrow("Correct the email …
+       |                                            ^
+    291| });
+    292|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 34 passed (35)
+   Start at  00:15:33
+   Duration  523ms (transform 195ms, setup 0ms, import 437ms, tests 415ms, environment 0ms)
+

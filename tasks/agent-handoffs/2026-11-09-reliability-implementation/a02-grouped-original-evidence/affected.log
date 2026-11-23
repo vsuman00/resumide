@@ -1,0 +1,35 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/canonical-grouped-import.test.ts (0 test)
+ ✓ tests/unit/canonical-resume-schema.test.ts (22 tests) 8ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/canonical-grouped-import.test.ts [ tests/unit/canonical-grouped-import.test.ts ]
+Error: Transform failed with 1 error:
+/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/tests/unit/canonical-grouped-import.test.ts:396:0: ERROR: Unexpected "}"
+  Plugin: vite:esbuild
+  File: /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/tests/unit/canonical-grouped-import.test.ts:396:0
+  
+  Unexpected "}"
+  394|    );
+  395|  });
+  396|  });
+     |  ^
+  397|  
+  
+ ❯ failureErrorWithLog ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  22 passed (22)
+   Start at  16:32:30
+   Duration  140ms (transform 27ms, setup 0ms, import 63ms, tests 8ms, environment 0ms)
+

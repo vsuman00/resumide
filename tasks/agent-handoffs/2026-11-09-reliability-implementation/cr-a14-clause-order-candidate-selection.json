@@ -1,0 +1,47 @@
+{
+  "id": "CR-A14-S10",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "status": "VERIFIED_LOCAL_OWNED_DRAFT_SELECTION",
+  "before": "The long JD regression exhausted 50 detailed checks on unrelated requirements and omitted the supported Git draft.",
+  "after": {
+    "planVersion": "jd-clause-order-plan/2.1.0",
+    "draftVersion": "jd-clause-order-draft/2.0.0",
+    "requirementsInRegression": 53,
+    "unrelatedRequirements": 52,
+    "detailedChecks": 1,
+    "previewCount": 1,
+    "truncated": false,
+    "behavior": "Use the same literal and approved alias rules for scheduling and full validation. Keep saved pair ordering and the existing full draft validator. The selected draft is exactly equal to the direct draft for the same source and JD.",
+    "limits": "50 detailed candidate-pair checks and five previews. Boundary tests distinguish 50 and 51 relevant candidates that fail full source review. Previously unrelated fixture pairs consumed the old count."
+  },
+  "firstIntegratedRun": {
+    "passed": 7217,
+    "failed": 5,
+    "reason": "Stored test assumptions counted unrelated or unsupported pairs before the filtering change. After correcting the fixtures, the boundary test still exercises the original 50 detailed-check cap and the same tamper assertion."
+  },
+  "checks": {
+    "focusedTests": 228,
+    "ownedRepositoryTests": 24,
+    "finalIntegratedTests": 7222,
+    "finalIntegratedFiles": 340,
+    "typecheck": "pass",
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 4
+    },
+    "webBuild": "pass",
+    "workerBuild": "pass"
+  },
+  "sourceHashes": {
+    "app/lib/server/jd-clause-order-drafting.ts": "484d2511440a97a372cb83f4f3f168f83d15e21c3c3f710bdecace6a96a43340",
+    "tests/unit/typed-jd-clause-order.test.ts": "7f6b269b301db60750655724184d33eeec85b0a545b2d6adea9a6ae0e6800221",
+    "tests/unit/jd-clause-order-mutation-repository.test.ts": "d243a88d2dfb76850cab839d55fd92731f602a40831cda47ca16246528c2aab7",
+    "tests/unit/jd-clause-order-repository.test.ts": "ca7e826a4fda3d47d808b1a4f37ce04208245d26cd22e7334a2f28fa8d6e882b"
+  },
+  "open": [
+    "Current saved edit journey in an approved managed target",
+    "Broader supported drafting grammar",
+    "Representative score calibration"
+  ]
+}

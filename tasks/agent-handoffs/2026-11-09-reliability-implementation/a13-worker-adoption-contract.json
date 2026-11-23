@@ -1,0 +1,25 @@
+{
+  "status": "SOURCE_CONTRACT_FROZEN_BEFORE_IMPLEMENTATION",
+  "featureFlag": "INITIAL_FEEDBACK_ENABLED=false",
+  "dependencies": [
+    "LEGACY_SCORING_INPUT_ENABLED=true",
+    "ANALYSIS_FENCING_ENABLED=true"
+  ],
+  "scope": "Opt-in owned initial-feedback worker only; no SQL/grants/policy-seeding/provider activation",
+  "stage": [
+    "Branch before legacy current-source/extraction/JD/quota reads and fresh lease RPC; require real supplied lease, correct attempt, abort validity",
+    "Read only actual analysis owner/org/request IDs needed for scope; all generation inputs/result numbers from immutable original Native context",
+    "Use real policy factory from technical config; DB-owner selected policy remains authority; never seed or choose budget-off fallback",
+    "Actual runInitialFeedbackService + actual raw SDK transport from captured model/max/prompt; no old lossy transport adapter or legacy persistence fallback",
+    "Fresh authorize only: verify existing explicit qualitative_ai consent with owner/org/currentpolicy, never fabricate accepted=true; consume actual hashed analysis/user rate-limit RPC keys; replay/AIoff/pending/loser before consent/rate/quota/SDK sideeffects",
+    "Known usage/unknown holds and onceclaim stay in service; published returns success; unresolvedpending throws fixed safe error rather than normal completion or old partial producer; existing bounded queue retry must not redispatch provider",
+    "Defaultfalse path retains all legacy behavior; flagtrue with legacy providedTransport must not silently route into old transport"
+  ],
+  "startup": [
+    "Both worker scripts pass feature/dependency options; invalid selecteddependency blocks beforeclaim",
+    "Existing evidence/table/worker capability checks stay; within shared bounded deadline+abort validate exactactual legacy scoring metadata/profile writerExecutable",
+    "Validate full IFO19 actualprofile and all7caps, retirement8/6 export readiness, budget-export7/5 readiness; allmetadata only, no data/claim/seed/SDK",
+    "Failure/timeout/cancel malformed/hash/ACL false blocksstartup; featurefalse adds no RPCs, no existingresponsewire changes"
+  ],
+  "verification": "Meaningful existingworker-boundary RED; realservice/SDKfakefetch integration controls; source-only metadata/roles actualNative execution unclaimed; one integrated affectedgate afterrelease"
+}

@@ -1,0 +1,171 @@
+--- before/tests/unit/worker-readiness.test.ts
++++ after/tests/unit/worker-readiness.test.ts
+@@ -1,3 +1,4 @@
++import { DOCUMENT_PAGE_COUNT_READINESS_PROFILE } from "../../app/lib/server/document-page-count-readiness-profile";
+ import { afterEach, describe, expect, it, vi } from "vitest";
+ import { assertWorkerSchemaReady } from "../../app/lib/server/worker-readiness";
+ import { LEGACY_SCORING_INPUT_PROFILE } from "../../app/lib/server/legacy-scoring-input-profile";
+@@ -73,6 +74,163 @@
+ afterEach(() => vi.useRealTimers());
+ 
+ describe("worker schema readiness", () => {
++  it.each([false, true])(
++    "blocks review extraction without the atomic page-count capability (fencing=%s)",
++    async (fencing) => {
++      const fixture = clientFor(ready(fencing, false));
++      const options = {
++        evidenceReviewEnabled: true,
++        analysisFencingEnabled: fencing,
++      };
++      await expect(
++        assertWorkerSchemaReady(fixture.client as never, options),
++      ).rejects.toMatchObject({
++        code: expect.stringMatching(/^WORKER_SCHEMA_/u),
++      });
++    },
++  );
++
++  const pageReady = () => ({
++    ...DOCUMENT_PAGE_COUNT_READINESS_PROFILE,
++    schemaReady: true,
++    writerExecutable: true,
++    fencedWriterExecutable: true,
++  });
++  const pageFixture = (
++    metadata: unknown,
++    fencing = false,
++    error: unknown = null,
++  ) => {
++    const fixture = clientFor(ready(fencing, false));
++    const rpc = vi.fn((name: string) =>
++      query({
++        data:
++          name === "read_document_page_count_readiness"
++            ? metadata
++            : ready(fencing, false),
++        error: name === "read_document_page_count_readiness" ? error : null,
++      }),
++    );
++    return { ...fixture, client: { ...fixture.client, rpc } };
++  };
++  it.each([false, true])(
++    "reads exact page-count metadata before selected readiness (fencing=%s)",
++    async (fencing) => {
++      const fixture = pageFixture(pageReady(), fencing);
++      await assertWorkerSchemaReady(fixture.client as never, {
++        evidenceReviewEnabled: true,
++        analysisFencingEnabled: fencing,
++      });
++      expect(fixture.client.rpc.mock.calls.map((call) => call[0])).toEqual(
++        fencing
++          ? ["read_document_page_count_readiness", "worker_schema_readiness"]
++          : ["read_document_page_count_readiness"],
++      );
++      expect(fixture.client.rpc.mock.calls[0]).toEqual([
++        "read_document_page_count_readiness",
++        {},
++      ]);
++    },
++  );
++  it("does not require the independent fenced capability when fencing is off", async () => {
++    const fixture = pageFixture({
++      ...pageReady(),
++      fencedWriterExecutable: false,
++    });
++    await expect(
++      assertWorkerSchemaReady(fixture.client as never, {
++        evidenceReviewEnabled: true,
++      }),
++    ).resolves.toBeUndefined();
++  });
++  it.each([
++    null,
++    {},
++    [],
++    { ...pageReady(), extra: true },
++    ...Object.keys(DOCUMENT_PAGE_COUNT_READINESS_PROFILE).map((key) => ({
++      ...pageReady(),
++      [key]: "mismatch",
++    })),
++    ...Object.keys(pageReady()).map((key) => {
++      const result: Record<string, unknown> = { ...pageReady() };
++      delete result[key];
++      return result;
++    }),
++    ...["schemaReady", "writerExecutable", "fencedWriterExecutable"].flatMap(
++      (key) =>
++        [false, "true", null].map((value) => ({
++          ...pageReady(),
++          [key]: value,
++        })),
++    ),
++  ])(
++    "rejects malformed, mismatched or denied page-count metadata %#",
++    async (metadata) => {
++      const fixture = pageFixture(metadata, true);
++      await expect(
++        assertWorkerSchemaReady(fixture.client as never, {
++          evidenceReviewEnabled: true,
++          analysisFencingEnabled: true,
++        }),
++      ).rejects.toMatchObject({
++        code: expect.stringMatching(/^WORKER_SCHEMA_/u),
++      });
++      expect(fixture.client.rpc).toHaveBeenCalledTimes(1);
++    },
++  );
++  it("sanitizes a denied page-count metadata request", async () => {
++    const fixture = pageFixture(null, false, {
++      message: "private synthetic detail",
++    });
++    await expect(
++      assertWorkerSchemaReady(fixture.client as never, {
++        evidenceReviewEnabled: true,
++      }),
++    ).rejects.toMatchObject({ code: "WORKER_SCHEMA_UNAVAILABLE" });
++  });
++  it("rejects an invalid review selection before querying", async () => {
++    const fixture = pageFixture(pageReady());
++    await expect(
++      assertWorkerSchemaReady(
++        fixture.client as never,
++        { evidenceReviewEnabled: "true" } as never,
++      ),
++    ).rejects.toMatchObject({ code: "WORKER_SCHEMA_INVALID" });
++    expect(fixture.client.from).not.toHaveBeenCalled();
++  });
++  it.each(["timeout", "cancel"])(
++    "bounds page-count metadata with the shared signal: %s",
++    async (mode) => {
++      vi.useFakeTimers();
++      try {
++        const fixture = pageFixture(pageReady());
++        const controller = new AbortController();
++        const probe = query(new Promise<Result>(() => {}), true);
++        fixture.client.rpc.mockImplementation(() => probe);
++        const pending = assertWorkerSchemaReady(fixture.client as never, {
++          evidenceReviewEnabled: true,
++          timeoutMs: 20,
++          signal: controller.signal,
++        });
++        const assertion = expect(pending).rejects.toMatchObject({
++          code:
++            mode === "timeout"
++              ? "WORKER_STARTUP_TIMEOUT"
++              : "WORKER_STARTUP_CANCELLED",
++        });
++        await vi.advanceTimersByTimeAsync(1);
++        if (mode === "cancel") controller.abort();
++        else await vi.advanceTimersByTimeAsync(20);
++        await assertion;
++        expect(probe.abortSignal).toHaveBeenCalledWith(expect.any(AbortSignal));
++        expect(probe.abortSignal.mock.calls[0][0].aborted).toBe(true);
++      } finally {
++        vi.useRealTimers();
++      }
++    },
++  );
++
+   it("blocks selected initial feedback without its metadata capabilities", async () => {
+     const fixture = clientFor();
+     const options = {

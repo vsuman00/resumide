@@ -1,0 +1,59 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/initial-feedback-operation-repository.test.ts (32 tests | 1 failed) 153ms
+     ✓ uses exact fresh metadata then one prepare RPC, retaining original lease/native hash 39ms
+     ✓ refuses missing foundation metadata without mutation/fallback 14ms
+     ✓ refuses unknown foundation metadata without mutation/fallback 2ms
+     ✓ refuses drift foundation metadata without mutation/fallback 2ms
+     ✓ refuses schema foundation metadata without mutation/fallback 1ms
+     ✓ refuses staged foundation metadata without mutation/fallback 1ms
+     ✓ refuses invalid scope/selector before RPC and does not import caller profile authority 1ms
+     ✓ refuses foreign ownerId even when reply internally correlates 2ms
+     ✓ refuses foreign organizationId even when reply internally correlates 2ms
+     ✓ refuses foreign analysisId even when reply internally correlates 2ms
+     ✓ refuses valid but unrequested fresh policy and tampered deterministic checksum 3ms
+     ✓ preserves pending captured policy after selector movement; pending cannot be claimed 2ms
+     ✓ returns no permission for false/replayed claim and never settles/releases its winner 1ms
+     ✓ does not dispatch when claimExecutable is false in fresh admission 1ms
+     ✓ does not dispatch when settleExecutable is false in fresh admission 1ms
+     ✓ correlates op/attempt/binding and does not mint a token for malformed true claim 1ms
+     ✓ winning capability uses private copies despite public nested mutation; forged and cross-instance fail before RPC 2ms
+     ✓ settles after candidate cancellation/metadata denial without refreshing content, consent, month or R03 1ms
+     ✓ preserves held unknown/terminal error, permits one late known, rejects changed known/error 1ms
+     ✓ refuses settlement with wrong identity/counters and retains exact original input for manual retry 1ms
+     ✓ maps 22023 to fixed safe mutation outcome without raw messages/retry 1ms
+     ✓ maps 42501 to fixed safe mutation outcome without raw messages/retry 1ms
+     ✓ maps P0C01 to fixed safe mutation outcome without raw messages/retry 1ms
+     ✓ maps P0C03 to fixed safe mutation outcome without raw messages/retry 1ms
+     ✓ maps XX000 to fixed safe mutation outcome without raw messages/retry 1ms
+     ✓ preaborted prepare and settlement make zero new RPCs 1ms
+     ✓ bounds ignored-abort metadata and does not later send the mutation 2ms
+     ✓ bounds ambiguous claim without token, no automatic retry/settlement 1ms
+     ✓ bounds settlement cancellation and retries exact retained technical input only 52ms
+     ✓ rejects immediate valid response after absolute deadline even if timer did not run 1ms
+     × preserves actual R03 request and envelope and never assumes queue attempt equals provider ordinal 6ms
+     ✓ rejects malformed known counters and foreign preparation handles without IO 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-operation-repository.test.ts > initial-feedback FOUNDATION RPC boundary (fake RPC, no Native execution) > preserves actual R03 request and envelope and never assumes queue attempt equals provider ordinal
+InitialFeedbackOperationError: Initial feedback operation is unavailable.
+ ❯ decode app/lib/server/initial-feedback-operation-repository.ts:141:9
+    139|     /* Only fixed errors cross this boundary. */
+    140|   }
+    141|   throw new InitialFeedbackOperationError(
+       |         ^
+    142|     status === "not_sent" ? "invalid" : "unavailable",
+    143|     status,
+ ❯ Object.claim app/lib/server/initial-feedback-operation-repository.ts:383:22
+ ❯ tests/unit/initial-feedback-operation-repository.test.ts:758:28
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 31 passed (32)
+   Start at  13:32:05
+   Duration  463ms (transform 143ms, setup 0ms, import 242ms, tests 153ms, environment 0ms)
+

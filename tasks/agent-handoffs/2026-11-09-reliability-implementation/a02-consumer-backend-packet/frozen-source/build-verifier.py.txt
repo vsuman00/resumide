@@ -1,0 +1,97 @@
+from pathlib import Path
+import re,json
+root=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats')
+old=(root/'scripts/verify-grouped-original-admission.sql').read_text();oracle=json.loads(re.search(r'\$oracle\$(.*?)\$oracle\$::jsonb',old,re.S).group(1))
+pin=Path(__file__).with_name('readiness-successor-sha256.txt').read_text().strip()
+sql='''-- SOURCE ONLY / UNPARSED / UNAPPLIED / UNEXECUTED. Rollback-only, privileged synthetic fixture.
+-- Requires a separate reviewed isolated managed target/action packet. No automatic runner.
+-- This script does not prove two-session concurrency, restore acceptance or applied grants.
+begin isolation level read committed;
+set local statement_timeout='20s';
+set local lock_timeout='2s';
+set local idle_in_transaction_session_timeout='30s';
+do $admission$
+begin
+  if current_setting('resumide.a02_test_admission',true) is distinct from 'isolated-managed-grouped-original-read/1'
+    or current_setting('resumide.a02_test_owner_id',true) is distinct from '10000000-0000-4000-8000-000000000002'
+    or coalesce(current_setting('resumide.a02_test_run_id',true),'') collate "C" !~ '^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+    or exists(select 1 from auth.users where id='10000000-0000-4000-8000-000000000002')
+    or exists(select 1 from public.resumes where id='10000000-0000-4000-8000-000000000005') then
+    raise exception 'A02_READ_FIXTURE_NOT_ADMITTED' using errcode='42501'; end if;
+  if private.canonical_correction_write_ready() is not true
+    or (select encode(extensions.digest(convert_to(prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc
+      where oid=to_regprocedure('private.canonical_correction_write_ready()')) is distinct from 'PIN'
+    or not has_function_privilege('service_role','public.read_grouped_original_workspace(uuid,uuid)','EXECUTE')
+    or has_function_privilege('anon','public.read_grouped_original_workspace(uuid,uuid)','EXECUTE')
+    or has_function_privilege('authenticated','public.read_grouped_original_workspace(uuid,uuid)','EXECUTE')
+    or exists(select 1 from pg_catalog.pg_proc p, lateral aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a
+      where p.oid=to_regprocedure('public.read_grouped_original_workspace(uuid,uuid)') and a.grantee=0 and a.privilege_type='EXECUTE')
+    or has_function_privilege('service_role','public.import_canonical_grouped_original(uuid,uuid,jsonb,jsonb,text)','EXECUTE') then
+    raise exception 'A02_READ_PROFILE_NOT_ADMITTED' using errcode='42501'; end if;
+end;
+$admission$;
+create function pg_temp.a02_read_assert(p_ok boolean,p_case text) returns void language plpgsql set search_path='' as $$
+begin if p_ok is not true then raise exception 'A02_READ_CASE_%',p_case using errcode='23514'; end if; end;
+$$;
+do $native$
+#variable_conflict use_variable
+<<fixture_scope>>
+declare oracle jsonb:=$oracle$ORACLE$oracle$::jsonb;
+  owner_id uuid:=(oracle->'scope'->>'ownerId')::uuid; org_id uuid;
+  root_id uuid:=(oracle->'scope'->>'resumeId')::uuid; source_id uuid:=(oracle->'scope'->>'sourceId')::uuid;
+  analysis_id uuid:=(oracle->'scope'->>'analysisId')::uuid; attempt_id uuid:=(oracle->'scope'->>'attemptId')::uuid;
+  envelope jsonb:=oracle->'envelope'; original jsonb:=oracle->'original'; command jsonb:=oracle->'command';
+  result jsonb; initial jsonb; imported jsonb; review_id uuid:=gen_random_uuid(); latest_id uuid:=gen_random_uuid(); count_before bigint;
+begin
+  insert into auth.users(id,aud,role,email,raw_app_meta_data,raw_user_meta_data)
+    values(owner_id,'authenticated','authenticated','a02-'||owner_id||'@example.test','{"provider":"email","providers":["email"]}','{}');
+  select id into strict org_id from public.organizations o where o.owner_id=fixture_scope.owner_id;
+  original:=jsonb_set(original,'{organizationId}',to_jsonb(org_id));
+  command:=jsonb_set(command,'{normalForm,binding,organizationId}',to_jsonb(org_id));
+  command:=jsonb_set(command,'{previewHash}',to_jsonb(private.grouped_import_command_sha256(private.grouped_original_atoms(command->'normalForm'))));
+  insert into public.resumes(id,organization_id,owner_id,display_name) values(root_id,org_id,owner_id,'Synthetic A02 read');
+  insert into public.resume_versions(id,resume_id,organization_id,owner_id,storage_key,checksum,bytes,media_type)
+    values(source_id,root_id,org_id,owner_id,'a02-read/'||source_id,repeat('a',64),1024,'application/pdf');
+  insert into public.analyses(id,resume_version_id,organization_id,owner_id,status,idempotency_key)
+    values(analysis_id,source_id,org_id,owner_id,'needs_ocr',gen_random_uuid());
+  delete from public.analysis_jobs j where j.analysis_id=fixture_scope.analysis_id;
+  insert into public.document_evidence_attempts(id,analysis_id,organization_id,owner_id,resume_version_id,input_sha256,attempt_number,envelope)
+    values(attempt_id,analysis_id,org_id,owner_id,source_id,repeat('a',64),1,envelope);
+  select count(*) into count_before from public.candidate_entry_association_batches where owner_id=fixture_scope.owner_id;
+  initial:=public.read_grouped_original_workspace(owner_id,analysis_id);
+  perform pg_temp.a02_read_assert(initial->>'status'='available' and initial->'compatibilityReady'='true'::jsonb
+    and initial->'canCommit'='false'::jsonb and initial->'freshImportAllowed'='true'::jsonb,'ready_but_writer_denied');
+  perform pg_temp.a02_read_assert(initial->'attempt'->'envelope'=envelope and initial->'source'=jsonb_build_object(
+    'ownerId',owner_id,'organizationId',org_id,'resumeId',root_id,'analysisId',analysis_id,'sourceId',source_id,'attemptId',attempt_id,'inputSha256',repeat('a',64)),'one_exact_source_envelope');
+  perform pg_temp.a02_read_assert(initial->'captured'=jsonb_build_object('reviewRevision',0,'reviewHeadId',null,
+    'assignmentRevision',0,'assignmentHeadId',null,'associationRevision',0,'associationHeadId',null,'canonicalHeadId',null),'actual_initial_pairs');
+  perform pg_temp.a02_read_assert((select count(*) from public.candidate_entry_association_batches where owner_id=fixture_scope.owner_id)=count_before
+    and not exists(select 1 from public.canonical_resume_heads where resume_id=root_id),'read_has_no_version_or_approval_writes');
+  result:=public.read_grouped_original_workspace('ffffffff-ffff-ffff-ffff-ffffffffffff',analysis_id);
+  perform pg_temp.a02_read_assert(result=jsonb_build_object('schemaVersion','grouped-original-read/1.0.0','status','not_found','scoringEligible',false),'foreign_owner_fixed_not_found');
+  result:=public.read_grouped_original_workspace(owner_id,'ffffffff-ffff-ffff-ffff-ffffffffffff');
+  perform pg_temp.a02_read_assert(result->>'status'='not_found','missing_analysis_denied');
+  -- Privileged fixture construction invokes the revoked writer without granting caller access.
+  imported:=public.import_canonical_grouped_original(owner_id,analysis_id,command,original,'a02-read-owned');
+  perform pg_temp.a02_read_assert(imported->>'status'='applied','privileged_grouped_fixture');
+  insert into public.evidence_corrections(id,attempt_id,analysis_id,organization_id,owner_id,actor_id,revision,expected_revision,field,operation,value,candidate_id,idempotency_key,request_id)
+    values(review_id,attempt_id,analysis_id,org_id,owner_id,owner_id,1,0,'employer','correct','Synthetic Later Proposal',null,gen_random_uuid(),'a02-read-owned');
+  result:=public.read_grouped_original_workspace(owner_id,analysis_id);
+  perform pg_temp.a02_read_assert(result->'captured'->'canonicalHeadId'=imported->'versionId'
+    and result->'captured'->'associationHeadId'=imported->'batchId' and result->'captured'->'associationRevision'='1'::jsonb
+    and result->'captured'->'reviewRevision'='1'::jsonb and result->'captured'->>'reviewHeadId'=review_id::text
+    and result->'freshImportAllowed'='false'::jsonb and result->'canCommit'='false'::jsonb,'nonzero_captures_head_and_capability_are_distinct');
+  insert into public.document_evidence_attempts(id,analysis_id,organization_id,owner_id,resume_version_id,input_sha256,attempt_number,envelope)
+    values(latest_id,analysis_id,org_id,owner_id,source_id,repeat('a',64),2,jsonb_set(envelope,'{id}',to_jsonb(latest_id)));
+  result:=public.read_grouped_original_workspace(owner_id,analysis_id);
+  perform pg_temp.a02_read_assert(result->'source'->>'attemptId'=latest_id::text and result->'attempt'->>'id'=latest_id::text
+    and result->'attempt'->'attemptNumber'='2'::jsonb and result->'attempt'->'envelope'->>'id'=latest_id::text,'latest_attempt_not_mixed_with_old_envelope');
+  insert into public.data_requests(organization_id,user_id,kind) values(org_id,owner_id,'deletion');
+  result:=public.read_grouped_original_workspace(owner_id,analysis_id);
+  perform pg_temp.a02_read_assert(result=jsonb_build_object('schemaVersion','grouped-original-read/1.0.0','status','not_found','scoringEligible',false),'current_privacy_blocks_raw_source');
+  raise notice 'A02_READ_SOURCE_CASES_COMPLETE_ROLLBACK_REQUIRED';
+end;
+$native$;
+rollback;
+'''.replace('PIN',pin).replace('ORACLE',json.dumps(oracle,indent=2))
+(root/'scripts/verify-grouped-original-read.sql').write_text(sql)

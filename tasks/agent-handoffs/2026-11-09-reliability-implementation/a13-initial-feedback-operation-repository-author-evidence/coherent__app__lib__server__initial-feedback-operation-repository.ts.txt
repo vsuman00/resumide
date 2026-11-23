@@ -1,0 +1,520 @@
+import { isDeepStrictEqual } from "node:util";
+import { z } from "zod";
+import {
+  InitialFeedbackPrepareSchema,
+  InitialFeedbackClaimSchema,
+  InitialFeedbackSettlementSchema,
+  InitialFeedbackUsageSchema,
+  type InitialFeedbackPrepare,
+  type InitialFeedbackClaim,
+  type InitialFeedbackSettlement,
+  type InitialFeedbackOperation,
+} from "./initial-feedback-operation-contract";
+import { InitialFeedbackPublicationPolicySchema } from "./initial-feedback-publication-policy";
+import { INITIAL_FEEDBACK_OPERATION_PROFILE } from "./initial-feedback-operation-profile";
+
+const id = z.uuid().regex(/^[a-f0-9-]+$/u);
+const sha = z.string().regex(/^[a-f0-9]{64}$/u);
+const leaseSchema = z.strictObject({
+  workerId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u),
+  attempt: z.number().int().min(1).max(3),
+  leaseFence: id,
+});
+const scopeSchema = z.strictObject({
+  ownerId: id,
+  organizationId: id,
+  analysisId: id,
+  lease: leaseSchema,
+  policy: InitialFeedbackPublicationPolicySchema,
+});
+export type InitialFeedbackOperationScope = z.infer<typeof scopeSchema>;
+const profile = INITIAL_FEEDBACK_OPERATION_PROFILE;
+/** Diagnostic FOUNDATION metadata only; not the full publication readiness wire. */
+export const InitialFeedbackOperationReadinessSchema = z.strictObject({
+  schemaVersion: z.literal(profile.schemaVersion),
+  profileVersion: z.literal(profile.profileVersion),
+  checkerSha256: z.literal(profile.checkerSha256),
+  prepareSha256: z.literal(profile.prepareSha256),
+  claimSha256: z.literal(profile.claimSha256),
+  settleSha256: z.literal(profile.settleSha256),
+  metadataSha256: z.literal(profile.metadataSha256),
+  schemaReady: z.boolean(),
+  prepareExecutable: z.boolean(),
+  claimExecutable: z.boolean(),
+  settleExecutable: z.boolean(),
+});
+const methodSchema = z.strictObject({
+  signal: z.instanceof(AbortSignal).optional(),
+});
+const errorCodeSchema = z
+  .enum([
+    "provider_failed",
+    "timeout",
+    "cancelled",
+    "invalid_output",
+    "unsupported_output",
+    "storage_failed",
+    "unknown",
+  ])
+  .nullable();
+const settlementInputSchema = z.strictObject({
+  usage: InitialFeedbackUsageSchema.nullable(),
+  errorCode: errorCodeSchema,
+});
+export type InitialFeedbackSettlementInput = z.infer<
+  typeof settlementInputSchema
+>;
+const reserved = z
+  .string()
+  .regex(/^[1-9][0-9]{0,15}$/u)
+  .refine((v) => BigInt(v) <= BigInt(Number.MAX_SAFE_INTEGER));
+const version = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$/u);
+const budgetSchema = z.strictObject({
+  p_user_id: id,
+  p_organization_id: id,
+  p_request: z.strictObject({
+    operationId: id,
+    attemptId: id,
+    attemptOrdinal: z.number().int().min(1).max(3),
+    surface: z.literal("qualitative"),
+    payloadSha256: sha,
+    model: version,
+    promptPolicyVersion: version,
+    policyVersion: version,
+    reservedInputTokens: reserved,
+    reservedOutputTokens: reserved,
+  }),
+});
+export type InitialFeedbackBudgetClaim = z.infer<typeof budgetSchema>;
+type RpcResult = { data: unknown; error: unknown };
+type RpcRequest = PromiseLike<RpcResult> & {
+  abortSignal?: (signal: AbortSignal) => PromiseLike<RpcResult>;
+};
+export interface InitialFeedbackOperationClient {
+  rpc(name: string, args: Record<string, unknown>): RpcRequest;
+}
+export type InitialFeedbackMutationStatus = "not_sent" | "refused" | "unknown";
+export class InitialFeedbackOperationError extends Error {
+  constructor(
+    readonly code:
+      "invalid" | "not_found" | "stale" | "unavailable" | "cancelled",
+    readonly mutationStatus: InitialFeedbackMutationStatus = "not_sent",
+  ) {
+    super("Initial feedback operation is unavailable.");
+    this.name = "InitialFeedbackOperationError";
+  }
+}
+const dispatchBrand: unique symbol = Symbol("validated feedback dispatch");
+export interface InitialFeedbackWinningDispatch {
+  readonly operationId: string;
+  readonly attemptId: string;
+  readonly bindingSha256: string;
+  readonly claimedAt: string;
+  readonly [dispatchBrand]: true;
+}
+export type InitialFeedbackClaimResult =
+  | {
+      status: "won";
+      claim: InitialFeedbackClaim;
+      dispatch: InitialFeedbackWinningDispatch;
+    }
+  | { status: "not_won"; claim: InitialFeedbackClaim };
+type MethodOptions = { signal?: AbortSignal };
+type DispatchState = {
+  claim: InitialFeedbackClaim;
+  usage: InitialFeedbackSettlement["usage"];
+  errorCode: InitialFeedbackSettlement["errorCode"];
+  pending: InitialFeedbackSettlementInput | null;
+  busy: boolean;
+};
+function decode<T>(
+  schema: z.ZodType<T>,
+  raw: unknown,
+  status: InitialFeedbackMutationStatus = "not_sent",
+): T {
+  try {
+    const value = schema.safeParse(raw);
+    if (value.success) return value.data;
+  } catch {
+    /* Only fixed errors cross this boundary. */
+  }
+  throw new InitialFeedbackOperationError(
+    status === "not_sent" ? "invalid" : "unavailable",
+    status,
+  );
+}
+function sameOperation(
+  a: InitialFeedbackOperation,
+  b: InitialFeedbackOperation,
+) {
+  return (
+    a.operationId === b.operationId &&
+    a.analysisId === b.analysisId &&
+    a.ownerId === b.ownerId &&
+    a.organizationId === b.organizationId &&
+    a.bindingSha256 === b.bindingSha256 &&
+    a.attemptLimit === b.attemptLimit &&
+    isDeepStrictEqual(a.binding, b.binding)
+  );
+}
+function ownCode(error: unknown) {
+  if (error === null || typeof error !== "object") return null;
+  const field = Object.getOwnPropertyDescriptor(error, "code");
+  return field && "value" in field ? field.value : null;
+}
+
+/** Server-owned scope and policy only. This factory does not adopt the worker. */
+export function createInitialFeedbackOperationRepository(
+  client: InitialFeedbackOperationClient,
+  rawScope: InitialFeedbackOperationScope,
+  options: { timeoutMs?: number; now?: () => number } = {},
+) {
+  const scope = decode(scopeSchema, rawScope);
+  const timeoutMs = options.timeoutMs ?? 5000;
+  const now = options.now ?? Date.now;
+  if (
+    !client ||
+    typeof client.rpc !== "function" ||
+    !Number.isInteger(timeoutMs) ||
+    timeoutMs < 1 ||
+    timeoutMs > 5000 ||
+    typeof now !== "function"
+  )
+    throw new InitialFeedbackOperationError("invalid");
+  const preparations = new WeakMap<
+    object,
+    InitialFeedbackPrepare & { status: "prepared" }
+  >();
+  const dispatches = new WeakMap<object, DispatchState>();
+  let original: InitialFeedbackOperation | undefined;
+
+  async function bounded<T>(
+    method: MethodOptions,
+    execute: (
+      call: (
+        name: string,
+        args: Record<string, unknown>,
+        mutation?: boolean,
+      ) => Promise<unknown>,
+      active: () => void,
+    ) => Promise<T>,
+  ): Promise<T> {
+    const { signal } = decode(methodSchema, method);
+    const start = now();
+    if (!Number.isFinite(start))
+      throw new InitialFeedbackOperationError("invalid");
+    const deadline = start + timeoutMs;
+    const controller = new AbortController();
+    let sent = false;
+    const status = () => (sent ? ("unknown" as const) : ("not_sent" as const));
+    let stop!: (e: InitialFeedbackOperationError) => void;
+    const interrupted = new Promise<never>((_, reject) => {
+      stop = reject;
+    });
+    const abort = () => {
+      stop(
+        new InitialFeedbackOperationError(
+          signal?.aborted ? "cancelled" : "unavailable",
+          status(),
+        ),
+      );
+      controller.abort();
+    };
+    const active = () => {
+      if (
+        signal?.aborted ||
+        controller.signal.aborted ||
+        !Number.isFinite(now()) ||
+        now() >= deadline
+      )
+        throw new InitialFeedbackOperationError(
+          signal?.aborted ? "cancelled" : "unavailable",
+          status(),
+        );
+    };
+    signal?.addEventListener("abort", abort, { once: true });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      active();
+      timer = setTimeout(abort, timeoutMs);
+      const call = async (
+        name: string,
+        args: Record<string, unknown>,
+        mutation = true,
+      ) => {
+        active();
+        if (mutation) sent = true;
+        let reply: RpcResult;
+        try {
+          const request = client.rpc(name, args);
+          reply = await (request.abortSignal
+            ? request.abortSignal(controller.signal)
+            : request);
+        } catch {
+          throw new InitialFeedbackOperationError("unavailable", status());
+        }
+        active();
+        if (!reply || typeof reply !== "object")
+          throw new InitialFeedbackOperationError("unavailable", status());
+        if (reply.error) {
+          const code = ownCode(reply.error);
+          const fixed =
+            code === "22023"
+              ? "invalid"
+              : code === "42501"
+                ? "not_found"
+                : code === "P0C01"
+                  ? "stale"
+                  : code === "P0C03"
+                    ? "unavailable"
+                    : null;
+          throw new InitialFeedbackOperationError(
+            fixed ?? "unavailable",
+            mutation && fixed ? "refused" : status(),
+          );
+        }
+        return reply.data;
+      };
+      const work = Promise.resolve().then(() => {
+        active();
+        return execute(call, active);
+      });
+      const value = await Promise.race([work, interrupted]);
+      active();
+      return value;
+    } catch (e) {
+      if (e instanceof InitialFeedbackOperationError) throw e;
+      throw new InitialFeedbackOperationError("unavailable", status());
+    } finally {
+      if (timer) clearTimeout(timer);
+      signal?.removeEventListener("abort", abort);
+      controller.abort();
+    }
+  }
+  async function ready(
+    call: (
+      name: string,
+      args: Record<string, unknown>,
+      mutation?: boolean,
+    ) => Promise<unknown>,
+    capability: "prepareExecutable" | "claimExecutable",
+  ) {
+    let value;
+    try {
+      value = InitialFeedbackOperationReadinessSchema.safeParse(
+        await call("read_initial_feedback_operation_readiness", {}, false),
+      );
+    } catch (e) {
+      if (e instanceof InitialFeedbackOperationError && e.code === "cancelled")
+        throw e;
+      throw new InitialFeedbackOperationError("unavailable");
+    }
+    if (
+      !value.success ||
+      !value.data.schemaReady ||
+      !value.data[capability] ||
+      (capability === "claimExecutable" && !value.data.settleExecutable)
+    )
+      throw new InitialFeedbackOperationError("unavailable");
+  }
+  function correlate(operation: InitialFeedbackOperation) {
+    if (
+      operation.ownerId !== scope.ownerId ||
+      operation.organizationId !== scope.organizationId ||
+      operation.analysisId !== scope.analysisId ||
+      operation.state !== "open" ||
+      operation.publicationId !== null ||
+      (original && !sameOperation(original, operation))
+    )
+      throw new InitialFeedbackOperationError("unavailable", "unknown");
+  }
+  return {
+    async prepare(
+      retryAfterAttemptId: string | null = null,
+      method: MethodOptions = {},
+    ): Promise<InitialFeedbackPrepare> {
+      decode(id.nullable(), retryAfterAttemptId);
+      return bounded(method, async (call, active) => {
+        await ready(call, "prepareExecutable");
+        const reply = decode(
+          InitialFeedbackPrepareSchema,
+          await call("prepare_initial_feedback", {
+            p_analysis_id: scope.analysisId,
+            p_lease: structuredClone(scope.lease),
+            p_policy: {
+              version: scope.policy.version,
+              sha256: scope.policy.sha256,
+            },
+            p_retry_after_attempt_id: retryAfterAttemptId,
+          }),
+          "unknown",
+        );
+        correlate(reply.operation);
+        if (reply.status === "published")
+          throw new InitialFeedbackOperationError("unavailable", "unknown");
+        if (
+          reply.status === "prepared" &&
+          reply.attempt.attemptId !== reply.operation.attempts.at(-1)?.attemptId
+        )
+          throw new InitialFeedbackOperationError("unavailable", "unknown");
+        if (reply.status === "prepared") {
+          if (
+            !isDeepStrictEqual(reply.operation.binding.policy, scope.policy) ||
+            (retryAfterAttemptId === null
+              ? reply.attempt.ordinal !== 1
+              : reply.operation.attempts.at(-2)?.attemptId !==
+                retryAfterAttemptId)
+          )
+            throw new InitialFeedbackOperationError("unavailable", "unknown");
+          preparations.set(reply, structuredClone(reply));
+        }
+        active();
+        original = structuredClone(reply.operation);
+        return reply;
+      });
+    },
+    async claim(
+      prepared: InitialFeedbackPrepare,
+      rawBudget: InitialFeedbackBudgetClaim | null = null,
+      method: MethodOptions = {},
+    ): Promise<InitialFeedbackClaimResult> {
+      const held = preparations.get(prepared);
+      if (!held) throw new InitialFeedbackOperationError("invalid");
+      const budget = decode(budgetSchema.nullable(), rawBudget);
+      const op = held.operation,
+        att = held.attempt,
+        p = op.binding.policy;
+      if (
+        p.budgetPolicyVersion === null
+          ? budget !== null
+          : !budget ||
+            budget.p_user_id !== scope.ownerId ||
+            budget.p_organization_id !== scope.organizationId ||
+            budget.p_request.operationId !== op.operationId ||
+            budget.p_request.attemptId !== att.attemptId ||
+            budget.p_request.payloadSha256 !== op.bindingSha256 ||
+            budget.p_request.model !== p.model ||
+            budget.p_request.promptPolicyVersion !== p.promptVersion ||
+            budget.p_request.policyVersion !== p.budgetPolicyVersion ||
+            budget.p_request.reservedOutputTokens !== String(p.maxOutputTokens)
+      )
+        throw new InitialFeedbackOperationError("invalid");
+      return bounded(method, async (call, active) => {
+        await ready(call, "claimExecutable");
+        const reply = decode(
+          InitialFeedbackClaimSchema,
+          await call("claim_initial_feedback_dispatch", {
+            p_analysis_id: scope.analysisId,
+            p_lease: structuredClone(scope.lease),
+            p_operation_id: op.operationId,
+            p_attempt_id: att.attemptId,
+            p_binding_sha256: op.bindingSha256,
+            p_budget: budget,
+          }),
+          "unknown",
+        );
+        correlate(reply.operation);
+        if (
+          !sameOperation(op, reply.operation) ||
+          reply.attempt.attemptId !== att.attemptId ||
+          reply.attempt.ordinal !== att.ordinal
+        )
+          throw new InitialFeedbackOperationError("unavailable", "unknown");
+        active();
+        if (!reply.dispatchAllowed) return { status: "not_won", claim: reply };
+        if (
+          reply.replayed ||
+          reply.attempt.state !== "dispatched" ||
+          reply.attempt.claimedAt === null
+        )
+          throw new InitialFeedbackOperationError("unavailable", "unknown");
+        if (
+          budget &&
+          (reply.budget?.status !== "ok" ||
+            reply.budget.receipt.reservedInputTokens !==
+              budget.p_request.reservedInputTokens ||
+            reply.budget.receipt.reservedOutputTokens !==
+              budget.p_request.reservedOutputTokens ||
+            reply.budget.receipt.attemptOrdinal !==
+              budget.p_request.attemptOrdinal)
+        )
+          throw new InitialFeedbackOperationError("unavailable", "unknown");
+        const dispatch: InitialFeedbackWinningDispatch = Object.freeze({
+          operationId: op.operationId,
+          attemptId: att.attemptId,
+          bindingSha256: op.bindingSha256,
+          claimedAt: reply.attempt.claimedAt,
+          [dispatchBrand]: true as const,
+        });
+        dispatches.set(dispatch, {
+          claim: structuredClone(reply),
+          usage: null,
+          errorCode: null,
+          pending: null,
+          busy: false,
+        });
+        return { status: "won", claim: reply, dispatch };
+      });
+    },
+    async settle(
+      dispatch: InitialFeedbackWinningDispatch,
+      rawInput: InitialFeedbackSettlementInput,
+      method: MethodOptions = {},
+    ): Promise<InitialFeedbackSettlement> {
+      const held = dispatches.get(dispatch);
+      if (!held || held.busy)
+        throw new InitialFeedbackOperationError("invalid");
+      const input = decode(settlementInputSchema, rawInput);
+      if (
+        (held.usage &&
+          input.usage &&
+          !isDeepStrictEqual(held.usage, input.usage)) ||
+        (held.errorCode &&
+          input.errorCode &&
+          held.errorCode !== input.errorCode) ||
+        (held.pending && !isDeepStrictEqual(held.pending, input))
+      )
+        throw new InitialFeedbackOperationError("invalid");
+      held.busy = true;
+      try {
+        return await bounded(method, async (call, active) => {
+          // Independent technical attempt: no readiness/candidate/consent/month read.
+          const identity = held.claim;
+          held.pending = structuredClone(input);
+          const reply = decode(
+            InitialFeedbackSettlementSchema,
+            await call("settle_initial_feedback_attempt", {
+              p_operation_id: identity.operation.operationId,
+              p_attempt_id: identity.attempt.attemptId,
+              p_binding_sha256: identity.operation.bindingSha256,
+              p_usage: input.usage,
+              p_error_code: input.errorCode,
+            }),
+            "unknown",
+          );
+          const expectedUsage = held.usage ?? input.usage;
+          const expectedError = held.errorCode ?? input.errorCode;
+          if (
+            reply.operationId !== identity.operation.operationId ||
+            reply.attemptId !== identity.attempt.attemptId ||
+            reply.bindingSha256 !== identity.operation.bindingSha256 ||
+            !isDeepStrictEqual(reply.usage, expectedUsage) ||
+            reply.errorCode !== expectedError ||
+            (reply.usage !== null && reply.state === "held_unknown") ||
+            (reply.usage === null && reply.state !== "held_unknown") ||
+            (reply.usage !== null &&
+              reply.state !== (reply.errorCode === null ? "known" : "failed"))
+          )
+            throw new InitialFeedbackOperationError("unavailable", "unknown");
+          active();
+          held.usage = reply.usage;
+          held.errorCode = reply.errorCode;
+          held.pending = null;
+          return reply;
+        });
+      } finally {
+        held.busy = false;
+      }
+    },
+  };
+}

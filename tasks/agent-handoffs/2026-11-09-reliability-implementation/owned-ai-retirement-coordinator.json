@@ -1,0 +1,79 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE",
+  "owner": "pricing_validation",
+  "parent": [
+    "CR-A13",
+    "CR-R19"
+  ],
+  "files": [
+    "supabase/migrations/20261115100607_owned_ai_retirement.sql",
+    "app/lib/server/initial-feedback-profile.ts",
+    "tests/unit/owned-ai-retirement-sql.test.ts",
+    "scripts/verify-owned-ai-retirement.sql",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-owned-ai-retirement.md",
+    "tests/unit/initial-feedback-late-settlement-sql.test.ts"
+  ],
+  "preimages": {
+    "app/lib/server/initial-feedback-profile.ts": "1a0113aa8a7c19f72cc5da238953404392d86f23fcfa61fc0e16b8748a26104f",
+    "tests/unit/owned-ai-retirement-sql.test.ts": null,
+    "scripts/verify-owned-ai-retirement.sql": null,
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-owned-ai-retirement.md": null,
+    "supabase/migrations/20261115100607_owned_ai_retirement.sql": null,
+    "tests/unit/initial-feedback-late-settlement-sql.test.ts": "291296d1ccd0e8d84b59d618a30ede0c0b6a35b65581333f8b98a847b557f4a9"
+  },
+  "dependencyTransfers": {
+    "supabase/migrations/20261115095258_initial_feedback_late_settlement.sql": {
+      "preimage": null,
+      "postimage": "6563a195f69de2bd92675da850b7b893e7e6df16cd6223a2e85ef3c3739286cf"
+    },
+    "app/lib/server/initial-feedback-operation-profile.ts": {
+      "preimage": "871d489793a9091b8dc75fb97e1019a1b892d9e5478b387deab654514cb8c87e",
+      "postimage": "0071bcade48d53e053fa2670f485dd3e90a6a63a248efefe9272019ddb73e93a"
+    },
+    "app/lib/server/initial-feedback-profile.ts": {
+      "preimage": "219cee395932854bf67bbbcb727eb4eaab606f8867b47665c1ec5857d89763c6",
+      "postimage": "1a0113aa8a7c19f72cc5da238953404392d86f23fcfa61fc0e16b8748a26104f"
+    },
+    "tests/unit/owned-ai-usage-sql.test.ts": {
+      "preimage": "08b6f5ed4e32af11f47f4e60dd92eb44a9541a9ab3340b4c59ce8378757aeaea",
+      "postimage": "5cf9cec6616680dfae5d459ead023f1a556801e3b5b8ce09960e6ab7f3e88e11"
+    },
+    "tests/unit/initial-feedback-publication-sql.test.ts": {
+      "preimage": null,
+      "postimage": "af3a0488b1642396b1d402fdf13a05a3f3537e7242d6337cf89928e00d06021e"
+    },
+    "app/lib/server/initial-feedback-publication-repository.ts": {
+      "preimage": null,
+      "postimage": "43aff60fd4233f89e3bc3a8e42d0ab39a60deba775ee5b4d85915ac438d127e2"
+    },
+    "app/lib/server/initial-feedback-service.ts": {
+      "preimage": null,
+      "postimage": "e59757235b63940b12fd027d07eaee1297426f2e12db1b9db18dc9d70d206dd7"
+    },
+    "tests/unit/initial-feedback-service.test.ts": {
+      "preimage": null,
+      "postimage": "4eb30aef79cc20ee2f73b10a55dfcaa9f044c0953150e7b8ac7b93b2b437f21e"
+    },
+    "scripts/verify-initial-feedback-late-settlement.sql": {
+      "preimage": null,
+      "postimage": "25254db8b7aba50caa1bb9d998079e0d6ee59bce660d9eb10c36f5bcf206cbf2"
+    }
+  },
+  "dependencyArchive": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-retirement-dependencies-2lc6x_ps",
+  "scope": "Minimal exact content retirement proof, actual deletion/retention producer patch, same-snapshot counter successor, separate owner-wide export/readiness and actual source pins. No expiry/Auth/restore implementation yet.",
+  "design": "runtime-owned-ai-retention-design.md",
+  "boundaries": "Source-only; SQL UNPARSED/UNEXECUTED; no DB/hosted/provider/services/env/PII/deps/Git/deployment",
+  "scaffold": {
+    "migration": "supabase/migrations/20261115100607_owned_ai_retirement.sql",
+    "receiptSha256": "2ca29f4cc0321a9fc13d3b8614e5ed799174791dc1f556f6ed12be9aae45525f"
+  },
+  "historicalPlumbing": "Granted late-settlement8 fullProfile fixture only; unchanged original95258 assertions; successor retirement test proves current liveprofile",
+  "integratedFiles": {
+    "supabase/migrations/20261115100607_owned_ai_retirement.sql": "ba89d609204d73e0588e1af33b54d46bf0583c810b14f80e843893bea9730cc5",
+    "app/lib/server/initial-feedback-profile.ts": "0b2811871b33a08009aa174cac11ba049d3d4be3ee22e3b9df8ac7cae36557ec",
+    "tests/unit/owned-ai-retirement-sql.test.ts": "25e8bbc549b4bee37292ee2a15a1be71e7f387179ba2b37b8424cdd0122028c3",
+    "tests/unit/initial-feedback-late-settlement-sql.test.ts": "ca1083dd22f4cca27a8a85a01796c27f6d6d92b670c51c11d49fa37e5399bdd1",
+    "scripts/verify-owned-ai-retirement.sql": "f544c8d1f68365a155c0c2c6113e5295c1cdceb1e39eebcf4eea926818fdd56c",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-owned-ai-retirement.md": "2454407168f417ab447fa592af75efdae635107d45e7fb45db84b3b04fe1fdac"
+  }
+}

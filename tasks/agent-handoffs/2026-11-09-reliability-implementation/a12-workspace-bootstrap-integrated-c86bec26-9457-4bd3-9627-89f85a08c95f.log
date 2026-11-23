@@ -1,0 +1,234 @@
+
+> test
+> vitest run tests/unit/canonical-rewrite-workspace.test.ts tests/components/CanonicalRewritePanel.test.tsx tests/unit/canonical-rewrite-score.test.ts tests/unit/canonical-rewrite-route.test.ts tests/unit/typed-authoring-score-route.test.ts tests/unit/typed-score-route.test.ts tests/unit/score-v2-route.test.ts
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats
+
+ ✓ tests/unit/score-v2-route.test.ts (15 tests) 25ms
+ ✓ tests/unit/typed-score-route.test.ts (14 tests) 277ms
+ ✓ tests/unit/typed-authoring-score-route.test.ts (17 tests) 464ms
+ ✓ tests/unit/canonical-rewrite-workspace.test.ts (29 tests) 754ms
+ ✓ tests/unit/canonical-rewrite-route.test.ts (11 tests) 777ms
+ ✓ tests/unit/canonical-rewrite-score.test.ts (12 tests) 930ms
+stderr | tests/components/CanonicalRewritePanel.test.tsx > shows actual saved source basis, pinned versions and honest exact-copy wording
+No `HydrateFallback` element provided to render during initial hydration
+
+ ✓ tests/components/CanonicalRewritePanel.test.tsx (28 tests) 2007ms
+
+ Test Files  7 passed (7)
+      Tests  126 passed (126)
+   Start at  10:20:44
+   Duration  3.48s (transform 2.19s, setup 0ms, import 4.23s, tests 5.23s, environment 601ms)
+
+
+> typecheck
+> react-router typegen && tsc
+
+
+> lint
+> eslint app/routes app/lib/server app/lib/native-layout-schema.ts app/lib/native-layout-structure.ts tests e2e app/components scripts/verify-local-ocr.ts vite.worker.config.ts scripts/check-container.mjs
+
+
+> build
+> react-router build
+
+Using Vite Environment API (experimental)
+vite v6.4.5 building for production...
+transforming...
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/canonical-rewrite-contract.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:util" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/canonical-rewrite-contract.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/canonical-rewrite-contract.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:util" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/canonical-rewrite-contract.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-score-diagnostics.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-score-diagnostics.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-authoring-declaration.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-authoring-declaration.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-authoring-protocol.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-authoring-protocol.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/writing-support.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/writing-support.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/job-duration-subject.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/job-duration-subject.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-authoring-command-codec.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-authoring-command-codec.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/job-aliases.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/job-aliases.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/requirement-semantic-evidence.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/requirement-semantic-evidence.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/requirement-coverage.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/requirement-coverage.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-authoring-contract.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-authoring-contract.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/score-v2-engine.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/score-v2-engine.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/job-requirement-admission.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/job-requirement-admission.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/requirement-duration.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/requirement-duration.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/job-requirements.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/job-requirements.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/evidence-targets.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/evidence-targets.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/evidence-entry-associations.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/evidence-entry-associations.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/canonical-repository.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/canonical-repository.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+node_modules/zod/v4/core/util.js (400:0): A comment
+
+"// Wrapped in a `@__PURE__` IIFE: esbuild never tree-shakes a top-level initializer that contains a member access on `Number`, so the bare object literal survived into every bundle."
+
+in "node_modules/zod/v4/core/util.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/zod/v4/core/regexes.js (74:0): A comment
+
+"/** Anchors a pattern source. The interpolation lives here rather than at the call site because
+ * esbuild will not drop a `@__PURE__` call whose own argument interpolates a variable, but it
+ * will drop `anchor(dateSource)`. Keeping it inline pinned `date` into every bundle. */"
+
+in "node_modules/zod/v4/core/regexes.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/job-relations.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/job-relations.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/canonical-content.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/canonical-content.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/ocr/profiles.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+[plugin vite:resolve] Module "node:crypto" has been externalized for browser compatibility, imported by "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/ocr/profiles.ts". See https://vite.dev/guide/troubleshooting.html#module-externalized-for-browser-compatibility for more details.
+✓ 330 modules transformed.
+✗ Build failed in 1.88s
+app/lib/server/typed-authoring-command-codec.ts (1:9): "createHash" is not exported by "__vite-browser-external", imported by "app/lib/server/typed-authoring-command-codec.ts".
+file: /Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-authoring-command-codec.ts:1:9
+
+1: import { createHash } from "node:crypto";
+            ^
+2: 
+3: export const TYPED_AUTHORING_COMMAND_CODEC_VERSION = "a11-command-bytes/1.0.0";
+
+    at getRollupError (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/rollup/dist/es/shared/parseAst.js:402:41)
+    at error (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/rollup/dist/es/shared/parseAst.js:398:42)
+    at Module.error (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/rollup/dist/es/shared/node-entry.js:17040:16)
+    at Module.traceVariable (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/rollup/dist/es/shared/node-entry.js:17452:29)
+    at ModuleScope.findVariable (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/rollup/dist/es/shared/node-entry.js:15070:39)
+    at FunctionScope.findVariable (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/rollup/dist/es/shared/node-entry.js:5673:38)
+    at FunctionBodyScope.findVariable (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/rollup/dist/es/shared/node-entry.js:5673:38)
+    at Identifier.bind (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/rollup/dist/es/shared/node-entry.js:5447:40)
+    at CallExpression.bind (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/rollup/dist/es/shared/node-entry.js:2829:23)
+    at CallExpression.bind (file:///Users/vaibhavsuman/Development/Presonal%20Project/ResumeATS/resume_ats/node_modules/rollup/dist/es/shared/node-entry.js:12179:15) {
+  binding: 'createHash',
+  code: 'MISSING_EXPORT',
+  exporter: '__vite-browser-external',
+  id: '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-authoring-command-codec.ts',
+  url: 'https://rollupjs.org/troubleshooting/#error-name-is-not-exported-by-module',
+  pos: 9,
+  loc: {
+    column: 9,
+    file: '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/typed-authoring-command-codec.ts',
+    line: 1
+  },
+  frame: '1: import { createHash } from "node:crypto";\n' +
+    '            ^\n' +
+    '2: \n' +
+    '3: export const TYPED_AUTHORING_COMMAND_CODEC_VERSION = "a11-command-bytes/1.0.0";',
+  watchFiles: [
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/root.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/auth.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/home.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/auth.callback.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/auth.logout.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/account.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analyses.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/upload.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/privacy.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/latex.compile.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/build.suggest.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/latex.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/latex.legacy.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/latex.compile-legacy.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/resume.rewrite.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/resume.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.source.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.export.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.evidence.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.artifact.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.canonical.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.author.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.author.typed.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.rewrite.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.rewrite.workspace.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.score.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/api.analysis-status.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/analysis.requirements.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/api.analyze.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/api.analysis-cancel.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/api.telemetry.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/api.privacy-export.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/api.not-found.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/metrics.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/healthz.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/@react-router/dev/dist/config/defaults/entry.client.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/readyz.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/routes/chrome-devtools.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/client.js',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react/index.js',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react/jsx-runtime.js',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/dom-export.mjs',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/package.json',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react/cjs/react.production.js',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react/cjs/react-jsx-runtime.production.js',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/cjs/react-dom-client.production.js',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/index.js',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-BV7QT456.mjs',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/chunk-HT4INDD5.mjs',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/scheduler/index.js',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/EvidenceScene3D.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/auth.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-router/dist/development/index.mjs',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/PublicShell.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/WorkspaceShell.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/cjs/react-dom.production.js',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/FileUploader.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/utils.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/SiteNavigation.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/LatexPdfPreview.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/store.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/BuildAiAssistant.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/latex-converter.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/privacy-deletion.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/LatexConverter.module.css',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/scheduler/cjs/scheduler.production.js',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/StageTimeline.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/AuthoringWorkspace.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/RequirementCoverageReview.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/CanonicalRewritePanel.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/server/canonical-rewrite-contract.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/TypedAuthoringBridge.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/BrandLockup.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/WorkspaceShell.module.css',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dropzone/dist/es/index.js',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/zustand/esm/index.mjs',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/ThemeControl.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/clsx/dist/clsx.mjs',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/CitedWritingSuggestions.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/pdf2img.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/SavedScoreContext.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/Summary.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/Details.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/ATS.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/ParseView.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/Heatmap.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/RewriteGenerator.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/ResumeWriter.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/result-feedback.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/ResultTabs.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/SiteNavigation.module.css',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/build-assist.ts',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/CanonicalCorrectionReview.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/GroupedOriginalImportReview.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/CanonicalEntryRegroupReview.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/BuildAiAssistant.module.css',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/tailwind-merge/dist/bundle-mjs.mjs',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/components/TelemetryReporter.tsx',
+    '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/app/lib/theme.ts',
+    ... 4075 more items
+  ],
+  [Symbol(augmented)]: true
+}

@@ -1,0 +1,5 @@
+{
+  "date": "2026-11-09",
+  "query": "select c.relname as table_name, c.relrowsecurity as rls_enabled, has_schema_privilege('anon','private','USAGE') as anon_schema_usage, has_schema_privilege('authenticated','private','USAGE') as authenticated_schema_usage, has_table_privilege('anon',c.oid,'SELECT') as anon_select, has_table_privilege('authenticated',c.oid,'SELECT') as authenticated_select from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relname in ('analysis_rate_limit_buckets','privacy_deletion_plans','retention_items') order by c.relname;",
+  "observation": "All3 private tables had RLS enabled; anon/authenticated had neither schema USAGE nor SELECT. The no-policy INFO is consistent with intentional server-only access, not proven public exposure."
+}

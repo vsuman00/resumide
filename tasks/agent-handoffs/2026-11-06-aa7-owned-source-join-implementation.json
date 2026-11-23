@@ -1,0 +1,68 @@
+{
+  "status": "PREPARED_FOR_COORDINATOR_INTEGRATION",
+  "files": {
+    "app/lib/server/canonical-repository.ts": {
+      "baselineSha256": "7f6e3052b0e3caa2ab13308f58cef37eebf4f40cd737d1f91ef80aa7bc1ef8a5",
+      "candidateSha256": "e3006273398857eb9c73100d45334d2c26324a032d9a9dee03c87a8f8986cf4b"
+    },
+    "app/lib/server/job-requirement-repository.ts": {
+      "baselineSha256": "1af779d2428eb7619153f5d4486c6018063536619f6a73c86c44277b654c98ad",
+      "candidateSha256": "797c9f31816dd93adb20b9f70ba6718d4c692be817b9fd3c17f09c352b78607e"
+    },
+    "tests/unit/repository-read-scheduling.test.ts": {
+      "baselineSha256": "321b1717f4b16f0b87bc393d6bd48d85da88016ab5e5f7072479ceaa8d7bad3a",
+      "candidateSha256": "b564830f269b3427c0ca8cde0d9b191f12878a180e83f3710f628286e40d77ab"
+    }
+  },
+  "patch": "tasks/agent-handoffs/2026-11-06-aa7-owned-source-join.patch",
+  "patchSha256": "14cef070c9703fe714416f756aed8f48bb139a55655136179b525bfb21cdbe3f",
+  "checks": {
+    "newGuardTestsRed": {
+      "failed": 4,
+      "passed": 17
+    },
+    "focusedGreen": {
+      "passed": 21,
+      "failed": 0
+    },
+    "originalTopLevelTestStatementsUnchanged": 11,
+    "originalExpandedCases": 13,
+    "newExpandedCases": 8,
+    "eslint": "PASS",
+    "prettier": "PASS",
+    "currentRootReadOnlyTypeOverlay": {
+      "diagnostics": 0,
+      "ambientTypesIncluded": true,
+      "emits": false
+    },
+    "broaderIsolatedRun": {
+      "passed": 93,
+      "failed": 1,
+      "failure": "canonical-sql-contract.test.ts: isolated stale schema JSON date-time pattern parity; no schema changes included"
+    },
+    "authorizationQueryWaves": {
+      "canonicalBefore": 3,
+      "canonicalAfter": 2,
+      "canonicalReadsBefore": 5,
+      "canonicalReadsAfter": 4,
+      "requirementsBefore": 3,
+      "requirementsAfter": 2,
+      "requirementsReadsBefore": 6,
+      "requirementsReadsAfter": 5
+    }
+  },
+  "supportOnlyExcluded": {
+    "file": "app/lib/server/authoring-repository.ts",
+    "sha256": "465c694a79f441b5fcffe19cfb38e7de95c29633f70cdedca6bab639b1f3a05c",
+    "matchesCurrentRoot": true
+  },
+  "boundaries": {
+    "servicesStarted": false,
+    "databaseCalls": false,
+    "rootWrites": false,
+    "timeoutChanges": false,
+    "migrationChanges": false,
+    "finalFreshnessBarriersChanged": false,
+    "browserLatencyClaim": false
+  }
+}

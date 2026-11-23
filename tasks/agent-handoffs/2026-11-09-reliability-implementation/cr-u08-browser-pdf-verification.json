@@ -1,0 +1,63 @@
+{
+  "id": "CR-U08-S07",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "status": "VERIFIED_LOCAL_PDFJS_AND_EXACT_COMPILER_WITH_FIXTURE_SERVICES",
+  "workspace": "Integrated dirty main checkout",
+  "before": "A header count in range was enough to create a download even before opening the PDF. In the red regression the component rendered a PDF whose parsed count disagreed with the header.",
+  "after": {
+    "downloadGate": "Create a download for the current PDF only after PDF.js verifies the declared count or reports that browser preview is unavailable.",
+    "refusals": "The component rejects a page-count mismatch and classified invalid or password-protected documents. The route keeps the source, removes preview and keeps the download disabled.",
+    "previewLoadDeadlineMs": 10000,
+    "fallback": "A dedicated bounded preview-only failure or timeout still allows the server-checked PDF to be downloaded. Late check results for a different PDF are ignored."
+  },
+  "browser": {
+    "channel": "Google Chrome",
+    "zoomPercent": 200,
+    "viewportCssWidths": [390, 320],
+    "workerImageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "workerPlatform": "linux/arm64",
+    "fixtureResponses": [
+      "HTTP 401",
+      "empty PDF",
+      "valid two-page PDF with one-page header"
+    ],
+    "authRateAndAiSuggestion": "Simulated",
+    "mismatchedResponseRejected": true,
+    "sourceRetainedAndRecompiled": true,
+    "realCompilations": 3,
+    "totalCompileRequests": 6,
+    "matchedDownloads": 3,
+    "responseAndDownloadSha256": [
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f",
+      "3ec3c5e17be268457834e91528b760dd8b1f9c206effd64040db2a4810d195f0",
+      "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f"
+    ],
+    "remainingConverterContainers": 0
+  },
+  "checks": {
+    "focusedTests": 166,
+    "focusedFiles": 6,
+    "integratedTests": 7233,
+    "integratedFiles": 340,
+    "typecheck": "pass",
+    "lint": {
+      "errors": 0,
+      "existingWarnings": 4
+    },
+    "webBuild": "pass",
+    "workerBuild": "pass"
+  },
+  "sourceHashes": {
+    "app/routes/latex.tsx": "c274a357c44ce8156b9996ced7c05f223fe684221d47d59850bc01fb7a32cb9d",
+    "app/components/LatexPdfPreview.tsx": "7f44b22690da3e37e0056c2b281bcbee515406499d1be5363117ae43c1ac964f",
+    "tests/components/LatexCompileRecovery.test.tsx": "f28dcff5a5826bc9288fbb02c0b2c6407c3f3a6366b761957744ba566f413f25",
+    "tests/components/LatexPdfPreview.test.tsx": "7add8f2a16e7a868a9c0ba802be3b732573be0f77f86683d19936ed36f6ccd10",
+    "scripts/verify-local-build-pdf-lifecycle.ts": "3318bcf8c789c07f4ecf148b611cb3382c1a70455a38beea97de7985c5ba15a1"
+  },
+  "open": [
+    "Managed Auth and rate admission",
+    "Live Build AI",
+    "Formal accessibility and release acceptance"
+  ]
+}

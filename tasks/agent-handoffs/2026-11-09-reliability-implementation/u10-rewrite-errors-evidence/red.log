@@ -1,0 +1,71 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ↓ tests/components/RewriteGenerator.test.tsx > offers draft generation without guaranteeing factual grounding
+ ↓ tests/components/RewriteGenerator.test.tsx > announces submitting as pending drafts and disables duplicate requests
+ ↓ tests/components/RewriteGenerator.test.tsx > announces loading as pending drafts and disables duplicate requests
+ ↓ tests/components/RewriteGenerator.test.tsx > distinguishes saved drafts from accepted or saved resume changes
+ ↓ tests/components/RewriteGenerator.test.tsx > shows a failed request without claiming a save or hiding the retry action
+ × tests/components/RewriteGenerator.test.tsx > distinguishes published AI_REFUSED feedback in the actual component 47ms
+   → expected 'The AI provider could not complete wr…' to be 'The AI provider declined this writing…' // Object.is equality
+ × tests/components/RewriteGenerator.test.tsx > distinguishes published AI_RATE_LIMITED feedback in the actual component 4ms
+   → expected 'The AI provider could not complete wr…' to be 'Writing requests are temporarily limi…' // Object.is equality
+ × tests/components/RewriteGenerator.test.tsx > distinguishes published AI_CANCELLED feedback in the actual component 3ms
+   → expected 'The AI provider could not complete wr…' to be 'The writing request was cancelled. Yo…' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/RewriteGenerator.test.tsx > distinguishes published AI_REFUSED feedback in the actual component
+AssertionError: expected 'The AI provider could not complete wr…' to be 'The AI provider declined this writing…' // Object.is equality
+
+Expected: "The AI provider declined this writing request. Review any saved drafts."
+Received: "The AI provider could not complete writing generation. Your previous draft is preserved."
+
+ ❯ tests/components/RewriteGenerator.test.tsx:115:49
+    113|   };
+    114|   render(<RewriteGenerator analysisId="synthetic-analysis" />);
+    115|   expect(screen.getByRole("alert").textContent).toBe(message);
+       |                                                 ^
+    116|   expect(screen.getByRole("status").textContent).toBe("");
+    117|   expect(screen.getByRole("button").closest("form")?.getAttribute("act…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/components/RewriteGenerator.test.tsx > distinguishes published AI_RATE_LIMITED feedback in the actual component
+AssertionError: expected 'The AI provider could not complete wr…' to be 'Writing requests are temporarily limi…' // Object.is equality
+
+Expected: "Writing requests are temporarily limited. Wait before trying again."
+Received: "The AI provider could not complete writing generation. Your previous draft is preserved."
+
+ ❯ tests/components/RewriteGenerator.test.tsx:115:49
+    113|   };
+    114|   render(<RewriteGenerator analysisId="synthetic-analysis" />);
+    115|   expect(screen.getByRole("alert").textContent).toBe(message);
+       |                                                 ^
+    116|   expect(screen.getByRole("status").textContent).toBe("");
+    117|   expect(screen.getByRole("button").closest("form")?.getAttribute("act…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/components/RewriteGenerator.test.tsx > distinguishes published AI_CANCELLED feedback in the actual component
+AssertionError: expected 'The AI provider could not complete wr…' to be 'The writing request was cancelled. Yo…' // Object.is equality
+
+Expected: "The writing request was cancelled. You can request suggestions again."
+Received: "The AI provider could not complete writing generation. Your previous draft is preserved."
+
+ ❯ tests/components/RewriteGenerator.test.tsx:115:49
+    113|   };
+    114|   render(<RewriteGenerator analysisId="synthetic-analysis" />);
+    115|   expect(screen.getByRole("alert").textContent).toBe(message);
+       |                                                 ^
+    116|   expect(screen.getByRole("status").textContent).toBe("");
+    117|   expect(screen.getByRole("button").closest("form")?.getAttribute("act…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 5 skipped (8)
+   Start at  18:07:35
+   Duration  749ms (transform 32ms, setup 0ms, import 112ms, tests 55ms, environment 510ms)
+

@@ -1,0 +1,59 @@
+{
+  "status": "COMPLETE_WITH_FINDINGS_AND_BLOCKED_CAPABILITIES",
+  "date": "2026-11-09",
+  "checks": {
+    "markdownFormat": "pass",
+    "gitDiffCheck": "pass",
+    "localFileLinks": 61,
+    "missingLinks": [],
+    "jsonDocumentsParsed": 55,
+    "capturedNonDocumentOutput": [
+      {
+        "file": "tasks/agent-handoffs/2026-11-09-consumer-sandbox/missing-runtime.json",
+        "kind": "empty stdout from intentionally preserved failed availability assertion, not a JSON document",
+        "stderr": "tasks/agent-handoffs/2026-11-09-consumer-sandbox/missing-runtime-error.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "prose": "measured low/medium; zero suspicious Unicode and zero deterministic changes",
+    "postIntegrationSecretScan": "pass"
+  },
+  "review": {
+    "atsJdGroundingOwnerFile": "pass by pricing_backend",
+    "sandboxAiOcr": "pass by pricing_validation",
+    "browser": "pass by pricing_frontend; CI wording corrected"
+  },
+  "files": {
+    "docs/evaluation/CONSUMER_VALIDATION_20261109.md": "092a46d0381e1920c0a9c47e5b310780e89e5e538d5ad691251a31eb7db49a49",
+    "CONTEXT.md": "b2f8cc9ab287f087db12723b043864836f602e41daa600b218ae6efcee952c37",
+    "docs/design/BILLING_ENTITLEMENTS.md": "bfc6387d24d7cb4528d9eedba3d62a1fee7766d9162a40be494e10047a94086a",
+    "docs/decisions/0019-phase8-billing-prerequisites.md": "764d95e26901d4f98866d640f35e586a02b4955f6cf0920c082075f8b1f95c4f",
+    "tasks/agent-handoffs/2026-11-09-consumer-validation/coordinator.md": "5acb68fb40a9225812f9e64186e166801bf98451675c03e4da9d1bceee5fd850",
+    "tasks/agent-handoffs/2026-11-09-consumer-ats.md": "5ae0e5c2c450960a5371ceb84bd224850e50d4f4d88b37f61de36ab9696f03e7",
+    "tasks/agent-handoffs/2026-11-09-consumer-sandbox.md": "ce637ec7941c804b33a2e69141208bca65a2763438bf9213d90767ae4eec6337",
+    "tasks/agent-handoffs/2026-11-09-consumer-sandbox/ocr-follow-up.md": "74a98b7f99947884a367d2616bf31a17cdf93dc707c888c0721d21932dee9cca",
+    "tasks/agent-handoffs/2026-11-09-consumer-journeys/handoff.md": "1f6f5313c8e12d342429bcb073f314983eb4f1aa7082ff6c68a8c5892ceef5e5",
+    "tasks/todo.md": "d4260b5f823fa27597e545d0affe4f1c8942a245ce491e73b1c2b6de7a647806",
+    "tasks/plan.md": "d48e9de84f47f1a46dbba05e6af1d64b4d9292efbe4ad1a54389cb0f116d2760",
+    "docs/evaluation/CONSUMER_VALIDATION_20261109.json": "35b412820a134853d26858fe06a8d55d2398b7bf001d1feef96ba621ceca568b",
+    "docs/evaluation/CONSUMER_RENDER_PARITY_20261109.json": "11dc0aaf5c934c2155a2bc28199ba3690259c9292b959b4de2bd740274051620"
+  },
+  "noApplicationFixes": true,
+  "noDeployment": true,
+  "packagingNote": "Initial broad JSON-extension check failed on the empty stdout capture above; failure artifact preserved and document classification corrected, without altering any application assertion.",
+  "sourceBinding": {
+    "inputs": 615,
+    "added": [],
+    "missing": [],
+    "changed": [],
+    "sourceMapSha256": "d041eeceb3cc03ef50108905ada5d7ec75963e03a8a23f0c2933f2787b35feac"
+  },
+  "completedAt": "2026-11-09T08:01:37.352Z",
+  "reportSha256": "092a46d0381e1920c0a9c47e5b310780e89e5e538d5ad691251a31eb7db49a49",
+  "serviceCleanup": {
+    "port3110": "no listener",
+    "ownedOcrAndLatexContainers": 0,
+    "unrelatedDockerServicesPreserved": 7
+  },
+  "summary": "Actual evidence tiers, known failures and blocked capabilities preserved."
+}

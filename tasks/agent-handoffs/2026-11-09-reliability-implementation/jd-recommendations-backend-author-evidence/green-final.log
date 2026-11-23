@@ -1,0 +1,67 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/jd-recommendations.test.ts (27 tests | 1 failed) 288ms
+     ✓ binds exact current contribution, quote, versions and complete digest without altering inputs 83ms
+     × prioritizes actual Python, FastAPI, API and Git contributions 19ms
+     ✓ rejects a target that labels an old quote as a current declaration 9ms
+     ✓ does not invent a Pydantic contribution from Python elsewhere 10ms
+     ✓ does not invent a RAG contribution from Python elsewhere 9ms
+     ✓ does not invent a agents contribution from Python elsewhere 7ms
+     ✓ does not invent a cloud contribution from Python elsewhere 8ms
+     ✓ does not invent a async contribution from Python elsewhere 7ms
+     ✓ does not invent a microservices contribution from Python elsewhere 8ms
+     ✓ preserves and without inventing missing operands 8ms
+     ✓ preserves or without inventing missing operands 7ms
+     ✓ keeps edited confirmed declarations distinct from old source wording 7ms
+     ✓ does not promote a listing to contribution 6ms
+     ✓ does not pick the first of multiple related contributions 8ms
+     ✓ does not upgrade a source fragment into a complete current claim 8ms
+     ✓ keeps ambiguous or nonpositive scope review-only: Python is not required 6ms
+     ✓ keeps ambiguous or nonpositive scope review-only: Context
+Python 5ms
+     ✓ keeps ambiguous or nonpositive scope review-only: Requirements
+Python experience may be useful 6ms
+     ✓ deduplicates actual semantic duplicates while preserving importance and full counts 16ms
+     ✓ rejects an expected ownerId mismatch 6ms
+     ✓ rejects an expected analysisId mismatch 6ms
+     ✓ rejects an expected canonicalVersionId mismatch 6ms
+     ✓ rejects an expected requirementVersionId mismatch 6ms
+     ✓ refuses tampered source rather than accepting supplied support 6ms
+     ✓ refuses tampered hash rather than accepting supplied support 7ms
+     ✓ refuses tampered head rather than accepting supplied support 6ms
+     ✓ refuses tampered client-matches rather than accepting supplied support 6ms
+ ✓ tests/unit/jd-recommendations-repository.test.ts (8 tests) 189ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/jd-recommendations.test.ts > owned local JD recommendations > prioritizes actual Python, FastAPI, API and Git contributions
+AssertionError: expected [ 'Built services using Python', …(3) ] to deeply equal [ 'Built services using Python', …(3) ]
+
+- Expected
++ Received
+
+  [
+    "Built services using Python",
+    "Built endpoints using FastAPI",
+-   "Built integrations using API",
+    "Tested pipelines using Git",
++   undefined,
+  ]
+
+ ❯ tests/unit/jd-recommendations.test.ts:73:52
+     71|         "Requirements\nPython required\nFastAPI required\nAPI required…
+     72|     });
+     73|     expect(plan.items.map((i) => i.target?.value)).toEqual(clauses);
+       |                                                    ^
+     74|     expect(
+     75|       plan.items.every((i) => i.observation === "source_related_claim"…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 34 passed (35)
+   Start at  09:15:43
+   Duration  932ms (transform 194ms, setup 0ms, import 336ms, tests 477ms, environment 0ms)
+

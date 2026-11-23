@@ -51,6 +51,12 @@ Prometheus buckets, so p95 can be calculated without exporting raw samples:
 histogram_quantile(0.95, sum by (le) (rate(http_request_duration_ms_bucket[15m])))
 ```
 
+Prometheus histogram buckets, counts and sums accumulate until the process
+restarts. The in-process percentile snapshot still uses the latest 2,000
+observations per series. Queue age has its own millisecond buckets through 30
+minutes, including boundaries at five and ten minutes. A series appears after
+its first sample.
+
 Logs should be queried by `requestId`, `analysisId`, or `runId`, never by resume
 text or email. A synthetic request must be traceable through HTTP, queue,
 stage, and provider usage counters while remaining content-free.

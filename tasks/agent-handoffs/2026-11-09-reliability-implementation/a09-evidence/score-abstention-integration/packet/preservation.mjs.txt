@@ -1,0 +1,20 @@
+import ts from '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/typescript/lib/typescript.js';
+import {readFileSync,writeFileSync} from 'node:fs';
+const receipt='/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a09-score-wqwtz7uk';
+const root='/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats';
+function cases(src){const sf=ts.createSourceFile('test.ts',src,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);const result=new Map();function visit(node){if(ts.isCallExpression(node)&&node.arguments.length&&ts.isStringLiteralLike(node.arguments[0])&&(ts.isIdentifier(node.expression)&&node.expression.text==='it'||ts.isCallExpression(node.expression)&&ts.isPropertyAccessExpression(node.expression.expression)&&node.expression.expression.expression.getText(sf)==='it'&&node.expression.expression.name.text==='each'))result.set(node.arguments[0].text,node.getText(sf));ts.forEachChild(node,visit);}visit(sf);return result;}
+const paths=['tests/unit/score-snapshot-binding.test.ts','tests/unit/score-v2-route.test.ts'];
+const result={tests:{}};
+for(let i=0;i<paths.length;i++){
+ const before=cases(readFileSync(`${receipt}/baseline-${i+1}.txt`,'utf8')),after=cases(readFileSync(`${root}/${paths[i]}`,'utf8'));
+ result.tests[paths[i]]={oldDeclarations:before.size,currentDeclarations:after.size,changedOrMissingOldDeclarations:[...before.keys()].filter(key=>before.get(key)!==after.get(key))};
+}
+const before=readFileSync(`${receipt}/baseline-0.txt`,'utf8'),after=readFileSync(`${root}/app/lib/server/score-v2-repository.ts`,'utf8');
+const marker='  // Recheck deletion/active ownership and moving heads before releasing private data.';
+result.successfulFinalChecksByteIdentical=before.slice(before.indexOf(marker))===after.slice(after.indexOf(marker));
+const guard='  const requirementDocument = requirements?.current?.document ?? null;\n  if (requirementDocument?.schemaVersion === "requirements/2.0.0")\n    throw new CanonicalError(\n      503,\n      "Saved typed JD requirements can be reviewed on the JD page. Scoring diagnostics and proposals are paused until typed requirement coverage is available.",\n    );\n';
+const expected=before.replace('  let diagnostics;\n',guard+'  let diagnostics;\n').replace('      requirements: requirements?.current?.document ?? null,','      requirements: requirementDocument,');
+result.productionDeltaIsOnlyGuardAndNarrowedArgument=expected===after;
+writeFileSync(`${receipt}/assertion-preservation.json`,JSON.stringify(result,null,2)+'\n');
+console.log(JSON.stringify(result));
+process.exit(!result.successfulFinalChecksByteIdentical||!result.productionDeltaIsOnlyGuardAndNarrowedArgument||Object.values(result.tests).some(v=>v.changedOrMissingOldDeclarations.length)?1:0);

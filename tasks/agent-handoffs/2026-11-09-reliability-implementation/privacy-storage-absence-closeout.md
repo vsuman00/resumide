@@ -1,0 +1,9 @@
+# Exact Storage absence for account deletion
+
+CR-R17-S02 closes a premature-completion defect in the privacy worker on dirty `main` based on `a0b2392`. The regression reproduced deletion completion when the removal response succeeded and the exact key was still present or could not be verified.
+
+The worker sends a removal request for each exact key in the existing durable deletion plan. In the same five-second attempt, it performs a fresh Storage metadata lookup for that key. It accepts an HTTP 404 with the explicit `NoSuchKey` code. A generic 404, a missing bucket, a permission error, an outage, a still-visible object, or a timeout keeps the request incomplete. It records the bounded `STORAGE_DELETE_UNVERIFIED` failure on the current claim. On a later claim, an already-absent key can pass the same independent lookup. Both requests share the deadline. A removal response arriving after cancellation cannot start the lookup. [Storage info reference](https://supabase.com/docs/reference/javascript/storage-from-info) · [Storage error codes](https://supabase.com/docs/guides/storage/debugging/error-codes).
+
+The focused suite uses synthetic data and exercises the actual worker default and installed Storage SDK transport. It checks the exact request key, cache and redirect behavior, retry with a fresh claim, and cancellation. The [verification receipt](privacy-storage-absence-evidence.json) binds the changed files and test and build results.
+
+This check establishes provider-visible absence for the exact key in the test contract. The bound-admission deletion hold remains active while upload writers and ambiguous transport outcomes are unresolved. It still needs a claim-bound cleanup path and retirement of the captured operation and upload records. The current managed schema and the browser fixture remain pending. [Admission inventory](admission-retirement-inventory-closeout.md) · [Remaining goal work](remaining-goal-work.md).

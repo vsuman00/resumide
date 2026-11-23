@@ -1,9 +1,127 @@
 import type { FeedbackZod } from "./server/schema";
+import type { InitialFeedbackPublication } from "./server/initial-feedback-operation-contract";
 
-/** Old envelopes contain padding tips. They are availability messages, not repairs. */
+export const writingCategories = [
+  "toneAndStyle",
+  "content",
+  "structure",
+  "skills",
+] as const;
+export type WritingCategory = (typeof writingCategories)[number];
+export type WritingClassification =
+  | "source_claim"
+  | "editorial_observation"
+  | "clarification_question"
+  | "compatibility_only"
+  | "unverified";
+/** Small server-projected presentation data; no Native policy/binding/capture. */
+export type FeedbackProvenance = {
+  status: "available" | "legacy_unbound" | "pending" | "unavailable";
+  currentness: "current" | "historical" | null;
+  publicationState: "assessed" | "deterministic_only" | null;
+  deterministicReason?:
+    NonNullable<InitialFeedbackPublication["reason"]> | "refused";
+  tips: Array<{
+    category: WritingCategory;
+    compatibilityIndex: number;
+    classification: Exclude<WritingClassification, "unverified">;
+  }>;
+};
+export function writingClassification(
+  provenance: FeedbackProvenance | undefined,
+  category: WritingCategory,
+  compatibilityIndex: number,
+): WritingClassification {
+  if (
+    provenance?.status !== "available" ||
+    provenance.publicationState !== "assessed" ||
+    (provenance.currentness !== "current" &&
+      provenance.currentness !== "historical")
+  )
+    return "unverified";
+  return (
+    provenance.tips.find(
+      (t) =>
+        t.category === category && t.compatibilityIndex === compatibilityIndex,
+    )?.classification ?? "unverified"
+  );
+}
+type ClassifiedTip = {
+  type: "good" | "improve";
+  classification: WritingClassification | "deterministic";
+};
+export const isFeedbackStrength = (tip: ClassifiedTip) =>
+  tip.type === "good" &&
+  (tip.classification === "deterministic" ||
+    tip.classification === "source_claim");
+export const isFeedbackRepair = (tip: ClassifiedTip) =>
+  tip.type === "improve" &&
+  ["deterministic", "source_claim", "editorial_observation"].includes(
+    tip.classification,
+  );
+export function writingLabel(
+  type: "good" | "improve",
+  classification: WritingClassification,
+) {
+  if (classification === "clarification_question") return "Question to review";
+  if (classification === "editorial_observation") return "Editing suggestion";
+  if (classification === "source_claim")
+    return type === "good" ? "Strength to keep" : "Source-supported suggestion";
+  return type === "good" ? "Unverified observation" : "Suggested change";
+}
+export function feedbackProvenanceMessage(
+  value: FeedbackProvenance | undefined,
+) {
+  if (
+    value?.status === "available" &&
+    value.publicationState === "deterministic_only" &&
+    value.currentness === "historical"
+  )
+    return "This result uses an earlier saved resume or job description.";
+  if (value?.status === "available")
+    return value.currentness === "historical"
+      ? "These suggestions were saved for an earlier source or job description. Compare them with your current material."
+      : "These suggestions match the saved source record. Review each excerpt before making changes.";
+  if (value?.status === "pending")
+    return "Writing feedback is still pending. Existing saved suggestions are unverified.";
+  if (value?.status === "unavailable")
+    return "The source record could not be checked. Existing saved suggestions remain unverified.";
+  return "These saved suggestions have no matched source record. Quotations alone do not verify their claims.";
+}
+export function writingUnavailableMessage(
+  value: FeedbackProvenance | undefined,
+) {
+  const reason =
+    value?.status === "available" &&
+    value.publicationState === "deterministic_only"
+      ? value.deterministicReason
+      : undefined;
+  switch (reason) {
+    case "ai_disabled":
+      return "AI writing feedback was disabled for this analysis.";
+    case "historical_inputs":
+      return "Writing feedback was unavailable for the earlier saved inputs.";
+    case "source_resource_limit":
+      return "The source exceeded the size limit for writing feedback.";
+    case "refused":
+      return "The AI provider declined the writing request.";
+    case "invalid_output":
+      return "The writing response could not be used safely.";
+    case "unsupported_output":
+      return "The proposed writing feedback could not be supported by the saved source.";
+    case "provider_unavailable":
+      return "The AI writing service could not complete this run.";
+    case "attempts_exhausted":
+      return "This analysis reached its writing attempt limit.";
+    default:
+      return "Writing feedback did not complete for this analysis.";
+  }
+}
+/** Preserve legacy visibility. Explicit classifications govern counts/actions. */
 export function visibleFeedbackGroups(
   feedback: FeedbackZod,
   unavailable = false,
+  provenance?: FeedbackProvenance,
 ) {
   const proseOnly =
     feedback.scoreSemantics === "deterministic_baseline_no_model_ratings/1.0.0";
@@ -13,8 +131,18 @@ export function visibleFeedbackGroups(
       type: "good" | "improve";
       tip: string;
       explanation?: string;
+      quote?: string;
+      classification: WritingClassification | "deterministic";
     }>;
-  }> = [{ source: "ATS compatibility", tips: feedback.ATS.tips }];
+  }> = [
+    {
+      source: "ATS compatibility",
+      tips: feedback.ATS.tips.map((t) => ({
+        ...t,
+        classification: "deterministic" as const,
+      })),
+    },
+  ];
   if (unavailable) return groups;
   for (const [key, source] of [
     ["toneAndStyle", "Tone and style"],
@@ -24,9 +152,16 @@ export function visibleFeedbackGroups(
   ] as const) {
     groups.push({
       source,
-      tips: feedback[key].tips.filter(
-        (tip) => !proseOnly || Boolean(tip.quote),
-      ),
+      tips: feedback[key].tips
+        .map((tip, index) => ({
+          ...tip,
+          classification: writingClassification(provenance, key, index),
+        }))
+        .filter(
+          (t) =>
+            (!proseOnly || Boolean(t.quote)) &&
+            t.classification !== "compatibility_only",
+        ),
     });
   }
   return groups;

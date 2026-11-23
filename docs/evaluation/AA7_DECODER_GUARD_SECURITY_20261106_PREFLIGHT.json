@@ -1,0 +1,117 @@
+{
+  "status": "PREPARED_NOT_EXPORTED_OR_SCANNED",
+  "imageID": "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203",
+  "freeDiskBytes": 13163876352,
+  "minimumFreeDiskBytes": 3221225472,
+  "cacheReusedWithoutBootstrap": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-sealed-security-0zi88hb7",
+  "verifiedInputs": {
+    "binary": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-sealed-security-0zi88hb7/trivy",
+      "bytes": 168530818,
+      "sha256": "7a15c426f963473a485a4f315e21f8e2c881269d500bf0de35da13a4421fa108",
+      "expectedMatched": true,
+      "seconds": 0.142
+    },
+    "db": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-sealed-security-0zi88hb7/cache/db/trivy.db",
+      "bytes": 1686421504,
+      "sha256": "acc7850179a48dbe868f97eb59ea186510800ade8ee815392fa2e7b26875c22d",
+      "expectedMatched": true,
+      "seconds": 1.473
+    },
+    "java-db": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-sealed-security-0zi88hb7/cache/java-db/trivy-java.db",
+      "bytes": 1572696064,
+      "sha256": "7124b5d89aa910c1c79b7cbdd35903ab940762f6ebb27729e558fb197f9ae1db",
+      "expectedMatched": true,
+      "seconds": 1.368
+    }
+  },
+  "scannerVersionBoundByExactBinaryHash": "0.76.2",
+  "proposedCommand": [
+    "/usr/bin/sandbox-exec",
+    "-p",
+    "(version 1)(allow default)(deny network*)",
+    "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-sealed-security-0zi88hb7/trivy",
+    "image",
+    "--input",
+    "<NEW_0700_FC8_AUDIT_DIR>/decoder-guard.image.tar",
+    "--cache-dir",
+    "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-sealed-security-0zi88hb7/cache",
+    "--config",
+    "",
+    "--ignorefile",
+    "",
+    "--scanners",
+    "vuln",
+    "--pkg-types",
+    "os,library",
+    "--severity",
+    "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+    "--ignore-unfixed=false",
+    "--show-suppressed",
+    "--offline-scan",
+    "--disable-telemetry",
+    "--skip-version-check",
+    "--skip-db-update",
+    "--skip-java-db-update",
+    "--skip-check-update",
+    "--skip-vex-repo-update",
+    "--list-all-pkgs",
+    "--format",
+    "json",
+    "--output",
+    "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/docs/evaluation/AA7_DECODER_GUARD_SECURITY_20261106_RAW.json",
+    "--exit-code",
+    "1",
+    "--timeout",
+    "10m",
+    "--parallel",
+    "2",
+    "--max-image-size",
+    "2GB",
+    "--no-progress"
+  ],
+  "proposedExports": [
+    [
+      "docker",
+      "image",
+      "save",
+      "--output",
+      "<NEW_0700_FC8_AUDIT_DIR>/decoder-guard.full-index.tar",
+      "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203"
+    ],
+    [
+      "docker",
+      "image",
+      "save",
+      "--platform",
+      "linux/arm64",
+      "--output",
+      "<NEW_0700_FC8_AUDIT_DIR>/decoder-guard.image.tar",
+      "sha256:fc8c0ace5e3bc53b3db1e23e0df11caed38161bb716b5c388d96169abe0e8203"
+    ]
+  ],
+  "identityAcceptance": [
+    "requested OCI index bytes hash equals imageID",
+    "index arm64 descriptor -> selected platform manifest digest",
+    "platform manifest bytes hash and config descriptor verified",
+    "config bytes hash -> local inspect rootfs diffIDs and exact runtimeconfig",
+    "each compressed layer hash + streamed uncompressed SHA equals corresponding diffID",
+    "scanner ArtifactID/Metadata ImageID/config and diffIDs match exact archivechain"
+  ],
+  "networkPolicy": "(version 1)(allow default)(deny network*)",
+  "fullSeverityNoSuppression": true,
+  "dbRehashAfterRequired": true,
+  "baselineRaw": {
+    "path": "/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/docs/evaluation/AA7_SEALED_NATIVE_SECURITY_20261106_RAW.json",
+    "sha256": "ebd88e0c10176b00aa792bac78df55fbedc45256ab9a1f30355c0e0a0a45963f",
+    "sameDatabasesRequired": true
+  },
+  "noExportOrScanExecuted": true,
+  "waitingFor": [
+    "tester runtime slot release",
+    "root exact command/manifest approval"
+  ],
+  "preservedExistingCachesArchivesImages": true
+}

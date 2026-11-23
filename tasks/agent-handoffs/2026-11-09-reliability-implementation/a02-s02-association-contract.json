@@ -1,0 +1,58 @@
+{
+  "task": "CR-A02-S02",
+  "status": "ASSOCIATION_REVIEW_INTERFACE_FROZEN_FOR_PREPARATION",
+  "at": "2026-11-13T10:13:38.903695+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "previousGoalTurn": "PROGRESS: A01 source/UI completed and264 distinct tests/full checks recorded; A02 remaining source counterexample identified",
+  "fullObjective": "Complete target-aware grouping/import and corrections through source, consumer and storage admission; this preparation does not close persisted import or fullA02 acceptance.",
+  "api": {
+    "function": "deriveEvidenceEntryAssociations(raw: unknown, owned: OwnedEvidenceBinding): EntryAssociationReview",
+    "module": "app/lib/server/evidence-entry-associations.ts",
+    "modelVersion": "evidence-entry-associations/1.0.0",
+    "flags": {
+      "authority": "derived_review_only",
+      "scoringEligible": false,
+      "persistable": false,
+      "qualificationAssessment": "not_assessed"
+    },
+    "states": [
+      "review_required",
+      "unavailable"
+    ],
+    "binding": "Existing EvidenceReviewTargets binding plus targetModelVersion evidence-targets/1.0.0; null only if invalid input/binding",
+    "preservedGroupIds": "Existing same-span group IDs, unchanged; these members never silently disappear or duplicate into new groups",
+    "groups": [
+      {
+        "id": "Deterministic SHA256 identity bound to model/owned source/page/method/ordered exact observation and target references",
+        "kind": "employment",
+        "association": "explicit_labelled_multiline_candidate",
+        "verified": false,
+        "pageId": "source page identity",
+        "method": "native_text or local_ocr",
+        "observationIds": "source-ordered existing observation IDs",
+        "targetIds": "corresponding existing immutable target IDs",
+        "members": "one existing observation/target reference per employer/role/optional dates, exact field and citations; do not copy values or source text"
+      }
+    ],
+    "unresolved": "Every remaining relevant entry observation gets a fixed reason and its original IDs/citations; no fabricated absence, qualification or relationship",
+    "unavailableReason": [
+      "invalid_evidence",
+      "binding_mismatch",
+      "unsupported_extractor",
+      "resource_limit"
+    ]
+  },
+  "sourceBoundary": "Replay/validate actual DocumentEvidenceSchema before deriving current frozen targets. Exact owner/analysis/source/inputSha/attempt binding. This function cannot authenticate or authorize writes. Preserve raw sources/fields/blockers/targets/canonical output and producer versions. No model/provider use.",
+  "v1SupportedSubset": "Explicit labelled employment blocks on one source page/method in an explicit employment section. English exact employment headings only; record supported subset, do not infer domain/language authority. Start at Employer label; collect one Role and optional one Dates across contiguous explicit labelled lines; section/blank/unlabelled content/page/method change ends a block. Employer+Role required for new candidate. Dates never create duration credit.",
+  "ambiguity": "Repeated Role/Dates labels or multiple observations per label make block unresolved; next Employer begins new block. No cross-page/method linking, no unlabeled proximity guess, no contribution attribution. Preserve separate native/OCR disagreement and duplicate header observations. Education/certification/contact targets remain unchanged and explicit out-of-scope/unresolved rather than missing qualification.",
+  "dataRules": "Use existing observed values/citations; no normalization/reparsing to fabricate a field. Existing same-span groups remain available through preserved IDs. Stable source ordering, deterministic group IDs, no duplicate member assignment, immutable inputs. Empty/unsupported cases remain reviewable/unavailable with fixed metadata only.",
+  "resourceRules": "Respect validated envelope bounds (20 native pages,500000 native UTF16 units,20000 projected spans,1000 assertions); pre-index by page/method/span and reject over-budget without partial authoritative results. Avoid raw source in logs/handoffs/errors.",
+  "firstEvidence": "Execute real existing extraction/targets/importer on neutral structured source BEFORE adding module. Verify source-predicted six observations/zero groups/six entries/raw states, recording actual results without forcing predictions. Contrary results change the next action before implementation. This characterization is not a repaired legacy importer. New projection tests and persistence regression remain distinct.",
+  "tests": "Two explicit jobs and overlapping dates, no headings, blank/section/page/method barriers, repeated labels/ambiguous values, single incomplete block, same-span preservation, contact/education/certification unknowns, repeated headers, native/OCR separation, exact Unicode offsets/references, owner/source binding tamper, determinism/input immutability/no raw-text output.",
+  "nextLeaves": [
+    "Owned evidence-route association review using actual private read boundary; render existing observation values through exact IDs and qualify candidate relationships",
+    "Review canonical producer/reader/command/SQL admission and durable association acknowledgement BEFORE grouped original import; preserve existing immutable producer semantics",
+    "Complete actual native/RPC/CAS/browser consumer verification under separately admitted execution scope"
+  ],
+  "nonGoals": "No changes to existing evidence-targets model, raw field conflict states, canonical importer/producers/schema, SQL, numerical fields or correction semantics in this3-file preparation. No hosted/native/provider/PII/env/OCR/Docker/Git/deploy/dependency action."
+}

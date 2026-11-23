@@ -1,0 +1,40 @@
+{
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "worktree": "dirty",
+  "nodeVersion": "22.23.4",
+  "tier": "synthetic_extraction_stage_with_mocked_recognition_storage_and_database",
+  "focusedTestsPassed": 416,
+  "focusedFilesPassed": 22,
+  "baselineRegressionFailuresObserved": 4,
+  "productionOcrEnabled": false,
+  "leasedManagedUploadVerified": false,
+  "containerCleanupVerifiedInThisSlice": false,
+  "normalEntryPoint": "processExtractionStage",
+  "verified": [
+    "worker cancellation aborts pending review parsing",
+    "stale lease blocks OCR admission",
+    "retention policy mismatch blocks recognition",
+    "elapsed extraction time caps recognition deadline",
+    "cancellation denies admission completed later",
+    "mixed native middle page preserved",
+    "review-only evidence sent with exact leased attempt and source identity",
+    "refused fenced write has no fallback"
+  ],
+  "testedSources": {
+    "app/lib/server/document-extraction.ts": "b60ae81930375e4ea1f8cfc7972e264920bca1d05b51585920ca797a6bb92706",
+    "app/lib/server/extraction-stage.ts": "cd67fc9cb8ae234a588da1bd65080b297dc5688743fdbe7ec267a514ec72bb93",
+    "app/lib/server/analysis-stage-fence.ts": "a5746b7295a9644a7cfb63a25ae0b35ab614ab35e84031056cdc0ecb3e4e72b9",
+    "app/lib/server/ocr/selective.ts": "2d647df8cd51d36fd1fbd489cc7464d8ef3b8f098fc674743b871ea8a7f04325",
+    "tests/unit/document-extraction.test.ts": "8cf4970be43e1f795de6b4f46e21e0a95d51f1c59bd57d6c51ec0de59e21a662",
+    "tests/unit/analysis-worker-fence.test.ts": "fc7240ddc1707561f32a23616272c84ffe9efa27f1efb008be4669919699c252",
+    "supabase/migrations/20261117060054_document_evidence_page_count.sql": "f3c88c69d760ed3de8e1b7ecd44e72da84628f6589f19366c4bee3fd11e42f77"
+  },
+  "checks": [
+    "npm run typecheck",
+    "npm run lint",
+    "npm run build",
+    "npm run build:worker"
+  ],
+  "redLogSha256": "f2aa45049f3a0802eb40d9b1755533cc80a139354bd09a32cc60443616cb1cd1",
+  "focusedLogSha256": "7f8d81dbddf0bb99139725862fdde77676d4e4d4d87972fcad338413999e21f0"
+}

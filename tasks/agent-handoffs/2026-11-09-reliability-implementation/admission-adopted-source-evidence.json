@@ -1,0 +1,51 @@
+{
+  "task": "CR-R17-S08",
+  "checkedDate": "2026-11-21",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "checkout": "dirty integration worktree",
+  "inputSha256": {
+    "supabase/migrations/20261121212400_analysis_admission_adopted_source_bindings.sql": "69aae4718c4595687b56e2474b73931e1d438a10b00743b1f640ab32a3ee28ab",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-adopted-source-native-fixture.py.txt": "6c241bd36e20f66214959faccdefed3221702dbd48dbff0a44c258d11d72b658",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-cleanup-recovery-native-fixture.py.txt": "646c561c65735786eff003f9036388a0616ba2799e67e29de99cda9fa89ac7ec",
+    "app/lib/server/privacy-worker.ts": "111c8986037fdcfe9b16161aeb141eac343457f5aed7ab49567d9144485984ae",
+    "supabase/migrations/20261110080810_lease_fencing_and_verification_scope.sql": "1c85475124f8d1093c0cae280af8f2f8e272abae908b6e62e9126cef51b669b2"
+  },
+  "before": {
+    "detected": "Prior SQL lacked adopted-source bindings in the deletion inventory.",
+    "logSha256": "03717b9c69a897043b957d47071a75c0aeb3f8f8211b2bbd0730942393da52f9"
+  },
+  "native": {
+    "result": "PASS: completed and evidence-review adopted sources, seven exclusions, stable replay, source and queue drift refusal, and owner export.",
+    "eligible": 2,
+    "excludedControls": 7,
+    "scope": "Actual adopted binding migration and review-handoff predicate on synthetic relations. No live Storage calls.",
+    "logSha256": "2fd805079d85157730c9b01b18d2f3639f3e7449d9c65484412651fbd4542e90"
+  },
+  "after": {
+    "unit": [
+      {
+        "passed": 6789,
+        "files": 322,
+        "sha256": "cfc8a50d61802c0d06529df2e886f62d0a1880990b7ae4f11f49e6ea9929bfed"
+      },
+      {
+        "passed": 3,
+        "files": 1,
+        "sha256": "d527b9b0a8ccd95d831dd9f64ce408050190510246989950e664c281a8adca61"
+      }
+    ]
+  },
+  "statics": {
+    "commands": ["format:check", "typecheck", "lint", "build", "build:worker"],
+    "exitCode": 0,
+    "lintWarnings": 4,
+    "logSha256": "448c57c6cce287cb26cbc7ef45fd42f463bab9c560c18bf42277c88ecc5dfc3a"
+  },
+  "migrationInventory": "managed-schema-inventory-88.json",
+  "notRun": [
+    "managed migration replay",
+    "adopted Storage cleanup",
+    "account-wide admission retirement",
+    "deployment"
+  ]
+}

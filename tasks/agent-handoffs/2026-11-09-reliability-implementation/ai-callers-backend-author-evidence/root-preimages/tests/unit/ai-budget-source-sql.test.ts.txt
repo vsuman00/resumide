@@ -1,0 +1,408 @@
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { createHash } from "node:crypto";
+import { AI_BUDGET_SOURCE_PROFILE } from "../../app/lib/server/ai-budget-source-profile";
+import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
+const read = (p: string) =>
+  readFileSync(new URL(`../../${p}`, import.meta.url), "utf8");
+const base = read("supabase/migrations/20261110062548_technical_ai_budget.sql");
+const clock = read(
+  "supabase/migrations/20261115131621_owned_ai_disposition_clocks.sql",
+);
+const candidate = read(
+  "supabase/migrations/20261115154855_ai_budget_source_registration.sql",
+);
+describe("actual R03 producer source regression, SQL unparsed/unexecuted", () => {
+  it("guards actual fresh generic operation insertion with a live registered source", () => {
+    expect(base).toContain("insert into private.ai_budget_operations");
+    expect(candidate).toContain(
+      "before insert on private.ai_budget_operations",
+    );
+  });
+  it("extends the actual retirement producer to registered legacy rewrite selectors", () => {
+    expect(clock).toContain(
+      "for x in select o.* from private.ai_budget_operations",
+    );
+    expect(candidate).toContain("private.ai_budget_operation_sources");
+  });
+  it("refuses ambiguous retained OP1 retries and rolls fresh registration back on denied reserve", () => {
+    expect(base).toContain("return private.ai_budget_denied");
+    expect(candidate).toContain("AI_SOURCE_RESERVE_ROLLBACK");
+    expect(candidate).toContain("AIBUDGET-OP1");
+  });
+});
+
+const hash = (s: string) => createHash("sha256").update(s).digest("hex");
+const block = (s: string, n: string) => {
+  const parts = s.split(`$${n}$`);
+  if (parts.length !== 3) throw Error("DELIMITED_SOURCE");
+  return parts[1];
+};
+const body = (n: string) => {
+  const start = candidate.indexOf(`create function ${n}(`);
+  if (start < 0) throw Error("SOURCE_BODY");
+  const m = /\bas\s+(\$[a-z_]+\$)([\s\S]*?)\1;/u.exec(candidate.slice(start));
+  if (!m) throw Error("SOURCE_DELIMITER");
+  return m[2];
+};
+type Patch = {
+  signature: string;
+  before: string;
+  after: string;
+  old: string;
+  new: string;
+};
+const patches = JSON.parse(block(candidate, "source_patches")) as Patch[];
+const current = (n: string) =>
+  patches.find((p) => p.signature === n)?.new ?? body(n.split("(")[0]);
+type Pin = {
+  signature: string;
+  sha256: string;
+  definer: boolean;
+  strict: boolean;
+  acl: string;
+};
+const pins = JSON.parse(
+  block(body("private.ai_budget_source_ready"), "source_functions"),
+) as Pin[];
+describe("actual terminal source and catalogue proof mechanism; no SQL execution", () => {
+  it("pins every new actual function and all three terminal pre/postimages", () => {
+    expect(patches.map((p) => p.signature)).toEqual([
+      "private.capture_owned_ai_operation_dispositions(uuid,uuid,uuid,uuid)",
+      "public.export_owned_ai_disposition_records(uuid)",
+      "private.owned_ai_disposition_ready()",
+    ]);
+    for (const p of patches) {
+      expect(hash(p.old)).toBe(p.before);
+      expect(hash(p.new)).toBe(p.after);
+    }
+    const newPins = pins.filter(
+      (p) =>
+        p.signature.startsWith("private.ai_budget_source_") ||
+        [
+          "public.ai_budget_reserve_source_next",
+          "public.export_owned_ai_budget_sources",
+          "public.read_ai_budget_source_readiness",
+        ].includes(p.signature.split("(")[0]),
+    );
+    for (const p of newPins)
+      expect(hash(body(p.signature.split("(")[0]))).toBe(p.sha256);
+    expect(hash(body("private.ai_budget_source_ready"))).toBe(
+      AI_BUDGET_SOURCE_PROFILE.checkerSha256,
+    );
+    expect(hash(body("public.ai_budget_reserve_source_next"))).toBe(
+      AI_BUDGET_SOURCE_PROFILE.reserveSha256,
+    );
+    expect(hash(body("public.export_owned_ai_budget_sources"))).toBe(
+      AI_BUDGET_SOURCE_PROFILE.exportSha256,
+    );
+    expect(hash(body("public.read_ai_budget_source_readiness"))).toBe(
+      AI_BUDGET_SOURCE_PROFILE.metadataSha256,
+    );
+    expect(hash(current("private.owned_ai_disposition_ready()"))).toBe(
+      OWNED_AI_DISPOSITION_PROFILE.checkerSha256,
+    );
+    expect(
+      hash(current("public.export_owned_ai_disposition_records(uuid)")),
+    ).toBe(OWNED_AI_DISPOSITION_PROFILE.exportSha256);
+  });
+  it("preserves generic budget bodies and strict old binding/receipt/policy dependencies", () => {
+    const expected = {
+      "public.ai_budget_reserve(uuid,uuid,jsonb)":
+        "b0e5f479153e6de8954695702a85be673257d59beb9ecf331f53ab7a153fcb69",
+      "public.ai_budget_reserve_next(uuid,uuid,jsonb)":
+        "db7c59b3c08143c81c0c5792c813ddfc1aa2414769286f0d7f59fc2369098fe7",
+      "private.ai_budget_transition(uuid,uuid,jsonb,text)":
+        "b2ee84cc0468cd21f68865bdabfca570b830b60a61ecc1f4c453c84c015f60e9",
+    };
+    for (const [sig, pin] of Object.entries(expected))
+      expect(pins.find((p) => p.signature === sig)?.sha256).toBe(pin);
+    expect(
+      pins.find(
+        (p) => p.signature === "private.try_candidate_privacy_write(uuid)",
+      )?.definer,
+    ).toBe(true);
+    expect(
+      patches.some((p) =>
+        /ai_budget_transition|ifo_policy|legacy_scoring|candidate_write_blocked/u.test(
+          p.signature,
+        ),
+      ),
+    ).toBe(false);
+    expect(candidate).not.toContain("alter table private.ai_budget_operations");
+    expect(candidate).not.toContain(
+      "grant execute on function public.ai_budget_reserve_source_next",
+    );
+    expect(candidate).not.toContain(
+      "grant execute on function public.export_owned_ai_budget_sources",
+    );
+  });
+  it("requires real owner/analysis/version/root and nonblocking admission before any reserve", () => {
+    const lock = body("private.ai_budget_source_lock"),
+      reserve = body("public.ai_budget_reserve_source_next");
+    expect(lock.indexOf("private.try_candidate_privacy_write")).toBeLessThan(
+      lock.indexOf("select v.resume_id"),
+    );
+    expect(lock).toContain(
+      "a.id=p_analysis and a.owner_id=p_owner and a.organization_id=p_org and v.id=p_version",
+    );
+    expect(lock).toContain("r.status='active' for share skip locked");
+    expect(lock).toContain("for share of a,v skip locked");
+    expect(lock).toContain("for share of o,m skip locked");
+    expect(lock).toContain("v.storage_key=private.r17_storage_key");
+    expect(
+      reserve.indexOf("root_id:=private.ai_budget_source_lock"),
+    ).toBeLessThan(
+      reserve.indexOf("insert into private.ai_budget_operation_sources"),
+    );
+    expect(reserve).toContain(
+      "p_request->>'operationId' is distinct from op_id::text",
+    );
+  });
+  it("guards all generic new operations/attempts/dispatch, but leaves release/settlement paths alone", () => {
+    const guard = body("private.ai_budget_source_guard");
+    expect(candidate).toContain(
+      "before insert on private.ai_budget_operations",
+    );
+    expect(candidate).toContain(
+      "before insert or update on private.ai_budget_attempts",
+    );
+    expect(guard).toContain("elsif tg_op='INSERT' then");
+    expect(guard).toContain(
+      "elsif old.state='reserved' and new.state='dispatched' then",
+    );
+    expect(guard).toContain("private.ai_budget_source_valid(s,new)");
+    expect(guard).not.toContain("settled");
+    expect(guard).not.toContain("released");
+    expect(guard).not.toContain("held_unknown");
+    expect(body("private.ai_budget_source_admit")).toContain(
+      "private.ai_budget_source_lock",
+    );
+    expect(candidate).not.toMatch(
+      /current_setting\('[^']*(?:bypass|flag|enabled)/u,
+    );
+  });
+  it("rolls fresh source registration back on every denied or malformed old reservation", () => {
+    const s = body("public.ai_budget_reserve_source_next"),
+      insert = s.indexOf("insert into private.ai_budget_operation_sources"),
+      call = s.indexOf("reply:=public.ai_budget_reserve_next"),
+      abort = s.indexOf("raise exception 'AI_SOURCE_RESERVE_ROLLBACK'"),
+      handler = s.indexOf("exception when sqlstate 'P0S01'");
+    expect(insert).toBeLessThan(call);
+    expect(call).toBeLessThan(abort);
+    expect(abort).toBeLessThan(handler);
+    expect(s.slice(handler)).toContain(
+      "return private.ai_budget_denied('AI_BUDGET_UNAVAILABLE')",
+    );
+    expect(s).toContain(
+      "reply->'receipt'->>'bindingSha256' is distinct from binding",
+    );
+    expect(s.match(/where id=old_op/g)).toHaveLength(2);
+    expect(s).not.toMatch(/where id=old_op[^;]*(?:state|status)/u);
+  });
+  it("uses exact registered selectors before legacy/account inference and never makes a clock from registration", () => {
+    const s = current(
+      "private.capture_owned_ai_operation_dispositions(uuid,uuid,uuid,uuid)",
+    );
+    expect(s).toContain(
+      "s.operation_id=o.id and s.owner_id=p_owner and s.resume_id=p_resume",
+    );
+    const registered = s.indexOf("-- Registered OP2 source wins"),
+      legacy = s.indexOf("-- Account capture cannot restart");
+    expect(registered).toBeLessThan(legacy);
+    const branch = s.slice(registered, legacy);
+    expect(branch).toContain(
+      "registration.analysis_id;root_id:=registration.resume_id;version_id:=registration.resume_version_id",
+    );
+    expect(branch).toContain("select t.id,t.created_at into root_clock");
+    expect(branch).toContain("root_clock.created_at<capture_at");
+    expect(branch).toContain("capture_at:=source_row.prepared_at");
+    expect(branch).toContain("scope:='historical_unresolved';capture_at:=null");
+    expect(branch).not.toContain("registered_at");
+    expect(branch).not.toContain("clock_timestamp()");
+    expect(
+      current("public.export_owned_ai_disposition_records(uuid)"),
+    ).toContain(
+      "from private.ai_budget_operation_sources s where s.owner_id=p_user_id",
+    );
+  });
+  it("exports the complete owner set with exact binding/source proof after retirement", () => {
+    const s = body("public.export_owned_ai_budget_sources");
+    expect(s).toContain(
+      "where owner_id=p_user_id order by operation_id limit 4097",
+    );
+    expect(s).toContain("if n>4096");
+    expect(s).toContain("bytes>33554432");
+    expect(s).toContain("private.ai_budget_source_valid(s,o)");
+    expect(s).toContain("d.phase='prepared' and d.source_scope='resume_root'");
+    expect(s).toContain(
+      "(d.owner_id,d.organization_id,d.analysis_id,d.resume_id,d.resume_version_id)=(s.owner_id,s.organization_id,s.analysis_id,s.resume_id,s.resume_version_id)",
+    );
+    expect(s).not.toContain("current_setting");
+    expect(s).not.toContain("for update");
+    expect(s).not.toContain("join public.memberships");
+    for (const key of [
+      "operationId",
+      "ownerId",
+      "organizationId",
+      "kind",
+      "analysisId",
+      "resumeId",
+      "resumeVersionId",
+      "requestNonce",
+      "bindingSha256",
+    ])
+      expect(s).toContain(`'${key}',s.`);
+    expect(s).toContain("'registeredAt',private.ifo_stamp(s.registered_at)");
+  });
+  it("seals fresh schema/constraints/indexes/guards once and rejects writable catalogue/data access", () => {
+    const s = body("private.ai_budget_source_ready"),
+      cat = body("private.ai_budget_source_catalogue");
+    for (const term of [
+      "pg_get_constraintdef",
+      "pg_get_indexdef",
+      "pg_get_triggerdef",
+      "attnotnull",
+      "atthasdef",
+    ])
+      expect(term === "atthasdef" ? s : cat).toContain(term);
+    expect(cat).toContain(
+      "'private.ai_budget_source_catalogue_seal'::regclass",
+    );
+    expect(cat).toContain(
+      "c.relname='ai_budget_source_catalogue_seal' and t.tgname='ai_budget_source_seal_closed'",
+    );
+    expect(
+      candidate.match(/insert into private.ai_budget_source_catalogue_seal/g),
+    ).toHaveLength(1);
+    expect(s).toContain("has_any_column_privilege");
+    expect(s).toContain("has_table_privilege");
+    expect(s).toContain("pg_catalog.pg_policy");
+    expect(s).toContain("tgenabled='O'");
+    expect(s).toContain("tgconstraint=0");
+    expect(s).toContain(
+      "private.ifo_sha(private.ai_budget_source_catalogue()::text) is distinct from",
+    );
+    expect(body("private.ai_budget_source_seal_closed")).toContain(
+      "raise exception 'AI_SOURCE_SEAL_CLOSED'",
+    );
+    expect(s).not.toContain("insert into");
+    expect(s).not.toContain("update private.");
+  });
+  it("exposes exactly independent frozen metadata capabilities", () => {
+    expect(Object.keys(AI_BUDGET_SOURCE_PROFILE)).toHaveLength(6);
+    const s = body("public.read_ai_budget_source_readiness");
+    for (const key of [
+      ...Object.keys(AI_BUDGET_SOURCE_PROFILE),
+      "schemaReady",
+      "reserveExecutable",
+      "exportExecutable",
+    ])
+      expect(s).toContain(`'${key}'`);
+    expect(s).toContain(
+      "has_function_privilege('service_role','public.ai_budget_reserve_source_next",
+    );
+    expect(s).toContain(
+      "has_function_privilege('service_role','public.export_owned_ai_budget_sources",
+    );
+  });
+});
+
+const vectors = [
+  {
+    atoms: [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222",
+      "legacy_rewrite",
+      "33333333-3333-4333-8333-333333333333",
+      "44444444-4444-4444-8444-444444444444",
+      "shared-request",
+    ],
+    framedUtf8Hex:
+      "41494255444745542d4f50320a5433363a31313131313131312d313131312d343131312d383131312d3131313131313131313131313b5433363a32323232323232322d323232322d343232322d383232322d3232323232323232323232323b5431343a6c65676163795f726577726974653b5433363a33333333333333332d333333332d343333332d383333332d3333333333333333333333333b5433363a34343434343434342d343434342d343434342d383434342d3434343434343434343434343b5431343a7368617265642d726571756573743b",
+    operationId: "7cd53f15-ba8c-8625-9698-4604dabfcb4b",
+  },
+  {
+    atoms: [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222",
+      "legacy_rewrite",
+      "55555555-5555-4555-8555-555555555555",
+      "44444444-4444-4444-8444-444444444444",
+      "shared-request",
+    ],
+    framedUtf8Hex:
+      "41494255444745542d4f50320a5433363a31313131313131312d313131312d343131312d383131312d3131313131313131313131313b5433363a32323232323232322d323232322d343232322d383232322d3232323232323232323232323b5431343a6c65676163795f726577726974653b5433363a35353535353535352d353535352d343535352d383535352d3535353535353535353535353b5433363a34343434343434342d343434342d343434342d383434342d3434343434343434343434343b5431343a7368617265642d726571756573743b",
+    operationId: "033a7039-590c-8638-b36a-a578dedcf2a9",
+  },
+  {
+    atoms: [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222",
+      "legacy_rewrite",
+      "33333333-3333-4333-8333-333333333333",
+      "66666666-6666-4666-8666-666666666666",
+      "shared-request",
+    ],
+    framedUtf8Hex:
+      "41494255444745542d4f50320a5433363a31313131313131312d313131312d343131312d383131312d3131313131313131313131313b5433363a32323232323232322d323232322d343232322d383232322d3232323232323232323232323b5431343a6c65676163795f726577726974653b5433363a33333333333333332d333333332d343333332d383333332d3333333333333333333333333b5433363a36363636363636362d363636362d343636362d383636362d3636363636363636363636363b5431343a7368617265642d726571756573743b",
+    operationId: "15ae9c0b-12a2-8850-a718-33237bcc533a",
+  },
+  {
+    atoms: [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222",
+      "legacy_rewrite",
+      "33333333-3333-4333-8333-333333333333",
+      "44444444-4444-4444-8444-444444444444",
+      " ",
+    ],
+    framedUtf8Hex:
+      "41494255444745542d4f50320a5433363a31313131313131312d313131312d343131312d383131312d3131313131313131313131313b5433363a32323232323232322d323232322d343232322d383232322d3232323232323232323232323b5431343a6c65676163795f726577726974653b5433363a33333333333333332d333333332d343333332d383333332d3333333333333333333333333b5433363a34343434343434342d343434342d343434342d383434342d3434343434343434343434343b54313a203b",
+    operationId: "3a4d4106-1f24-8dc3-9b3c-12b3c76b3b03",
+  },
+  {
+    atoms: [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222",
+      "legacy_rewrite",
+      "33333333-3333-4333-8333-333333333333",
+      "44444444-4444-4444-8444-444444444444",
+      "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    ],
+    framedUtf8Hex:
+      "41494255444745542d4f50320a5433363a31313131313131312d313131312d343131312d383131312d3131313131313131313131313b5433363a32323232323232322d323232322d343232322d383232322d3232323232323232323232323b5431343a6c65676163795f726577726974653b5433363a33333333333333332d333333332d343333332d383333332d3333333333333333333333333b5433363a34343434343434342d343434342d343434342d383434342d3434343434343434343434343b543132383a61616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161616161613b",
+    operationId: "05dff7c7-f067-86a1-a31b-7d95f2e83fce",
+  },
+] as const;
+
+describe("independent byte vectors and source controls, not Native codec execution", () => {
+  for (const [n, v] of vectors.entries())
+    it(`preserves Root OP2 byte vector ${n + 1}`, () => {
+      const frame =
+        "AIBUDGET-OP2\n" +
+        v.atoms.map((a) => `T${Buffer.byteLength(a, "utf8")}:${a};`).join("");
+      expect(Buffer.from(frame, "utf8").toString("hex")).toBe(v.framedUtf8Hex);
+      const bytes = createHash("sha256")
+        .update(frame, "utf8")
+        .digest()
+        .subarray(0, 16);
+      bytes[6] = (bytes[6] & 15) | 128;
+      bytes[8] = (bytes[8] & 63) | 128;
+      const hex = bytes.toString("hex"),
+        id = `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+      expect(id).toBe(v.operationId);
+    });
+  it("binds the actual Native source to the exact OP2 header/framing/masks", () => {
+    expect(body("private.ai_budget_source_operation_id")).toContain(
+      "E'AIBUDGET-OP2\\n'",
+    );
+    const s = body("private.ai_budget_source_uuid");
+    expect(s).toContain("octet_length(convert_to(atom,'UTF8'))");
+    expect(s).toContain("(get_byte(bytes,6)&15)|128");
+    expect(s).toContain("(get_byte(bytes,8)&63)|128");
+    expect(body("public.ai_budget_reserve_source_next")).toContain(
+      "~ '^[ -~]{1,128}$'",
+    );
+  });
+});

@@ -1,5 +1,17 @@
 import { createHash, randomUUID } from "node:crypto";
 import { z } from "zod";
+import { SqlCompatibleIsoDateTimeSchema } from "./iso-datetime";
+import {
+  discoverJobAliasMentions,
+  JOB_ALIAS_LEXICON_SHA256,
+  JOB_ALIAS_POLICY_VERSION,
+  resolveJobAlias,
+  type JobAliasMapping,
+} from "./job-aliases";
+import {
+  deriveLocalJobRelations,
+  type LocalJobRelations,
+} from "./job-relations";
 
 export const RequirementType = z.enum([
   "skill",
@@ -54,7 +66,7 @@ export const JobRequirementsSchema = z
     organizationId: z.uuid(),
     analysisId: z.uuid(),
     jobId: z.uuid(),
-    createdAt: z.iso.datetime(),
+    createdAt: SqlCompatibleIsoDateTimeSchema,
     retentionPolicyId: z.literal("candidate-active-30d/1.0.0"),
     inputSha256: z.string().regex(/^[a-f0-9]{64}$/u),
     locale: z.string().min(2).max(20),
@@ -273,6 +285,79 @@ function sourceLines(source: string) {
   }
   return result;
 }
+
+const requiredSection =
+  /^(requirements|job requirements|qualifications|required qualifications|basic qualifications|minimum qualifications|required skills(?: and experience)?|skills and experience|must have|essential skills):?$/iu;
+const preferredSection =
+  /^(preferred qualifications|preferred|nice to have):?$/iu;
+const contextualSection = /^((?:key |job )?responsibilities|duties):?$/iu;
+const roleSection = /^about (?:the job|this role):?$/iu;
+const companySection =
+  /^(benefits|about (?!the job\b|this role\b)[\p{L}\p{N}][\p{L}\p{N}& .,'’–-]{0,80}|company overview|equal opportunity):?$/iu;
+const span = (start: number, end: number, quote: string): ExactJobSpan => ({
+  spanId: `jd-${start}-${end}`,
+  start,
+  end,
+  quote,
+});
+type ReviewedSkillScope = {
+  importance: "required" | "preferred";
+  heading: ExactJobSpan;
+};
+
+/** Read additional skills headings on admitted JD text without changing stored scope. */
+export function deriveReviewedSkillSections(source: string) {
+  const characters = Array.from(source);
+  const headings = new Set<string>();
+  const scopes = new Map<string, ReviewedSkillScope>();
+  let active: ReviewedSkillScope | null = null;
+  let inCompanySection = false;
+  for (const { text, start, end, metadata } of sourceLines(source)) {
+    if (!text || metadata) continue;
+    if (
+      requiredSection.test(text) ||
+      preferredSection.test(text) ||
+      contextualSection.test(text) ||
+      roleSection.test(text) ||
+      companySection.test(text)
+    ) {
+      active = null;
+      inCompanySection = companySection.test(text);
+      continue;
+    }
+    if (inCompanySection) continue;
+    const citation = span(start, end, text);
+    const newHeading = /^preferred skills(?: and experience)?:?$/iu.test(text)
+      ? "preferred"
+      : /^mandatory skills(?: and experience)?:?$/iu.test(text)
+        ? "required"
+        : null;
+    if (newHeading) {
+      let before = start - 1;
+      while (before >= 0 && /^[\t \u00a0]$/u.test(characters[before])) before--;
+      let after = end;
+      while (
+        after < characters.length &&
+        /^[\t \u00a0\r]$/u.test(characters[after])
+      )
+        after++;
+      if (
+        (before < 0 || characters[before] === "\n") &&
+        (after === characters.length || characters[after] === "\n")
+      ) {
+        active = { importance: newHeading, heading: citation };
+        headings.add(citation.spanId);
+        continue;
+      }
+    }
+    if (active) {
+      const explicit = importance(text, "unknown");
+      if (explicit.importanceBasis === "unknown" && !explicit.ambiguity.length)
+        scopes.set(citation.spanId, active);
+    }
+  }
+  return { headings, scopes };
+}
 export function parseJobRequirements(
   sourceText: string,
   context: {
@@ -295,39 +380,31 @@ export function parseJobRequirements(
   let headingEvidence: JobRequirement["importanceEvidence"] = null;
   for (const { text, start, end, metadata } of sourceLines(sourceText)) {
     if (!text) continue;
-    if (
-      /^(requirements|job requirements|qualifications|required qualifications|basic qualifications|minimum qualifications|required skills(?: and experience)?|skills and experience|must have|essential skills):?$/iu.test(
-        text,
-      )
-    ) {
+    if (requiredSection.test(text)) {
       heading = "required";
       companyContext = false;
       headingEvidence = { start, end, quote: text };
       continue;
     }
-    if (/^(preferred qualifications|preferred|nice to have):?$/iu.test(text)) {
+    if (preferredSection.test(text)) {
       heading = "preferred";
       companyContext = false;
       headingEvidence = { start, end, quote: text };
       continue;
     }
-    if (/^((?:key |job )?responsibilities|duties):?$/iu.test(text)) {
+    if (contextualSection.test(text)) {
       heading = "contextual";
       companyContext = false;
       headingEvidence = { start, end, quote: text };
       continue;
     }
-    if (/^about (?:the job|this role):?$/iu.test(text)) {
+    if (roleSection.test(text)) {
       companyContext = false;
       heading = "unknown";
       headingEvidence = null;
       continue;
     }
-    if (
-      /^(benefits|about (?!the job\b|this role\b)[\p{L}\p{N}][\p{L}\p{N}& .,'’–-]{0,80}|company overview|equal opportunity):?$/iu.test(
-        text,
-      )
-    ) {
+    if (companySection.test(text)) {
       companyContext = true;
       heading = "unknown";
       headingEvidence = null;
@@ -471,4 +548,279 @@ export function parseJobRequirements(
       "domain_pack_review_pending",
     ],
   });
+}
+
+export const LOCAL_JD_ALIAS_MODEL_VERSION =
+  "jd-local-alias-parser/1.0.0" as const;
+type ExactJobSpan = JobRequirement["evidence"];
+export type LocalAliasRequirement = JobRequirement & {
+  mapping: JobAliasMapping | null;
+  tokenEvidence: ExactJobSpan[];
+};
+export type LocalAliasJobRequirements = Omit<
+  JobRequirements,
+  "schemaVersion" | "producerVersion" | "requirements"
+> & {
+  schemaVersion: "jd-local-discovery/1.0.0";
+  modelVersion: typeof LOCAL_JD_ALIAS_MODEL_VERSION;
+  legacyParserVersion: typeof JD_PARSER_VERSION;
+  authority: "local_review_only";
+  persistable: false;
+  scoringEligible: false;
+  mappingPolicy: {
+    version: typeof JOB_ALIAS_POLICY_VERSION;
+    lexiconSha256: string;
+    externalTaxonomy: null;
+  };
+  requirements: LocalAliasRequirement[];
+  retainedClauses: Array<{
+    evidence: ExactJobSpan;
+    importance: JobRequirement["importance"];
+    negated: boolean;
+    interpretation: "unmapped" | "partial_vocabulary";
+    reviewRequired: true;
+    requirementIds: string[];
+  }>;
+};
+
+// A separate, opt-in read model. The stored parser above remains frozen.
+export function parseJobRequirementsWithAliases(
+  sourceText: string,
+  context: Parameters<typeof parseJobRequirements>[1],
+  options: { modelVersion: typeof LOCAL_JD_ALIAS_MODEL_VERSION },
+): LocalAliasJobRequirements {
+  if (options?.modelVersion !== LOCAL_JD_ALIAS_MODEL_VERSION)
+    throw new Error("JD_ALIAS_MODEL_UNSUPPORTED");
+  const legacy = parseJobRequirements(sourceText, context);
+  let tokenCount = 0;
+  const admitTokens = (tokens: ExactJobSpan[]) => {
+    tokenCount += tokens.length;
+    if (tokenCount > 1000) throw new Error("JD_ALIAS_TOKEN_LIMIT");
+    return tokens;
+  };
+  const requirements: LocalAliasRequirement[] = legacy.requirements.map(
+    (item) => {
+      const tokenEvidence: ExactJobSpan[] = [];
+      let mapping = item.type === "skill" ? resolveJobAlias(item.value) : null;
+      if (mapping?.kind === "exact") {
+        for (const mention of discoverJobAliasMentions(item.evidence.quote))
+          if (mention.value.toLowerCase() === item.value.toLowerCase())
+            tokenEvidence.push(
+              span(
+                item.evidence.start + mention.evidence.start,
+                item.evidence.start + mention.evidence.end,
+                mention.evidence.quote,
+              ),
+            );
+        // Retain the frozen raw observation without promoting a qualified fragment.
+        if (!tokenEvidence.length) mapping = resolveJobAlias("");
+      } else if (item.type === "skill") {
+        const pattern = new RegExp(
+          `(?<![\\p{L}\\p{N}])${escaped(item.value)}(?![\\p{L}\\p{N}])`,
+          "giu",
+        );
+        for (const match of item.evidence.quote.matchAll(pattern)) {
+          const start =
+            item.evidence.start +
+            Array.from(item.evidence.quote.slice(0, match.index)).length;
+          tokenEvidence.push(
+            span(start, start + Array.from(match[0]).length, match[0]),
+          );
+        }
+      }
+      return {
+        ...item,
+        mapping,
+        tokenEvidence: admitTokens(tokenEvidence),
+      };
+    },
+  );
+  const retainedClauses: LocalAliasJobRequirements["retainedClauses"] = [];
+  let heading = "unknown",
+    companyContext = false;
+  let headingEvidence: JobRequirement["importanceEvidence"] = null;
+  // These heading rules deliberately retain the frozen parser's scope. Relation
+  // interpretation and new storage admission belong to later versioned slices.
+  for (const { text, start, end, metadata } of sourceLines(sourceText)) {
+    if (!text) continue;
+    if (requiredSection.test(text)) {
+      heading = "required";
+      companyContext = false;
+      headingEvidence = { start, end, quote: text };
+      continue;
+    }
+    if (preferredSection.test(text)) {
+      heading = "preferred";
+      companyContext = false;
+      headingEvidence = { start, end, quote: text };
+      continue;
+    }
+    if (contextualSection.test(text)) {
+      heading = "contextual";
+      companyContext = false;
+      headingEvidence = { start, end, quote: text };
+      continue;
+    }
+    if (roleSection.test(text)) {
+      heading = "unknown";
+      companyContext = false;
+      headingEvidence = null;
+      continue;
+    }
+    if (companySection.test(text)) {
+      heading = "unknown";
+      companyContext = true;
+      headingEvidence = null;
+      continue;
+    }
+    if (companyContext || metadata !== null) continue;
+    const imp = importance(text, heading);
+    const negated = /\b(no|not(?!\s+only\b)|without|never)\b/iu.test(text);
+    const mentions = discoverJobAliasMentions(text).filter(
+      (m) => m.mapping.kind === "alias",
+    );
+    const byLiteral = new Map<string, typeof mentions>();
+    for (const mention of mentions) {
+      const key = mention.value.toLowerCase();
+      const group = byLiteral.get(key) ?? [];
+      group.push(mention);
+      byLiteral.set(key, group);
+    }
+    for (const group of byLiteral.values()) {
+      if (text.length > 2000 || requirements.length >= 300)
+        throw new Error("JD_ITEM_LIMIT");
+      const first = group[0];
+      const raw = RequirementItemSchema.parse({
+        id: randomUUID(),
+        type: "skill",
+        value: first.value,
+        ...imp,
+        importance: negated ? "contextual" : imp.importance,
+        importanceBasis: negated ? "explicit" : imp.importanceBasis,
+        importanceEvidence:
+          negated || importance(text, "unknown").importanceBasis === "explicit"
+            ? { start, end, quote: text }
+            : imp.importanceBasis === "explicit"
+              ? headingEvidence
+              : null,
+        derivation: "exact",
+        minimumYears: null,
+        negated,
+        ambiguity: [
+          ...imp.ambiguity,
+          ...(/\bor\b/iu.test(text) ? ["skill_alternative_review"] : []),
+          ...(negated ? ["negated_clause_review"] : []),
+        ],
+        dedupGroup: createHash("sha256")
+          .update(`skill:${first.value.toLowerCase()}`)
+          .digest("hex"),
+        evidence: span(start, end, text),
+        confidence: { kind: "uncalibrated", value: null },
+      });
+      requirements.push({
+        ...raw,
+        mapping: first.mapping,
+        tokenEvidence: admitTokens(
+          group.map((m) =>
+            span(
+              start + m.evidence.start,
+              start + m.evidence.end,
+              m.evidence.quote,
+            ),
+          ),
+        ),
+      });
+    }
+    const inClause = requirements.filter(
+      (r) => r.evidence.start === start && r.evidence.end === end,
+    );
+    if (
+      inClause.length ||
+      imp.importance === "required" ||
+      imp.importance === "preferred" ||
+      imp.ambiguity.length ||
+      negated
+    ) {
+      if (text.length > 2000 || retainedClauses.length >= 300)
+        throw new Error("JD_ALIAS_CLAUSE_LIMIT");
+      retainedClauses.push({
+        evidence: span(start, end, text),
+        importance: negated ? "contextual" : imp.importance,
+        negated,
+        interpretation: inClause.length ? "partial_vocabulary" : "unmapped",
+        reviewRequired: true,
+        requirementIds: inClause.map((r) => r.id),
+      });
+    }
+  }
+  // Do not expose a legacy producer-labelled body containing new observations.
+  return {
+    id: legacy.id,
+    parentVersionId: legacy.parentVersionId,
+    ownerId: legacy.ownerId,
+    organizationId: legacy.organizationId,
+    analysisId: legacy.analysisId,
+    jobId: legacy.jobId,
+    createdAt: legacy.createdAt,
+    retentionPolicyId: legacy.retentionPolicyId,
+    inputSha256: legacy.inputSha256,
+    sourceText: legacy.sourceText,
+    locale: legacy.locale,
+    domain: legacy.domain,
+    schemaVersion: "jd-local-discovery/1.0.0",
+    modelVersion: LOCAL_JD_ALIAS_MODEL_VERSION,
+    legacyParserVersion: JD_PARSER_VERSION,
+    authority: "local_review_only",
+    persistable: false,
+    scoringEligible: false,
+    mappingPolicy: {
+      version: JOB_ALIAS_POLICY_VERSION,
+      lexiconSha256: JOB_ALIAS_LEXICON_SHA256,
+      externalTaxonomy: null,
+    },
+    state:
+      legacy.state === "unsupported"
+        ? "unsupported"
+        : requirements.length || retainedClauses.length
+          ? "review_required"
+          : "insufficient",
+    requirements,
+    retainedClauses,
+    warnings: [
+      ...legacy.warnings,
+      "local_alias_policy_not_admitted",
+      "clause_interpretation_review_pending",
+    ],
+  };
+}
+
+export const LOCAL_JD_RELATION_MODEL_VERSION =
+  "jd-local-relation-parser/1.0.0" as const;
+export type LocalRelationalJobRequirements = Omit<
+  LocalAliasJobRequirements,
+  "schemaVersion" | "modelVersion"
+> & {
+  schemaVersion: "jd-local-relational-discovery/1.0.0";
+  modelVersion: typeof LOCAL_JD_RELATION_MODEL_VERSION;
+  baseModelVersion: typeof LOCAL_JD_ALIAS_MODEL_VERSION;
+  relations: LocalJobRelations;
+};
+
+export function parseJobRequirementsWithRelations(
+  sourceText: string,
+  context: Parameters<typeof parseJobRequirements>[1],
+  options: { modelVersion: typeof LOCAL_JD_RELATION_MODEL_VERSION },
+): LocalRelationalJobRequirements {
+  if (options?.modelVersion !== LOCAL_JD_RELATION_MODEL_VERSION)
+    throw new Error("JD_RELATION_MODEL_UNSUPPORTED");
+  const aliases = parseJobRequirementsWithAliases(sourceText, context, {
+    modelVersion: LOCAL_JD_ALIAS_MODEL_VERSION,
+  });
+  return {
+    ...aliases,
+    schemaVersion: "jd-local-relational-discovery/1.0.0",
+    modelVersion: LOCAL_JD_RELATION_MODEL_VERSION,
+    baseModelVersion: aliases.modelVersion,
+    relations: deriveLocalJobRelations(aliases),
+  };
 }

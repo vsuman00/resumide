@@ -1,0 +1,86 @@
+  -- Direct profile checks are deferred native controls, not executed by Vitest.
+  foreach cp in array array[9,10,11,12,13,32,160,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288,65279] loop
+    if private.grouped_import_trim(chr(cp)||'X'||chr(cp))<>'X' then raise exception 'A02_SOURCE_WHITESPACE_%',cp using errcode='23514'; end if;
+  end loop;
+  if private.grouped_import_utf16_length('😀')<>2 or private.grouped_import_utf16_length('é')<>2
+    or private.grouped_import_ascii_lower('AZéİſ')<>'azéİſ' then raise exception 'A02_SOURCE_TEXT_PROFILE' using errcode='23514'; end if;
+  select value into strict source_fixture from jsonb_array_elements(fixtures) where value->>'id'='two_jobs_overlap';
+  foreach case_id in array array[
+    'binding_owner','binding_model','binding_locale_type','binding_extra',
+    'source_ref_type','source_ref_fraction','source_ref_null','source_grounding','source_span_empty_bounds',
+    'source_span_utf16','source_native_utf16','source_pages_21','source_spans_20001','source_assertions_1001','source_refs_21',
+    'selection_order','selection_member_order','selection_ref','selection_extra','selection_duplicate','selection_empty','selection_excess',
+    'base_producer','base_parent','base_locale','base_state','base_confirmation','base_event_actor','base_event_target','base_event_time',
+    'base_null_sources','base_ref_type','base_full_value','base_empty_sources','base_duplicate_critical','base_unmatched_critical','base_missing_assertion','base_complete_citations',
+    'base_duplicate_id','base_dangling_ref','base_duplicate_ref','base_contact_type','base_fact_utf16','base_title_utf16','base_entries_101',
+    'placement_missing','placement_mixed','placement_cross_section','placement_anchor_order','placement_multiple','placement_section','placement_bullet','base_bullet_text'
+  ] loop
+    bad_envelope:=source_fixture->'envelope'; bad_binding:=source_fixture->'binding';
+    bad_original:=source_fixture->'original'; bad_selections:=source_fixture->'selections';
+    case case_id
+      when 'binding_owner' then bad_binding:=jsonb_set(bad_binding,'{ownerId}','"50000000-0000-4000-8000-000000000001"');
+      when 'binding_model' then bad_binding:=jsonb_set(bad_binding,'{targetModelVersion}','"unsupported/1"');
+      when 'binding_locale_type' then bad_binding:=jsonb_set(bad_binding,'{effectiveLocale}','7');
+      when 'binding_extra' then bad_binding:=bad_binding||'{"unexpected":true}';
+      when 'source_ref_type' then bad_envelope:=jsonb_set(bad_envelope,'{assertions,0,evidence,0,start}','"0"');
+      when 'source_ref_fraction' then bad_envelope:=jsonb_set(bad_envelope,'{assertions,0,evidence,0,start}','0.5');
+      when 'source_ref_null' then bad_envelope:=jsonb_set(bad_envelope,'{assertions,0,evidence,0,start}','null');
+      when 'source_grounding' then bad_envelope:=jsonb_set(bad_envelope,'{assertions,0,value}','"Synthetic mismatch"');
+      when 'source_span_empty_bounds' then bad_envelope:=jsonb_set(bad_envelope,'{spans}',(bad_envelope->'spans')||jsonb_build_array(
+        (bad_envelope->'spans'->0)||jsonb_build_object('id','synthetic-empty-outside','text','','start',200000,'end',200000)));
+      when 'source_span_utf16' then bad_envelope:=jsonb_set(bad_envelope,'{spans,0,text}',to_jsonb(repeat('😀',100001)));
+      when 'source_native_utf16' then bad_envelope:=jsonb_set(bad_envelope,'{nativeSource,pages,0,text}',to_jsonb(repeat('x',500001)));
+      when 'source_pages_21' then bad_envelope:=jsonb_set(bad_envelope,'{nativeSource,pages}',(select jsonb_agg(bad_envelope->'nativeSource'->'pages'->0) from generate_series(1,21)));
+      when 'source_spans_20001' then bad_envelope:=jsonb_set(bad_envelope,'{spans}',(select jsonb_agg(bad_envelope->'spans'->0) from generate_series(1,20001)));
+      when 'source_assertions_1001' then bad_envelope:=jsonb_set(bad_envelope,'{assertions}',(select jsonb_agg(bad_envelope->'assertions'->0) from generate_series(1,1001)));
+      when 'source_refs_21' then bad_envelope:=jsonb_set(bad_envelope,'{assertions,0,evidence}',(select jsonb_agg(bad_envelope->'assertions'->0->'evidence'->0) from generate_series(1,21)));
+      when 'selection_order' then bad_selections:=(select jsonb_agg(value order by ordinality desc) from jsonb_array_elements(bad_selections) with ordinality);
+      when 'selection_member_order' then bad_selections:=jsonb_set(bad_selections,'{0,members}',(select jsonb_agg(value order by ordinality desc) from jsonb_array_elements(bad_selections->0->'members') with ordinality));
+      when 'selection_ref' then bad_selections:=jsonb_set(bad_selections,'{0,members,0,citations,0,end}','1');
+      when 'selection_extra' then bad_selections:=jsonb_set(bad_selections,'{0}',(bad_selections->0)||'{"unexpected":true}');
+      when 'selection_duplicate' then bad_selections:=bad_selections||jsonb_build_array(bad_selections->0);
+      when 'selection_empty' then bad_selections:='[]';
+      when 'selection_excess' then bad_selections:=(select jsonb_agg(bad_selections->0) from generate_series(1,33));
+      when 'base_producer' then bad_original:=jsonb_set(bad_original,'{producerVersion}','"canonical-engine/1.0.3"');
+      when 'base_parent' then bad_original:=jsonb_set(bad_original,'{parentVersionId}',bad_original->'versionId');
+      when 'base_locale' then bad_original:=jsonb_set(bad_original,'{locale}','"en-US"');
+      when 'base_state' then bad_original:=jsonb_set(bad_original,'{facts,0,state}','"candidate_confirmed"');
+      when 'base_confirmation' then bad_original:=jsonb_set(bad_original,'{facts,0,confirmation}',jsonb_build_object('actorId',bad_binding->'ownerId','value',bad_original->'facts'->0->'value','confirmedAt',bad_original->'createdAt'));
+      when 'base_event_actor' then bad_original:=jsonb_set(bad_original,'{changes,0,actorId}','"50000000-0000-4000-8000-000000000001"');
+      when 'base_event_target' then bad_original:=jsonb_set(bad_original,'{changes,0,targetId}','"50000000-0000-4000-8000-000000000001"');
+      when 'base_event_time' then bad_original:=jsonb_set(bad_original,'{changes,0,createdAt}','"2026-11-12T00:00:00.000Z"');
+      when 'base_null_sources' then bad_original:=jsonb_set(bad_original,'{facts,0,sources}','null');
+      when 'base_ref_type' then bad_original:=jsonb_set(bad_original,'{facts,0,sources,0,start}','"0"');
+      when 'base_full_value' then bad_original:=jsonb_set(bad_original,'{facts,0,sources,0,start}','0');
+      when 'base_empty_sources' then bad_original:=jsonb_set(bad_original,'{facts,0,sources}','[]');
+      when 'base_duplicate_critical' then bad_original:=jsonb_set(bad_original,'{facts}',(bad_original->'facts')||jsonb_build_array((bad_original->'facts'->0)||'{"id":"50000000-0000-4000-8000-000000000001"}'));
+      when 'base_unmatched_critical' then bad_original:=jsonb_set(bad_original,'{facts}',(bad_original->'facts')||jsonb_build_array((bad_original->'facts'->1)||'{"id":"50000000-0000-4000-8000-000000000001","type":"employer"}'));
+      when 'base_missing_assertion' then bad_original:=jsonb_set(jsonb_set(bad_original,'{facts}',(bad_original->'facts')-0),'{sections,0,entries}',(bad_original->'sections'->0->'entries')-0);
+      when 'base_complete_citations' then bad_original:=jsonb_set(bad_original,'{facts,0,sources}',(bad_original->'facts'->0->'sources')||(bad_original->'facts'->0->'sources'));
+      when 'base_duplicate_id' then bad_original:=jsonb_set(bad_original,'{sections,0,id}',bad_original->'versionId');
+      when 'base_dangling_ref' then bad_original:=jsonb_set(bad_original,'{sections,0,entries,0,factIds}','["50000000-0000-4000-8000-000000000001"]');
+      when 'base_duplicate_ref' then bad_original:=jsonb_set(bad_original,'{sections,0,entries,0,factIds}',(bad_original->'sections'->0->'entries'->0->'factIds')||(bad_original->'sections'->0->'entries'->0->'factIds'));
+      when 'base_contact_type' then bad_original:=jsonb_set(bad_original,'{contactFactIds}',jsonb_build_array(bad_original->'facts'->0->'id'));
+      when 'base_fact_utf16' then bad_original:=jsonb_set(bad_original,'{facts,0,value}',to_jsonb(repeat('😀',1001)));
+      when 'base_title_utf16' then bad_original:=jsonb_set(bad_original,'{sections,0,title}',to_jsonb(repeat('😀',51)));
+      when 'base_entries_101' then bad_original:=jsonb_set(bad_original,'{sections,0,entries}',(select jsonb_agg(bad_original->'sections'->0->'entries'->0) from generate_series(1,101)));
+      when 'placement_missing' then bad_original:=jsonb_set(bad_original,'{sections,0,entries}',(bad_original->'sections'->0->'entries')-0);
+      when 'placement_mixed' then bad_original:=jsonb_set(jsonb_set(bad_original,'{sections,0,entries,0,factIds}',(bad_original->'sections'->0->'entries'->0->'factIds')||(bad_original->'sections'->0->'entries'->1->'factIds')),'{sections,0,entries}',(jsonb_set(bad_original->'sections'->0->'entries','{0,factIds}',(bad_original->'sections'->0->'entries'->0->'factIds')||(bad_original->'sections'->0->'entries'->1->'factIds')))-1);
+      when 'placement_cross_section' then bad_original:=jsonb_set(bad_original,'{sections}',jsonb_build_array(jsonb_set(bad_original->'sections'->0,'{entries}',(bad_original->'sections'->0->'entries')-1),jsonb_build_object('id','50000000-0000-4000-8000-000000000001','type','experience','title','Second experience','factIds','[]'::jsonb,'entries',jsonb_build_array(bad_original->'sections'->0->'entries'->1))));
+      when 'placement_anchor_order' then bad_original:=jsonb_set(bad_original,'{sections,0,entries}',(select jsonb_agg(case ordinality when 1 then bad_original->'sections'->0->'entries'->1 when 2 then bad_original->'sections'->0->'entries'->0 else value end order by ordinality) from jsonb_array_elements(bad_original->'sections'->0->'entries') with ordinality));
+      when 'placement_multiple' then bad_original:=jsonb_set(bad_original,'{sections,0,entries}',(bad_original->'sections'->0->'entries')||jsonb_build_array((bad_original->'sections'->0->'entries'->0)||'{"id":"50000000-0000-4000-8000-000000000001"}'));
+      when 'placement_section' then bad_original:=jsonb_set(jsonb_set(bad_original,'{sections,0,factIds}',bad_original->'sections'->0->'entries'->0->'factIds'),'{sections,0,entries}',(bad_original->'sections'->0->'entries')-0);
+      when 'placement_bullet' then bad_original:=jsonb_set(bad_original,'{sections,0,entries,0}',(bad_original->'sections'->0->'entries'->0)||jsonb_build_object('factIds','[]'::jsonb,'bullets',jsonb_build_array(jsonb_build_object('id','50000000-0000-4000-8000-000000000001','text',bad_original->'facts'->0->'value','factIds',jsonb_build_array(bad_original->'facts'->0->'id')))));
+      when 'base_bullet_text' then bad_original:=jsonb_set(bad_original,'{sections,0,entries,0}',(bad_original->'sections'->0->'entries'->0)||jsonb_build_object('factIds','[]'::jsonb,'bullets',jsonb_build_array(jsonb_build_object('id','50000000-0000-4000-8000-000000000001','text','Synthetic mismatch','factIds',jsonb_build_array(bad_original->'facts'->0->'id')))));
+    end case;
+    rejected:=false;
+    begin
+      if case_id like 'source_%' or case_id like 'binding_%' then
+        perform private.grouped_import_project_candidates(bad_envelope,bad_binding);
+      else
+        perform private.grouped_import_place_original(bad_envelope,bad_binding,bad_original,bad_selections);
+      end if;
+    exception when sqlstate '22023' then rejected:=true;
+    end;
+    if not rejected then raise exception 'A02_SOURCE_REFUSAL_%',case_id using errcode='23514'; end if;
+  end loop;

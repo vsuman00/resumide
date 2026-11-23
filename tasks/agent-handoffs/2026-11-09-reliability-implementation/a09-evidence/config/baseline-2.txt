@@ -1,0 +1,82 @@
+NODE_ENV=development
+APP_ORIGIN=http://localhost:5173
+
+# Supabase project Connect dialog. Keep the secret key server-only.
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=your-publishable-key
+SUPABASE_SECRET_KEY=your-secret-key
+SUPABASE_RESUME_BUCKET=resumes
+
+# Enable only after the native evidence migration and database verifier pass.
+NATIVE_EVIDENCE_ENABLED=false
+# Enable only after the native_layout_evidence migration and verifier pass.
+# Also persists the AA010 native evidence graph; no OCR layout is inferred.
+NATIVE_LAYOUT_ENABLED=false
+
+# OpenAI server configuration.
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_BASE_URL=https://api.openai.com/v1
+OPENAI_MODEL=gpt-6-luna
+OPENAI_TIMEOUT_MS=20000
+OPENAI_MAX_OUTPUT_TOKENS=1200
+QUALITATIVE_MAX_ATTEMPTS=1
+
+# Security and operations. Keep METRICS_TOKEN in the secret manager in staging/production.
+SESSION_MAX_AGE_SECONDS=3600
+CSP_MODE=report-only
+CSP_REPORT_URI=
+METRICS_TOKEN=
+RETENTION_DAYS=30
+PRIVACY_MAX_ATTEMPTS=3
+PRIVACY_LEASE_SECONDS=300
+AI_INPUT_COST_PER_1K_USD=0.0001
+AI_OUTPUT_COST_PER_1K_USD=0.0005
+
+# Candidate resume uploads are capped at 10 MiB.
+MAX_UPLOAD_BYTES=10485760
+
+# Requires document evidence migration; uncalibrated review always withholds scores.
+EVIDENCE_REVIEW_ENABLED=false
+CANONICAL_AUTHORING_ENABLED=false
+# Requires the correction-ledger cutover and compatible readers; keep off until validated.
+CANONICAL_CORRECTIONS_ENABLED=false
+JOB_INTELLIGENCE_ENABLED=false
+
+# AA4 private diagnostics only; no numeric policy activation
+SCORING_V2_ENABLED=false
+
+# AA5 candidate-controlled authoring; no model or numeric-score activation
+AUTHORING_ENABLED=false
+
+# AA6 core artifacts: keep disabled until local validation is complete.
+ARTIFACT_RENDERING_ENABLED=false
+
+# Engineering-only hosted PaddleOCR adapter; production upload/worker wiring is pending.
+# Setting this flag does not enable OCR in the app. See docs/design/HOSTED_PADDLEOCR_API.md.
+# Keep credentials server-only. Approve exact BOS result hosts and a disclosure policy before use.
+PADDLEOCR_ENABLED=false
+PADDLEOCR_ACCESS_TOKEN=
+PADDLEOCR_RESULT_HOSTS=
+PADDLEOCR_DISCLOSURE_POLICY_ID=
+PADDLEOCR_TIMEOUT_MS=15000
+PADDLEOCR_MAX_PAGES=3
+PADDLEOCR_MAX_UPLOAD_BYTES=10485760
+PADDLEOCR_MAX_RESULT_BYTES=1000000
+PADDLEOCR_MAX_CHARACTERS=100000
+PADDLEOCR_MAX_POLLS=20
+PADDLEOCR_POLL_INTERVAL_MS=500
+
+# Standalone converter: local sandbox review required before enabling.
+LATEX_CONVERTER_ENABLED=false
+LATEX_COMPILER_IMAGE=
+
+# Selected-context Build suggestions; explicit consent and reviewed credentials required.
+BUILD_AI_ASSIST_ENABLED=false
+
+# Internal shared AI admission; keep off until SQL, opening and cutover are admitted.
+AI_BUDGET_ENABLED=false
+AI_BUDGET_POLICY_VERSION=
+
+# Durable admission and per-attempt leases require their reviewed forward migrations.
+ANALYSIS_ADMISSION_BINDING_ENABLED=false
+ANALYSIS_FENCING_ENABLED=false

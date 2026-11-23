@@ -1,0 +1,65 @@
+{
+  "id": "CR-U19-S02",
+  "status": "VERIFIED_LOCAL_AUTH_RECOVERY_A11Y",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated SSR build on loopback with simulated Supabase Auth",
+  "sources": {
+    "app/routes/auth.tsx": "15edf2e7a760b98cf934bd97747df0a1e21e208bd777f5c1f441cbf90c4602ce",
+    "app/routes/auth.callback.ts": "ce72df3edc097fd534a9e249020b2906ad21ecb248dae980e038115d8df7c578",
+    "app/app.css": "fd4cc681e0150b6e2ca6bf7a5ad934126c4bdbf6ce95b84f180c2a0905b7f45c",
+    "scripts/verify-local-auth-recovery.ts": "e4179b3044bacc17beb715042b777bdd971565287b7260655446de4b2c675b51",
+    "scripts/local-fixture-browser.ts": "372fa419ba68e5c15b742dbb4acd267a0359b67c1b8eb8b9ea5319a5c36e22f4",
+    "tests/unit/auth-recovery.test.ts": "17b5fc627ba44c29d0dff004156746e547336c623cbb93d19eb51c6e5a4b0f0b",
+    "package-lock.json": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41"
+  },
+  "baseline": {
+    "focusedStatesMissing": ["sent", "expired", "failed resend"],
+    "providerFailureMarkedValidEmailInvalid": true,
+    "darkAxeRule": "color-contrast",
+    "logSha256": "35407266918dc08f5df2164bddcb75867f2665db8ee0ae92a247bce51438e65f"
+  },
+  "focusedTests": {
+    "passed": 104,
+    "files": 9,
+    "logSha256": "92e389ef52cd458c98887766765950d95c697655077ccd792c90a296e504b868"
+  },
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed with four existing warnings",
+    "fixtureLint": "passed",
+    "webBuildLogSha256": "fcf8e71d1cdd12c134883f34df1299915a78280265a221ed9059582edc3e985a",
+    "workerBuildLogSha256": "7b270bd94f89e6a24f3e3738d5db42966be653e672f2d326c06e9ba867b82732"
+  },
+  "browser": {
+    "viewports": [
+      {
+        "width": 390,
+        "height": 700
+      },
+      {
+        "width": 320,
+        "height": 540
+      }
+    ],
+    "scopedAxe": ["dark send confirmation", "dark expired-link recovery"],
+    "reportSha256": "d0c18c2b1099196e142f6add9d668c6bf7ab8c61f6fbbd32df98929a19a04675",
+    "result": {
+      "browser": "Chromium",
+      "otpCalls": 3,
+      "exchangeCalls": 2,
+      "logoutCalls": 1,
+      "invalidLinkKeptDestination": true,
+      "failedResendKeptDestination": true,
+      "sameBrowserPKCE": true,
+      "replayDeclined": true,
+      "focusedStatusAndRecovery": true,
+      "fieldAndProviderFailuresDistinct": true,
+      "pendingSendDisabled": true,
+      "narrowRecoveryWithForcedColors": true,
+      "authBlockingAxeViolations": 0,
+      "hostedDelivery": false
+    }
+  },
+  "manualScreenReaderVerified": false,
+  "browserZoomVerified": false
+}

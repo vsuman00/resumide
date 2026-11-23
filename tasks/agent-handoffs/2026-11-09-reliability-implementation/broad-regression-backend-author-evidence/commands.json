@@ -1,0 +1,72 @@
+{
+  "finite": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/canonical-rewrite-route.test.ts",
+      "tests/unit/score-snapshot-binding.test.ts",
+      "--maxWorkers=1",
+      "--no-file-parallelism"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "tests/unit/canonical-rewrite-route.test.ts",
+      "tests/unit/score-snapshot-binding.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "tests/unit/canonical-rewrite-route.test.ts",
+      "tests/unit/score-snapshot-binding.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "types": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-broad-backend-regressions-vqb5vwe2/types.cjs"
+    ],
+    "expectedExit": 0
+  },
+  "affected": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/canonical-rewrite-route.test.ts",
+      "tests/unit/score-snapshot-binding.test.ts",
+      "-t",
+      "runs the actual authenticated resource|refuses (known canonical spend|unknown canonical claim)|fails closed for a (current|historical) stored v2 row",
+      "--maxWorkers=1",
+      "--no-file-parallelism"
+    ],
+    "expectedExit": 0
+  },
+  "types-final": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-broad-backend-regressions-vqb5vwe2/types.cjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint-final": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "tests/unit/canonical-rewrite-route.test.ts",
+      "tests/unit/score-snapshot-binding.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format-final": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "tests/unit/canonical-rewrite-route.test.ts",
+      "tests/unit/score-snapshot-binding.test.ts"
+    ],
+    "expectedExit": 0
+  }
+}

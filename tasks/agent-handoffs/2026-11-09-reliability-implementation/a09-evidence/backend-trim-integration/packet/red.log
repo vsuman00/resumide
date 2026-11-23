@@ -1,0 +1,87 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/job-requirement-admission.test.ts (33 tests | 5 failed | 27 skipped) 90ms
+   ↓ constructs a distinct registered review-only envelope with literal aliases and complete typed clauses
+   ↓ uses stable ordinal graph references while ignoring generated IDs, allocation time and separate expected parent
+   × rejects stored v2 literal padding " " without rewriting the value 67ms
+   × rejects stored v2 literal padding "\t" without rewriting the value 4ms
+   × rejects stored v2 literal padding " " without rewriting the value 4ms
+   × rejects stored v2 literal padding "﻿" without rewriting the value 3ms
+   × rejects oversized stored v2 literal padding before it can disappear from the body budget 7ms
+   ✓ keeps exact v2 literals unchanged and preserves the legacy value trimming contract 4ms
+   ↓ rejects tampered or without treating a forged semantic envelope as admitted
+   ↓ rejects tampered bounds without treating a forged semantic envelope as admitted
+   ↓ rejects tampered quote without treating a forged semantic envelope as admitted
+   ↓ rejects tampered mapping without treating a forged semantic envelope as admitted
+   ↓ rejects tampered importance without treating a forged semantic envelope as admitted
+   ↓ rejects tampered policy without treating a forged semantic envelope as admitted
+   ↓ rejects tampered relationPolicy without treating a forged semantic envelope as admitted
+   ↓ rejects tampered source without treating a forged semantic envelope as admitted
+   ↓ rejects tampered score without treating a forged semantic envelope as admitted
+   ↓ rejects tampered local without treating a forged semantic envelope as admitted
+   ↓ rejects invalid duplicate_id in the stored graph
+   ↓ rejects invalid dangling in the stored graph
+   ↓ rejects invalid duplicate_ref in the stored graph
+   ↓ rejects invalid wrong_span_id in the stored graph
+   ↓ rejects invalid duplicate_clause in the stored graph
+   ↓ rejects invalid float in the stored graph
+   ↓ rejects invalid oversized_graph in the stored graph
+   ↓ rejects non-PostgreSQL Unicode input "\u0000"
+   ↓ rejects non-PostgreSQL Unicode input "\ud800"
+   ↓ rejects non-PostgreSQL Unicode input "\udc00"
+   ↓ rejects non-PostgreSQL Unicode input "\ud800x"
+   ↓ encodes wellformed Unicode and JSON string escapes without normalization or structural spaces
+   ↓ keeps unsupported segments and ambiguous relations explicit and unscored
+   ↓ rejects oversized source and never weakens the legacy reader
+   ↓ binds the frozen structural schema, Unicode profile and policies into an immutable admission descriptor
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/job-requirement-admission.test.ts > rejects stored v2 literal padding " " without rewriting the value
+ FAIL  tests/unit/job-requirement-admission.test.ts > rejects stored v2 literal padding "\t" without rewriting the value
+ FAIL  tests/unit/job-requirement-admission.test.ts > rejects stored v2 literal padding " " without rewriting the value
+ FAIL  tests/unit/job-requirement-admission.test.ts > rejects stored v2 literal padding "﻿" without rewriting the value
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/job-requirement-admission.test.ts:117:66
+    115|     )!;
+    116|     item.value = `${padding}${item.value}${padding}`;
+    117|     expect(JobRequirementRelationsSchema.safeParse(doc).success).toBe(…
+       |                                                                  ^
+    118|   },
+    119| );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+
+ FAIL  tests/unit/job-requirement-admission.test.ts > rejects oversized stored v2 literal padding before it can disappear from the body budget
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/job-requirement-admission.test.ts:129:64
+    127|     JOB_RELATION_ADMISSION_PROFILE.budgets.bodyJsonbUtf8Bytes,
+    128|   );
+    129|   expect(JobRequirementRelationsSchema.safeParse(doc).success).toBe(fa…
+       |                                                                ^
+    130| });
+    131| it("keeps exact v2 literals unchanged and preserves the legacy value t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  5 failed | 1 passed | 27 skipped (33)
+   Start at  18:02:13
+   Duration  278ms (transform 78ms, setup 0ms, import 124ms, tests 90ms, environment 0ms)
+

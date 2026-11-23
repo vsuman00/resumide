@@ -1,0 +1,661 @@
+import { createHash } from "node:crypto";
+import { z } from "zod";
+import { SqlCompatibleIsoDateTimeSchema } from "./iso-datetime";
+import * as authoring from "./typed-authoring-protocol";
+import {
+  WRITING_SUPPORT_POLICY_VERSION,
+  buildWritingSupportDocument,
+  assessWritingSupport,
+} from "./writing-support";
+import { deriveRequirementSemanticEvidence } from "./requirement-semantic-evidence";
+import { deriveTypedAuthoringDeclarations } from "./typed-authoring-declaration";
+import { buildTypedScoreDiagnostics } from "./typed-score-diagnostics";
+import { ResumeWriterSchema } from "./schema";
+import { isDeepStrictEqual } from "node:util";
+import {
+  JOB_DURATION_SUBJECT_POLICY_VERSION,
+  JOB_DURATION_SUBJECT_POLICY_SHA256,
+} from "./job-duration-subject";
+
+export const CANONICAL_REWRITE_PROMPT_VERSION =
+  "canonical-closed-rewrite/1.0.0" as const;
+export const CANONICAL_REWRITE_POLICY_VERSION =
+  "canonical-rewrite-rules/1.0.0" as const;
+export const CANONICAL_REWRITE_POLICY = Object.freeze({
+  version: CANONICAL_REWRITE_POLICY_VERSION,
+  promptVersion: CANONICAL_REWRITE_PROMPT_VERSION,
+  writingSupportVersion: WRITING_SUPPORT_POLICY_VERSION,
+  sourceAuthoringVersion: authoring.TYPED_AUTHORING_POLICY_VERSION,
+  sourceAuthoringSha256: authoring.TYPED_AUTHORING_POLICY_SHA256,
+  declarationAuthoringVersion:
+    authoring.TYPED_AUTHORING_DECLARATION_POLICY_VERSION,
+  declarationAuthoringSha256:
+    authoring.TYPED_AUTHORING_DECLARATION_POLICY_SHA256,
+  durationSubjectVersion: JOB_DURATION_SUBJECT_POLICY_VERSION,
+  durationSubjectSha256: JOB_DURATION_SUBJECT_POLICY_SHA256,
+  plan: "choose sourceId+clauseId; copy or equivalent leading Built/Created/Developed lower/title; rest UTF8 identical; optional summary exact copy of one admitted source",
+  support:
+    "actual complete confirmed uniquely placed current A11 claim; no source/declaration relabel; Node writingIR and native reconstruction required",
+  numerics: "none; no proficiency, duration or numerical credit",
+  limits: Object.freeze({
+    sources: 32,
+    bullets: 4,
+    factUtf16: 2000,
+    payloadUtf8: 131072,
+    formUtf8: 65536,
+    requestUtf8: 16384,
+    projectionOriginalUtf16: 500,
+    projectionRewriteUtf16: 700,
+    projectionSummaryUtf16: 1200,
+    projectionReasonUtf16: 500,
+  }),
+});
+const sha = (value: string) => createHash("sha256").update(value).digest("hex");
+export const CANONICAL_REWRITE_POLICY_SHA256 = sha(
+  JSON.stringify(CANONICAL_REWRITE_POLICY),
+);
+const uuid = z.uuid(),
+  digest = z
+    .string()
+    .length(64)
+    .regex(/^[a-f0-9]{64}$/u);
+export const CanonicalRewritePolicySchema = z.strictObject({
+  version: z.literal(CANONICAL_REWRITE_POLICY_VERSION),
+  sha256: z.literal(CANONICAL_REWRITE_POLICY_SHA256),
+  promptVersion: z.literal(CANONICAL_REWRITE_PROMPT_VERSION),
+  writingSupportVersion: z.literal(WRITING_SUPPORT_POLICY_VERSION),
+  model: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,99}$/u),
+});
+export const canonicalRewritePolicy = (model: string) =>
+  CanonicalRewritePolicySchema.parse({
+    version: CANONICAL_REWRITE_POLICY_VERSION,
+    sha256: CANONICAL_REWRITE_POLICY_SHA256,
+    promptVersion: CANONICAL_REWRITE_PROMPT_VERSION,
+    writingSupportVersion: WRITING_SUPPORT_POLICY_VERSION,
+    model,
+  });
+export const CanonicalRewriteRequestSchema = z.strictObject({
+  schemaVersion: z.literal("canonical-rewrite-request/1.0.0"),
+  operationId: uuid,
+  canonicalVersionId: uuid,
+  requirementVersionId: uuid,
+  draftId: uuid,
+  expectedDraftUpdatedAt: SqlCompatibleIsoDateTimeSchema,
+});
+export type CanonicalRewriteRequest = z.infer<
+  typeof CanonicalRewriteRequestSchema
+>;
+export const CanonicalRewriteCommandSchema = z.strictObject({
+  schemaVersion: z.literal("canonical-rewrite-command/1.0.0"),
+  request: CanonicalRewriteRequestSchema,
+  policy: CanonicalRewritePolicySchema,
+});
+export const CanonicalRewriteDraftSchema = z
+  .strictObject({
+    id: uuid,
+    updatedAt: SqlCompatibleIsoDateTimeSchema,
+    contentSha256: digest,
+    versionId: uuid.nullable(),
+    revision: z.number().int().min(0).max(2147483647),
+    headId: uuid.nullable(),
+  })
+  .superRefine((v, c) => {
+    if (
+      (v.revision === 0) !== (v.versionId === null) ||
+      v.versionId !== v.headId
+    )
+      c.addIssue({ code: "custom", message: "Invalid rewrite draft identity" });
+  });
+const location = z.strictObject({
+  sectionId: uuid,
+  entryId: uuid,
+  bulletId: uuid.nullable(),
+});
+const confirmation = z.strictObject({
+  actorId: uuid,
+  value: z.string().min(1).max(2000),
+  confirmedAt: SqlCompatibleIsoDateTimeSchema,
+});
+const citations =
+  authoring.TypedAuthoringPatchSchema.options[0].shape.sourceCitations;
+export const CanonicalRewriteSourceMetadataSchema = z.strictObject({
+  sourceId: z.number().int().min(0).max(31),
+  factId: uuid,
+  valueSha256: digest,
+  location,
+  confirmation,
+  basis: z.enum(["source_quote", "candidate_declaration"]),
+  currentCitations: citations,
+  clauseIds: z.array(digest).min(1).max(300),
+  authoringVersion: z.enum([
+    "typed-authoring-rules/1.0.0",
+    "typed-authoring-rules/1.1.0",
+  ]),
+});
+export const CanonicalRewriteSourceSchema =
+  CanonicalRewriteSourceMetadataSchema.extend({
+    value: z.string().min(1).max(2000),
+  });
+export type CanonicalRewriteSource = z.infer<
+  typeof CanonicalRewriteSourceSchema
+>;
+const action = z.enum(["Built", "Created", "Developed"]);
+export const CanonicalRewritePlanItemSchema = z
+  .strictObject({
+    sourceId: z.number().int().min(0).max(31),
+    clauseId: digest,
+    operation: z.enum(["copy", "equivalent_action"]),
+    replacementAction: action.nullable(),
+  })
+  .superRefine((v, c) => {
+    if ((v.operation === "copy") !== (v.replacementAction === null))
+      c.addIssue({
+        code: "custom",
+        message: "Invalid closed rewrite operation",
+      });
+  });
+export const CanonicalRewritePlanSchema = z.strictObject({
+  summarySourceId: z.number().int().min(0).max(31).nullable(),
+  bullets: z.array(CanonicalRewritePlanItemSchema).max(4),
+});
+export type CanonicalRewritePlan = z.infer<typeof CanonicalRewritePlanSchema>;
+export const CanonicalRewriteBindingSchema = z.strictObject({
+  authoring: authoring.TypedAuthoringBindingSchema,
+  draft: CanonicalRewriteDraftSchema,
+  policy: CanonicalRewritePolicySchema,
+});
+export const CanonicalRewriteItemSchema = z.strictObject({
+  source: CanonicalRewriteSourceSchema,
+  clauseId: digest,
+  operation: z.enum(["copy", "equivalent_action"]),
+  replacementAction: action.nullable(),
+  before: z.string().min(1).max(2000),
+  after: z.string().min(1).max(2000),
+  rationale: z.string().min(1).max(500),
+  supportPolicyVersion: z.literal(WRITING_SUPPORT_POLICY_VERSION),
+});
+export const CanonicalRewriteResultSchema = z.strictObject({
+  schemaVersion: z.literal("canonical-rewrite-result/1.0.0"),
+  operationId: uuid,
+  bindingSha256: digest,
+  binding: CanonicalRewriteBindingSchema,
+  summary: CanonicalRewriteItemSchema.nullable(),
+  bullets: z.array(CanonicalRewriteItemSchema).max(4),
+});
+export type CanonicalRewriteResult = z.infer<
+  typeof CanonicalRewriteResultSchema
+>;
+export const CanonicalRewriteReceiptSchema = z.strictObject({
+  schemaVersion: z.literal("canonical-rewrite-receipt/1.0.0"),
+  state: z.literal("saved_proposals"),
+  operationId: uuid,
+  bindingSha256: digest,
+  runId: uuid,
+  draftId: uuid,
+  draftVersionId: uuid,
+  revision: z.number().int().min(1).max(2147483647),
+  draftUpdatedAt: SqlCompatibleIsoDateTimeSchema,
+  resultSha256: digest,
+  projectionSha256: digest,
+  idempotent: z.boolean(),
+});
+export type CanonicalRewriteReceipt = z.infer<
+  typeof CanonicalRewriteReceiptSchema
+>;
+export const CanonicalRewritePublicationSchema = z.strictObject({
+  result: CanonicalRewriteResultSchema,
+  receipt: CanonicalRewriteReceiptSchema,
+});
+export type CanonicalRewritePublication = z.infer<
+  typeof CanonicalRewritePublicationSchema
+>;
+export const CanonicalRewriteSavedSchema = z
+  .strictObject({
+    state: z.enum(["current", "historical", "legacy_unbound"]),
+    publication: CanonicalRewritePublicationSchema.nullable(),
+    legacyDraft: ResumeWriterSchema.nullable(),
+  })
+  .superRefine((v, c) => {
+    if (
+      v.state === "legacy_unbound"
+        ? v.publication !== null || v.legacyDraft === null
+        : v.publication === null || v.legacyDraft !== null
+    )
+      c.addIssue({ code: "custom", message: "Invalid rewrite saved state" });
+  });
+export const CanonicalRewriteNativeProfileSchema = z.strictObject({
+  schemaVersion: z.literal("canonical-rewrite-readiness/1.0.0"),
+  profileVersion: z.literal("canonical-rewrite-readiness-profile/1.0.0"),
+  checkerSha256: digest,
+  readerSha256: digest,
+  prepareSha256: digest,
+  claimSha256: digest,
+  finishSha256: digest,
+  settleSha256: digest,
+});
+export const CanonicalRewriteReadinessSchema =
+  CanonicalRewriteNativeProfileSchema.extend({
+    schemaReady: z.boolean(),
+    mutatorsExecutable: z.boolean(),
+  });
+export const CanonicalRewriteContextSchema = z.strictObject({
+  schemaVersion: z.literal("canonical-rewrite-context/1.0.0"),
+  status: z.literal("available"),
+  relationshipContext: z.unknown(),
+  draft: CanonicalRewriteDraftSchema,
+  bindingSha256: digest,
+  manifest: z.array(CanonicalRewriteSourceMetadataSchema).max(32),
+  saved: CanonicalRewriteSavedSchema,
+  readiness: CanonicalRewriteReadinessSchema,
+});
+export const CanonicalRewriteOperationSchema = z.strictObject({
+  schemaVersion: z.literal("canonical-rewrite-operation/1.0.0"),
+  operationId: uuid,
+  ownerId: uuid,
+  analysisId: uuid,
+  request: CanonicalRewriteRequestSchema,
+  policy: CanonicalRewritePolicySchema,
+  bindingSha256: digest,
+  state: z.enum(["reserved", "dispatched", "saved", "rejected", "unknown"]),
+  dispatchAllowed: z.boolean(),
+  publication: CanonicalRewritePublicationSchema.nullable(),
+});
+export type CanonicalRewriteOperation = z.infer<
+  typeof CanonicalRewriteOperationSchema
+>;
+export const CanonicalRewritePrepareSchema = z.strictObject({
+  status: z.literal("prepared"),
+  operation: CanonicalRewriteOperationSchema,
+  context: CanonicalRewriteContextSchema.nullable(),
+});
+export const CanonicalRewriteClaimSchema = z.strictObject({
+  operation: CanonicalRewriteOperationSchema,
+  budget: z.unknown().nullable(),
+});
+export const CanonicalRewriteWorkspaceSchema = z.strictObject({
+  schemaVersion: z.literal("canonical-rewrite-workspace/1.0.0"),
+  binding: CanonicalRewriteBindingSchema,
+  bindingSha256: digest,
+  sources: z.array(CanonicalRewriteSourceSchema).max(32),
+  clauses: z
+    .array(z.strictObject({ clauseId: digest, quote: z.string().max(2000) }))
+    .max(300),
+  canGenerate: z.boolean(),
+  saved: CanonicalRewriteSavedSchema,
+});
+export type CanonicalRewriteWorkspace = z.infer<
+  typeof CanonicalRewriteWorkspaceSchema
+>;
+export type CanonicalRewriteReason =
+  | "invalid_input"
+  | "not_found"
+  | "disabled"
+  | "unavailable"
+  | "stale_inputs"
+  | "pending"
+  | "unsupported_output"
+  | "cancelled"
+  | "invalid_result";
+export type CanonicalRewriteRecovery =
+  "retry_exact" | "review_again" | "unavailable";
+export class CanonicalRewriteError extends Error {
+  readonly status: number;
+  constructor(
+    readonly reason: CanonicalRewriteReason,
+    readonly recovery: CanonicalRewriteRecovery = "review_again",
+  ) {
+    super(
+      "The rewrite request could not be completed. Your previous draft is preserved.",
+    );
+    this.status =
+      reason === "not_found" || reason === "disabled"
+        ? 404
+        : reason === "stale_inputs" ||
+            reason === "pending" ||
+            reason === "cancelled"
+          ? 409
+          : reason === "unavailable" || reason === "invalid_result"
+            ? 503
+            : 422;
+  }
+}
+export function createCanonicalRewriteRequest(
+  workspace: CanonicalRewriteWorkspace,
+  operationId: string,
+): CanonicalRewriteRequest {
+  return CanonicalRewriteRequestSchema.parse({
+    schemaVersion: "canonical-rewrite-request/1.0.0",
+    operationId,
+    canonicalVersionId: workspace.binding.authoring.canonical.versionId,
+    requirementVersionId: workspace.binding.authoring.requirements.versionId,
+    draftId: workspace.binding.draft.id,
+    expectedDraftUpdatedAt: workspace.binding.draft.updatedAt,
+  });
+}
+const literal = (v: string) =>
+  v
+    .replace(/[A-Z]/gu, (c) => c.toLowerCase())
+    .replace(/[\t ]+/gu, " ")
+    .trim();
+export function canonicalRewriteMetadata(source: CanonicalRewriteSource) {
+  const { value: text, ...metadata } = source;
+  if (sha(text) !== metadata.valueSha256)
+    throw new CanonicalRewriteError("invalid_result");
+  return CanonicalRewriteSourceMetadataSchema.parse(metadata);
+}
+export function buildCanonicalRewriteWorkspace(
+  raw: unknown,
+  model: string,
+  expectedProfile: unknown,
+): CanonicalRewriteWorkspace {
+  try {
+    const row = CanonicalRewriteContextSchema.parse(raw),
+      profile = CanonicalRewriteNativeProfileSchema.parse(expectedProfile);
+    for (const key of Object.keys(profile) as (keyof typeof profile)[])
+      if (row.readiness[key] !== profile[key])
+        throw new CanonicalRewriteError("unavailable", "unavailable");
+    if (!row.readiness.schemaReady)
+      throw new CanonicalRewriteError("unavailable", "unavailable");
+    const admitted = deriveTypedAuthoringDeclarations(row.relationshipContext),
+      context = admitted.context;
+    const coverage = buildTypedScoreDiagnostics(context).typedCoverage;
+    const semantic = deriveRequirementSemanticEvidence(context);
+    if (semantic.state !== "available")
+      throw new CanonicalRewriteError("unavailable", "unavailable");
+    const declarations = new Map(admitted.witnesses.map((w) => [w.factId, w]));
+    const byFact = new Map(semantic.witnesses.map((w) => [w.factId, w]));
+    const sources: CanonicalRewriteSource[] = [];
+    for (const fact of context.canonical.content.facts) {
+      if (sources.length === 32) break;
+      if (
+        fact.type !== "contribution" ||
+        fact.state !== "candidate_confirmed" ||
+        !fact.confirmation ||
+        fact.confirmation.actorId !== context.source.ownerId ||
+        fact.confirmation.value !== fact.value ||
+        !/^(Built|Created|Developed|built|created|developed)[\t ]/u.test(
+          fact.value,
+        )
+      )
+        continue;
+      const original = byFact.get(fact.id),
+        declared = declarations.get(fact.id);
+      const w =
+        original &&
+        original.sourceClause === null &&
+        original.offsetSpace === "current_fact" &&
+        original.tier === "source_contribution" &&
+        original.clause.value === fact.value &&
+        original.confirmation?.value === fact.value &&
+        original.location.kind !== "contact" &&
+        original.location.kind !== "section"
+          ? original
+          : null;
+      if (!w && !declared) continue;
+      const place = w?.location ?? declared!.location;
+      if (!place.entryId) continue;
+      const clauseIds =
+        declared?.clauseIds ??
+        coverage.clauses
+          .filter(
+            (c) =>
+              !c.scope.negated &&
+              ["required", "preferred"].includes(c.scope.importance) &&
+              c.operands.some((o) =>
+                o.mapping.conceptId !== null
+                  ? o.mapping.conceptId === w!.skill.identity.conceptId
+                  : literal(o.value) === w!.skill.identity.literalKey,
+              ),
+          )
+          .map((c) => c.id);
+      if (!clauseIds.length) continue;
+      sources.push(
+        CanonicalRewriteSourceSchema.parse({
+          sourceId: sources.length,
+          factId: fact.id,
+          value: fact.value,
+          valueSha256: sha(fact.value),
+          location: {
+            sectionId: place.sectionId,
+            entryId: place.entryId,
+            bulletId: place.bulletId ?? null,
+          },
+          confirmation: fact.confirmation,
+          basis: declared ? "candidate_declaration" : "source_quote",
+          currentCitations: declared ? [] : w!.currentSourceCitations,
+          clauseIds,
+          authoringVersion: declared
+            ? "typed-authoring-rules/1.1.0"
+            : "typed-authoring-rules/1.0.0",
+        }),
+      );
+    }
+    if (!isDeepStrictEqual(sources.map(canonicalRewriteMetadata), row.manifest))
+      throw new CanonicalRewriteError("invalid_result", "unavailable");
+    const binding = {
+      authoring: admitted.binding,
+      draft: row.draft,
+      policy: canonicalRewritePolicy(model),
+    };
+    const heads = admitted.binding.heads;
+    if (row.saved.publication) {
+      const p = row.saved.publication;
+      validateCanonicalRewritePublication(p);
+      const priorSource = p.result.binding.authoring.source;
+      if (
+        p.receipt.draftId !== row.draft.id ||
+        [
+          "ownerId",
+          "organizationId",
+          "resumeId",
+          "analysisId",
+          "sourceId",
+          "inputSha256",
+        ].some(
+          (key) =>
+            priorSource[key as keyof typeof priorSource] !==
+            context.source[key as keyof typeof priorSource],
+        )
+      )
+        throw new CanonicalRewriteError("invalid_result", "unavailable");
+      if (
+        row.saved.state === "current" &&
+        (p.receipt.draftVersionId !== row.draft.versionId ||
+          p.receipt.revision !== row.draft.revision ||
+          p.receipt.draftUpdatedAt !== row.draft.updatedAt ||
+          p.receipt.projectionSha256 !== row.draft.contentSha256 ||
+          !isDeepStrictEqual(p.result.binding.authoring, admitted.binding) ||
+          !isDeepStrictEqual(p.result.binding.policy, binding.policy))
+      )
+        throw new CanonicalRewriteError("invalid_result", "unavailable");
+      if (row.saved.state === "current") {
+        const original = CanonicalRewriteWorkspaceSchema.parse({
+          schemaVersion: "canonical-rewrite-workspace/1.0.0",
+          binding: { ...binding, draft: p.result.binding.draft },
+          bindingSha256: p.result.bindingSha256,
+          sources,
+          clauses: coverage.clauses.map((c) => ({
+            clauseId: c.id,
+            quote: c.evidence.quote,
+          })),
+          canGenerate: false,
+          saved: row.saved,
+        });
+        const expected = reconstructCanonicalRewrite(
+          original,
+          p.result.operationId,
+          {
+            summarySourceId: p.result.summary?.source.sourceId ?? null,
+            bullets: p.result.bullets.map((item) => ({
+              sourceId: item.source.sourceId,
+              clauseId: item.clauseId,
+              operation: item.operation,
+              replacementAction: item.replacementAction,
+            })),
+          },
+        );
+        if (!isDeepStrictEqual(expected, p.result))
+          throw new CanonicalRewriteError("invalid_result", "unavailable");
+      }
+    }
+    return CanonicalRewriteWorkspaceSchema.parse({
+      schemaVersion: "canonical-rewrite-workspace/1.0.0",
+      binding,
+      bindingSha256: row.bindingSha256,
+      sources,
+      clauses: coverage.clauses.map((c) => ({
+        clauseId: c.id,
+        quote: c.evidence.quote,
+      })),
+      saved: row.saved,
+      canGenerate:
+        row.readiness.mutatorsExecutable &&
+        row.draft.revision < 2147483647 &&
+        sources.length > 0 &&
+        heads.canonicalHeadId === binding.authoring.canonical.versionId &&
+        heads.canonicalHeadRevision === binding.authoring.canonical.revision &&
+        heads.requirementHeadId === binding.authoring.requirements.versionId &&
+        heads.requirementHeadRevision ===
+          binding.authoring.requirements.revision,
+    });
+  } catch (error) {
+    if (error instanceof CanonicalRewriteError) throw error;
+    throw new CanonicalRewriteError("unavailable", "unavailable");
+  }
+}
+export function reconstructCanonicalRewrite(
+  workspace: CanonicalRewriteWorkspace,
+  operationId: string,
+  rawPlan: unknown,
+): CanonicalRewriteResult {
+  try {
+    const plan = CanonicalRewritePlanSchema.parse(rawPlan),
+      seen = new Set<number>();
+    const render = (item: z.infer<typeof CanonicalRewritePlanItemSchema>) => {
+      const source = workspace.sources.find(
+        (s) => s.sourceId === item.sourceId,
+      );
+      if (!source || !source.clauseIds.includes(item.clauseId))
+        throw new CanonicalRewriteError("unsupported_output");
+      let after = source.value;
+      if (item.operation === "equivalent_action") {
+        const h =
+          /^(Built|Created|Developed|built|created|developed)(?=[\t ])/u.exec(
+            source.value,
+          );
+        if (!h || h[1].toLowerCase() === item.replacementAction!.toLowerCase())
+          throw new CanonicalRewriteError("unsupported_output");
+        after =
+          (h[1] === h[1].toLowerCase()
+            ? item.replacementAction!.toLowerCase()
+            : item.replacementAction!) + source.value.slice(h[1].length);
+      }
+      const document = buildWritingSupportDocument(source.value),
+        rationale =
+          item.operation === "copy"
+            ? "Preserves the source facts."
+            : "Clarifies wording.";
+      if (
+        assessWritingSupport(document, {
+          kind: "rewrite",
+          original: source.value,
+          proposed: after,
+          expectedSourceSha256: document.sourceSha256,
+          expectedPolicyVersion: WRITING_SUPPORT_POLICY_VERSION,
+        }).state !== "supported" ||
+        assessWritingSupport(document, {
+          kind: "editorial",
+          original: source.value,
+          proposed: rationale,
+        }).state !== "supported"
+      )
+        throw new CanonicalRewriteError("unsupported_output");
+      const { sourceId: selectedSourceId, ...operation } = item;
+      if (selectedSourceId !== source.sourceId)
+        throw new CanonicalRewriteError("unsupported_output");
+      return CanonicalRewriteItemSchema.parse({
+        ...operation,
+        source,
+        before: source.value,
+        after,
+        rationale,
+        supportPolicyVersion: WRITING_SUPPORT_POLICY_VERSION,
+      });
+    };
+    const bullets = plan.bullets.map((item) => {
+      if (seen.has(item.sourceId))
+        throw new CanonicalRewriteError("unsupported_output");
+      seen.add(item.sourceId);
+      return render(item);
+    });
+    const summarySource =
+      plan.summarySourceId === null
+        ? null
+        : workspace.sources.find((s) => s.sourceId === plan.summarySourceId);
+    if (plan.summarySourceId !== null && !summarySource)
+      throw new CanonicalRewriteError("unsupported_output");
+    const summary = summarySource
+      ? render({
+          sourceId: summarySource.sourceId,
+          clauseId: summarySource.clauseIds[0],
+          operation: "copy",
+          replacementAction: null,
+        })
+      : null;
+    const result = CanonicalRewriteResultSchema.parse({
+      schemaVersion: "canonical-rewrite-result/1.0.0",
+      operationId,
+      bindingSha256: workspace.bindingSha256,
+      binding: workspace.binding,
+      summary,
+      bullets,
+    });
+    canonicalRewriteProjection(result);
+    if (!summary && !bullets.length)
+      throw new CanonicalRewriteError("unsupported_output");
+    return result;
+  } catch (error) {
+    if (error instanceof CanonicalRewriteError) throw error;
+    throw new CanonicalRewriteError("unsupported_output");
+  }
+}
+export function canonicalRewriteProjection(result: CanonicalRewriteResult) {
+  return ResumeWriterSchema.parse({
+    summary: result.summary?.after ?? null,
+    bullets: result.bullets.map((item) => ({
+      original: item.before,
+      rewrite: item.after,
+      reasoning: item.rationale,
+    })),
+  });
+}
+export function validateCanonicalRewritePublication(
+  raw: unknown,
+  request?: CanonicalRewriteRequest,
+  expectedResult?: CanonicalRewriteResult,
+): CanonicalRewritePublication {
+  try {
+    const p = CanonicalRewritePublicationSchema.parse(raw),
+      r = p.receipt,
+      b = p.result.binding;
+    if (
+      r.operationId !== p.result.operationId ||
+      r.bindingSha256 !== p.result.bindingSha256 ||
+      r.draftId !== b.draft.id ||
+      r.revision !== b.draft.revision + 1 ||
+      r.draftVersionId === b.draft.versionId ||
+      (request &&
+        (r.operationId !== request.operationId ||
+          r.draftId !== request.draftId ||
+          b.authoring.canonical.versionId !== request.canonicalVersionId ||
+          b.authoring.requirements.versionId !== request.requirementVersionId ||
+          b.draft.updatedAt !== request.expectedDraftUpdatedAt)) ||
+      (expectedResult && !isDeepStrictEqual(p.result, expectedResult))
+    )
+      throw new CanonicalRewriteError("invalid_result", "retry_exact");
+    canonicalRewriteProjection(p.result);
+    return p;
+  } catch {
+    throw new CanonicalRewriteError("invalid_result", "retry_exact");
+  }
+}

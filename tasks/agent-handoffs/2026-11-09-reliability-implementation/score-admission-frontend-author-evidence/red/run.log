@@ -1,0 +1,667 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx (15 tests | 13 failed) 101ms
+   ✓ covers the actual existing score blocker vocabulary 1ms
+   × explains the observed calibration_not_approved blocker in plain language 48ms
+   × explains the observed coverage_policy_unknown blocker in plain language 4ms
+   × explains the observed extraction_review_required blocker in plain language 3ms
+   × explains the observed critical_evidence_missing blocker in plain language 2ms
+   × explains the observed unsupported_input blocker in plain language 3ms
+   × explains the observed requirements_review_required blocker in plain language 2ms
+   × explains the observed job_description_missing blocker in plain language 4ms
+   × combines actual dimension and readiness blockers once without inventing other reasons 2ms
+   × separates candidate review from service validation and offers only the supplied owned workspaces 10ms
+   × does not suggest candidate actions can complete policy validation when review blockers are absent 5ms
+   × provides a safe explanation for an unknown blocker without echoing its raw code 1ms
+   × adds no inferred blockers or review controls when no blocker is supplied 2ms
+   × keeps review links keyboard accessible without a form, mutation or score output 11ms
+   ✓ uses distinct heading labels when more than one notice is rendered 3ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 13 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > explains the observed calibration_not_approved blocker in plain language
+TestingLibraryElementError: Unable to find an element with the text: /The service has not approved the scoring policy/u. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<section[39m
+  [33maria-labelledby[39m=[32m"«r0»"[39m
+  [33mclass[39m=[32m"account-card"[39m
+[36m>[39m
+  [36m<h2[39m
+    [33mid[39m=[32m"«r0»"[39m
+  [36m>[39m
+    [0mWhy scores are unavailable[0m
+  [36m</h2>[39m
+  [36m<p>[39m
+    [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+  [36m</p>[39m
+  [36m<ul>[39m
+    [36m<li>[39m
+      [0mcalibration not approved[0m
+    [36m</li>[39m
+  [36m</ul>[39m
+[36m</section>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:29:85
+     27| it.each(cases)("explains the observed %s blocker in plain language", (…
+     28|   show([blocker]);
+     29|   expect(within(screen.getByRole("region", { name: "Why scores are una…
+       |                                                                                     ^
+     30| });
+     31| it("combines actual dimension and readiness blockers once without inve…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > explains the observed coverage_policy_unknown blocker in plain language
+TestingLibraryElementError: Unable to find an element with the text: /minimum evidence coverage needed for a score/u. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<section[39m
+  [33maria-labelledby[39m=[32m"«r1»"[39m
+  [33mclass[39m=[32m"account-card"[39m
+[36m>[39m
+  [36m<h2[39m
+    [33mid[39m=[32m"«r1»"[39m
+  [36m>[39m
+    [0mWhy scores are unavailable[0m
+  [36m</h2>[39m
+  [36m<p>[39m
+    [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+  [36m</p>[39m
+  [36m<ul>[39m
+    [36m<li>[39m
+      [0mcoverage policy unknown[0m
+    [36m</li>[39m
+  [36m</ul>[39m
+[36m</section>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:29:85
+     27| it.each(cases)("explains the observed %s blocker in plain language", (…
+     28|   show([blocker]);
+     29|   expect(within(screen.getByRole("region", { name: "Why scores are una…
+       |                                                                                     ^
+     30| });
+     31| it("combines actual dimension and readiness blockers once without inve…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > explains the observed extraction_review_required blocker in plain language
+TestingLibraryElementError: Unable to find an element with the text: /Compare the recovered text with your source document/u. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<section[39m
+  [33maria-labelledby[39m=[32m"«r2»"[39m
+  [33mclass[39m=[32m"account-card"[39m
+[36m>[39m
+  [36m<h2[39m
+    [33mid[39m=[32m"«r2»"[39m
+  [36m>[39m
+    [0mWhy scores are unavailable[0m
+  [36m</h2>[39m
+  [36m<p>[39m
+    [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+  [36m</p>[39m
+  [36m<ul>[39m
+    [36m<li>[39m
+      [0mextraction review required[0m
+    [36m</li>[39m
+  [36m</ul>[39m
+[36m</section>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:29:85
+     27| it.each(cases)("explains the observed %s blocker in plain language", (…
+     28|   show([blocker]);
+     29|   expect(within(screen.getByRole("region", { name: "Why scores are una…
+       |                                                                                     ^
+     30| });
+     31| it("combines actual dimension and readiness blockers once without inve…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > explains the observed critical_evidence_missing blocker in plain language
+TestingLibraryElementError: Unable to find an element with the text: /Important resume information is missing, uncertain, or conflicting/u. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<section[39m
+  [33maria-labelledby[39m=[32m"«r3»"[39m
+  [33mclass[39m=[32m"account-card"[39m
+[36m>[39m
+  [36m<h2[39m
+    [33mid[39m=[32m"«r3»"[39m
+  [36m>[39m
+    [0mWhy scores are unavailable[0m
+  [36m</h2>[39m
+  [36m<p>[39m
+    [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+  [36m</p>[39m
+  [36m<ul>[39m
+    [36m<li>[39m
+      [0mcritical evidence missing[0m
+    [36m</li>[39m
+  [36m</ul>[39m
+[36m</section>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:29:85
+     27| it.each(cases)("explains the observed %s blocker in plain language", (…
+     28|   show([blocker]);
+     29|   expect(within(screen.getByRole("region", { name: "Why scores are una…
+       |                                                                                     ^
+     30| });
+     31| it("combines actual dimension and readiness blockers once without inve…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > explains the observed unsupported_input blocker in plain language
+TestingLibraryElementError: Unable to find an element with the text: /outside the currently supported scoring scope/u. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<section[39m
+  [33maria-labelledby[39m=[32m"«r4»"[39m
+  [33mclass[39m=[32m"account-card"[39m
+[36m>[39m
+  [36m<h2[39m
+    [33mid[39m=[32m"«r4»"[39m
+  [36m>[39m
+    [0mWhy scores are unavailable[0m
+  [36m</h2>[39m
+  [36m<p>[39m
+    [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+  [36m</p>[39m
+  [36m<ul>[39m
+    [36m<li>[39m
+      [0munsupported input[0m
+    [36m</li>[39m
+  [36m</ul>[39m
+[36m</section>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:29:85
+     27| it.each(cases)("explains the observed %s blocker in plain language", (…
+     28|   show([blocker]);
+     29|   expect(within(screen.getByRole("region", { name: "Why scores are una…
+       |                                                                                     ^
+     30| });
+     31| it("combines actual dimension and readiness blockers once without inve…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > explains the observed requirements_review_required blocker in plain language
+TestingLibraryElementError: Unable to find an element with the text: /required and preferred labels and their source quotes/u. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<section[39m
+  [33maria-labelledby[39m=[32m"«r5»"[39m
+  [33mclass[39m=[32m"account-card"[39m
+[36m>[39m
+  [36m<h2[39m
+    [33mid[39m=[32m"«r5»"[39m
+  [36m>[39m
+    [0mWhy scores are unavailable[0m
+  [36m</h2>[39m
+  [36m<p>[39m
+    [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+  [36m</p>[39m
+  [36m<ul>[39m
+    [36m<li>[39m
+      [0mrequirements review required[0m
+    [36m</li>[39m
+  [36m</ul>[39m
+[36m</section>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:29:85
+     27| it.each(cases)("explains the observed %s blocker in plain language", (…
+     28|   show([blocker]);
+     29|   expect(within(screen.getByRole("region", { name: "Why scores are una…
+       |                                                                                     ^
+     30| });
+     31| it("combines actual dimension and readiness blockers once without inve…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > explains the observed job_description_missing blocker in plain language
+TestingLibraryElementError: Unable to find an element with the text: /No job description is available for this view/u. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<section[39m
+  [33maria-labelledby[39m=[32m"«r6»"[39m
+  [33mclass[39m=[32m"account-card"[39m
+[36m>[39m
+  [36m<h2[39m
+    [33mid[39m=[32m"«r6»"[39m
+  [36m>[39m
+    [0mWhy scores are unavailable[0m
+  [36m</h2>[39m
+  [36m<p>[39m
+    [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+  [36m</p>[39m
+  [36m<ul>[39m
+    [36m<li>[39m
+      [0mjob description missing[0m
+    [36m</li>[39m
+  [36m</ul>[39m
+[36m</section>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:29:85
+     27| it.each(cases)("explains the observed %s blocker in plain language", (…
+     28|   show([blocker]);
+     29|   expect(within(screen.getByRole("region", { name: "Why scores are una…
+       |                                                                                     ^
+     30| });
+     31| it("combines actual dimension and readiness blockers once without inve…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > combines actual dimension and readiness blockers once without inventing other reasons
+TestingLibraryElementError: Unable to find an element with the text: /The service has not approved the scoring policy/u. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r7»"[39m
+      [33mclass[39m=[32m"account-card"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«r7»"[39m
+      [36m>[39m
+        [0mWhy scores are unavailable[0m
+      [36m</h2>[39m
+      [36m<p>[39m
+        [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+      [36m</p>[39m
+      [36m<ul>[39m
+        [36m<li>[39m
+          [0mcalibration not approved[0m
+        [36m</li>[39m
+        [36m<li>[39m
+          [0mcritical evidence missing[0m
+        [36m</li>[39m
+        [36m<li>[39m
+          [0mrequirements review required[0m
+        [36m</li>[39m
+      [36m</ul>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:109:15
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:33:17
+     31| it("combines actual dimension and readiness blockers once without inve…
+     32|   show(["calibration_not_approved", "critical_evidence_missing", "crit…
+     33|   expect(screen.getAllByText(cases[0][1])).toHaveLength(1);
+       |                 ^
+     34|   expect(screen.getAllByText(cases[3][1])).toHaveLength(1);
+     35|   expect(screen.getByText(cases[5][1])).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > separates candidate review from service validation and offers only the supplied owned workspaces
+TestingLibraryElementError: Unable to find an accessible element with the role "list" and name "Checks you can review"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Why scores are unavailable":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«r8»"[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Why scores are unavailable":
+  [36m<h2[39m
+    [33mid[39m=[32m"«r8»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "":
+  [36m<ul />[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r8»"[39m
+      [33mclass[39m=[32m"account-card"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«r8»"[39m
+      [36m>[39m
+        [0mWhy scores are unavailable[0m
+      [36m</h2>[39m
+      [36m<p>[39m
+        [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+      [36m</p>[39m
+      [36m<ul>[39m
+        [36m<li>[39m
+          [0mcalibration not approved[0m
+        [36m</li>[39m
+        [36m<li>[39m
+          [0mextraction review required[0m
+        [36m</li>[39m
+        [36m<li>[39m
+          [0mcritical evidence missing[0m
+        [36m</li>[39m
+        [36m<li>[39m
+          [0munsupported input[0m
+        [36m</li>[39m
+        [36m<li>[39m
+          [0mrequirements review required[0m
+        [36m</li>[39m
+        [36m<li>[39m
+          [0mjob description missing[0m
+        [36m</li>[39m
+        [36m<li>[39m
+          [0mcoverage policy unknown[0m
+        [36m</li>[39m
+      [36m</ul>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:40:25
+     38| it("separates candidate review from service validation and offers only…
+     39|   show(ScoreBlocker.options);
+     40|   const review = screen.getByRole("list", { name: "Checks you can revi…
+       |                         ^
+     41|   const service = screen.getByRole("list", { name: "Service validation…
+     42|   expect(within(review).getByText(cases[2][1])).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > does not suggest candidate actions can complete policy validation when review blockers are absent
+TestingLibraryElementError: Unable to find an accessible element with the role "heading" and name "Service validation is still required"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Why scores are unavailable":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«r9»"[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Why scores are unavailable":
+  [36m<h2[39m
+    [33mid[39m=[32m"«r9»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "":
+  [36m<ul />[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r9»"[39m
+      [33mclass[39m=[32m"account-card"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«r9»"[39m
+      [36m>[39m
+        [0mWhy scores are unavailable[0m
+      [36m</h2>[39m
+      [36m<p>[39m
+        [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+      [36m</p>[39m
+      [36m<ul>[39m
+        [36m<li>[39m
+          [0mcalibration not approved[0m
+        [36m</li>[39m
+        [36m<li>[39m
+          [0mcoverage policy unknown[0m
+        [36m</li>[39m
+      [36m</ul>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:51:17
+     49| it("does not suggest candidate actions can complete policy validation …
+     50|   show(["calibration_not_approved", "coverage_policy_unknown"]);
+     51|   expect(screen.getByRole("heading", { name: "Service validation is st…
+       |                 ^
+     52|   expect(screen.queryByRole("heading", { name: "Review your inputs" })…
+     53|   expect(screen.queryByRole("link")).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > provides a safe explanation for an unknown blocker without echoing its raw code
+TestingLibraryElementError: Unable to find an element with the text: Another scoring check is unresolved. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«ra»"[39m
+      [33mclass[39m=[32m"account-card"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«ra»"[39m
+      [36m>[39m
+        [0mWhy scores are unavailable[0m
+      [36m</h2>[39m
+      [36m<p>[39m
+        [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+      [36m</p>[39m
+      [36m<ul>[39m
+        [36m<li>[39m
+          [0mfuture unrecognized check[0m
+        [36m</li>[39m
+      [36m</ul>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:58:17
+     56| it("provides a safe explanation for an unknown blocker without echoing…
+     57|   const { container } = show(["future_unrecognized_check"]);
+     58|   expect(screen.getByText("Another scoring check is unresolved")).toBe…
+       |                 ^
+     59|   expect(container.textContent).not.toContain("future_unrecognized_che…
+     60|   expect(container.textContent).not.toContain("future unrecognized che…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > adds no inferred blockers or review controls when no blocker is supplied
+AssertionError: expected <ul></ul> to be null
+
+- Expected:
+null
+
++ Received:
+<ul />
+
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:65:38
+     63| it("adds no inferred blockers or review controls when no blocker is su…
+     64|   show([]);
+     65|   expect(screen.queryByRole("list")).toBeNull();
+       |                                      ^
+     66|   expect(screen.queryByRole("link")).toBeNull();
+     67|   expect(screen.queryByText(cases[0][1])).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/13]⎯
+
+ FAIL  tests/components/ScoreAdmissionNotice.test.tsx > keeps review links keyboard accessible without a form, mutation or score output
+TestingLibraryElementError: Unable to find an accessible element with the role "link" and name "Review source evidence"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Why scores are unavailable":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«rc»"[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Why scores are unavailable":
+  [36m<h2[39m
+    [33mid[39m=[32m"«rc»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "":
+  [36m<ul />[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li />[39m
+
+  Name "":
+  [36m<li />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«rc»"[39m
+      [33mclass[39m=[32m"account-card"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"«rc»"[39m
+      [36m>[39m
+        [0mWhy scores are unavailable[0m
+      [36m</h2>[39m
+      [36m<p>[39m
+        [0mNumeric scores are unavailable while evidence and scoring calibration need review.[0m
+      [36m</p>[39m
+      [36m<ul>[39m
+        [36m<li>[39m
+          [0mcritical evidence missing[0m
+        [36m</li>[39m
+        [36m<li>[39m
+          [0mrequirements review required[0m
+        [36m</li>[39m
+      [36m</ul>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/ScoreAdmissionNotice.test.tsx:74:48
+     72|   for (const name of ["Review source evidence", "Review structured res…
+     73|     await user.tab();
+     74|     expect(document.activeElement).toBe(screen.getByRole("link", { nam…
+       |                                                ^
+     75|   }
+     76|   expect(container.querySelectorAll("form, input, button")).toHaveLeng…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/13]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  13 failed | 2 passed (15)
+   Start at  08:51:07
+   Duration  841ms (transform 32ms, setup 0ms, import 173ms, tests 101ms, environment 497ms)
+
+JSON report written to /private/tmp/resumide-score-admission-frontend-mafipu1p/red/tests.json

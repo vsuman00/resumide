@@ -1,0 +1,91 @@
+--- before/app/components/AuthoringWorkspace.tsx
++++ after/app/components/AuthoringWorkspace.tsx
+@@ -5,7 +5,11 @@
+   ClarificationPreview,
+   loadAuthoring,
+ } from "~/lib/server/authoring-repository";
+-import { QUESTIONS, CLARIFICATION_KINDS } from "~/lib/authoring-ui";
++import {
++  QUESTIONS,
++  CLARIFICATION_KINDS,
++  describeWritingPattern,
++} from "~/lib/authoring-ui";
+ type Model = Awaited<ReturnType<typeof loadAuthoring>>;
+ export type AuthoringFeedback = {
+   error?: string | null;
+@@ -563,6 +567,21 @@
+                 uncalibrated.
+               </p>
+               <p>{patch.rationale}</p>
++              <p>{describeWritingPattern(patch.pattern)}</p>
++              {doc.facts.find((f) => f.id === patch.targetFactId)!.value !==
++              patch.operations[0].value ? (
++                <p>
++                  These are structural wording changes using the same bound
++                  fact, not added qualification evidence.
++                </p>
++              ) : (
++                <p>
++                  Current wording is retained; no wording change is proposed
++                  yet. Clarify only details you know; unknown answers may remain
++                  unanswered. A measurement is not required to use the
++                  metric-free alternatives.
++                </p>
++              )}
+               <p>
+                 Factual strength: candidate-declared; domain quality needs
+                 review.
+@@ -575,7 +594,52 @@
+                   <li key={warning}>{warning}</li>
+                 ))}
+               </ul>
+-              <blockquote>{patch.operations[0].value}</blockquote>
++              <p>Complete current wording:</p>
++              <blockquote
++                aria-label="Complete current wording"
++                style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
++              >
++                {doc.facts.find((f) => f.id === patch.targetFactId)!.value}
++              </blockquote>
++              <p>
++                {doc.facts.find((f) => f.id === patch.targetFactId)!.value !==
++                patch.operations[0].value
++                  ? "Proposed wording (not saved):"
++                  : "Retained wording (no change to save yet):"}
++              </p>
++              <blockquote
++                aria-label="Complete proposed wording"
++                style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}
++              >
++                {patch.operations[0].value}
++              </blockquote>
++              <details>
++                <summary>
++                  Unchanged fact binding and recorded provenance
++                </summary>
++                <p>Bound source fact IDs: {patch.sourceFactIds.join(", ")}</p>
++                <p>
++                  These IDs bind this proposal to the same fact; they are not
++                  independent verification of its claims. Recorded provenance
++                  may describe earlier wording. Candidate confirmation is a
++                  declaration, not independent source verification.
++                </p>
++                <Link
++                  to={`${base}/canonical?version=${encodeURIComponent(patch.baseVersionId)}#fact-${encodeURIComponent(patch.targetFactId)}`}
++                >
++                  Inspect the bound fact and recorded provenance
++                </Link>
++                <ul>
++                  {doc.facts
++                    .find((f) => f.id === patch.targetFactId)!
++                    .sources.map((source, index) => (
++                      <li key={index}>
++                        Recorded reference: attempt {source.attemptId}, span{" "}
++                        {source.spanId}, characters {source.start}–{source.end}.
++                      </li>
++                    ))}
++                </ul>
++              </details>
+               {patch.clarificationNeeds.length > 0 && (
+                 <p>
+                   Clarification needed: {patch.clarificationNeeds.join(", ")}

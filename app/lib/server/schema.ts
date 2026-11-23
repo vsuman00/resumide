@@ -42,11 +42,11 @@ export const QualitativeFeedbackSchema = z.object({
 
 export type QualitativeFeedbackZod = z.infer<typeof QualitativeFeedbackSchema>;
 
-const ResumeWriterSchema = z.object({
+export const ResumeWriterSchema = z.strictObject({
   summary: z.string().min(1).max(1_200).nullable(),
   bullets: z
     .array(
-      z.object({
+      z.strictObject({
         original: z.string().min(1).max(500),
         rewrite: z.string().min(1).max(700),
         reasoning: z.string().min(1).max(500),
@@ -160,6 +160,7 @@ export const AnalysisResultSchema = z.object({
       outcome: z.enum(["passed", "failed", "not_evaluated"]).optional(),
       confidence: z.enum(["high", "none"]).optional(),
       weight: z.number().int().min(0),
+      credit: z.number().min(0).max(1).optional(),
       detail: z.string(),
       evidence: z.array(z.string()).optional(),
     }),

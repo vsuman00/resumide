@@ -1,0 +1,100 @@
+{
+  "status": "actual_local_ocr_runtime_verified_quality_limited_consumer_integration_disabled",
+  "imageId": "sha256:ab1d5c0fab7533a23584bd533df8459fdf2090fb27fbabe3355bbc7fb750b58c",
+  "imageTag": "resumide-ocr:consumer-20261109",
+  "platform": "linux/arm64",
+  "imageBytes": 370411848,
+  "buildAttempts": 1,
+  "recipePinsChanged": false,
+  "checks": [
+    {
+      "command": "npm run test:ocr:local -- <imageId>",
+      "exitCode": 0,
+      "status": "engineering_smoke_passed",
+      "safeFailureModes": ["cancelled", "timeout", "invalid_pdf"]
+    },
+    {
+      "command": "npm run test:ocr:local -- <imageId> --text-fusion",
+      "exitCode": 0,
+      "status": "engineering_smoke_passed",
+      "safeFailureModes": [
+        "cancelled",
+        "cancelled_second_pass",
+        "timeout",
+        "invalid_pdf"
+      ]
+    },
+    {
+      "command": "npm run test:ocr:adverse -- <imageId>",
+      "exitCode": 0,
+      "status": "adverse_runtime_verified",
+      "cases": 2
+    },
+    {
+      "command": "npm run test:ocr:fields -- <imageId>",
+      "exitCode": 0,
+      "status": "structured_field_diagnostic_completed"
+    }
+  ],
+  "originalBlockGlyphQuality": [
+    {
+      "profile": "legacy-fast",
+      "kind": "scanned",
+      "errors": 13,
+      "referenceCharacters": 76,
+      "cer": 0.17105263157894737,
+      "accuracyGate": "not_passed",
+      "scoringStatus": "review_required"
+    },
+    {
+      "profile": "legacy-fast",
+      "kind": "mixed",
+      "errors": 17,
+      "referenceCharacters": 204,
+      "cer": 0.08333333333333333,
+      "accuracyGate": "not_passed",
+      "scoringStatus": "review_required"
+    },
+    {
+      "profile": "text-fusion-v4",
+      "kind": "scanned",
+      "errors": 14,
+      "referenceCharacters": 76,
+      "cer": 0.18421052631578946,
+      "accuracyGate": "not_passed",
+      "scoringStatus": "review_required"
+    },
+    {
+      "profile": "text-fusion-v4",
+      "kind": "mixed",
+      "errors": 16,
+      "referenceCharacters": 204,
+      "cer": 0.0784313725490196,
+      "accuracyGate": "not_passed",
+      "scoringStatus": "review_required"
+    }
+  ],
+  "normalFontFieldDiagnostic": {
+    "documents": 9,
+    "sourceFamilies": 3,
+    "partition": "development",
+    "gate": "diagnostic_only_not_release_acceptance",
+    "aggregate": {
+      "truePositive": 72,
+      "falsePositive": 0,
+      "falseNegative": 0,
+      "ungroundedPredictions": 0,
+      "precision": 1,
+      "recall": 1
+    }
+  },
+  "nativeControlStatus": "not_needed",
+  "textFusionRecognitionPerSelectedPage": 2,
+  "ownedContainersRemaining": 0,
+  "databaseCalls": 0,
+  "providerRequests": 0,
+  "lockedCalibrationExecuted": false,
+  "consumerOcrIntegration": "default_production_caller_does_not_supply_syntheticOcr_adapter",
+  "latexRuntimeDependency": false,
+  "productionActivation": false
+}

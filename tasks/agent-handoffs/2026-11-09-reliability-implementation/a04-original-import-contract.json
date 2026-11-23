@@ -1,0 +1,53 @@
+{
+  "status": "ROOT_SOURCE_INTERFACE_APPROVED_NATIVE_NOT_AUTHORIZED",
+  "id": "CR-A04-S03",
+  "rpc": "import_canonical_original",
+  "parameters": [
+    "p_user_id uuid",
+    "p_analysis_id uuid",
+    "p_binding jsonb",
+    "p_body jsonb",
+    "p_command jsonb",
+    "p_request_id text"
+  ],
+  "bindingKeys": [
+    "ownerId",
+    "organizationId",
+    "resumeId",
+    "analysisId",
+    "sourceId",
+    "attemptId",
+    "inputSha256",
+    "evidenceSchemaVersion",
+    "fieldExtractorVersion",
+    "targetModelVersion",
+    "projectionModelVersion",
+    "admissionPolicyVersion",
+    "reviewRevision",
+    "assignmentRevision",
+    "canonicalHeadId"
+  ],
+  "browserContract": "Unchanged legacy operation/import, null expectedVersionId and stable idempotency key; server derives all binding/body authority.",
+  "flagOff": "Unchanged legacy save_canonical_version path",
+  "admissionOrder": [
+    "Current owner/privacy/source/attempt/version and real writeReady checks",
+    "Owned exact original-import receipt before fresh CAS; ignore regenerated technical body IDs for legacy replay identity; never move head",
+    "New-only requires null current head and exact captured review/assignment/head CAS",
+    "SQL resolves every current correction through latest valid assignment or sole observed assertion; unresolved/unobserved/ambiguous denies; each resolved target must end with a valid confirmation of that original assertion",
+    "Existing strong original-import validator/save inside same whole-function rollback boundary"
+  ],
+  "result": "Exact existing canonical applied/versionId/revision/idempotent receipt or fixed not_found/conflict/invalid/unavailable; server result keeps scoringEligible false",
+  "preserved": [
+    "Four correction command kinds and nonempty selectors",
+    "Existing ledger/schema/foundation and source/citation checks",
+    "Default-off flags, deployed old caller and grant policy",
+    "No JS-only active-correction opinion or unlocked check-to-save gap",
+    "No native SQL/provider/owner-file/Docker/Git/deployment actions"
+  ],
+  "owners": {
+    "server": "a04_backend",
+    "sqlAndAmendment": "a04_runtime",
+    "uiReadiness": "a04_frontend",
+    "integration": "Root"
+  }
+}

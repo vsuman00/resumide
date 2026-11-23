@@ -1,0 +1,444 @@
+/** @vitest-environment jsdom */
+
+import {
+  act,
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+  waitFor,
+} from "@testing-library/react";
+import { afterEach, expect, it } from "vitest";
+import {
+  createMemoryRouter,
+  RouterProvider,
+  useLoaderData,
+} from "react-router";
+import AuthoringWorkspace, {
+  type AuthoringFeedback,
+} from "~/components/AuthoringWorkspace";
+import WorkspaceShell from "~/components/WorkspaceShell";
+import { StageTimeline } from "~/components/StageTimeline";
+import { scoreFixture, SCORE_SOURCE } from "../fixtures/scoring-v2";
+import {
+  buildSuggestion,
+  clarifyValue,
+  withheldDelta,
+} from "~/lib/server/authoring-contract";
+import { buildScoreDiagnostics } from "~/lib/server/score-v2-engine";
+import { randomUUID } from "node:crypto";
+
+afterEach(cleanup);
+
+type AuthoringModel = Parameters<typeof AuthoringWorkspace>[0]["model"];
+function confirmationFixture() {
+  const f = scoreFixture();
+  const fact = f.canonical.facts.find(
+    (value) => value.type === "contribution",
+  )!;
+  fact.value = clarifyValue(
+    clarifyValue(fact.value, "scope", "Internal services"),
+    "result",
+    "Fewer release failures",
+  );
+  fact.sources = [];
+  fact.confirmation!.value = fact.value;
+  f.canonical.sections
+    .find((section) => section.type === "experience")!
+    .entries[0].bullets.push({
+      id: randomUUID(),
+      factIds: [fact.id],
+      text: fact.value,
+    });
+  const diagnostics = buildScoreDiagnostics({
+    evidence: f.evidence,
+    canonical: f.canonical,
+    requirements: f.requirements,
+  });
+  const patch = buildSuggestion(
+    f.canonical,
+    fact.id,
+    "action_scope_result",
+    diagnostics,
+  );
+  const model: AuthoringModel = {
+    document: f.canonical,
+    editable: true,
+    findings: { top: [], remaining: [], total: 0 },
+    patches: [patch],
+    events: [],
+    history: [],
+    nextOffset: null,
+    selectedFactId: fact.id,
+    formKey: randomUUID(),
+    formKeys: { [`confirm:${fact.id}`]: randomUUID() },
+    projected: withheldDelta(f.canonical.versionId, null, "test-policy"),
+    actual: withheldDelta(
+      f.canonical.versionId,
+      f.canonical.versionId,
+      "test-policy",
+    ),
+  };
+  return { model, fact };
+}
+async function mountConfirmation(
+  model: AuthoringModel,
+  feedback?: AuthoringFeedback,
+) {
+  const state = { model, feedback };
+  const router = createMemoryRouter([
+    {
+      path: "/",
+      loader: () => ({ ...state }),
+      Component: function Workspace() {
+        const loaded = useLoaderData<typeof state>();
+        return (
+          <AuthoringWorkspace
+            model={loaded.model}
+            analysisId="analysis"
+            feedback={loaded.feedback}
+          />
+        );
+      },
+    },
+  ]);
+  render(<RouterProvider router={router} />);
+  await screen.findByRole("heading", {
+    name: "Edit your resume on this analysis",
+  });
+  return {
+    state,
+    async revalidate() {
+      await act(async () => {
+        await router.revalidate();
+      });
+    },
+  };
+}
+function clarificationAnswer() {
+  return screen.getByLabelText(
+    "What result can you truthfully attribute to this contribution?",
+  ) as HTMLInputElement;
+}
+function reviewCheckbox(form: HTMLFormElement) {
+  return within(form).getByRole("checkbox", {
+    hidden: true,
+  }) as HTMLInputElement;
+}
+function recoveryForm() {
+  return screen
+    .getByText("Save reviewed correction against current version")
+    .closest("form")!;
+}
+function retainedFeedback(model: AuthoringModel, factId: string) {
+  return {
+    error: "The resume changed. Review the latest version.",
+    submitted: {
+      action: "edit",
+      expectedVersionId: model.document.parentVersionId ?? randomUUID(),
+      idempotencyKey: randomUUID(),
+      targetFactId: factId,
+      value: "Retained correction",
+    },
+  };
+}
+
+it("rebinds writing selection and clears clarification text and confirmation when focus changes", async () => {
+  const { canonical } = scoreFixture(
+    SCORE_SOURCE.replace(
+      "Built reliable services",
+      "Built reliable services\nImproved release tooling",
+    ),
+  );
+  const contributions = canonical.facts.filter(
+    (fact) => fact.type === "contribution",
+  );
+  expect(contributions.length).toBeGreaterThanOrEqual(2);
+  const model = {
+    document: canonical,
+    editable: true,
+    findings: { top: [], remaining: [], total: 0 },
+    patches: [],
+    events: [],
+    history: [],
+    nextOffset: null,
+    selectedFactId: contributions[0].id,
+    formKey: randomUUID(),
+    formKeys: {},
+    projected: withheldDelta(canonical.versionId, null, "test-policy"),
+    actual: withheldDelta(
+      canonical.versionId,
+      canonical.versionId,
+      "test-policy",
+    ),
+  };
+  const router = createMemoryRouter([
+    {
+      path: "/",
+      loader: ({ request }) => ({
+        ...model,
+        selectedFactId:
+          new URL(request.url).searchParams.get("focus") ?? contributions[0].id,
+      }),
+      Component: function Workspace() {
+        const loaded = useLoaderData<typeof model>();
+        return <AuthoringWorkspace model={loaded} analysisId="analysis" />;
+      },
+    },
+  ]);
+  render(<RouterProvider router={router} />);
+  const input = await screen.findByLabelText(
+    "What result can you truthfully attribute to this contribution?",
+  );
+  fireEvent.change(input, {
+    target: { value: "Draft for first contribution" },
+  });
+  const form = input.closest("form")!;
+  fireEvent.click(within(form).getByRole("checkbox"));
+  await router.navigate(`/?focus=${contributions[1].id}`);
+  await waitFor(
+    () =>
+      expect(
+        (
+          screen.getByRole("combobox", {
+            name: "Contribution to review",
+          }) as HTMLSelectElement
+        ).value,
+      ).toBe(contributions[1].id),
+    { timeout: 5000 },
+  );
+  const next = screen.getByLabelText(
+    "What result can you truthfully attribute to this contribution?",
+  ) as HTMLInputElement;
+  expect(next.value).toBe("");
+  expect(
+    (within(next.closest("form")!).getByRole("checkbox") as HTMLInputElement)
+      .checked,
+  ).toBe(false);
+  expect(
+    (
+      screen.getByRole("combobox", {
+        name: "Contribution to review",
+      }) as HTMLSelectElement
+    ).value,
+  ).toBe(contributions[1].id);
+  expect(
+    (
+      next
+        .closest("form")!
+        .querySelector('[name="targetFactId"]') as HTMLInputElement
+    ).value,
+  ).toBe(contributions[1].id);
+  fireEvent.change(next, {
+    target: { value: "Draft for second contribution" },
+  });
+  await router.navigate(-1);
+  await waitFor(
+    () =>
+      expect(
+        (
+          screen.getByRole("combobox", {
+            name: "Contribution to review",
+          }) as HTMLSelectElement
+        ).value,
+      ).toBe(contributions[0].id),
+    { timeout: 5000 },
+  );
+  const restored = screen.getByLabelText(
+    "What result can you truthfully attribute to this contribution?",
+  ) as HTMLInputElement;
+  expect(restored.value).toBe("");
+  fireEvent.change(restored, {
+    target: { value: "Draft before cached-page restore" },
+  });
+  fireEvent.click(within(restored.closest("form")!).getByRole("checkbox"));
+  fireEvent(window, new PageTransitionEvent("pageshow", { persisted: true }));
+  expect(restored.value).toBe("");
+  expect(
+    (
+      within(restored.closest("form")!).getByRole(
+        "checkbox",
+      ) as HTMLInputElement
+    ).checked,
+  ).toBe(false);
+});
+
+it("provides Privacy and the current-session sign-out form on mobile surfaces", async () => {
+  const router = createMemoryRouter([
+    {
+      id: "root",
+      path: "/",
+      loader: () => ({ user: { email: "synthetic@example.test" } }),
+      Component: () => (
+        <WorkspaceShell title="Workspace">Content</WorkspaceShell>
+      ),
+    },
+  ]);
+  render(<RouterProvider router={router} />);
+  await screen.findByRole("heading", { name: "Workspace" });
+  const mobileNavigation = document.querySelector(
+    ".workspace-floating-header details",
+  ) as HTMLElement;
+  expect(
+    within(mobileNavigation)
+      .getByRole("link", { name: "Privacy" })
+      .getAttribute("href"),
+  ).toBe("/privacy");
+  const header = document.querySelector(
+    ".workspace-floating-header details",
+  ) as HTMLElement;
+  expect(
+    within(header)
+      .getByRole("button", { name: "Sign out" })
+      .closest("form")!
+      .getAttribute("action"),
+  ).toBe("/auth/logout");
+});
+
+it("shows a partial result as saved while marking qualitative feedback unavailable", () => {
+  render(<StageTimeline status="partial" updatedAt="2026-10-16T00:00:00Z" />);
+  const items = screen.getAllByRole("listitem");
+  expect(within(items[3]).getAllByText("Unavailable").length).toBeGreaterThan(
+    0,
+  );
+  expect(within(items[4]).getByText("Complete")).toBeTruthy();
+  expect(screen.queryByText("Pending")).toBeNull();
+});
+
+it("shows saved extraction as needing review and later stages as blocked", () => {
+  render(<StageTimeline status="needs_ocr" updatedAt="2026-10-16T00:00:00Z" />);
+  const items = screen.getAllByRole("listitem");
+  expect(within(items[0]).getByText("Complete")).toBeTruthy();
+  expect(within(items[1]).getAllByText("Needs review").length).toBeGreaterThan(
+    0,
+  );
+  expect(screen.getAllByText("Blocked pending evidence review")).toHaveLength(
+    3,
+  );
+  expect(screen.queryByText("Current stage")).toBeNull();
+});
+
+it("does not label cancelled work as pending or active", () => {
+  render(<StageTimeline status="cancelled" updatedAt="2026-10-16T00:00:00Z" />);
+  expect(screen.getAllByText("Not completed")).toHaveLength(5);
+  expect(screen.queryByText("Current stage")).toBeNull();
+  expect(screen.queryByText("Pending")).toBeNull();
+});
+
+it("U03 resets acknowledgement after editing the clarification answer", async () => {
+  const { model } = confirmationFixture();
+  await mountConfirmation(model);
+  const answer = clarificationAnswer();
+  fireEvent.change(answer, { target: { value: "First reviewed answer" } });
+  const checkbox = reviewCheckbox(answer.closest("form")!);
+  fireEvent.click(checkbox);
+  expect(checkbox.checked).toBe(true);
+  fireEvent.change(answer, { target: { value: "Changed answer" } });
+  expect(reviewCheckbox(answer.closest("form")!).checked).toBe(false);
+  expect(answer.value).toBe("Changed answer");
+});
+
+it("U03 resets same-target acknowledgement after version changes while retaining its draft", async () => {
+  const { model } = confirmationFixture();
+  const view = await mountConfirmation(model);
+  const answer = clarificationAnswer();
+  fireEvent.change(answer, { target: { value: "My unsaved answer" } });
+  fireEvent.click(reviewCheckbox(answer.closest("form")!));
+  const nextVersion = randomUUID();
+  view.state.model = {
+    ...model,
+    document: {
+      ...model.document,
+      parentVersionId: model.document.versionId,
+      versionId: nextVersion,
+    },
+  };
+  await view.revalidate();
+  const current = clarificationAnswer();
+  expect(reviewCheckbox(current.closest("form")!).checked).toBe(false);
+  expect(current.value).toBe("My unsaved answer");
+  expect(new FormData(current.closest("form")!).get("expectedVersionId")).toBe(
+    nextVersion,
+  );
+});
+
+it("U03 resets retained-correction acknowledgement after current head or draft changes", async () => {
+  const { model, fact } = confirmationFixture();
+  const feedback = retainedFeedback(model, fact.id);
+  const view = await mountConfirmation(model, feedback);
+  fireEvent.click(reviewCheckbox(recoveryForm()));
+  view.state.model = {
+    ...model,
+    document: {
+      ...model.document,
+      parentVersionId: model.document.versionId,
+      versionId: randomUUID(),
+    },
+  };
+  await view.revalidate();
+  expect.soft(reviewCheckbox(recoveryForm()).checked).toBe(false);
+  if (!reviewCheckbox(recoveryForm()).checked)
+    fireEvent.click(reviewCheckbox(recoveryForm()));
+  view.state.feedback = {
+    ...feedback,
+    submitted: {
+      ...feedback.submitted,
+      value: "Different retained correction",
+    },
+  };
+  await view.revalidate();
+  expect.soft(reviewCheckbox(recoveryForm()).checked).toBe(false);
+  expect(new FormData(recoveryForm()).get("value")).toBe(
+    "Different retained correction",
+  );
+  expect(new FormData(recoveryForm()).get("expectedVersionId")).toBe(
+    view.state.model.document.versionId,
+  );
+});
+
+it("U03 resets proposal and recovery acknowledgements after persisted history restore", async () => {
+  const { model, fact } = confirmationFixture();
+  await mountConfirmation(model, retainedFeedback(model, fact.id));
+  const proposal = screen
+    .getByRole("button", { name: "Accept action scope result" })
+    .closest("form")!;
+  fireEvent.click(reviewCheckbox(proposal));
+  fireEvent.click(reviewCheckbox(recoveryForm()));
+  fireEvent(window, new PageTransitionEvent("pageshow", { persisted: true }));
+  expect.soft(reviewCheckbox(proposal).checked).toBe(false);
+  expect.soft(reviewCheckbox(recoveryForm()).checked).toBe(false);
+});
+
+it("U03 confirms the displayed current fact while preserving the separate exact retry", async () => {
+  const { model, fact } = confirmationFixture();
+  fact.state = "unconfirmed";
+  fact.confirmation = null;
+  const oldVersion = randomUUID(),
+    oldKey = randomUUID();
+  await mountConfirmation(model, {
+    error: "The resume changed.",
+    submitted: {
+      action: "confirm",
+      targetFactId: fact.id,
+      expectedVersionId: oldVersion,
+      idempotencyKey: oldKey,
+    },
+  });
+  const confirm = screen
+    .getAllByRole("button", { name: "Confirm this saved fact" })
+    .find((button) => !button.hasAttribute("disabled"))!
+    .closest("form")!;
+  const retry = screen
+    .getByRole("button", { name: "Retry this exact submission" })
+    .closest("form")!;
+  expect
+    .soft(new FormData(confirm).get("expectedVersionId"))
+    .toBe(model.document.versionId);
+  expect
+    .soft(new FormData(confirm).get("idempotencyKey"))
+    .toBe(model.formKeys[`confirm:${fact.id}`]);
+  expect(new FormData(confirm).get("targetFactId")).toBe(fact.id);
+  expect(new FormData(retry).get("expectedVersionId")).toBe(oldVersion);
+  expect(new FormData(retry).get("idempotencyKey")).toBe(oldKey);
+});

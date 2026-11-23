@@ -1,0 +1,49 @@
+{
+  "id": "CR-U19-S09",
+  "status": "VERIFIED_LOCAL_ACCOUNT_BROWSER_ZOOM",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR on loopback with simulated Supabase Auth and Data API replies and synthetic account state",
+  "sources": {
+    "scripts/local-fixture-browser.ts": "4ff34f88080793085ad7bb64bdeebbd89ba3a39472f45319187a3e386fb3cdb2",
+    "scripts/verify-local-auth-recovery.ts": "b9588c47a8efba8ad362ddb1792d579f31c4784efaf0ac5b510a85e9b5d026cf",
+    "scripts/verify-local-privacy-journey.ts": "e73072ed92eaa3f4d62a71f004bd618ea2cd6d64248ef80a9e7b122af12a3481",
+    "app/routes/auth.tsx": "15edf2e7a760b98cf934bd97747df0a1e21e208bd777f5c1f441cbf90c4602ce",
+    "app/routes/privacy.tsx": "47116b3366a267a49e5fdb6d0b432c9da84ba122c339577760111f10eb6e606d"
+  },
+  "browser": {
+    "version": "Chromium 153.0.8010.12",
+    "option": "RESUMIDE_ACCOUNT_BROWSER_ZOOM=true",
+    "effectiveViewportWidthsCssPx": [390, 320],
+    "pageZoomPercent": 200,
+    "ssrEntrySha256": "a6ca7cb24568314b15bcfbf50ce0d2620c1410f0c412c43ee9839bf6ee33d3ad",
+    "signIn": {
+      "script": "scripts/verify-local-auth-recovery.ts",
+      "logSha256": "276928b47b74cf984838e2a7624187a3c22c5af1f4b1245294fd3905078af28a",
+      "keyboardRetryFitsAndHasVisibleFocus": true,
+      "recoveryPreservedDestination": true,
+      "fieldAndProviderFailuresDistinct": true,
+      "sameBrowserSessionAndReplayRefusalVerified": true,
+      "scopedSeriousOrCriticalAxeViolations": 0
+    },
+    "deletion": {
+      "script": "scripts/verify-local-privacy-journey.ts",
+      "logSha256": "43a3eaa4ac02081ed9ef794dc4ea784b74866c496bd110441d5de5ef869354b6",
+      "keyboardFocusCycledAndReturned": true,
+      "verificationControlFitsAndHasVisibleFocus": true,
+      "finalConfirmationFitsAt320": true,
+      "pendingFocusContained": true,
+      "verifiedCallbackAloneCreatedNoDeletion": true,
+      "exactRetryKeptSingleRequest": true,
+      "scopedSeriousOrCriticalAxeViolations": 0
+    }
+  },
+  "checks": {
+    "node": "22.23.4",
+    "typecheck": "passed",
+    "fixtureLint": "passed",
+    "changedTypeScriptFormatting": "passed"
+  },
+  "manualScreenReaderVerified": false,
+  "managedSupabaseVerified": false,
+  "physicalDeletionVerified": false
+}

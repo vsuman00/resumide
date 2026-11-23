@@ -1,0 +1,70 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/ai-budget-source-sql.test.ts (3 tests | 3 failed) 3ms
+     × guards actual fresh generic operation insertion with a live registered source 2ms
+     × extends the actual retirement producer to registered legacy rewrite selectors 0ms
+     × refuses ambiguous retained OP1 retries and rolls fresh registration back on denied reserve 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/ai-budget-source-sql.test.ts > actual R03 producer source regression, SQL unparsed/unexecuted > guards actual fresh generic operation insertion with a live registered source
+AssertionError: expected '' to contain 'before insert on private.ai_budget_op…'
+
+- Expected
++ Received
+
+- before insert on private.ai_budget_operations
+
+ ❯ tests/unit/ai-budget-source-sql.test.ts:10:21
+      8|  it("guards actual fresh generic operation insertion with a live regis…
+      9|   expect(base).toContain("insert into private.ai_budget_operations");
+     10|   expect(candidate).toContain("before insert on private.ai_budget_oper…
+       |                     ^
+     11|  });
+     12|  it("extends the actual retirement producer to registered legacy rewri…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/unit/ai-budget-source-sql.test.ts > actual R03 producer source regression, SQL unparsed/unexecuted > extends the actual retirement producer to registered legacy rewrite selectors
+AssertionError: expected '' to contain 'private.ai_budget_operation_sources'
+
+- Expected
++ Received
+
+- private.ai_budget_operation_sources
+
+ ❯ tests/unit/ai-budget-source-sql.test.ts:14:21
+     12|  it("extends the actual retirement producer to registered legacy rewri…
+     13|   expect(clock).toContain("for x in select o.* from private.ai_budget_…
+     14|   expect(candidate).toContain("private.ai_budget_operation_sources");
+       |                     ^
+     15|  });
+     16|  it("refuses ambiguous retained OP1 retries and rolls fresh registrati…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/unit/ai-budget-source-sql.test.ts > actual R03 producer source regression, SQL unparsed/unexecuted > refuses ambiguous retained OP1 retries and rolls fresh registration back on denied reserve
+AssertionError: expected '' to contain 'AI_SOURCE_RESERVE_ROLLBACK'
+
+- Expected
++ Received
+
+- AI_SOURCE_RESERVE_ROLLBACK
+
+ ❯ tests/unit/ai-budget-source-sql.test.ts:18:21
+     16|  it("refuses ambiguous retained OP1 retries and rolls fresh registrati…
+     17|   expect(base).toContain("return private.ai_budget_denied");
+     18|   expect(candidate).toContain("AI_SOURCE_RESERVE_ROLLBACK");
+       |                     ^
+     19|   expect(candidate).toContain("AIBUDGET-OP1");
+     20|  });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  15:50:42
+   Duration  83ms (transform 12ms, setup 0ms, import 17ms, tests 3ms, environment 0ms)
+

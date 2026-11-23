@@ -1,0 +1,48 @@
+"""Measured punctuation candidate for registered synthetic OCR experiments."""
+
+
+def numeric_punctuation_refiner(previous):
+    def refine(word, next_word, anchors):
+        baseline = previous(word, next_word, anchors)
+        refined = list(baseline)
+        for index, symbol in enumerate(word[:-1]):
+            if symbol[0] not in "-—":
+                continue
+            right_digit = word[index + 1]
+            if not right_digit[0].isascii() or not right_digit[0].isdecimal():
+                continue
+            left_digit = word[index - 1] if index else None
+            if left_digit and left_digit[0].isascii() and left_digit[0].isdecimal():
+                if matches_numeric_mark(symbol, right_digit, left_digit):
+                    refined[index] = "–"
+            elif index == 0 and matches_numeric_mark(symbol, right_digit):
+                refined[index] = "−"
+        return "".join(refined)
+
+    return refine
+
+
+def matches_numeric_mark(symbol, right_digit, left_digit=None):
+    _, left, top, right, bottom = symbol
+    _, digit_left, digit_top, _, digit_bottom = right_digit
+    height = digit_bottom - digit_top
+    if height < 12 or not -0.10 * height <= digit_left - right <= 0.45 * height:
+        return False
+    thickness = (bottom - top) / height
+    if not 0 < thickness <= 0.26:
+        return False
+    width = (right - left) / height
+    elevation = (digit_bottom - (top + bottom) / 2) / height
+    if left_digit is None:
+        # Compare a leading sign with its own digit. A long or low dash
+        # and a short hyphen both retain their primary transcription.
+        return 0.60 <= width <= 0.76 and 0.43 <= elevation <= 0.56
+
+    _, _, left_top, left_right, left_bottom = left_digit
+    left_height = left_bottom - left_top
+    stable_digits = (
+        0.85 * height <= left_height <= 1.15 * height
+        and abs(left_bottom - digit_bottom) <= 0.13 * height
+        and -0.10 * height <= left - left_right <= 0.45 * height
+    )
+    return stable_digits and 0.62 <= width <= 0.90 and 0.27 <= elevation <= 0.42

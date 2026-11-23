@@ -1,0 +1,31 @@
+{
+  "status": "CURRENT_PROTOCOL_AMENDMENT_REQUIRED",
+  "evidenceTier": "source_contract_review_only",
+  "frozenProposal": "c02-ledger-admission.md",
+  "frozenProposalSha256": "00ffd802d57accdaeac029c01e1f32322e352948dbb58f889055184b8ea7b04b",
+  "proposalPreserved": true,
+  "holds": [
+    {
+      "kind": "SUPERSEDED_DELETION_POLICY",
+      "proposalRule": "Blocks cancelled deletion requests",
+      "currentRule": "Successfully cancelled and failed deletions are inactive; active/unknown states block",
+      "currentSource": "app/lib/privacy-deletion.ts",
+      "effect": "A04 must use the current cancellation policy, not reintroduce the old blocked-access defect"
+    },
+    {
+      "kind": "SUPERSEDED_WRITER_MANIFEST",
+      "proposalRule": "Targets legacy phase4 transition/cancel/release and pre-admission/pre-fencing write paths",
+      "currentSource": "R07-R11/R19 reviewed source migrations and pending legacy bridge",
+      "effect": "A current ordered source/lock/caller manifest must precede write cutover; do not replay older function bodies or weaken new fencing"
+    },
+    {
+      "kind": "LATER_CATCHUP_MIGRATION_ORDER",
+      "currentSource": "R08 release body f6891414 versus stricter legacy bridge body75079833",
+      "effect": "Applying the older unapplied R08 migration after the standalone bridge would replace its legacy release body. Any future catch-up packet must reconcile/assert the current bridge bodies after its complete chain before worker activation; the existing read-only legacy verifier detects this."
+    }
+  ],
+  "foundationStatus": "Previously integrated source and22codec cases remain unchanged; native SQL acceptance remains open",
+  "newSchemaOrSqlExecuted": false,
+  "newTestsRun": 0,
+  "next": "Prepare a current source-contract addendum and A04 implementation against that contract; keep the frozen historical proposal and old-reader compatibility."
+}

@@ -1,0 +1,306 @@
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
+import {
+  createStaticHandler,
+  createStaticRouter,
+  StaticRouterProvider,
+} from "react-router";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { createRequirementContextFixture } from "../fixtures/requirement-context";
+import { buildTypedScoreDiagnostics } from "../../app/lib/server/typed-score-diagnostics";
+import type { ScoreDiagnosticReadModel } from "../../app/lib/server/score-v2-repository";
+
+const mocks = vi.hoisted(() => ({
+  enabled: true,
+  authoringEnabled: true,
+  artifactEnabled: false,
+  user: vi.fn(),
+  admin: vi.fn(),
+  server: vi.fn(),
+  load: vi.fn(),
+  authoring: vi.fn(),
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getServerConfig: () => ({
+    SCORING_V2_ENABLED: mocks.enabled,
+    AUTHORING_ENABLED: mocks.authoringEnabled,
+    ARTIFACT_RENDERING_ENABLED: mocks.artifactEnabled,
+  }),
+}));
+vi.mock("../../app/lib/server/auth", () => ({
+  getAuthenticatedUser: mocks.user,
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseAdminClient: mocks.admin,
+  createSupabaseServerClient: mocks.server,
+}));
+vi.mock("../../app/lib/server/score-v2-repository", () => ({
+  loadScoreDiagnostics: mocks.load,
+}));
+vi.mock("../../app/lib/server/authoring-repository", () => ({
+  loadAuthoring: mocks.authoring,
+}));
+import ScoreDiagnostics, {
+  loader,
+  action,
+  headers,
+} from "../../app/routes/analysis.score";
+import { CanonicalError } from "../../app/lib/server/canonical-repository";
+import { buildScoreDiagnostics } from "../../app/lib/server/score-v2-engine";
+import { scoreFixture } from "../fixtures/scoring-v2";
+
+async function model(
+  options: Parameters<typeof createRequirementContextFixture>[0] = {},
+): Promise<ScoreDiagnosticReadModel> {
+  const { context } = await createRequirementContextFixture(options);
+  return {
+    ...buildTypedScoreDiagnostics(context),
+    analysisId: context.source.analysisId,
+    canonical: {
+      versionId: context.canonical.versionId,
+      revision: context.canonical.revision,
+      headId: context.heads.canonicalHeadId,
+    },
+    requirements: {
+      versionId: context.requirements.versionId,
+      revision: context.requirements.revision,
+      headId: context.heads.requirementHeadId,
+    },
+    historical: false,
+    sourceExcerpts: context.attempt.envelope.spans.map((span) => ({
+      id: span.id,
+      text: span.text,
+      truncated: false,
+    })),
+  };
+}
+const args = (query = "") => ({
+  request: new Request(`https://example.test/analysis/analysis/score${query}`),
+  params: { id: "analysis" },
+});
+async function renderRoute() {
+  const handler = createStaticHandler([
+    { path: "/analysis/:id/score", Component: ScoreDiagnostics, loader },
+  ]);
+  const context = await handler.query(
+    new Request("https://example.test/analysis/analysis/score"),
+  );
+  if (context instanceof Response) throw Error("EXPECTED_ROUTER_DATA");
+  return renderToString(
+    createElement(StaticRouterProvider, {
+      router: createStaticRouter(handler.dataRoutes, context),
+      context,
+      hydrate: false,
+    }),
+  ).replaceAll("<!-- -->", "");
+}
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.enabled = true;
+  mocks.authoringEnabled = true;
+  mocks.artifactEnabled = false;
+  mocks.user.mockResolvedValue({ id: "verified-owner" });
+  mocks.admin.mockReturnValue({ kind: "owned-client" });
+  mocks.authoring.mockResolvedValue(null);
+});
+
+describe("typed scoring route consumer", () => {
+  it("does not call authoring for the actual typed model even when authoring is enabled", async () => {
+    mocks.load.mockResolvedValue(await model());
+    const response = await loader(args());
+    expect(mocks.authoring).not.toHaveBeenCalled();
+    expect(response.data.authoring).toBeNull();
+    expect(response.data.typedCoverage?.state).toBe("available");
+    expect(new Headers(response.init?.headers).get("Cache-Control")).toBe(
+      "private, no-store",
+    );
+  });
+  it("renders the real typed sidecar and an explicit proposal pause through Router SSR", async () => {
+    const actual = await model({ confirm: true });
+    mocks.load.mockResolvedValue(actual);
+    const html = await renderRoute();
+    expect(html).toContain("Job requirement review");
+    expect(html).toContain("Proposals are paused for typed job requirements");
+    expect(html).toContain("Bounded support observed");
+    expect(html).toContain(actual.canonical.versionId);
+    expect(html).toContain("Numeric scores are unavailable");
+    expect(html).not.toContain("Apply suggestion");
+  });
+  it("shows the JD heading beside a preferred qualification and still withholds scores", async () => {
+    const actual = await model({
+      clauses: ["Built services using PostgreSQL"],
+      skill: "PostgreSQL",
+      confirm: true,
+      jdText: "Requirements:\nPython\nPreferred Skills:\nPostgreSQL",
+    });
+    mocks.load.mockResolvedValue(actual);
+    const html = await renderRoute();
+    expect(html).toContain(
+      "<h4>Preferred clause</h4><blockquote>PostgreSQL</blockquote><p>Job description heading: Preferred Skills:</p>",
+    );
+    expect(html).toContain("Numeric scores are unavailable");
+    expect(
+      actual.diagnostics.score.dimensions.every(
+        (dimension) => dimension.value === null && !dimension.eligible,
+      ),
+    ).toBe(true);
+  });
+  it("keeps unknown declared page count unknown instead of displaying zero percent", async () => {
+    mocks.load.mockResolvedValue(await model({ pageCount: null }));
+    const html = await renderRoute();
+    expect(html).toContain("The original page count is unknown");
+    expect(html).not.toContain("0% of");
+  });
+  it("preserves an actual declared count of 21 and the observed coverage", async () => {
+    mocks.load.mockResolvedValue(await model({ pageCount: 21 }));
+    const html = await renderRoute();
+    expect(html).toContain("5% of");
+    expect(html).not.toContain("100% of");
+  });
+  it("preserves explicit version selectors, verified ownership and focus parsing", async () => {
+    const actual = await model();
+    mocks.load.mockResolvedValue(actual);
+    const query = `?canonical=${actual.canonical.versionId}&requirements=${actual.requirements?.versionId}&expectedCanonical=${actual.canonical.headId}&expectedRequirements=${actual.requirements?.headId}&focus=chosen`;
+    await loader(args(query));
+    expect(mocks.load).toHaveBeenCalledWith(
+      { kind: "owned-client" },
+      "analysis",
+      "verified-owner",
+      {
+        canonical: actual.canonical.versionId,
+        requirements: actual.requirements?.versionId,
+        expectedCanonical: actual.canonical.headId,
+        expectedRequirements: actual.requirements?.headId,
+      },
+      undefined,
+      { clauseOrderPreview: mocks.authoringEnabled },
+    );
+    expect(mocks.authoring).not.toHaveBeenCalled();
+  });
+  it("keeps legacy diagnostics and authoring on the existing path", async () => {
+    const input = scoreFixture();
+    const actual: ScoreDiagnosticReadModel = {
+      diagnostics: buildScoreDiagnostics(input),
+      analysisId: input.canonical.analysisId,
+      canonical: {
+        versionId: input.canonical.versionId,
+        revision: 1,
+        headId: input.canonical.versionId,
+      },
+      requirements: input.requirements
+        ? {
+            versionId: input.requirements.id,
+            revision: 1,
+            headId: input.requirements.id,
+          }
+        : null,
+      sourceExcerpts: [],
+      historical: false,
+    };
+    mocks.load.mockResolvedValue(actual);
+    await loader(args("?focus=chosen"));
+    expect(mocks.authoring).toHaveBeenCalledWith(
+      { kind: "owned-client" },
+      "analysis",
+      "verified-owner",
+      actual,
+      "chosen",
+    );
+    const html = await renderRoute();
+    expect(html).toContain("Technical evidence checks");
+    expect(html).not.toContain("Job requirement review");
+    expect(html).not.toContain("Proposals are paused for typed");
+  });
+  it.each(["?canonical=a&canonical=b", "?focus=a&focus=b", "?ownerId=foreign"])(
+    "rejects invalid selectors %s before privileged reads",
+    async (query) => {
+      await expect(loader(args(query))).rejects.toMatchObject({
+        init: { status: 422 },
+      });
+      expect(mocks.admin).not.toHaveBeenCalled();
+      expect(mocks.load).not.toHaveBeenCalled();
+    },
+  );
+  it("keeps the scoring flag before authentication and privileged reads", async () => {
+    mocks.enabled = false;
+    await expect(loader(args())).rejects.toMatchObject({
+      init: { status: 404 },
+    });
+    expect(mocks.user).not.toHaveBeenCalled();
+    expect(mocks.admin).not.toHaveBeenCalled();
+  });
+  it("keeps authentication before the owned read model", async () => {
+    mocks.user.mockResolvedValue(null);
+    await expect(loader(args())).rejects.toMatchObject({ status: 302 });
+    expect(mocks.admin).not.toHaveBeenCalled();
+  });
+  it("retains read-only actions and private cookie headers", () => {
+    const response = action();
+    expect(response.init?.status).toBe(405);
+    expect(new Headers(response.init?.headers).get("Allow")).toBe("GET");
+    expect(mocks.load).not.toHaveBeenCalled();
+    const actual = headers({
+      loaderHeaders: new Headers({ "Set-Cookie": "session=synthetic" }),
+      errorHeaders: new Headers(),
+    } as Parameters<typeof headers>[0]);
+    expect(new Headers(actual).get("Set-Cookie")).toBe("session=synthetic");
+    expect(new Headers(actual).get("X-Robots-Tag")).toBe("noindex, nofollow");
+  });
+  it("preserves historical notices and optional artifact navigation", async () => {
+    mocks.artifactEnabled = true;
+    const actual = await model();
+    actual.historical = true;
+    mocks.load.mockResolvedValue(actual);
+    const html = await renderRoute();
+    expect(html).toContain("Historical input versions");
+    expect(html).toContain("Preview and export resume");
+    expect(html).toContain(
+      `href="/analysis/${actual.analysisId}/export?version=${actual.canonical.versionId}"`,
+    );
+  });
+  it("keeps repair links on the selected versions and hides export for a historical resume", async () => {
+    mocks.artifactEnabled = true;
+    const actual = await model();
+    actual.historical = true;
+    actual.canonical.headId = "10000000-0000-4000-8000-000000000100";
+    actual.diagnostics.improvements = [
+      {
+        id: "selected.canonical",
+        reason: "Review resume fact.",
+        target: "canonical",
+      },
+      {
+        id: "selected.requirement",
+        reason: "Review JD clause.",
+        target: "requirements",
+      },
+    ];
+    mocks.load.mockResolvedValue(actual);
+    const html = await renderRoute();
+    expect(html).not.toContain("Preview and export resume");
+    const links = html.match(/<a\b[^>]+>Review this evidence<\/a>/gu);
+    expect(links).toEqual([
+      expect.stringContaining(
+        `href="/analysis/${actual.analysisId}/canonical?version=${actual.canonical.versionId}"`,
+      ),
+      expect.stringContaining(
+        `href="/analysis/${actual.analysisId}/requirements?version=${actual.requirements?.versionId}"`,
+      ),
+    ]);
+  });
+  it("preserves safe typed failures and hides raw exceptions", async () => {
+    mocks.load.mockRejectedValue(
+      new CanonicalError(503, "Typed observations unavailable."),
+    );
+    await expect(loader(args())).rejects.toMatchObject({
+      data: { error: "Typed observations unavailable." },
+      init: { status: 503 },
+    });
+    expect(mocks.authoring).not.toHaveBeenCalled();
+    mocks.load.mockRejectedValue(Error("private source payload"));
+    await expect(loader(args())).rejects.toMatchObject({
+      data: { error: "Scoring diagnostics are unavailable." },
+      init: { status: 503 },
+    });
+  });
+});

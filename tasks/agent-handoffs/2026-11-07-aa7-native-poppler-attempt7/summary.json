@@ -1,0 +1,294 @@
+{
+  "status": "PRIVATE_NATIVE_SOURCE_AND_INSTALLATION_VERIFIED_WITH_E010_NOT_RUNTIME_ADOPTED",
+  "dockerExit": 0,
+  "buildSeconds": 269.997,
+  "artifactImageId": "sha256:f6e24849981889d886b6391d27548a72a7d470f325fed416c9be62b378efbb33",
+  "sourceOutcome": "private-engineering-with-reviewed-exception",
+  "actualCTest": {
+    "exit": 8,
+    "passed": 70,
+    "failed": 1,
+    "allNativeTestsPassed": false,
+    "qtPositiveClasses": 56,
+    "engineeringException": {
+      "id": "E010",
+      "scope": "private engineering only; not release acceptance",
+      "class": "check_qt6_signature_basics",
+      "method": "testPgp",
+      "backend": "gpg",
+      "sourceLine": 311,
+      "actualSigner": "",
+      "expectedSigner": "Sune Vuorela",
+      "originalTestStillFailed": true,
+      "sourceOrKeyOrClockChanged": false,
+      "unexecutedLaterAssertionLines": [
+        312,
+        313,
+        314,
+        315
+      ],
+      "pgpVerificationDisabledClaim": false,
+      "baselineOnlyRemovedLibrary": {
+        "path": "/usr/lib/aarch64-linux-gnu/libopenjp2.so.2.5.3",
+        "sha256": "4aef3d9074095224e3fe50176cdd3a72390ab7d134ccd1d05c7ea4b30dcfee7d"
+      }
+    }
+  },
+  "consumer": {
+    "cases": 107,
+    "passed": true
+  },
+  "nativeVerification": {
+    "soname": "libpoppler.so.147",
+    "baselineExports": 2716,
+    "candidateExports": 2716,
+    "missingExports": [],
+    "oldHeaderClientLinkedAndPassed": true,
+    "runtimeElfNoOpj": [
+      {
+        "path": "usr/bin/pdfattach",
+        "sha256": "ef0a9c3f91140572a6882b2bed9da0deb04793439316c03eff82445924aa6f6d"
+      },
+      {
+        "path": "usr/bin/pdfdetach",
+        "sha256": "bb0b7afe5003b85c3e5a6f3af899325fd7c4d8b535826e5c3d49cca63e32813f"
+      },
+      {
+        "path": "usr/bin/pdffonts",
+        "sha256": "e561ac1d3ec532373e87b0f4335c24dc778be7a1027198663997ac17a83f733b"
+      },
+      {
+        "path": "usr/bin/pdfimages",
+        "sha256": "2bfb11f356ef1a3cfe548e7cc41542280c300c41b6869aef9c7bdb595e708a70"
+      },
+      {
+        "path": "usr/bin/pdfinfo",
+        "sha256": "9e05f4854079fc6beb9510d77a55dfc0c289a370a612e6b98b55bf8b9c343108"
+      },
+      {
+        "path": "usr/bin/pdfseparate",
+        "sha256": "89924a538e16c70ea442336c7f8347aa2a260786980608e114432666dd66733e"
+      },
+      {
+        "path": "usr/bin/pdfsig",
+        "sha256": "de48ae57930220565d40d3505e6e01795f0441105a420c488f0ab7bf9c424a20"
+      },
+      {
+        "path": "usr/bin/pdftocairo",
+        "sha256": "65f19033c69bf908f57cdb185747b3c803970c020222101f3e40a4c3b15bea89"
+      },
+      {
+        "path": "usr/bin/pdftohtml",
+        "sha256": "500fc4f048784d79f81062d3652a107e86d56274094c987dcf8965b006c829ef"
+      },
+      {
+        "path": "usr/bin/pdftoppm",
+        "sha256": "55b02f4edb32e98344bbe3b89dd86c17dcf9578a585afb8bda44210a07f4fee1"
+      },
+      {
+        "path": "usr/bin/pdftops",
+        "sha256": "9a043429cdb8c360efa3659ef5c754ab0afc7d6af2a34f63cb2bdcd9c2491628"
+      },
+      {
+        "path": "usr/bin/pdftotext",
+        "sha256": "ab4f361acc35210371eeecb2a11ee45487f143f39c3d0d37d998c04bb66313c5"
+      },
+      {
+        "path": "usr/bin/pdfunite",
+        "sha256": "b68860ccf2f0a13c583ad45cad7acdf46013048fc353e4a1b36f1534cc6ab43c"
+      },
+      {
+        "path": "usr/lib/aarch64-linux-gnu/libpoppler.so.147.0.0",
+        "sha256": "b5daf4231741a16c9c16ff64112976fd0abab4fecb7c05d941ee43fff713dca6"
+      }
+    ],
+    "samePdfParity": [
+      {
+        "fixture": "unittestcases/truetype.pdf",
+        "pdfSha256": "00362f969af8c8130e1294c75336d7153078e70494934a4d86ad623a1d96552b",
+        "pages": 1,
+        "words": 87,
+        "textSha256": "74da54b54e2c43d8db0d7fe5a9bbaff3ff567401774e5ba8594a4626aeb876bc",
+        "frameSha256": "e4332f7a10d3a2c192ce4bcd5bf5a742d8eef8676ccd9b7036f644210c21a58f",
+        "layoutCode": null,
+        "exactCoordinateTextOrder": true,
+        "standardBboxTsvByteParity": true,
+        "fontInventoryParity": true,
+        "unusedMetadataCompatibilityRepair": null,
+        "negativeEmptyDocument": null
+      },
+      {
+        "fixture": "unittestcases/russian.pdf",
+        "pdfSha256": "cf7f3725933ec39e1ae18b70ac49b022a26bad915b6886959fda45767b6a2a97",
+        "pages": 1,
+        "words": 7,
+        "textSha256": "a1861318f18ae529b63958d6c4276b3227278774ba613e442135df91c5024488",
+        "frameSha256": "2c0353154375b1ba4834838658b5c26725e72b5c50eab1798f7fc47103d369a8",
+        "layoutCode": null,
+        "exactCoordinateTextOrder": true,
+        "standardBboxTsvByteParity": true,
+        "fontInventoryParity": true,
+        "unusedMetadataCompatibilityRepair": null,
+        "negativeEmptyDocument": null
+      },
+      {
+        "fixture": "unittestcases/deseret.pdf",
+        "pdfSha256": "15557c958a539f771ea22dd10518edf5c92a417f970c94a6dd5da76fc2ebc1eb",
+        "pages": 1,
+        "words": 2,
+        "textSha256": "dcb81dbfd567fc811dba32a7e8b0119778ae92bd89d2a5010a56dc449156bed2",
+        "frameSha256": "69f389412a2b8586890c2081967b4000c317f69a32c57d50c9b02e46612cfa11",
+        "layoutCode": null,
+        "exactCoordinateTextOrder": true,
+        "standardBboxTsvByteParity": true,
+        "fontInventoryParity": true,
+        "unusedMetadataCompatibilityRepair": null,
+        "negativeEmptyDocument": null
+      },
+      {
+        "fixture": "unittestcases/WithActualText.pdf",
+        "pdfSha256": "44fba5399b25815571d6a366fe371dc89ada97fb3e804803f04037fc27f77237",
+        "pages": 1,
+        "words": 9,
+        "textSha256": "60ed2ff702b145f35e70165df908309be9d102c974f2e5c4cb61630c85947e3f",
+        "frameSha256": "082a4c9779bd8cab226037465f7902696dabc4e05c7cc27b74b59e519870dce0",
+        "layoutCode": null,
+        "exactCoordinateTextOrder": true,
+        "standardBboxTsvByteParity": true,
+        "fontInventoryParity": true,
+        "unusedMetadataCompatibilityRepair": null,
+        "negativeEmptyDocument": null
+      },
+      {
+        "fixture": "unittestcases/pdf20-utf8-test.pdf",
+        "pdfSha256": "066cac85038db27cb85b923eb2fbdffb4c76e94bf2f4d21cc952af94b40e71fe",
+        "pages": 1,
+        "words": 19,
+        "textSha256": "c597a0b00a6e33754b821298d703bb6bdeaf8e9137caa122ecb529a3aee62256",
+        "frameSha256": "3dc0e5478d041bd0cf641e82e6a08aadd6465af0ce65e70186d1207f354672b4",
+        "layoutCode": null,
+        "exactCoordinateTextOrder": true,
+        "standardBboxTsvByteParity": true,
+        "fontInventoryParity": true,
+        "unusedMetadataCompatibilityRepair": {
+          "scope": "exact pinned unused TITLE only; build-time reference",
+          "legacyWholeXmlCode": "output_invalid",
+          "legacyErrorLine": 3,
+          "legacyErrorColumn": 23,
+          "strictGeometryBodyCode": null,
+          "geometryBodySha256": "a759f1d0f266c1bf525bb3f432ccc4029f72ffd44c141bb1ef19e3021fdcd44a",
+          "fullStandardBboxTsvByteParityRequired": true,
+          "productionXmlFallback": false
+        },
+        "negativeEmptyDocument": null
+      },
+      {
+        "fixture": "unittestcases/doublepage.pdf",
+        "pdfSha256": "aa53117a8ec181a7edc8cc2d4559930c091660454af1d2e9e6a080f1a07c95bb",
+        "pages": 2,
+        "words": 0,
+        "textSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "frameSha256": "cd7f7e4aa7219835f7202390162090fb34ac03831d035e0a15790134b323b200",
+        "layoutCode": "output_invalid",
+        "exactCoordinateTextOrder": true,
+        "standardBboxTsvByteParity": true,
+        "fontInventoryParity": true,
+        "unusedMetadataCompatibilityRepair": null,
+        "negativeEmptyDocument": {
+          "legacyCode": "output_invalid",
+          "privateCode": "output_invalid",
+          "canonicalClosedFrameByteParity": true,
+          "nonemptyDocumentFloorPreserved": true
+        }
+      },
+      {
+        "fixture": "unittestcases/orientation.pdf",
+        "pdfSha256": "fab4969565b516fa68f941919a2b00463b7d05f5dbe922c68d305cbb2d8f92fa",
+        "pages": 4,
+        "words": 5,
+        "textSha256": "01b970dd0fbf5418885b5c681dca0ce8a97cf9c64f0c507d78a0063f6329cdad",
+        "frameSha256": "301050ade6f01b4e197c6c20d2092aa2b44fc6e36549b16d502a28a5be6205df",
+        "layoutCode": "layout_overflow",
+        "exactCoordinateTextOrder": true,
+        "standardBboxTsvByteParity": true,
+        "fontInventoryParity": true,
+        "unusedMetadataCompatibilityRepair": null,
+        "negativeEmptyDocument": null
+      }
+    ],
+    "disabledJpxDiagnostic": "Unknown filter; EOF permits unrelated text extraction",
+    "wholePdfRejectionClaim": false,
+    "fullConverterProfilesRuntimeRenderBrowser": "not-run; mandatory root-integrated worker gates"
+  },
+  "freshNormalApt": {
+    "normalNoRemoveApt": true,
+    "before": {
+      "libpoppler147": "25.03.0-5+deb13u4",
+      "poppler-utils": "25.03.0-5+deb13u4"
+    },
+    "after": {
+      "libpoppler147": "25.03.0-5+deb13u4+resumide1",
+      "poppler-utils": "25.03.0-5+deb13u4+resumide1"
+    },
+    "allOtherPackagesUnchanged": true,
+    "plan": "Reading package lists...\nBuilding dependency tree...\nReading state information...\nThe following package was automatically installed and is no longer required:\n  libopenjp2-7\nUse 'apt autoremove' to remove it.\nThe following packages will be upgraded:\n  libpoppler147 poppler-utils\n2 upgraded, 0 newly installed, 0 to remove and 0 not upgraded.\nInst poppler-utils [25.03.0-5+deb13u4] (25.03.0-5+deb13u4+resumide1 local-deb [arm64]) []\nInst libpoppler147 [25.03.0-5+deb13u4] (25.03.0-5+deb13u4+resumide1 local-deb [arm64])\nConf poppler-utils (25.03.0-5+deb13u4+resumide1 local-deb [arm64])\nConf libpoppler147 (25.03.0-5+deb13u4+resumide1 local-deb [arm64])\n",
+    "runtimeAdopted": false,
+    "freshNonrootProbe": {
+      "actualInstalledCli": true,
+      "textHashMatchesNativeParity": true,
+      "noOpenJpegLink": true,
+      "runtimeElfHashes": {
+        "usr/bin/pdfattach": "ef0a9c3f91140572a6882b2bed9da0deb04793439316c03eff82445924aa6f6d",
+        "usr/bin/pdfdetach": "bb0b7afe5003b85c3e5a6f3af899325fd7c4d8b535826e5c3d49cca63e32813f",
+        "usr/bin/pdffonts": "e561ac1d3ec532373e87b0f4335c24dc778be7a1027198663997ac17a83f733b",
+        "usr/bin/pdfimages": "2bfb11f356ef1a3cfe548e7cc41542280c300c41b6869aef9c7bdb595e708a70",
+        "usr/bin/pdfinfo": "9e05f4854079fc6beb9510d77a55dfc0c289a370a612e6b98b55bf8b9c343108",
+        "usr/bin/pdfseparate": "89924a538e16c70ea442336c7f8347aa2a260786980608e114432666dd66733e",
+        "usr/bin/pdfsig": "de48ae57930220565d40d3505e6e01795f0441105a420c488f0ab7bf9c424a20",
+        "usr/bin/pdftocairo": "65f19033c69bf908f57cdb185747b3c803970c020222101f3e40a4c3b15bea89",
+        "usr/bin/pdftohtml": "500fc4f048784d79f81062d3652a107e86d56274094c987dcf8965b006c829ef",
+        "usr/bin/pdftoppm": "55b02f4edb32e98344bbe3b89dd86c17dcf9578a585afb8bda44210a07f4fee1",
+        "usr/bin/pdftops": "9a043429cdb8c360efa3659ef5c754ab0afc7d6af2a34f63cb2bdcd9c2491628",
+        "usr/bin/pdftotext": "ab4f361acc35210371eeecb2a11ee45487f143f39c3d0d37d998c04bb66313c5",
+        "usr/bin/pdfunite": "b68860ccf2f0a13c583ad45cad7acdf46013048fc353e4a1b36f1534cc6ab43c",
+        "usr/lib/aarch64-linux-gnu/libpoppler.so.147.0.0": "b5daf4231741a16c9c16ff64112976fd0abab4fecb7c05d941ee43fff713dca6"
+      }
+    }
+  },
+  "cohort": {
+    "libpoppler147": {
+      "file": "libpoppler147_25.03.0-5+deb13u4+resumide1_arm64.deb",
+      "version": "25.03.0-5+deb13u4+resumide1",
+      "sha256": "9bb3f2a370ab33fd8ab27f5ed4db3746ce3eb42a8ba9abe416c0ce2f76665569",
+      "source": "poppler",
+      "depends": "libc6 (>= 2.38), libcurl3t64-gnutls (>= 7.16.2), libfontconfig1 (>= 2.12.6), libfreetype6 (>= 2.2.1), libgpgmepp6t64 (>= 1.24.2), libjpeg62-turbo (>= 1.3.1), liblcms2-2 (>= 2.2+git20110628), libnspr4 (>= 2:4.9-2~), libnss3 (>= 2:3.16), libpng16-16t64 (>= 1.6.46), libstdc++6 (>= 13.1), libtiff6 (>= 4.0.3), zlib1g (>= 1:1.1.4)"
+    },
+    "poppler-utils": {
+      "file": "poppler-utils_25.03.0-5+deb13u4+resumide1_arm64.deb",
+      "version": "25.03.0-5+deb13u4+resumide1",
+      "sha256": "c097bdc4c2912bd7470eebc3bc8922bf433853735f5db8357f44260404e08561",
+      "source": "poppler",
+      "depends": "libpoppler147 (= 25.03.0-5+deb13u4+resumide1), libc6 (>= 2.38), libcairo2 (>= 1.17.8), libfreetype6 (>= 2.2.1), liblcms2-2 (>= 2.2+git20110628), libstdc++6 (>= 13.1)"
+    }
+  },
+  "exportBytes": 4576422,
+  "debBytes": 2108228,
+  "cleanup": {
+    "containerID": "47db6e207455ca772dc8849646cf9837b96f7e6eac5199ef2317c2e1e6199657",
+    "removeExit": 0,
+    "inspectExit": 1,
+    "stderr": "error: no such object: 47db6e207455ca772dc8849646cf9837b96f7e6eac5199ef2317c2e1e6199657\n",
+    "exactContainerAbsent": true
+  },
+  "sourceBindings": {
+    "reviewManifest": "03ce12f861b5e3f3a710bb3bda6624e2244cfe97ec2a1380fb3da9e600e32c8d",
+    "contextManifest": "de1b506a1d43d1a3d8d5accd4fd326463d9de9a2f2289506a20f4ef80dfeba2b",
+    "reviewFiles": 81,
+    "contextFiles": 24
+  },
+  "sourceHashesUnchanged": true,
+  "scanNotRunAndScannerMainRemainsArchived": true,
+  "rootIntegratedConverterRuntimeProfilesRenderBrowserStillRequired": true,
+  "rawLogSha256": "ae8ce88a09298ffe3d00c94c2acf17da5d408f0c1b099455af084b0393f6234a",
+  "terminalReceiptSha256": "4ff1349658bc28b864e8f1e19916bb8bf1b0fd8b2780d0a3369f4438eb03525a"
+}

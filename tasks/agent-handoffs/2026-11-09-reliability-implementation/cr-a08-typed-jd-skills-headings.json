@@ -1,0 +1,60 @@
+{
+  "id": "CR-A08-S03",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_LOCAL_TYPED_COVERAGE_AND_ROUTER_SSR",
+  "review": "A read-only subagent identified the scope leak. The coordinator reproduced and repaired it.",
+  "before": {
+    "regressionsFailed": 2,
+    "finding": "Preferred Skills left the previous required scope in effect. Mandatory Skills left the previous preferred scope in effect. Both headings appeared as requirements."
+  },
+  "after": {
+    "coverageSchema": "requirement-coverage/1.2.0",
+    "coveragePolicy": "typed-fact-coverage/1.2.0",
+    "storedProducer": "jd-relations/1.0.0",
+    "behavior": "The typed review uses exact standalone skills headings. The covered qualification cites the heading and the review preserves explicit clause importance and ambiguity.",
+    "controls": [
+      "Exact heading and clause source offsets in CRLF text after a supplementary Unicode character",
+      "Supported preferred contribution",
+      "Explicit required clause",
+      "Conflicting clause remains unknown",
+      "Contextual and company section boundaries",
+      "Saved JD retains its original scope",
+      "Router SSR shows the heading and all three scores remain withheld"
+    ],
+    "focused": {
+      "files": 9,
+      "tests": 285
+    },
+    "integratedLocalSuite": {
+      "files": 340,
+      "tests": 7218,
+      "mode": "Node 22, isolated synthetic configuration"
+    },
+    "typecheck": "pass",
+    "lint": {
+      "errors": 0,
+      "warnings": 4,
+      "warningScope": "Existing JD clause ordering hook cleanup warnings."
+    },
+    "build": "pass",
+    "buildWorker": "pass",
+    "benchmarks": {
+      "jobIntelligence": "pass on two synthetic documents",
+      "scoringValidity": "pass on nine synthetic segments with twenty deterministic runs each",
+      "releasePassed": false
+    }
+  },
+  "sourceHashes": {
+    "app/lib/server/job-requirements.ts": "6220fb25c78ae8dcdfddda9ca926114d16aba608be3bd3ee203c715ce359f2de",
+    "app/lib/server/requirement-coverage.ts": "ad954fb4e942568c59b4b212e75e5ea96920599b60325bd75a0e4f1849649e4f",
+    "app/components/RequirementCoverageReview.tsx": "3bff79ac2077b79e4c4f974f69dc4876be9b561e24a526a8f74ac0c0aaf0bf2a",
+    "tests/unit/requirement-coverage.test.ts": "250ac062d40b7c13ca9dc6b5f913458628c0c6701a397f0afede28d61be8f31f",
+    "tests/unit/typed-score-route.test.ts": "76a535e0efc06cf43e5d7d1c4eec8a9613e7a1cd85c94563cf41a548663ee3e7"
+  },
+  "open": [
+    "Managed acceptance for this review",
+    "Representative scoring calibration and numerical policy approval"
+  ]
+}

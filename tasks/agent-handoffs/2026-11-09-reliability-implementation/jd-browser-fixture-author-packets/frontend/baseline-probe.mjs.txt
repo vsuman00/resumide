@@ -1,0 +1,9 @@
+import {clauseOrderRequestForm} from "./retained-parser.mjs";
+const command=JSON.stringify({operation:"accept",source:"neutral α + & = claim"});
+const form=new FormData();form.set("action","decision");form.set("command",command);form.set("reviewAcknowledgement","accepted");
+const request=new Request("http://127.0.0.1:3110/analysis/neutral/author/clause-order",{method:"POST",body:form});
+const body=Buffer.from(await request.arrayBuffer());
+const response={request:()=>({postData:()=>body.toString("utf8")})};
+const observed=clauseOrderRequestForm(response);
+if(observed.get("command")!==command)throw Error("Retained parser did not preserve native multipart command");
+console.log("Native multipart command preserved");

@@ -1,0 +1,723 @@
+import { createSourceBoundAiBudgetOperationId } from "../../app/lib/server/ai-budget-source";
+import { AI_BUDGET_SOURCE_PROFILE } from "../../app/lib/server/ai-budget-source-profile";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  calculateAiBudgetCost,
+  hashAiBudgetBinding,
+} from "../../app/lib/server/ai-budget";
+import { OWNED_AI_BUDGET_EXPORT_PROFILE } from "../../app/lib/server/owned-ai-budget-export-profile";
+import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
+import { createInitialFeedbackPublicationPolicy } from "../../app/lib/server/initial-feedback-publication-policy";
+import {
+  INITIAL_FEEDBACK_PROFILE,
+  OWNED_AI_RETIREMENT_PROFILE,
+} from "../../app/lib/server/initial-feedback-profile";
+import { SupabasePrivacyRequestRepository } from "../../app/lib/server/privacy-worker";
+
+const db = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn() }));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseAdminClient: () => ({ from: db.from, rpc: db.rpc }),
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getServerConfig: () => ({
+    AI_ENABLED: false,
+    AI_BUDGET_ENABLED: false,
+    SCORING_ENABLED: false,
+    INITIAL_FEEDBACK_ENABLED: false,
+    LEGACY_SCORING_INPUT_ENABLED: false,
+  }),
+}));
+const id = (n: number) =>
+  `a0000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const owner = id(1),
+  org = id(2),
+  stamp = "2026-11-15T00:00:00.123456Z";
+const request = {
+  id: id(3),
+  kind: "export" as const,
+  userId: owner,
+  organizationId: org,
+  attempt: 1,
+  workerId: "privacy-unit",
+};
+const workspaceKeys = [
+  "canonicalResumeVersions",
+  "resumeFacts",
+  "canonicalResumeHeads",
+  "changeEvents",
+  "jobRequirementVersions",
+  "jobRequirements",
+  "authoringEvents",
+  "candidateCorrectionOperations",
+  "candidateCorrectionAssignments",
+  "candidateCorrectionApplications",
+  "canonicalCorrectionSnapshots",
+  "canonicalCorrectionSnapshotFacts",
+  "candidateEntryAssociationBatches",
+  "candidateEntryAssociationGroups",
+  "candidateEntryAssociationMembers",
+  "canonicalEntryAssociationSnapshots",
+  "canonicalEntryAssociationLinks",
+  "candidateEntryRegroupBatches",
+  "candidateEntryRegroupGroups",
+  "candidateEntryRegroupMembers",
+  "canonicalEntryRegroupSnapshots",
+  "canonicalEntryRegroupLinks",
+];
+function fixture() {
+  const binding = {
+    userId: owner,
+    organizationId: id(20),
+    operationId: id(21),
+    attemptId: id(22),
+    attemptOrdinal: 1,
+    surface: "build" as const,
+    payloadSha256: "1".repeat(64),
+    model: "unit-model",
+    promptPolicyVersion: "unit/1",
+    policyVersion: "unit-budget/1",
+    reservedInputTokens: 1000,
+    reservedOutputTokens: 1000,
+  };
+  const budget = {
+    schemaVersion: "owned-ai-budget-export/1.0.0",
+    ownerId: owner,
+    operations: [
+      {
+        id: binding.operationId,
+        organization_id: binding.organizationId,
+        user_id: owner,
+        surface: binding.surface,
+        payload_sha256: binding.payloadSha256,
+        model: binding.model,
+        prompt_policy_version: binding.promptPolicyVersion,
+        policy_version: binding.policyVersion,
+        reserved_input_tokens: "1000",
+        reserved_output_tokens: "1000",
+        input_microusd_per_million: "1000000",
+        output_microusd_per_million: "1000000",
+        attempt_limit: 3,
+        binding_sha256: hashAiBudgetBinding(binding),
+        created_at: stamp,
+      },
+    ],
+    attempts: [
+      {
+        id: binding.attemptId,
+        operation_id: binding.operationId,
+        organization_id: binding.organizationId,
+        ordinal: 1,
+        period: "2026-10-01",
+        state: "held_unknown",
+        reserved_cost_microusd: "2000",
+        actual_input_tokens: null,
+        actual_output_tokens: null,
+        actual_cost_microusd: null,
+        created_at: stamp,
+        updated_at: stamp,
+      },
+    ],
+    events: ["reserve", "dispatch", "unknown"].map((kind, i) => ({
+      id: id(25 + i),
+      attempt_id: binding.attemptId,
+      kind,
+      input_tokens: null,
+      output_tokens: null,
+      cost_microusd: null,
+      reconciliation_id: null,
+      operator_id: null,
+      evidence_sha256: null,
+      created_at: stamp,
+      operator_disposition: "none",
+    })),
+    reconciliationOperators: [
+      {
+        organization_id: id(30),
+        operator_id: owner,
+        enabled: false,
+        approval_sha256: "2".repeat(64),
+      },
+    ],
+    operatorActions: [
+      {
+        kind: "reconcile",
+        operator_id: owner,
+        reconciliation_id: id(31),
+        evidence_sha256: "3".repeat(64),
+        created_at: stamp,
+      },
+    ],
+    omissions: {
+      sharedPools: "not_subject_attributable",
+      periodOpenings: "not_subject_attributable",
+      foreignOperatorIdentity: "redacted",
+      foreignTargetHistory: "redacted",
+    },
+  };
+  const policy = createInitialFeedbackPublicationPolicy({
+    model: "unit-model",
+    maxOutputTokens: 1200,
+    attemptLimit: 3,
+    budgetPolicyVersion: null,
+  });
+  const feedbackBinding = {
+    schemaVersion: "initial-feedback-binding/1.0.0",
+    analysisId: id(40),
+    ownerId: owner,
+    organizationId: id(41),
+    resumeId: id(42),
+    resumeVersionId: id(43),
+    scoringInputSha256: "4".repeat(64),
+    deterministicContentSha256: "5".repeat(64),
+    resultChecksum: "6".repeat(64),
+    sourceTextSha256: "7".repeat(64),
+    jobId: null,
+    jobSha256: null,
+    policy,
+  };
+  const feedback = {
+    schemaVersion: "initial-feedback-export/1.0.0",
+    operations: [
+      {
+        operation_id: id(44),
+        analysis_id: id(40),
+        owner_id: owner,
+        organization_id: id(41),
+        resume_id: id(42),
+        resume_version_id: id(43),
+        policy_version: policy.version,
+        policy_sha256: policy.sha256,
+        binding: feedbackBinding,
+        binding_sha256: "8".repeat(64),
+        attempt_limit: 3,
+        state: "published",
+        publication_id: id(45),
+        created_at: stamp,
+      },
+    ],
+    attempts: [
+      {
+        attempt_id: id(46),
+        operation_id: id(44),
+        ordinal: 1,
+        state: "held_unknown",
+        claim_lease: {
+          workerId: "unit-worker",
+          attempt: 1,
+          leaseFence: id(47),
+        },
+        claimed_at: stamp,
+        usage: null,
+        error_code: "unknown",
+        budget_attempt_id: null,
+        created_at: stamp,
+        owner_id: owner,
+        organization_id: id(41),
+        analysis_id: id(40),
+      },
+    ],
+    publications: [],
+  };
+  const retirement = {
+    operation_id: id(44),
+    publication_id: id(45),
+    attempt_id: id(46),
+    run_id: null,
+    owner_id: owner,
+    organization_id: id(41),
+    analysis_id: id(40),
+    resume_id: id(42),
+    resume_version_id: id(43),
+    publication_state: "deterministic_only",
+    binding_sha256: "8".repeat(64),
+    retired_at: stamp,
+    deletion_request_id: id(48),
+    retention_item_id: null,
+  };
+  const dispositionAccount = {
+    owner_id: owner,
+    first_request_id: id(48),
+    prepared_at: stamp,
+    expires_at: "2026-12-15T00:00:00.123456Z",
+    phase: "prepared",
+  };
+  const disposition = {
+    schemaVersion: "owned-ai-disposition-export/1.0.0",
+    ownerId: owner,
+    accounts: [dispositionAccount],
+    operations: [
+      {
+        kind: "r03",
+        owner_id: owner,
+        organization_id: binding.organizationId,
+        operation_id: binding.operationId,
+        analysis_id: null as string | null,
+        resume_id: null as string | null,
+        resume_version_id: null as string | null,
+        source_scope: "account_only",
+        phase: "prepared",
+        first_cause: "account_preparation" as string | null,
+        deletion_request_id: id(48) as string | null,
+        retention_item_id: null as string | null,
+        prepared_at: stamp as string | null,
+        expires_at: dispositionAccount.expires_at as string | null,
+        effective_expires_at: dispositionAccount.expires_at as string | null,
+      },
+      {
+        kind: "a13",
+        owner_id: owner,
+        organization_id: feedback.operations[0].organization_id,
+        operation_id: feedback.operations[0].operation_id,
+        analysis_id: feedback.operations[0].analysis_id,
+        resume_id: feedback.operations[0].resume_id,
+        resume_version_id: feedback.operations[0].resume_version_id,
+        source_scope: "resume_root",
+        phase: "prepared",
+        first_cause: "account_preparation",
+        deletion_request_id: id(48),
+        retention_item_id: null,
+        prepared_at: stamp,
+        expires_at: dispositionAccount.expires_at,
+        effective_expires_at: dispositionAccount.expires_at,
+      },
+    ],
+  };
+  const workspace = Object.fromEntries(workspaceKeys.map((k) => [k, []]));
+  const sources = {
+    schemaVersion: "owned-ai-budget-sources/2.0.0" as const,
+    ownerId: owner,
+    sources:
+      [] as import("../../app/lib/server/ai-budget-source-export").AiBudgetSourceExport["sources"],
+  };
+  const replies: Record<string, { data: unknown; error: unknown }> = {
+    read_ai_budget_source_readiness: {
+      data: {
+        ...AI_BUDGET_SOURCE_PROFILE,
+        schemaReady: true,
+        reserveExecutable: false,
+        exportExecutable: true,
+      },
+      error: null,
+    },
+    export_owned_ai_budget_sources: { data: sources, error: null },
+    export_resume_workspace_records: { data: workspace, error: null },
+    export_canonical_rewrite_records: {
+      data: {
+        schemaVersion: "canonical-rewrite-export/1.0.0",
+        canonicalRewriteOperations: [],
+        canonicalRewriteVersions: [],
+        canonicalRewriteHeads: [],
+      },
+      error: null,
+    },
+    export_legacy_scoring_inputs: {
+      data: { schemaVersion: "legacy-scoring-export/1.0.0", scoringInputs: [] },
+      error: null,
+    },
+    export_owned_ai_budget_records: { data: budget, error: null },
+    read_owned_ai_disposition_readiness: {
+      data: {
+        ...OWNED_AI_DISPOSITION_PROFILE,
+        schemaReady: true,
+        exportExecutable: true,
+        accessExecutable: false,
+      },
+      error: null,
+    },
+    export_owned_ai_disposition_records: { data: disposition, error: null },
+    read_owned_ai_budget_export_readiness: {
+      data: {
+        ...OWNED_AI_BUDGET_EXPORT_PROFILE,
+        schemaReady: true,
+        exportExecutable: true,
+      },
+      error: null,
+    },
+    read_initial_feedback_readiness: {
+      data: {
+        ...INITIAL_FEEDBACK_PROFILE,
+        schemaReady: true,
+        readerExecutable: true,
+        prepareExecutable: true,
+        claimExecutable: true,
+        settleExecutable: true,
+        finishExecutable: true,
+        usageExecutable: true,
+        exportExecutable: true,
+      },
+      error: null,
+    },
+    export_initial_feedback_records: { data: feedback, error: null },
+    read_owned_ai_retirement_readiness: {
+      data: {
+        ...OWNED_AI_RETIREMENT_PROFILE,
+        schemaReady: true,
+        exportExecutable: true,
+      },
+      error: null,
+    },
+    export_owned_ai_retirement_records: {
+      data: {
+        schemaVersion: "owned-ai-retirement-export/1.0.0",
+        retirements: [retirement],
+      },
+      error: null,
+    },
+  };
+  db.from.mockImplementation((table: string) => ({
+    select: () => ({
+      eq: () =>
+        Promise.resolve({
+          data: table === "profiles" ? [{ id: owner }] : [],
+          error: null,
+        }),
+    }),
+  }));
+  db.rpc.mockImplementation(
+    async (name: string) =>
+      replies[name] ?? {
+        data: null,
+        error: { code: "42883", message: "PRIVATE_UNUSED_RPC" },
+      },
+  );
+  return {
+    binding,
+    sources,
+    budget,
+    feedback,
+    retirement,
+    disposition,
+    workspace,
+    replies,
+  };
+}
+beforeEach(() => vi.resetAllMocks());
+describe("owner-wide privacy accounting export; synthetic RPCs only", () => {
+  it("requires the disposition export even when every feature is off", async () => {
+    const f = fixture();
+    f.replies.export_owned_ai_disposition_records = {
+      data: null,
+      error: { code: "42501", message: "PRIVATE_DISPOSITION_DETAIL" },
+    };
+    await expect(
+      new SupabasePrivacyRequestRepository().buildExportManifest(request),
+    ).rejects.toEqual(new Error("Privacy export data is unavailable."));
+  });
+  it("includes R03 and retired A13 personal records even with all AI flags off", async () => {
+    const f = fixture();
+    const manifest =
+      await new SupabasePrivacyRequestRepository().buildExportManifest(request);
+    expect(manifest.records).toMatchObject({
+      aiBudgetOperations: f.budget.operations,
+      aiBudgetAttempts: f.budget.attempts,
+      aiBudgetEvents: f.budget.events,
+      aiBudgetReconciliationOperators: f.budget.reconciliationOperators,
+      aiBudgetOperatorActions: f.budget.operatorActions,
+      initialFeedbackOperations: f.feedback.operations,
+      initialFeedbackAttempts: f.feedback.attempts,
+      initialFeedbackPublications: [],
+      ownedAiRetirements: [f.retirement],
+      ownedAiDeletionDispositions: f.disposition.accounts,
+      ownedAiOperationDispositions: f.disposition.operations,
+      aiBudgetSourceRegistrations: [],
+    });
+    expect(manifest.records.profile).toEqual([{ id: owner }]);
+    for (const key of workspaceKeys) expect(manifest.records[key]).toEqual([]);
+    expect(manifest.aiBudgetExportMetadata).toEqual({
+      schemaVersion: f.budget.schemaVersion,
+      ownerId: owner,
+      omissions: f.budget.omissions,
+    });
+    for (const name of [
+      "export_owned_ai_budget_records",
+      "export_initial_feedback_records",
+      "export_owned_ai_retirement_records",
+      "export_owned_ai_disposition_records",
+      "export_owned_ai_budget_sources",
+    ])
+      expect(db.rpc).toHaveBeenCalledWith(name, { p_user_id: owner });
+    expect(manifest.records.aiBudgetAttempts[0]).toMatchObject({
+      period: "2026-10-01",
+      actual_input_tokens: null,
+      actual_output_tokens: null,
+    });
+    expect(manifest.records.initialFeedbackOperations[0]).toMatchObject({
+      organization_id: id(41),
+    });
+    expect(manifest.version).toBe("resumide-export-v1");
+  });
+  it.each([
+    "read_ai_budget_source_readiness",
+    "export_owned_ai_budget_sources",
+    "read_owned_ai_budget_export_readiness",
+    "export_owned_ai_budget_records",
+    "read_initial_feedback_readiness",
+    "export_initial_feedback_records",
+    "read_owned_ai_retirement_readiness",
+    "export_owned_ai_retirement_records",
+    "read_owned_ai_disposition_readiness",
+    "export_owned_ai_disposition_records",
+  ])("refuses the whole export when mandatory %s is denied", async (name) => {
+    const f = fixture();
+    f.replies[name] = {
+      data: null,
+      error: { code: "42501", message: "PRIVATE_EXPORT_DETAIL" },
+    };
+    const pending = new SupabasePrivacyRequestRepository().buildExportManifest(
+      request,
+    );
+    await expect(pending).rejects.toEqual(
+      new Error("Privacy export data is unavailable."),
+    );
+    await expect(pending).rejects.not.toThrow("PRIVATE_EXPORT_DETAIL");
+  });
+  it.each([
+    "budget_schema",
+    "budget_owner",
+    "budget_parent",
+    "budget_unsafe_number",
+    "budget_omission",
+    "feedback_schema",
+    "feedback_owner",
+    "retirement_owner",
+    "retirement_binding",
+    "missing_retirement",
+    "budget_limit",
+    "feedback_limit",
+    "retirement_limit",
+    "disposition_owner",
+    "disposition_clock",
+    "disposition_incomplete",
+    "disposition_repair_clock",
+    "disposition_limit",
+  ])("does not publish an incomplete manifest for %s", async (kind) => {
+    const f = fixture();
+    if (kind === "budget_schema") f.budget.schemaVersion = "unsupported";
+    if (kind === "budget_owner") f.budget.ownerId = id(999);
+    if (kind === "budget_parent") f.budget.attempts[0].operation_id = id(999);
+    if (kind === "budget_unsafe_number")
+      Reflect.set(
+        f.budget.operations[0],
+        "reserved_input_tokens",
+        9007199254740992,
+      );
+    if (kind === "budget_omission")
+      Reflect.deleteProperty(f.budget.omissions, "foreignTargetHistory");
+    if (kind === "feedback_schema") f.feedback.schemaVersion = "unsupported";
+    if (kind === "feedback_owner") f.feedback.operations[0].owner_id = id(999);
+    if (kind === "retirement_owner") f.retirement.owner_id = id(999);
+    if (kind === "retirement_binding")
+      f.retirement.binding_sha256 = "0".repeat(64);
+    if (kind === "missing_retirement")
+      f.replies.export_owned_ai_retirement_records.data = {
+        schemaVersion: "owned-ai-retirement-export/1.0.0",
+        retirements: [],
+      };
+    if (kind === "budget_limit")
+      f.budget.operations = Array.from(
+        { length: 4097 },
+        () => f.budget.operations[0],
+      );
+    if (kind === "feedback_limit")
+      f.feedback.operations = Array.from(
+        { length: 4097 },
+        () => f.feedback.operations[0],
+      );
+    if (kind === "retirement_limit")
+      f.replies.export_owned_ai_retirement_records.data = {
+        schemaVersion: "owned-ai-retirement-export/1.0.0",
+        retirements: Array.from({ length: 4097 }, () => f.retirement),
+      };
+    if (kind === "disposition_owner") f.disposition.ownerId = id(999);
+    if (kind === "disposition_clock")
+      f.disposition.operations[0].effective_expires_at =
+        "2026-12-15T00:00:00.123457Z";
+    if (kind === "disposition_incomplete")
+      Reflect.deleteProperty(f.disposition, "operations");
+    if (kind === "disposition_repair_clock")
+      Object.assign(f.disposition.operations[0], {
+        phase: "repair_required",
+        source_scope: "historical_unresolved",
+      });
+    if (kind === "disposition_limit")
+      f.disposition.operations = Array.from(
+        { length: 4097 },
+        () => f.disposition.operations[0],
+      );
+    await expect(
+      new SupabasePrivacyRequestRepository().buildExportManifest(request),
+    ).rejects.toEqual(new Error("Privacy export data is unavailable."));
+  });
+  it("requires actual native capabilities even for empty personal collections", async () => {
+    const f = fixture();
+    f.budget.operations = [];
+    f.budget.attempts = [];
+    f.budget.events = [];
+    f.feedback.operations = [];
+    f.feedback.attempts = [];
+    f.replies.export_owned_ai_retirement_records.data = {
+      schemaVersion: "owned-ai-retirement-export/1.0.0",
+      retirements: [],
+    };
+    f.replies.read_owned_ai_budget_export_readiness.data = {
+      ...OWNED_AI_BUDGET_EXPORT_PROFILE,
+      schemaReady: true,
+      exportExecutable: false,
+    };
+    await expect(
+      new SupabasePrivacyRequestRepository().buildExportManifest(request),
+    ).rejects.toThrow("Privacy export data is unavailable.");
+    expect(
+      db.rpc.mock.calls.some(
+        ([name]) => name === "export_owned_ai_budget_records",
+      ),
+    ).toBe(false);
+  });
+  it("fails the actual manifest when the mandatory disposition RPC never settles", async () => {
+    vi.useFakeTimers();
+    try {
+      fixture();
+      const original = db.rpc.getMockImplementation()!;
+      db.rpc.mockImplementation((name, ...args) =>
+        name === "export_owned_ai_disposition_records"
+          ? new Promise(() => {})
+          : original(name, ...args),
+      );
+      const pending =
+        new SupabasePrivacyRequestRepository().buildExportManifest(request);
+      const outcome = pending.catch((error: unknown) => error);
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(await outcome).toEqual(
+        new Error("Privacy export data is unavailable."),
+      );
+      expect(vi.getTimerCount()).toBe(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+  it("preserves exact decimal counters beyond JSON safe-integer costs", async () => {
+    const f = fixture(),
+      rates = {
+        inputMicrousdPerMillion: "9223372036854775807",
+        outputMicrousdPerMillion: "9223372036854775807",
+      };
+    Object.assign(f.budget.operations[0], {
+      input_microusd_per_million: rates.inputMicrousdPerMillion,
+      output_microusd_per_million: rates.outputMicrousdPerMillion,
+    });
+    const reserve = calculateAiBudgetCost({
+        inputTokens: 1000,
+        outputTokens: 1000,
+        ...rates,
+      }),
+      actual = calculateAiBudgetCost({
+        inputTokens: 37,
+        outputTokens: 11,
+        ...rates,
+      });
+    Object.assign(f.budget.attempts[0], {
+      state: "settled",
+      reserved_cost_microusd: reserve,
+      actual_input_tokens: "37",
+      actual_output_tokens: "11",
+      actual_cost_microusd: actual,
+    });
+    Object.assign(f.budget.events[2], {
+      kind: "settle",
+      input_tokens: "37",
+      output_tokens: "11",
+      cost_microusd: actual,
+    });
+    const manifest =
+      await new SupabasePrivacyRequestRepository().buildExportManifest(request);
+    expect(BigInt(reserve) > BigInt(Number.MAX_SAFE_INTEGER)).toBe(true);
+    expect(manifest.records.aiBudgetAttempts[0]).toMatchObject({
+      reserved_cost_microusd: reserve,
+      actual_cost_microusd: actual,
+    });
+  });
+});
+
+function registerRewriteFixture(f: ReturnType<typeof fixture>) {
+  const source = {
+    schemaVersion: "ai-budget-source/1.0.0" as const,
+    kind: "legacy_rewrite" as const,
+    analysisId: id(70),
+    resumeVersionId: id(71),
+    requestNonce: "source-request",
+  };
+  const operationId = createSourceBoundAiBudgetOperationId({
+    userId: owner,
+    organizationId: f.binding.organizationId,
+    source,
+  });
+  const binding = { ...f.binding, surface: "rewrite" as const, operationId };
+  const op = f.budget.operations[0];
+  Object.assign(op, {
+    id: operationId,
+    surface: "rewrite",
+    binding_sha256: hashAiBudgetBinding(binding),
+  });
+  f.budget.attempts[0].operation_id = operationId;
+  f.sources.sources.push({
+    operationId,
+    ownerId: owner,
+    organizationId: binding.organizationId,
+    kind: source.kind,
+    analysisId: source.analysisId,
+    resumeId: id(72),
+    resumeVersionId: source.resumeVersionId,
+    requestNonce: source.requestNonce,
+    bindingSha256: op.binding_sha256,
+    registeredAt: stamp,
+  });
+}
+it("includes source registrations only with the exact exported budget operation binding", async () => {
+  const f = fixture();
+  registerRewriteFixture(f);
+  const manifest =
+    await new SupabasePrivacyRequestRepository().buildExportManifest(request);
+  expect(manifest.records.aiBudgetSourceRegistrations).toEqual(
+    f.sources.sources,
+  );
+  expect(manifest.records.aiBudgetOperations).toEqual(f.budget.operations);
+  expect(manifest.records.aiBudgetAttempts).toEqual(f.budget.attempts);
+});
+it.each(["missing_operation", "wrong_binding", "different_organization"])(
+  "refuses inconsistent multi-RPC registration closure: %s",
+  async (kind) => {
+    const f = fixture();
+    registerRewriteFixture(f);
+    if (kind === "missing_operation") {
+      f.budget.operations.length = 0;
+      f.budget.attempts.length = 0;
+      f.budget.events.length = 0;
+    }
+    if (kind === "wrong_binding")
+      f.sources.sources[0].bindingSha256 = "0".repeat(64);
+    if (kind === "different_organization") {
+      const row = f.sources.sources[0];
+      if (
+        row.kind !== "legacy_rewrite" ||
+        !row.analysisId ||
+        !row.resumeVersionId
+      )
+        throw Error("INVALID_REWRITE_SOURCE_FIXTURE");
+      row.organizationId = id(73);
+      row.operationId = createSourceBoundAiBudgetOperationId({
+        userId: owner,
+        organizationId: row.organizationId,
+        source: {
+          schemaVersion: "ai-budget-source/1.0.0",
+          kind: row.kind,
+          analysisId: row.analysisId,
+          resumeVersionId: row.resumeVersionId,
+          requestNonce: row.requestNonce,
+        },
+      });
+    }
+    await expect(
+      new SupabasePrivacyRequestRepository().buildExportManifest(request),
+    ).rejects.toEqual(new Error("Privacy export data is unavailable."));
+  },
+);

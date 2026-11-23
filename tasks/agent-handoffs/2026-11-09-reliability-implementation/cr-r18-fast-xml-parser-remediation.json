@@ -1,0 +1,277 @@
+{
+  "id": "CR-R18-S05",
+  "status": "VERIFIED_NPM_REMEDIATION_ONLY",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "candidateScope": "dirty integrated worktree",
+  "platform": "darwin-arm64",
+  "node": "22.23.4",
+  "npm": "11.17.0",
+  "registry": "https://registry.npmjs.org",
+  "advisory": {
+    "id": "GHSA-474x-hrwr-fgx4",
+    "cve": "CVE-2026-126066",
+    "severity": "low",
+    "upstreamFirstPatchedVersion": "5.12.0",
+    "productionPath": "app/lib/server/artifact-worker.mjs",
+    "requiredOptionConfigured": false
+  },
+  "changes": [
+    {
+      "package": "fast-xml-builder",
+      "from": "1.3.1",
+      "to": "1.3.2",
+      "declaredLicense": "MIT",
+      "integrity": "sha512-OX91VSlShLPDgRZV7tk/YQ4l8tT75QziF5Ixg8g4PFbCVPjuTWwN+yQfAxLJ0dufJpprdOd6HlM74Jhd39TcBQ=="
+    },
+    {
+      "package": "fast-xml-parser",
+      "from": "5.11.2",
+      "to": "5.12.1",
+      "declaredLicense": "MIT",
+      "integrity": "sha512-wR8dO/fx+z8C5exuem1e7BKOWvjsuzvjS/tvA/Xu3Z1zQqJGcXrPzXbcAiaMgp2KjreEROcTkmnnisrcmJ2hYQ=="
+    },
+    {
+      "package": "is-unsafe",
+      "from": "2.0.2",
+      "to": "2.0.3",
+      "declaredLicense": "MIT",
+      "integrity": "sha512-ZBllczCCO267vgdFb6Tq3pv+LhHaCiGMdr+ZsuL+OopruAg7S+3ZDs1vD0RPC0uSrkjzbraxaGjtX1YBxjPeFQ=="
+    }
+  ],
+  "audits": [
+    {
+      "phase": "before",
+      "scope": "full",
+      "collectedAtUtc": "2026-11-21T22:42:23+00:00",
+      "packageLockSha256": "d190bf3f360b0b2c4a309853ae00c19cbd39e1e58458e5730fda4a626a80d3a9",
+      "exitCode": 1,
+      "reportSha256": "9d132072a8342f3e8bafac1608dedc3f38a6569fc2ea86a0317b00815951e630",
+      "report": {
+        "auditReportVersion": 2,
+        "vulnerabilities": {
+          "fast-xml-parser": {
+            "name": "fast-xml-parser",
+            "severity": "low",
+            "isDirect": true,
+            "via": [
+              {
+                "source": 1246029,
+                "name": "fast-xml-parser",
+                "dependency": "fast-xml-parser",
+                "title": "fast-xml-parser: Quadratic CPU consumption scanning unterminated stop-node tags",
+                "url": "https://github.com/advisories/GHSA-474x-hrwr-fgx4",
+                "severity": "low",
+                "cwe": ["CWE-407"],
+                "cvss": {
+                  "score": 3.7,
+                  "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L"
+                },
+                "range": "<=5.11.2"
+              }
+            ],
+            "effects": [],
+            "range": "<=5.11.2",
+            "nodes": ["node_modules/fast-xml-parser"],
+            "fixAvailable": {
+              "name": "fast-xml-parser",
+              "version": "5.12.1",
+              "isSemVerMajor": false
+            }
+          }
+        },
+        "metadata": {
+          "vulnerabilities": {
+            "info": 0,
+            "low": 1,
+            "moderate": 0,
+            "high": 0,
+            "critical": 0,
+            "total": 1
+          },
+          "dependencies": {
+            "prod": 160,
+            "dev": 385,
+            "optional": 98,
+            "peer": 10,
+            "peerOptional": 0,
+            "total": 554
+          }
+        }
+      }
+    },
+    {
+      "phase": "before",
+      "scope": "production",
+      "collectedAtUtc": "2026-11-21T22:42:23+00:00",
+      "packageLockSha256": "d190bf3f360b0b2c4a309853ae00c19cbd39e1e58458e5730fda4a626a80d3a9",
+      "exitCode": 1,
+      "reportSha256": "9d132072a8342f3e8bafac1608dedc3f38a6569fc2ea86a0317b00815951e630",
+      "report": {
+        "auditReportVersion": 2,
+        "vulnerabilities": {
+          "fast-xml-parser": {
+            "name": "fast-xml-parser",
+            "severity": "low",
+            "isDirect": true,
+            "via": [
+              {
+                "source": 1246029,
+                "name": "fast-xml-parser",
+                "dependency": "fast-xml-parser",
+                "title": "fast-xml-parser: Quadratic CPU consumption scanning unterminated stop-node tags",
+                "url": "https://github.com/advisories/GHSA-474x-hrwr-fgx4",
+                "severity": "low",
+                "cwe": ["CWE-407"],
+                "cvss": {
+                  "score": 3.7,
+                  "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L"
+                },
+                "range": "<=5.11.2"
+              }
+            ],
+            "effects": [],
+            "range": "<=5.11.2",
+            "nodes": ["node_modules/fast-xml-parser"],
+            "fixAvailable": {
+              "name": "fast-xml-parser",
+              "version": "5.12.1",
+              "isSemVerMajor": false
+            }
+          }
+        },
+        "metadata": {
+          "vulnerabilities": {
+            "info": 0,
+            "low": 1,
+            "moderate": 0,
+            "high": 0,
+            "critical": 0,
+            "total": 1
+          },
+          "dependencies": {
+            "prod": 160,
+            "dev": 385,
+            "optional": 98,
+            "peer": 10,
+            "peerOptional": 0,
+            "total": 554
+          }
+        }
+      }
+    },
+    {
+      "phase": "after",
+      "scope": "full",
+      "collectedAtUtc": "2026-11-21T22:46:06+00:00",
+      "packageLockSha256": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41",
+      "exitCode": 0,
+      "reportSha256": "1450add76a6a435b99791cb26919768adb2cf78aba952156015ebc25dcb0ec27",
+      "report": {
+        "auditReportVersion": 2,
+        "vulnerabilities": {},
+        "metadata": {
+          "vulnerabilities": {
+            "info": 0,
+            "low": 0,
+            "moderate": 0,
+            "high": 0,
+            "critical": 0,
+            "total": 0
+          },
+          "dependencies": {
+            "prod": 160,
+            "dev": 385,
+            "optional": 98,
+            "peer": 10,
+            "peerOptional": 0,
+            "total": 554
+          }
+        }
+      }
+    },
+    {
+      "phase": "after",
+      "scope": "production",
+      "collectedAtUtc": "2026-11-21T22:46:06+00:00",
+      "packageLockSha256": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41",
+      "exitCode": 0,
+      "reportSha256": "1450add76a6a435b99791cb26919768adb2cf78aba952156015ebc25dcb0ec27",
+      "report": {
+        "auditReportVersion": 2,
+        "vulnerabilities": {},
+        "metadata": {
+          "vulnerabilities": {
+            "info": 0,
+            "low": 0,
+            "moderate": 0,
+            "high": 0,
+            "critical": 0,
+            "total": 0
+          },
+          "dependencies": {
+            "prod": 160,
+            "dev": 385,
+            "optional": 98,
+            "peer": 10,
+            "peerOptional": 0,
+            "total": 554
+          }
+        }
+      }
+    }
+  ],
+  "signatures": {
+    "exitCode": 0,
+    "reportSha256": "f40336f274ca2b416d96fd4715a4014d3cc412a32bf2f9ce63cab7da2cff9bef",
+    "verifiedSignatures": 463,
+    "verifiedAttestations": 141,
+    "reportText": "audited 463 packages in 8s\n\n463 packages have verified registry signatures\n\n141 packages have verified attestations\n(use --json --include-attestations to view attestation details)"
+  },
+  "checks": {
+    "artifactUnit": {
+      "exitCode": 0,
+      "files": 6,
+      "passed": 61
+    },
+    "benchmark:render-parity": {
+      "exitCode": 0,
+      "passed": 20,
+      "engineeringPass": true,
+      "releasePass": false
+    },
+    "typecheck": {
+      "exitCode": 0
+    },
+    "lint": {
+      "exitCode": 0,
+      "errors": 0,
+      "warnings": 4,
+      "warningRule": "react-hooks/exhaustive-deps"
+    },
+    "build": {
+      "exitCode": 0,
+      "logSha256": "abd6fe3770a5ab332182ffd1aa25c66cb511d8dadd80b4c4113870b073306f03"
+    },
+    "build:worker": {
+      "exitCode": 0,
+      "logSha256": "6358bbb25b2a89ab3bc53f56a8f112e5b106d5521a5fdbf6fb372c972b12f23f"
+    },
+    "check:container": {
+      "exitCode": 0,
+      "sourceChecks": ["Dockerfile", "Dockerfile.worker"]
+    }
+  },
+  "auditHarness": {
+    "severityFilters": false,
+    "ignoredAdvisories": false,
+    "installScripts": false,
+    "credentialsOrEnvFile": false,
+    "initialPostPatchAttempt": "npm rejected a shared user and global config path before audit startup; rerun used two separate empty configs"
+  },
+  "remaining": [
+    "exact main/OCR/LaTeX images and SBOMs",
+    "reviewed scanner and database",
+    "vendor applicability and runtime reachability disposition",
+    "release acceptance"
+  ]
+}

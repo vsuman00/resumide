@@ -1,0 +1,22 @@
+# Worker-only app. Supply your chosen app with --app; web stays on Vercel.
+primary_region = "bom"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  dockerfile = "Dockerfile.worker"
+
+[env]
+  NODE_ENV = "production"
+  APP_ORIGIN = "https://resumide.vercel.app"
+  AI_ENABLED = "false"
+  EVIDENCE_REVIEW_ENABLED = "false"
+
+[processes]
+  worker = "node build/worker/analysis.mjs"
+
+[[vm]]
+  processes = ["worker"]
+  cpu_kind = "shared"
+  cpus = 1
+  memory = "1gb"

@@ -1,0 +1,2404 @@
+
+> test
+> vitest run tests/components/WorkspaceRepairs.test.tsx -t U03 preview
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+stderr | tests/components/WorkspaceRepairs.test.tsx > U03 preview displays the complete reviewed value with one native final acknowledgement
+No `HydrateFallback` element provided to render during initial hydration
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx (13 tests | 3 failed | 10 skipped) 890ms
+   ↓ rebinds writing selection and clears clarification text and confirmation when focus changes
+   ↓ provides Privacy and the current-session sign-out form on mobile surfaces
+   ↓ shows a partial result as saved while marking qualitative feedback unavailable
+   ↓ shows saved extraction as needing review and later stages as blocked
+   ↓ does not label cancelled work as pending or active
+   ↓ U03 resets acknowledgement after editing the clarification answer
+   ↓ U03 resets same-target acknowledgement after version changes while retaining its draft
+   ↓ U03 resets retained-correction acknowledgement after current head or draft changes
+   ↓ U03 resets proposal and recovery acknowledgements after persisted history restore
+   ↓ U03 confirms the displayed current fact while preserving the separate exact retry
+   × U03 preview displays the complete reviewed value with one native final acknowledgement 477ms
+   × U03 preview preserves a non-first target and invalidates changed answer and head context 267ms
+   × U03 preview retains failed proof for exact retry while using the current binding for a new preview 146ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 preview displays the complete reviewed value with one native final acknowledgement
+AssertionError: expected 'clarify' to be 'preview_clarification' // Object.is equality
+
+Expected: "preview_clarification"
+Received: "clarify"
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:487:6
+    485|   expect
+    486|     .soft(new FormData(stageOne).get("action"))
+    487|     .toBe("preview_clarification");
+       |      ^
+    488|   expect.soft(within(stageOne).queryByRole("checkbox")).toBeNull();
+    489|   expect.soft(answer.value).toBe("A revised result");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 preview displays the complete reviewed value with one native final acknowledgement
+AssertionError: expected <input required …(3)></input> to be null
+
+- Expected:
+null
+
++ Received:
+<input
+  name="confirmation"
+  required=""
+  type="checkbox"
+  value="true"
+/>
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:488:57
+    486|     .soft(new FormData(stageOne).get("action"))
+    487|     .toBe("preview_clarification");
+    488|   expect.soft(within(stageOne).queryByRole("checkbox")).toBeNull();
+       |                                                         ^
+    489|   expect.soft(answer.value).toBe("A revised result");
+    490|   expect
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 preview displays the complete reviewed value with one native final acknowledgement
+AssertionError: expected '' to be 'A revised result' // Object.is equality
+
+- Expected
++ Received
+
+- A revised result
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:489:29
+    487|     .toBe("preview_clarification");
+    488|   expect.soft(within(stageOne).queryByRole("checkbox")).toBeNull();
+    489|   expect.soft(answer.value).toBe("A revised result");
+       |                             ^
+    490|   expect
+    491|     .soft(screen.queryByRole("button", { name: "Retry this exact submi…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 preview displays the complete reviewed value with one native final acknowledgement
+AssertionError: expected <button type="submit"></button> to be null
+
+- Expected:
+null
+
++ Received:
+<button
+  type="submit"
+>
+  Retry this exact submission
+</button>
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:492:6
+    490|   expect
+    491|     .soft(screen.queryByRole("button", { name: "Retry this exact submi…
+    492|     .toBeNull();
+       |      ^
+    493|   const region = screen.getByRole("region", { name: "Clarification pre…
+    494|   expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 preview displays the complete reviewed value with one native final acknowledgement
+TestingLibraryElementError: Unable to find an accessible element with the role "region" and name "Clarification preview"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Edit your resume on this analysis":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"authoring-heading"[39m
+    [33mclass[39m=[32m"rule-trace"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Edit your resume on this analysis":
+  [36m<h2[39m
+    [33mid[39m=[32m"authoring-heading"[39m
+  [36m/>[39m
+
+  Name "Top findings to review":
+  [36m<h3 />[39m
+
+  Name "Imported content":
+  [36m<h3 />[39m
+
+  Name "email: fictional@example.test":
+  [36m<h4 />[39m
+
+  Name "phone: +91 9876543210":
+  [36m<h4 />[39m
+
+  Name "name: Fictional Person":
+  [36m<h4 />[39m
+
+  Name "Experience":
+  [36m<h3 />[39m
+
+  Name "role: Software Engineer":
+  [36m<h4 />[39m
+
+  Name "contribution: Built reliable services
+  Scope: Internal services
+  Result: Fewer release failures":
+  [36m<h4 />[39m
+
+  Name "dates: 2020-01-01 - 2022-01-01":
+  [36m<h4 />[39m
+
+  Name "dates: 2021-01-01 - 2023-01-01":
+  [36m<h4 />[39m
+
+  Name "Education":
+  [36m<h3 />[39m
+
+  Name "education: Bachelor":
+  [36m<h4 />[39m
+
+  Name "Skills":
+  [36m<h3 />[39m
+
+  Name "skill: SQL":
+  [36m<h4 />[39m
+
+  Name "skill: TypeScript":
+  [36m<h4 />[39m
+
+  Name "Certifications":
+  [36m<h3 />[39m
+
+  Name "certification: AWS":
+  [36m<h4 />[39m
+
+  Name "Additional imported facts":
+  [36m<h3 />[39m
+
+  Name "employer: Fictional Company":
+  [36m<h4 />[39m
+
+  Name "dates: 2020-01-01 - 2022-01-01":
+  [36m<h4 />[39m
+
+  Name "dates: 2021-01-01 - 2023-01-01":
+  [36m<h4 />[39m
+
+  Name "Grounded writing review":
+  [36m<h3 />[39m
+
+  Name "Candidate change history":
+  [36m<h3 />[39m
+
+  --------------------------------------------------
+  group:
+
+  Name "Resume authoring actions":
+  [36m<fieldset[39m
+    [33mstyle[39m=[32m"min-width: 0px; border: 0px; padding: 0px; margin: 0px;"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<details />[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  blockquote:
+
+  Name "Your submitted correction":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Your submitted correction"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Retry this exact submission":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save section title":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save section title":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save section title":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save section title":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save section title":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Review contribution":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save result clarification":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save measurement clarification":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save scope clarification":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save method clarification":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save ownership clarification":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Undo last saved change as a new version":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "":
+  [36m<ol />[39m
+
+  Name "":
+  [36m<ol />[39m
+
+  Name "":
+  [36m<ul />[39m
+
+  --------------------------------------------------
+  navigation:
+
+  Name "Resume outline":
+  [36m<nav[39m
+    [33maria-label[39m=[32m"Resume outline"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "Imported content":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-0288ac71-01bd-4158-a56d-a815dee8aa72"[39m
+  [36m/>[39m
+
+  Name "Experience":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-7b4d4946-d37e-452f-b0cf-7a5bed284386"[39m
+  [36m/>[39m
+
+  Name "Education":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-f9d2baba-f0a2-4b46-8229-5e40ee85714c"[39m
+  [36m/>[39m
+
+  Name "Skills":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-88a8ddb8-a52c-435b-8b6c-700ff39752c8"[39m
+  [36m/>[39m
+
+  Name "Certifications":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-4362f00e-fc7e-4ad6-b107-a82fde02d532"[39m
+  [36m/>[39m
+
+  Name "Additional imported facts":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-unassigned"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-f6fc5ef1-d063-4fd0-9292-20c6c3090696"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-709c55ea-73b0-411c-b306-5591097bf14f"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-0a9b5710-29a9-4c62-a397-808c97a8f0dd"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-b4ceb64f-e8f6-4083-9b9c-3e2224947c47"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-0572a355-b131-4fd1-926b-bf8948eafa29"[39m
+  [36m/>[39m
+
+  Name "Review writing for this contribution":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/score?focus=0572a355-b131-4fd1-926b-bf8948eafa29#writing-review"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-df096000-dd81-44d4-b326-7adc2a8e0953"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-118adba4-2900-47c3-a351-25e7a2980b9c"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-59b19e88-9821-4600-9f17-3257835f6be7"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-b034fd40-409f-4c43-835e-2b7e33d3570e"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-e9a4b00a-8eee-4e3a-ace6-de174f578c23"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-b48684f8-a0ca-4649-824e-ba5ee88c90dc"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-beb1154c-2897-49ca-b532-bd29d1e9e7a6"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-6ad692a7-085e-4301-b03a-11a650c7ba6c"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=4a538184-2819-4e5c-981f-fcab6a3fd97b#fact-b8e99cfb-8eac-45d8-9a36-b326424e6649"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Section title: Imported content":
+  [36m<input[39m
+    [33mid[39m=[32m"section-title-0288ac71-01bd-4158-a56d-a815dee8aa72"[39m
+    [33mmaxlength[39m=[32m"100"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m"Imported content"[39m
+  [36m/>[39m
+
+  Name "Edit email: fictional@example.test":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-f6fc5ef1-d063-4fd0-9292-20c6c3090696"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit phone: +91 9876543210":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-709c55ea-73b0-411c-b306-5591097bf14f"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit name: Fictional Person":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-0a9b5710-29a9-4c62-a397-808c97a8f0dd"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Section title: Experience":
+  [36m<input[39m
+    [33mid[39m=[32m"section-title-7b4d4946-d37e-452f-b0cf-7a5bed284386"[39m
+    [33mmaxlength[39m=[32m"100"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m"Experience"[39m
+  [36m/>[39m
+
+  Name "Edit role: Software Engineer":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-b4ceb64f-e8f6-4083-9b9c-3e2224947c47"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit contribution: Built reliable services
+  Scope: Internal services
+  Result: Fewer release failures":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-0572a355-b131-4fd1-926b-bf8948eafa29"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit dates: 2020-01-01 - 2022-01-01":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-df096000-dd81-44d4-b326-7adc2a8e0953"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit dates: 2021-01-01 - 2023-01-01":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-118adba4-2900-47c3-a351-25e7a2980b9c"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Section title: Education":
+  [36m<input[39m
+    [33mid[39m=[32m"section-title-f9d2baba-f0a2-4b46-8229-5e40ee85714c"[39m
+    [33mmaxlength[39m=[32m"100"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m"Education"[39m
+  [36m/>[39m
+
+  Name "Edit education: Bachelor":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-59b19e88-9821-4600-9f17-3257835f6be7"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Section title: Skills":
+  [36m<input[39m
+    [33mid[39m=[32m"section-title-88a8ddb8-a52c-435b-8b6c-700ff39752c8"[39m
+    [33mmaxlength[39m=[32m"100"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m"Skills"[39m
+  [36m/>[39m
+
+  Name "Edit skill: SQL":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-b034fd40-409f-4c43-835e-2b7e33d3570e"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit skill: TypeScript":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-e9a4b00a-8eee-4e3a-ace6-de174f578c23"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Section title: Certifications":
+  [36m<input[39m
+    [33mid[39m=[32m"section-title-4362f00e-fc7e-4ad6-b107-a82fde02d532"[39m
+    [33mmaxlength[39m=[32m"100"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m"Certifications"[39m
+  [36m/>[39m
+
+  Name "Edit certification: AWS":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-b48684f8-a0ca-4649-824e-ba5ee88c90dc"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit employer: Fictional Company":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-beb1154c-2897-49ca-b532-bd29d1e9e7a6"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit dates: 2020-01-01 - 2022-01-01":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-6ad692a7-085e-4301-b03a-11a650c7ba6c"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit dates: 2021-01-01 - 2023-01-01":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-b8e99cfb-8eac-45d8-9a36-b326424e6649"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "What result can you truthfully attribute to this contribution?":
+  [36m<input[39m
+    [33mid[39m=[32m"question-result"[39m
+    [33mmaxlength[39m=[32m"300"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "How was that result measured? Leave it unanswered if no measurement is known.":
+  [36m<input[39m
+    [33mid[39m=[32m"question-measurement"[39m
+    [33mmaxlength[39m=[32m"300"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "What was the verified scope or context?":
+  [36m<input[39m
+    [33mid[39m=[32m"question-scope"[39m
+    [33mmaxlength[39m=[32m"300"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "What did you do to achieve the result?":
+  [36m<input[39m
+    [33mid[39m=[32m"question-method"[39m
+    [33mmaxlength[39m=[32m"300"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "What was your own responsibility rather than the team's?":
+  [36m<input[39m
+    [33mid[39m=[32m"question-ownership"[39m
+    [33mmaxlength[39m=[32m"300"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  article:
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "Contribution to review":
+  [36m<select[39m
+    [33mid[39m=[32m"writing-focus"[39m
+    [33mname[39m=[32m"focus"[39m
+    [33mstyle[39m=[32m"max-width: 100%;"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  option:
+
+  Name "Built reliable services
+  Scope: Internal services
+  Result: Fewer release failures":
+  [36m<option[39m
+    [33mselected[39m=[32m""[39m
+    [33mvalue[39m=[32m"0572a355-b131-4fd1-926b-bf8948eafa29"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  checkbox:
+
+  Name "I confirm this answer is accurate.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  Name "I confirm this answer is accurate.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  Name "I confirm this answer is accurate.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  Name "I confirm this answer is accurate.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  Name "I confirm this answer is accurate.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"authoring-heading"[39m
+      [33mclass[39m=[32m"rule-trace"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"authoring-heading"[39m
+      [36m>[39m
+        [0mEdit your resume on this analysis[0m
+      [36m</h2>[39m
+      [36m<fieldset[39m
+        [33mstyle[39m=[32m"min-width: 0px; border: 0px; padding: 0px; margin: 0px;"[39m
+      [36m>[39m
+        [36m<legend>[39m
+          [0mResume authoring actions[0m
+        [36m</legend>[39m
+        [36m<p>[39m
+          [0mChanges create new versions. Imported or edited facts need your confirmation; confirmation is your own declaration, not verified extraction accuracy.[0m
+        [36m</p>[39m
+        [36m<blockquote[39m
+          [33maria-label[39m=[32m"Your submitted correction"[39m
+        [36m>[39m
+          [0mA revised result[0m
+        [36m</blockquote>[39m
+        [36m<form[39m
+          [33maction[39m=[32m"/analysis/analysis/author"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mmethod[39m=[32m"post"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"action"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"preview_clarification"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"expectedVersionId"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"4a538184-2819-4e5c-981f-fcab6a3fd97b"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"idempotencyKey"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"cb5c47f4-0118-48c4-86c3-479ffaf02530"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"targetFactId"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"0572a355-b131-4fd1-926b-bf8948eafa29"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"questionKind"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"result"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"value"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"A revised result"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33mtype[39m=[32m"submit"[39m
+          [36m>[39m
+            [0mRetry this exact submission[0m
+          [36m</button>[39m
+        [36m</form>[39m
+        [36m<section>[39m
+          [36m<h3>[39m
+            [0mTop findings to review[0m
+          [36m</h3>[39m
+          [36m<p>[39m
+            [0mAt most five evidence priorities; impact points are unavailable.[0m
+          [36m</p>[39m
+          [36m<ol />[39m
+          [36m<details>[39m
+            [36m<summary>[39m
+              [0mRemaining findings ([0m
+              [0m0[0m
+              [0m)[0m
+            [36m</summary>[39m
+            [36m<ol />[39m
+          [36m</details>[39m
+        [36m</section>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Resume outline"[39m
+        [36m>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-0288ac71-01bd-4158-a56d-a815dee8aa72"[39m
+            [36m>[39m
+              [0mImported content[0m
+            [36m</a>[39m
+          [36m</p>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-7b4d4946-d37e-452f-b0cf-7a5bed284386"[39m
+            [36m>[39m
+              [0mExperience[0m
+            [36m</a>[39m
+          [36m</p>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-f9d2baba-f0a2-4b46-8229-5e40ee85714c"[39m
+            [36m>[39m
+              [0mEducation[0m
+            [36m</a>[39m
+          [36m</p>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-88a8ddb8-a52c-435b-8b6c-700ff39752c8"[39m
+            [36m>[39m
+              [0mSkills[0m
+            [36m</a>[39m
+          [36m</p>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-4362f00e-fc7e-4ad6-b107-a82fde02d532"[39m
+            [36m>[39m
+              [0mCertifications[0m
+            [36m</a>[39m
+          [36m</p>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-unassigned"[39m
+            [36m>[39m
+              [0mAdditional imported facts[0m
+            [36m</a>[39m
+          [36m</p>[39m
+        [36m</nav>[39m
+        [36m<section[39m
+          [33mid[39m=[32m"author-section-0288ac71-01bd-4158-a56d-a815dee8aa72"[39m
+        [36m>[39m
+          [36m<h3>[39m
+            [0mImported content[0m
+          [36m</h3>[39m
+          [36m<form[39m
+            [33maction[39m=[32m"/analysis/analysis/author"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mmethod[39m=[32m"post"[39m
+          [36m>[39m
+            [36m<input[39m
+              [33mname[39m=[32m"action"[39m
+              [33mtype[39m=[32m"hidden"[39m
+              [33mvalue[39m=[32m"rename"[39m
+            [36m/>[39m
+            [36m<input[39m
+              [33mname[39m=[32m"expectedVersionId"[39m
+              [33mtype[39m=[32m"hidden"[39m
+              [33mvalue[39m=[32m"4a538184-2819-4e5c-981f-fcab6a3fd97b"[39m
+            [36m/>[39m
+            [36m<input[39m
+              [33mname[39m=[32m"idempotencyKey"[39m
+              [33mtype[39m=[32m"hidden"[39m
+              [33mvalue[39m=[32m"c0c02755-047f-4819-a0c5-6fe45500b84c"[39m
+            [36m/>[39m
+            [36m<input[39m
+              [33mname[39m=[32m"sectionId"[39m
+              [33mtype[39m=[32m"hidden"[39m
+              [33mvalue[39m=[32m"0288ac71-01bd-4158-a56d-a815dee8aa72"[39m
+            [36m/>[39m
+            [36m<label[39m
+              [33mfor[39m=[32m"section-title-0288ac71-01bd-4158-a56d-a815dee8aa72"[39m
+            [36m>[39m
+              [0mSection title: [0m
+              [0mImported content[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mid[39m=[32m"section-title-0288ac71-01bd-4158-a56d-a815dee8aa72"[39m
+              [33mmaxlength[39m=[32m"100"[39m
+              [33mname[39m=[32m"value"[39m
+              [33mrequired[39m=[32m""[39m
+              [33mvalue[39m=[32m"Imported content"[39m
+            [36m/>[39m
+            [36m<button[39m
+              [33mtype[39m=[32m"submit"[39m
+            [36m>[39m
+              [0mSave section title[0m
+            [36m</button>[39m
+          [36m</form>[39m
+       ...
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/WorkspaceRepairs.test.tsx:493:25
+    491|     .soft(screen.queryByRole("button", { name: "Retry this exact submi…
+    492|     .toBeNull();
+    493|   const region = screen.getByRole("region", { name: "Clarification pre…
+       |                         ^
+    494|   expect(
+    495|     within(region).getByLabelText("Complete fact to confirm").textCont…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 preview preserves a non-first target and invalidates changed answer and head context
+TestingLibraryElementError: Unable to find an accessible element with the role "region" and name "Clarification preview"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Edit your resume on this analysis":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"authoring-heading"[39m
+    [33mclass[39m=[32m"rule-trace"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Edit your resume on this analysis":
+  [36m<h2[39m
+    [33mid[39m=[32m"authoring-heading"[39m
+  [36m/>[39m
+
+  Name "Top findings to review":
+  [36m<h3 />[39m
+
+  Name "Imported content":
+  [36m<h3 />[39m
+
+  Name "email: fictional@example.test":
+  [36m<h4 />[39m
+
+  Name "phone: +91 9876543210":
+  [36m<h4 />[39m
+
+  Name "name: Fictional Person":
+  [36m<h4 />[39m
+
+  Name "Experience":
+  [36m<h3 />[39m
+
+  Name "role: Software Engineer":
+  [36m<h4 />[39m
+
+  Name "contribution: Built reliable services
+  Scope: Internal services
+  Result: Fewer release failures":
+  [36m<h4 />[39m
+
+  Name "dates: 2020-01-01 - 2022-01-01":
+  [36m<h4 />[39m
+
+  Name "dates: 2021-01-01 - 2023-01-01":
+  [36m<h4 />[39m
+
+  Name "Education":
+  [36m<h3 />[39m
+
+  Name "education: Bachelor":
+  [36m<h4 />[39m
+
+  Name "Skills":
+  [36m<h3 />[39m
+
+  Name "skill: SQL":
+  [36m<h4 />[39m
+
+  Name "skill: TypeScript":
+  [36m<h4 />[39m
+
+  Name "Certifications":
+  [36m<h3 />[39m
+
+  Name "certification: AWS":
+  [36m<h4 />[39m
+
+  Name "Additional imported facts":
+  [36m<h3 />[39m
+
+  Name "employer: Fictional Company":
+  [36m<h4 />[39m
+
+  Name "dates: 2020-01-01 - 2022-01-01":
+  [36m<h4 />[39m
+
+  Name "dates: 2021-01-01 - 2023-01-01":
+  [36m<h4 />[39m
+
+  Name "contribution: Improved release tooling":
+  [36m<h4 />[39m
+
+  Name "Grounded writing review":
+  [36m<h3 />[39m
+
+  Name "Candidate change history":
+  [36m<h3 />[39m
+
+  --------------------------------------------------
+  group:
+
+  Name "Resume authoring actions":
+  [36m<fieldset[39m
+    [33mstyle[39m=[32m"min-width: 0px; border: 0px; padding: 0px; margin: 0px;"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<details />[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+  blockquote:
+
+  Name "Your submitted correction":
+  [36m<blockquote[39m
+    [33maria-label[39m=[32m"Your submitted correction"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Retry this exact submission":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save section title":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save section title":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save section title":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save section title":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save section title":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save fact correction":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Confirm this saved fact":
+  [36m<button[39m
+    [33mdisabled[39m=[32m""[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Review contribution":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save result clarification":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save measurement clarification":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save scope clarification":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save method clarification":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Save ownership clarification":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  Name "Undo last saved change as a new version":
+  [36m<button[39m
+    [33mtype[39m=[32m"submit"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "":
+  [36m<ol />[39m
+
+  Name "":
+  [36m<ol />[39m
+
+  Name "":
+  [36m<ul />[39m
+
+  --------------------------------------------------
+  navigation:
+
+  Name "Resume outline":
+  [36m<nav[39m
+    [33maria-label[39m=[32m"Resume outline"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "Imported content":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-b7e5fdd6-e56f-4481-bbfe-401a606c7435"[39m
+  [36m/>[39m
+
+  Name "Experience":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-9f4478ee-87de-4435-b991-2337c5fec681"[39m
+  [36m/>[39m
+
+  Name "Education":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-bcd4d6cc-58a2-4fe2-af35-8090313f72e5"[39m
+  [36m/>[39m
+
+  Name "Skills":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-9bf76c21-0616-4a07-91ac-52ef50d302ec"[39m
+  [36m/>[39m
+
+  Name "Certifications":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-59eb0d60-eb2a-47f8-8fcb-c43bc0809d97"[39m
+  [36m/>[39m
+
+  Name "Additional imported facts":
+  [36m<a[39m
+    [33mhref[39m=[32m"#author-section-unassigned"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-55399c44-ec23-4736-889c-b8e6cc1ce268"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-85698dc4-deda-4631-911c-44d8cb2a4438"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-e0ee74c3-b2a5-48cc-8e23-26075ef7f219"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-b9b8707d-e58f-42a8-857c-6081fcc03cd7"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-5ae955a3-cac0-4ed3-87b4-41d2897486fd"[39m
+  [36m/>[39m
+
+  Name "Review writing for this contribution":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/score?focus=5ae955a3-cac0-4ed3-87b4-41d2897486fd#writing-review"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-553085fc-b374-4d95-ad54-0a02dc12658c"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-d8d76483-e6a1-4e5c-8e2f-a9bfff925686"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-b19870bc-8d9f-4f1a-b8bc-354fa232c2cc"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-89ffa91c-18ce-4f82-b61d-33d522744eb4"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-433d6a60-010c-441f-84b9-57609580606d"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-bee6b5c2-b44d-49ff-b587-602cde0a3b6c"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-e9d44faa-636b-4247-87ce-941f604485bf"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-a10d1ec2-4748-443b-9752-25f444c92d9d"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-92b7922c-2154-4314-9ff4-f5a7aedfce13"[39m
+  [36m/>[39m
+
+  Name "Inspect this fact’s provenance and version":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/canonical?version=661eb209-3af1-4acf-954f-b4734f997254#fact-0194c5a9-c196-4ed9-b2c3-243dfec3ee7f"[39m
+  [36m/>[39m
+
+  Name "Review writing for this contribution":
+  [36m<a[39m
+    [33mdata-discover[39m=[32m"true"[39m
+    [33mhref[39m=[32m"/analysis/analysis/score?focus=0194c5a9-c196-4ed9-b2c3-243dfec3ee7f#writing-review"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  textbox:
+
+  Name "Section title: Imported content":
+  [36m<input[39m
+    [33mid[39m=[32m"section-title-b7e5fdd6-e56f-4481-bbfe-401a606c7435"[39m
+    [33mmaxlength[39m=[32m"100"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m"Imported content"[39m
+  [36m/>[39m
+
+  Name "Edit email: fictional@example.test":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-55399c44-ec23-4736-889c-b8e6cc1ce268"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit phone: +91 9876543210":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-85698dc4-deda-4631-911c-44d8cb2a4438"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit name: Fictional Person":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-e0ee74c3-b2a5-48cc-8e23-26075ef7f219"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Section title: Experience":
+  [36m<input[39m
+    [33mid[39m=[32m"section-title-9f4478ee-87de-4435-b991-2337c5fec681"[39m
+    [33mmaxlength[39m=[32m"100"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m"Experience"[39m
+  [36m/>[39m
+
+  Name "Edit role: Software Engineer":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-b9b8707d-e58f-42a8-857c-6081fcc03cd7"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit contribution: Built reliable services
+  Scope: Internal services
+  Result: Fewer release failures":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-5ae955a3-cac0-4ed3-87b4-41d2897486fd"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit dates: 2020-01-01 - 2022-01-01":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-553085fc-b374-4d95-ad54-0a02dc12658c"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit dates: 2021-01-01 - 2023-01-01":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-d8d76483-e6a1-4e5c-8e2f-a9bfff925686"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Section title: Education":
+  [36m<input[39m
+    [33mid[39m=[32m"section-title-bcd4d6cc-58a2-4fe2-af35-8090313f72e5"[39m
+    [33mmaxlength[39m=[32m"100"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m"Education"[39m
+  [36m/>[39m
+
+  Name "Edit education: Bachelor":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-b19870bc-8d9f-4f1a-b8bc-354fa232c2cc"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Section title: Skills":
+  [36m<input[39m
+    [33mid[39m=[32m"section-title-9bf76c21-0616-4a07-91ac-52ef50d302ec"[39m
+    [33mmaxlength[39m=[32m"100"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m"Skills"[39m
+  [36m/>[39m
+
+  Name "Edit skill: SQL":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-89ffa91c-18ce-4f82-b61d-33d522744eb4"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit skill: TypeScript":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-433d6a60-010c-441f-84b9-57609580606d"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Section title: Certifications":
+  [36m<input[39m
+    [33mid[39m=[32m"section-title-59eb0d60-eb2a-47f8-8fcb-c43bc0809d97"[39m
+    [33mmaxlength[39m=[32m"100"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m"Certifications"[39m
+  [36m/>[39m
+
+  Name "Edit certification: AWS":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-bee6b5c2-b44d-49ff-b587-602cde0a3b6c"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit employer: Fictional Company":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-e9d44faa-636b-4247-87ce-941f604485bf"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit dates: 2020-01-01 - 2022-01-01":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-a10d1ec2-4748-443b-9752-25f444c92d9d"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit dates: 2021-01-01 - 2023-01-01":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-92b7922c-2154-4314-9ff4-f5a7aedfce13"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "Edit contribution: Improved release tooling":
+  [36m<textarea[39m
+    [33mid[39m=[32m"author-fact-0194c5a9-c196-4ed9-b2c3-243dfec3ee7f"[39m
+    [33mmaxlength[39m=[32m"2000"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "What result can you truthfully attribute to this contribution?":
+  [36m<input[39m
+    [33mid[39m=[32m"question-result"[39m
+    [33mmaxlength[39m=[32m"300"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "How was that result measured? Leave it unanswered if no measurement is known.":
+  [36m<input[39m
+    [33mid[39m=[32m"question-measurement"[39m
+    [33mmaxlength[39m=[32m"300"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "What was the verified scope or context?":
+  [36m<input[39m
+    [33mid[39m=[32m"question-scope"[39m
+    [33mmaxlength[39m=[32m"300"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "What did you do to achieve the result?":
+  [36m<input[39m
+    [33mid[39m=[32m"question-method"[39m
+    [33mmaxlength[39m=[32m"300"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  Name "What was your own responsibility rather than the team's?":
+  [36m<input[39m
+    [33mid[39m=[32m"question-ownership"[39m
+    [33mmaxlength[39m=[32m"300"[39m
+    [33mname[39m=[32m"value"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mvalue[39m=[32m""[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  article:
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<article[39m
+    [33mclass[39m=[32m"account-card"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  combobox:
+
+  Name "Contribution to review":
+  [36m<select[39m
+    [33mid[39m=[32m"writing-focus"[39m
+    [33mname[39m=[32m"focus"[39m
+    [33mstyle[39m=[32m"max-width: 100%;"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  option:
+
+  Name "Built reliable services
+  Scope: Internal services
+  Result: Fewer release failures":
+  [36m<option[39m
+    [33mvalue[39m=[32m"5ae955a3-cac0-4ed3-87b4-41d2897486fd"[39m
+  [36m/>[39m
+
+  Name "Improved release tooling":
+  [36m<option[39m
+    [33mselected[39m=[32m""[39m
+    [33mvalue[39m=[32m"0194c5a9-c196-4ed9-b2c3-243dfec3ee7f"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  checkbox:
+
+  Name "I confirm this answer is accurate.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  Name "I confirm this answer is accurate.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  Name "I confirm this answer is accurate.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  Name "I confirm this answer is accurate.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  Name "I confirm this answer is accurate.":
+  [36m<input[39m
+    [33mname[39m=[32m"confirmation"[39m
+    [33mrequired[39m=[32m""[39m
+    [33mtype[39m=[32m"checkbox"[39m
+    [33mvalue[39m=[32m"true"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"authoring-heading"[39m
+      [33mclass[39m=[32m"rule-trace"[39m
+    [36m>[39m
+      [36m<h2[39m
+        [33mid[39m=[32m"authoring-heading"[39m
+      [36m>[39m
+        [0mEdit your resume on this analysis[0m
+      [36m</h2>[39m
+      [36m<fieldset[39m
+        [33mstyle[39m=[32m"min-width: 0px; border: 0px; padding: 0px; margin: 0px;"[39m
+      [36m>[39m
+        [36m<legend>[39m
+          [0mResume authoring actions[0m
+        [36m</legend>[39m
+        [36m<p>[39m
+          [0mChanges create new versions. Imported or edited facts need your confirmation; confirmation is your own declaration, not verified extraction accuracy.[0m
+        [36m</p>[39m
+        [36m<blockquote[39m
+          [33maria-label[39m=[32m"Your submitted correction"[39m
+        [36m>[39m
+          [0mSecond contribution result[0m
+        [36m</blockquote>[39m
+        [36m<form[39m
+          [33maction[39m=[32m"/analysis/analysis/author"[39m
+          [33mdata-discover[39m=[32m"true"[39m
+          [33mmethod[39m=[32m"post"[39m
+        [36m>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"action"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"preview_clarification"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"expectedVersionId"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"661eb209-3af1-4acf-954f-b4734f997254"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"idempotencyKey"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"3e50124f-b6fe-4700-a9df-5def43b3f379"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"targetFactId"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"0194c5a9-c196-4ed9-b2c3-243dfec3ee7f"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"questionKind"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"result"[39m
+          [36m/>[39m
+          [36m<input[39m
+            [33mname[39m=[32m"value"[39m
+            [33mtype[39m=[32m"hidden"[39m
+            [33mvalue[39m=[32m"Second contribution result"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33mtype[39m=[32m"submit"[39m
+          [36m>[39m
+            [0mRetry this exact submission[0m
+          [36m</button>[39m
+        [36m</form>[39m
+        [36m<section>[39m
+          [36m<h3>[39m
+            [0mTop findings to review[0m
+          [36m</h3>[39m
+          [36m<p>[39m
+            [0mAt most five evidence priorities; impact points are unavailable.[0m
+          [36m</p>[39m
+          [36m<ol />[39m
+          [36m<details>[39m
+            [36m<summary>[39m
+              [0mRemaining findings ([0m
+              [0m0[0m
+              [0m)[0m
+            [36m</summary>[39m
+            [36m<ol />[39m
+          [36m</details>[39m
+        [36m</section>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Resume outline"[39m
+        [36m>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-b7e5fdd6-e56f-4481-bbfe-401a606c7435"[39m
+            [36m>[39m
+              [0mImported content[0m
+            [36m</a>[39m
+          [36m</p>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-9f4478ee-87de-4435-b991-2337c5fec681"[39m
+            [36m>[39m
+              [0mExperience[0m
+            [36m</a>[39m
+          [36m</p>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-bcd4d6cc-58a2-4fe2-af35-8090313f72e5"[39m
+            [36m>[39m
+              [0mEducation[0m
+            [36m</a>[39m
+          [36m</p>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-9bf76c21-0616-4a07-91ac-52ef50d302ec"[39m
+            [36m>[39m
+              [0mSkills[0m
+            [36m</a>[39m
+          [36m</p>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-59eb0d60-eb2a-47f8-8fcb-c43bc0809d97"[39m
+            [36m>[39m
+              [0mCertifications[0m
+            [36m</a>[39m
+          [36m</p>[39m
+          [36m<p>[39m
+            [36m<a[39m
+              [33mhref[39m=[32m"#author-section-unassigned"[39m
+            [36m>[39m
+              [0mAdditional imported facts[0m
+            [36m</a>[39m
+          [36m</p>[39m
+        [36m</nav>[39m
+        [36m<section[39m
+          [33mid[39m=[32m"author-section-b7e5fdd6-e56f-4481-bbfe-401a606c7435"[39m
+        [36m>[39m
+          [36m<h3>[39m
+            [0mImported content[0m
+          [36m</h3>[39m
+          [36m<form[39m
+            [33maction[39m=[32m"/analysis/analysis/author"[39m
+            [33mdata-discover[39m=[32m"true"[39m
+            [33mmethod[39m=[32m"post"[39m
+          [36m>[39m
+            [36m<input[39m
+              [33mname[39m=[32m"action"[39m
+              [33mtype[39m=[32m"hidden"[39m
+              [33mvalue[39m=[32m"rename"[39m
+            [36m/>[39m
+            [36m<input[39m
+              [33mname[39m=[32m"expectedVersionId"[39m
+              [33mtype[39m=[32m"hidden"[39m
+              [33mvalue[39m=[32m"661eb209-3af1-4acf-954f-b4734f997254"[39m
+            [36m/>[39m
+            [36m<input[39m
+              [33mname[39m=[32m"idempotencyKey"[39m
+              [33mtype[39m=[32m"hidden"[39m
+              [33mvalue[39m=[32m"7f9e9eec-5d3b-4729-95d7-f2566ecde3dc"[39m
+            [36m/>[39m
+            [36m<input[39m
+              [33mname[39m=[32m"sectionId"[39m
+              [33mtype[39m=[32m"hidden"[39m
+              [33mvalue[39m=[32m"b7e5fdd6-e56f-4481-bbfe-401a606c7435"[39m
+            [36m/>[39m
+            [36m<label[39m
+              [33mfor[39m=[32m"section-title-b7e5fdd6-e56f-4481-bbfe-401a606c7435"[39m
+            [36m>[39m
+              [0mSection title: [0m
+              [0mImported content[0m
+            [36m</label>[39m
+            [36m<input[39m
+              [33mid[39m=[32m"section-title-b7e5fdd6-e56f-4481-bbfe-401a606c7435"[39m
+              [33mmaxlength[39m=[32m"100"[39m
+              [33mname[39m=[32m"value"[39m
+              [33mrequired[39m=[32m""[39m
+              [33mvalue[39m=[32m"Imported content"[39m
+            [36m/>[39m
+            [36m<button[39m
+              [33mtype[39m=[32m"submit"[39m
+            [36m>[39m
+              [0mSave section title[0m
+            [36m</button>[39m
+          [36m...
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/WorkspaceRepairs.test.tsx:539:25
+    537|   );
+    538|   const view = await mountConfirmation(model, feedback);
+    539|   const region = screen.getByRole("region", { name: "Clarification pre…
+       |                         ^
+    540|   const button = within(region).getByRole("button", {
+    541|     name: "Confirm complete fact",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 preview retains failed proof for exact retry while using the current binding for a new preview
+AssertionError: expected 'clarify' to be 'preview_clarification' // Object.is equality
+
+Expected: "preview_clarification"
+Received: "clarify"
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:604:49
+    602|   });
+    603|   const main = clarificationAnswer().closest("form")!;
+    604|   expect.soft(new FormData(main).get("action")).toBe("preview_clarific…
+       |                                                 ^
+    605|   expect
+    606|     .soft(new FormData(main).get("expectedVersionId"))
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 preview retains failed proof for exact retry while using the current binding for a new preview
+AssertionError: expected 'fd1b41b6-dc32-4d3c-b53a-080ad313910f' to be '6ac55908-db4a-4dcd-9b1f-2ca0be662163' // Object.is equality
+
+Expected: "6ac55908-db4a-4dcd-9b1f-2ca0be662163"
+Received: "fd1b41b6-dc32-4d3c-b53a-080ad313910f"
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:607:6
+    605|   expect
+    606|     .soft(new FormData(main).get("expectedVersionId"))
+    607|     .toBe(model.document.versionId);
+       |      ^
+    608|   expect.soft(new FormData(main).get("idempotencyKey")).toBe(model.for…
+    609|   expect(clarificationAnswer().value).toBe("Retained answer");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  tests/components/WorkspaceRepairs.test.tsx > U03 preview retains failed proof for exact retry while using the current binding for a new preview
+AssertionError: expected 'bee4ba8f-2701-4680-bf88-85dfa3ca68b1' to be '31a7579f-41b8-4066-8653-10e66fa135c2' // Object.is equality
+
+Expected: "31a7579f-41b8-4066-8653-10e66fa135c2"
+Received: "bee4ba8f-2701-4680-bf88-85dfa3ca68b1"
+
+ ❯ tests/components/WorkspaceRepairs.test.tsx:608:57
+    606|     .soft(new FormData(main).get("expectedVersionId"))
+    607|     .toBe(model.document.versionId);
+    608|   expect.soft(new FormData(main).get("idempotencyKey")).toBe(model.for…
+       |                                                         ^
+    609|   expect(clarificationAnswer().value).toBe("Retained answer");
+    610|   const retry = screen
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 10 skipped (13)
+   Start at  23:15:16
+   Duration  1.70s (transform 150ms, setup 0ms, import 269ms, tests 890ms, environment 479ms)
+

@@ -1,0 +1,211 @@
+/** @vitest-environment jsdom */
+import { cleanup, render, screen, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router";
+import userEvent from "@testing-library/user-event";
+import { afterEach, expect, it } from "vitest";
+import JdRecommendations from "../../app/components/JdRecommendations";
+import { buildJdRecommendations } from "../../app/lib/server/jd-recommendations";
+import { createRequirementContextFixture } from "../fixtures/requirement-context";
+
+afterEach(cleanup);
+async function fixture(
+  options: Parameters<typeof createRequirementContextFixture>[0] = {},
+) {
+  const f = await createRequirementContextFixture({
+    clauses: ["Built APIs using Python"],
+    skill: "Python",
+    jdText: "Requirements\nPython required",
+    confirm: true,
+    ...options,
+  });
+  const context = f.context;
+  const plan = buildJdRecommendations(context, {
+    analysisId: context.source.analysisId,
+    ownerId: context.source.ownerId,
+    canonicalVersionId: context.canonical.versionId,
+    requirementVersionId: context.requirements.versionId,
+  });
+  const base = `/analysis/${context.source.analysisId}`;
+  return { ...f, plan, base };
+}
+function show(f: Awaited<ReturnType<typeof fixture>>) {
+  return render(
+    <MemoryRouter>
+      <JdRecommendations plan={f.plan} base={f.base} />
+    </MemoryRouter>,
+  );
+}
+it("renders the exact saved requirement and complete current claim with its source basis and pinned links", async () => {
+  const f = await fixture();
+  const item = f.plan.items[0];
+  expect(item.observation).toBe("source_related_claim");
+  expect(item.target).not.toBeNull();
+  show(f);
+  expect(
+    screen.getByRole("blockquote", { name: "Saved job requirement" })
+      .textContent,
+  ).toBe(item.requirementQuote);
+  expect(
+    screen.getByRole("blockquote", { name: "Current resume claim" })
+      .textContent,
+  ).toBe(item.target!.value);
+  expect(
+    screen.getByText(/Quoted source claim; not independently verified/u),
+  ).toBeTruthy();
+  expect(
+    screen.getByRole("blockquote", { name: "Recorded source quote" })
+      .textContent,
+  ).toBe(item.target!.sourceQuote);
+  expect(
+    screen
+      .getByRole("link", { name: "Inspect this current fact and version" })
+      .getAttribute("href"),
+  ).toBe(
+    `${f.base}/canonical?version=${f.plan.binding.canonical.versionId}#fact-${item.target!.factId}`,
+  );
+  expect(
+    screen
+      .getByRole("link", { name: "Review the complete saved job requirements" })
+      .getAttribute("href"),
+  ).toBe(
+    `${f.base}/requirements?version=${f.plan.binding.requirements.versionId}`,
+  );
+  expect(
+    screen
+      .getByRole("link", { name: "Review source evidence" })
+      .getAttribute("href"),
+  ).toBe(`${f.base}/evidence`);
+});
+it("labels an edited current declaration without substituting earlier source wording", async () => {
+  const f = await fixture({
+    clauses: ["Built services using PostgreSQL"],
+    skill: "PostgreSQL",
+    jdText: "Requirements\nPostgreSQL required",
+    edit: "Responsible for services using PostgreSQL",
+  });
+  expect(f.plan.items[0].target?.basis).toBe("candidate_declaration");
+  show(f);
+  expect(
+    screen.getByRole("blockquote", { name: "Current resume claim" })
+      .textContent,
+  ).toBe("Responsible for services using PostgreSQL");
+  expect(
+    screen.getByText(
+      /Recorded candidate declaration; not independent source support/u,
+    ),
+  ).toBeTruthy();
+  expect(
+    screen.queryByRole("blockquote", { name: "Recorded source quote" }),
+  ).toBeNull();
+  expect(screen.queryByText("Built services using PostgreSQL")).toBeNull();
+});
+it.each<
+  [string, Parameters<typeof createRequirementContextFixture>[0], RegExp]
+>([
+  [
+    "listed_skill_only",
+    { clauses: ["Built internal services"], skill: "Python" },
+    /A skill listing alone does not establish contribution, proficiency or duration/u,
+  ],
+  [
+    "evidence_gap",
+    { jdText: "Requirements\nRAG required" },
+    /Missing evidence does not mean you are unqualified/u,
+  ],
+])(
+  "shows %s without inventing a contribution link or a question",
+  async (observation, options, explanation) => {
+    const f = await fixture(options);
+    expect(f.plan.items[0].observation).toBe(observation);
+    show(f);
+    expect(screen.getByText(explanation)).toBeTruthy();
+    expect(
+      screen.queryByRole("link", {
+        name: "Inspect this current fact and version",
+      }),
+    ).toBeNull();
+    expect(screen.queryByText(/Optional question/u)).toBeNull();
+  },
+);
+it("shows conditional same-contribution questions and preserves AND scope without requiring a metric", async () => {
+  const f = await fixture({
+    jdText: "Requirements\nPython and Pydantic required",
+  });
+  const item = f.plan.items[0];
+  expect(item.expressionKind).toBe("all_of");
+  expect(item.question).not.toBeNull();
+  show(f);
+  expect(screen.getByText("All parts (AND)")).toBeTruthy();
+  expect(
+    screen.getByText("Optional question, only if true of this contribution"),
+  ).toBeTruthy();
+  expect(screen.getByText(item.question!)).toBeTruthy();
+  expect(
+    screen.getByText(
+      /Leave unknown details unanswered; measurements are optional and must be truthful/u,
+    ),
+  ).toBeTruthy();
+  expect(screen.queryByRole("textbox")).toBeNull();
+  expect(screen.queryByRole("button")).toBeNull();
+});
+it("keeps OR and review-only unknown/negated scope visible without qualification credit", async () => {
+  const f = await fixture({
+    jdText:
+      "Requirements\nPython or FastAPI required\nNo cloud certification required\nTeam context to discuss",
+  });
+  show(f);
+  expect(screen.getByText("Alternatives (OR)")).toBeTruthy();
+  for (const item of f.plan.items)
+    expect(screen.getByText(item.requirementQuote)).toBeTruthy();
+  expect(screen.getByText(/Qualification credit: not assessed/u)).toBeTruthy();
+});
+it("limits priorities to five and preserves complete remaining and retained-clause counts", async () => {
+  const f = await fixture({
+    jdText:
+      "Requirements\nPython required\nFastAPI required\nGit required\nSQL required\nTypeScript required\nRAG required\nCloud preferred\nTeam context to discuss",
+  });
+  expect(f.plan.items).toHaveLength(5);
+  expect(f.plan.remainingCount).toBeGreaterThan(0);
+  show(f);
+  expect(screen.getAllByRole("article")).toHaveLength(5);
+  expect(
+    screen.getByText(
+      `Showing ${f.plan.items.length} of ${f.plan.total} review priorities.`,
+    ),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(
+      `${f.plan.remainingCount} more priorities remain in the complete requirement review.`,
+    ),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(
+      `${f.plan.retainedClauseCount} retained clauses have no supported mapping. Review them separately; they are not treated as met.`,
+    ),
+  ).toBeTruthy();
+});
+it("offers keyboard-accessible read links and local guidance without apply, AI, or numerical promises", async () => {
+  const f = await fixture();
+  const { container } = show(f);
+  const user = userEvent.setup();
+  expect(screen.getByText(/Deterministic local review guidance/u)).toBeTruthy();
+  expect(
+    screen.getByText(/Numerical score and score change: unavailable/u),
+  ).toBeTruthy();
+  const links = screen.getAllByRole("link");
+  for (const link of links) {
+    await user.tab();
+    expect(document.activeElement).toBe(link);
+  }
+  expect(container.querySelectorAll("form,input,button,textarea")).toHaveLength(
+    0,
+  );
+  expect(container.textContent).not.toMatch(
+    /AI[- ]generated|score.*(?:gain|increase)|guarantee|\d+%/iu,
+  );
+  expect(
+    within(
+      screen.getByRole("region", { name: "JD review priorities" }),
+    ).getByText(/not independent verification/u),
+  ).toBeTruthy();
+});

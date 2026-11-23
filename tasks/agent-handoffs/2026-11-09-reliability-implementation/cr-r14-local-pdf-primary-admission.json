@@ -1,0 +1,222 @@
+{
+  "id": "CR-R14-S09",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "status": "VERIFIED_PRIMARY_LOCAL_OPT_IN_ADMISSION",
+  "flattenedEvidenceSha256": "c116d531e930d409962b2b39d48342b1e91b398a686a0d2d4f9569f19449fcbd",
+  "packageEvidenceSha256": "535d293502152c0c099d0865f3fb7ffb33a85e8dd8be6fa522f84d08c1907bd7",
+  "sourceHashes": {
+    "scripts/verify-latex-sandbox.ts": "48cfa899cf2a3d85370bd8d92988fe870d55102d6ec1ee950f365359d69d7abe",
+    "scripts/verify-latex-local-pdf.ts": "862784d6d1f7effb42393d6075e3c24694d7aac8a07b3638d1397ebeb5dd979c",
+    "scripts/latex-runtime/verify-native-frame.py": "d724394c416a007828151985752e6f9e391375098e6e3c7e31f1308ec850262d"
+  },
+  "artifactBundle": {
+    "file": "tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-r14-local-pdf-admission-artifacts.tar.gz",
+    "bytes": 28794,
+    "sha256": "5e9d681cbe34d7a202381e0a04a1348ed7fd7e8c3c7b8d2ccdab5deda32016e8",
+    "contentsSha256": {
+      "build-outcome.json": "b9afe420a6f1eacb7b50a9002c12a6cfbbd8b9531afff7cf7fb6292f7e321f81",
+      "candidate-signature-binding.json": "cd50336124d80a4f1055af6a152523fede4d785ce4a3ad60ffef69d8a9e214df",
+      "local-pdf-legacy-signature.xml": "82d174df93c21ab7ab6203df4a4fc8aca35881652c677bc4bd8463fa9c4dd9bd",
+      "local-pdf-signature-acceptance.json": "42dc7888ce94b2abe9809de1d700d4b772181cc8abfd65c0a8cbc105bfd6035e",
+      "source-and-test-receipt.json": "861d2f801b9d4aae14374d89d2414ada57ce4163029a7f632ea659c499f00794",
+      "upstream-junit.xml": "111080451517e22649a40b449ebc0ccf225795e19a7f22b20b30a43aa6accd11"
+    }
+  },
+  "admission": {
+    "imageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "profile": "local-pdf-admission",
+    "checks": [
+      {
+        "name": "flattened-local-pdf-native-admission",
+        "passed": true,
+        "protocol": "RESUMIDE_BBOX/1",
+        "currentPackageVersion": "25.03.0-5+deb13u4+resumide2",
+        "installedCohort": [
+          "libpoppler147",
+          "poppler-utils"
+        ],
+        "installedElfCount": 14,
+        "retiredPackagesAbsent": [
+          "libcurl3t64-gnutls",
+          "libgssapi-krb5-2",
+          "libk5crypto3",
+          "libkrb5-3",
+          "libkrb5support0"
+        ],
+        "samePdfNativeFixtures": 7,
+        "consumerSuite": {
+          "passed": true,
+          "cases": 107,
+          "testMethods": 6,
+          "consumerStable": true,
+          "suiteSha256": "8d36bb9de1fcf0cf900e0d8c08c05a255b05e165bab7c40aeef28ffc6386bd1d",
+          "consumerSha256": "8399d3432cde87c92f55771f272bad82c42b26856f3b4096fc1f76bc88249da1",
+          "receiptSha256": "629c1e9553fea67413c40f0ff1ee5335afa22c15ffb4a32f2f76b17c137d59a8",
+          "logSha256": "af09ad6f1ca1bec1a04b783277f339a8ae7694ab5cf7faa548f50913993fa8c9",
+          "originalReceiptTier": "neutral-source-prototype-only",
+          "executionContext": "actual immutable worker; unchanged frame-only neutral suite"
+        },
+        "sourceReceiptSha256": "861d2f801b9d4aae14374d89d2414ada57ce4163029a7f632ea659c499f00794",
+        "installedMetadataSha256": "a970ff15394d61156006d38d9a781579a96ef570ed0f707f3846c73b742b637f",
+        "originalSignatureClass": {
+          "actualExitCode": 8,
+          "junitSha256": "82d174df93c21ab7ab6203df4a4fc8aca35881652c677bc4bd8463fa9c4dd9bd"
+        },
+        "paddingNormalizedSuite": {
+          "passed": 71,
+          "qtClasses": 56,
+          "junitSha256": "111080451517e22649a40b449ebc0ccf225795e19a7f22b20b30a43aa6accd11"
+        },
+        "pdfInputsGenerated": false,
+        "pdfNativeDecodingRequested": false,
+        "sourceBuildsRequested": false,
+        "temporaryFilesRemoved": true
+      },
+      {
+        "name": "actual-landlock-rights-and-exec",
+        "abi": 8,
+        "deniedReads": 2,
+        "approvedRead": 1,
+        "scratchWrite": 1,
+        "outsideWriteDenied": 1,
+        "shellExecDenied": 1
+      },
+      {
+        "name": "neutral-wrapper",
+        "pass": true,
+        "pages": 1
+      },
+      {
+        "name": "latin-unicode",
+        "pass": true,
+        "pages": 1
+      },
+      {
+        "name": "missing-glyph",
+        "pass": true,
+        "code": "missing_glyph"
+      },
+      {
+        "name": "overfull-layout",
+        "pass": true,
+        "code": "layout_overflow"
+      }
+    ],
+    "checksExecuted": 6
+  },
+  "controls": {
+    "rejected": [
+      "unreviewed-image",
+      "missing-evidence",
+      "mixed-options",
+      "duplicate-digest",
+      "unknown-option",
+      "altered-junit",
+      "altered-outcome",
+      "nonregular-artifact"
+    ],
+    "predecessorFocusedLayout": {
+      "imageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a",
+      "checks": [
+        {
+          "name": "neutral-wrapper",
+          "pass": true,
+          "pages": 1
+        },
+        {
+          "name": "latin-unicode",
+          "pass": true,
+          "pages": 1
+        },
+        {
+          "name": "missing-glyph",
+          "pass": true,
+          "code": "missing_glyph"
+        },
+        {
+          "name": "overfull-layout",
+          "pass": true,
+          "code": "layout_overflow"
+        }
+      ],
+      "checksExecuted": 4
+    }
+  },
+  "predecessorDefaultNative": {
+    "imageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a",
+    "packageVersion": "25.03.0-5+deb13u4+resumide1",
+    "frameCases": 107,
+    "upstream": {
+      "executed": 71,
+      "passed": 70,
+      "failed": 1,
+      "actualCtestExitCode": 8,
+      "allNativeTestsPassed": false,
+      "qtCompleteClasses": 56,
+      "engineeringException": {
+        "id": "E010",
+        "scope": "private engineering only; not release acceptance",
+        "class": "check_qt6_signature_basics",
+        "method": "testPgp",
+        "backend": "gpg",
+        "sourceLine": 311,
+        "actualSigner": "",
+        "expectedSigner": "Sune Vuorela",
+        "originalTestStillFailed": true,
+        "sourceOrKeyOrClockChanged": false,
+        "unexecutedLaterAssertionLines": [
+          312,
+          313,
+          314,
+          315
+        ],
+        "pgpVerificationDisabledClaim": false,
+        "baselineOnlyRemovedLibrary": {
+          "path": "/usr/lib/aarch64-linux-gnu/libopenjp2.so.2.5.3",
+          "sha256": "4aef3d9074095224e3fe50176cdd3a72390ab7d134ccd1d05c7ea4b30dcfee7d"
+        }
+      },
+      "junitSha256": "4ad5749434299172b1dfe5cd057c39defae4ef7e445b4b9d9102a580e2ad2906"
+    },
+    "receiptSha256": "78997d44937695b4ec9f972f2f49b860bbfe173b46848cf7d092c7cf587b1344"
+  },
+  "earlierWholeOriginalSuite": {
+    "passed": 70,
+    "total": 71,
+    "evidenceSha256": "535d293502152c0c099d0865f3fb7ffb33a85e8dd8be6fa522f84d08c1907bd7",
+    "kind": "historical build record; the successor admission hashes the original signature-class JUnit and the separate normalized full JUnit"
+  },
+  "verification": {
+    "typecheck": true,
+    "focusedEslint": true,
+    "prettier": true,
+    "ownedCompilerContainersRemaining": 0,
+    "admissionRunSha256": "45528cce1be36477ec35c18449f01cae936e6f3a7c7df8fa615c62592e3114ed"
+  },
+  "defaultWorkerSwitched": false,
+  "deployed": false,
+  "releaseAccepted": false,
+  "remaining": [
+    "Broader exact-image runtime acceptance",
+    "Open LaTeX and OCR advisories",
+    "Main production-image scan and SBOM",
+    "Formal release approval"
+  ],
+  "rollback": {
+    "checks": {
+      "imageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+      "flagOffUnitHttpBoundary": "pass",
+      "stoppedOwnedContainerRefusesAdmission": "pass",
+      "exactOwnedContainerRemoved": "pass",
+      "sameProcessRetainsQuarantine": "pass",
+      "freshProcessCompile": "pass",
+      "pdfBytes": 14077,
+      "pages": 2,
+      "pdfSha256": "d649b6b2bedbd7622f95a919e994b40ece49c1df268bc1a4c98ba07756c32926",
+      "ownedContainersRemaining": 0
+    },
+    "commandOutputSha256": "a558399d80688cbecb7e6246f3a758c6a1ef1fb3ff7bd445409b89c9ae924bbc",
+    "sourceSha256": "d3e69b7749db55527928e62344addbe2d57604e6b3dea3037396ac2d34bfce6c"
+  }
+}

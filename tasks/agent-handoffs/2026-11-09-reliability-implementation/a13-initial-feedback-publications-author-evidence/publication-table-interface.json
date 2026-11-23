@@ -1,0 +1,160 @@
+{
+  "table": "private.initial_feedback_publications",
+  "columns": [
+    {
+      "name": "id",
+      "type": "uuid",
+      "nullable": false
+    },
+    {
+      "name": "operation_id",
+      "type": "uuid",
+      "nullable": false
+    },
+    {
+      "name": "attempt_id",
+      "type": "uuid",
+      "nullable": true
+    },
+    {
+      "name": "analysis_id",
+      "type": "uuid",
+      "nullable": false
+    },
+    {
+      "name": "owner_id",
+      "type": "uuid",
+      "nullable": false
+    },
+    {
+      "name": "organization_id",
+      "type": "uuid",
+      "nullable": false
+    },
+    {
+      "name": "resume_id",
+      "type": "uuid",
+      "nullable": false
+    },
+    {
+      "name": "resume_version_id",
+      "type": "uuid",
+      "nullable": false
+    },
+    {
+      "name": "run_id",
+      "type": "uuid",
+      "nullable": true
+    },
+    {
+      "name": "state",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "reason",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "binding_sha256",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "completion",
+      "type": "jsonb",
+      "nullable": false
+    },
+    {
+      "name": "completion_sha256",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "publication_core",
+      "type": "jsonb",
+      "nullable": false
+    },
+    {
+      "name": "publication_sha256",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "receipt",
+      "type": "jsonb",
+      "nullable": false
+    },
+    {
+      "name": "render",
+      "type": "jsonb",
+      "nullable": true
+    },
+    {
+      "name": "plan_sha256",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "render_sha256",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "support_sha256",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "capture_sha256",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "result_content_sha256",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "writer_content_sha256",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "run_content_sha256",
+      "type": "text",
+      "nullable": true
+    },
+    {
+      "name": "finish_lease",
+      "type": "jsonb",
+      "nullable": false
+    },
+    {
+      "name": "process_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "request_id",
+      "type": "text",
+      "nullable": false
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "nullable": false
+    }
+  ],
+  "unique": [
+    "id",
+    "operation_id",
+    "attempt_id",
+    "analysis_id",
+    "run_id"
+  ],
+  "runLink": "run_id public.analysis_ai_runs(id); actual same operation/attempt/owner/org/analysis/usage verified by native factory",
+  "publicationSha256": "native SHA256(publication_core::text UTF8), excludes receipt",
+  "purpose": "finish_lease captures actual native-admitted original worker tuple, including null-attempt deterministic-only replay after queue movement"
+}

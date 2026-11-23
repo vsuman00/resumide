@@ -1,0 +1,74 @@
+{
+  "status": "BOOTSTRAP_VERIFIED_COMPARISON_PENDING",
+  "createdAt": "2026-11-06T05:18:47.103883+00:00",
+  "candidateImageId": null,
+  "baselineImageId": "sha256:600c3815bdf12a4e3df6d332c0aea11685fd122f0fc3240b7be3c802fd23bf4f",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "retainedTemporaryDirectory": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-trivy-compare-zlk290na",
+  "temporaryDirectoryMode": "0o700",
+  "temporaryBytes": 3477491558,
+  "scanner": {
+    "version": "0.76.2",
+    "assetUrl": "https://github.com/aquasecurity/trivy/releases/download/v0.76.2/trivy_0.76.2_macOS-ARM64.tar.gz",
+    "assetSha256": "ae7ea358326960406b703c77b2ac490190797d80b306b5b50c2a27221da0a5b8",
+    "assetBytes": 49840394,
+    "binarySha256": "7a15c426f963473a485a4f315e21f8e2c881269d500bf0de35da13a4421fa108"
+  },
+  "databaseBootstrap": [
+    {
+      "kind": "db",
+      "exitCode": 0,
+      "durationSeconds": 9.4,
+      "repository": "ghcr.io/aquasecurity/trivy-db@sha256:fb417a88061be7d8c246c61cd56e73c91040574fb8cb7b74c48f7a2ea5c2f92f"
+    },
+    {
+      "kind": "java-db",
+      "exitCode": 0,
+      "durationSeconds": 32.94,
+      "repository": "ghcr.io/aquasecurity/trivy-java-db@sha256:a48270d8181f59baed801e34d73e0857558570c51c9a582eaa3999e897c210e4"
+    }
+  ],
+  "databases": {
+    "db": {
+      "metadata": {
+        "Version": 2,
+        "NextUpdate": "2026-11-07T01:07:43.832839854Z",
+        "UpdatedAt": "2026-11-06T01:07:43.832840315Z",
+        "DownloadedAt": "2026-11-06T05:09:34.224564Z"
+      },
+      "bytes": 1686421504,
+      "sha256": "acc7850179a48dbe868f97eb59ea186510800ade8ee815392fa2e7b26875c22d",
+      "matchesHistoricalDatabase": true
+    },
+    "java-db": {
+      "metadata": {
+        "Version": 1,
+        "NextUpdate": "2026-11-09T01:10:43.741478889Z",
+        "UpdatedAt": "2026-11-06T01:10:43.741478979Z",
+        "DownloadedAt": "2026-11-06T05:10:07.133077Z"
+      },
+      "bytes": 1572696064,
+      "sha256": "7124b5d89aa910c1c79b7cbdd35903ab940762f6ebb27729e558fb197f9ae1db",
+      "matchesHistoricalDatabase": true
+    }
+  },
+  "historicalDatabaseReceipt": "AA7_IMAGE_CVE_20261106.json",
+  "imageArchivesCreated": false,
+  "scansExecuted": 0,
+  "pendingReason": "Coordinator reported two candidate build attempts blocked by pinned Debian snapshot HTTP 503/504; no final candidate image ID exists. This agent did not run or recheck those builds.",
+  "resumeInstructions": [
+    "Do not redownload or requery versions/tags while this verified cache remains intact.",
+    "Inspect current coordinator handoff/build receipts and obtain the confirmed candidate image ID.",
+    "Verify task directory ownership/mode and tool/database hashes before use.",
+    "Save baseline and confirmed candidate archives by exact image ID without container execution or registry lookup.",
+    "Run both scans sequentially with the same retained cache and identical options under macOS sandbox-exec deny network*.",
+    "Use archive inputs, cleared environment, isolated HOME/TMPDIR/cwd, telemetry/version checks disabled, offline dependency identification and all DB/check/VEX updates skipped.",
+    "Retain all findings and exact exit codes without suppressing high/critical or unfixed findings.",
+    "Save complete comparison receipts before exact task-owned temporary cleanup."
+  ],
+  "privacy": "Public tool/database bootstrap only; no image, SBOM, document or project source uploaded. No project dependency/lockfile or production file changed.",
+  "cleanup": {
+    "status": "RETAINED_PENDING_CANDIDATE",
+    "scope": "Only the exact task-owned 0700 directory listed above; no active scan/download process remains."
+  }
+}

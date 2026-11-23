@@ -1,54 +1,83 @@
 import {
+  data,
   Form,
   redirect,
   useActionData,
   useLoaderData,
   useNavigation,
+  type HeadersFunction,
 } from "react-router";
 import type { Route } from "./+types/account";
 import WorkspaceShell from "~/components/WorkspaceShell";
-import { getAuthenticatedUser } from "~/lib/server/auth";
+import { authResponseHeaders, getAuthenticatedUser } from "~/lib/server/auth";
 import { createSupabaseServerClient } from "~/lib/server/supabase";
 import { assertSameOrigin } from "~/lib/server/security";
 import { getServerConfig } from "~/lib/server/config";
 
-async function requireRouteUser(request: Request, headers: Headers) {
-  const user = await getAuthenticatedUser(
-    createSupabaseServerClient(request, headers),
-  );
-  if (!user) throw redirect("/auth?next=/account", { headers });
-  return user;
+export const headers: HeadersFunction = () => authResponseHeaders();
+
+async function requireAccountSession(request: Request, headers: Headers) {
+  const client = createSupabaseServerClient(request, headers);
+  const user = await getAuthenticatedUser(client);
+  if (!user)
+    throw redirect("/auth?next=/account", {
+      headers: authResponseHeaders(headers),
+    });
+  return { client, user };
 }
 
 export async function loader({ request }: Route.LoaderArgs) {
   const headers = new Headers();
-  const user = await requireRouteUser(request, headers);
-  return {
-    email: user.email ?? "Email unavailable",
-    createdAt: user.created_at,
-    lastSignInAt: user.last_sign_in_at ?? null,
-  };
+  const { user } = await requireAccountSession(request, headers);
+  return data(
+    {
+      email: user.email ?? "Email unavailable",
+      createdAt: user.created_at,
+      lastSignInAt: user.last_sign_in_at ?? null,
+    },
+    { headers: authResponseHeaders(headers) },
+  );
 }
 
 export async function action({ request }: Route.ActionArgs) {
   assertSameOrigin(request, getServerConfig().APP_ORIGIN);
   const headers = new Headers();
-  const user = await requireRouteUser(request, headers);
+  const { client } = await requireAccountSession(request, headers);
   const formData = await request.formData();
   if (formData.get("action") !== "sign-out-others") {
-    return { error: "Choose a valid account action." };
+    return data(
+      { error: "Choose a valid account action.", success: null },
+      { status: 400, headers: authResponseHeaders(headers) },
+    );
   }
 
-  const { error } = await createSupabaseServerClient(
-    request,
-    headers,
-  ).auth.signOut({
-    scope: "others",
-  });
-  if (error) return { error: "Other sessions could not be signed out." };
-  return {
-    success: `Other sessions for ${user.email ?? "this account"} were signed out.`,
-  };
+  const failed = () =>
+    data(
+      {
+        error: "We could not confirm sign-out on other devices. Try again.",
+        success: null,
+      },
+      { status: 503, headers: authResponseHeaders(headers) },
+    );
+  try {
+    // getUser already authenticated the request. Read only its current token
+    // and require the logout endpoint to acknowledge the scoped revocation.
+    const { data: sessionData, error: sessionError } =
+      await client.auth.getSession();
+    const token = sessionData.session?.access_token;
+    if (sessionError || !token) return failed();
+    const { error } = await client.auth.admin.signOut(token, "others");
+    if (error) return failed();
+  } catch {
+    return failed();
+  }
+  return data(
+    {
+      error: null,
+      success: "Other sessions will end when their current access expires.",
+    },
+    { headers: authResponseHeaders(headers) },
+  );
 }
 
 export function meta() {
@@ -112,8 +141,8 @@ export default function Account() {
           <p className="workspace-eyebrow">Session security</p>
           <h2 id="session-heading">Manage sessions</h2>
           <p>
-            Sign out other active sessions if you no longer recognize a device.
-            This browser stays signed in.
+            Sign out on other devices while keeping this browser signed in.
+            Other devices may keep access until their current session expires.
           </p>
           <Form method="post">
             <button

@@ -1,0 +1,199 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import {
+  createInitialFeedbackPublicationPolicy,
+  encodeInitialFeedbackPublicationPolicy,
+  hashInitialFeedbackPublicationPolicy,
+  validateInitialFeedbackPublicationPolicy,
+  InitialFeedbackPublicationPolicySchema,
+  INITIAL_FEEDBACK_POLICY_ATOM_ORDER,
+  INITIAL_FEEDBACK_POLICY_HEADER,
+  INITIAL_FEEDBACK_PUBLICATION_PROMPT_VERSION,
+} from "../../app/lib/server/initial-feedback-publication-policy";
+import { LEGACY_SCORING_INPUT_PROFILE } from "../../app/lib/server/legacy-scoring-input-profile";
+import { INITIAL_FEEDBACK_PLAN_PROFILE } from "../../app/lib/server/initial-feedback-plan-profile";
+import { DEFAULT_OPENAI_MODEL } from "../../app/lib/server/openai-model";
+import { parseAnalysisConfig } from "../../app/lib/server/config";
+import { WRITING_SUPPORT_POLICY_VERSION } from "../../app/lib/server/writing-support";
+const args = {
+  model: DEFAULT_OPENAI_MODEL,
+  maxOutputTokens: 1200,
+  attemptLimit: 1,
+  budgetPolicyVersion: null,
+};
+const descriptor = () => {
+  const { sha256, ...d } = createInitialFeedbackPublicationPolicy(args);
+  return { d, sha256 };
+};
+describe("publication source policy, no registry selection/provider", () => {
+  it("derives frozen dependencies and requires explicit technical inputs", () => {
+    const p = createInitialFeedbackPublicationPolicy(args);
+    expect(p.scoringInputProfile).toEqual(LEGACY_SCORING_INPUT_PROFILE);
+    expect(p.planProfile).toEqual(INITIAL_FEEDBACK_PLAN_PROFILE);
+    expect(p.writingSupportPolicyVersion).toBe(WRITING_SUPPORT_POLICY_VERSION);
+    expect(() => createInitialFeedbackPublicationPolicy({})).toThrow();
+    expect(() =>
+      createInitialFeedbackPublicationPolicy({ ...args, enabled: true }),
+    ).toThrow();
+    expect(
+      Object.isFrozen(p) &&
+        Object.isFrozen(p.scoringInputProfile) &&
+        Object.isFrozen(p.planProfile),
+    ).toBe(true);
+  });
+  it("uses exact27-atom UTF8 framing, not JSON serialization", () => {
+    const { d, sha256 } = descriptor();
+    const atoms = [
+      d.version,
+      d.provider,
+      d.model,
+      d.promptVersion,
+      String(d.maxOutputTokens),
+      String(d.attemptLimit),
+      d.budgetPolicyVersion,
+      d.supportVersion,
+      d.supportSha256,
+      d.planVersion,
+      d.planSha256,
+      d.writingSupportPolicyVersion,
+      d.scoringInputProfile.schemaVersion,
+      d.scoringInputProfile.profileVersion,
+      d.scoringInputProfile.checkerSha256,
+      d.scoringInputProfile.readerSha256,
+      d.scoringInputProfile.finishSha256,
+      d.scoringInputProfile.contextSha256,
+      d.scoringInputProfile.exportSha256,
+      d.scoringInputProfile.metadataSha256,
+      d.planProfile.schemaVersion,
+      d.planProfile.profileVersion,
+      d.planProfile.policyVersion,
+      d.planProfile.policySha256,
+      d.planProfile.checkerSha256,
+      d.planProfile.rendererSha256,
+      d.planProfile.metadataSha256,
+    ];
+    const expected = Buffer.from(
+      "INITIAL-FEEDBACK-POLICY/1\n" +
+        atoms
+          .map((v) =>
+            v === null ? "N;" : `T${Buffer.byteLength(v, "utf8")}:${v};`,
+          )
+          .join(""),
+      "utf8",
+    );
+    expect(INITIAL_FEEDBACK_POLICY_ATOM_ORDER).toHaveLength(27);
+    expect(INITIAL_FEEDBACK_POLICY_HEADER).toBe("INITIAL-FEEDBACK-POLICY/1\n");
+    expect(encodeInitialFeedbackPublicationPolicy(d)).toEqual(expected);
+    expect(sha256).toBe(createHash("sha256").update(expected).digest("hex"));
+    expect(sha256).not.toBe(
+      createHash("sha256").update(JSON.stringify(d)).digest("hex"),
+    );
+    expect(sha256).toBe(
+      "5f5eace5226885c3bbaf6c430e656034edbb3f12e42ffa4634faffd8f94619ca",
+    );
+  });
+  it("ignores input property order while retaining every value", () => {
+    const { d, sha256 } = descriptor();
+    const reverse = (v: unknown): unknown =>
+      Array.isArray(v)
+        ? v.map(reverse)
+        : v && typeof v === "object"
+          ? Object.fromEntries(
+              Object.entries(v)
+                .reverse()
+                .map(([k, x]) => [k, reverse(x)]),
+            )
+          : v;
+    expect(hashInitialFeedbackPublicationPolicy(reverse(d))).toBe(sha256);
+  });
+  it("distinguishes null budget mode from string null and explicit synthetic on policy", () => {
+    const off = createInitialFeedbackPublicationPolicy(args),
+      on = createInitialFeedbackPublicationPolicy({
+        ...args,
+        budgetPolicyVersion: "synthetic-budget-policy/1",
+      }),
+      literal = createInitialFeedbackPublicationPolicy({
+        ...args,
+        budgetPolicyVersion: "null",
+      });
+    expect(on.sha256).toBe(
+      "fd7f080752a0aaddd1f9330aa27f2c8bad7daee0feb342030105258c5713de8a",
+    );
+    expect(new Set([off.sha256, on.sha256, literal.sha256]).size).toBe(3);
+  });
+  it.each([
+    { model: "GPT-6-luna" },
+    { maxOutputTokens: 256 },
+    { attemptLimit: 2 },
+  ])("does not normalize technical changes %j", (delta) => {
+    expect(
+      createInitialFeedbackPublicationPolicy({ ...args, ...delta }).sha256,
+    ).not.toBe(createInitialFeedbackPublicationPolicy(args).sha256);
+  });
+  it.each([
+    { maxOutputTokens: 255 },
+    { maxOutputTokens: 8001 },
+    { attemptLimit: 0 },
+    { attemptLimit: 4 },
+    { model: "bad model" },
+    { model: "bad\uD800" },
+    { model: "bad\0name" },
+    { budgetPolicyVersion: "" },
+  ])("refuses unsupported parameters %j", (delta) => {
+    expect(() =>
+      createInitialFeedbackPublicationPolicy({ ...args, ...delta }),
+    ).toThrow();
+  });
+  it("matches current source output/attempt bounds and exact prompt", () => {
+    for (const value of [256, 8000]) {
+      expect(
+        parseAnalysisConfig({
+          OPENAI_API_KEY: "synthetic-offline",
+          OPENAI_MAX_OUTPUT_TOKENS: String(value),
+        }).OPENAI_MAX_OUTPUT_TOKENS === value,
+      ).toBe(true);
+      expect(
+        createInitialFeedbackPublicationPolicy({
+          ...args,
+          maxOutputTokens: value,
+        }).maxOutputTokens,
+      ).toBe(value);
+    }
+    for (const value of [1, 3])
+      expect(
+        parseAnalysisConfig({
+          OPENAI_API_KEY: "synthetic-offline",
+          QUALITATIVE_MAX_ATTEMPTS: String(value),
+        }).QUALITATIVE_MAX_ATTEMPTS === value,
+      ).toBe(true);
+    const stage = readFileSync(
+      new URL("../../app/lib/server/qualitative-stage.ts", import.meta.url),
+      "utf8",
+    );
+    expect(stage).toContain(
+      `export const PROMPT_VERSION = "${INITIAL_FEEDBACK_PUBLICATION_PROMPT_VERSION}";`,
+    );
+  });
+  it("rejects drifted source profiles, changed hashes and unknown nested fields safely", () => {
+    const p = createInitialFeedbackPublicationPolicy(args);
+    for (const bad of [
+      { ...p, sha256: "0".repeat(64) },
+      { ...p, model: "bad model" },
+      { ...p, extra: true },
+      {
+        ...p,
+        scoringInputProfile: {
+          ...p.scoringInputProfile,
+          readerSha256: "0".repeat(64),
+        },
+      },
+      { ...p, planProfile: { ...p.planProfile, extra: true } },
+    ])
+      expect(
+        InitialFeedbackPublicationPolicySchema.safeParse(bad).success,
+      ).toBe(false);
+    expect(validateInitialFeedbackPublicationPolicy(p)).toEqual(p);
+    expect(() => hashInitialFeedbackPublicationPolicy(p)).toThrow();
+  });
+});

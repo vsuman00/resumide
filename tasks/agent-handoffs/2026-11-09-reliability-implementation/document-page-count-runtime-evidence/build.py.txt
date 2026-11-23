@@ -1,0 +1,144 @@
+from pathlib import Path
+import re,json,hashlib
+r=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats');out=Path('/private/tmp/resumide-document-page-count-runtime'); sha=lambda s:hashlib.sha256(s.encode()).hexdigest()
+# Text-only body extraction. No SQL parser/execution.
+def definition(file,name):
+ s=(r/'supabase/migrations'/file).read_text();m=re.search(r'create(?: or replace)? function '+re.escape(name)+r'\((.*?)\)\s*returns\s+(.*?)\bas\s+(\$[\w]*\$)(.*?)\3\s*;',s,re.I|re.S)
+ assert m,(file,name)
+ return m[4],m[2],m[1]
+old4,_,_=definition('20261018072430_ocr_fusion_resource_profile.sql','public.persist_document_evidence')
+stage,_,stageargs=definition('20261110082455_analysis_stage_write_fencing.sql','public.persist_analysis_stage_v2')
+originalstage=stage
+old="""    keys:=array['p_analysis_id','p_envelope','p_process_id','p_request_id'];
+    strings:=array['p_analysis_id','p_process_id','p_request_id'];
+    if jsonb_typeof(p_parameters->'p_envelope') is distinct from 'object' then return false; end if;"""
+new=old+"""
+    if p_parameters ? 'p_page_count' then
+      keys:=keys||array['p_page_count'];
+      if not private.analysis_stage_integer(p_parameters->'p_page_count')
+        or (p_parameters->>'p_page_count')::integer not between 1 and 20 then return false;end if;
+    end if;"""
+assert stage.count(old)==1;stage=stage.replace(old,new)
+old="""      result:=public.persist_document_evidence(p_analysis_id,p_parameters->'p_envelope',p_parameters->>'p_process_id',p_parameters->>'p_request_id');"""
+new="""      if p_parameters ? 'p_page_count' then
+        result:=public.persist_document_evidence(p_analysis_id,p_parameters->'p_envelope',p_parameters->>'p_process_id',p_parameters->>'p_request_id',
+          (p_parameters->>'p_page_count')::integer);
+      else
+"""+old+"\n      end if;"
+assert stage.count(old)==1;stage=stage.replace(old,new)
+writer='''
+declare
+  a public.analyses%rowtype;
+  v public.resume_versions%rowtype;
+  prior public.document_evidence_attempts%rowtype;
+  page jsonb; ordinal integer:=0; affected integer;
+begin
+  if p_analysis_id is null or p_page_count is null or p_page_count not between 1 and 20
+    or jsonb_typeof(p_envelope) is distinct from 'object'
+    or jsonb_typeof(p_envelope->'nativeSource'->'pages') is distinct from 'array'
+    or jsonb_array_length(p_envelope->'nativeSource'->'pages')<>p_page_count then return false;end if;
+  -- The independently declared extractor count is an input, never inferred from
+  -- the envelope. Every native page (including blank pages) must agree with it.
+  for page in select e.value from jsonb_array_elements(p_envelope->'nativeSource'->'pages') e(value) loop
+    ordinal:=ordinal+1;
+    if page->>'id' is distinct from 'page-'||ordinal::text
+      or jsonb_typeof(page->'pageNumber') is distinct from 'number'
+      or page->>'pageNumber' is distinct from ordinal::text then return false;end if;
+  end loop;
+  select * into a from public.analyses where id=p_analysis_id for update;
+  if not found or a.status not in ('extracting','needs_ocr','scoring','qualitative_review','partial','completed') then return false;end if;
+  if not private.try_candidate_privacy_write(a.owner_id) then return false;end if;
+  perform 1 from public.memberships m where m.organization_id=a.organization_id and m.user_id=a.owner_id
+    and m.role in ('owner','admin','member') for share skip locked;
+  if not found then return false;end if;
+  select * into v from public.resume_versions where id=a.resume_version_id
+    and owner_id=a.owner_id and organization_id=a.organization_id for no key update skip locked;
+  if not found or p_envelope->>'ownerId' is distinct from a.owner_id::text
+    or p_envelope->>'analysisId' is distinct from a.id::text
+    or p_envelope->>'sourceId' is distinct from v.id::text
+    or p_envelope->>'inputSha256' is distinct from v.checksum
+    or (v.page_count is not null and v.page_count<>p_page_count) then return false;end if;
+  perform 1 from public.resumes root where root.id=v.resume_id and root.owner_id=a.owner_id
+    and root.organization_id=a.organization_id and root.status='active' for share skip locked;
+  if not found then return false;end if;
+  select * into prior from public.document_evidence_attempts where id=(p_envelope->>'id')::uuid;
+  -- A legacy replay with unknown source metadata cannot manufacture an extractor
+  -- observation. A fresh validated extraction/attempt is required instead.
+  if found and v.page_count is null then return false;end if;
+  -- The outer exception block encloses every write, including legacy writes that
+  -- might return false. Raising on refusal is essential for atomic rollback.
+  if public.persist_document_evidence(p_analysis_id,p_envelope,p_process_id,p_request_id) is not true then
+    raise exception 'DOCUMENT_PAGE_COUNT_REFUSED' using errcode='P0P01';end if;
+  if v.page_count is null then
+    update public.resume_versions set page_count=p_page_count
+      where id=v.id and owner_id=a.owner_id and organization_id=a.organization_id
+        and resume_id=v.resume_id and checksum=v.checksum and page_count is null;
+    get diagnostics affected=row_count;
+    if affected<>1 then raise exception 'DOCUMENT_PAGE_COUNT_REFUSED' using errcode='P0P01';end if;
+  end if;
+  if not private.try_candidate_privacy_write(a.owner_id) then
+    raise exception 'DOCUMENT_PAGE_COUNT_REFUSED' using errcode='P0P01';end if;
+  return true;
+exception when others then return false;
+end;
+'''
+# Resolve fixed reviewed source forms only, retaining each terminal body.
+bodies={};attrs={};provenance={}
+for p in sorted((r/'supabase/migrations').glob('*.sql')):
+ if p.name=='20261117060054_document_evidence_page_count.sql':continue
+ s=p.read_text()
+ for m in re.finditer(r'create(?: or replace)? function ((?:public|private)\.[\w]+)\((.*?)\)\s*returns\s+(.*?)\bas\s+(\$[\w]*\$)(.*?)\4\s*;',s,re.I|re.S):
+  name=m[1];bodies[name]=m[5];attrs[name]=m[3];provenance[name]=[p.name,'CREATE body']
+ for tag in dict.fromkeys(re.findall(r'\$([A-Za-z_][\w]*)\$',s)):
+  match=re.search(r'\$'+re.escape(tag)+r'\$(.*?)\$'+re.escape(tag)+r'\$',s,re.S)
+  try:items=json.loads(match[1])
+  except (ValueError,TypeError):continue
+  if not isinstance(items,list):continue
+  for x in items:
+   if not isinstance(x,dict)or'signature'not in x:continue
+   name=x['signature'].split('(')[0]
+   if name not in bodies:continue
+   if 'old'in x and 'new'in x and 'after'in x:
+    assert sha(x['old'])==x['before'] and sha(x['new'])==x['after'];bodies[name]=x['new'];provenance[name]=[p.name,'guarded whole-body literal']
+   elif 'patches'in x:
+    for patch in x['patches']:
+     if bodies[name].count(patch['old'])==patch.get('count',1):bodies[name]=bodies[name].replace(patch['old'],patch['new']);provenance[name]=[p.name,'fixed textual patch']
+# Concrete evidence old function is latest full CREATE, untouched by later patches.
+assert bodies['public.persist_document_evidence']==old4
+assert bodies['public.persist_analysis_stage_v2']==originalstage
+bodies['public.persist_analysis_stage_v2']=stage
+names=['public.persist_document_evidence','public.persist_analysis_stage_v2','private.analysis_stage_parameter_keys','private.analysis_stage_integer','private.analysis_stage_strings','private.lock_analysis_stage_lease','private.try_candidate_privacy_write','private.candidate_write_blocked','private.candidate_owner_lock_keys','private.evidence_keys','private.evidence_integer','private.evidence_number']
+signatures={'public.persist_document_evidence':'uuid,jsonb,text,text','public.persist_analysis_stage_v2':'uuid,text,integer,uuid,text,jsonb','private.analysis_stage_parameter_keys':'jsonb,text[]','private.analysis_stage_integer':'jsonb','private.analysis_stage_strings':'jsonb,text[]','private.lock_analysis_stage_lease':'uuid,text,integer,uuid','private.try_candidate_privacy_write':'uuid','private.candidate_write_blocked':'uuid','private.candidate_owner_lock_keys':'uuid[]','private.evidence_keys':'jsonb,text[]','private.evidence_integer':'jsonb,bigint,bigint','private.evidence_number':'jsonb,numeric,numeric'}
+manifest=[]
+for n in names:
+ assert n in bodies,n
+ a=attrs[n].lower();manifest.append({'signature':n+'('+signatures[n]+')','sha256':sha(bodies[n]),'definer':'security definer'in a,'volatility':'i'if'immutable'in a else 's'if'stable'in a else'v','language':'sql'if re.search(r'language\s+sql\b',a)else'plpgsql','resultType':'bigint[]'if n.endswith('candidate_owner_lock_keys')else'boolean','acl':'worker'if n.startswith('public.')else'private'})
+manifest.append({'signature':'public.persist_document_evidence(uuid,jsonb,text,text,integer)','sha256':sha(writer),'definer':True,'volatility':'v','language':'plpgsql','resultType':'boolean','acl':'worker'})
+prefix="""-- SOURCE ONLY / UNPARSED / UNEXECUTED. Forward migration; no backfill,
+-- flag activation, target admission or runtime acceptance is supplied here.
+begin;
+
+"""
+prefix+=f"""do $page_count_preflight$
+begin
+ if not exists(select 1 from pg_catalog.pg_proc where oid=to_regprocedure('public.persist_document_evidence(uuid,jsonb,text,text)')
+   and encode(extensions.digest(convert_to(prosrc,'UTF8'),'sha256'),'hex')='{sha(old4)}')
+   or not exists(select 1 from pg_catalog.pg_proc where oid=to_regprocedure('public.persist_analysis_stage_v2(uuid,text,integer,uuid,text,jsonb)')
+   and encode(extensions.digest(convert_to(prosrc,'UTF8'),'sha256'),'hex')='{sha(originalstage)}') then
+  raise exception 'DOCUMENT_PAGE_COUNT_SOURCE_DRIFT' using errcode='23514';end if;
+end;
+$page_count_preflight$;
+
+create function public.persist_document_evidence(
+ p_analysis_id uuid,p_envelope jsonb,p_process_id text,p_request_id text,p_page_count integer
+) returns boolean language plpgsql security definer set search_path='' as $page_count_writer${writer}$page_count_writer$;
+
+create or replace function public.persist_analysis_stage_v2({stageargs})
+returns boolean language plpgsql security definer set search_path='' as $page_count_dispatcher${stage}$page_count_dispatcher$;
+
+"""
+(out/'bodies.json').write_text(json.dumps({n:{'sha256':sha(bodies[n]),'body':bodies[n],'provenance':provenance[n]}for n in names},indent=2)+'\n')
+(out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+(out/'prefix.sql.txt').write_text(prefix)
+(r/'supabase/migrations/20261117060054_document_evidence_page_count.sql').write_text(prefix)
+print('prefix',len(prefix),sha(prefix),'manifest',len(manifest))

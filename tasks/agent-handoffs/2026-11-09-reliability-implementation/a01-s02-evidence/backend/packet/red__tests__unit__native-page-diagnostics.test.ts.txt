@@ -1,0 +1,100 @@
+import { describe, expect, it, vi } from "vitest";
+import { buildNativeEvidence } from "../../app/lib/server/native-evidence";
+import { reconcileDocumentEvidence } from "../../app/lib/server/document-evidence";
+import {
+  loadEvidenceReview,
+  type EvidenceReviewClient,
+} from "../../app/lib/server/evidence-review";
+
+const context = {
+  id: "10000000-0000-4000-8000-000000000001",
+  ownerId: "10000000-0000-4000-8000-000000000002",
+  analysisId: "10000000-0000-4000-8000-000000000003",
+  sourceId: "10000000-0000-4000-8000-000000000004",
+  inputSha256: "a".repeat(64),
+  createdAt: "2026-11-13T00:00:00.000Z",
+  retentionPolicyId: "synthetic-local-30d/1.0.0",
+};
+
+function storedReview(pageTexts: string[]) {
+  const evidence = reconcileDocumentEvidence(
+    context,
+    buildNativeEvidence(pageTexts),
+  );
+  const rows = [
+    {
+      id: context.analysisId,
+      owner_id: context.ownerId,
+      resume_version_id: context.sourceId,
+    },
+    {
+      id: context.id,
+      analysis_id: context.analysisId,
+      owner_id: context.ownerId,
+      resume_version_id: context.sourceId,
+      input_sha256: context.inputSha256,
+      attempt_number: 1,
+      envelope: evidence,
+    },
+    null,
+  ];
+  const from = vi.fn(() => {
+    const data = rows.shift();
+    const chain = {
+      select: vi.fn(() => chain),
+      eq: vi.fn(() => chain),
+      order: vi.fn(() => chain),
+      limit: vi.fn(() => chain),
+      abortSignal: vi.fn(() => chain),
+      maybeSingle: vi.fn(async () => ({ data, error: null })),
+    };
+    return chain;
+  });
+  const client = { from } as unknown as EvidenceReviewClient;
+  return loadEvidenceReview(client, context.analysisId, context.ownerId);
+}
+
+describe("owned native page review diagnostics", () => {
+  it("reports replacement characters despite eight-unit native availability", async () => {
+    const review = await storedReview(["\uFFFD".repeat(8)]);
+    expect(review).toMatchObject({
+      scoringEligible: false,
+      nativePageDiagnostics: {
+        modelVersion: "native-page-review/1.0.0",
+        reliability: "unassessed",
+        pages: [
+          {
+            pageId: "page-1",
+            pageNumber: 1,
+            nativeTextAvailable: true,
+            nonWhitespaceUtf16Units: 8,
+            reasons: ["replacement_character"],
+            duplicatePageIds: [],
+          },
+        ],
+      },
+    });
+  });
+
+  it("reports exact duplicate readable native pages without promoting reliability", async () => {
+    const review = await storedReview(["Native page text", "Native page text"]);
+    expect(review).toMatchObject({
+      scoringEligible: false,
+      nativePageDiagnostics: {
+        reliability: "unassessed",
+        pages: [
+          {
+            pageId: "page-1",
+            reasons: ["duplicate_native_page_text"],
+            duplicatePageIds: ["page-2"],
+          },
+          {
+            pageId: "page-2",
+            reasons: ["duplicate_native_page_text"],
+            duplicatePageIds: ["page-1"],
+          },
+        ],
+      },
+    });
+  });
+});

@@ -1,0 +1,158 @@
+{
+  "id": "CR-R18-S17",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "status": "VERIFIED_LOCAL_OPT_IN_PACKAGE_REMOVAL_AND_IMAGE_SCAN",
+  "predecessorImageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+  "candidateImageId": "sha256:32cc4de5007d97d56cc355e435411227c1e0de64b13f3d084960381b2b63a38a",
+  "localCandidateTag": "resumide-latex:local-without-openssl-cli-64bbce299794",
+  "productionDefaultChanged": false,
+  "deployed": false,
+  "sourceHashes": {
+    "scripts/latex-runtime/optional-openssl-purge/Dockerfile": "36a3078270a44852eb333497ff33b09c529d356f7564c7a54e10f505f7871f2d",
+    "scripts/latex-runtime/optional-openssl-purge/purge.py": "abdbdb0d2057ecd3c97c9255e1245873b805391b8b6782dbeeebeaea0fad411c"
+  },
+  "simulation": {
+    "fileSha256": "99b3a4f30de5ac5bfb3141ae108828a618834fd670698cd34412c9d79b765618",
+    "observations": {
+      "xdg-utils": {
+        "exit": 0,
+        "changes": [
+          "Purg texlive-xetex [2024.20250309-1]",
+          "Purg texlive-latex-extra [2024.20250309-2]",
+          "Purg texlive-pictures [2024.20250309-1]",
+          "Purg texlive-base [2024.20250309-1] [texlive-latex-base:arm64 texlive-fonts-recommended:arm64 texlive-latex-recommended:arm64 ]",
+          "Purg texlive-fonts-recommended [2024.20250309-1] [texlive-latex-base:arm64 texlive-latex-recommended:arm64 ]",
+          "Purg tipa [2:1.3-21] [texlive-latex-base:arm64 texlive-latex-recommended:arm64 ]",
+          "Purg texlive-latex-recommended [2024.20250309-1] [texlive-latex-base:arm64 ]",
+          "Purg texlive-latex-base [2024.20250309-1]",
+          "Purg xdg-utils [1.2.1-2]"
+        ]
+      },
+      "openssl": {
+        "exit": 0,
+        "changes": [
+          "Purg ca-certificates [20250419+deb13u1]",
+          "Purg openssl [3.5.7-1~deb13u3]"
+        ]
+      },
+      "libsqlite3-0": {
+        "exit": 100,
+        "changes": []
+      },
+      "libtiff6": {
+        "exit": 0,
+        "changes": [
+          "Purg poppler-utils [25.03.0-5+deb13u4+resumide2]",
+          "Purg libpoppler147 [25.03.0-5+deb13u4+resumide2]",
+          "Purg libtiff6 [4.7.0-3+deb13u3]"
+        ]
+      },
+      "libxi6": {
+        "exit": 0,
+        "changes": [
+          "Purg texlive-xetex [2024.20250309-1]",
+          "Purg texlive-latex-extra [2024.20250309-2]",
+          "Purg texlive-pictures [2024.20250309-1]",
+          "Purg texlive-base [2024.20250309-1] [texlive-latex-base:arm64 texlive-fonts-recommended:arm64 texlive-latex-recommended:arm64 ]",
+          "Purg tipa [2:1.3-21] [texlive-latex-base:arm64 texlive-fonts-recommended:arm64 texlive-latex-recommended:arm64 ]",
+          "Purg texlive-latex-recommended [2024.20250309-1] [texlive-latex-base:arm64 texlive-fonts-recommended:arm64 ]",
+          "Purg texlive-binaries [2024.20240313.70630+ds-6] [texlive-latex-base:arm64 texlive-fonts-recommended:arm64 ]",
+          "Purg libxi6 [2:1.8.2-1] [texlive-latex-base:arm64 texlive-fonts-recommended:arm64 ]",
+          "Purg texlive-fonts-recommended [2024.20250309-1] [texlive-latex-base:arm64 ]",
+          "Purg texlive-latex-base [2024.20250309-1]"
+        ]
+      },
+      "gpg": {
+        "exit": 0,
+        "changes": [
+          "Purg poppler-utils [25.03.0-5+deb13u4+resumide2]",
+          "Purg libpoppler147 [25.03.0-5+deb13u4+resumide2]",
+          "Purg libgpgmepp6t64 [1.24.2-3+deb13u1]",
+          "Purg libgpgme11t64 [1.24.2-3+deb13u1]",
+          "Purg gpg [2.4.7-21+deb13u1+b5]"
+        ]
+      }
+    }
+  },
+  "build": {
+    "receipt": {
+      "removed": ["ca-certificates", "openssl"],
+      "retainedPackages": 209,
+      "sealedFilesVerified": 1974,
+      "unchangedElfGraphs": [
+        "python3",
+        "xetex",
+        "xdvipdfmx",
+        "pdftotext",
+        "pdfsig"
+      ],
+      "cryptoPackagesRetained": ["libssl3t64", "openssl-provider-legacy"]
+    },
+    "filesystemEntriesPerLayer": [27557, 0],
+    "removedCliAndBundleAbsentFromAllSavedLayers": true,
+    "buildLogSha256": "be13a194561b1d81821b2c1bd04c0195d7cf8bc52564df86f43a95db7da0cd7c"
+  },
+  "verification": {
+    "byteMatchedStarters": 6,
+    "byteMatchedChromeDownloads": 3,
+    "pdfPolicyGroupsPassed": 3,
+    "compilerContainersRemaining": 0,
+    "focusedTestsPassed": 123,
+    "typecheck": "pass",
+    "check:latex:source": "pass"
+  },
+  "scanner": {
+    "archive": {
+      "imageId": "sha256:32cc4de5007d97d56cc355e435411227c1e0de64b13f3d084960381b2b63a38a",
+      "configDigest": "sha256:a631051130918e3d9763daa15181413a4918213c192c18794bbb129b2363f30f",
+      "archiveSha256": "d082c762794ca55f88b856e743a355aac50a036503814f06252b5fb7bf39c06c",
+      "archiveBytes": 238450176,
+      "databaseHashes": {
+        "db/trivy.db": "d2dffa97d0215c2033c810802488b1b1bc27a105ef52eb7d76a7713f4d2d590b",
+        "db/metadata.json": "c1fdcc933890714ac0e89b24fe20b9482e4d57a5bb8dcfa5e8451f091fe3b1e9",
+        "java-db/trivy-java.db": "c37684e9e526820eb11f5b2713c086210f2b704d669aeeacde64e7f1de1f284c",
+        "java-db/metadata.json": "eb518b5b49ffdaf9b0c445d97fbc3b198c08898e13a3e620ff5ad66cbac2917c"
+      },
+      "rawSha256": "acd91e39d6b1e04ef12ebc14f305558bf89ff547cf9484cc83132cd386b8c272",
+      "elapsedSeconds": 4.295
+    },
+    "samePinnedDatabasesVerifiedUnchanged": true,
+    "scannerVersion": "0.76.2",
+    "firstAttempt": "A single 32 MiB process file ceiling also constrained decompression. The retry used the reviewed 2 GiB scratch file ceiling and kept the emitted streams bounded to 32 MiB.",
+    "initialFailureLogSha256": "39e659ad524dc688380f49302c72644ace1d3257122cc973b60293faac6d3a98",
+    "rawMatches": 932,
+    "rawHigh": 83,
+    "openHighAfterVerifiedExpatFixes": 79,
+    "rawCritical": 0,
+    "removedBySeverity": {
+      "HIGH": 1,
+      "MEDIUM": 7,
+      "LOW": 4
+    },
+    "addedMatches": 0,
+    "report": "docs/evaluation/RESUMIDE_WORKER_TRIVY_20261122_LATEX_NO_OPENSSL_CLI_ARM64.json.gz",
+    "reportSha256": "7c6c1cad23d8e4b2217de695a9c3a424758b10afe0f2f27a37fe8efd42666246",
+    "sbom": {
+      "imageId": "sha256:32cc4de5007d97d56cc355e435411227c1e0de64b13f3d084960381b2b63a38a",
+      "file": "docs/evaluation/RESUMIDE_LATEX_WORKER_SBOM_20261122_NO_OPENSSL_CLI_ARM64.cdx.json",
+      "sha256": "f5e272b6aa57304c7d6ad3810494f0372e662498e7ef84b15ca16536ff1657d2",
+      "packages": 213,
+      "osMetadataComponents": 1,
+      "allReportPackagePurlsMatch": true,
+      "schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
+      "skippedOptionalFormats": ["iri-reference", "idn-email"],
+      "schemas": {
+        "bom-1.7.schema.json": "71152f97948eeeca2fd4a1434a9d29aab35d377be11828b504d029dfeeb1925a",
+        "cryptography-defs.schema.json": "95897594e42f7229523fd7a03272da284e0591b1c49550a8b62a355df6357249",
+        "jsf-0.82.schema.json": "2faf5eb3651f2ae5f46091a131770d8d847bbd121139d19c85fc7051bfa58c46",
+        "spdx.schema.json": "33863a360fc4d348e183d89c1ca7aa0877f481e7eb55be2d4102a30386188a10"
+      }
+    }
+  },
+  "open": [
+    "OpenSSL libraries remain installed and their advisories remain open.",
+    "The system CA bundle is absent. Full certificate trust and signature-suite verification were not run.",
+    "Remaining advisories, managed verification and release acceptance remain open."
+  ]
+}

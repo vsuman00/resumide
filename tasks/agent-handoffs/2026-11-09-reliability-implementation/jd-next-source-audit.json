@@ -1,0 +1,59 @@
+{
+  "status": "SOURCE_AUDIT_ONLY_NO_REPRODUCTION_OR_ADOPTION",
+  "at": "2026-11-10T19:03:52.329369+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "A09": {
+    "finding": "Current stored reader/writer admits only frozen legacy requirements/1.0.0 parser/RPC; typed A07/A08 relation model is intentionally nonpersistable. Legacy replay omits producer/mapping/relation policy and typed expression/bounds semantics.",
+    "sources": [
+      "app/lib/server/job-requirement-repository.ts:199,230-265",
+      "app/lib/server/job-requirements.ts:748",
+      "legacy save_job_requirements SQL replay identity:73-77"
+    ],
+    "requiredContract": [
+      "New explicit stored producer/envelope; retain legacy parser/schema/RPC and dual historical reader",
+      "Store exact raw quotes/Unicode spans/mapping and relation policy hashes/typed expressions/bounds/unknown clauses",
+      "Server stable-reference semantic codec excludes regenerated IDs/time from replay; samekey equal semantics returns originalreceipt, changedsemantics/policy conflicts withoutheadrewind",
+      "Owner mutex/currentprivacy admission, freshheadCAS and atomicversion/item/audit",
+      "New capability flag defaultoff, dependent JOB_INTELLIGENCE_ENABLED; typed consumers must use exact version/policy or abstain rather than score a flattened subset"
+    ],
+    "proposedBackendFiles": [
+      "new job-requirement-admission.ts",
+      "job-requirement-repository.ts",
+      "new admission unit tests",
+      "new actual repository tests",
+      "backend handoff"
+    ],
+    "proposedSeparateRootRuntimeScope": [
+      "shared strict storage/admission contract and consumer interface",
+      "default-off config/.env-example/tests",
+      "ordered forward-only SQL migration, SQL-contract test and source-only rollback verifier"
+    ],
+    "firstProposedRegression": "Actual existing reader rejects a synthetic explicit new stored row; no missing-import failure. Then actual writer dispatch is still legacy. Both NOT_RUN.",
+    "native": "All SQL source review/parsing/application/directRPC/concurrency/role/cleanup gates remain unexecuted; no A09 implementation allocated."
+  },
+  "U04": {
+    "findings": [
+      {
+        "source": "app/routes/analysis.requirements.tsx:183-192",
+        "gap": "Historical selected JD still offers Save against current head, while writer reparses current source text."
+      },
+      {
+        "source": "app/lib/server/authoring-repository.ts:187-190; app/routes/analysis.score.tsx:145-150",
+        "gap": "Current canonical plus historical selected JD can still expose authoring edits because editable checks canonical head only."
+      },
+      {
+        "source": "app/lib/server/authoring-contract.ts:25-53,143-145,254-306; authoring-repository.ts:333-340",
+        "gap": "Proposal/command identity is canonical-bound but lacks explicit JD version/fingerprint; acceptance loads current JD."
+      },
+      {
+        "source": "AuthoringWorkspace.tsx:416,427-447; analysis.author.tsx:77-85",
+        "gap": "Focus/GET navigation and success redirect drop selected input-pair selectors."
+      }
+    ],
+    "existingFloors": "Score read model records/hashes/rechecks both versions and expected heads. Canonical stale writes remain fenced and exact prior receipts replay before fresh-head checks. Numbers remain withheld.",
+    "allocatedIndependentLeaf": "u04-history-allocation.json: historical JD view readonly only",
+    "unallocatedRemaining": "Full authoring pair admission, selector preservation and JD-only stale proposal proof require reviewed A09/A15 interface. Clarification is fact/canonical-only; JD invalidation semantics need explicit decision, not inferred."
+  },
+  "A10": "a10-declaration-contract.json authorizes diagnostic-only producer1.0.2 leaf; no score persistence or C02 registration. Actual regression pending.",
+  "externalOperations": 0
+}

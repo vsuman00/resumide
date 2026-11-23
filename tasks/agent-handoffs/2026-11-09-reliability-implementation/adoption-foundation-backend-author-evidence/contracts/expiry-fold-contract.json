@@ -1,0 +1,60 @@
+{
+  "status": "FROZEN",
+  "version": "owned-ai-expiry/1",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Implement the actual atomic due accounting fold and exact personal-row removal, paired global read/admission safety, a strict bounded one-shot worker and source tests. This is a staged source implementation of ADR-0020, not retention/runtime/launch acceptance.",
+  "boundary": "Existing source/synthetic/fake RPC only; pinned Node22.23.4 sealed empty HOME with OS network/root dotenv/Git-write denial. No SQL parser/execution/DB/actual env/keys/PII/provider/services/browser/compiler/OCR/Docker/deps/Git mutation/deploy. Installed SupabaseCLI2.117.0 migration-new only after exact allocation.",
+  "invariants": [
+    "Original account/root deadlines and their minimum never extend; never infer historical clocks or zero unknown usage.",
+    "Fold validated legacy/A12/A13 shared-quota partition once into original UTC month. Keep R03 tokens/cost separate; preserve unresolved exposure and unreconciled overage fencing. No refund or extra dispatch from erasure.",
+    "No owner/org/op/attempt/run/actor/request IDs, nonce, payload/evidence hash, exact event time, selector or per-subject receipt may remain in retained aggregate or purge output. Month-only numeric aggregate is separate from a global owner-free snapshot floor.",
+    "Fold, all selected relational removals and required safety blocks share one transaction. Ambiguous retry finds no eligible personal row; never another personal dedup marker or separate credit-then-purge phase.",
+    "Use locked real disposition/closure authority, never custom GUC/arbitrary client Boolean/reason. Preserve consistent owner/source/month locking and fail atomically on incomplete ownership, closure, consent/source/admission, count or provenance.",
+    "Global safety blocks cover original-period known usage through UTC period end when attribution is erased; unresolved exposure stays blocked beyond expiry. Affected arbitrary-since/org usage queries refuse fixed unavailable rather than returning global totals or dropping charges.",
+    "Actual foreign-actor sanitization, restrictive Auth/org cleanup, old exports/object cleanup, scheduler/deadline monitoring and independent restore floor remain mandatory adoption dependencies. Missing paired authority refuses the entire fold, never partial erasure or success. Do not invent approval, transfer policy, external proof, automatic reconciliation or a destructive grant.",
+    "All new data and destructive RPCs denied by default. Only readiness metadata may be service-readable. No feature flag, configuration, commercial pricing, policy/model/rate, old migration, frozen policy/schema descriptor or existing assertion changes outside exact allocation."
+  ],
+  "wire": {
+    "metadataRpc": "read_owned_ai_expiry_readiness",
+    "metadataKeys": [
+      "schemaVersion",
+      "profileVersion",
+      "schemaReady",
+      "foldExecutable",
+      "checkerSha256",
+      "sweepSha256",
+      "metadataSha256"
+    ],
+    "metadataSchemaVersion": "owned-ai-expiry-readiness/1.0.0",
+    "profileVersion": "owned-ai-expiry-profile/1.0.0",
+    "profileKeys": [
+      "schemaVersion",
+      "profileVersion",
+      "checkerSha256",
+      "sweepSha256",
+      "metadataSha256"
+    ],
+    "sweepRpc": "sweep_owned_ai_expiry",
+    "sweepArgs": {
+      "p_limit": "integer 1..100"
+    },
+    "sweepKeys": [
+      "schemaVersion",
+      "selectedCount",
+      "foldedCount",
+      "blockedCount",
+      "deadlineBreached"
+    ],
+    "sweepSchemaVersion": "owned-ai-expiry-sweep/1.0.0",
+    "counts": "All counts safe integers 0..limit; selectedCount=foldedCount+blockedCount. No per-owner output. Any overdue/deadline breach must be visible, including an already overdue item successfully folded; cannot report a 30-day guarantee.",
+    "privateCore": "private.expire_owned_ai_disposition(p_owner_id uuid) -> jsonb, fixed folded/not_pending only; errors roll back. Source-retired and account scopes must preserve unrelated active roots/owners.",
+    "worker": "Strict exact profile/metadata/wire matching, fresh readiness before one sweep; forward cancellation, bounded timeout, no automatic retry on uncertain commit. Refuse missing/denied schema/profile/capability. Explicit --execute one-shot CLI only; no live execution or scheduler activation. Deadline breach/blocked work is a failed result with content-free counts, not successful cleanup."
+  },
+  "tests": [
+    "Real predecessor missing-fold/admission regression before implementation; retain failed receipts.",
+    "Actual migration text closure/pin authority, atomic producer removal with folds, no personal aggregates/receipts, strict default ACL; source evidence does not prove SQL.",
+    "Original month/late known/unknown/overage, linked dedup, live-retained conflict, missing clock/authority, cross-owner, ambiguous retry and late-selector refusal remain acceptance requirements.",
+    "Worker exact keys/digests/counts/limits, pre-abort/timeout/uncertain result, zero sweep on denied readiness, one call only, no logs/PII and no false completion on blocked/breach.",
+    "Never skip/delete assertions/lower thresholds or mirror a fake SQL engine as Native proof. Any wider dependency profile/fixture amendments need exact observed proposal before edits."
+  ]
+}

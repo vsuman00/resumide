@@ -1,0 +1,82 @@
+{
+  "status": "PASS_DOCUMENTATION_ONLY",
+  "date": "2026-11-09",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "canonicalTasks": 64,
+  "uncheckedTasks": 64,
+  "uniqueProposalsMapped": 62,
+  "gapClosureCategories": 15,
+  "dependencyGraph": "ACYCLIC_ALL_KNOWN",
+  "linksChecked": 155,
+  "linkErrors": [],
+  "proseChecks": "prose-checks.json",
+  "sourceStability": "source-stability.json",
+  "applicationTestsRun": false,
+  "providerCalls": 0,
+  "databaseOperations": 0,
+  "dockerOperations": 0,
+  "implementationAuthorized": false,
+  "pricing": "DEFERRED_ALL_SERVICES_FREE",
+  "deployment": "HOLD",
+  "secretPatternScan": "NO_MATCHES_IN_SCOPED_PROSE",
+  "documentCheckAttempts": [
+    {
+      "attempt": 1,
+      "result": "FAILED",
+      "cause": "Link checker ran before creating its own pending verification.json target. No application test ran.",
+      "fix": "Create pending receipt before validating links, require every link to exist, then replace with actual check outcomes."
+    },
+    {
+      "attempt": 2,
+      "result": "PASS"
+    }
+  ],
+  "reviewDispositions": [
+    {
+      "reviewer": "pricing_backend",
+      "finding": "Keep PDF-only upload scope explicit",
+      "resolution": "DOCX is export or unsupported-input rejection coverage."
+    },
+    {
+      "reviewer": "pricing_frontend",
+      "finding": "Manual export cannot depend on AI generation",
+      "resolution": "Removed CR-A14 prerequisite from CR-U18; G01 retains AI-edited export coverage."
+    },
+    {
+      "reviewer": "pricing_frontend",
+      "finding": "Selected OAuth needs explicit backend leaves",
+      "resolution": "U13 must allocate bounded backend delivery/dependencies before provider UI work; no feasibility-only closure."
+    },
+    {
+      "reviewer": "pricing_validation",
+      "finding": "Scoped worker test cannot close global lifecycle",
+      "resolution": "R11/G01 require actual unscoped lifecycle in approved isolated managed target."
+    },
+    {
+      "reviewer": "pricing_validation",
+      "finding": "Separate local image test suitability and final advisories",
+      "resolution": "Early inventory/admission required before R14; final R18 disposition runs alongside testing; release requirements retained."
+    }
+  ],
+  "documentHashes": {
+    "tasks/reliability-remediation-plan.md": "3b75fa721317dab432b5d3954547fe8f824835fbf99525522af6686fe3bfa309",
+    "tasks/plan.md": "e4f6d9eec309ddbd958e14fbf15cdb049642ba5ea6b286119e1c8f1592c058c6",
+    "tasks/todo.md": "1b631594957a7cda789b92521b5ce53d3ea7d7e057e577c26c2eb2852b6c5834",
+    "CONTEXT.md": "633614432ee87e9387421da8fbc7c46aee03c4c21eaeca9203f60f047ff0ccdd",
+    "tasks/agent-handoffs/2026-11-09-reliability-plan/coordinator.md": "0cc96e982b7c5542b06b8238e819c63790d06627b27a29b497486391c97d10fd",
+    "tasks/agent-handoffs/2026-11-09-reliability-plan-ats.md": "05197cdec0d34af98caf76dd4a42be4d0ec2684d224310f80a7176c63a676430",
+    "tasks/agent-handoffs/2026-11-09-reliability-plan-frontend.md": "2ce2ae86b24e0ec73afa7eaef9b7546571793ce7e2c54a0ab7f220bd566bf8a2",
+    "tasks/agent-handoffs/2026-11-09-reliability-plan-runtime.md": "436a240fa1b6f65afb376f32169ce9c6c5dd68966f8189253602143067c0af8d",
+    "tasks/reliability-remediation-plan.json": "815e54613a6ee278e93db132ef268295806ae53757a99b13da57d99beedadde1"
+  },
+  "formatting": {
+    "runtime": "Node.js 22.23.4",
+    "checker": "Prettier --check, 12 scoped files",
+    "status": "PASS",
+    "initialFinding": "Generated prose-checks.json needed JSON formatting; formatted that receipt and reran the same scoped check successfully."
+  },
+  "diffCheck": {
+    "command": "git diff --check -- <scoped planning paths>",
+    "exitCode": 0
+  }
+}

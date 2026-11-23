@@ -1,0 +1,72 @@
+{
+  "id": "CR-R14-S12",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_EXACT_IMAGE_BOUNDARIES",
+  "evidenceTier": "Source admission, actual immutable local worker and independent PDF.js reading",
+  "priorAdmission": {
+    "file": "cr-r14-local-pdf-primary-admission.json",
+    "sha256": "afdfc6b82faf8ede045e36690c1992d5c3457a7efae7f83c258981f14df31231"
+  },
+  "verifier": {
+    "imageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "profile": "focused-boundaries",
+    "checks": [
+      {
+        "name": "source-byte-limit-plus-one",
+        "pass": true,
+        "sourceBytes": 49153,
+        "code": "source_too_large"
+      },
+      {
+        "name": "exact-source-and-page-limits",
+        "pass": true,
+        "sourceBytes": 49152,
+        "pages": 10,
+        "pdfBytes": 7352,
+        "pdfSha256": "b173256b37619ab71c05a30c11adf19ecf7c242bca680af1d8a09305abe00948"
+      },
+      {
+        "name": "page-limit-plus-one",
+        "pass": true,
+        "requestedPages": 11,
+        "code": "output_invalid"
+      },
+      {
+        "name": "same-process-boundary-recovery",
+        "pass": true,
+        "pages": 1,
+        "pdfSha256": "104d11e29abee18ee390bc48b84ba38f32cb8957d65aea2353a25b993c025523"
+      }
+    ],
+    "checksExecuted": 4
+  },
+  "ownedConverterContainersRemaining": 0,
+  "syntheticTests": {
+    "filesPassed": 5,
+    "passed": 121
+  },
+  "typecheck": "pass",
+  "check:latex:source": "pass",
+  "sourceHashes": {
+    "app/lib/latex-converter.ts": "79801197c4c7c91957f1391141659780dcf463a89a824b2fab0bf5d87ed79a25",
+    "app/lib/server/latex-source.ts": "10e3975858dbd91a7de04724d2cf452d358364ce11cf840aaa0bbd9b3496116f",
+    "app/lib/server/latex-sandbox.ts": "100252a580c6fe5579040b2e99253b710517ba7a117a691c2b0694305af41096",
+    "scripts/verify-latex-boundaries.ts": "9d08363cf70b44016076144e23280b55b4820487065d0d91c44cd8f9cf2724e7",
+    "scripts/verify-latex-sandbox.ts": "fa270ba1facd050e67002e0ad31f2ef66c00c4df2aa8195dcc7487bcd23e7200",
+    "scripts/latex-test-fixtures.ts": "b32f859d8fe78364257882a2134a82c66c5903be5f4ba19e5bd22b919c5b8e52",
+    "tests/fixtures/latex.ts": "315c19667af0b54062a09b8db1b1ee05678daed701d34bb2ac28eabb66743de6",
+    "package.json": "12a735d060152fd58edb8295987a8e9d38558954d3a8fb93f9db68822f592926"
+  },
+  "logHashes": {
+    "final": "346059e4144633c028d3d98eab4fd373307481f45750ee6e10eb16a9b3478bb9",
+    "tests": "baff940bcf028582bb04920ff0b8fefdc577d1101eb7c337b46355dbfacbc75d",
+    "types": "b63c0de51fcb1526e23a41bde9c50d3e1af56b2b08d9bfe50e3d977251642455",
+    "source": "d776806e187eca963fdefcf38f373b00add5ba121afdc2841112e7f3d25cbb9a"
+  },
+  "open": [
+    "The 5 MiB PDF output boundary was not exercised on this worker.",
+    "Broader runtime and release acceptance remain open."
+  ]
+}

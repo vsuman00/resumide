@@ -1,0 +1,473 @@
+import { useId } from "react";
+import type { RequirementCoverage } from "~/lib/server/requirement-coverage";
+
+type Available = Extract<RequirementCoverage, { state: "available" }>;
+type Operand = Available["clauses"][number]["operands"][number];
+type Witness = Available["witnesses"][number];
+const observationLabels = {
+  satisfied: "Bounded support observed",
+  partially_satisfied: "Some related evidence",
+  candidate_confirmation_required: "Current source claim needs confirmation",
+  not_evidenced: "Support not established",
+  not_applicable: "Not applicable",
+  not_evaluated: "Not evaluated",
+};
+const tierLabels = {
+  listed: "Listed skill",
+  source_contribution: "Source contribution claim",
+  candidate_responsibility: "Candidate responsibility declaration",
+  dated_use: "Dated skill-use claim",
+};
+function DurationObservation({
+  duration,
+}: {
+  duration: NonNullable<Operand["duration"]>;
+}) {
+  const { minimum, maximum } = duration.durationDays;
+  return (
+    <div>
+      <p>
+        Claimed calendar coverage:{" "}
+        {minimum === maximum ? minimum : `${minimum}–${maximum}`} days after
+        combining overlapping intervals. The word “to” does not specify whether
+        the last day is included.
+      </p>
+      <p>
+        Duration comparison:{" "}
+        {duration.state === "satisfied"
+          ? "the stated bound is supported by the claimed intervals"
+          : duration.state === "not_satisfied"
+            ? "the claimed intervals do not establish the stated bound"
+            : "uncertain at the calendar or endpoint boundary"}
+        . This does not establish full-time work, proficiency or independent
+        verification.
+      </p>
+    </div>
+  );
+}
+function WitnessReview({
+  witness,
+  base,
+  versionId,
+}: {
+  witness: Witness;
+  base: string;
+  versionId: string;
+}) {
+  const citations = witness.sourceClause
+    ? [witness.sourceClause.citation]
+    : witness.currentSourceCitations;
+  return (
+    <article id={witness.id} className="account-card">
+      <h4>
+        {tierLabels[witness.tier]}: {witness.skill.value}
+      </h4>
+      <p>
+        {witness.basis === "source_quote"
+          ? "Basis: quoted source claim, not independently verified."
+          : "Basis: your recorded declaration, not independent source support."}
+      </p>
+      <blockquote>{witness.clause.value}</blockquote>
+      {witness.confirmation ? (
+        <p>
+          Current fact confirmation recorded on{" "}
+          <time dateTime={witness.confirmation.confirmedAt}>
+            {witness.confirmation.confirmedAt}
+          </time>
+          .
+        </p>
+      ) : (
+        <p>No candidate confirmation is recorded for this current fact.</p>
+      )}
+      {witness.sourceClause && (
+        <p>
+          The complete clause is reconstructed from cited source fragments. A
+          confirmation of one fragment applies only to that current fact, not to
+          the complete clause.
+        </p>
+      )}
+      {witness.interval && (
+        <p>
+          {witness.interval.claim === "source_reported"
+            ? "Source-reported"
+            : "Candidate-declared"}{" "}
+          interval:{" "}
+          <time dateTime={witness.interval.startDate}>
+            {witness.interval.startDate}
+          </time>{" "}
+          to{" "}
+          <time dateTime={witness.interval.endDate}>
+            {witness.interval.endDate}
+          </time>
+          . End-day inclusion is unspecified.
+        </p>
+      )}
+      <p>
+        <a
+          href={`${base}/canonical?version=${versionId}#fact-${witness.factId}`}
+        >
+          Inspect this current fact in the pinned resume version
+        </a>
+      </p>
+      {citations.length > 0 && (
+        <ul aria-label="Source citations">
+          {citations.map((citation, index) => (
+            <li key={`${citation.spanId}:${citation.start}:${index}`}>
+              <a
+                href={`${base}/evidence#source-${encodeURIComponent(citation.spanId)}`}
+              >
+                Review source workspace:{" "}
+                {citation.method === "native_text"
+                  ? "native text"
+                  : "local OCR"}
+              </a>
+              <details>
+                <summary>Source reference details</summary>
+                <p>
+                  Page <code>{citation.pageId}</code>; span{" "}
+                  <code>{citation.spanId}</code>; quoted characters{" "}
+                  {citation.start} to {citation.end}; attempt{" "}
+                  <code>{citation.attemptId}</code>.
+                </p>
+              </details>
+            </li>
+          ))}
+        </ul>
+      )}
+      <details>
+        <summary>Claim provenance and interpretation</summary>
+        <p>
+          Fact: <code>{witness.factId}</code>. Claim: <code>{witness.id}</code>.
+        </p>
+        <p>
+          Skill matching:{" "}
+          {witness.skill.identity.kind === "literal_only"
+            ? "exact literal only; no synonym concept inferred"
+            : `${witness.skill.identity.mappingKind === "alias" ? "approved alias" : "exact concept spelling"} (${witness.skill.identity.canonicalValue})`}
+          .
+        </p>
+        <p>
+          Confirmation scope: current fact only. Claim text offsets refer to{" "}
+          {witness.offsetSpace === "source_span"
+            ? "the complete source span"
+            : "the current fact"}
+          .
+        </p>
+        {witness.observedOrigin && (
+          <>
+            <p>
+              {witness.observedOrigin.versionId === versionId
+                ? "Observed text in this pinned resume version:"
+                : "Earlier observed text, retained as provenance:"}
+            </p>
+            <blockquote>{witness.observedOrigin.value}</blockquote>
+            <p>
+              {witness.observedOrigin.versionId === versionId
+                ? "Pinned resume version:"
+                : "Earlier resume version:"}{" "}
+              <code>{witness.observedOrigin.versionId}</code>.
+            </p>
+            {witness.observedOrigin.versionId !== versionId && (
+              <p>This earlier quote does not support newly declared text.</p>
+            )}
+          </>
+        )}
+      </details>
+    </article>
+  );
+}
+
+/** Read-only derived observations. It offers no correction or confirmation action. */
+export default function RequirementCoverageReview({
+  coverage,
+  analysisId,
+}: {
+  coverage: RequirementCoverage;
+  analysisId: string;
+}) {
+  const heading = useId();
+  const base = `/analysis/${analysisId}`;
+  if (coverage.state === "unavailable")
+    return (
+      <section aria-labelledby={heading} className="account-card">
+        <h2 id={heading}>Job requirement review</h2>
+        <p>
+          These requirement observations are unavailable. Review the saved
+          resume and job requirements. No conclusion about your qualifications
+          has been made.
+        </p>
+      </section>
+    );
+  return (
+    <section aria-labelledby={heading}>
+      <h2 id={heading}>Job requirement review</h2>
+      <p>
+        Read-only observations from the pinned resume and job requirements.
+        Every requirement remains unevaluated; the observations below do not
+        grant a score or establish proficiency. Missing or ambiguous evidence
+        does not mean you are unqualified.
+      </p>
+      <p>
+        Resume revision {coverage.binding.canonical.revision}; job requirements
+        revision {coverage.binding.requirements.revision}. Changes to other
+        versions do not update these observations.
+      </p>
+      <p>
+        <a
+          href={`${base}/canonical?version=${coverage.binding.canonical.versionId}`}
+        >
+          Open pinned resume version
+        </a>
+        {" · "}
+        <a
+          href={`${base}/requirements?version=${coverage.binding.requirements.versionId}`}
+        >
+          Open pinned job requirements
+        </a>
+      </p>
+      <section aria-label="Job requirement clauses">
+        <h3>Requirement clauses</h3>
+        {!coverage.clauses.length && (
+          <p>
+            No interpreted clauses are available. Preserved clauses below may
+            still need review.
+          </p>
+        )}
+        {coverage.clauses.map((clause) => (
+          <article key={clause.id} className="account-card">
+            <h4>
+              {clause.scope.importance === "unknown"
+                ? "Importance unknown"
+                : `${clause.scope.importance[0].toUpperCase()}${clause.scope.importance.slice(1)}`}{" "}
+              clause
+            </h4>
+            <blockquote>{clause.evidence.quote}</blockquote>
+            {clause.scopeHeading && (
+              <p>Job description heading: {clause.scopeHeading.quote}</p>
+            )}
+            {clause.durationSubjectInterpretation?.state === "derived" && (
+              <p>
+                The saved skill interpretation remains unresolved. This separate
+                reading links the stated duration to{" "}
+                {clause.durationSubjectInterpretation.subjectBinding ===
+                "single_operand"
+                  ? "the named skill"
+                  : clause.durationSubjectInterpretation.subjectBinding ===
+                      "each_operand"
+                    ? "each named skill separately"
+                    : "the explicit skill alternatives"}
+                . It does not change the saved job requirements.
+              </p>
+            )}
+            <p>
+              Evaluation: not evaluated. Bounded observation:{" "}
+              {observationLabels[clause.proposedState]}.
+            </p>
+            <p>{clause.explanation}</p>
+            {clause.scope.negated && (
+              <p>
+                This is a negated requirement; it has not been treated as
+                automatically satisfied.
+              </p>
+            )}
+            {clause.expressionKind === "all_of" && (
+              <p>The listed skills are required together.</p>
+            )}
+            {clause.expressionKind === "any_of" && (
+              <p>
+                The clause gives explicit alternatives; one supported
+                alternative may be relevant.
+              </p>
+            )}
+            {clause.expressionKind === "unknown" && (
+              <p>The clause interpretation remains unknown.</p>
+            )}
+            {clause.duplicateOf && (
+              <p>
+                This repeats an interpreted clause. Its source text is retained
+                without duplicate credit.
+              </p>
+            )}
+            <ul>
+              {clause.operands.map((operand) => (
+                <li key={operand.id}>
+                  <h5>{operand.value}</h5>
+                  <p>
+                    {observationLabels[operand.proposedState]}.{" "}
+                    {operand.explanation}
+                  </p>
+                  {operand.duplicateOf && (
+                    <p>
+                      This repeats the same skill; it is not extra evidence.
+                    </p>
+                  )}
+                  <p>
+                    Related claim types:{" "}
+                    {operand.tiers.length
+                      ? operand.tiers.map((tier) => tierLabels[tier]).join("; ")
+                      : "none admitted"}
+                    .
+                  </p>
+                  {operand.duration && (
+                    <DurationObservation duration={operand.duration} />
+                  )}
+                  <ul aria-label={`Claims related to ${operand.value}`}>
+                    {operand.matches.map((match) => (
+                      <li key={match.witnessId}>
+                        <a href={`#${match.witnessId}`}>
+                          Inspect related claim (
+                          {match.matchKind === "approved_alias"
+                            ? "approved alias"
+                            : "exact literal"}
+                          )
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                  <p>
+                    Showing {operand.matches.length} of{" "}
+                    {operand.matchingWitnessCount} related claims;{" "}
+                    {operand.additionalWitnessCount} additional claim references
+                    and {operand.additionalFactCount} additional fact references
+                    are not displayed.
+                  </p>
+                </li>
+              ))}
+            </ul>
+            <details>
+              <summary>Clause references</summary>
+              <p>
+                Saved expression:{" "}
+                {clause.storedExpressionKind.replaceAll("_", " ")}; displayed
+                reading: {clause.expressionKind.replaceAll("_", " ")}.
+              </p>
+              {clause.durationSubjectInterpretation && (
+                <p>
+                  Duration interpretation:{" "}
+                  {clause.durationSubjectInterpretation.reason.replaceAll(
+                    "_",
+                    " ",
+                  )}
+                  .
+                </p>
+              )}
+              <p>
+                Clause identifier: <code>{clause.id}</code>.{" "}
+                {clause.sourceRequirementIds.length} mapped requirement
+                record(s).
+              </p>
+              <p>
+                JD source <code>{clause.evidence.spanId}</code>, characters{" "}
+                {clause.evidence.start} to {clause.evidence.end}.
+              </p>
+            </details>
+          </article>
+        ))}
+      </section>
+      <section aria-label="Preserved uninterpreted clauses">
+        <h3>Preserved clauses needing review</h3>
+        <p>
+          These original clauses remain visible even when no requirement records
+          could be mapped.
+        </p>
+        {coverage.retainedClauses.length ? (
+          coverage.retainedClauses.map((clause, index) => (
+            <article
+              key={`${clause.evidence.spanId}:${clause.evidence.start}:${index}`}
+            >
+              <blockquote>{clause.evidence.quote}</blockquote>
+              <p>
+                {clause.importance === "unknown"
+                  ? "Importance unknown"
+                  : clause.importance}
+                ; {clause.negated ? "negated clause" : "no recorded negation"}.{" "}
+                {clause.requirementIds.length} mapped requirement record(s).
+                Interpretation needs review.
+              </p>
+            </article>
+          ))
+        ) : (
+          <p>
+            No additional uninterpreted clauses were retained. This does not
+            establish complete requirement coverage.
+          </p>
+        )}
+      </section>
+      <section aria-label="Related resume claims">
+        <h3>Related resume claims</h3>
+        <p>
+          {coverage.witnessCounts.displayed} distinct claims displayed;{" "}
+          {coverage.witnessCounts.additionalMatching} additional matching claims
+          are not displayed. {coverage.witnessCounts.unmatched} recognized
+          claims do not match these requirements.
+        </p>
+        {coverage.witnesses.length ? (
+          coverage.witnesses.map((witness) => (
+            <WitnessReview
+              key={witness.id}
+              witness={witness}
+              base={base}
+              versionId={coverage.binding.canonical.versionId}
+            />
+          ))
+        ) : (
+          <p>No admitted related claims are available.</p>
+        )}
+        {coverage.semanticUnresolved.length > 0 && (
+          <p>
+            {coverage.semanticUnresolved.length} fact interpretations remain
+            unresolved. Review the pinned resume and source; their absence from
+            the claims above is not a qualification judgment.
+          </p>
+        )}
+      </section>
+      <details>
+        <summary>Input versions and interpretation policies</summary>
+        <p>
+          Resume: <code>{coverage.binding.canonical.versionId}</code>; revision{" "}
+          {coverage.binding.canonical.revision}; content{" "}
+          <code>{coverage.binding.canonical.contentSha256}</code>.
+        </p>
+        <p>
+          Job requirements:{" "}
+          <code>{coverage.binding.requirements.versionId}</code>; revision{" "}
+          {coverage.binding.requirements.revision}; input{" "}
+          <code>{coverage.binding.requirements.inputSha256}</code>; content{" "}
+          <code>{coverage.binding.requirements.contentSha256}</code>.
+        </p>
+        <p>
+          Source: <code>{coverage.binding.source.sourceId}</code>; input{" "}
+          <code>{coverage.binding.source.inputSha256}</code>; attempt{" "}
+          <code>{coverage.binding.attemptId}</code>.
+        </p>
+        <p>
+          Coverage policy: {coverage.policy.version};{" "}
+          <code>{coverage.policy.sha256}</code>.
+        </p>
+        <p>
+          Semantic policy: {coverage.policy.semanticVersion};{" "}
+          <code>{coverage.policy.semanticSha256}</code>.
+        </p>
+        <p>
+          Duration policy: {coverage.policy.durationVersion};{" "}
+          <code>{coverage.policy.durationSha256}</code>.
+        </p>
+        <p>
+          Duration subject policy: {coverage.policy.durationSubjectVersion};{" "}
+          <code>{coverage.policy.durationSubjectSha256}</code>.
+        </p>
+        <p>
+          Diagnostic digest: <code>{coverage.digest}</code>.
+        </p>
+        <p>Reader profiles:</p>
+        <ul>
+          {Object.entries(coverage.binding.profiles).map(([key, value]) => (
+            <li key={key}>
+              {key}: <code>{value}</code>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </section>
+  );
+}

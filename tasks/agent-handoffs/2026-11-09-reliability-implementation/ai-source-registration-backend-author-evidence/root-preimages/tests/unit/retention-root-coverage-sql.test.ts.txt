@@ -1,0 +1,401 @@
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { describe, expect, it } from "vitest";
+import {
+  INITIAL_FEEDBACK_PROFILE,
+  OWNED_AI_RETIREMENT_PROFILE,
+} from "../../app/lib/server/initial-feedback-profile";
+import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
+const read = (n: string) =>
+  readFileSync(new URL(`../../${n}`, import.meta.url), "utf8");
+const clock = read(
+  "supabase/migrations/20261115131621_owned_ai_disposition_clocks.sql",
+);
+const candidate = read(
+  "supabase/migrations/20261115143547_retention_root_coverage.sql",
+);
+const hash = (s: string) => createHash("sha256").update(s).digest("hex");
+type Patch = {
+  signature: string;
+  before: string;
+  after: string;
+  old: string;
+  new: string;
+};
+function block(s: string, n: string) {
+  const m = new RegExp(`\\$${n}\\$([\\s\\S]*?)\\$${n}\\$`).exec(s);
+  if (!m) throw Error("MISSING_DELIMITED_SOURCE");
+  return m[1];
+}
+function body(s: string, n: string) {
+  const escaped = n.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const m = new RegExp(
+    `create(?: or replace)? function ${escaped}\\([^;]*?\\bas\\s+(\\$[A-Za-z0-9_]*\\$)([\\s\\S]*?)\\1;`,
+  ).exec(s);
+  if (!m) throw Error("MISSING_SOURCE_BODY");
+  return m[2];
+}
+const originalPatches = JSON.parse(
+  block(clock, "disposition_patches"),
+) as Patch[];
+const patches = candidate
+  ? (JSON.parse(block(candidate, "r17_patches")) as Patch[])
+  : [];
+function original(n: string) {
+  const p = originalPatches.find((p) => p.signature.startsWith(n + "("));
+  if (p) return p.new;
+  if (n === "private.owned_ai_disposition_ready") return body(clock, n);
+  return body(
+    read(
+      n === "public.fail_retention_item"
+        ? "supabase/migrations/20260911110000_phase7_security_privacy_operations.sql"
+        : "supabase/migrations/20261115100607_owned_ai_retirement.sql",
+    ),
+    n,
+  );
+}
+function current(n: string) {
+  return (
+    patches.find((p) => p.signature.startsWith(n + "("))?.new ?? original(n)
+  );
+}
+describe("R17 actual source regressions; SQL unparsed/unexecuted", () => {
+  it("keeps deleted roots with missing version coverage eligible independently of failed items", () => {
+    const s = current("public.claim_expired_resume_objects");
+    expect(s).toContain("uncovered version inventory");
+    expect(s).toContain("enroll_count>=p_limit");
+    expect(s).toContain("return_count>=p_limit");
+  });
+  it("requires exact actual version coverage before final root deletion", () => {
+    const s = current("public.complete_retention_item");
+    expect(s).toContain("private.r17_root_covered");
+    expect(s.indexOf("private.r17_root_covered")).toBeLessThan(
+      s.indexOf("delete from public.resumes"),
+    );
+  });
+  it("does not resurrect a deleted item when a late removal failure arrives", () => {
+    const s = current("public.fail_retention_item");
+    expect(s).toContain("item_row.status='deleted' then return false");
+    expect(s).not.toContain(
+      "set status = 'failed', last_error_code = p_error_code\n  where id = p_item_id",
+    );
+  });
+  it("preserves first timestamps rather than requeueing a new enrollment event", () => {
+    const s = current("public.claim_expired_resume_objects");
+    expect(s).toContain("RETENTION_FIRST_CLOCK_REPAIR_REQUIRED");
+    expect(s).toContain("attempt_count=attempt_count+1");
+    expect(s).not.toContain("set created_at");
+  });
+});
+// Imported current profiles are tested against actual terminal postimages below
+// once the candidate exists; absence is never a missing-module RED.
+void INITIAL_FEEDBACK_PROFILE;
+void OWNED_AI_RETIREMENT_PROFILE;
+void OWNED_AI_DISPOSITION_PROFILE;
+void hash;
+
+describe("R17 composed source closure and guards, not Native execution", () => {
+  it("checks terminal preimages from the final clock successor and every actual new body pin", () => {
+    expect(patches).toHaveLength(6);
+    expect(new Set(patches.map((p) => p.signature)).size).toBe(6);
+    expect(hash(clock)).toBe(
+      "19e3d3c7f3d5dd996a13d504e3f675dc8c8957ec2c311f4bdea282a433abda11",
+    );
+    for (const p of patches) {
+      expect(p.old).toBe(original(p.signature.split("(")[0]));
+      expect(hash(p.old)).toBe(p.before);
+      expect(hash(p.new)).toBe(p.after);
+    }
+    for (const [n, pin] of [
+      [
+        "private.owned_ai_disposition_ready",
+        OWNED_AI_DISPOSITION_PROFILE.checkerSha256,
+      ],
+      [
+        "private.owned_ai_retirement_ready",
+        OWNED_AI_RETIREMENT_PROFILE.checkerSha256,
+      ],
+      [
+        "private.initial_feedback_ready",
+        INITIAL_FEEDBACK_PROFILE.checkerSha256,
+      ],
+    ])
+      expect(hash(current(n))).toBe(pin);
+    const catalog = JSON.parse(
+      block(
+        current("private.owned_ai_disposition_ready"),
+        "disposition_catalog",
+      ),
+    ) as Array<{ signature: string; sha256: string }>;
+    for (const p of patches.filter(
+      (p) => p.signature !== "private.owned_ai_disposition_ready()",
+    ))
+      expect(catalog.find((c) => c.signature === p.signature)?.sha256).toBe(
+        p.after,
+      );
+    for (const n of [
+      "private.r17_storage_key",
+      "private.r17_version_write_guard",
+      "private.r17_root_tombstone_guard",
+      "private.r17_lock_root",
+      "private.r17_root_covered",
+    ])
+      expect(catalog.find((c) => c.signature.startsWith(n + "("))?.sha256).toBe(
+        hash(body(candidate, n)),
+      );
+    expect(
+      patches.some((p) =>
+        /legacy_scoring|candidate_write_blocked|ifo_policy/u.test(p.signature),
+      ),
+    ).toBe(false);
+    expect(candidate).not.toContain(
+      "insert into private.owned_ai_disposition_catalogue_seal",
+    );
+  });
+  it("binds storage work to actual owned rows and freezes the enrolled/deleted key identity", () => {
+    const lock = body(candidate, "private.r17_lock_root"),
+      claim = current("public.claim_expired_resume_objects");
+    expect(lock).toContain(
+      "v.owner_id<>p_owner or v.organization_id<>root_row.organization_id",
+    );
+    expect(lock).toContain(
+      "v.storage_key is distinct from private.r17_storage_key",
+    );
+    expect(lock).toContain("t.resume_id<>p_root or t.owner_id<>p_owner");
+    expect(lock).toContain("for share skip locked");
+    expect(lock).toContain("locked<>expected");
+    expect(claim).toContain(
+      "on conflict on constraint retention_items_storage_key_key do nothing",
+    );
+    expect(claim).toContain("attempt_count,t.created_at,t.id limit p_limit");
+    expect(claim).toContain("'queued',0,enrolled_at");
+    expect(claim.indexOf("RETENTION_FIRST_CLOCK_REPAIR_REQUIRED")).toBeLessThan(
+      claim.indexOf("insert into private.retention_items"),
+    );
+    expect(claim).toContain("select min(t.created_at)");
+    expect(
+      claim.indexOf("private.capture_owned_ai_operation_dispositions"),
+    ).toBeLessThan(claim.indexOf("update public.resumes"));
+    expect(claim).not.toMatch(
+      /(?:count\(\*\)|expected|total)[^\n]*(?:>1000|>=1000)/u,
+    );
+  });
+  it("rejects post-tombstone inserts/updates in the DB while preserving legitimate active page-count updates", () => {
+    const guard = body(candidate, "private.r17_version_write_guard");
+    expect(guard).toContain("to_jsonb(new)-array['page_count','updated_at']");
+    expect(guard).toContain(
+      "r.id=new.resume_id and r.owner_id=new.owner_id and r.organization_id=new.organization_id and r.status='active'",
+    );
+    expect(guard).toContain("for share skip locked");
+    expect(guard).toContain(
+      "private.try_candidate_privacy_write(new.owner_id)",
+    );
+    expect(guard).toContain(
+      "new.storage_key is distinct from private.r17_storage_key",
+    );
+    expect(candidate).toContain(
+      "before insert or update on public.resume_versions",
+    );
+    expect(current("private.owned_ai_disposition_ready")).toContain(
+      "tgtype=23",
+    );
+  });
+  it("makes existing root tombstones permanent without changing old generic barrier handling", () => {
+    const g = body(candidate, "private.r17_root_tombstone_guard");
+    expect(g).toContain(
+      "old.status='deleted' and new.status is distinct from 'deleted'",
+    );
+    expect(candidate).toContain("before update on public.resumes");
+    expect(candidate).not.toContain("before insert on public.resumes");
+    expect(current("private.owned_ai_disposition_ready")).toContain(
+      "tgtype=19",
+    );
+    for (const [oldStatus, newStatus, denied] of [
+      ["deleted", "active", true],
+      ["deleted", null, true],
+      ["deleted", "other", true],
+      ["deleted", "deleted", false],
+      ["active", "deleted", false],
+      ["active", "active", false],
+    ] as const) {
+      expect(oldStatus === "deleted" && newStatus !== "deleted").toBe(denied);
+    }
+  });
+  it("keeps the privileged verifier deferred and checks a saved completion timestamp", () => {
+    const verifier = read("scripts/verify-retention-root-coverage.sql");
+    expect(verifier).toContain(
+      "PRIVILEGED MUTATING ROLLBACK-ONLY DRAFT. SQL UNPARSED/UNEXECUTED",
+    );
+    expect(verifier).toContain(
+      "select completed_at into strict first_completed_at",
+    );
+    expect(verifier).toContain("is not distinct from first_completed_at");
+    expect(verifier).toContain("get diagnostics claimed_count=row_count");
+    expect(verifier.trimEnd().endsWith("rollback;")).toBe(true);
+  });
+  it("re-reads terminal item state after owner acquisition before requiring a parent", () => {
+    for (const [n, terminal] of [
+      ["public.complete_retention_item", "true"],
+      ["public.fail_retention_item", "false"],
+    ]) {
+      const s = current(n),
+        owner = s.indexOf("private.try_lock_candidate_owners"),
+        reread = s.indexOf("select * into item_row"),
+        done = s.indexOf(
+          `if item_row.status='deleted' then return ${terminal}`,
+        ),
+        parent = s.indexOf("root_row:=private.r17_lock_root");
+      expect(owner).toBeGreaterThan(-1);
+      expect(reread).toBeGreaterThan(owner);
+      expect(done).toBeGreaterThan(reread);
+      expect(parent).toBeGreaterThan(done);
+      expect(s).toContain("for update skip locked");
+    }
+    const covered = body(candidate, "private.r17_root_covered"),
+      complete = current("public.complete_retention_item");
+    expect(covered).toContain(
+      "not exists(select 1 from public.resume_versions",
+    );
+    expect(covered).toContain(
+      "not exists(select 1 from private.retention_items",
+    );
+    expect(complete.match(/private\.r17_root_covered/gu)).toHaveLength(2);
+    expect(complete.indexOf("private.r17_root_covered")).toBeLessThan(
+      complete.indexOf("private.retire_initial_feedback_publications"),
+    );
+  });
+});
+
+type Item = {
+  key: string;
+  state: "queued" | "failed" | "deleted";
+  attempts: number;
+  createdAt: number;
+  completedAt: number | null;
+};
+// Independent target protocol oracle. It does NOT interpret or execute SQL.
+function protocol(versions: number, deleted = false, existing: Item[] = []) {
+  const inventory = Array.from(
+      { length: versions },
+      (_, n) => `owned-version-${n}`,
+    ),
+    items = new Map(existing.map((i) => [i.key, { ...i }]));
+  let rootDeleted = deleted,
+    rootGone = false,
+    deadline: number | null = null;
+  const covered = () =>
+    inventory.every((key) => items.get(key)?.state === "deleted") &&
+    [...items.keys()].every((key) => inventory.includes(key));
+  return {
+    items,
+    inventory,
+    get rootGone() {
+      return rootGone;
+    },
+    get deadline() {
+      return deadline;
+    },
+    claim(limit: number, now: number) {
+      if (rootDeleted && items.size === 0) throw Error("FIRST_CLOCK_REPAIR");
+      for (const key of inventory.filter((k) => !items.has(k)).slice(0, limit))
+        items.set(key, {
+          key,
+          state: "queued",
+          attempts: 0,
+          createdAt: now,
+          completedAt: null,
+        });
+      const work = [...items.values()]
+        .filter((i) => i.state !== "deleted")
+        .sort(
+          (a, b) =>
+            a.attempts - b.attempts ||
+            a.createdAt - b.createdAt ||
+            a.key.localeCompare(b.key),
+        )
+        .slice(0, limit);
+      for (const i of work) {
+        i.state = "queued";
+        i.attempts++;
+      }
+      if (work.length) {
+        rootDeleted = true;
+        deadline ??=
+          Math.min(...[...items.values()].map((i) => i.createdAt)) +
+          720 * 60 * 60 * 1000;
+      }
+      return work;
+    },
+    complete(key: string, now: number) {
+      const i = items.get(key);
+      if (!i) return false;
+      if (i.state === "deleted") return true;
+      i.state = "deleted";
+      i.completedAt = now;
+      if (covered()) rootGone = true;
+      return true;
+    },
+    fail(key: string) {
+      const i = items.get(key);
+      if (!i || i.state === "deleted") return false;
+      i.state = "failed";
+      return true;
+    },
+  };
+}
+describe("bounded chunk protocol oracle, not SQL/race/physical-erasure proof", () => {
+  it("drains more than 1000 versions through p_limit=1 without a history cap or early root deletion", () => {
+    const p = protocol(1003);
+    let firstDeadline: number | null = null;
+    for (let n = 0; n < 1003; n++) {
+      const before = p.items.size,
+        work = p.claim(1, 100 + n);
+      expect(work).toHaveLength(1);
+      expect(p.items.size - before).toBeLessThanOrEqual(1);
+      firstDeadline ??= p.deadline;
+      expect(p.deadline).toBe(firstDeadline);
+      expect(p.complete(work[0].key, 2000 + n)).toBe(true);
+      expect(p.rootGone).toBe(n === 1002);
+    }
+    expect([...p.items.values()].every((i) => i.state === "deleted")).toBe(
+      true,
+    );
+  });
+  it("keeps missing inventory reachable after every currently enrolled item completes", () => {
+    const p = protocol(5),
+      first = p.claim(1, 10)[0];
+    p.complete(first.key, 11);
+    expect(p.rootGone).toBe(false);
+    const next = p.claim(2, 20);
+    expect(next).toHaveLength(2);
+    expect(p.items.size).toBe(3);
+    expect(next.every((i) => i.key !== first.key)).toBe(true);
+  });
+  it("preserves the earliest deleted-item clock during backfill and rejects an unproved first event", () => {
+    const prior: Item = {
+      key: "owned-version-0",
+      state: "deleted",
+      attempts: 1,
+      createdAt: 7,
+      completedAt: 8,
+    };
+    const p = protocol(3, true, [prior]);
+    p.claim(1, 100);
+    expect(p.deadline).toBe(7 + 720 * 60 * 60 * 1000);
+    expect(p.items.get(prior.key)).toEqual(prior);
+    const unknown = protocol(3, true);
+    expect(() => unknown.claim(1, 100)).toThrow("FIRST_CLOCK_REPAIR");
+    expect(unknown.items.size).toBe(0);
+  });
+  it("keeps deletion terminal when a stale worker fails after another completes the last item", () => {
+    const p = protocol(1),
+      work = p.claim(1, 1)[0];
+    const staleSnapshot = { ...work };
+    expect(staleSnapshot.state).toBe("queued");
+    p.complete(work.key, 2);
+    expect(p.rootGone).toBe(true);
+    expect(p.complete(staleSnapshot.key, 999)).toBe(true);
+    expect(p.fail(staleSnapshot.key)).toBe(false);
+    expect(p.items.get(work.key)?.completedAt).toBe(2);
+  });
+});

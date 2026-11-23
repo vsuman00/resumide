@@ -1,0 +1,27 @@
+# Accounting expiry core: local source closeout
+
+The atomic accounting fold/removal source and strict one-shot client/CLI are integrated. A fresh combined source gate passes **5,821 unit/component tests in 281 files**, with zero failures/skips, then full typecheck, lint and web/worker builds. The actual adoption verifier and capability record are absent/unseeded, and destructive access remains denied. This does not complete usable expiry, the 720-hour retention policy, Native behavior or release acceptance.
+
+## Implemented scope
+
+Migration `20261115190341_owned_ai_expiry_fold.sql` (SHA `01c770432cfd5532b1a0f2d4bdc4d6a9d657c7a1ae5975b8c4b07cad06449a55`) declares original-month conservation, exact selected personal accounting removal and required safety blocks in one transaction. Its private work relation authorizes only the selected current-transaction closure and must be empty at commit; it supplies no retained personal dedup receipt. Missing authority or incomplete provenance rolls the transaction back. No current AI consent, membership or already-erased content parent is added as an erasure prerequisite.
+
+Shared legacy/A12/A13 usage and R03 technical tokens/cost remain separate. Unknown reservations and unreconciled overages stay blocked. A separate month-only pool-deficit measure preserves an existing over-limit fence when removal would otherwise clear it, without repeatedly counting a still-surviving deficit. Separate original-run-month markers force unavailable responses for legacy arbitrary-since queries that cannot be reconstructed exactly; they do not debit shared usage again. Global totals never become an organization's usage response.
+
+Review corrected integer-before-numeric overflow, deadlines crossed during a sweep, a fresh-publication expiry-fence omission, row/alias ambiguity, a stale-snapshot read after acquiring the fold gate, and incomplete work/seal-trigger constraints. Fresh VOLATILE post-lock safety checks preserve the existing consistent classification/totals snapshot. All 24 exact old/new body pairs and 45 current source pins were independently reconciled; nine existing profile files change dependency digests only. Frozen policy/scoring contracts and old migration bytes remain intact.
+
+The client checks exact metadata/profile/wire keys and bounded count conservation before one sweep. It propagates a single bounded deadline/cancellation and never automatically retries an uncertain commit. Blocked work or a deadline breach fails visibly. Transport exceptions cannot fabricate an authoritative count report. The CLI requires explicit `--execute` before constructing a real client; no actual sweep or scheduler was activated.
+
+## Evidence
+
+[Combined receipt](expiry-fold-integrated-d7aaaa13-b7e6-4721-b836-984763e25b9c.json) executes all 281 unit/component files: 5,818 cases under OS isolation and the existing SHA-pinned three-case neutral lifecycle exception in its separate sealed environment. Fresh checks then pass `npm run typecheck`, `npm run lint`, `npm run build` and `npm run build:worker`. This is a fresh full unit/component pass, not full integration/browser/CI acceptance.
+
+[Root reconciliation](expiry-fold-integrated-review.json) rehashes 947 inputs, 29 allocated source/test/handoff files, reports/logs and both build artifacts; six command groups are independently absent. Root's TypeScript AST check preserves all 973 prior complete assertions in ten historical source fixtures. The [peer review](peer-expiry-fold.md) reports no remaining scoped finding. Backend author checks passed 203 cases in 13 files; runtime checks passed 85 cases in two files. These are separate focused evidence, not added to the combined total. Original RED, fixture, formatting and review-failure receipts remain archived.
+
+Checks used pinned Node 22.23.4, empty HOME and OS network/root dotenv-read/Git-write denials, apart from the explicit neutral process-fixture exception. No SQL parser/execution, actual DB/provider/browser/OCR/compiler, dependency installation, workspace Git mutation or deployment occurred. The privileged mutating rollback verifier is a draft and remains unparsed/unexecuted. `npm run verify:ci` was unavailable within these source-only boundaries because its network/runtime/browser stages are outside the current authorization.
+
+## Remaining adoption
+
+Implement the real pre-fold external/non-admission authority and FK-safe finalization for account scope, while preserving unrelated active roots/accounts. Requiring physical Auth/org absence before restrictive accounting FKs are disposed would be circular. Finish foreign actors, pool/opening evidence, Auth/session/org, old requests/exports and exact object cleanup; add actual scheduler/deadline monitoring and controlled aggregate reconciliation.
+
+Restore needs an independent owner-free monotonic floor and quarantine that survive database rollback. That protection must also cover the first durable account preparation/root-retirement capture; a pre-clock backup must not restart the original deadline. Advancing a rollbackable database timestamp, keeping perpetual owner/hash tombstones, or returning an echo witness cannot supply that authority. Actual transactions/roles/two-session races, physical erasure, restore and consumer/release tests remain mandatory. The same 64 parents remain 2 VERIFIED, 39 PARTIAL and 23 PLANNED. Services remain free, deployment stays HOLD, and the full goal is active.

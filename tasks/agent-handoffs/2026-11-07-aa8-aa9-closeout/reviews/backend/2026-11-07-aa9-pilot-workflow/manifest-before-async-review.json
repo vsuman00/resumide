@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "files": [
+    {
+      "path": "app/lib/server/pilot-workflow.ts",
+      "sha256": "d3f4bd80292594278f73037241e7762b081ece4f94afbc42f637856167c4438f"
+    },
+    {
+      "path": "tests/unit/pilot-workflow.test.ts",
+      "sha256": "89c429426c60f2590e6dfaf0f1b3a45a1594e0cb660c25554474456276a30195"
+    },
+    {
+      "path": "tasks/agent-handoffs/2026-11-07-aa9-pilot-workflow/README.md",
+      "sha256": "0a402535b1674efe0a18a3fdfe6cbba467f7ace13805efec9d672678f2c4707b"
+    }
+  ],
+  "node": "22.23.4",
+  "behavioralTests": {
+    "passed": 15,
+    "exit": 0
+  },
+  "focusedChecks": {
+    "typescript": 0,
+    "eslint": 0,
+    "prettier": 0
+  },
+  "redGreen": [
+    "Malformed adapter output must stop; active before, stopped after",
+    "Cached reads during pending deletion must deny; idempotent rubric leaked before, RUN_BUSY after"
+  ],
+  "deployment": "EXPLICITLY_STOPPED_NO_DEPLOYMENT_REQUEST_OR_ACTION",
+  "evidence": "ephemeral synthetic local execution; actual external vendor/customer/hosted deletion notperformed"
+}

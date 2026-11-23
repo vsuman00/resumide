@@ -7,6 +7,11 @@ Owner: workspace owner until delegated
 This model covers the candidate B2C product only. Resumide provides resume
 compatibility guidance and must not make hiring or rejection decisions.
 
+The Phase 7 inventory and evidence statements below retain their original
+2026-09-11 review scope. They are not fresh certification of the current hosted
+project. The 2026-11-10 source additions follow that inventory; all release and
+actual tenant/privacy acceptance remains open.
+
 ## Assets and trust boundaries
 
 | Boundary                         | Assets at risk                                   | STRIDE focus                                        | Primary controls                                                                                                                          | Abuse test                                                                      | Owner      | Residual risk and review                                                                  |
@@ -43,3 +48,46 @@ real database restore, monitored staging E2E, alert notification delivery,
 rollback rehearsal, live provider verification, deployment-owned parser/egress
 controls, and security-owner sign-off remain external A4 evidence and are
 intentionally not marked complete here.
+
+## Local source additions, 2026-11-10
+
+The shared technical AI ledger adds private policy, period-opening, pool,
+operation, attempt, event and reconciliation-operator records. The admission
+ledger adds durable owner-bound operations and exact upload intents before
+Storage I/O. These stores hold linkable UUIDs, object paths, hashes, versions,
+timestamps and accounting metadata even though they do not hold raw prompts or
+resume text. Treat them as personal/operational assets. See the exact inventory
+and lifecycle gaps in the [privacy data map](PRIVACY_DATA_MAP.md).
+
+Default-off caller branches bind verified ownership, request identity and exact
+payload/model/policy before dispatch or upload adoption. Known AI usage settles
+before result persistence, including invalid output; unknown usage retains a
+reservation. The lease path uses an opaque per-claim token plus worker/attempt
+binding for queue mutations and the fixed stage-write wrapper. Cancellation and
+lost ownership must not authorize later writes or compensation. An already
+committed valid result is not rolled back by a later cancellation signal.
+
+The main residual threats are duplicate admission, stale-worker writes,
+uncertain provider charges, unsafe compensation, operational-token disclosure
+and retained metadata outside the existing privacy graph. The source controls
+include strict DTOs, first-claim dispatch, exact unadopted-object cleanup,
+bounded shutdown waits and fail-closed ownership checks. RPC/provider doubles
+and source review are their present evidence tier. The budget/admission/lease
+migrations have not been parsed, applied or executed, and no flags, policies or
+period openings were activated. Hosted grants, transaction races, old-producer
+cutover and terminal-job recovery still require their allocated acceptance.
+
+A successfully withdrawn queued deletion is inactive, like a failed request.
+Queued, processing, completed and unknown deletion states still block current
+access; lookup failures block access too. The privacy page uses a separate
+owner-scoped access query rather than inferring complete history from its
+twenty displayed rows, while the download API rechecks before serialization.
+The forward enqueue/write barrier is a separate SQL protocol; neither local
+tests nor a second access read prove atomic response revocation after enqueue.
+
+Append-only accounting and restrictive ledger foreign keys are not an approved
+retention policy. The source resume-retention default of 30 days does not purge
+these stores or authorize indefinite retention. Export/omission, deletion,
+Auth/session disposition, backups, restore and exact orphan cleanup need
+reviewed policies and actual tests before activation. No new provider, billing
+surface or release approval follows from these source additions.

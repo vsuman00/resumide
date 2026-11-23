@@ -1,0 +1,16 @@
+{
+  "status": "ACCEPTED_PRIVATE_WITNESS",
+  "adoptionContract": "expiry-fold-adoption-contract.json",
+  "scope": {
+    "schemaVersion": "owned-ai-expiry-scope/1.0.0",
+    "ownerId": "actual owner UUID",
+    "minimumExpiresAt": "minimum actual selected first deadline",
+    "selected": "DB-derived exact kind/identity/expiresAt entries, deterministically sorted from txid work rows"
+  },
+  "return": {
+    "schemaVersion": "owned-ai-expiry-adoption/1.0.0",
+    "ownerId": "same owner UUID",
+    "scope": "exact same strict scope"
+  },
+  "meaning": "A real separately pinned future verifier may return this exact private acknowledgment only after deriving all actual external closures; denial raises. Echoing scope alone supplies no external evidence. No verifier, capability row or proof is seeded in this leaf. The witness is transient and never logged, exported or retained as a dedup receipt."
+}

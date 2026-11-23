@@ -1,0 +1,96 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/native-page-diagnostics.test.ts (2 tests | 2 failed) 21ms
+     × reports replacement characters despite eight-unit native availability 16ms
+     × reports exact duplicate readable native pages without promoting reliability 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/native-page-diagnostics.test.ts > owned native page review diagnostics > reports replacement characters despite eight-unit native availability
+AssertionError: expected { …(9) } to match object { scoringEligible: false, …(1) }
+(45 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "nativePageDiagnostics": {
+-     "modelVersion": "native-page-review/1.0.0",
+-     "pages": [
+-       {
+-         "duplicatePageIds": [],
+-         "nativeTextAvailable": true,
+-         "nonWhitespaceUtf16Units": 8,
+-         "pageId": "page-1",
+-         "pageNumber": 1,
+-         "reasons": [
+-           "replacement_character",
+-         ],
+-       },
+-     ],
+-     "reliability": "unassessed",
+-   },
+    "scoringEligible": false,
+  }
+
+ ❯ tests/unit/native-page-diagnostics.test.ts:60:20
+     58|   it("reports replacement characters despite eight-unit native availab…
+     59|     const review = await storedReview(["\uFFFD".repeat(8)]);
+     60|     expect(review).toMatchObject({
+       |                    ^
+     61|       scoringEligible: false,
+     62|       nativePageDiagnostics: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/unit/native-page-diagnostics.test.ts > owned native page review diagnostics > reports exact duplicate readable native pages without promoting reliability
+AssertionError: expected { …(9) } to match object { scoringEligible: false, …(1) }
+(45 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "nativePageDiagnostics": {
+-     "pages": [
+-       {
+-         "duplicatePageIds": [
+-           "page-2",
+-         ],
+-         "pageId": "page-1",
+-         "reasons": [
+-           "duplicate_native_page_text",
+-         ],
+-       },
+-       {
+-         "duplicatePageIds": [
+-           "page-1",
+-         ],
+-         "pageId": "page-2",
+-         "reasons": [
+-           "duplicate_native_page_text",
+-         ],
+-       },
+-     ],
+-     "reliability": "unassessed",
+-   },
+    "scoringEligible": false,
+  }
+
+ ❯ tests/unit/native-page-diagnostics.test.ts:81:20
+     79|   it("reports exact duplicate readable native pages without promoting …
+     80|     const review = await storedReview(["Native page text", "Native pag…
+     81|     expect(review).toMatchObject({
+       |                    ^
+     82|       scoringEligible: false,
+     83|       nativePageDiagnostics: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  14:39:24
+   Duration  229ms (transform 77ms, setup 0ms, import 129ms, tests 21ms, environment 0ms)
+

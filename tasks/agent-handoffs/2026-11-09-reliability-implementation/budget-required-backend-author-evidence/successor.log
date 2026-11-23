@@ -1,0 +1,261 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/retention-root-coverage-sql.test.ts (18 tests | 1 failed) 70ms
+     ✓ keeps deleted roots with missing version coverage eligible independently of failed items 1ms
+     ✓ requires exact actual version coverage before final root deletion 0ms
+     ✓ does not resurrect a deleted item when a late removal failure arrives 0ms
+     ✓ preserves first timestamps rather than requeueing a new enrollment event 0ms
+     ✓ checks terminal preimages from the final clock successor and every actual new body pin 2ms
+     ✓ binds storage work to actual owned rows and freezes the enrolled/deleted key identity 0ms
+     ✓ rejects post-tombstone inserts/updates in the DB while preserving legitimate active page-count updates 0ms
+     ✓ makes existing root tombstones permanent without changing old generic barrier handling 0ms
+     ✓ keeps the privileged verifier deferred and checks a saved completion timestamp 0ms
+     ✓ re-reads terminal item state after owner acquisition before requiring a parent 0ms
+     ✓ drains more than 1000 versions through p_limit=1 without a history cap or early root deletion 57ms
+     ✓ keeps missing inventory reachable after every currently enrolled item completes 4ms
+     ✓ preserves the earliest deleted-item clock during backfill and rejects an unproved first event 0ms
+     ✓ keeps deletion terminal when a stale worker fails after another completes the last item 0ms
+   ✓ bridges the frozen R17 disposition checker/export to the source-registration successor 0ms
+   ✓ binds current all-caller profile successors while retaining all prior source goldens 1ms
+   ✓ bridges retained-usage current profiles while preserving every historical source assertion 0ms
+   × binds mandatory-budget current profiles while retaining all prior source assertions 2ms
+ ❯ tests/unit/owned-ai-disposition-sql.test.ts (15 tests | 2 failed) 13ms
+     ✓ checks exact composed terminal preimages and fixed postimages, including guarded historical successors 4ms
+     ✓ pins every changed checker from actual postimages without reshaping existing profile wires 1ms
+     ✓ captures the first account clock within actual preparation before candidate deletion and preserves retries 0ms
+     ✓ captures every version/operation at first root claim before tombstoning, independently of storage completion 0ms
+     ✓ retains composite A12 selectors and never rebinds generic R03 by owner/hash guesses 0ms
+     ✓ keeps the durable DB barrier and cancellation race authoritative without changing pre-preparation failed/cancelled semantics 0ms
+     ✓ exports the entire bounded owner closure with microseconds and effective minimum, failing incomplete captures 0ms
+     ✓ preserves exact historical policy validation while fresh Native selection requires current descriptor 0ms
+   ✓ captures the exact A13 reserve-before-claim attempt identity and refuses guessed generic linkage 0ms
+   ✓ seals exact future Native catalogue forms once and never learns them at runtime 0ms
+   ✓ adopts the exact R17 terminal checker successors while retaining all clock-source goldens 0ms
+   ✓ preserves R17 pins and binds the current source-registration disposition successor 0ms
+   × binds current all-caller profile successors while retaining all prior source goldens 3ms
+   ✓ bridges retained-usage current profiles while preserving every historical source assertion 0ms
+   × binds mandatory-budget current profiles while retaining all prior source assertions 1ms
+ ❯ tests/unit/ai-budget-source-sql.test.ts (39 tests | 2 failed) 12ms
+     ✓ guards actual fresh generic operation insertion with a live registered source 1ms
+     ✓ extends the actual retirement producer to registered legacy rewrite selectors 0ms
+     ✓ refuses ambiguous retained OP1 retries and rolls fresh registration back on denied reserve 0ms
+     ✓ pins every new actual function and all three terminal pre/postimages 1ms
+     ✓ preserves generic budget bodies and strict old binding/receipt/policy dependencies 0ms
+     ✓ requires real owner/analysis/version/root and nonblocking admission before any reserve 0ms
+     ✓ guards all generic new operations/attempts/dispatch, but leaves release/settlement paths alone 0ms
+     ✓ rolls fresh source registration back on every denied or malformed old reservation 0ms
+     ✓ uses exact registered selectors before legacy/account inference and never makes a clock from registration 0ms
+     ✓ exports the complete owner set with exact binding/source proof after retirement 0ms
+     ✓ seals fresh schema/constraints/indexes/guards once and rejects writable catalogue/data access 0ms
+     ✓ exposes exactly independent frozen metadata capabilities 0ms
+     ✓ preserves Root OP2 byte vector 1 0ms
+     ✓ preserves Root OP2 byte vector 2 0ms
+     ✓ preserves Root OP2 byte vector 3 0ms
+     ✓ preserves Root OP2 byte vector 4 0ms
+     ✓ preserves Root OP2 byte vector 5 0ms
+     ✓ binds the actual Native source to the exact OP2 header/framing/masks 0ms
+     ✓ admits real typed and account sources instead of the current rewrite-only guard 0ms
+     ✓ closes public generic technical claim bypass for typed Native once gates 0ms
+     ✓ keeps Build capture account-only with literal null parent selectors 0ms
+     × binds all20 actual predecessor/postimage bodies and current Node profiles 2ms
+     ✓ pins each changed/new source body and preserves the original private budget arithmetic 2ms
+     ✓ excludes registration through the exact owner mutex across fresh generic classification and transition 0ms
+     ✓ uses service-denied private reservation/claim after actual typed proof, never a caller/GUC tag 0ms
+     ✓ proves transient A13 lease/attempt/ordinal/policy and deterministic scoped A12 attempt 0ms
+     ✓ refuses all retained historical collisions and never adopts old unregistered rows 0ms
+     ✓ keeps Build account-only/Auth-admitted, null-safe exportable, and unrelated to root retirement 0ms
+     ✓ preserves legacy OP2 and old closed seal while sealing only the actual successor schema 0ms
+     ✓ matches independent A12/Build byte vector 1 0ms
+     ✓ matches independent A12/Build byte vector 2 0ms
+     ✓ matches independent A12/Build byte vector 3 0ms
+     ✓ matches independent A12/Build byte vector 4 0ms
+     ✓ matches independent A12/Build byte vector 5 0ms
+     ✓ matches independent A12/Build byte vector 6 0ms
+     ✓ locks the prior sealed schema and proves old readiness before any ALTER/bootstrap 0ms
+     ✓ keeps the successor verifier privileged/mutating/rollback-only and unexecuted 0ms
+   ✓ bridges retained-usage current profiles while preserving every historical source assertion 0ms
+   × binds mandatory-budget current profiles while retaining all prior source assertions 1ms
+ ❯ tests/unit/owned-ai-retirement-sql.test.ts (14 tests | 1 failed) 9ms
+     ✓ requires actual retirement authority before accepting a missing publication 1ms
+     ✓ captures within the two real producer transactions before parent erasure 0ms
+     ✓ requires live durable authority and actual immutable source/publication/run rows 0ms
+     ✓ keeps link validation in one snapshot across all months and validates retained attempts without runs 0ms
+     ✓ pins real composed source bodies without a self-hash cycle 1ms
+     ✓ guards the exact table identities, attributes, ACLs and producer predecessors 0ms
+     ✓ exports whole owner scope with separate staged capability and no false existing-export authority 0ms
+     ✓ preserves frozen accounting and publication sources 0ms
+     ✓ keeps Native deletion, corruption and export proof deferred 0ms
+   ✓ adopts exact current retirement/full checker successors while retaining every historical100607 body 1ms
+   ✓ pins the current R17 retirement and full checker bodies through explicit forward successors 1ms
+   ✓ binds current all-caller profile successors while retaining all prior source goldens 1ms
+   ✓ bridges retained-usage current profiles while preserving every historical source assertion 0ms
+   × binds mandatory-budget current profiles while retaining all prior source assertions 2ms
+ ❯ tests/unit/initial-feedback-late-settlement-sql.test.ts (11 tests | 1 failed) 7ms
+     ✓ does not make exact terminal accounting depend on an erasable publication row 1ms
+     ✓ preserves9ffc/6bc/63dd source bytes and the publication profile 1ms
+     ✓ changes only the erasable-row condition while retaining every old guard 0ms
+     ✓ changes only the exact guard hash in the operation source manifest 0ms
+     ✓ changes only the exact operation checker hash in the full source manifest 0ms
+     ✓ guards exact preimages/postimages and keeps all three private routines denied 1ms
+     ✓ adds no storage/policy/admission path and leaves the usage-retirement defect separate 0ms
+     ✓ retains a real owner-scoped cascade/late-settlement verifier as explicitly unrun 0ms
+   ✓ renews the current operation checker through the exact disposition successor without changing late-settlement history 1ms
+   ✓ binds current all-caller profile successors while retaining all prior source goldens 1ms
+   × binds mandatory-budget current profiles while retaining all prior source assertions 2ms
+ ❯ tests/unit/owned-ai-usage-sql.test.ts (11 tests | 2 failed) 10ms
+     ✓ pins the real local bodies and composed actual publication interfaces without a cycle 1ms
+     ✓ admits owned current source/privacy/membership and optional job without a numeric score guard 0ms
+     ✓ validates links across all months before the legacy creation-month filter 0ms
+     ✓ excludes exact run IDs only and refuses ambiguous or inconsistent authoritative links 0ms
+     ✓ keeps all claimed known/unknown accounting regardless publication outcome 0ms
+     ✓ returns exact thirteen usage fields and nineteen real readiness fields 0ms
+     ✓ preserves old counters/source profiles while the actual caller always uses the shared helper 0ms
+     ✓ keeps actual Native verification deferred and refuses empty/time-backdated substitutes 0ms
+   ✓ adopts the exact disposition-era rewrite checker postimage while preserving the historical profile-file golden 1ms
+   × binds current all-caller profile successors while retaining all prior source goldens 5ms
+   × binds mandatory-budget current profiles while retaining all prior source assertions 1ms
+ ✓ tests/unit/owned-legacy-ai-usage-sql.test.ts (17 tests) 6ms
+ ✓ tests/unit/mandatory-ai-budget-sql.test.ts (8 tests) 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/ai-budget-source-sql.test.ts > all-caller actual terminal source closure, not Native parsing/execution > binds all20 actual predecessor/postimage bodies and current Node profiles
+ReferenceError: CALLER_CANONICAL_PROFILE is not defined
+ ❯ tests/unit/ai-budget-source-sql.test.ts:562:9
+    560|       [
+    561|         "private.canonical_rewrite_ready",
+    562|         CALLER_CANONICAL_PROFILE.checkerSha256,
+       |         ^
+    563|       ],
+    564|       [
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  tests/unit/ai-budget-source-sql.test.ts > binds mandatory-budget current profiles while retaining all prior source assertions
+ReferenceError: USAGE_RETENTION_CURRENT_CALLER_SOURCE_PROFILE is not defined
+ ❯ tests/unit/ai-budget-source-sql.test.ts:1046:42
+    1044|   expect(createHash("sha256").update(p.new).digest("hex")).toBe(p.afte…
+    1045|  }
+    1046|  for(const [key,value] of Object.entries(USAGE_RETENTION_CURRENT_CALLE…
+       |                                          ^
+    1047|   const successor=terminal.find(p=>p.before===value);
+    1048|   expect((MANDATORY_BUDGET_USAGE_RETENTION_CURRENT_CALLER_SOURCE_PROFI…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  tests/unit/initial-feedback-late-settlement-sql.test.ts > binds mandatory-budget current profiles while retaining all prior source assertions
+ReferenceError: ALL_CALLERS_currentOperationProfile is not defined
+ ❯ tests/unit/initial-feedback-late-settlement-sql.test.ts:294:42
+    292|   expect(createHash("sha256").update(p.new).digest("hex")).toBe(p.afte…
+    293|  }
+    294|  for(const [key,value] of Object.entries(ALL_CALLERS_currentOperationP…
+       |                                          ^
+    295|   const successor=terminal.find(p=>p.before===value);
+    296|   expect((MANDATORY_BUDGET_ALL_CALLERS_currentOperationProfile as Reco…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  tests/unit/owned-ai-disposition-sql.test.ts > binds current all-caller profile successors while retaining all prior source goldens
+ReferenceError: ALL_CALLERS_INITIAL_FEEDBACK_OPERATION_PROFILE is not defined
+ ❯ tests/unit/owned-ai-disposition-sql.test.ts:758:7
+    756|     expect(p.before).toBe(INITIAL_FEEDBACK_OPERATION_PROFILE.checkerSh…
+    757|     expect(sha(p.new)).toBe(
+    758|       ALL_CALLERS_INITIAL_FEEDBACK_OPERATION_PROFILE.checkerSha256,
+       |       ^
+    759|     );
+    760|     expect(p.after).toBe(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+ FAIL  tests/unit/owned-ai-disposition-sql.test.ts > binds mandatory-budget current profiles while retaining all prior source assertions
+ReferenceError: USAGE_RETENTION_ALL_CALLERS_currentSourceDispositionProfile is not defined
+ ❯ tests/unit/owned-ai-disposition-sql.test.ts:997:42
+    995|   expect(createHash("sha256").update(p.new).digest("hex")).toBe(p.afte…
+    996|  }
+    997|  for(const [key,value] of Object.entries(USAGE_RETENTION_ALL_CALLERS_c…
+       |                                          ^
+    998|   const successor=terminal.find(p=>p.before===value);
+    999|   expect((MANDATORY_BUDGET_USAGE_RETENTION_ALL_CALLERS_currentSourceDi…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/9]⎯
+
+ FAIL  tests/unit/owned-ai-retirement-sql.test.ts > binds mandatory-budget current profiles while retaining all prior source assertions
+ReferenceError: USAGE_RETENTION_ALL_CALLERS_terminalFull is not defined
+ ❯ tests/unit/owned-ai-retirement-sql.test.ts:569:42
+    567|   expect(createHash("sha256").update(p.new).digest("hex")).toBe(p.afte…
+    568|  }
+    569|  for(const [key,value] of Object.entries(USAGE_RETENTION_ALL_CALLERS_t…
+       |                                          ^
+    570|   const successor=terminal.find(p=>p.before===value);
+    571|   expect((MANDATORY_BUDGET_USAGE_RETENTION_ALL_CALLERS_terminalFull as…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/9]⎯
+
+ FAIL  tests/unit/owned-ai-usage-sql.test.ts > binds current all-caller profile successors while retaining all prior source goldens
+AssertionError: expected '// Forward compatibility profile; exa…' to be '// Forward compatibility profile; exa…' // Object.is equality
+
+- Expected
++ Received
+
+@@ -2,17 +2,17 @@
+  // Canonical run metadata is private; all mutation grants remain denied.
+  export const CANONICAL_REWRITE_READINESS_PROFILE = Object.freeze({
+    schemaVersion: "canonical-rewrite-readiness/1.0.0",
+    profileVersion: "canonical-rewrite-readiness-profile/1.0.1",
+    checkerSha256:
+-     "ef084481faf7a75e5da4dafbabdb8cd9c2aacae542b26c5e90ced4ed25b8ef14",
++     "b8f2c321599054fc5a05bdccdd15ebd8b3bd3bbdc8e7cf233c99cc01b205ffed",
+    readerSha256:
+      "fbe6a2167174a33a8fe9541a781623e595444206d0fe121971b87f1b14089707",
+    prepareSha256:
+      "3ba48ee775c9ce62aa3df976d2011b6cc202acd16c62dd60abe4e36c9f65aef9",
+    claimSha256:
+-     "77a9357fde10413f08d0276bae3c1b747f44e2de10c1ef757d47eb05b21992aa",
++     "08c3eedd3979e2a3287d5ab8dac9da876daa7c18ad5fdd848661c54949f1aa66",
+    finishSha256:
+      "cb7a256fbacd55d494fb72196308e6c06e8c7faabb40c18a9ea2bba97a3c5828",
+    settleSha256:
+      "7bf6d0a1fc731d650716c7ce3ccd204d5529f74cc12e69d0c830b1ac4a69ed28",
+    usageSha256:
+
+ ❯ tests/unit/owned-ai-usage-sql.test.ts:342:73
+    340|     expect(p.after).toBe(ALL_CALLERS_currentRewriteProfile.claimSha256…
+    341|   }
+    342|   expect(read("app/lib/server/canonical-rewrite-readiness-profile.ts")…
+       |                                                                         ^
+    343|     registeredRewriteProfileFileSource
+    344|       .replace(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/9]⎯
+
+ FAIL  tests/unit/owned-ai-usage-sql.test.ts > binds mandatory-budget current profiles while retaining all prior source assertions
+ReferenceError: ALL_CALLERS_currentRewriteProfile is not defined
+ ❯ tests/unit/owned-ai-usage-sql.test.ts:362:42
+    360|   expect(createHash("sha256").update(p.new).digest("hex")).toBe(p.afte…
+    361|  }
+    362|  for(const [key,value] of Object.entries(ALL_CALLERS_currentRewritePro…
+       |                                          ^
+    363|   const successor=terminal.find(p=>p.before===value);
+    364|   expect((MANDATORY_BUDGET_ALL_CALLERS_currentRewriteProfile as Record…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/9]⎯
+
+ FAIL  tests/unit/retention-root-coverage-sql.test.ts > binds mandatory-budget current profiles while retaining all prior source assertions
+ReferenceError: USAGE_RETENTION_ALL_CALLERS_INITIAL_FEEDBACK_PROFILE is not defined
+ ❯ tests/unit/retention-root-coverage-sql.test.ts:732:42
+    730|   expect(createHash("sha256").update(p.new).digest("hex")).toBe(p.afte…
+    731|  }
+    732|  for(const [key,value] of Object.entries(USAGE_RETENTION_ALL_CALLERS_I…
+       |                                          ^
+    733|   const successor=terminal.find(p=>p.before===value);
+    734|   expect((MANDATORY_BUDGET_USAGE_RETENTION_ALL_CALLERS_INITIAL_FEEDBAC…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/9]⎯
+
+
+ Test Files  6 failed | 2 passed (8)
+      Tests  9 failed | 124 passed (133)
+   Start at  18:31:54
+   Duration  695ms (transform 81ms, setup 0ms, import 136ms, tests 130ms, environment 0ms)
+

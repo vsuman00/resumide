@@ -1,0 +1,15 @@
+# A12 compatibility consumer review
+
+This is the separately allocated forward consumer checkpoint after Root's A12 351-case source gate. That predecessor and its failures remain historical evidence. No rewrite UI or support policy was edited here. Ownership was the existing resource test and this handoff; production dependencies were copied only from released, hash-checked checkpoints.
+
+The actual resource tests now supply the strict 12-field native usage envelope using the real profile's `usageSha256`. The real helper checks owner, organization, analysis, profile, component totals and the current UTC month; no helper decoder is mocked. The legacy zero-only counter fixture was replaced rather than left as a fallback.
+
+All nine existing cases and all 45 original assertion statements remain. Two new cases deny known canonical spend at the limit, despite zero legacy tokens, and an unknown canonical claim. Both stop before provider creation, dispatch claim or publication and preserve earlier drafts. The two existing source/declaration replay cases now change the counter to a denying state after the first save: replay still returns the exact original receipt, calls only prepare, and retains one provider dispatch. New assertions verify owned counter arguments and its order before claim. The test now has 11 cases and 60 assertion statements.
+
+One sealed Node 22.23.4 run passed **11/11** on contract `9986127e`, service `4c19b95e`, profile `d80052f6` and helper `a10b80f5`. Helper `a51cfb8c` was released while that handle was running; the same handle finished before its deadline-only successor was copied. Root explicitly owns the fresh final-helper combined gate. Scoped types pass three roots/71 source files with zero diagnostics on that successor; test lint and formatting pass. No unchanged suite was repeated.
+
+Independent consumer source review found no required remaining finding: the contract's successor changes only readiness version 1.0.1 and required usage metadata; authenticated ownership is correlated with the owned workspace; strict usage precedes provider dispatch; comparison uses `BigInt`; exact receipt replay precedes counters; and there is no old-counter fallback. The counter is a fresh observation, not an atomic quota reservation. Backend/helper tests own the detailed metadata and timing matrix.
+
+Final test SHA is `5a0d5d90f8019fd0b5a3c736c6b53f56cf4b89827b9815e741fa9227366d086a`. The private packet is `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a12-compatibility-470gjdlm`: exact prior/source snapshots, dependency chains, `route11.json`, scoped receipts and AST preservation proof. The recorded contract chain is `73471582` to Root prerequisite `4f3d4767` to `9986127e`; no reset restored older bytes. A13's frozen source/test checkpoints remain unchanged.
+
+This is synthetic resource/helper evidence with fake RPC and transport only. SQL, native publication, quotas under concurrency, provider, browser and release acceptance remain open; mutation grants stay denied and flags default off.

@@ -1,0 +1,75 @@
+
+> test
+> vitest run tests/unit/canonical-rewrite-service.test.ts -t refuses initial feedback known spend before any canonical
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats[39m
+
+ [31m❯[39m tests/unit/canonical-rewrite-service.test.ts [2m([22m[2m39 tests[22m[2m | [22m[31m1 failed[39m[2m | [22m[33m38 skipped[39m[2m)[22m[32m 156[2mms[22m[39m
+     [2m[90m↓[39m[22m preserves exact valid request and microseconds from urlencoded
+     [2m[90m↓[39m[22m preserves exact valid request and microseconds from multipart
+     [2m[90m↓[39m[22m refuses duplicate form without service IO
+     [2m[90m↓[39m[22m refuses escaped duplicate JSON without service IO
+     [2m[90m↓[39m[22m refuses missing without service IO
+     [2m[90m↓[39m[22m refuses extra without service IO
+     [2m[90m↓[39m[22m refuses file without service IO
+     [2m[90m↓[39m[22m requires the exact native consent acknowledgement
+     [2m[90m↓[39m[22m rejects malformed UTF8 and both encoded and decoded byte overflows
+     [2m[90m↓[39m[22m settles stalled body deadline and releases reader when cancel resolve
+     [2m[90m↓[39m[22m settles stalled body deadline and releases reader when cancel reject
+     [2m[90m↓[39m[22m settles caller cancellation during a pending read and releases its reader
+     [2m[90m↓[39m[22m denies unknown or malformed counter null before dispatch
+     [2m[90m↓[39m[22m denies unknown or malformed counter false before dispatch
+     [2m[90m↓[39m[22m denies unknown or malformed counter  before dispatch
+     [2m[90m↓[39m[22m denies unknown or malformed counter   before dispatch
+     [2m[90m↓[39m[22m denies unknown or malformed counter 12 before dispatch
+     [2m[90m↓[39m[22m denies unknown or malformed counter -1 before dispatch
+     [2m[90m↓[39m[22m denies unknown or malformed counter 1.5 before dispatch
+     [2m[90m↓[39m[22m denies unknown or malformed counter NaN before dispatch
+     [2m[90m↓[39m[22m denies unknown or malformed counter Infinity before dispatch
+     [2m[90m↓[39m[22m retains legitimate nonnegative numeric counter 0
+     [2m[90m↓[39m[22m retains legitimate nonnegative numeric counter 12
+     [2m[90m↓[39m[22m preserves AI_BUDGET_EXHAUSTED without provider dispatch
+     [2m[90m↓[39m[22m preserves AI_BUDGET_BLOCKED without provider dispatch
+     [2m[90m↓[39m[22m preserves AI_BUDGET_DENIED without provider dispatch
+     [2m[90m↓[39m[22m preserves AI_BUDGET_DISABLED without provider dispatch
+     [2m[90m↓[39m[22m preserves AI_BUDGET_UNAVAILABLE without provider dispatch
+     [2m[90m↓[39m[22m refuses canonical known spend or unknown holds ignored by legacy counter '100000'/'0'
+     [2m[90m↓[39m[22m refuses canonical known spend or unknown holds ignored by legacy counter '0'/'1'
+   [2m[90m↓[39m[22m refuses foreign owner usage metadata through the actual caller
+   [2m[90m↓[39m[22m refuses foreign organization usage metadata through the actual caller
+   [2m[90m↓[39m[22m refuses foreign analysis usage metadata through the actual caller
+   [2m[90m↓[39m[22m refuses wrong usage profile usage metadata through the actual caller
+   [2m[90m↓[39m[22m refuses inconsistent component total usage metadata through the actual caller
+   [2m[90m↓[39m[22m refuses a prior-month usage snapshot instead of using it as this month's capacity
+   [2m[90m↓[39m[22m refuses old profile readiness metadata before counter/provider dispatch
+   [2m[90m↓[39m[22m refuses missing usage function hash readiness metadata before counter/provider dispatch
+[31m   [31m×[31m refuses initial feedback known spend before any canonical provider dispatch[39m[32m 156[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[90m (1)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[33m38 skipped[39m[90m (39)[39m
+[2m   Start at [22m 13:56:52
+[2m   Duration [22m 671ms[2m (transform 284ms, setup 0ms, import 452ms, tests 156ms, environment 0ms)[22m
+
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/unit/canonical-rewrite-service.test.ts[2m > [22mrefuses initial feedback known spend before any canonical provider dispatch
+[31m[1mAssertionError[22m: expected 200 to be 503 // Object.is equality[39m
+
+[32m- Expected[39m
+[31m+ Received[39m
+
+[32m- 503[39m
+[31m+ 200[39m
+
+[36m [2m❯[22m tests/unit/canonical-rewrite-service.test.ts:[2m616:27[22m[39m
+    [90m614|[39m   const f = await handlerFixture(0, undefined, {canonicalTokens: "0", …
+    [90m615|[39m   [35mconst[39m response [33m=[39m [35mawait[39m f[33m.[39m[34mresponse[39m()[33m;[39m
+    [90m616|[39m   [34mexpect[39m(response[33m.[39mstatus)[33m.[39m[34mtoBe[39m([34m503[39m)[33m;[39m
+    [90m   |[39m                           [31m^[39m
+    [90m617|[39m   [34mexpect[39m(f[33m.[39mtransport[33m.[39mexecute)[33m.[39mnot[33m.[39m[34mtoHaveBeenCalled[39m()[33m;[39m
+    [90m618|[39m   expect(f.client.rpc.mock.calls.some((call) => call[0] === "claim_can…
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+

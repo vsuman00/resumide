@@ -1,0 +1,617 @@
+{
+  "status": "FROZEN_LOCALIZED_WHITESPACE_REPAIR",
+  "task": "CR-A01-I01",
+  "files": {
+    "app/lib/server/parsing/contact.ts": {
+      "preimage": "e5b1959000b229a3f22e52e5cda6abc30bbfd2e8b6f18b55d1d907db3ebb5579",
+      "postimage": "41c7c81b820b64a1dde2fb59bceaa9b080e4399f2aa10f6a3179ee04fdccd34e",
+      "preimageSnapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/preimages/app/lib/server/parsing/contact.ts",
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/snapshots/app/lib/server/parsing/contact.ts",
+      "bytes": 6097
+    },
+    "tests/unit/parsing/contact.test.ts": {
+      "preimage": "2803d98abd8cae2a469aa8e59c868dc039e299aec07483205ee4dcda255f9bf1",
+      "postimage": "a28a913ae2013d277e78387fa0cd99c148761be4acc46385cc95d00446de1826",
+      "preimageSnapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/preimages/tests/unit/parsing/contact.test.ts",
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/snapshots/tests/unit/parsing/contact.test.ts",
+      "bytes": 2256
+    },
+    "tests/unit/preparation-whitespace.test.ts": {
+      "preimage": null,
+      "postimage": "7f411c1c0ab95dd692fe5c21ccfa335d5e15bec271852bc14ffb586a620319f8",
+      "preimageSnapshot": null,
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/snapshots/tests/unit/preparation-whitespace.test.ts",
+      "bytes": 2274
+    },
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/whitespace-backend.md": {
+      "preimage": null,
+      "postimage": "f0415efecab37e4c5c060755c99e870515791764951a147ca28642f505dd81b2",
+      "preimageSnapshot": null,
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/snapshots/tasks/agent-handoffs/2026-11-09-reliability-implementation/whitespace-backend.md",
+      "bytes": 3778
+    }
+  },
+  "contracts": {
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/whitespace-contract.json": {
+      "sha256": "233b6451b115fd1d09f8edd4db2c987d122a51a57fe5f65cd00a7b658a7bc542",
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/contracts/whitespace-contract.json"
+    },
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/whitespace-fix-allocation.json": {
+      "sha256": "09f6e9c058627a5c7a3081883332db43267a889f5bd4274af7c39cb15c31b32f",
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/contracts/whitespace-fix-allocation.json"
+    },
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/whitespace-source-sync.json": {
+      "sha256": "ad89a7a8310234920affec2cb18e910bfce1aa6cb29980816efd37f24544e0b2",
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/contracts/whitespace-source-sync.json"
+    }
+  },
+  "preservation": {
+    "soleProductionRegexSubstitution": true,
+    "oldContactTestExactPrefixPreserved": true,
+    "originalThreePreparationVariantsAndFiveSharedAssertionsPreserved": true,
+    "originalFiveSecondFloorPreserved": true,
+    "finalInstrumentationRemoved": true,
+    "profiledSourceSha256": "55fb55e79b7471c807d5b30118e508afc88702900f0aabeb834cb531214bdba3",
+    "beforeSource": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/preimages/tests/unit/preparation-whitespace.test.ts",
+    "afterSource": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/post-profile/tests/unit/preparation-whitespace.test.ts",
+    "profileSourceDelta": [
+      "app/lib/server/parsing/contact.ts"
+    ]
+  },
+  "profiles": {
+    "before": [
+      {
+        "profile": "synthetic_preparation_whitespace",
+        "variant": "normal",
+        "elapsedMs": 87.49787500000002,
+        "stages": {
+          "parse_contact": {
+            "calls": 193,
+            "elapsedMs": 2.377119000000448,
+            "maximumMs": 1.2847079999999664
+          },
+          "native_builder": {
+            "calls": 1,
+            "elapsedMs": 2.4975000000000023,
+            "maximumMs": 2.4975000000000023
+          },
+          "reconciliation": {
+            "calls": 1,
+            "elapsedMs": 8.375291000000004,
+            "maximumMs": 8.375291000000004
+          },
+          "canonical_import": {
+            "calls": 1,
+            "elapsedMs": 3.0378749999999854,
+            "maximumMs": 3.0378749999999854
+          },
+          "canonical_confirmation": {
+            "calls": 1,
+            "elapsedMs": 0.29374999999998863,
+            "maximumMs": 0.29374999999998863
+          },
+          "typed_jd": {
+            "calls": 1,
+            "elapsedMs": 26.78845899999999,
+            "maximumMs": 26.78845899999999
+          },
+          "relationship_context": {
+            "calls": 3,
+            "elapsedMs": 9.19545800000003,
+            "maximumMs": 5.754500000000007
+          },
+          "owned_score": {
+            "calls": 1,
+            "elapsedMs": 39.495041000000015,
+            "maximumMs": 39.495041000000015
+          }
+        }
+      },
+      {
+        "profile": "synthetic_preparation_whitespace",
+        "variant": "bounded_lines",
+        "elapsedMs": 106.21895900000004,
+        "stages": {
+          "parse_contact": {
+            "calls": 193,
+            "elapsedMs": 8.423459000000037,
+            "maximumMs": 7.59054100000003
+          },
+          "native_builder": {
+            "calls": 1,
+            "elapsedMs": 8.517165999999975,
+            "maximumMs": 8.517165999999975
+          },
+          "reconciliation": {
+            "calls": 1,
+            "elapsedMs": 5.6747910000000275,
+            "maximumMs": 5.6747910000000275
+          },
+          "canonical_import": {
+            "calls": 1,
+            "elapsedMs": 4.37337500000001,
+            "maximumMs": 4.37337500000001
+          },
+          "canonical_confirmation": {
+            "calls": 1,
+            "elapsedMs": 0.07554099999998698,
+            "maximumMs": 0.07554099999998698
+          },
+          "typed_jd": {
+            "calls": 1,
+            "elapsedMs": 0.5237089999999966,
+            "maximumMs": 0.5237089999999966
+          },
+          "relationship_context": {
+            "calls": 3,
+            "elapsedMs": 24.380165999999917,
+            "maximumMs": 8.708708000000001
+          },
+          "owned_score": {
+            "calls": 1,
+            "elapsedMs": 77.95350000000002,
+            "maximumMs": 77.95350000000002
+          }
+        }
+      },
+      {
+        "profile": "synthetic_preparation_whitespace",
+        "variant": "single_long_line",
+        "elapsedMs": 7790.734791999999,
+        "stages": {
+          "parse_contact": {
+            "calls": 193,
+            "elapsedMs": 7684.6145899999965,
+            "maximumMs": 7683.728709
+          },
+          "native_builder": {
+            "calls": 1,
+            "elapsedMs": 7684.947084,
+            "maximumMs": 7684.947084
+          },
+          "reconciliation": {
+            "calls": 1,
+            "elapsedMs": 5.947582999999213,
+            "maximumMs": 5.947582999999213
+          },
+          "canonical_import": {
+            "calls": 1,
+            "elapsedMs": 4.354291000001467,
+            "maximumMs": 4.354291000001467
+          },
+          "canonical_confirmation": {
+            "calls": 1,
+            "elapsedMs": 0.14654200000040873,
+            "maximumMs": 0.14654200000040873
+          },
+          "typed_jd": {
+            "calls": 1,
+            "elapsedMs": 0.9757919999992737,
+            "maximumMs": 0.9757919999992737
+          },
+          "relationship_context": {
+            "calls": 3,
+            "elapsedMs": 25.702542999997604,
+            "maximumMs": 9.359833999998955
+          },
+          "owned_score": {
+            "calls": 1,
+            "elapsedMs": 84.31908399999884,
+            "maximumMs": 84.31908399999884
+          }
+        }
+      }
+    ],
+    "after": [
+      {
+        "profile": "synthetic_preparation_whitespace",
+        "variant": "normal",
+        "elapsedMs": 88.3945,
+        "stages": {
+          "parse_contact": {
+            "calls": 193,
+            "elapsedMs": 2.50287600000064,
+            "maximumMs": 1.411875000000009
+          },
+          "native_builder": {
+            "calls": 1,
+            "elapsedMs": 2.601165999999978,
+            "maximumMs": 2.601165999999978
+          },
+          "reconciliation": {
+            "calls": 1,
+            "elapsedMs": 8.576416000000052,
+            "maximumMs": 8.576416000000052
+          },
+          "canonical_import": {
+            "calls": 1,
+            "elapsedMs": 2.96875,
+            "maximumMs": 2.96875
+          },
+          "canonical_confirmation": {
+            "calls": 1,
+            "elapsedMs": 0.2980840000000171,
+            "maximumMs": 0.2980840000000171
+          },
+          "typed_jd": {
+            "calls": 1,
+            "elapsedMs": 26.98470900000001,
+            "maximumMs": 26.98470900000001
+          },
+          "relationship_context": {
+            "calls": 3,
+            "elapsedMs": 9.024291000000005,
+            "maximumMs": 5.701999999999998
+          },
+          "owned_score": {
+            "calls": 1,
+            "elapsedMs": 40.15666700000003,
+            "maximumMs": 40.15666700000003
+          }
+        }
+      },
+      {
+        "profile": "synthetic_preparation_whitespace",
+        "variant": "bounded_lines",
+        "elapsedMs": 95.98579199999995,
+        "stages": {
+          "parse_contact": {
+            "calls": 193,
+            "elapsedMs": 1.505079999999623,
+            "maximumMs": 0.7306670000000395
+          },
+          "native_builder": {
+            "calls": 1,
+            "elapsedMs": 1.5603750000000218,
+            "maximumMs": 1.5603750000000218
+          },
+          "reconciliation": {
+            "calls": 1,
+            "elapsedMs": 5.358083000000022,
+            "maximumMs": 5.358083000000022
+          },
+          "canonical_import": {
+            "calls": 1,
+            "elapsedMs": 4.014333000000022,
+            "maximumMs": 4.014333000000022
+          },
+          "canonical_confirmation": {
+            "calls": 1,
+            "elapsedMs": 0.05808300000001054,
+            "maximumMs": 0.05808300000001054
+          },
+          "typed_jd": {
+            "calls": 1,
+            "elapsedMs": 0.3947080000000369,
+            "maximumMs": 0.3947080000000369
+          },
+          "relationship_context": {
+            "calls": 3,
+            "elapsedMs": 23.254832999999962,
+            "maximumMs": 8.090458000000012
+          },
+          "owned_score": {
+            "calls": 1,
+            "elapsedMs": 76.25720800000005,
+            "maximumMs": 76.25720800000005
+          }
+        }
+      },
+      {
+        "profile": "synthetic_preparation_whitespace",
+        "variant": "single_long_line",
+        "elapsedMs": 99.15520800000002,
+        "stages": {
+          "parse_contact": {
+            "calls": 193,
+            "elapsedMs": 1.4899219999999787,
+            "maximumMs": 0.7979170000000977
+          },
+          "native_builder": {
+            "calls": 1,
+            "elapsedMs": 1.4372919999999567,
+            "maximumMs": 1.4372919999999567
+          },
+          "reconciliation": {
+            "calls": 1,
+            "elapsedMs": 5.442332999999962,
+            "maximumMs": 5.442332999999962
+          },
+          "canonical_import": {
+            "calls": 1,
+            "elapsedMs": 3.5410839999999553,
+            "maximumMs": 3.5410839999999553
+          },
+          "canonical_confirmation": {
+            "calls": 1,
+            "elapsedMs": 0.05412499999999909,
+            "maximumMs": 0.05412499999999909
+          },
+          "typed_jd": {
+            "calls": 1,
+            "elapsedMs": 0.3005000000000564,
+            "maximumMs": 0.3005000000000564
+          },
+          "relationship_context": {
+            "calls": 3,
+            "elapsedMs": 24.275125000000003,
+            "maximumMs": 8.469875000000002
+          },
+          "owned_score": {
+            "calls": 1,
+            "elapsedMs": 79.7097500000001,
+            "maximumMs": 79.7097500000001
+          }
+        }
+      }
+    ],
+    "inclusiveDurationsOverlap": true,
+    "interpretation": "Controlled source/native parser preparation; no production SLA/default PDF-ingress exploit claim"
+  },
+  "verification": {
+    "finalTests": 24,
+    "testFiles": 2,
+    "lintFiles": 3,
+    "formatFiles": 3,
+    "allPassed": true,
+    "before": "2PASS/1FAIL unchanged5000ms assertion",
+    "afterSameProfile": "3PASS",
+    "additionalBelowDefaultCapCase": true,
+    "authorBroadTypesBuildRun": false
+  },
+  "receipts": {
+    "final-regression": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/final-regression.json",
+      "sha256": "187df7d053984a67e7bf41bcf9b4babc33011ff9d0af50d8122040e82205f709",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/final-regression.log",
+      "logSha256": "073dc743f402023850a67d063a85935379a239d9930d055f3359c93be5547e96",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 18501,
+        "startIdentity": "18501 18501 Mon Nov 16 18:37:17 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 18501,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "format-write-control": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/format-write-control.json",
+      "sha256": "5153f120326eb1def3fa9c28cc71a65aa5e239e632f783ba79382a8a8e9464d1",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/format-write-control.log",
+      "logSha256": "b2b3456e427ffccd8f4d61df914ef5c4ba0178cd7424d8f4091a7cabf02d8679",
+      "sourceStable": false,
+      "start": {
+        "processGroup": 18463,
+        "startIdentity": "18463 18463 Mon Nov 16 18:37:17 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 18463,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "format-write-final": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/format-write-final.json",
+      "sha256": "7d7e951d048335f2308ec1914226f25465af7ba3037e17bc6c7737cf29487692",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/format-write-final.log",
+      "logSha256": "3c659596be8bc962da58a662a9fd3ffa3675ee89824d23034fb643b2e2db39ff",
+      "sourceStable": false,
+      "start": {
+        "processGroup": 18353,
+        "startIdentity": "18353 18353 Mon Nov 16 18:36:25 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 18353,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "stage-profile-after": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/stage-profile-after.json",
+      "sha256": "8a220260548f70953892cefda5c1cfb145a739c1ac9c7cb4ac9dd50ddb604936",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/stage-profile-after.log",
+      "logSha256": "bcecc24182715ee76354160306764821cd920880a2c4aaee423cd7d551155057",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 18231,
+        "startIdentity": "18231 18231 Mon Nov 16 18:35:23 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 18231,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "stage-profile": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/stage-profile.json",
+      "sha256": "ca0e1d9043699d37f9cf0372446813775dd12d342a34e3567248d9fdcbf269a0",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/stage-profile.log",
+      "logSha256": "2d9ca4d778a94106ed085d22a757dc578f8151c7ff74f269c8b5cc1a1195747d",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 16218,
+        "startIdentity": "16218 16218 Mon Nov 16 13:54:12 2026"
+      },
+      "close": {
+        "code": 1,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 1,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 16218,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "statics-format-final": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/statics-format-final.json",
+      "sha256": "8a40b8f998a67a69af5d4eadad0498c793cca6aa184cae9ca80cda5a2cea8388",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/statics-format-final.log",
+      "logSha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 18499,
+        "startIdentity": "18499 18499 Mon Nov 16 18:37:17 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 18499,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "statics-format-owned": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/statics-format-owned.json",
+      "sha256": "65c067a5bbeefe2c552b6d33305b1cf6dcc15278c436ffc8c243868b5cc909ae",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/statics-format-owned.log",
+      "logSha256": "570da84b2e9ec9eb847b92fb8174006d78dc2faf5f49c88977d6a90516ae95b6",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 18424,
+        "startIdentity": "18424 18424 Mon Nov 16 18:37:02 2026"
+      },
+      "close": {
+        "code": 1,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 1,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 18424,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "statics-lint-owned": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/statics-lint-owned.json",
+      "sha256": "f0df51619a97f4c3295980795907e83808fd62a637bdfc4a3e4913dd3ec5b108",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/statics-lint-owned.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 18500,
+        "startIdentity": "18500 18500 Mon Nov 16 18:37:17 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 18500,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    }
+  },
+  "source": {
+    "initialReceipt": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/stage-profile.json",
+    "initialManifestIncludesNewProfileTest": true,
+    "finalManifest": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/source-final-manifest.json",
+    "sha256": "8c125e64f920df2d3d31c834ab905d7c793a001af6b5625dac09189258884c4f",
+    "inputs": 960,
+    "changed": [
+      "app/lib/server/parsing/contact.ts",
+      "tests/unit/parsing/contact.test.ts",
+      "tests/unit/preparation-whitespace.test.ts"
+    ],
+    "outsideOwnedChanges": []
+  },
+  "processGroups": {
+    "checkedAt": "2026-11-16T18:40:19.279Z",
+    "groups": [
+      18501,
+      18463,
+      18353,
+      18231,
+      16218,
+      18499,
+      18424,
+      18500
+    ],
+    "remaining": [],
+    "allAbsent": true
+  },
+  "proseHygiene": {
+    "before": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/handoff-before.json",
+    "final": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/handoff-final.json",
+    "densityTier": "low",
+    "unicodeChanges": 0
+  },
+  "boundaries": "PinnedNode22.23.4,sealedfakeenv/emptyHOME,OSnetwork+Root/WTdotenv+sharedGit/pointerwrite denied,oneworker,30s/1MiB;no DB/SQLparser/provider/browser/service/OCR/compiler/realdata/deps/Git/deploy",
+  "remaining": [
+    "Root integrated affected/type/lint/build gate",
+    "Broader extraction/import reliability and actual PDF/consumer/representative/release gates",
+    "Full reliability goal remains incomplete"
+  ],
+  "packagingDiagnostics": {
+    "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-whitespace-backend-wz1w0svj/package-error-first.log",
+    "sha256": "24a717e5beef6833ab349b2dbf1392dd667057eff6b419e8d571a30e9709858d",
+    "productAndTestsUnchanged": true
+  }
+}

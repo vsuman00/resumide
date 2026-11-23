@@ -1,0 +1,19 @@
+{"tier":"REAL_EXISTING_PURE_PIPELINE_WITH_INJECTED_SYNTHETIC_NATIVE_LAYERS","assertions":6,"assertionsByField":{"employer":2,"role":2,"dates":2},"groups":0,"unassignedObservedTargets":6,"rawFieldStates":[{"field":"employer","state":"conflict"},{"field":"role","state":"conflict"},{"field":"dates","state":"conflict"}],"canonicalEntries":6,"canonicalFacts":6,"factsByEntry":[1,1,1,1,1,1],"blockers":["uncalibrated_confidence","missing_critical_fields","conflicting_critical_fields"],"scoringEligible":false,"versions":{"evidence":"evidence/2.0.0","fieldExtractor":"evidence-fields/1.0.1","targets":"evidence-targets/1.0.0","canonical":"canonical-engine/1.0.1"},"ocrSourcePresent":false}
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Legacy importer does not yet produce two grouped employment entries
+
+6 !== 2
+
+    at file:///private/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-grouped-original-32v0hoeb/legacy-red.mjs:16:8 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 6,
+  expected: 2,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.4

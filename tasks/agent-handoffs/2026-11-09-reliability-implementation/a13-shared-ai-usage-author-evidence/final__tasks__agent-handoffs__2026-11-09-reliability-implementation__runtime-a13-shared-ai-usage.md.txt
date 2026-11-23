@@ -1,0 +1,29 @@
+# A13 shared AI usage source handoff
+
+Implemented the allocated shared counter, strict Node helper, A12 caller cutover and full source profile. This is source and synthetic verification only. SQL and the privileged rollback-only verifier are **UNPARSED/UNEXECUTED**. No data RPC was enabled, no policy was seeded and no feature flag changed. Parent owns integration, the combined application gate and adoption decisions.
+
+The installed Supabase CLI 2.117.0 created `20261115082125_owned_ai_usage.sql` in an isolated, network-denied workspace after version/help checks. Root amended migration ordering before source writes. The scaffold receipt is `scaffold.json` in the private evidence directory below; the original empty file SHA256 was `e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855`.
+
+The counter admits the actual owned analysis, current source/root, membership, optional job and privacy barrier. One CTE statement snapshot validates authoritative A12/A13 run links across all months, excludes only those exact run IDs, then sums three disjoint components: unlinked legacy runs, claimed canonical operations and claimed initial-feedback attempts. The latter two use original immutable claim month, including rejected, partial and unpublished usage. Claimed null usage remains an unknown hold. Later known settlement stays in the original claim month. Invalid or ambiguous links refuse the whole reply. The counter reads the actual `private.canonical_rewrite_operations` table; it introduces no accounting table or second R03 debit. This observational quota is not an atomic monthly cap.
+
+The exact 13-field usage reply carries canonical decimal strings and the actual usage routine source hash. `owned-ai-usage.ts` reuses the frozen strict reply schema, validates lowercase UUIDs, owner/org/analysis, source profile, current UTC month and exact BigInt component total. It rejects unknown usage, malformed replies, backward clocks, elapsed deadlines and month-crossing observations. Cancellation is forwarded to the one RPC. There is no old-counter fallback.
+
+The canonical-owned A12 service always reads the new counter in both budget modes. Exact prepare/replay resolution remains before fresh authorization and usage reads. All 38 prior behavior assertions remain; fixture adapters now supply the strict shared reply. The old counter, module, profile and compatibility migration remain byte-exact. The separately owned A13 caller must also use this helper before adoption.
+
+`INITIAL_FEEDBACK_PROFILE` contains 11 actual strings. The metadata reply has 19 keys: those strings, `schemaReady` and seven effective execution capabilities. Its 13-entry closure composes the actual publication and canonical readiness routines. All four new bodies have real source pins; no placeholder routine or hash is exported. Only metadata is service-readable. New usage/private functions remain denied, and existing denied data capabilities remain staged.
+
+The frozen migration is `63ddc8a43deba5e794feef0f6c0fefe73be524d6c75a60b70e67087ae82b44b1`; helper is `38561cea225414c6f69690294bc568ecf6bebaa7b5099dd995a82e93f028c495`; A12 caller is `611f3e5dad383584895a339b3b685accca1c2e61a800823092833971b1295232`. Profile formatting after the peer checkpoint changes only its file hash. The final release packet records all nine file hashes and actual body pins.
+
+Verification and preserved failures:
+
+- The original A12 caller returned HTTP 200 instead of 503 when A13 known usage exhausted the synthetic quota. This genuine fake-SDK regression is preserved in `caller-source-red`. The affected service file then passed all 40 tests.
+- Helper checks passed 26 cases with one cancellation-fixture scheduling failure. Waiting for actual RPC entry corrected that fixture; the affected case passed. No unchanged full helper rerun was performed.
+- Text/source checks passed seven cases with one comment-wrap assertion failure. Normalizing only wrapped SQL comment lines corrected the harness; the affected case passed. These checks do not parse or execute SQL.
+- Scoped TypeScript (seven roots), ESLint and Prettier checks passed. Earlier stale/missing dependency collection failures and the failed custom import preflight remain setup evidence, separate from product regressions. Root-authorized dependency transfers are recorded in the allocation; no dependency source was authored here.
+- Backend independently reviewed the quiescent migration/helper/caller and profile values. It found no remaining issue in the allocated scope. Validation, run-link exclusions and all three sums use one statement snapshot; the proposed multi-statement race is absent.
+
+Evidence and immutable source snapshots are in `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-shared-usage-gfrr1c18`. `release-packet.json` records hashes, source pins, checks and failures. `/private/tmp/build-owned-ai-usage-closure.py` is a textual reconstruction helper, not a SQL parser; its actual relative publication dependencies are pinned in `full-source-checkpoint.json`.
+
+The deferred verifier requires a separately admitted direct synthetic target, function-owner access, real factory fixtures, independently registered totals and natural claim/publication month boundaries. It refuses empty or backdated substitutes. It also checks late known usage, malformed links and unchanged R03 pool state, all inside rollback. It has not run.
+
+Actual SQL compilation, catalog/role reconciliation, inherited CHECK/default validation, concurrency, resource limits, UTC cutover races, privacy/export adoption, technical UUID erasure/retention and complete caller/worker/consumer activation remain open. Source profile agreement does not supply those proofs. Frozen base138, typed13, prior policies, thresholds, legacy score guards and migrations are unchanged. Pricing remains deferred; services remain free.

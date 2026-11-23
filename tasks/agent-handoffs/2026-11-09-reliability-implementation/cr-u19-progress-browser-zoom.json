@@ -1,0 +1,52 @@
+{
+  "id": "CR-U19-S11",
+  "status": "VERIFIED_LOCAL_PROGRESS_BROWSER_ZOOM",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR on loopback with simulated analysis status",
+  "sources": {
+    "app/routes/analysis.tsx": "7cc890e70bba229eb04e91f6aef3db4b2c5bc7731ad75b9c0aae25cd5bc3a722",
+    "e2e/smoke.spec.ts": "69b21b45f21968129b712af7ae1881cad33fbca1a14ae5853c0ea50a569c20e9",
+    "scripts/local-fixture-browser.ts": "e8f78771b4545f1ec7cdf4145a9412f0c94f01f46e44f2f5a2e36d427a177609"
+  },
+  "baseline": {
+    "observed": "At 200% zoom, the missing focus assertion reproduced after the evidence status response removed the retry button.",
+    "logSha256": "e782eb2aeda01aa72339f170dce3c90527c3d2ccefd9ef7bdb047273deb8e8df"
+  },
+  "browser": {
+    "version": "Chromium 153.0.8010.12",
+    "command": "playwright test --config=playwright.public.config.ts e2e/smoke.spec.ts --workers=2",
+    "pageZoomPercent": 200,
+    "effectiveViewportWidthsCssPx": [390, 320],
+    "ssrEntrySha256": "3efbdca189885de23dad91f31a0204701678056692c1751eaa9b4ddf37813b00",
+    "logSha256": "b23c88e42f58de1c801d6f15cf386ed3af18d5ee49e263c3c15c58b2aa9b8557",
+    "firstFullRun": {
+      "passed": 30,
+      "failed": 1,
+      "finding": "The invalid callback smoke spec expected the page to call an unused link expired. It now verifies the current recovery heading, focus, resend instructions and enabled send control.",
+      "logSha256": "222712b90250c77c691c75e430a991e33062bb30892219a540ee2b40a3842c8a"
+    },
+    "result": {
+      "pendingAndCompletedStatusKeptFocus": true,
+      "statusTextReportedCheckInProgress": true,
+      "evidenceActionFitsAt320": true,
+      "nextTabAndEnterReachedEvidenceRequest": true,
+      "numericScoresWithheld": true,
+      "progressRegionSeriousOrCriticalAxeViolations": 0,
+      "publicSmokeTestsPassed": 31
+    }
+  },
+  "checks": {
+    "node": "22.23.4",
+    "focusedTestsPassed": 278,
+    "focusedTestFiles": 9,
+    "testsLogSha256": "e5e0303c72157ec9678849445ce765619dc9cb0f99bd7783c378d2be4472b7c6",
+    "typecheck": "passed",
+    "lint": "passed with four existing JD clause-order warnings",
+    "changedFileFormatting": "passed",
+    "webBuildLogSha256": "47145aa5dc89bcedda78f449f5e2eb22e9f0e043a9cbf1be9a0a13730dac7cf4",
+    "workerBuildLogSha256": "1afbe3feed66d0f9a5f7e6d816d4738afdd88321aafdf06870fb6a0563baf78a"
+  },
+  "manualScreenReaderVerified": false,
+  "liveWorkerVerified": false,
+  "managedSupabaseVerified": false
+}

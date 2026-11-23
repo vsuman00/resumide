@@ -1,0 +1,6 @@
+import {writeFileSync} from 'node:fs';
+import {JOB_RELATION_JSON_SCHEMA,JOB_RELATION_ADMISSION_PROFILE,JOB_RELATION_ADMISSION_PROFILE_SHA256} from '/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/app/lib/server/job-requirement-admission.ts';
+const folder='/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a09-admission-2ql8jqnk';
+writeFileSync(folder+'/structural-schema.json',JSON.stringify(JOB_RELATION_JSON_SCHEMA,null,2)+'\n');
+writeFileSync(folder+'/admission-profile.json',JSON.stringify(JOB_RELATION_ADMISSION_PROFILE,null,2)+'\n');
+process.stdout.write(JSON.stringify({profile:JOB_RELATION_ADMISSION_PROFILE,profileSha256:JOB_RELATION_ADMISSION_PROFILE_SHA256})+'\n');

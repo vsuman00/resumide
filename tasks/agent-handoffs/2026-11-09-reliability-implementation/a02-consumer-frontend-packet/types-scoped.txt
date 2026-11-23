@@ -1,0 +1,11 @@
+const ts=require('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/node_modules/typescript');
+const root='/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats';
+const config=ts.readConfigFile(root+'/tsconfig.json',ts.sys.readFile);
+if(config.error)throw Error(ts.flattenDiagnosticMessageText(config.error.messageText,'\n'));
+const parsed=ts.parseJsonConfigFileContent(config.config,ts.sys,root);
+const roots=['app/routes/analysis.canonical.tsx','app/components/GroupedOriginalImportReview.tsx','tests/unit/canonical-route.test.ts','tests/components/GroupedOriginalImportReview.test.tsx','types/index.d.ts'].map(p=>root+'/'+p);
+const program=ts.createProgram(roots,{...parsed.options,noEmit:true,incremental:false});
+const diagnostics=ts.getPreEmitDiagnostics(program);
+for(const d of diagnostics){const location=d.file&&d.start!==undefined?d.file.getLineAndCharacterOfPosition(d.start):null;process.stdout.write((d.file?d.file.fileName+(location?':'+(location.line+1)+':'+(location.character+1):'')+': ':'')+ts.flattenDiagnosticMessageText(d.messageText,'\n')+'\n');}
+process.stdout.write(JSON.stringify({roots:roots.length,files:program.getSourceFiles().length,diagnostics:diagnostics.length})+'\n');
+process.exitCode=diagnostics.length?1:0;

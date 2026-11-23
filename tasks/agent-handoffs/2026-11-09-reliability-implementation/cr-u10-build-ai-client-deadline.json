@@ -1,0 +1,42 @@
+{
+  "id": "CR-U10-S07",
+  "status": "VERIFIED_BUILD_AI_CLIENT_DEADLINE_WITH_SIMULATED_TRANSPORT",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated checkout with synthetic fixtures",
+  "sources": {
+    "app/components/BuildAiAssistant.tsx": "63c2d4d2a861c1b16807a2563925b8cd956c00ed99fcb903b3e9ba28305e4192",
+    "app/lib/build-assist.ts": "47d5079e0e125c66d934418720a90dd86886ce76ed3701ebfbf7bb5abec005d1",
+    "tests/components/BuildAiAssistant.test.tsx": "b2ed3c7dc8553b40d0f2ffba5d02f497542dbd69ba789c79fe3a3f68456a5020",
+    "tests/unit/build-assist-budget.test.ts": "eb42f59cdd243ef248a3bb3680a7bed760a6a7dc2a4cc3c69051c9d183f5ed00",
+    "scripts/verify-local-build-ai-deadline.ts": "d0eaabf7e924875387e6322631438cbbac3572760933279ec8176ed181e782de",
+    "scripts/local-fixture-browser.ts": "372fa419ba68e5c15b742dbb4acd267a0359b67c1b8eb8b9ea5319a5c36e22f4"
+  },
+  "baselineRegressions": 2,
+  "baselineLogSha256": "258fd8e0283afb8156bccdcee1bd3eea3df7db52b8027393a4a05a61a8db5217",
+  "focusedTestCommands": [
+    "npm test -- tests/components/BuildAiAssistant.test.tsx tests/unit/build-assist.test.ts tests/unit/build-assist-provider.test.ts tests/unit/build-assist-service.test.ts tests/unit/build-assist-config.test.ts",
+    "npm test -- tests/unit/build-assist-budget.test.ts"
+  ],
+  "focusedTestsPassed": 268,
+  "typecheckExitCode": 0,
+  "lintExitCode": 0,
+  "existingLintWarnings": 4,
+  "webBuildExitCode": 0,
+  "webBuildLogSha256": "ccc6ae30b080e82bec85f287fa25ad0b8deb86453023a6e940fb5071758b3bac",
+  "workerBuildExitCode": 0,
+  "browser": {
+    "application": "Built SSR on loopback",
+    "auth": "Simulated Supabase Auth transport",
+    "suggestionTransport": "Browser route fixture deliberately delivered the expired response after the fresh response",
+    "reportSha256": "a6d429f72693b8270a8d5e05671081d4c2176c9538585ac8ab81d8a0181ad8c8",
+    "result": {
+      "browser": "Chromium",
+      "requests": 2,
+      "expiredReplyDelivered": true,
+      "explicitFreshConsent": true,
+      "exactFreshEditApplied": true
+    }
+  },
+  "managedVerification": false,
+  "liveProviderVerification": false
+}

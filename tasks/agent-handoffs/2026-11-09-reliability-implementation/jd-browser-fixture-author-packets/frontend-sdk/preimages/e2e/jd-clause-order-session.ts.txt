@@ -1,0 +1,283 @@
+import { createServerClient } from "@supabase/ssr";
+import type {
+  BrowserContext,
+  Response as BrowserResponse,
+} from "@playwright/test";
+import { z } from "zod";
+import {
+  createJdClauseOrderBrowserTestRequest,
+  readJdClauseOrderBrowserBuildBinding,
+  requireJdClauseOrderBrowserTarget,
+} from "../scripts/jd-clause-order-browser-target";
+import { CanonicalResumeDraftSchema } from "../app/lib/server/canonical-resume-schema";
+
+type Fixture = Awaited<
+  ReturnType<
+    typeof import("../scripts/jd-clause-order-test-fixture").createJdClauseOrderTestFixture
+  >
+>;
+
+/** No PDF, session or network operation precedes the fixed target/build guard. */
+export async function createJdClauseOrderSession(context: BrowserContext) {
+  const target = requireJdClauseOrderBrowserTarget(
+    createJdClauseOrderBrowserTestRequest(process.env),
+    process.env,
+    readJdClauseOrderBrowserBuildBinding(),
+  );
+  const { createJdClauseOrderTestFixture, JD_CLAUSE_ORDER_FIXTURE_TEXT } =
+    await import("../scripts/jd-clause-order-test-fixture");
+  const { default: PDFDocument } = await import("pdfkit");
+  const pdf = await new Promise<Buffer>((resolve, reject) => {
+    const document = new PDFDocument({ size: "A4", margin: 48 });
+    const chunks: Buffer[] = [];
+    let size = 0;
+    document.on("data", (chunk: Buffer) => {
+      size += chunk.length;
+      if (size > 1_048_576) {
+        document.destroy(new Error("Synthetic PDF limit exceeded"));
+        return;
+      }
+      chunks.push(chunk);
+    });
+    document.once("error", () =>
+      reject(new Error("Synthetic PDF creation failed")),
+    );
+    document.once("end", () => resolve(Buffer.concat(chunks)));
+    document.font("Helvetica").fontSize(12).text(JD_CLAUSE_ORDER_FIXTURE_TEXT);
+    document.end();
+  });
+  const fixture = await createJdClauseOrderTestFixture({
+    pdf,
+    syntheticConsent: true,
+  });
+  const cookies: Array<{ name: string; value: string }> = [];
+  let client: ReturnType<typeof createServerClient>;
+  try {
+    client = createServerClient(
+      target.serverEnv.SUPABASE_URL!,
+      target.serverEnv.SUPABASE_PUBLISHABLE_KEY!,
+      {
+        global: {
+          fetch: (input, init) =>
+            fetch(input, {
+              ...init,
+              signal: init?.signal
+                ? AbortSignal.any([init.signal, AbortSignal.timeout(5_000)])
+                : AbortSignal.timeout(5_000),
+            }),
+        },
+        cookies: {
+          getAll: () => cookies,
+          setAll: (values) => {
+            cookies.splice(
+              0,
+              cookies.length,
+              ...values.map(({ name, value }) => ({ name, value })),
+            );
+          },
+        },
+      },
+    );
+  } catch {
+    await fixture.cleanup();
+    throw new Error("Owned journey session preparation failed");
+  }
+  try {
+    const signedIn = await client.auth.signInWithPassword({
+      email: fixture.email,
+      password: fixture.password,
+    });
+    if (signedIn.error || signedIn.data.user?.id !== fixture.ownerId)
+      throw new Error("Owned journey sign-in failed");
+    await context.clearCookies();
+    await context.addCookies(
+      cookies.map((cookie) => ({
+        ...cookie,
+        url: target.baseURL,
+        httpOnly: true,
+        sameSite: "Lax" as const,
+      })),
+    );
+  } catch {
+    await Promise.allSettled([client.auth.signOut(), context.clearCookies()]);
+    await fixture.cleanup();
+    throw new Error("Owned journey session preparation failed");
+  }
+  return {
+    fixture,
+    baseURL: target.baseURL,
+    async cleanup() {
+      const sessions = await Promise.allSettled([
+        client.auth.signOut(),
+        context.clearCookies(),
+      ]);
+      await fixture.cleanup();
+      if (
+        sessions.some((result) => result.status === "rejected") ||
+        (sessions[0].status === "fulfilled" && sessions[0].value?.error)
+      )
+        throw new Error("Owned journey session cleanup failed");
+    },
+  };
+}
+
+const versionSchema = z.object({
+  id: z.uuid(),
+  revision: z.number().int().positive(),
+  parent_version_id: z.uuid().nullable(),
+  content: CanonicalResumeDraftSchema,
+});
+const eventSchema = z.object({
+  id: z.uuid(),
+  action: z.string(),
+  base_version_id: z.uuid(),
+  result_version_id: z.uuid().nullable(),
+  idempotency_key: z.uuid(),
+  command: z.unknown(),
+  result: z.unknown(),
+});
+/** Exact owned/source reads only; no worker claim, mutation or global inventory. */
+export async function readJdClauseOrderState(f: Fixture) {
+  const signal = AbortSignal.timeout(5_000);
+  const [head, versions, events] = await Promise.all([
+    f.admin
+      .from("canonical_resume_heads")
+      .select("version_id,revision")
+      .eq("resume_id", f.resumeId)
+      .eq("owner_id", f.ownerId)
+      .eq("organization_id", f.organizationId)
+      .single()
+      .abortSignal(signal),
+    f.admin
+      .from("canonical_resume_versions")
+      .select("id,revision,parent_version_id,content")
+      .eq("resume_id", f.resumeId)
+      .eq("owner_id", f.ownerId)
+      .eq("organization_id", f.organizationId)
+      .eq("source_resume_version_id", f.sourceId)
+      .order("revision", { ascending: true })
+      .limit(40)
+      .abortSignal(signal),
+    f.admin
+      .from("authoring_events")
+      .select(
+        "id,action,base_version_id,result_version_id,idempotency_key,command,result",
+      )
+      .eq("analysis_id", f.analysisId)
+      .eq("resume_id", f.resumeId)
+      .eq("owner_id", f.ownerId)
+      .eq("organization_id", f.organizationId)
+      .order("created_at", { ascending: true })
+      .limit(40)
+      .abortSignal(signal),
+  ]);
+  const parsedHead = z
+    .object({ version_id: z.uuid(), revision: z.number().int().positive() })
+    .safeParse(head.data);
+  const parsedVersions = z
+    .array(versionSchema)
+    .max(39)
+    .safeParse(versions.data);
+  const parsedEvents = z.array(eventSchema).max(39).safeParse(events.data);
+  if (
+    head.error ||
+    versions.error ||
+    events.error ||
+    !parsedHead.success ||
+    !parsedVersions.success ||
+    !parsedEvents.success
+  )
+    throw new Error("Owned journey state could not be verified");
+  if (
+    !parsedVersions.data.every(
+      (v) =>
+        v.content.versionId === v.id &&
+        v.content.parentVersionId === v.parent_version_id &&
+        v.content.ownerId === f.ownerId &&
+        v.content.organizationId === f.organizationId &&
+        v.content.resumeId === f.resumeId &&
+        v.content.analysisId === f.analysisId &&
+        v.content.sourceEvidenceVersionId === f.attemptId,
+    )
+  )
+    throw new Error("Owned journey version binding failed");
+  const current = parsedVersions.data.find(
+    (v) =>
+      v.id === parsedHead.data.version_id &&
+      v.revision === parsedHead.data.revision,
+  );
+  if (!current) throw new Error("Owned journey head is unavailable");
+  return {
+    head: parsedHead.data,
+    versions: parsedVersions.data,
+    events: parsedEvents.data,
+    current,
+  };
+}
+
+export function isClauseOrderResponse(
+  response: BrowserResponse,
+  analysisId: string,
+  baseURL: string,
+) {
+  const url = new URL(response.url());
+  return (
+    url.origin === baseURL &&
+    url.pathname === `/analysis/${analysisId}/author/clause-order` &&
+    response.request().method() === "POST"
+  );
+}
+
+export async function clauseOrderRequestForm(response: BrowserResponse) {
+  const request = response.request();
+  const body = request.postDataBuffer();
+  const contentType = request.headers()["content-type"];
+  if (
+    !body ||
+    body.byteLength > 131_072 ||
+    !contentType?.startsWith("multipart/form-data;")
+  )
+    throw new Error("Clause-order request observation failed");
+  try {
+    const form = await new Response(new Uint8Array(body), {
+      headers: { "Content-Type": contentType },
+    }).formData();
+    const names = Array.from(form.keys());
+    if (form.get("action") !== "decision" && form.get("action") !== "undo")
+      throw new Error("Clause-order request observation failed");
+    const expected =
+      form.get("action") === "decision"
+        ? ["action", "command", "reviewAcknowledgement"]
+        : ["action", "receipt", "idempotencyKey"];
+    // Rejection omits the acceptance-only acknowledgement.
+    const required = expected.filter(
+      (name) => name !== "reviewAcknowledgement",
+    );
+    if (
+      names.length > expected.length ||
+      names.some((name) => !expected.includes(name)) ||
+      required.some((name) => !form.has(name)) ||
+      names.some(
+        (name) =>
+          form.getAll(name).length !== 1 || typeof form.get(name) !== "string",
+      )
+    )
+      throw new Error("Clause-order request observation failed");
+    return form;
+  } catch {
+    throw new Error("Clause-order request observation failed");
+  }
+}
+
+export async function clauseOrderResponseBody(
+  response: BrowserResponse,
+): Promise<unknown> {
+  const body = await response.body();
+  if (body.length > 65_536)
+    throw new Error("Clause-order response observation failed");
+  try {
+    return JSON.parse(body.toString("utf8"));
+  } catch {
+    throw new Error("Clause-order response observation failed");
+  }
+}

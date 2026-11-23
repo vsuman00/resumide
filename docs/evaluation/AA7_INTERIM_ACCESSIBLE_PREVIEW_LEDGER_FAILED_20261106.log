@@ -1,0 +1,26 @@
+
+Running 1 test using 1 worker
+
+  ✘  1 [chromium] › e2e/latex-converter.spec.ts:84:1 › exact current macro source compiles in place and downloads a real readable PDF (142ms)
+
+
+  1) [chromium] › e2e/latex-converter.spec.ts:84:1 › exact current macro source compiles in place and downloads a real readable PDF 
+
+    Error: LaTeX auth fixtures require explicit approval for the configured Supabase test target
+
+       at ../tests/fixtures/latex-auth.ts:22
+
+      20 |     !/^\/tmp\/resumide-aa7-[a-z0-9-]+\.jsonl$/.test(ledger)
+      21 |   ) {
+    > 22 |     throw new Error(
+         |           ^
+      23 |       "LaTeX auth fixtures require explicit approval for the configured Supabase test target",
+      24 |     );
+      25 |   }
+        at createLatexOwner (<workspace>/tests/fixtures/latex-auth.ts:22:11)
+        at <workspace>/e2e/latex-converter.spec.ts:88:23
+
+    Error Context: ../../../../../../tmp/resumide-aa7-private-c3e25463-a851-4149-ac5a-5d20d01e9ce8/playwright/latex-converter-exact-curr-dc99f-wnloads-a-real-readable-PDF-chromium/error-context.md
+
+  1 failed
+    [chromium] › e2e/latex-converter.spec.ts:84:1 › exact current macro source compiles in place and downloads a real readable PDF 

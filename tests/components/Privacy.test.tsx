@@ -1,0 +1,265 @@
+/** @vitest-environment jsdom */
+
+import {
+  act,
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
+import { afterEach, expect, it, vi } from "vitest";
+import { createMemoryRouter, RouterProvider } from "react-router";
+
+vi.mock("~/lib/server/auth", () => ({
+  getAuthenticatedUser: vi.fn(() => {
+    throw new Error("Component tests must not call authentication.");
+  }),
+}));
+vi.mock("~/lib/server/supabase", () => ({
+  createSupabaseAdminClient: vi.fn(() => {
+    throw new Error("Component tests must not create a database client.");
+  }),
+  createSupabaseServerClient: vi.fn(() => {
+    throw new Error("Component tests must not create a session client.");
+  }),
+}));
+
+import Privacy from "~/routes/privacy";
+
+type RequestSummary = {
+  id: string;
+  kind: "export" | "deletion";
+  status: "queued" | "processing" | "completed" | "failed" | "cancelled";
+  created_at: string;
+};
+
+const downloadExplanation =
+  "Export downloads are unavailable because an account deletion request is on record.";
+
+function requestSummary(
+  id: string,
+  kind: RequestSummary["kind"],
+  status: RequestSummary["status"],
+): RequestSummary {
+  return { id, kind, status, created_at: "2026-11-09T00:00:00Z" };
+}
+
+function renderPrivacy(
+  getRequests: () => RequestSummary[],
+  getAccess: () => "allowed" | "blocked" | "unavailable" = () => "allowed",
+  getDeletionPrepared: () => boolean | null = () => false,
+) {
+  const router = createMemoryRouter(
+    [
+      {
+        path: "/privacy",
+        Component: Privacy,
+        loader: () => ({
+          requests: getRequests(),
+          consents: [],
+          exportDownloadAccess: getAccess(),
+          deletionPrepared: getDeletionPrepared(),
+        }),
+      },
+    ],
+    { initialEntries: ["/privacy"] },
+  );
+  render(<RouterProvider router={router} />);
+  return router;
+}
+
+afterEach(cleanup);
+
+it.each(["queued", "processing", "completed"] as const)(
+  "withdraws completed-export downloads while a visible deletion is %s and preserves request tracking",
+  async (status) => {
+    renderPrivacy(
+      () => [
+        requestSummary("export-one", "export", "completed"),
+        requestSummary("deletion-one", "deletion", status),
+      ],
+      () => "blocked",
+    );
+    const history = await screen.findByRole("region", {
+      name: "Recent requests",
+    });
+
+    expect(
+      within(history).queryByRole("link", { name: "Download export" }),
+    ).toBeNull();
+    expect(within(history).getByRole("status").textContent).toBe(
+      downloadExplanation,
+    );
+    expect(within(history).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(history).getByText("Account deletion")).toBeTruthy();
+    expect(within(history).getAllByText(status).length).toBeGreaterThan(0);
+    expect(screen.getByRole("button", { name: "Request export" })).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Review deletion" }),
+    ).toBeTruthy();
+    if (status === "queued") {
+      const cancel = within(history).getByRole("button", {
+        name: "Cancel request",
+      });
+      expect(cancel.getAttribute("name")).toBe("kind");
+      expect(cancel.getAttribute("value")).toBe("cancel");
+      expect(
+        cancel
+          .closest("form")
+          ?.querySelector('input[name="requestId"]')
+          ?.getAttribute("value"),
+      ).toBe("deletion-one");
+    }
+  },
+);
+
+it.each(["failed", "cancelled"] as const)(
+  "preserves completed-export downloads when the only visible deletion is %s",
+  async (status) => {
+    renderPrivacy(() => [
+      requestSummary("export-one", "export", "completed"),
+      requestSummary("export-two", "export", "completed"),
+      requestSummary("export-pending", "export", "processing"),
+      requestSummary("deletion-inactive", "deletion", status),
+    ]);
+    const history = await screen.findByRole("region", {
+      name: "Recent requests",
+    });
+    const downloads = within(history).getAllByRole("link", {
+      name: "Download export",
+    });
+    expect(downloads.map((link) => link.getAttribute("href"))).toEqual([
+      "/api/privacy/requests/export-one/export",
+      "/api/privacy/requests/export-two/export",
+    ]);
+    expect(within(history).queryByText(downloadExplanation)).toBeNull();
+    expect(within(history).getByText(status)).toBeTruthy();
+  },
+);
+
+it("keeps normal downloads with a capped visible list without claiming complete history", async () => {
+  renderPrivacy(() =>
+    Array.from({ length: 20 }, (_, index) =>
+      requestSummary(`export-${index}`, "export", "completed"),
+    ),
+  );
+  const history = await screen.findByRole("region", {
+    name: "Recent requests",
+  });
+  expect(
+    within(history).getAllByRole("link", { name: "Download export" }),
+  ).toHaveLength(20);
+  expect(within(history).getByText("20 shown")).toBeTruthy();
+  expect(within(history).queryByText(downloadExplanation)).toBeNull();
+  expect(within(history).queryByRole("status")).toBeNull();
+});
+
+it("updates download availability when revalidation reveals a deletion or its failure", async () => {
+  let requests = [requestSummary("export-one", "export", "completed")];
+  let access: "allowed" | "blocked" = "allowed";
+  const router = renderPrivacy(
+    () => requests,
+    () => access,
+  );
+  expect(
+    await screen.findByRole("link", { name: "Download export" }),
+  ).toBeTruthy();
+
+  requests = [
+    ...requests,
+    requestSummary("deletion-one", "deletion", "queued"),
+  ];
+  access = "blocked";
+  await act(async () => {
+    await router.revalidate();
+  });
+  await waitFor(() => {
+    expect(screen.queryByRole("link", { name: "Download export" })).toBeNull();
+  });
+  expect(screen.getByText(downloadExplanation)).toBeTruthy();
+
+  requests = [
+    requestSummary("export-one", "export", "completed"),
+    requestSummary("deletion-one", "deletion", "failed"),
+  ];
+  access = "allowed";
+  await act(async () => {
+    await router.revalidate();
+  });
+  expect(
+    await screen.findByRole("link", { name: "Download export" }),
+  ).toBeTruthy();
+  expect(screen.queryByText(downloadExplanation)).toBeNull();
+});
+
+it.each(["blocked", "unavailable"] as const)(
+  "withholds links when access metadata is %s even without a visible deletion",
+  async (access) => {
+    renderPrivacy(
+      () => [requestSummary("export-one", "export", "completed")],
+      () => access,
+    );
+    const history = await screen.findByRole("region", {
+      name: "Recent requests",
+    });
+    expect(
+      within(history).queryByRole("link", { name: "Download export" }),
+    ).toBeNull();
+    expect(within(history).getByRole("status").textContent).toBe(
+      access === "blocked"
+        ? downloadExplanation
+        : "Export download access could not be checked. Try again shortly.",
+    );
+  },
+);
+
+it.each(["queued", "failed", "cancelled"] as const)(
+  "keeps a prepared %s deletion distinct from an unprepared request",
+  async (status) => {
+    renderPrivacy(
+      () => [
+        requestSummary("export-one", "export", "completed"),
+        requestSummary("deletion-one", "deletion", status),
+      ],
+      () => "blocked",
+      () => true,
+    );
+    const history = await screen.findByRole("region", {
+      name: "Recent requests",
+    });
+    expect(
+      within(history).queryByRole("link", { name: "Download export" }),
+    ).toBeNull();
+    expect(
+      within(history).queryByRole("button", { name: "Cancel request" }),
+    ).toBeNull();
+    expect(within(history).getByRole("status").textContent).toBe(
+      "Account deletion has been prepared. Export downloads remain unavailable while deletion is completed.",
+    );
+    expect(within(history).getByText(status)).toBeTruthy();
+  },
+);
+it("keeps export cancellation available while a prepared deletion retry cannot be cancelled", async () => {
+  renderPrivacy(
+    () => [
+      requestSummary("export-queued", "export", "queued"),
+      requestSummary("deletion-retry", "deletion", "queued"),
+    ],
+    () => "blocked",
+    () => true,
+  );
+  const history = await screen.findByRole("region", {
+    name: "Recent requests",
+  });
+  const buttons = within(history).getAllByRole("button", {
+    name: "Cancel request",
+  });
+  expect(buttons).toHaveLength(1);
+  expect(
+    buttons[0]
+      .closest("form")
+      ?.querySelector('input[name="requestId"]')
+      ?.getAttribute("value"),
+  ).toBe("export-queued");
+});

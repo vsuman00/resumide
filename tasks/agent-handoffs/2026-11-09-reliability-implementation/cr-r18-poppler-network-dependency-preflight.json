@@ -1,0 +1,77 @@
+{
+  "id": "CR-R18-S14",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "status": "VERIFIED_SOURCE_OPTION_AND_EXACT_APT_SIMULATION",
+  "imageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a",
+  "priorEvidenceSha256": "422a88285f27f9a6a6185671283fd8cce580d22e4f8514a589f65442d90b3e19",
+  "sourceArchive": {
+    "name": "poppler_25.03.0.orig.tar.xz",
+    "size": 1954516,
+    "sha256": "97da4ff88517a6bbd729529f195f85c8d7a0c3bb4a3d57cb0c685cbb052fe837",
+    "url": "https://deb.debian.org/debian/pool/main/p/poppler/poppler_25.03.0.orig.tar.xz"
+  },
+  "sourceReferences": {
+    "CMakeLists.txt": [
+      80,
+      527,
+      532
+    ],
+    "poppler/PDFDocFactory.cc": [
+      41,
+      43,
+      44
+    ],
+    "poppler/CurlPDFDocBuilder.cc": [
+      42
+    ],
+    "config.h.cmake": [
+      4
+    ]
+  },
+  "runtimeDependencyEvidence": {
+    "directPackageDependencyMentions": {
+      "libcurl3t64-gnutls": [
+        "libgssapi-krb5-2"
+      ],
+      "libgssapi-krb5-2": [
+        "libk5crypto3",
+        "libkrb5-3",
+        "libkrb5support0"
+      ],
+      "libk5crypto3": [
+        "libkrb5support0"
+      ],
+      "libkrb5-3": [
+        "libk5crypto3",
+        "libkrb5support0"
+      ],
+      "libpoppler147": [
+        "libcurl3t64-gnutls"
+      ]
+    },
+    "simulationChangedPackages": false,
+    "simulationWouldRemove": [
+      "libcurl3t64-gnutls",
+      "libgssapi-krb5-2",
+      "libk5crypto3",
+      "libkrb5-3",
+      "libkrb5support0",
+      "libpoppler147",
+      "poppler-utils"
+    ],
+    "imageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a"
+  },
+  "currentHighPackageMatchesInReviewCohort": 58,
+  "currentHighAdvisoryIdsInReviewCohort": 16,
+  "proposal": "Build a separately identified local Poppler successor with ENABLE_LIBCURL=OFF. Retain the local-file builder, geometry framing, JPEG2000 exclusion, and GPGME/NSS signature contract. Derive package and ELF closures from the new artifact.",
+  "acceptance": [
+    "Authenticate source, packaging and test inputs. Preserve frozen predecessor receipts and exact image references.",
+    "Verify candidate configuration, DT_NEEDED, required signatures and packaging. Require that an offline install and the explicit five-package removal retain both Poppler packages and all unrelated package versions and marks.",
+    "Verify the previous ABI/signature gate, ordinary local PDF consumers, all six LaTeX starters, two-page renders, Chrome PDF downloads and exact cleanup.",
+    "Scan the newly verified image once, retain all matches, and compare the exact dependency cohort before crediting any reduction."
+  ],
+  "successorBuilt": false,
+  "findingsResolvedByThisWork": 0,
+  "releaseAccepted": false
+}

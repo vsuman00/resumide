@@ -1,14 +1,34 @@
-import { getAuthenticatedUser } from "~/lib/server/auth";
+import { authResponseHeaders, getAuthenticatedUser } from "~/lib/server/auth";
+import { readCandidatePrivacyAccess } from "~/lib/server/privacy-deletion-policy";
 import {
   methodNotAllowedResponse,
   PublicApiError,
   toErrorResponse,
 } from "~/lib/server/errors";
-import { createRequestId } from "~/lib/server/request-context";
+import { requestIdFrom } from "~/lib/server/request-context";
 import {
   createSupabaseAdminClient,
   createSupabaseServerClient,
 } from "~/lib/server/supabase";
+
+async function requireExportAccess(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+  signal: AbortSignal,
+) {
+  const { state } = await readCandidatePrivacyAccess(admin, userId, { signal });
+  if (state === "unavailable") {
+    throw new PublicApiError(
+      "SERVICE_UNAVAILABLE",
+      "Privacy access is unavailable. Try again later.",
+      503,
+      true,
+    );
+  }
+  if (state === "blocked") {
+    throw new PublicApiError("NOT_FOUND", "Export not found.", 404);
+  }
+}
 
 export async function loader({
   request,
@@ -17,14 +37,23 @@ export async function loader({
   request: Request;
   params: { id?: string };
 }) {
-  const requestId = createRequestId();
+  const requestId = requestIdFrom(request);
+  const sessionHeaders = new Headers();
+  const privateResponse = (response: Response) => {
+    const headers = authResponseHeaders(sessionHeaders);
+    for (const [name, value] of headers) {
+      if (name !== "set-cookie") response.headers.set(name, value);
+    }
+    for (const cookie of headers.getSetCookie())
+      response.headers.append("Set-Cookie", cookie);
+    return response;
+  };
   if (request.method !== "GET") {
-    return methodNotAllowedResponse(requestId, ["GET"]);
+    return privateResponse(methodNotAllowedResponse(requestId, ["GET"]));
   }
   try {
-    const headers = new Headers({ "X-Request-Id": requestId });
     const user = await getAuthenticatedUser(
-      createSupabaseServerClient(request, headers),
+      createSupabaseServerClient(request, sessionHeaders),
     );
     if (!user) {
       throw new PublicApiError(
@@ -36,7 +65,9 @@ export async function loader({
     if (!params.id) {
       throw new PublicApiError("NOT_FOUND", "Export not found.", 404);
     }
-    const { data, error } = await createSupabaseAdminClient()
+    const admin = createSupabaseAdminClient();
+    await requireExportAccess(admin, user.id, request.signal);
+    const { data, error } = await admin
       .from("data_requests")
       .select("id, result_manifest")
       .eq("id", params.id)
@@ -47,14 +78,16 @@ export async function loader({
     if (error || !data?.result_manifest) {
       throw new PublicApiError("NOT_FOUND", "Export not found.", 404);
     }
-    return Response.json(data.result_manifest, {
-      headers: {
-        ...Object.fromEntries(headers),
-        "Cache-Control": "no-store",
-        "Content-Disposition": 'attachment; filename="resumide-export.json"',
-      },
-    });
+    await requireExportAccess(admin, user.id, request.signal);
+    return privateResponse(
+      Response.json(data.result_manifest, {
+        headers: {
+          "X-Request-Id": requestId,
+          "Content-Disposition": 'attachment; filename="resumide-export.json"',
+        },
+      }),
+    );
   } catch (error) {
-    return toErrorResponse(error, requestId);
+    return privateResponse(toErrorResponse(error, requestId));
   }
 }

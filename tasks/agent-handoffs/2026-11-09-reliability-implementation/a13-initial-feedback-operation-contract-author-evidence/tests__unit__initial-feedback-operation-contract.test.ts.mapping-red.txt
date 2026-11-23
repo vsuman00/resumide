@@ -1,0 +1,649 @@
+import { createHash } from "node:crypto";
+import { describe, expect, it } from "vitest";
+import { scoreExtractedResume } from "../../app/lib/server/scoring-stage";
+import { buildPartialFeedback } from "../../app/lib/server/qualitative-stage";
+import { compileInitialFeedbackPlan } from "../../app/lib/server/initial-feedback-plan";
+import { createInitialFeedbackPublicationPolicy } from "../../app/lib/server/initial-feedback-publication-policy";
+import {
+  calculateAiBudgetCost,
+  hashAiBudgetBinding,
+} from "../../app/lib/server/ai-budget";
+import {
+  InitialFeedbackAttemptSchema,
+  InitialFeedbackBindingSchema,
+  InitialFeedbackContextSchema,
+  InitialFeedbackOperationSchema,
+  InitialFeedbackPrepareSchema,
+  InitialFeedbackClaimSchema,
+  InitialFeedbackCompletionSchema,
+  InitialFeedbackPublicationSchema,
+  InitialFeedbackSettlementSchema,
+  InitialFeedbackReadSchema,
+  InitialFeedbackUsageSchema,
+  InitialFeedbackUsageReplySchema,
+  InitialFeedbackReadinessSchema,
+  validateInitialFeedbackReadiness,
+  validateInitialFeedbackUsage,
+  initialFeedbackPartialFeedback,
+} from "../../app/lib/server/initial-feedback-operation-contract";
+
+const sha = (v: string) => createHash("sha256").update(v).digest("hex");
+const uuid = (n: number) =>
+  `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+const source = "Experience\nBuilt services using Python\n\nSkills\nPython";
+const policy = () =>
+  createInitialFeedbackPublicationPolicy({
+    model: "unit-model",
+    maxOutputTokens: 1200,
+    attemptLimit: 3,
+    budgetPolicyVersion: null,
+  });
+function fixture() {
+  // IDs and PG digests are explicitly synthetic opaque metadata; content and
+  // all source/plan/assessment/checksum values come from the real producers.
+  const scoringContext = {
+    schemaVersion: "legacy-scoring-input/1.0.0" as const,
+    analysisId: uuid(1),
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    requestId: null,
+    source: {
+      resumeId: uuid(4),
+      resumeVersionId: uuid(5),
+      fileChecksum: "a".repeat(64),
+      bytes: 1000,
+      mediaType: "application/pdf" as const,
+    },
+    extraction: {
+      text: source,
+      pageCount: 1,
+      pageTexts: [source],
+      textChecksum: sha(source),
+      extractorVersion: "unpdf-v1",
+      contentSha256: "b".repeat(64),
+    },
+    job: {
+      kind: "owned_job" as const,
+      id: uuid(6),
+      title: "Unit role",
+      description: "Python required",
+      companyName: "",
+      contentSha256: "c".repeat(64),
+    },
+    producer: {
+      parserVersion: "parse-sim-v1" as const,
+      rulesetVersion: "ats-rules-v4" as const,
+      normalizerVersion: "normalizer-v1" as const,
+      taxonomyVersion: "skills-taxonomy-v1" as const,
+    },
+    binding: {
+      schemaVersion: "legacy-scoring-binding/1.0.0" as const,
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      resumeId: uuid(4),
+      resumeVersionId: uuid(5),
+      fileChecksum: "a".repeat(64),
+      textChecksum: sha(source),
+      extractionSha256: "b".repeat(64),
+      jobId: uuid(6),
+      jobSha256: "c".repeat(64),
+      inputBindingSha256: "d".repeat(64),
+    },
+  };
+  const deterministicResult = scoreExtractedResume({
+    text: source,
+    pageCount: 1,
+    jobDescription: "Python required",
+  });
+  const context = {
+    scoringContext,
+    deterministicResult,
+    currentness: "current" as const,
+    generationEligibility: "eligible" as const,
+  };
+  const binding = {
+    schemaVersion: "initial-feedback-binding/1.0.0" as const,
+    analysisId: uuid(1),
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    resumeId: uuid(4),
+    resumeVersionId: uuid(5),
+    scoringInputSha256: "d".repeat(64),
+    deterministicContentSha256: "e".repeat(64),
+    resultChecksum: deterministicResult.resultChecksum,
+    sourceTextSha256: sha(source),
+    jobId: uuid(6),
+    jobSha256: "c".repeat(64),
+    policy: policy(),
+  };
+  const attempt = {
+    attemptId: uuid(8),
+    ordinal: 1,
+    state: "reserved" as const,
+    claimedAt: null,
+    usage: null,
+    errorCode: null,
+    budgetAttemptId: null,
+  };
+  const operation = {
+    schemaVersion: "initial-feedback-operation/1.0.0" as const,
+    operationId: uuid(7),
+    analysisId: uuid(1),
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    binding,
+    bindingSha256: "f".repeat(64),
+    state: "open" as const,
+    attemptLimit: 3,
+    attempts: [attempt],
+    publicationId: null,
+  };
+  return { context, binding, attempt, operation };
+}
+function publication() {
+  const f = fixture(),
+    empty = () => ({ tips: [] });
+  const compiled = compileInitialFeedbackPlan(source, {
+    toneAndStyle: {
+      tips: [
+        {
+          type: "good",
+          tip: "Created services using Python",
+          explanation: "Clarifies wording.",
+          quote: "Built services using Python",
+        },
+        {
+          type: "good",
+          tip: "Developed services using Python",
+          explanation: "Clarifies wording.",
+          quote: "Built services using Python",
+        },
+      ],
+    },
+    content: empty(),
+    structure: empty(),
+    skills: empty(),
+    writer: { summary: null, bullets: [] },
+  });
+  if (compiled.status !== "available")
+    throw Error("Actual compiler fixture unavailable");
+  const render = compiled.rendered,
+    d = f.context.deterministicResult;
+  return {
+    schemaVersion: "initial-feedback-publication/1.0.0" as const,
+    publicationId: uuid(9),
+    state: "assessed" as const,
+    reason: null,
+    binding: f.binding,
+    plan: compiled.plan,
+    recordedObservation: compiled.recordedObservation,
+    generationFailure: null,
+    ownedSupport: {
+      schemaVersion: "initial-feedback-native-support/1.0.0" as const,
+      scope: "retained_output_only" as const,
+      bindingSha256: f.operation.bindingSha256,
+      planSha256: "1".repeat(64),
+      parts: render.parts,
+      mapping: render.mapping,
+    },
+    prose: render.prose,
+    compatibility: {
+      deterministicResult: d,
+      feedback: {
+        scoreSemantics:
+          "deterministic_baseline_no_model_ratings/1.0.0" as const,
+        overallScore: d.score,
+        ATS: {
+          score: d.score,
+          tips: d.ruleTrace
+            .slice(0, 4)
+            .map((r) => ({
+              type: r.passed ? ("good" as const) : ("improve" as const),
+              tip: r.detail,
+            })),
+        },
+        toneAndStyle: render.compatibility.toneAndStyle,
+        content: render.compatibility.content,
+        structure: render.compatibility.structure,
+        skills: render.compatibility.skills,
+      },
+      writer: render.prose.writer,
+    },
+    receipt: {
+      schemaVersion: "initial-feedback-receipt/1.0.0" as const,
+      operationId: uuid(7),
+      attemptId: uuid(8),
+      publicationId: uuid(9),
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      bindingSha256: f.operation.bindingSha256,
+      publicationSha256: "2".repeat(64),
+      resultSha256: "3".repeat(64),
+      writerSha256: "4".repeat(64),
+      runId: uuid(10),
+      createdAt: "2026-11-15T01:02:03.123456Z",
+      replayed: false,
+    },
+  };
+}
+
+describe("initial feedback operation contract, pure synthetic metadata with real content producers", () => {
+  it("accepts actual original scorer/context and actual compiled retained publication", () => {
+    const f = fixture();
+    expect(InitialFeedbackContextSchema.safeParse(f.context).success).toBe(
+      true,
+    );
+    expect(
+      InitialFeedbackPublicationSchema.safeParse(publication()).success,
+    ).toBe(true);
+    expect(
+      InitialFeedbackPrepareSchema.safeParse({
+        schemaVersion: "initial-feedback-prepare/1.0.0",
+        status: "prepared",
+        ...f,
+        attempt: undefined,
+        binding: undefined,
+      }).success,
+    ).toBe(false);
+    expect(
+      InitialFeedbackPrepareSchema.safeParse({
+        schemaVersion: "initial-feedback-prepare/1.0.0",
+        status: "prepared",
+        operation: f.operation,
+        attempt: f.attempt,
+        context: f.context,
+        dispatchAllowed: false,
+        replayed: false,
+      }).success,
+    ).toBe(true);
+  });
+  it("rejects a duplicated retained part that drops another", () => {
+    const p = publication();
+    p.ownedSupport.parts.tips[1] = structuredClone(
+      p.ownedSupport.parts.tips[0],
+    );
+    expect(InitialFeedbackPublicationSchema.safeParse(p).success).toBe(false);
+  });
+  it("preserves exact partial producer semantics", () => {
+    const f = fixture(),
+      d = f.context.deterministicResult;
+    expect(initialFeedbackPartialFeedback(d)).toEqual(
+      buildPartialFeedback({ score: d.score, ruleTrace: d.ruleTrace }),
+    );
+  });
+  it.each([
+    "ownerId",
+    "organizationId",
+    "analysisId",
+    "resumeVersionId",
+    "jobSha256",
+  ] as const)("refuses original context mismatch %s", (key) => {
+    const f = fixture();
+    f.context.scoringContext.binding[key] = key.endsWith("Sha256")
+      ? "9".repeat(64)
+      : uuid(99);
+    expect(InitialFeedbackContextSchema.safeParse(f.context).success).toBe(
+      false,
+    );
+  });
+  it("rejects changed numeric output with unchanged producer checksum", () => {
+    const f = fixture();
+    f.context.deterministicResult.score =
+      f.context.deterministicResult.score === 0 ? 1 : 0;
+    expect(InitialFeedbackContextSchema.safeParse(f.context).success).toBe(
+      false,
+    );
+  });
+  it("rejects noncanonical UUID, SHA, unknown nested fields and unpaired text", () => {
+    const p = publication();
+    expect(
+      InitialFeedbackBindingSchema.safeParse({
+        ...p.binding,
+        analysisId: "ABCDEF00-0000-4000-8000-000000000001",
+      }).success,
+    ).toBe(false);
+    expect(
+      InitialFeedbackBindingSchema.safeParse({
+        ...p.binding,
+        sourceTextSha256: "A".repeat(64),
+      }).success,
+    ).toBe(false);
+    expect(
+      InitialFeedbackPublicationSchema.safeParse({
+        ...p,
+        compatibility: {
+          ...p.compatibility,
+          writer: { ...p.compatibility.writer, proof: true },
+        },
+      }).success,
+    ).toBe(false);
+    p.prose.toneAndStyle.tips[0].tip = "bad\uD800";
+    expect(InitialFeedbackPublicationSchema.safeParse(p).success).toBe(false);
+  });
+  it.each([
+    "2026-02-30T00:00:00Z",
+    "2026-11-15T00:00:00+00:00",
+    "0000-01-01T00:00:00Z",
+    "2026-11-15T00:00:00.1234567Z",
+  ])("rejects non-native timestamp %s", (value) => {
+    const p = publication();
+    p.receipt.createdAt = value;
+    expect(InitialFeedbackPublicationSchema.safeParse(p).success).toBe(false);
+  });
+  it("requires sorted unique provider ordinals and known terminal previous attempts", () => {
+    const f = fixture();
+    expect(
+      InitialFeedbackOperationSchema.safeParse({
+        ...f.operation,
+        attempts: [f.attempt, { ...f.attempt, ordinal: 2 }],
+      }).success,
+    ).toBe(false);
+    expect(
+      InitialFeedbackOperationSchema.safeParse({
+        ...f.operation,
+        attemptLimit: 1,
+      }).success,
+    ).toBe(false);
+    expect(
+      InitialFeedbackAttemptSchema.safeParse({
+        ...f.attempt,
+        state: "known",
+        claimedAt: "2026-11-15T00:00:00Z",
+        usage: null,
+      }).success,
+    ).toBe(false);
+    expect(
+      InitialFeedbackAttemptSchema.safeParse({
+        ...f.attempt,
+        state: "held_unknown",
+        claimedAt: "2026-11-15T00:00:00Z",
+        usage: null,
+        errorCode: "timeout",
+      }).success,
+    ).toBe(true);
+  });
+  it("keeps unknown usage distinct from actual zero and rejects unsafe/noncanonical counters", () => {
+    expect(InitialFeedbackUsageSchema.safeParse(null).success).toBe(false);
+    expect(
+      InitialFeedbackUsageSchema.parse({ inputTokens: "0", outputTokens: "0" }),
+    ).toEqual({ inputTokens: "0", outputTokens: "0" });
+    for (const value of [0, "01", "-1", "1.5", "9007199254740992"])
+      expect(
+        InitialFeedbackUsageSchema.safeParse({
+          inputTokens: value,
+          outputTokens: "0",
+        }).success,
+      ).toBe(false);
+    const f = fixture();
+    expect(
+      InitialFeedbackSettlementSchema.safeParse({
+        schemaVersion: "initial-feedback-settlement/1.0.0",
+        operationId: f.operation.operationId,
+        attemptId: f.attempt.attemptId,
+        bindingSha256: f.operation.bindingSha256,
+        state: "held_unknown",
+        usage: null,
+        errorCode: "timeout",
+        replayed: false,
+      }).success,
+    ).toBe(true);
+  });
+  it("correlates claim permission to open operation, actual dispatched attempt and budget mode", () => {
+    const f = fixture(),
+      a = {
+        ...f.attempt,
+        state: "dispatched",
+        claimedAt: "2026-11-15T00:00:00Z",
+      };
+    const claim = {
+      schemaVersion: "initial-feedback-claim/1.0.0",
+      operation: { ...f.operation, attempts: [a] },
+      attempt: a,
+      dispatchAllowed: true,
+      replayed: false,
+      budget: null,
+    };
+    expect(InitialFeedbackClaimSchema.safeParse(claim).success).toBe(true);
+    expect(
+      InitialFeedbackClaimSchema.safeParse({ ...claim, replayed: true })
+        .success,
+    ).toBe(false);
+    expect(
+      InitialFeedbackClaimSchema.safeParse({
+        ...claim,
+        operation: {
+          ...claim.operation,
+          state: "published",
+          publicationId: uuid(9),
+        },
+      }).success,
+    ).toBe(false);
+  });
+  it("accepts an exact existing R03 envelope only when bound to this claim", () => {
+    const f = fixture(),
+      p = createInitialFeedbackPublicationPolicy({
+        model: "unit-model",
+        maxOutputTokens: 1200,
+        attemptLimit: 3,
+        budgetPolicyVersion: "unit-budget/1",
+      });
+    const a = {
+      ...f.attempt,
+      state: "dispatched",
+      claimedAt: "2026-11-15T00:00:00Z",
+      budgetAttemptId: uuid(11),
+    };
+    const b = {
+      userId: uuid(2),
+      organizationId: uuid(3),
+      operationId: uuid(7),
+      attemptId: uuid(11),
+      attemptOrdinal: 1,
+      surface: "qualitative" as const,
+      payloadSha256: f.operation.bindingSha256,
+      model: p.model,
+      promptPolicyVersion: p.promptVersion,
+      policyVersion: p.budgetPolicyVersion!,
+      reservedInputTokens: 20,
+      reservedOutputTokens: 1200,
+    };
+    const r = {
+      schemaVersion: "ai-budget/1.0.0",
+      ...b,
+      poolPolicyVersion: "unit-pool/1",
+      bindingSha256: hashAiBudgetBinding(b),
+      period: "2026-11-01",
+      state: "dispatched",
+      reservedInputTokens: "20",
+      reservedOutputTokens: "1200",
+      reservedCostMicrousd: calculateAiBudgetCost({
+        inputTokens: 20,
+        outputTokens: 1200,
+        inputMicrousdPerMillion: "1",
+        outputMicrousdPerMillion: "1",
+      }),
+      inputMicrousdPerMillion: "1",
+      outputMicrousdPerMillion: "1",
+      actualInputTokens: null,
+      actualOutputTokens: null,
+      actualCostMicrousd: null,
+      replayed: false,
+      dispatchAllowed: true,
+      poolBlocked: false,
+      attemptLimit: 3,
+    };
+    const c = {
+      schemaVersion: "initial-feedback-claim/1.0.0",
+      operation: {
+        ...f.operation,
+        binding: { ...f.binding, policy: p },
+        attempts: [a],
+      },
+      attempt: a,
+      dispatchAllowed: true,
+      replayed: false,
+      budget: { schemaVersion: "ai-budget/1.0.0", status: "ok", receipt: r },
+    };
+    expect(InitialFeedbackClaimSchema.safeParse(c).success).toBe(true);
+    c.budget.receipt.operationId = uuid(99);
+    expect(InitialFeedbackClaimSchema.safeParse(c).success).toBe(false);
+  });
+  it("rejects mutually exclusive capture kinds and incomplete plan/observation", () => {
+    const p = publication();
+    expect(
+      InitialFeedbackCompletionSchema.safeParse({
+        kind: "assessed",
+        plan: p.plan,
+        observation: p.recordedObservation,
+        generationFailure: {
+          schemaVersion: "initial-feedback-generation-failure/1.0.0",
+          reason: "schema_invalid",
+          rawResponseSha256: null,
+        },
+      }).success,
+    ).toBe(false);
+    p.plan.toneAndStyle.pop();
+    expect(
+      InitialFeedbackCompletionSchema.safeParse({
+        kind: "assessed",
+        plan: p.plan,
+        observation: p.recordedObservation,
+        generationFailure: null,
+      }).success,
+    ).toBe(false);
+  });
+  it("rejects altered deterministic projection, model ratings and foreign receipts", () => {
+    for (const mutate of [
+      (p: ReturnType<typeof publication>) => {
+        p.compatibility.feedback.ATS.tips[0].tip = "invented";
+      },
+      (p: ReturnType<typeof publication>) => {
+        p.compatibility.feedback.skills.score = 1;
+      },
+      (p: ReturnType<typeof publication>) => {
+        p.receipt.ownerId = uuid(99);
+      },
+    ]) {
+      const p = publication();
+      mutate(p);
+      expect(InitialFeedbackPublicationSchema.safeParse(p).success).toBe(false);
+    }
+  });
+  it("does not turn missing publication into empty assessed feedback", () => {
+    expect(
+      InitialFeedbackReadSchema.parse({
+        schemaVersion: "initial-feedback-read/1.0.0",
+        status: "legacy_unbound",
+        analysisId: uuid(1),
+        reason: "original_input_or_publication_missing",
+      }).status,
+    ).toBe("legacy_unbound");
+    expect(
+      InitialFeedbackReadSchema.safeParse({
+        schemaVersion: "initial-feedback-read/1.0.0",
+        status: "available",
+        currentness: "current",
+        publication: null,
+      }).success,
+    ).toBe(false);
+  });
+  it("defines exact staged full readiness without fabricating a released profile", () => {
+    const pins = {
+      schemaVersion: "initial-feedback-readiness/1.0.0" as const,
+      profileVersion: "initial-feedback-readiness-profile/1.0.0" as const,
+      checkerSha256: "1".repeat(64),
+      readerSha256: "2".repeat(64),
+      prepareSha256: "3".repeat(64),
+      claimSha256: "4".repeat(64),
+      settleSha256: "5".repeat(64),
+      finishSha256: "6".repeat(64),
+      usageSha256: "7".repeat(64),
+      exportSha256: "8".repeat(64),
+      metadataSha256: "9".repeat(64),
+    };
+    const r = {
+      ...pins,
+      schemaReady: true,
+      readerExecutable: false,
+      prepareExecutable: false,
+      claimExecutable: false,
+      settleExecutable: false,
+      finishExecutable: false,
+      usageExecutable: false,
+      exportExecutable: false,
+    };
+    expect(Object.keys(InitialFeedbackReadinessSchema.parse(r))).toHaveLength(
+      19,
+    );
+    expect(() =>
+      validateInitialFeedbackReadiness(r, pins, ["prepareExecutable"]),
+    ).toThrow();
+    expect(
+      validateInitialFeedbackReadiness({ ...r, readerExecutable: true }, pins, [
+        "readerExecutable",
+      ]).readerExecutable,
+    ).toBe(true);
+    expect(() =>
+      validateInitialFeedbackReadiness(
+        { ...r, readerExecutable: true, usageSha256: "0".repeat(64) },
+        pins,
+        ["readerExecutable"],
+      ),
+    ).toThrow();
+  });
+  it("checks BigInt partition totals/current period/unknown holds without number coercion", () => {
+    const u = {
+      schemaVersion: "initial-feedback-usage/1.0.0",
+      profileVersion: "initial-feedback-readiness-profile/1.0.0",
+      usageSha256: "7".repeat(64),
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      analysisId: uuid(1),
+      periodStart: "2026-11-01",
+      periodEnd: "2026-12-01",
+      legacyUnlinkedTokens: "9007199254740991",
+      canonicalTokens: "9007199254740991",
+      initialFeedbackTokens: "1",
+      totalTokens: "18014398509481983",
+      unknownClaims: "0",
+    };
+    const b = {
+      ownerId: uuid(2),
+      organizationId: uuid(3),
+      analysisId: uuid(1),
+      usageSha256: u.usageSha256,
+    };
+    expect(
+      validateInitialFeedbackUsage(u, b, Date.parse("2026-11-15T00:00:00Z"))
+        .totalTokens,
+    ).toBe(u.totalTokens);
+    expect(
+      InitialFeedbackUsageReplySchema.safeParse({ ...u, totalTokens: "0" })
+        .success,
+    ).toBe(false);
+    expect(() =>
+      validateInitialFeedbackUsage(
+        { ...u, unknownClaims: "1" },
+        b,
+        Date.parse("2026-11-15T00:00:00Z"),
+      ),
+    ).toThrow();
+    expect(() =>
+      validateInitialFeedbackUsage(u, b, Date.parse("2026-12-01T00:00:00Z")),
+    ).toThrow();
+  });
+  it("bounds cycles, deep/oversized data and non-JSON objects before parsing", () => {
+    const x: Record<string, unknown> = {};
+    x.self = x;
+    expect(InitialFeedbackPublicationSchema.safeParse(x).success).toBe(false);
+    expect(InitialFeedbackContextSchema.safeParse(new Date()).success).toBe(
+      false,
+    );
+    expect(
+      InitialFeedbackContextSchema.safeParse({
+        x: "x".repeat(12 * 1024 * 1024 + 1),
+      }).success,
+    ).toBe(false);
+  });
+});

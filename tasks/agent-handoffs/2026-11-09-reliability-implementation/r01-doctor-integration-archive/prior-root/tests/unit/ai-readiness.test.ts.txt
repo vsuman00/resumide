@@ -1,0 +1,365 @@
+import { mkdtemp, mkdir, rm, symlink, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { readAiReadiness } from "../../app/lib/server/ai-readiness";
+import { runAiDoctor } from "../../scripts/doctor-ai";
+
+const syntheticKey = "sk-" + "UNIT_ONLY_".repeat(5);
+const otherKey = "sk-" + "OTHER_UNIT_ONLY_".repeat(4);
+const folders: string[] = [];
+async function workspace(contents?: string) {
+  const path = await mkdtemp(join(tmpdir(), "resumide-ai-doctor-unit-"));
+  folders.push(path);
+  if (contents !== undefined) await writeFile(join(path, ".env"), contents);
+  return path;
+}
+afterEach(async () => {
+  await Promise.all(
+    folders.splice(0).map((path) => rm(path, { recursive: true, force: true })),
+  );
+});
+
+describe("offline AI configuration diagnosis without credential exposure", () => {
+  it("reports plausible configuration without claiming authentication or live readiness", async () => {
+    const report = await readAiReadiness({
+      workspaceRoot: await workspace(`OPENAI_API_KEY=${syntheticKey}\n`),
+      environment: {},
+    });
+    expect(report.status).toBe("configuration_plausible");
+    expect(report.authentication).toBe("not_tested");
+    expect(report.providerRequests).toBe(0);
+    expect(report.credential).toMatchObject({
+      present: true,
+      formatPlausible: true,
+      noSurroundingWhitespace: true,
+      source: "env_file",
+    });
+    expect(report.endpoint).toEqual({ allowed: true, usesDefault: true });
+    expect(report.model).toMatchObject({ present: true, usesDefault: true });
+    expect(report.cache).toEqual({
+      compared: false,
+      matchesEffective: null,
+      restartRequired: null,
+    });
+    expect(JSON.stringify(report)).not.toContain(syntheticKey);
+  });
+  it("does not load a production or local override when the selected file is absent", async () => {
+    const root = await workspace();
+    await writeFile(
+      join(root, ".env.production"),
+      `OPENAI_API_KEY=${syntheticKey}`,
+    );
+    await writeFile(join(root, ".env.local"), `OPENAI_API_KEY=${syntheticKey}`);
+    const report = await readAiReadiness({
+      workspaceRoot: root,
+      environment: {},
+    });
+    expect(report.status).toBe("configuration_issues");
+    expect(report.issues).toContain("env_file_missing");
+    expect(report.credential.present).toBe(false);
+    expect(report.source.automaticFallback).toBe(false);
+  });
+  it("matches Node quoted/export syntax and treats an inherited key as the effective source", async () => {
+    const root = await workspace(
+      `export OPENAI_API_KEY = '${syntheticKey}' # comment\nOPENAI_MODEL='configured-model'\n`,
+    );
+    const report = await readAiReadiness({
+      workspaceRoot: root,
+      environment: { OPENAI_API_KEY: otherKey },
+    });
+    expect(report.credential.source).toBe("process_env");
+    expect(report.source.processOverrides.apiKey).toBe(true);
+    expect(report.source.processDiffersFromFile.apiKey).toBe(true);
+    expect(report.model.usesDefault).toBe(false);
+    expect(JSON.stringify(report)).not.toContain("configured-model");
+    expect(JSON.stringify(report)).not.toContain(otherKey);
+  });
+  it("does not fall back from an explicitly empty inherited key", async () => {
+    const report = await readAiReadiness({
+      workspaceRoot: await workspace(`OPENAI_API_KEY=${syntheticKey}`),
+      environment: { OPENAI_API_KEY: "" },
+    });
+    expect(report.credential).toMatchObject({
+      source: "process_env",
+      present: false,
+    });
+    expect(report.issues).toContain("credential_missing");
+  });
+  it("detects duplicate assignments and their Node last-value precedence without revealing either value", async () => {
+    const report = await readAiReadiness({
+      workspaceRoot: await workspace(
+        `OPENAI_API_KEY=${syntheticKey}\nexport OPENAI_API_KEY='${otherKey}'\n`,
+      ),
+      environment: {},
+      cachedEnvironment: { OPENAI_API_KEY: otherKey },
+    });
+    expect(report.source.definitions.apiKey).toBe(2);
+    expect(report.issues).toContain("duplicate_definitions");
+    expect(report.cache.matchesEffective).toBe(true);
+    expect(JSON.stringify(report)).not.toContain(syntheticKey);
+    expect(JSON.stringify(report)).not.toContain(otherKey);
+  });
+  it("does not count key-looking lines inside a quoted multiline value", async () => {
+    const report = await readAiReadiness({
+      workspaceRoot: await workspace(
+        `UNRELATED="first\nOPENAI_API_KEY=not-an-assignment\nlast"\nOPENAI_API_KEY=${syntheticKey}\n`,
+      ),
+      environment: {},
+    });
+    expect(report.source.definitions.apiKey).toBe(1);
+    expect(report.issues).not.toContain("duplicate_definitions");
+  });
+  it.each([
+    {
+      label: "backtick multiline value",
+      text: `UNRELATED=\`first\nOPENAI_API_KEY=inside-only\nlast\`\nOPENAI_API_KEY=${syntheticKey}\n`,
+      count: 1,
+    },
+    {
+      label: "unterminated unrelated quote",
+      text: `UNRELATED="unterminated\nOPENAI_API_KEY=${syntheticKey}\nOPENAI_API_KEY=${otherKey}\n`,
+      count: 2,
+    },
+    {
+      label: "marker-like unrelated identifier",
+      text: `__RESUMIDE_AI_ASSIGNMENT_0=ordinary\nOPENAI_API_KEY=${syntheticKey}\nexport OPENAI_API_KEY=${otherKey}\n`,
+      count: 2,
+    },
+  ])(
+    "counts only assignments emitted by Node for $label",
+    async ({ text, count }) => {
+      const report = await readAiReadiness({
+        workspaceRoot: await workspace(text),
+        environment: {},
+      });
+      expect(report.source.definitions.apiKey).toBe(count);
+      expect(report.issues.includes("duplicate_definitions")).toBe(count > 1);
+      expect(JSON.stringify(report)).not.toContain(syntheticKey);
+      expect(JSON.stringify(report)).not.toContain(otherKey);
+    },
+  );
+  it.each([
+    "not-a-provider-key",
+    ` ${syntheticKey}`,
+    `${syntheticKey}\nsecond-line`,
+  ])(
+    "keeps malformed or whitespace-bearing credential input private",
+    async (key) => {
+      const report = await readAiReadiness({
+        source: "process",
+        environment: { OPENAI_API_KEY: key },
+      });
+      expect(report.status).toBe("configuration_issues");
+      expect(report.issues).toContain("credential_format_unrecognized");
+      expect(JSON.stringify(report)).not.toContain(key);
+      expect(report.authentication).toBe("not_tested");
+    },
+  );
+  it("rejects an unterminated quoted credential as shape-invalid without echoing source text", async () => {
+    const report = await readAiReadiness({
+      workspaceRoot: await workspace(`OPENAI_API_KEY="${syntheticKey}`),
+      environment: {},
+    });
+    expect(report.status).toBe("configuration_issues");
+    expect(JSON.stringify(report)).not.toContain(syntheticKey);
+  });
+  it.each([
+    "https://api.openai.com/v1?secret=unit-only",
+    "https://unit-only@api.openai.com/v1",
+    "https://other.example.test/v1",
+  ])(
+    "reports unsafe configured egress without echoing it",
+    async (endpoint) => {
+      const report = await readAiReadiness({
+        source: "process",
+        environment: {
+          OPENAI_API_KEY: syntheticKey,
+          OPENAI_BASE_URL: endpoint,
+        },
+      });
+      expect(report.endpoint.allowed).toBe(false);
+      expect(report.issues).toContain("endpoint_not_allowed");
+      expect(JSON.stringify(report)).not.toContain(endpoint);
+    },
+  );
+  it("retains empty model/endpoint errors rather than silently using defaults", async () => {
+    const report = await readAiReadiness({
+      source: "process",
+      environment: {
+        OPENAI_API_KEY: syntheticKey,
+        OPENAI_MODEL: "",
+        OPENAI_BASE_URL: "",
+      },
+    });
+    expect(report.model).toMatchObject({ present: false, usesDefault: false });
+    expect(report.endpoint).toEqual({ allowed: false, usesDefault: false });
+    expect(report.issues).toContain("model_missing_or_malformed");
+  });
+  it("compares only an explicitly supplied in-memory cache snapshot and reports restart requirements", async () => {
+    const report = await readAiReadiness({
+      source: "process",
+      environment: { OPENAI_API_KEY: syntheticKey },
+      cachedEnvironment: { OPENAI_API_KEY: otherKey },
+    });
+    expect(report.cache).toEqual({
+      compared: true,
+      matchesEffective: false,
+      restartRequired: true,
+    });
+    expect(report.issues).toContain("cached_configuration_differs");
+    expect(JSON.stringify(report)).not.toContain(otherKey);
+  });
+  it("does not read any file in explicit process-only mode", async () => {
+    const report = await readAiReadiness({
+      source: "process",
+      workspaceRoot: "/definitely-unavailable-unit-workspace",
+      environment: { OPENAI_API_KEY: syntheticKey },
+    });
+    expect(report.status).toBe("configuration_plausible");
+    expect(report.source.fileRead).toBe(false);
+    expect(report.credential.source).toBe("process_env");
+  });
+  it("rejects path traversal, outside files and symlink files without reading them", async () => {
+    const root = await workspace();
+    const outside = await workspace(`OPENAI_API_KEY=${syntheticKey}`);
+    for (const envFile of [join(outside, ".env"), "../outside.env"]) {
+      const report = await readAiReadiness({
+        workspaceRoot: root,
+        envFile,
+        environment: {},
+      });
+      expect(report.issues).toContain("env_path_outside_workspace");
+      expect(report.source.fileRead).toBe(false);
+    }
+    await symlink(join(outside, ".env"), join(root, ".env"));
+    const report = await readAiReadiness({
+      workspaceRoot: root,
+      environment: {},
+    });
+    expect(report.issues).toContain("env_path_symlink");
+    expect(report.source.fileRead).toBe(false);
+  });
+  it("refuses a symlinked parent escaping the workspace and non-regular/oversized files", async () => {
+    const root = await workspace();
+    const outside = await workspace(`OPENAI_API_KEY=${syntheticKey}`);
+    await symlink(outside, join(root, "linked"));
+    const escaped = await readAiReadiness({
+      workspaceRoot: root,
+      envFile: "linked/.env",
+      environment: {},
+    });
+    expect(escaped.issues).toContain("env_path_outside_workspace");
+    expect(escaped.source.pathWithinWorkspace).toBe(false);
+    await mkdir(join(root, "directory"));
+    expect(
+      (
+        await readAiReadiness({
+          workspaceRoot: root,
+          envFile: "directory",
+          environment: {},
+        })
+      ).issues,
+    ).toContain("env_file_not_regular");
+    await writeFile(join(root, "large.env"), "x".repeat(131073));
+    expect(
+      (
+        await readAiReadiness({
+          workspaceRoot: root,
+          envFile: "large.env",
+          environment: {},
+        })
+      ).issues,
+    ).toContain("env_file_too_large");
+  });
+  it("preserves actual flags and reports malformed flag values without reflecting them", async () => {
+    const report = await readAiReadiness({
+      source: "process",
+      environment: {
+        OPENAI_API_KEY: syntheticKey,
+        AI_ENABLED: "false",
+        BUILD_AI_ASSIST_ENABLED: "unexpected-unit-only",
+      },
+    });
+    expect(report.flags.aiEnabled).toBe(false);
+    expect(report.flags.buildAiEnabled).toBeNull();
+    expect(report.issues).toContain("flag_invalid");
+    expect(JSON.stringify(report)).not.toContain("unexpected-unit-only");
+  });
+  it("reports ambient SDK context presence/source without revealing values or treating it as an auth diagnosis", async () => {
+    const privateOrg = "PRIVATE_UNIT_ORGANIZATION";
+    const privateProject = "PRIVATE_UNIT_PROJECT";
+    const root = await workspace(
+      `OPENAI_API_KEY=${syntheticKey}\nOPENAI_PROJECT_ID=${privateProject}\nOPENAI_LOG=debug\n`,
+    );
+    const report = await readAiReadiness({
+      workspaceRoot: root,
+      environment: { OPENAI_ORG_ID: privateOrg },
+    });
+    expect(report.sdkContext.organization).toEqual({
+      present: true,
+      source: "process_env",
+    });
+    expect(report.sdkContext.project).toEqual({
+      present: true,
+      source: "env_file",
+    });
+    expect(report.sdkContext.logging).toEqual({
+      present: true,
+      source: "env_file",
+    });
+    expect(report.authentication).toBe("not_tested");
+    expect(JSON.stringify(report)).not.toContain(privateOrg);
+    expect(JSON.stringify(report)).not.toContain(privateProject);
+    expect(JSON.stringify(report)).not.toContain("debug");
+  });
+});
+
+describe("offline doctor CLI boundary", () => {
+  it("returns only structured offline metadata and never calls fetch", async () => {
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("network must not run"));
+    const result = await runAiDoctor(["--source", "process"], {
+      OPENAI_API_KEY: syntheticKey,
+    });
+    expect(result.exitCode).toBe(0);
+    expect(result.output).toMatchObject({
+      mode: "offline",
+      authentication: "not_tested",
+      providerRequests: 0,
+    });
+    expect(fetch).not.toHaveBeenCalled();
+    fetch.mockRestore();
+  });
+  it.each(
+    [
+      ["--live"],
+      ["--workspace"],
+      ["--source", "untrusted"],
+      ["--source", "process", "--env-file", ".env.production"],
+      ["--workspace", "one", "--workspace", "two"],
+      ["--api-key", syntheticKey],
+    ].map((args) => ({ args })),
+  )(
+    "rejects unsupported/ambiguous arguments without exposing them",
+    async ({ args }) => {
+      const result = await runAiDoctor(args, {});
+      expect(result.exitCode).toBe(2);
+      expect(result.output).toMatchObject({
+        status: "invalid_arguments",
+        authentication: "not_tested",
+        providerRequests: 0,
+      });
+      expect(JSON.stringify(result.output)).not.toContain(syntheticKey);
+      expect(JSON.stringify(result.output)).not.toContain(".env.production");
+    },
+  );
+  it("keeps unavailable workspace errors content-free", async () => {
+    const root = "/not-found-PRIVATE_UNIT_CANARY";
+    const result = await runAiDoctor(["--workspace", root], {});
+    expect(result.exitCode).toBe(1);
+    expect(JSON.stringify(result.output)).not.toContain(root);
+    expect(JSON.stringify(result.output)).not.toContain("ENOENT");
+  });
+});

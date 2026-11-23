@@ -1,0 +1,69 @@
+--- before/tests/components/CanonicalCorrections.test.tsx
++++ after/tests/components/CanonicalCorrections.test.tsx
+@@ -24,6 +24,7 @@
+   CanonicalError,
+   mutateCanonical,
+ } from "~/lib/server/canonical-repository";
++import type { CanonicalEntryRegroupWorkspace } from "~/lib/server/canonical-entry-regroup-repository";
+ import type { CanonicalCommand } from "~/lib/server/canonical-repository";
+ import type {
+   CanonicalCorrectionCommand,
+@@ -57,6 +58,11 @@
+ const id = (n: number) =>
+   `10000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+ type Model = CanonicalCorrectionWorkspace & {
++  groupedOwnerId: string;
++  entryRegroup: Extract<
++    CanonicalEntryRegroupWorkspace,
++    { state: "unavailable" }
++  >;
+   scoringDiagnosticsEnabled: boolean;
+   formKey: string;
+   factKeys: Record<string, { edit: string; confirm: string }>;
+@@ -165,6 +171,13 @@
+   return {
+     analysisId: id(4),
+     resumeId: id(3),
++    groupedOwnerId: id(1),
++    entryRegroup: {
++      schemaVersion: "entry-regroup-workspace/1.0.0",
++      state: "unavailable",
++      reason: "unavailable",
++      scoringEligible: false,
++    },
+     headId: id(7),
+     history: [],
+     nextOffset: null,
+--- before/tests/components/GroupedOriginalImportReview.test.tsx
++++ after/tests/components/GroupedOriginalImportReview.test.tsx
+@@ -50,6 +50,7 @@
+   ...(await original<typeof import("~/lib/server/canonical-repository")>()),
+   loadCanonicalCorrectionWorkspace: mocks.canonicalLoad,
+ }));
++import type { CanonicalEntryRegroupWorkspace } from "~/lib/server/canonical-entry-regroup-repository";
+ import CanonicalResume from "~/routes/analysis.canonical";
+ import { action, loader, shouldRevalidate } from "~/routes/analysis.canonical";
+ 
+@@ -320,6 +321,12 @@
+             scoringDiagnosticsEnabled: false,
+             groupedOwnerId: id(2),
+             groupedOriginal,
++            entryRegroup: {
++              schemaVersion: "entry-regroup-workspace/1.0.0",
++              state: "unavailable",
++              reason: "unavailable",
++              scoringEligible: false,
++            } satisfies CanonicalEntryRegroupWorkspace,
+           }),
+           Component: CanonicalResume,
+         },
+--- before/tests/components/PrivacyRepairs.test.tsx
++++ after/tests/components/PrivacyRepairs.test.tsx
+@@ -70,6 +70,7 @@
+         Component: Privacy,
+         loader: () => ({
+           consents: [],
++          exportDownloadAccess: "allowed",
+           requests: [
+             {
+               id: "export-id",

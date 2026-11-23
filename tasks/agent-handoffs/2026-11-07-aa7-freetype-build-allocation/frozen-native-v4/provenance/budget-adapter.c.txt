@@ -1,0 +1,58 @@
+#include <assert.h>
+#include <stdio.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_SYSTEM_H
+#define FT_ERROR(x) ((void)0)
+#define FT_THROW(x) FT_Err_ ## x
+static FT_Error original(const FT_ULong *lengths, unsigned count, FT_ULong size, unsigned *accepted) {
+  FT_StreamRec record = {0}; FT_Stream stream = &record; record.size = size;
+  FT_Error error = FT_Err_Ok; FT_ULong offsets[2], data_len; unsigned num_subrs = 1; (void)stream;
+  *accepted = 0;
+  for (unsigned i=0; i<count; i++) {
+    assert(lengths[i] <= size); offsets[0]=0; offsets[1]=lengths[i];
+      data_len = offsets[num_subrs] - offsets[0];
+
+    (void)data_len; (*accepted)++; /* Mock allocation observation; no bytes allocated or decrypted. */
+  }
+  return error;
+}
+
+static FT_Error patched(const FT_ULong *lengths, unsigned count, FT_ULong size, unsigned *accepted) {
+  FT_StreamRec record = {0}; FT_Stream stream = &record; record.size = size;
+  FT_Error error = FT_Err_Ok; FT_ULong offsets[2], data_len; unsigned num_subrs = 1; (void)stream;
+    FT_ULong       cum_len = 0;
+  *accepted = 0;
+  for (unsigned i=0; i<count; i++) {
+    assert(lengths[i] <= size); offsets[0]=0; offsets[1]=lengths[i];
+      data_len = offsets[num_subrs] - offsets[0];
+      cum_len += data_len;
+
+      if ( cum_len / 4 > stream->size )
+      {
+        FT_ERROR(( "cid_read_subrs: excessive overlaps\n" ));
+        error = FT_THROW( Invalid_File_Format );
+        goto Fail;
+      }
+
+    (void)data_len; (*accepted)++; /* Mock allocation observation; no bytes allocated or decrypted. */
+  }
+Fail:
+  return error;
+}
+
+int main(void) {
+  const struct { FT_ULong size, lengths[5]; unsigned count, accepted; FT_Error error; } cases[] = {
+    {64,{4,4,4,4},4,4,FT_Err_Ok},
+    {16,{16,16,16,16},4,4,FT_Err_Ok},
+    {16,{16,16,16,16,16},5,4,FT_Err_Invalid_File_Format},
+    {16,{16,16,16,16,3},5,5,FT_Err_Ok},
+    {16,{16,16,16,16,4},5,4,FT_Err_Invalid_File_Format}
+  };
+  for(unsigned i=0;i<sizeof(cases)/sizeof(cases[0]);i++) {
+    unsigned a=0,b=0;
+    assert(original(cases[i].lengths,cases[i].count,cases[i].size,&a)==FT_Err_Ok && a==cases[i].count);
+    assert(patched(cases[i].lengths,cases[i].count,cases[i].size,&b)==cases[i].error && b==cases[i].accepted);
+  }
+  puts("neutral-vendor-budget-cases=5 original-controls=5 patched-controls=5"); return 0;
+}

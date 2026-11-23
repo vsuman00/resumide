@@ -1,0 +1,14 @@
+# A13 owned feedback consumer
+
+Implemented the eight-file consumer allocation in the preserved frontend worktree. Only a validated owned publication paired with the exact saved feedback grants source labels. The browser receives classification and currentness, without private binding, policy, lease or observation data. Both title and explanation must be supported source claims before an item counts as a strength. Questions, editorial advice and compatibility padding do not count as strengths; padding is excluded from repairs.
+
+The real resume loader preserves saved feedback on recoverable unavailability and labels it unverified. Access denial becomes 404. Current, historical, pending, legacy-unbound and deterministic-only results remain distinct. Legacy titles and explanations remain visible. ATS rule feedback keeps its separate deterministic authority. The unowned Details component, numbers, compiler and policy are unchanged.
+
+Evidence is in the private packet `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-owned-consumer-79pz6m90`. `terminal-source.json` records all seven source/test hashes; `terminal.diff.txt` and `.txt` snapshots preserve the changes. The successor packet records this handoff hash.
+
+- `consumer-red.json/log`: three genuine old-loader/classification failures plus a separate JSX setup failure. `dom-red.json/log`: actual old-component unsupported-label failure after correcting that setup error.
+- `focused.json/log`: 21 tests across three files passed. This receipt is historical: its new positive fixture mixed a source title with editorial explanation.
+- `mixed-red.json/log`: both real-compiler mixed pairs wrongly classified as source claims. `source-positive-fixture-amendment.json` records the reviewed correction to a genuinely all-source positive. `mixed-green.json/log`: six affected controls passed after the two-child-kind guard.
+- `fixture-followup.json/log`: 12 loader controls passed after fixture typing/narrowing changes. `compatibility-followup.json/log`: one affected deterministic-only case passed. Failed type/format receipts remain preserved; terminal types report 10 roots, 91 source files, zero diagnostics. Scoped lint and format passed.
+
+All original four tests and assertions remain, with Root's sole approved correction from unsupported "Strength to keep" to "Unverified observation". No test or policy threshold changed. The packet distinguishes the mistyped runner-path setup failure from behavioral evidence. All author checks used sealed Node 22, synthetic source, real scorer/compiler/decoders and fake RPC metadata. The author dependency was actual full profile `219cee39`; Root's later profile successor is covered by integration, not relabeled as this campaign. Native ownership/proof, browser rendering, provider behavior and deployment remain unverified. No feature was activated.

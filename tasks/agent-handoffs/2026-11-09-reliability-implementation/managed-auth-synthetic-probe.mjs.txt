@@ -1,0 +1,79 @@
+import { createRequire } from 'node:module';
+import { randomBytes, randomUUID } from 'node:crypto';
+import { readFileSync, appendFileSync } from 'node:fs';
+import { parseEnv } from 'node:util';
+const require = createRequire(`${process.cwd()}/package.json`);
+const {createClient} = require('@supabase/supabase-js');
+const target='https://wreqkdavofpfblsupnls.supabase.co';
+const env=parseEnv(readFileSync('.env','utf8'));
+if (new URL(env.SUPABASE_URL).origin!==target || !env.SUPABASE_SECRET_KEY || !env.SUPABASE_PUBLISHABLE_KEY) {
+  console.error('TARGET_OR_KEY_PREFLIGHT_FAILED');process.exit(2);
+}
+const options={auth:{autoRefreshToken:false,persistSession:false,detectSessionInUrl:false},global:{fetch:(input,init)=>{
+  const link=new URL(input instanceof Request?input.url:input);
+  if (link.origin!==target) throw Error('TARGET_DRIFT');
+  const signal=init?.signal?AbortSignal.any([init.signal,AbortSignal.timeout(7000)]):AbortSignal.timeout(7000);
+  return fetch(input,{...init,signal,redirect:'error'});
+}}};
+const admin=createClient(target,env.SUPABASE_SECRET_KEY,options);
+const runId=randomUUID();
+const ledger=process.argv[2];
+const note=(data)=>appendFileSync(ledger,`${JSON.stringify(data)}\n`,{mode:0o600});
+const planned=['a','b'].map(x=>({email:`resumide-rls-${runId}-${x}@example.test`,password:`Aa1!${randomBytes(24).toString('base64url')}`}));
+for (const {email} of planned) note({kind:'planned',email,marker:runId});
+let stage='preflight'; const checks={}; let passed=false;
+const requireOk=(v)=>{if(!v)throw Error('CHECK_FAILED')};
+try{
+  stage='create_synthetic_users';
+  for(const row of planned){
+    const r=await admin.auth.admin.createUser({email:row.email,password:row.password,email_confirm:true,app_metadata:{resumide_test_run:runId}});
+    if(r.error||!r.data.user) throw Error(`CREATE_${r.error?.status??'UNKNOWN'}`);
+    row.id=r.data.user.id;note({kind:'created',email:row.email,id:row.id});
+    requireOk(r.data.user.email===row.email&&r.data.user.app_metadata.resumide_test_run===runId);
+  }
+  const [owner,other]=planned;
+  stage='authenticate_and_bootstrap';
+  for(const row of planned){
+    const workspace=await admin.from('organizations').select('id').eq('owner_id',row.id).single();
+    requireOk(!workspace.error&&workspace.data?.id);
+    row.org=workspace.data.id;note({kind:'workspace',id:row.id,org:row.org});
+    row.client=createClient(target,env.SUPABASE_PUBLISHABLE_KEY,options);
+    const signedIn=await row.client.auth.signInWithPassword({email:row.email,password:row.password});
+    requireOk(!signedIn.error&&signedIn.data.session&&signedIn.data.user?.id===row.id);
+    const fetched=await row.client.auth.getUser();requireOk(!fetched.error&&fetched.data.user?.id===row.id);
+  }
+  checks.syntheticPasswordAuthAndWorkspace=true;
+  stage='owned_row_and_rls';
+  owner.request=randomUUID();note({kind:'request_intent',id:owner.request});
+  const inserted=await admin.from('data_requests').insert({id:owner.request,organization_id:owner.org,user_id:owner.id,kind:'export'}).select('id').single();
+  requireOk(!inserted.error&&inserted.data?.id===owner.request);
+  for(const [table,id] of [['organizations',owner.org],['data_requests',owner.request]]){
+    const [allowed,denied]=await Promise.all([owner.client,other.client].map(c=>c.from(table).select('id').eq('id',id)));
+    requireOk(!allowed.error&&allowed.data?.length===1&&allowed.data[0].id===id);
+    requireOk(!denied.error&&denied.data?.length===0);
+  }
+  checks.ownerReadAndCrossTenantDenial=true;
+  stage='sign_out';
+  for(const row of planned){const signOut=await row.client.auth.signOut({scope:'global'});requireOk(!signOut.error);const session=await row.client.auth.getSession();requireOk(!session.error&&!session.data.session);}
+  checks.globalSignOutClearsClients=true;
+  passed=true;
+}catch(err){console.error(JSON.stringify({status:'probe_failed',stage,code:/^CREATE_[0-9A-Z]+$/.test(err?.message)?err.message:'CHECK_FAILED'}));}
+let cleanup=true;
+for(const row of planned){
+  if(!row.id){cleanup=false;continue;}
+  try{
+    const before=await admin.auth.admin.getUserById(row.id);
+    requireOk(!before.error&&before.data.user?.email===row.email&&before.data.user.app_metadata.resumide_test_run===runId);
+    const removed=await admin.auth.admin.deleteUser(row.id,false);
+    requireOk(!removed.error);
+    const after=await admin.auth.admin.getUserById(row.id);
+    requireOk(after.error?.status===404&&!after.data.user);
+    for(const [table,col,id] of [['organizations','owner_id',row.id],['profiles','id',row.id],['memberships','user_id',row.id],['data_requests','user_id',row.id]]){
+      const residual=await admin.from(table).select(col).eq(col,id).limit(1);
+      requireOk(!residual.error&&residual.data?.length===0);
+    }
+    note({kind:'verified_removed',id:row.id});
+  }catch{cleanup=false;}
+}
+console.log(JSON.stringify({status:passed&&cleanup?'PASS':'INCOMPLETE',checks,cleanup,created:planned.filter(x=>x.id).length}));
+process.exitCode=passed&&cleanup?0:1;

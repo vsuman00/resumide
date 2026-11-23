@@ -1,0 +1,480 @@
+import { createHash } from "node:crypto";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({
+  user: vi.fn(),
+  server: vi.fn(),
+  admin: vi.fn(),
+  rpc: vi.fn(),
+  member: vi.fn(),
+  consent: vi.fn(),
+  audit: vi.fn(),
+  create: vi.fn(),
+  metrics: vi.fn(),
+  config: {
+    LATEX_CONVERTER_ENABLED: true,
+    BUILD_AI_ASSIST_ENABLED: true,
+    AI_ENABLED: true,
+    AI_BUDGET_ENABLED: true,
+    AI_BUDGET_POLICY_VERSION: "synthetic-policy/1",
+    APP_ORIGIN: "https://example.test",
+    AI_MONTHLY_TOKEN_LIMIT: 100000,
+    OPENAI_API_KEY: "synthetic-no-provider-key",
+    OPENAI_BASE_URL: "https://api.openai.com/v1",
+    OPENAI_MODEL: "gpt-6-luna",
+    AI_INPUT_COST_PER_1K_USD: 0,
+    AI_OUTPUT_COST_PER_1K_USD: 0,
+  },
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getServerConfig: () => mocks.config,
+}));
+vi.mock("../../app/lib/server/auth", () => ({
+  getAuthenticatedUser: mocks.user,
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseAdminClient: mocks.admin,
+  createSupabaseServerClient: mocks.server,
+}));
+vi.mock("../../app/lib/server/observability", () => ({
+  recordProviderUsage: mocks.metrics,
+}));
+vi.mock("openai", async (original) => {
+  const actual = await original<typeof import("openai")>();
+  return {
+    ...actual,
+    default: class {
+      static APIConnectionTimeoutError =
+        actual.default.APIConnectionTimeoutError;
+      chat = { completions: { create: mocks.create } };
+    },
+  };
+});
+import { BUILD_AI_POLICY_VERSION } from "../../app/lib/build-assist";
+import { buildSuggestAction } from "../../app/lib/server/build-assist-service";
+import {
+  calculateAiBudgetCost,
+  hashAiBudgetBinding,
+  type AiBudgetBinding,
+} from "../../app/lib/server/ai-budget";
+
+const userId = "11111111-1111-4111-8111-111111111111";
+const organizationId = "22222222-2222-4222-8222-222222222222";
+const source =
+  "\\documentclass{article}\n\\begin{document}\nSelected sentence.\n\\end{document}\n";
+function body() {
+  return {
+    source,
+    sourceHash: createHash("sha256").update(source).digest("hex"),
+    startLine: 3,
+    endLine: 3,
+    mode: "rewrite",
+    consent: true,
+    policyVersion: BUILD_AI_POLICY_VERSION,
+  };
+}
+function request(
+  value = body(),
+  options: { headers?: Record<string, string>; signal?: AbortSignal } = {},
+) {
+  return new Request("https://example.test/build/suggest", {
+    method: "POST",
+    headers: {
+      Origin: "https://example.test",
+      "Content-Type": "application/json",
+      "X-Request-Id": "synthetic-build-request-1",
+      ...options.headers,
+    },
+    body: JSON.stringify(value),
+    signal: options.signal,
+  });
+}
+
+// Deliberate RPC response doubles. They validate service/client wiring, not SQL
+// locking, isolation, capacity arithmetic, real persistence or concurrency.
+function installLedger(
+  options: {
+    replayDispatched?: boolean;
+    replayReserved?: boolean;
+    failSettlement?: boolean;
+    conflictOnChangedPayload?: boolean;
+  } = {},
+) {
+  let firstPayload: string | undefined;
+  mocks.rpc.mockImplementation(
+    async (name: string, args: Record<string, unknown>) => {
+      if (name === "consume_analysis_rate_limit") {
+        expect(String(args.p_key)).not.toMatch(/^build-ai:month:/);
+        return { data: true, error: null };
+      }
+      expect(name).not.toBe("get_organization_ai_tokens_used");
+      if (options.failSettlement && name === "ai_budget_settle")
+        return {
+          data: null,
+          error: { message: "synthetic-private-accounting-canary" },
+        };
+      const input = args.p_request as Record<string, unknown>;
+      if (name === "ai_budget_reserve_next") {
+        expect(input).not.toHaveProperty("attemptOrdinal");
+        if (
+          options.conflictOnChangedPayload &&
+          firstPayload !== undefined &&
+          firstPayload !== input.payloadSha256
+        )
+          return {
+            data: {
+              schemaVersion: "ai-budget/1.0.0",
+              status: "denied",
+              code: "AI_BUDGET_CONFLICT",
+            },
+            error: null,
+          };
+        firstPayload ??= String(input.payloadSha256);
+      }
+      const binding: AiBudgetBinding = {
+        userId: String(args.p_user_id),
+        organizationId: String(args.p_organization_id),
+        operationId: String(input.operationId),
+        attemptId: String(input.attemptId),
+        attemptOrdinal: Number(input.attemptOrdinal ?? 1),
+        surface: "build",
+        payloadSha256: String(input.payloadSha256),
+        model: String(input.model),
+        promptPolicyVersion: String(input.promptPolicyVersion),
+        policyVersion: String(input.policyVersion),
+        reservedInputTokens: Number(input.reservedInputTokens),
+        reservedOutputTokens: Number(input.reservedOutputTokens),
+      };
+      const usage = input.usage as
+        { inputTokens: string; outputTokens: string } | undefined;
+      const state =
+        name === "ai_budget_claim_dispatch"
+          ? "dispatched"
+          : name === "ai_budget_settle"
+            ? "settled"
+            : name === "ai_budget_mark_unknown"
+              ? "held_unknown"
+              : name === "ai_budget_release"
+                ? "released"
+                : options.replayDispatched
+                  ? "dispatched"
+                  : "reserved";
+      const cost = (inputTokens: number, outputTokens: number) =>
+        calculateAiBudgetCost({
+          inputTokens,
+          outputTokens,
+          inputMicrousdPerMillion: "1000000",
+          outputMicrousdPerMillion: "1000000",
+        });
+      const blocked =
+        state === "settled" &&
+        usage !== undefined &&
+        (Number(usage.inputTokens) > binding.reservedInputTokens ||
+          Number(usage.outputTokens) > binding.reservedOutputTokens);
+      return {
+        error: null,
+        data: {
+          schemaVersion: "ai-budget/1.0.0",
+          status: "ok",
+          receipt: {
+            schemaVersion: "ai-budget/1.0.0",
+            ...binding,
+            reservedInputTokens: String(binding.reservedInputTokens),
+            reservedOutputTokens: String(binding.reservedOutputTokens),
+            bindingSha256: hashAiBudgetBinding(binding),
+            poolPolicyVersion: "synthetic-pool/1",
+            attemptLimit: 3,
+            period: "2026-11-01",
+            state,
+            inputMicrousdPerMillion: "1000000",
+            outputMicrousdPerMillion: "1000000",
+            reservedCostMicrousd: cost(
+              binding.reservedInputTokens,
+              binding.reservedOutputTokens,
+            ),
+            actualInputTokens: state === "settled" ? usage?.inputTokens : null,
+            actualOutputTokens:
+              state === "settled" ? usage?.outputTokens : null,
+            actualCostMicrousd:
+              state === "settled" && usage
+                ? cost(Number(usage.inputTokens), Number(usage.outputTokens))
+                : null,
+            replayed:
+              name === "ai_budget_reserve_next" &&
+              Boolean(options.replayDispatched || options.replayReserved),
+            dispatchAllowed: name === "ai_budget_claim_dispatch",
+            poolBlocked: blocked,
+          },
+        },
+      };
+    },
+  );
+}
+
+function rpcRequests(name: string) {
+  return mocks.rpc.mock.calls
+    .filter(([called]) => called === name)
+    .map(([, args]) => args.p_request as Record<string, unknown>);
+}
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.config.AI_BUDGET_ENABLED = true;
+  mocks.config.AI_BUDGET_POLICY_VERSION = "synthetic-policy/1";
+  mocks.user.mockResolvedValue({ id: userId });
+  mocks.member.mockResolvedValue({
+    data: { organization_id: organizationId },
+    error: null,
+  });
+  mocks.consent.mockResolvedValue({ error: null });
+  mocks.audit.mockResolvedValue({ error: null });
+  mocks.rpc.mockImplementation(async (name: string) => ({
+    data:
+      name === "get_organization_ai_tokens_used"
+        ? 0
+        : name === "ai_budget_reserve_next"
+          ? {
+              schemaVersion: "ai-budget/1.0.0",
+              status: "denied",
+              code: "AI_BUDGET_EXHAUSTED",
+            }
+          : true,
+    error: null,
+  }));
+  mocks.admin.mockReturnValue({
+    rpc: mocks.rpc,
+    from(table: string) {
+      if (table === "consents") return { upsert: mocks.consent };
+      if (table === "audit_events") return { insert: mocks.audit };
+      const chain = {
+        select: () => chain,
+        eq: () => chain,
+        order: () => chain,
+        limit: () => chain,
+        maybeSingle: mocks.member,
+      };
+      return chain;
+    },
+  });
+  mocks.create.mockResolvedValue({
+    choices: [
+      {
+        finish_reason: "stop",
+        message: {
+          content: JSON.stringify({
+            operation: "no_change",
+            replacement: null,
+            explanation: "No edit is needed.",
+            questions: [],
+          }),
+        },
+      },
+    ],
+    usage: { prompt_tokens: 20, completion_tokens: 10 },
+  });
+});
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+});
+
+describe("Build shared budget opt-in (RPC and SDK doubles, no network)", () => {
+  it("denies the shared pool before provider dispatch even when the legacy allowance is available", async () => {
+    const response = await buildSuggestAction(request());
+    expect(response.status).toBe(429);
+    expect(await response.json()).toMatchObject({ code: "budget_exhausted" });
+    expect(mocks.rpc).toHaveBeenCalledWith(
+      "ai_budget_reserve_next",
+      expect.any(Object),
+    );
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it("uses one 24232+768 shared reservation and charges actual usage while retaining user/global/consent/audit gates", async () => {
+    installLedger();
+    const response = await buildSuggestAction(request());
+    expect(response.status).toBe(200);
+    expect(response.headers.get("X-Request-Id")).toBe(
+      "synthetic-build-request-1",
+    );
+    expect(rpcRequests("ai_budget_reserve_next")).toEqual([
+      expect.objectContaining({
+        surface: "build",
+        reservedInputTokens: "24232",
+        reservedOutputTokens: "768",
+      }),
+    ]);
+    expect(rpcRequests("ai_budget_claim_dispatch")).toHaveLength(1);
+    expect(rpcRequests("ai_budget_settle")).toEqual([
+      expect.objectContaining({
+        usage: { inputTokens: "20", outputTokens: "10" },
+      }),
+    ]);
+    expect(
+      mocks.rpc.mock.calls
+        .filter(([name]) => name === "consume_analysis_rate_limit")
+        .map(([, args]) => args.p_limit),
+    ).toEqual([3, 20]);
+    expect(mocks.consent).toHaveBeenCalledOnce();
+    expect(mocks.audit).toHaveBeenCalledOnce();
+    expect(mocks.create).toHaveBeenCalledOnce();
+    expect(mocks.metrics).toHaveBeenCalledWith(
+      expect.objectContaining({ inputTokens: 20, outputTokens: 10 }),
+    );
+    expect(JSON.stringify(rpcRequests("ai_budget_reserve_next"))).not.toContain(
+      source,
+    );
+  });
+
+  it("rejects an invalid HTTP idempotency key before ledger/provider work", async () => {
+    installLedger();
+    const response = await buildSuggestAction(
+      request(body(), { headers: { "Idempotency-Key": "invalid" } }),
+    );
+    expect(response.status).toBe(400);
+    expect(mocks.admin).not.toHaveBeenCalled();
+    expect(mocks.create).not.toHaveBeenCalled();
+  });
+
+  it("recovers an unclaimed RESERVED replay through the first dispatch CAS", async () => {
+    installLedger({ replayReserved: true });
+    expect((await buildSuggestAction(request())).status).toBe(200);
+    expect(rpcRequests("ai_budget_claim_dispatch")).toHaveLength(1);
+    expect(mocks.create).toHaveBeenCalledOnce();
+  });
+
+  it("does not dispatch or alter accounting for a prior DISPATCHED replay", async () => {
+    installLedger({ replayDispatched: true });
+    expect((await buildSuggestAction(request())).status).toBe(409);
+    expect(mocks.create).not.toHaveBeenCalled();
+    expect(rpcRequests("ai_budget_release")).toHaveLength(0);
+    expect(rpcRequests("ai_budget_mark_unknown")).toHaveLength(0);
+    expect(rpcRequests("ai_budget_settle")).toHaveLength(0);
+  });
+
+  it("binds changed payload to the same namespaced HTTP key instead of granting another operation", async () => {
+    installLedger({ conflictOnChangedPayload: true });
+    const headers = {
+      "Idempotency-Key": "AAAAAAAA-AAAA-4AAA-8AAA-AAAAAAAAAAAA",
+    };
+    expect(
+      (await buildSuggestAction(request(body(), { headers }))).status,
+    ).toBe(200);
+    expect(
+      (
+        await buildSuggestAction(
+          request({ ...body(), mode: "fix" }, { headers }),
+        )
+      ).status,
+    ).toBe(409);
+    const reservations = rpcRequests("ai_budget_reserve_next");
+    expect(reservations[0].operationId).toBe(reservations[1].operationId);
+    expect(reservations[0].attemptId).toBe(reservations[1].attemptId);
+    expect(reservations[0].payloadSha256).not.toBe(
+      reservations[1].payloadSha256,
+    );
+    expect(mocks.create).toHaveBeenCalledOnce();
+  });
+
+  it("settles observed safe usage even when the provider output is rejected", async () => {
+    installLedger();
+    mocks.create.mockResolvedValue({
+      choices: [
+        {
+          finish_reason: "stop",
+          message: { content: "synthetic-malformed-json" },
+        },
+      ],
+      usage: { prompt_tokens: 31, completion_tokens: 11 },
+    });
+    expect((await buildSuggestAction(request())).status).toBe(422);
+    expect(rpcRequests("ai_budget_settle")).toEqual([
+      expect.objectContaining({
+        usage: { inputTokens: "31", outputTokens: "11" },
+      }),
+    ]);
+    expect(rpcRequests("ai_budget_release")).toHaveLength(0);
+    expect(rpcRequests("ai_budget_mark_unknown")).toHaveLength(0);
+  });
+
+  it("charges and fences known usage above the reservation before output rejection without changing old bounded metrics", async () => {
+    installLedger();
+    const value = await mocks.create();
+    mocks.create.mockClear();
+    value.usage = { prompt_tokens: 26000, completion_tokens: 10 };
+    mocks.create.mockResolvedValue(value);
+    expect((await buildSuggestAction(request())).status).toBe(422);
+    expect(rpcRequests("ai_budget_settle")).toEqual([
+      expect.objectContaining({
+        usage: { inputTokens: "26000", outputTokens: "10" },
+      }),
+    ]);
+    expect(mocks.metrics).not.toHaveBeenCalled();
+    expect(rpcRequests("ai_budget_release")).toHaveLength(0);
+    expect(rpcRequests("ai_budget_mark_unknown")).toHaveLength(0);
+  });
+
+  it.each([undefined, { prompt_tokens: 1.5, completion_tokens: 10 }])(
+    "holds unknown or invalid numeric usage %j without an invented zero",
+    async (usage) => {
+      installLedger();
+      const value = await mocks.create();
+      mocks.create.mockClear();
+      value.usage = usage;
+      mocks.create.mockResolvedValue(value);
+      expect((await buildSuggestAction(request())).status).toBe(422);
+      expect(rpcRequests("ai_budget_mark_unknown")).toHaveLength(1);
+      expect(rpcRequests("ai_budget_settle")).toHaveLength(0);
+      expect(rpcRequests("ai_budget_release")).toHaveLength(0);
+      expect(mocks.metrics).not.toHaveBeenCalled();
+    },
+  );
+
+  it("holds a post-claim cancellation without refunding the dispatched attempt", async () => {
+    installLedger();
+    const controller = new AbortController();
+    mocks.create.mockImplementation(
+      (_body, options: { signal: AbortSignal }) =>
+        new Promise((_resolve, reject) => {
+          const cancel = () =>
+            reject(new Error("synthetic-provider-cancel-canary"));
+          if (options.signal.aborted) cancel();
+          else options.signal.addEventListener("abort", cancel, { once: true });
+        }),
+    );
+    const pending = buildSuggestAction(
+      request(body(), { signal: controller.signal }),
+    );
+    try {
+      await vi.waitFor(() => expect(mocks.create).toHaveBeenCalledOnce());
+      controller.abort();
+      expect((await pending).status).toBe(409);
+      expect(rpcRequests("ai_budget_mark_unknown")).toHaveLength(1);
+      expect(rpcRequests("ai_budget_release")).toHaveLength(0);
+    } finally {
+      controller.abort();
+    }
+  });
+
+  it("withholds a valid suggestion when known settlement fails", async () => {
+    installLedger({ failSettlement: true });
+    const response = await buildSuggestAction(request());
+    expect(response.status).toBe(503);
+    expect(await response.text()).not.toContain(
+      "synthetic-private-accounting-canary",
+    );
+    expect(rpcRequests("ai_budget_settle")).toHaveLength(1);
+    expect(rpcRequests("ai_budget_release")).toHaveLength(0);
+  });
+
+  it("retains the known charge when result delivery fails afterward", async () => {
+    installLedger();
+    vi.spyOn(Response, "json").mockImplementationOnce(() => {
+      throw new Error("synthetic-delivery-canary");
+    });
+    const response = await buildSuggestAction(request());
+    expect(response.status).toBe(503);
+    expect(await response.text()).not.toContain("synthetic-delivery-canary");
+    expect(rpcRequests("ai_budget_settle")).toHaveLength(1);
+    expect(rpcRequests("ai_budget_release")).toHaveLength(0);
+  });
+});

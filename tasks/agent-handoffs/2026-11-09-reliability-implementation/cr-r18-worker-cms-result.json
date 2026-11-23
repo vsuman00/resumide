@@ -1,0 +1,58 @@
+{
+  "id": "CR-R18-S19",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "status": "VERIFIED_LOCAL_CMS_AND_NSS_CHAIN_WITH_CLI_DISCREPANCY",
+  "predecessorImageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+  "candidateImageId": "sha256:32cc4de5007d97d56cc355e435411227c1e0de64b13f3d084960381b2b63a38a",
+  "resultScope": "Exact local ARM64 packages. The application LaTeX compiler continues to support generating ordinary PDFs.",
+  "reproduce": "python3 scripts/latex-runtime/verify-worker-cms-parity.py",
+  "verifierSha256": "5aa8410a5af492344a1e9e095a5a5a10bc619b18ce540ab5a19596ebf5b05db8",
+  "fixtureSha256": {
+    "pdf": "a2d1aa5f249d224f0a377d01636da07b8ce79f03b5d62847b8c6b01d0b11ce79",
+    "root": "bec173ae5a944c2e9c7be23161bf7731597a312722cdfa2c21f914851f10a84b",
+    "leaf": "b9269d58486c4a0b4d15f048c3431025ee7bda28e99ebd83de1b963b09bd0b98"
+  },
+  "fixture": "A fresh synthetic RSA root and S/MIME signing leaf generated locally by OpenSSL. Host CMS verification returned the exact signed byte ranges. Only the PDF and two public certificates entered the containers. Private keys and isolated temporary data were removed.",
+  "bothImages": {
+    "pdfSignature": "Signature is Valid.",
+    "emptyNssStore": {
+      "cliCertificate": "Certificate issuer is unknown.",
+      "verifyNowReturn": -1,
+      "pkixReturn": -1,
+      "pkixErrorSlot": -8179
+    },
+    "explicitRoot": {
+      "cliCertificate": "Unknown issue with Certificate or corrupted data.",
+      "verifyNowReturn": 0,
+      "pkixReturn": 0,
+      "pkixErrorSlot": -8157
+    },
+    "networkAccess": false,
+    "hostMounts": false,
+    "remainingOwnedWorkers": 0
+  },
+  "systemCaCounts": {
+    "predecessor": 148,
+    "candidate": 0
+  },
+  "localizedDiscrepancy": {
+    "sourceArchiveSha256": "97da4ff88517a6bbd729529f195f85c8d7a0c3bb4a3d57cb0c685cbb052fe837",
+    "sourceFile": "poppler/NSSCryptoSignBackend.cc",
+    "sourceFunction": "NSSSignatureVerification::validateCertificateAsync",
+    "inference": "The exact Poppler source calls CERT_PKIXVerifyCert and maps PORT_GetError without branching on the return status. With the same NSS email signing usage and offline parameters, the trusted result returned SECSuccess and left a nonzero error value. This is consistent with the generic error reported on both exact worker images.",
+    "primaryReference": "https://nss-crypto.org/reference/security/nss/legacy/reference/nspr_functions/index.html#error-reporting"
+  },
+  "earlierChecks": [
+    "The first temporary probe used a symbol absent from the installed libnss3 and stopped before the paired assertions.",
+    "The paired fixture yielded a valid signature on both images. The initial assertion for a positive Poppler certificate label failed on both.",
+    "The direct NSS probe with explicit offline verification parameters passed the expected certificate and parity assertions. The original public CMS and OpenPGP fixture failures remain in S18."
+  ],
+  "open": [
+    "Poppler CLI certificate reporting",
+    "Full native regression on candidate",
+    "79 remaining high advisory matches",
+    "Runtime promotion and release acceptance"
+  ],
+  "latexSourceCheck": "pass"
+}

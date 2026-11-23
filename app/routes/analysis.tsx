@@ -1,8 +1,12 @@
 import { Link, useParams } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { StageTimeline } from "~/components/StageTimeline";
 import WorkspaceShell from "~/components/WorkspaceShell";
 import EvidenceScene3D from "~/components/EvidenceScene3D";
+import type {
+  AnalysisQueueActivity,
+  AnalysisRecovery,
+} from "~/routes/api.analysis-status";
 
 const terminalStatuses = new Set([
   "completed",
@@ -45,11 +49,73 @@ const terminalCopy: Record<
     description: "Review the PDF requirements before trying another file.",
     heading: "File rejected",
   },
-  needs_ocr: {
-    title: "Extraction needs review",
+};
+
+const waitingCopy = {
+  title: "Resume saved",
+  description: "Your upload is saved. You can return here to check its status.",
+  heading: "Waiting for a worker",
+};
+const queueActivityCopy: Record<AnalysisQueueActivity, typeof waitingCopy> = {
+  recent_check: {
+    ...waitingCopy,
+    heading: "A worker checked the queue recently",
+  },
+  no_recent_check: {
+    ...waitingCopy,
+    heading: "No recent worker check-in",
+  },
+};
+const recoveryCopy: Record<
+  AnalysisRecovery,
+  { title: string; heading: string; description: string; review: boolean }
+> = {
+  text_pdf_required: {
+    title: "A text-based PDF is needed",
+    heading: "Readable text is required",
     description:
-      "Saved extraction evidence needs review before scoring can continue.",
-    heading: "Evidence needs review",
+      "Export the original document as a PDF with selectable text, then upload it again.",
+    review: false,
+  },
+  ocr_unavailable: {
+    title: "OCR is unavailable",
+    heading: "Some pages need OCR",
+    description:
+      "Some pages lack a usable text layer. Export a PDF with selectable text, or review the saved extraction evidence.",
+    review: true,
+  },
+  ocr_failed: {
+    title: "OCR could not finish",
+    heading: "Text extraction stopped",
+    description:
+      "Review the saved extraction evidence or upload a PDF with selectable text.",
+    review: true,
+  },
+  ocr_incomplete: {
+    title: "OCR needs more readable text",
+    heading: "Extraction is incomplete",
+    description:
+      "Review the available text, then upload a PDF with a clearer, selectable text layer.",
+    review: true,
+  },
+  native_review: {
+    title: "Extracted text needs review",
+    heading: "Review the saved PDF text",
+    description: "Check the extracted evidence against the original document.",
+    review: true,
+  },
+  ocr_review: {
+    title: "OCR evidence needs review",
+    heading: "Review the saved OCR text",
+    description:
+      "Check the extracted text against the original pages before relying on it.",
+    review: true,
+  },
+  review_status_unavailable: {
+    title: "Extraction needs attention",
+    heading: "Evidence availability is unknown",
+    description: "Check the status again or upload a PDF with selectable text.",
+    review: false,
   },
 };
 
@@ -57,6 +123,8 @@ type StatusResponse = {
   status: string;
   stage_updated_at: string;
   completed_at: string | null;
+  recovery?: AnalysisRecovery;
+  queueActivity?: AnalysisQueueActivity;
 };
 
 export function meta() {
@@ -65,41 +133,89 @@ export function meta() {
 
 export default function AnalysisProgress() {
   const { id } = useParams();
+  return <AnalysisProgressView key={id} id={id} />;
+}
+
+function AnalysisProgressView({ id }: { id: string | undefined }) {
   const [result, setResult] = useState<StatusResponse | null>(null);
   const [error, setError] = useState("");
   const [retryAttempt, setRetryAttempt] = useState(0);
+  const [checkingStatus, setCheckingStatus] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
-  const copy = result ? terminalCopy[result.status] : undefined;
+  const statusMessage = useRef<HTMLParagraphElement>(null);
+  const cancelRequest = useRef<AbortController | null>(null);
+  const stopPolling = useRef<(() => void) | null>(null);
   const canCancel = Boolean(
     result && ["quarantined", "queued"].includes(result.status),
   );
+  const recovery =
+    result?.status === "needs_ocr"
+      ? (result.recovery ?? "review_status_unavailable")
+      : undefined;
+  const recoveryDetails = recovery
+    ? (recoveryCopy[recovery] ?? recoveryCopy.review_status_unavailable)
+    : undefined;
+  const copy =
+    recoveryDetails ??
+    (canCancel
+      ? (result?.queueActivity && queueActivityCopy[result.queueActivity]) ||
+        waitingCopy
+      : result
+        ? terminalCopy[result.status]
+        : undefined);
+  const retryStatus = () => {
+    statusMessage.current?.focus();
+    setCheckingStatus(true);
+    setError("");
+    setRetryAttempt((attempt) => attempt + 1);
+  };
 
   const handleCancel = async () => {
-    if (!result || !id) return;
+    if (!result || !id || cancelRequest.current) return;
+    const controller = new AbortController();
+    cancelRequest.current = controller;
     setIsCancelling(true);
     try {
       const response = await fetch(`/api/analysis/${id}/cancel`, {
         method: "POST",
+        signal: controller.signal,
       });
       const payload = await response.json().catch(() => null);
+      if (controller.signal.aborted) return;
+      if ([401, 403, 404].includes(response.status)) {
+        stopPolling.current?.();
+        setCheckingStatus(false);
+        setResult(null);
+        setError(payload?.error?.message ?? "Analysis is unavailable.");
+        return;
+      }
       if (!response.ok) {
         throw new Error(
-          payload?.error?.message ?? "Unable to cancel analysis.",
+          payload?.error?.message ??
+            (response.status === 409 ? payload?.message : undefined) ??
+            "Unable to cancel analysis.",
         );
       }
-      setResult({
-        ...result,
-        status: "cancelled",
-        completed_at: new Date().toISOString(),
-      });
+      if (payload?.status !== "cancelled")
+        throw new Error(
+          "Unable to confirm cancellation. Check the latest status.",
+        );
+      stopPolling.current?.();
+      setCheckingStatus(false);
+      setError("");
+      setResult((current) => ({ ...(current ?? result), status: "cancelled" }));
     } catch (caught) {
+      if (controller.signal.aborted) return;
       setError(
         caught instanceof Error ? caught.message : "Unable to cancel analysis.",
       );
     } finally {
-      setIsCancelling(false);
+      cancelRequest.current = null;
+      if (!controller.signal.aborted) setIsCancelling(false);
     }
   };
+
+  useEffect(() => () => cancelRequest.current?.abort(), []);
 
   useEffect(() => {
     if (!id) return;
@@ -126,11 +242,26 @@ export default function AnalysisProgress() {
           signal: controller.signal,
         });
         const payload = await response.json().catch(() => null);
+        if (cancelled) return;
+        setCheckingStatus(false);
+        if ([401, 403, 404].includes(response.status)) {
+          if (cancelRequest.current) {
+            cancelRequest.current.abort();
+            setIsCancelling(false);
+          }
+          setResult(null);
+          setError(
+            payload?.error?.message ?? "Analysis status is unavailable.",
+          );
+          stop();
+          return;
+        }
         if (!response.ok)
           throw new Error(
             payload?.error?.message ?? "Unable to load analysis status.",
           );
-        if (cancelled) return;
+        if (!payload || typeof payload.status !== "string")
+          throw new Error("Analysis status is unavailable.");
         setResult(payload);
         setError("");
         if (terminalStatuses.has(payload.status)) return;
@@ -141,6 +272,7 @@ export default function AnalysisProgress() {
           (caught instanceof DOMException && caught.name === "AbortError")
         )
           return;
+        setCheckingStatus(false);
         setError(
           caught instanceof Error
             ? caught.message
@@ -158,13 +290,18 @@ export default function AnalysisProgress() {
         void poll();
       }
     };
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    void poll();
-    return () => {
+    const stop = () => {
       cancelled = true;
       controller?.abort();
       if (timer) clearTimeout(timer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+    stopPolling.current = stop;
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    void poll();
+    return () => {
+      stop();
+      stopPolling.current = null;
     };
   }, [id, retryAttempt]);
 
@@ -175,7 +312,7 @@ export default function AnalysisProgress() {
       description={
         copy?.description ??
         (result
-          ? "Your analysis is stored safely and will keep running if you leave this page."
+          ? "You can return here to check the latest saved status."
           : "Checking the latest durable analysis status.")
       }
       action={
@@ -201,7 +338,12 @@ export default function AnalysisProgress() {
       >
         <EvidenceScene3D
           variant="analysis"
-          active={Boolean(result && !terminalStatuses.has(result.status))}
+          active={Boolean(
+            result &&
+            ["extracting", "scoring", "qualitative_review"].includes(
+              result.status,
+            ),
+          )}
           label={
             copy?.heading ?? "Resume evidence being scanned and transformed"
           }
@@ -211,12 +353,19 @@ export default function AnalysisProgress() {
           <div className="analysis-progress-intro">
             <p className="workspace-eyebrow">Live status</p>
             <h2>{copy?.heading ?? "Evidence is being prepared"}</h2>
-            <p role="status" aria-live="polite">
-              {error
-                ? "We could not refresh this analysis."
-                : result
-                  ? `Current status: ${result.status.replaceAll("_", " ")}.`
-                  : "Loading analysis status."}
+            <p
+              ref={statusMessage}
+              tabIndex={-1}
+              role="status"
+              aria-live="polite"
+            >
+              {checkingStatus
+                ? "Checking the latest analysis status."
+                : error
+                  ? "We could not refresh this analysis."
+                  : result
+                    ? `Current status: ${result.status.replaceAll("_", " ")}.`
+                    : "Loading analysis status."}
             </p>
           </div>
 
@@ -224,6 +373,7 @@ export default function AnalysisProgress() {
             <StageTimeline
               status={result.status}
               updatedAt={result.stage_updated_at}
+              recovery={recovery}
             />
           ) : !error ? (
             <div className="stage-timeline-skeleton" aria-hidden="true">
@@ -245,10 +395,7 @@ export default function AnalysisProgress() {
               <button
                 type="button"
                 className="back-button"
-                onClick={() => {
-                  setError("");
-                  setRetryAttempt((attempt) => attempt + 1);
-                }}
+                onClick={retryStatus}
               >
                 Retry status check
               </button>
@@ -317,19 +464,31 @@ export default function AnalysisProgress() {
             </section>
           ) : null}
 
-          {result?.status === "needs_ocr" ? (
+          {recoveryDetails ? (
             <section className="analysis-state-panel is-partial" role="alert">
-              <h2>Extraction needs review</h2>
-              <Link to={`/analysis/${id}/evidence`}>
-                Review extracted evidence
-              </Link>
-              <p>
-                Scores are unavailable while extraction evidence needs review.
-                Missing text may require a new text-based PDF.
-              </p>
-              <Link to="/upload" className="back-button w-fit">
-                Upload a text-based PDF
-              </Link>
+              <h2>Scores are withheld</h2>
+              {recoveryDetails.review ? (
+                <Link
+                  to={`/analysis/${id}/evidence`}
+                  className="primary-button w-fit"
+                >
+                  Review extracted evidence
+                </Link>
+              ) : null}
+              {recovery === "review_status_unavailable" ? (
+                <button
+                  type="button"
+                  className="back-button w-fit"
+                  onClick={retryStatus}
+                >
+                  Check evidence status
+                </button>
+              ) : null}
+              {recovery !== "native_review" && recovery !== "ocr_review" ? (
+                <Link to="/upload" className="back-button w-fit">
+                  Upload a text-based PDF
+                </Link>
+              ) : null}
             </section>
           ) : null}
         </div>

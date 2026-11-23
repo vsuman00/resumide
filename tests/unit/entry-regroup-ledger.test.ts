@@ -1,0 +1,492 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+const read = (path: string) =>
+  readFileSync(new URL("../../" + path, import.meta.url), "utf8");
+const sha = (text: string) =>
+  createHash("sha256").update(text, "utf8").digest("hex");
+const sql = read(
+  "supabase/migrations/20261113155247_entry_regroup_ledger_foundation.sql",
+);
+const foundation = read(
+  "supabase/migrations/20261113130533_grouped_original_atomic_import.sql",
+);
+const admission = read(
+  "supabase/migrations/20261113131538_grouped_original_admission.sql",
+);
+const reader = read(
+  "supabase/migrations/20261113142537_grouped_original_workspace_read.sql",
+);
+const tables = [
+  "candidate_entry_regroup_batches",
+  "candidate_entry_regroup_groups",
+  "candidate_entry_regroup_members",
+  "canonical_entry_regroup_snapshots",
+  "canonical_entry_regroup_links",
+];
+const keys = [
+  "candidateEntryRegroupBatches",
+  "candidateEntryRegroupGroups",
+  "candidateEntryRegroupMembers",
+  "canonicalEntryRegroupSnapshots",
+  "canonicalEntryRegroupLinks",
+];
+function literal(source: string, tag: string) {
+  const match = source.match(
+    new RegExp("\\$" + tag + "\\$([\\s\\S]*?)\\$" + tag + "\\$"),
+  );
+  if (!match) throw Error("MISSING_SOURCE_LITERAL");
+  return match[1];
+}
+type Patch = { old: string; new: string };
+const patches = JSON.parse(literal(sql, "regroup_profile_patches")) as Patch[];
+const oldReady = literal(admission, "a02_ready").replace(
+  literal(reader, "a02_old_manifest"),
+  literal(reader, "a02_new_manifest"),
+);
+const predecessor = sql.match(/predecessor text:='([a-f0-9]{64})'/)![1];
+const postimage = sql.match(/postimage text:='([a-f0-9]{64})'/)![1];
+function transition(source: string, steps = patches) {
+  if (sha(source) !== predecessor) throw Error("PREDECESSOR_DRIFT");
+  for (const p of steps) {
+    if (!p.old.length || source.split(p.old).length !== 2)
+      throw Error("CONTEXT_DRIFT");
+    source = source.replace(p.old, p.new);
+  }
+  if (sha(source) !== postimage) throw Error("POSTIMAGE_DRIFT");
+  return source;
+}
+const nextReady = transition(oldReady);
+type Routine = {
+  signature: string;
+  sha256: string;
+  definer: boolean;
+  volatility: string;
+  resultType: string;
+  strict: boolean;
+  language: string;
+  serviceExecute: boolean;
+};
+type Column = { table: string; name: string; type: string; notNull: boolean };
+type ForeignKey = {
+  table: string;
+  columns: string[];
+  foreignTable: string;
+  foreignColumns: string[];
+  deferred: boolean;
+};
+const declaration = (table: string) =>
+  sql.match(
+    new RegExp("create table public\\." + table + " \\(([\\s\\S]*?)\\n\\);"),
+  )![1];
+const oldRoutines = JSON.parse(
+  literal(oldReady, "catalog_manifest"),
+) as Routine[];
+const newRoutines = JSON.parse(
+  literal(nextReady, "catalog_manifest"),
+) as Routine[];
+const helper = literal(sql, "regroup_export"),
+  workspace = literal(sql, "regroup_workspace");
+
+describe("regroup metadata foundation source only, not SQL execution", () => {
+  it("adds exactly five stores and ONE actual private exporter without writer/schema/validator", () => {
+    expect(
+      [...sql.matchAll(/create table public\.(\w+)/g)].map((m) => m[1]),
+    ).toEqual(tables);
+    expect(
+      [...sql.matchAll(/create(?: or replace)? function ([\w.]+)\(/g)].map(
+        (m) => m[1],
+      ),
+    ).toEqual([
+      "private.entry_regroup_export_records",
+      "public.export_resume_workspace_records",
+    ]);
+    expect(sql).not.toMatch(
+      /create(?: or replace)? function[^\n]*(?:validate|prefix|save|import|normalize)/,
+    );
+    expect(sql).not.toContain("canonical-engine/1.0.4");
+    expect(sql).not.toMatch(
+      /alter table public\.(?:candidate_entry_association|canonical_resume|resume_facts)/,
+    );
+    expect(sql.trimEnd()).toMatch(/commit;$/);
+  });
+  it("independently replays the actual guarded ready69 to70, carrying every unchanged policy", () => {
+    expect(predecessor).toBe(
+      "c2098f91ee32e4035ff30dd5db71c4d7e95944cef24e4b137c8c489841edd5db",
+    );
+    expect(postimage).toBe(
+      "c09803937360d27e8b9cd5d8cbe20177100560c6cea82c60891d43281f4e2f86",
+    );
+    expect(sha(oldReady)).toBe(predecessor);
+    expect(oldRoutines).toHaveLength(69);
+    expect(newRoutines).toHaveLength(70);
+    for (const old of oldRoutines) {
+      const next = newRoutines.find((r) => r.signature === old.signature)!;
+      expect(next).toEqual(
+        old.signature === "public.export_resume_workspace_records(uuid)"
+          ? { ...old, sha256: sha(workspace) }
+          : old,
+      );
+    }
+    expect(newRoutines.at(-1)).toEqual({
+      signature: "private.entry_regroup_export_records(uuid)",
+      sha256: sha(helper),
+      definer: false,
+      volatility: "s",
+      resultType: "jsonb",
+      strict: false,
+      language: "sql",
+      serviceExecute: false,
+    });
+    expect(
+      newRoutines.find(
+        (r) =>
+          r.signature ===
+          "public.import_canonical_grouped_original(uuid,uuid,jsonb,jsonb,text)",
+      )?.serviceExecute,
+    ).toBe(false);
+    expect(nextReady).not.toContain(postimage);
+    expect(helper).not.toContain(postimage);
+    // Every patch is invertible and disjoint: no old readiness check is discarded.
+    let restored = nextReady;
+    for (const p of [...patches].reverse()) {
+      expect(restored.split(p.new)).toHaveLength(2);
+      restored = restored.replace(p.new, p.old);
+    }
+    expect(restored).toBe(oldReady);
+  });
+  it("rejects predecessor, context and postimage drift instead of silently choosing a profile", () => {
+    expect(() => transition(oldReady + " ")).toThrow("PREDECESSOR_DRIFT");
+    expect(() =>
+      transition(oldReady, [
+        { ...patches[0], old: "missing" },
+        ...patches.slice(1),
+      ]),
+    ).toThrow("CONTEXT_DRIFT");
+    const changed = patches.map((p) => ({ ...p }));
+    changed[0].new += " ";
+    expect(() => transition(oldReady, changed)).toThrow("POSTIMAGE_DRIFT");
+    for (const kind of ["PREDECESSOR", "CONTEXT", "POSTIMAGE", "DEFINITION"])
+      expect(sql).toContain(`ENTRY_REGROUP_PROFILE_${kind}_DRIFT`);
+  });
+  it("checks all actual new columns, exact types/nullability and original65 unchanged", () => {
+    const old = JSON.parse(literal(oldReady, "column_manifest")) as Column[];
+    const next = JSON.parse(literal(nextReady, "column_manifest")) as Column[];
+    expect(old).toHaveLength(65);
+    expect(next).toHaveLength(160);
+    expect(next.slice(0, 65)).toEqual(old);
+    const actual: Column[] = [];
+    for (const table of tables)
+      for (const m of declaration(table).matchAll(
+        /^ {2}(\w+) (uuid\[\]|uuid|integer|text|jsonb|bytea|timestamptz)([^\n]*)/gm,
+      ))
+        actual.push({
+          table: "public." + table,
+          name: m[1],
+          type: m[2],
+          notNull: m[3].includes("not null"),
+        });
+    expect(actual).toHaveLength(95);
+    expect(next.slice(65)).toEqual(actual);
+    expect(next.filter((c) => c.type === "uuid[]").map((c) => c.name)).toEqual([
+      "affected_entry_ids",
+    ]);
+    for (const name of [
+      "regroup_revision",
+      "base_revision",
+      "result_revision",
+      "group_order",
+      "insertion_index",
+      "source_order",
+      "composition_order",
+    ])
+      expect(
+        actual
+          .filter((c) => c.name === name)
+          .every((c) => c.type === "integer"),
+      ).toBe(true);
+  });
+  it("binds all55 actual new composite cascades, deferred result references and21 original FKs", () => {
+    const old = JSON.parse(
+      literal(oldReady, "foreign_key_manifest"),
+    ) as ForeignKey[];
+    const next = JSON.parse(
+      literal(nextReady, "foreign_key_manifest"),
+    ) as ForeignKey[];
+    expect(old).toHaveLength(21);
+    expect(next).toHaveLength(76);
+    expect(next.slice(0, 21)).toEqual(old);
+    const actual: ForeignKey[] = [];
+    for (const table of tables)
+      for (const m of declaration(table).matchAll(
+        /constraint (\w+) foreign key\(([^)]+)\) references ([\w.]+)\(([^)]+)\) on delete cascade( deferrable initially deferred)?/g,
+      )) {
+        expect(m[1].length).toBeLessThanOrEqual(63);
+        actual.push({
+          table: "public." + table,
+          columns: m[2].split(","),
+          foreignTable: m[3],
+          foreignColumns: m[4].split(","),
+          deferred: Boolean(m[5]),
+        });
+      }
+    expect(next.slice(21)).toEqual(actual);
+    expect(actual).toHaveLength(55);
+    const links = actual.filter((f) =>
+      f.table.endsWith("canonical_entry_regroup_links"),
+    );
+    for (const family of ["association", "regroup"]) {
+      const f = links.find((x) => x.columns[0] === `${family}_group_id`)!;
+      expect(f.columns).toEqual([
+        `${family}_group_id`,
+        `${family}_batch_id`,
+        "owner_id",
+        "organization_id",
+        "resume_id",
+        "source_resume_version_id",
+        "original_approval_version_id",
+      ]);
+      expect(f.foreignColumns).toEqual([
+        "id",
+        "batch_id",
+        "owner_id",
+        "organization_id",
+        "resume_id",
+        "source_resume_version_id",
+        "result_version_id",
+      ]);
+    }
+    const member = actual.filter((f) =>
+      f.table.endsWith("candidate_entry_regroup_members"),
+    );
+    expect(
+      member.find(
+        (f) =>
+          f.columns[0] === "base_version_id" &&
+          f.foreignTable === "public.resume_facts",
+      )?.deferred,
+    ).toBe(false);
+    expect(
+      member.find(
+        (f) =>
+          f.columns[0] === "result_version_id" &&
+          f.foreignTable === "public.resume_facts",
+      )?.deferred,
+    ).toBe(true);
+    expect(
+      member.find(
+        (f) =>
+          f.columns[0] === "origin_version_id" &&
+          f.foreignTable === "public.resume_facts",
+      )?.columns,
+    ).toEqual([
+      "origin_version_id",
+      "origin_fact_id",
+      "owner_id",
+      "organization_id",
+    ]);
+  });
+  it("preserves the old10 trigger records and checks all10 actual new immutable/privacy triggers", () => {
+    const old = JSON.parse(literal(oldReady, "trigger_manifest"));
+    const next = JSON.parse(literal(nextReady, "trigger_manifest"));
+    expect(old).toHaveLength(10);
+    expect(next).toHaveLength(20);
+    expect(next.slice(0, 10)).toEqual(old);
+    for (const table of tables) {
+      const rows = next.filter(
+        (t: { table: string }) => t.table === "public." + table,
+      );
+      expect(rows).toHaveLength(2);
+      expect(rows).toContainEqual({
+        table: "public." + table,
+        name: "zz_candidate_privacy_write",
+        function: "private.guard_candidate_privacy_write()",
+        type: 23,
+        argsHex: "6f776e65725f696400",
+        argumentCount: 1,
+      });
+      expect(
+        rows.some(
+          (t: { type: number; function: string }) =>
+            t.type === 19 &&
+            t.function === "private.reject_correction_ledger_update()",
+        ),
+      ).toBe(true);
+      expect(sql).toContain(
+        `before insert or update on public.${table} for each row execute function private.guard_candidate_privacy_write('owner_id')`,
+      );
+      expect(sql).toContain(
+        `alter table public.${table} enable row level security`,
+      );
+      expect(sql).toContain(
+        `revoke all on public.${table} from public,anon,authenticated,service_role`,
+      );
+      expect(nextReady).toContain(
+        `relation_oid:=to_regclass('public.${table}')`,
+      );
+    }
+    expect(sql).not.toMatch(
+      /create policy|grant (?:select|insert|update|delete|all)/i,
+    );
+    expect(nextReady).toContain(
+      "has_table_privilege(role_name,relation_oid,'SELECT')",
+    );
+    expect(nextReady).toContain("where grantee=0) then return false");
+  });
+  it("keeps revision/hash/whole-entry/member-location metadata bounded without claiming semantics", () => {
+    expect(declaration(tables[0])).toContain(
+      "result_revision::bigint=base_revision::bigint+1",
+    );
+    expect(declaration(tables[0])).toContain(
+      "check(base_version_id<>result_version_id and storage_key<>idempotency_key)",
+    );
+    for (const bound of ["262144", "131072", "4130324f50310a"])
+      expect(declaration(tables[0])).toContain(bound);
+    expect(declaration(tables[1])).toContain(
+      "cardinality(affected_entry_ids) between 1 and 3",
+    );
+    expect(declaration(tables[1])).toContain(
+      "array_position(affected_entry_ids,null) is null",
+    );
+    expect(declaration(tables[1])).toContain(
+      "affected_entry_ids[1]<>affected_entry_ids[3]",
+    );
+    expect(declaration(tables[2])).not.toContain("entry_order");
+    expect(declaration(tables[2])).not.toContain(
+      "unique(batch_id,original_entry_id)",
+    );
+    expect(declaration(tables[2])).toContain(
+      "check((location_kind='bullet')=(original_bullet_id is not null))",
+    );
+    expect(declaration(tables[2])).toContain("origin_fact_id=fact_id");
+    expect(declaration(tables[3])).toContain("creation_kind='legacy_bridge'");
+    expect(declaration(tables[4])).toContain(
+      "origin_family='association' and association_group_id is not null and association_batch_id is not null and regroup_group_id is null and regroup_batch_id is null",
+    );
+    expect(declaration(tables[4])).toContain(
+      "origin_family='regroup' and association_group_id is null and association_batch_id is null and regroup_group_id is not null and regroup_batch_id is not null",
+    );
+  });
+  it("filters recursive JSON nodes to objects before keyvalue while banning nested candidate values", () => {
+    const guarded =
+      'strict $.** ? (@.type() == "object").keyvalue() ? (@.key == "value" || @.key == "sourceValue" || @.key == "currentValue")';
+    expect(sql.split(guarded)).toHaveLength(3);
+    expect(sql).not.toContain("'$.**.keyvalue()");
+    expect(declaration(tables[1])).toContain(guarded);
+    expect(declaration(tables[2])).toContain(guarded);
+  });
+  it("retains old10 helper bytes and appends new5 in ONE stable complete owner-qualified snapshot", () => {
+    const oldHelper = foundation.match(
+      /create function private.entry_association_export_records[\s\S]*?as \$\$([\s\S]*?)\$\$;/,
+    )![1];
+    expect(sha(oldHelper)).toBe(
+      "8daff2f43d41cab99ef417a55fdfc73cc17930dcd45923c82c6ac6004c49c1ff",
+    );
+    expect(sql).not.toContain(
+      "function private.entry_association_export_records(",
+    );
+    expect(sql).toContain(
+      "'7e84db73e326a2d372fd3cbbd8315e0c53a24d52f3a5ced9dd25900d5b9d56cd'",
+    );
+    expect(workspace).toContain(
+      "||private.entry_association_export_records(p_user_id)||private.entry_regroup_export_records(p_user_id)",
+    );
+    expect(workspace.match(/snapshot:=/g)).toHaveLength(1);
+    expect(workspace.indexOf("33554432")).toBeGreaterThan(
+      workspace.indexOf("entry_regroup_export_records"),
+    );
+    expect(sql).toContain(
+      "language sql stable security invoker set search_path='' as $regroup_export$",
+    );
+    expect(sql).toContain(
+      "language plpgsql stable security definer set search_path='' as $regroup_workspace$",
+    );
+    const orders = [
+      "t.analysis_id,t.regroup_revision",
+      "t.batch_id,t.group_order",
+      "t.batch_id,t.group_id,t.source_order",
+      "t.canonical_version_id",
+      "t.canonical_version_id,t.composition_order",
+    ];
+    keys.forEach((key, i) =>
+      expect(helper).toContain(
+        `'${key}',coalesce((select jsonb_agg(to_jsonb(t) order by ${orders[i]}) from public.${tables[i]} t where t.owner_id=p_user_id),'[]'::jsonb)`,
+      ),
+    );
+    tables.forEach((table) =>
+      expect(helper).toContain(
+        `from public.${table} t where t.owner_id=p_user_id`,
+      ),
+    );
+    expect(helper.match(/to_jsonb\(t\)/g)).toHaveLength(5);
+    expect(sql).toContain(
+      "revoke all on function private.entry_regroup_export_records(uuid) from public,anon,authenticated,service_role",
+    );
+    expect(sql).not.toMatch(/grant execute[^;]*entry_regroup_export_records/);
+    expect(sql).not.toMatch(
+      /grant execute[^;]*import_canonical_grouped_original/,
+    );
+  });
+});
+
+describe("deferred privileged metadata verifier source", () => {
+  const verifier = read("scripts/verify-entry-regroup-ledger.sql");
+  it("pins the successor and refuses unadmitted targets without a new writer or parser", () => {
+    expect(verifier).toContain(postimage);
+    expect(verifier).toContain(
+      "SOURCE ONLY / UNPARSED / UNAPPLIED / UNEXECUTED",
+    );
+    expect(verifier).toContain(
+      "PRIVILEGED METADATA FIXTURE ONLY: not a valid regroup, original approval or admission proof",
+    );
+    expect(verifier).toContain("isolated-managed-regroup-metadata/1");
+    expect(verifier).toContain("REGROUP_METADATA_FIXTURE_NOT_ADMITTED");
+    expect(verifier.trimEnd()).toMatch(/rollback;$/);
+    expect(verifier).not.toMatch(
+      /\bgrant\b|public\.save_canonical_version\(|perform public\.import_canonical_grouped_original\(/i,
+    );
+    const source = JSON.parse(literal(verifier, "fixture"));
+    const prior = JSON.parse(
+      literal(read("scripts/verify-grouped-original-admission.sql"), "oracle"),
+    );
+    expect(source).toEqual({
+      envelope: prior.envelope,
+      original: prior.original,
+    });
+    expect(verifier).toContain("nullif(value->'confirmation','null'::jsonb)");
+  });
+  it("prepares typed mixed-origin/shared-entry/export/privacy/cascade cases without calling semantic validators", () => {
+    for (const name of [
+      "shared_original_entry_metadata_allowed",
+      "typed_two_origin_composition_metadata",
+      "complete_ordered_new_export",
+      "old_export_preserved",
+      "nullable_xor_fields_preserved",
+      "foreign_owner_export_empty",
+      "result_revision_metadata_check",
+      "duplicate_affected_entries_denied",
+      "source_tuple_fk_denied",
+      "both_origin_families_denied",
+      "typed_origin_result_mismatch_denied",
+      "privacy_insert_guard_denied",
+    ])
+      expect(verifier).toContain(`'${name}'`);
+    expect(verifier).toContain(
+      "delete from public.resume_versions where id=source_id",
+    );
+    expect(verifier).toContain("'source_cascade_'||table_name");
+    expect(verifier).toContain("message='Correction ledger is immutable'");
+    expect(verifier).not.toContain("private.entry_association_validate_head(");
+    expect(verifier).not.toContain("private.grouped_import_place_original(");
+    expect(verifier).toContain("set constraints all immediate");
+  });
+  it("prepares scalar/nested positive and forbidden-key refusal controls for the corrected JSONpath", () => {
+    expect(verifier).toContain("'scalar_and_nested_metadata_path_positive'");
+    expect(verifier).toContain("'nested_candidate_key_path_detected'");
+    expect(verifier).toContain("'nested_candidate_key_table_denied'");
+    expect(verifier).toContain(
+      'strict $.** ? (@.type() == "object").keyvalue()',
+    );
+    expect(verifier).toContain('"nested":[0,null,{"id":"assertion-1"}]');
+  });
+});

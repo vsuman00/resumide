@@ -1,0 +1,37 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ✓ tests/unit/privacy.test.ts (37 tests) 179ms
+ ✓ tests/unit/privacy-operations.test.ts (54 tests) 68ms
+ ❯ tests/unit/privacy-export-generation-sql.test.ts (12 tests | 1 failed) 6ms
+     × checks twelve exact predecessor/postimages and all18 actual new/inherited authority pins 3ms
+     ✓ refuses each legacy overload rather than inferring a current attempt 0ms
+     ✓ validates actual request/worker/attempt/live lease and never guesses an old epoch 0ms
+     ✓ stamps only actual claims under fresh post-lock generation and retains monotonic attempt 0ms
+     ✓ binds content completion to current generation while safe failure cannot restamp/reuse old content 0ms
+     ✓ advances once at real first preparation and preserves the old plan/clock/capture bytes 0ms
+     ✓ advances/clears old copies before fold erasure under the same exclusive global gate 0ms
+     ✓ preflights actual old authority schema under DDL lock before learning the new seal 0ms
+     ✓ closes broad AND column writes and positively checks necessary service privileges 0ms
+     ✓ permits direct queued cancellation only and keeps the existing prepared-cancel barrier untouched 0ms
+     ✓ has an owner-free monotonic counter and never grants expiry/adoption data access 0ms
+   ✓ preserves all five predecessor profiles except exact actual successor pins 0ms
+ ✓ tests/unit/privacy-claim-fence.test.ts (6 tests) 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/privacy-export-generation-sql.test.ts > real privacy-generation source, SQL unparsed/unexecuted > checks twelve exact predecessor/postimages and all18 actual new/inherited authority pins
+Error: ACTUAL_BODY
+ ❯ direct tests/unit/privacy-export-generation-sql.test.ts:9:199
+
+ ❯ body tests/unit/privacy-export-generation-sql.test.ts:13:62
+ ❯ tests/unit/privacy-export-generation-sql.test.ts:20:433
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 3 passed (4)
+      Tests  1 failed | 108 passed (109)
+   Start at  08:15:55
+   Duration  846ms (transform 209ms, setup 0ms, import 372ms, tests 257ms, environment 0ms)
+

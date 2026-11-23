@@ -1,0 +1,91 @@
+import crypto from 'node:crypto';
+import {syncBuiltinESMExports} from 'node:module';
+import {writeFileSync} from 'node:fs';
+import {dirname,join} from 'node:path';
+const root='/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats';
+let sequence=0;
+crypto.randomUUID=()=>`40000000-0000-4000-8000-${(++sequence).toString(16).padStart(12,'0')}`;
+syncBuiltinESMExports();
+Date.prototype.toISOString=()=> '2026-11-13T00:00:00.000Z';
+const {buildNativeEvidence}=await import(root+'/app/lib/server/native-evidence.ts');
+const {reconcileDocumentEvidence,DocumentEvidenceSchema}=await import(root+'/app/lib/server/document-evidence.ts');
+const {deriveEvidenceEntryAssociations}=await import(root+'/app/lib/server/evidence-entry-associations.ts');
+const {prepareGroupedOriginalCommand}=await import(root+'/app/lib/server/grouped-import-commands.ts');
+const {importCanonicalEvidence}=await import(root+'/app/lib/server/canonical-content.ts');
+const {importCanonicalGroupedEvidence}=await import(root+'/app/lib/server/canonical-grouped-import.ts');
+const context={id:'10000000-0000-4000-8000-000000000001',ownerId:'10000000-0000-4000-8000-000000000002',analysisId:'10000000-0000-4000-8000-000000000003',sourceId:'10000000-0000-4000-8000-000000000004',inputSha256:'a'.repeat(64),createdAt:'2026-11-13T00:00:00.000Z',retentionPolicyId:'synthetic/1.0.0'};
+const owned={ownerId:context.ownerId,analysisId:context.analysisId,sourceId:context.sourceId,inputSha256:context.inputSha256,attemptId:context.id,resumeId:'10000000-0000-4000-8000-000000000005',organizationId:'10000000-0000-4000-8000-000000000006'};
+const binding={...owned,evidenceSchemaVersion:'evidence/2.0.0',fieldExtractorVersion:'evidence-fields/1.0.1',targetModelVersion:'evidence-targets/1.0.0',associationModelVersion:'evidence-entry-associations/1.0.0',producerVersion:'canonical-engine/1.0.3',admissionPolicyVersion:'grouped-original-admission/1.0.0',structuralTextProfileVersion:'a02-structural-text/1.0.0',correctionProjectionModelVersion:'canonical-corrections/1.0.1',correctionAdmissionPolicyVersion:'candidate-correction-admission/1.0.0',effectiveLocale:'en-IN'};
+const expected={reviewRevision:0,reviewHeadId:null,assignmentRevision:0,assignmentHeadId:null,associationRevision:0,associationHeadId:null,canonicalHeadId:null};
+const fixtures=[];
+function add(id,pages,selectionLimit=32){
+ const envelope=DocumentEvidenceSchema.parse(Array.isArray(pages)?reconcileDocumentEvidence(context,buildNativeEvidence(pages)):pages);
+ const review=deriveEvidenceEntryAssociations(envelope,owned);if(review.state!=='review_required')throw Error('ORACLE_UNAVAILABLE_'+id);
+ const projected=[];
+ for(let i=0;i<review.groups.length;i+=32){
+  const result=prepareGroupedOriginalCommand(envelope,owned,{schemaVersion:'grouped-original-command/1.0.0',operation:'approve_and_import_grouped_original',binding,expected,selectedGroupIds:review.groups.slice(i,i+32).map(g=>g.id),unselectedDisposition:'retain_original'});
+  if(result.state!=='prepared')throw Error('NORMALIZER_UNAVAILABLE_'+id);
+  projected.push(...result.normalForm.selections);
+ }
+ const selections=projected.slice(0,selectionLimit);
+ let original=null,placement=null,prototypeState=null;
+ if(selections.length){
+  sequence=0;original=importCanonicalEvidence(envelope,{...owned,locale:binding.effectiveLocale});
+  const selected=review.groups.slice(0,selections.length);
+  const intent={schemaVersion:'grouped-original-selection/1.0.0',binding:{...review.binding,organizationId:owned.organizationId,resumeId:owned.resumeId,associationModelVersion:review.modelVersion,producerVersion:'canonical-engine/1.0.3',canonicalHeadId:null},acknowledgement:'relationship_only_not_fact_confirmation',unselectedDisposition:'retain_original',selections:selected.map(g=>({groupId:g.id,members:g.members}))};
+  sequence=0;const result=importCanonicalGroupedEvidence(envelope,{...owned,locale:binding.effectiveLocale},intent);prototypeState=result.state;
+  if(result.state==='prepared'){
+   const mappings=result.associationReceipt.mappings.map((m,i)=>({selection:selections[i],sectionId:m.sectionId,entryId:m.entryId,members:m.members.map(v=>({assertionId:v.assertionId,field:v.field,factId:v.factId,originalEntryId:v.originalEntryId,citations:selections[i].members.find(x=>x.assertionId===v.assertionId).citations}))}));
+   placement={schemaVersion:'grouped-original-placement/1.0.0',authority:'derived_preparation_only',persistable:false,scoringEligible:false,requiresDurableAdmission:true,document:result.document,mappings};
+  }
+ }
+ fixtures.push({id,envelope,binding,projected,selections,original,placement,prototypeState});
+}
+const e='Employer: Synthetic Alpha Labs',r='Role: Platform Engineer',d='Dates: 2020 - 2022';
+add('two_jobs_overlap',['Experience\n'+e+'\n'+r+'\n'+d+'\nEmployer: Synthetic Beta Labs\nRole: Data Engineer\nDates: 2021 - 2023']);
+add('dates_before_role',['Employment\n'+e+'\n'+d+'\n'+r]);
+
+for(const heading of ['Employment','Experience','Work Experience','Professional Experience','Employment History']){
+ add('heading_'+heading.toLowerCase().replaceAll(' ','_'),[heading+'\n'+e+'\n'+r]);
+ add('heading_upper_'+heading.toLowerCase().replaceAll(' ','_'),[' \t'+heading.toUpperCase()+'\t \n\t'+e+'\n '+r]);
+}
+const whitespace=[9,10,11,12,13,32,160,5760,8192,8193,8194,8195,8196,8197,8198,8199,8200,8201,8202,8232,8233,8239,8287,12288,65279];
+for(const cp of whitespace){const w=String.fromCodePoint(cp);add('whitespace_'+cp.toString(16),[w+'Experience'+w+'\nEmployer: '+w+'Synthetic Alpha Labs'+w+'\nRole: '+w+'Platform Engineer'+w]);}
+const layouts={
+ blank_inside:'Experience\n'+e+'\n\n'+r,
+ blank_retains_section:'Experience\n'+e+'\n'+r+'\n\nEmployer: Synthetic Beta Labs\nRole: Data Engineer',
+ unlabelled_resets:'Experience\n'+e+'\n'+r+'\nNeutral content\nEmployer: Synthetic Beta Labs\nRole: Data Engineer',
+ unknown_empty_barrier:'Experience\nEmployer: Synthetic Alpha Labs | Other:\nEmployer: Synthetic Beta Labs\nRole: Data Engineer',
+ protected_contact_barrier:'Experience\nEmployer: Synthetic Alpha Labs | Role: Platform Engineer | Name: Demo Candidate Slate\nEmployer: Synthetic Beta Labs\nRole: Data Engineer',
+ mixed_education_barrier:'Experience\nEmployer: Synthetic Alpha Labs | Education: BSc Physics\nEmployer: Synthetic Beta Labs\nRole: Data Engineer',
+ same_span_employment:'Experience\nEmployer: Synthetic Alpha Labs | Role: Platform Engineer\nEmployer: Synthetic Beta Labs\nRole: Data Engineer',
+ same_span_education:'Experience\nEducation: BSc Physics | Dates: 2020 - 2022\nEmployer: Synthetic Beta Labs\nRole: Data Engineer',
+ same_span_certification:'Experience\nCertification: Synthetic Certification | Dates: 2020 - 2022\nEmployer: Synthetic Beta Labs\nRole: Data Engineer',
+ repeated_role:'Experience\n'+e+'\n'+r+'\nRole: Data Engineer\n'+d,
+ repeated_dates:'Experience\n'+e+'\n'+d+'\n'+r+'\nDates: 2023 - 2024',
+ incomplete_employer:'Experience\n'+e+'\n'+d,
+ no_anchor:'Experience\n'+r+'\n'+d,
+ prefix_spaced_colon:'Experience\nEmployer : Synthetic Alpha Labs\n'+r,
+ extra_spaced_label:'Experience\nEmployer: Synthetic Alpha Labs | Role : Platform Engineer\nEmployer: Synthetic Beta Labs\nRole: Data Engineer',
+ unicode_offsets:'EXPERIENCE\nEmployer: Synthetic Café 😀 Labs\nDates: 2020 - 2022\nRole: Data Engineer',
+ old_empty_long_s_separator:'Experience\nEmployer: Synthetic Alpha Labs | Role: Platform Engineer | dateſ:\nEmployer: Synthetic Beta Labs\nRole: Data Engineer',
+ contact_education_cert_outside:'Name: Demo Candidate Slate\nEducation\nEmployer: Synthetic Alpha Labs\nRole: Platform Engineer\nCertifications\nCertification: Synthetic Certification',
+};
+for(const [id,text] of Object.entries(layouts))add(id,[text]);
+add('page_boundary_no_cross',['Experience\n'+e,[r,d].join('\n')]);
+add('repeated_page_headers',['Experience\n'+e+'\n'+r,'EXPERIENCE\nEmployer: Synthetic Beta Labs\nRole: Data Engineer']);
+add('source_33_groups',['Experience\n'+Array.from({length:33},(_,i)=>`Employer: Synthetic Team ${i}\nRole: Engineer ${i}`).join('\n')]);
+add('selected_32_three_members_100_entries',['Experience\n'+Array.from({length:32},(_,i)=>`Employer: Synthetic Team ${i}\nDates: 2020 - 2022\nRole: Engineer ${i}`).join('\n')+'\nRetained neutral content one\nRetained neutral content two\nRetained neutral content three\nRetained neutral content four']);
+const {runSelectiveLocalOcr}=await import(root+'/app/lib/server/ocr/selective.ts');
+async function ocrEnvelope(nativeTexts,ocrText){
+ const result=await runSelectiveLocalOcr({schemaVersion:'selective-ocr-request-v1',attemptId:context.id,ownerId:context.ownerId,analysisId:context.analysisId,sourceId:context.sourceId,sourceSha256:context.inputSha256,createdAt:context.createdAt,retentionPolicyId:context.retentionPolicyId,nativePageTexts:nativeTexts,selectedPages:[{pageId:'page-1',pageNumber:1}],remainingDeadlineMs:1000,limits:{maxCharacters:200000,maxPages:10},allocation:{id:'source-validator-synthetic',maxWallTimeMs:1000,maxPages:1,externalApiFeeMicros:0},policy:{executionMode:'self_hosted',purpose:'synthetic_local_test',allowThirdPartyProcessing:false}},
+ {versions:{engine:'tesseract/synthetic',renderer:'synthetic/1',languageData:'synthetic/1'},recognize:async()=>({durationMs:1,pages:[{pageId:'page-1',pageNumber:1,imageSha256:'b'.repeat(64),widthPixels:100,heightPixels:100,rotation:0,text:ocrText,words:[...ocrText.matchAll(/\S+/gu)].map(w=>({text:w[0],start:Array.from(ocrText.slice(0,w.index)).length,end:Array.from(ocrText.slice(0,w.index+w[0].length)).length,confidence:80,box:{x:0.1,y:0.1,width:0.1,height:0.1}}))}]})});
+ return reconcileDocumentEvidence(context,buildNativeEvidence(nativeTexts),result);
+}
+add('valid_sparse_native_ocr',await ocrEnvelope(['Role:X'],'Experience\n'+e+'\n'+r));
+add('mixed_method_bucket_order',await ocrEnvelope(['Role:X','Experience\nEmployer: Synthetic Native Labs\nRole: Native Engineer'],'Experience\nEmployer: Synthetic OCR Labs\nRole: OCR Engineer'));
+const payload=JSON.stringify(fixtures,null,2);
+const verifier=`-- SOURCE ONLY: UNPARSED / UNAPPLIED / UNEXECUTED. Requires separately admitted native target.\n-- Neutral immutable JS oracle data; no auto-update path in ordinary tests.\nbegin;\nset local statement_timeout='15s';\nset local lock_timeout='2s';\ndo $verify$\ndeclare fixtures jsonb:=$fixtures$\n${payload}\n$fixtures$::jsonb; fixture jsonb; projected jsonb; placed jsonb;\nbegin\n  for fixture in select value from jsonb_array_elements(fixtures) loop\n    projected:=private.grouped_import_project_candidates(fixture->'envelope',fixture->'binding');\n    if projected is distinct from fixture->'projected' then raise exception 'A02_SOURCE_PROJECTION_%',fixture->>'id' using errcode='23514'; end if;\n    if fixture->'placement'<>'null'::jsonb then\n      placed:=private.grouped_import_place_original(fixture->'envelope',fixture->'binding',fixture->'original',fixture->'selections');\n      if placed is distinct from fixture->'placement' then raise exception 'A02_SOURCE_PLACEMENT_%',fixture->>'id' using errcode='23514'; end if;\n    end if;\n  end loop;\nend;\n$verify$;\nrollback;\n`;
+writeFileSync(root+'/scripts/verify-grouped-import-source.sql',verifier);
+writeFileSync(join(dirname(new URL(import.meta.url).pathname),'oracle-metadata.json'),JSON.stringify({cases:fixtures.map(f=>({id:f.id,groups:f.projected.length,selected:f.selections.length,prototypeState:f.prototypeState})),payloadSha256:crypto.createHash('sha256').update(payload).digest('hex')},null,2)+'\n');
+process.stdout.write(JSON.stringify({cases:fixtures.length,oracleSha256:crypto.createHash('sha256').update(payload).digest('hex')})+'\n');

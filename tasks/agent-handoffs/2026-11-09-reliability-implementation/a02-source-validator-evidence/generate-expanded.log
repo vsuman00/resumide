@@ -1,0 +1,30 @@
+file:///Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/app/lib/server/document-evidence.ts:214
+    return DocumentEvidenceSchema.parse(project(ContextSchema.parse(context), NativeEvidenceSchema.parse(nativeSource), ocrSource === null ? null : OcrEvidenceSchema.parse(ocrSource), ocrFailure === null ? null : failure.parse(ocrFailure), FIELD_EXTRACTOR_VERSION));
+                                  ^
+
+ZodError: [
+  {
+    "code": "invalid_value",
+    "values": [
+      "name",
+      "email",
+      "phone",
+      "employer",
+      "role",
+      "dates",
+      "education",
+      "certification"
+    ],
+    "path": [
+      "assertions",
+      2,
+      "field"
+    ],
+    "message": "Invalid option: expected one of \"name\"|\"email\"|\"phone\"|\"employer\"|\"role\"|\"dates\"|\"education\"|\"certification\""
+  }
+]
+    at reconcileDocumentEvidence (file:///Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/app/lib/server/document-evidence.ts:214:35)
+    at add (file:///private/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-source-validator-y47yz7p6/generate.mjs:22:67)
+    at file:///private/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a02-source-validator-y47yz7p6/generate.mjs:74:48
+
+Node.js v22.23.4

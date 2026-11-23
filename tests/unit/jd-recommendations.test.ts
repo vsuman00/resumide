@@ -1,0 +1,296 @@
+import { createHash } from "node:crypto";
+import { describe, expect, it } from "vitest";
+import {
+  buildJdRecommendations,
+  JdRecommendationPlanSchema,
+} from "../../app/lib/server/jd-recommendations";
+import { evaluateRequirementCoverage } from "../../app/lib/server/requirement-coverage";
+import {
+  createRequirementContextFixture,
+  requirementFixtureId,
+} from "../fixtures/requirement-context";
+async function fixture(
+  options: Parameters<typeof createRequirementContextFixture>[0] = {},
+) {
+  const f = await createRequirementContextFixture(options);
+  const expected = {
+    analysisId: f.owned.analysisId,
+    ownerId: f.owned.ownerId,
+    canonicalVersionId: f.context.canonical.versionId,
+    requirementVersionId: f.context.requirements.versionId,
+  };
+  return { f, expected, plan: buildJdRecommendations(f.context, expected) };
+}
+describe("owned local JD recommendations", () => {
+  it("binds exact current contribution, quote, versions and complete digest without altering inputs", async () => {
+    const { f, expected, plan } = await fixture({ confirm: true });
+    const before = JSON.stringify(f.context);
+    expect(plan.items[0]).toMatchObject({
+      observation: "source_related_claim",
+      action: "review_claim",
+      target: {
+        factId: f.targetFactId,
+        value: "Built services using PostgreSQL",
+        basis: "source_quote",
+        sourceQuote: "Built services using PostgreSQL",
+      },
+      question: null,
+    });
+    const coverage = evaluateRequirementCoverage(f.context);
+    expect(coverage.state).toBe("available");
+    if (coverage.state !== "available") throw Error("fixture");
+    expect(plan.binding).toEqual(coverage.binding);
+    expect(plan.coverageDigest).toBe(coverage.digest);
+    expect(plan.items[0].requirementQuote).toBe(
+      coverage.clauses[0].evidence.quote,
+    );
+    expect(buildJdRecommendations(f.context, expected)).toEqual(plan);
+    expect(JSON.stringify(f.context)).toBe(before);
+    const { digest, ...content } = plan;
+    expect(digest).toBe(
+      createHash("sha256").update(JSON.stringify(content)).digest("hex"),
+    );
+    expect(plan).toMatchObject({
+      scoreValue: null,
+      scoreDelta: null,
+      qualificationCredit: "not_assessed",
+    });
+    expect(JdRecommendationPlanSchema.parse(plan)).toEqual(plan);
+  });
+  it("prioritizes admitted Python, FastAPI and Git contributions and retains unsupported API scope", async () => {
+    const clauses = [
+      "Built services using Python",
+      "Built endpoints using FastAPI",
+      "Built integrations using API",
+      "Tested pipelines using Git",
+    ];
+    const { plan } = await fixture({
+      clauses,
+      skill: "Python",
+      jdText:
+        "Requirements\nPython required\nFastAPI required\nAPI required\nGit required",
+    });
+    expect(
+      plan.items.filter((i) => i.target).map((i) => i.target?.value),
+    ).toEqual([clauses[0], clauses[1], clauses[3]]);
+    expect(
+      plan.items.find((i) => i.requirementQuote === "API required"),
+    ).toMatchObject({
+      observation: "review_scope",
+      target: null,
+      question: null,
+    });
+  });
+  it("rejects a target that labels an old quote as a current declaration", async () => {
+    const { plan } = await fixture({
+      edit: "Responsible for services using PostgreSQL",
+      confirm: true,
+    });
+    const tampered = structuredClone(plan);
+    if (!tampered.items[0].target) throw Error("fixture");
+    tampered.items[0].target.sourceQuote = "Built services using PostgreSQL";
+    expect(JdRecommendationPlanSchema.safeParse(tampered).success).toBe(false);
+  });
+  it.each(["Pydantic", "RAG", "agents", "cloud", "async", "microservices"])(
+    "does not invent a %s contribution from Python elsewhere",
+    async (skill) => {
+      const { plan } = await fixture({
+        clauses: ["Built services using Python"],
+        skill: "Python",
+        jdText: `Requirements\nPython required\n${skill} required`,
+      });
+      const missing = plan.items.find((i) =>
+        i.requirementQuote.includes(skill),
+      );
+      expect(missing).toMatchObject({
+        target: null,
+        question: null,
+        observation: ["agents", "cloud", "async"].includes(skill)
+          ? "review_scope"
+          : "evidence_gap",
+        action: "review_requirement",
+      });
+      expect(plan.items.find((i) => i.target)).toHaveProperty(
+        "target.value",
+        "Built services using Python",
+      );
+    },
+  );
+  it.each(["and", "or"])(
+    "preserves %s without inventing missing operands",
+    async (connector) => {
+      const { plan } = await fixture({
+        clauses: ["Built services using Python"],
+        skill: "Python",
+        jdText: `Requirements\nPython ${connector} Pydantic required`,
+      });
+      expect(plan.items[0]).toMatchObject({
+        expressionKind: connector === "and" ? "all_of" : "any_of",
+        target: { value: "Built services using Python" },
+        action: connector === "and" ? "clarify_if_true" : "review_claim",
+      });
+      expect(plan.items[0].question === null).toBe(connector === "or");
+    },
+  );
+  it("asks conditional same-clause clarification when the other AND operand is only listed", async () => {
+    const { plan } = await fixture({
+      clauses: ["Built services using Python"],
+      skill: "Pydantic",
+      jdText: "Requirements\nPython and Pydantic required",
+    });
+    expect(plan.items[0]).toMatchObject({
+      expressionKind: "all_of",
+      observation: "source_related_claim",
+      target: { value: "Built services using Python" },
+      action: "clarify_if_true",
+    });
+    expect(plan.items[0].question).toContain(
+      "If true of this current contribution",
+    );
+  });
+  it("keeps edited confirmed declarations distinct from old source wording", async () => {
+    const { plan } = await fixture({
+      edit: "Responsible for services using PostgreSQL",
+      confirm: true,
+    });
+    expect(plan.items[0]).toMatchObject({
+      observation: "recorded_declaration",
+      target: {
+        value: "Responsible for services using PostgreSQL",
+        basis: "candidate_declaration",
+        sourceQuote: null,
+      },
+    });
+  });
+  it("does not promote a listing to contribution", async () => {
+    const { plan } = await fixture({
+      clauses: ["Built services using PostgreSQL"],
+      skill: "Python",
+      requiredSkill: "Python",
+    });
+    expect(plan.items[0]).toMatchObject({
+      observation: "listed_skill_only",
+      target: null,
+      question: null,
+    });
+  });
+  it("does not pick the first of multiple related contributions", async () => {
+    const { plan } = await fixture({
+      clauses: ["Built services using Python", "Tested pipelines using Python"],
+      skill: "Python",
+    });
+    expect(plan.items[0]).toMatchObject({
+      observation: "review_scope",
+      target: null,
+      question: null,
+    });
+  });
+  it("does not upgrade a source fragment into a complete current claim", async () => {
+    const { plan } = await fixture({
+      clauses: ["Used Python from 2018-01-01 to 2024-01-01"],
+      skill: "Python",
+      confirm: true,
+    });
+    expect(plan.items.every((i) => i.target === null)).toBe(true);
+  });
+  it.each([
+    "Python is not required",
+    "Context\nPython",
+    "Requirements\nPython experience may be useful",
+  ])("keeps ambiguous or nonpositive scope review-only: %s", async (jdText) => {
+    const { plan } = await fixture({
+      clauses: ["Built services using Python"],
+      skill: "Python",
+      jdText,
+    });
+    expect(
+      plan.items.every((i) => i.target === null && i.question === null),
+    ).toBe(true);
+  });
+  it("deduplicates actual semantic duplicates while preserving importance and full counts", async () => {
+    const { plan, f } = await fixture({
+      jdText:
+        "Requirements\nPostgreSQL required\nPostgreSQL required\nPython required\nPydantic required\nGit required\nDocker required\nRAG required\nPreferred\nPostgreSQL preferred",
+    });
+    const coverage = evaluateRequirementCoverage(f.context);
+    if (coverage.state !== "available") throw Error("fixture");
+    expect(plan.total).toBe(
+      coverage.clauses.filter((c) => c.duplicateOf === null).length,
+    );
+    expect(plan.total).toBeGreaterThan(5);
+    expect(plan.items).toHaveLength(5);
+    expect(plan.remainingCount).toBe(plan.total - 5);
+    expect(plan.retainedClauseCount).toBe(coverage.retainedClauses.length);
+    expect(
+      coverage.clauses.some(
+        (c) => c.scope.importance === "preferred" && c.duplicateOf === null,
+      ),
+    ).toBe(true);
+    expect(plan.items.every((i) => i.importance === "required")).toBe(true);
+  });
+  it("shows a required evidence gap before five already supported required claims", async () => {
+    const skills = ["Python", "FastAPI", "PostgreSQL", "Git", "Docker"];
+    const jdText = [
+      "Requirements",
+      ...skills.map((skill) => `${skill} required`),
+      "Pydantic required",
+      "Preferred Skills:",
+      "Redis",
+    ].join("\n");
+    const { f, plan } = await fixture({
+      clauses: skills.map((skill) => `Built services using ${skill}`),
+      confirmClauses: [0, 1, 2, 3, 4],
+      skill: "Python",
+      jdText,
+    });
+    const coverage = evaluateRequirementCoverage(f.context);
+    if (coverage.state !== "available") throw Error("fixture");
+    expect(
+      coverage.clauses.filter((clause) => clause.proposedState === "satisfied"),
+    ).toHaveLength(5);
+    expect(plan.items[0]).toMatchObject({
+      requirementQuote: "Pydantic required",
+      importance: "required",
+      observation: "evidence_gap",
+      action: "review_requirement",
+      target: null,
+      question: null,
+    });
+    expect(plan.items.slice(1).every((item) => item.target !== null)).toBe(
+      true,
+    );
+    expect(plan).toMatchObject({
+      total: 7,
+      remainingCount: 2,
+      scoreDelta: null,
+    });
+  });
+  it.each([
+    "ownerId",
+    "analysisId",
+    "canonicalVersionId",
+    "requirementVersionId",
+  ] as const)("rejects an expected %s mismatch", async (key) => {
+    const { f, expected } = await fixture();
+    expect(() =>
+      buildJdRecommendations(f.context, {
+        ...expected,
+        [key]: requirementFixtureId(990),
+      }),
+    ).toThrow();
+  });
+  it.each(["source", "hash", "head", "client-matches"])(
+    "refuses tampered %s rather than accepting supplied support",
+    async (kind) => {
+      const { f, expected } = await fixture();
+      const context = structuredClone(f.context);
+      if (kind === "source")
+        context.source.sourceId = requirementFixtureId(991);
+      if (kind === "hash") context.canonical.contentSha256 = "f".repeat(64);
+      if (kind === "head") context.heads.canonicalHeadRevision = 0;
+      if (kind === "client-matches")
+        Object.assign(context, { matches: [{ supported: true }] });
+      expect(() => buildJdRecommendations(context, expected)).toThrow();
+    },
+  );
+});

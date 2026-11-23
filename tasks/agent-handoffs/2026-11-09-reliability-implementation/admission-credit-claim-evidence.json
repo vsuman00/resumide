@@ -1,0 +1,61 @@
+{
+  "task": "CR-R17-S09",
+  "checkedDate": "2026-11-21",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "checkout": "dirty integration worktree",
+  "inputSha256": {
+    "supabase/migrations/20261121213600_privacy_claim_cleanup_credits.sql": "142b464216c1d9f247fab86350fb4a71e4b44aff17abe041d1421e2e4f697ac5",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-credit-claim-native-fixture.py.txt": "dffc02df39ca0b97e4eb5b21c7c932bf0ed992b62633d4e8a0cba08fe8dda5dc",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-cleanup-recovery-native-fixture.py.txt": "646c561c65735786eff003f9036388a0616ba2799e67e29de99cda9fa89ac7ec",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-cleanup-progress-native-fixture.py.txt": "1df5704bacfe89d4479143df432daae1ea5ef2385f393ee385a26ed1ef157adb",
+    "app/lib/server/privacy-worker.ts": "e6f0787d376c4e1df29f75344238bb7d96d44ccfeda8774af495b74db18f32ef",
+    "tests/unit/privacy-claim-fence.test.ts": "d4014b00412284ee8d41d2add838b8bfb2e694565d10b665a35b3b9dceac42e6",
+    "supabase/migrations/20261116075250_privacy_export_generation.sql": "17de23bf5bc6d167038f82468ca8609c455a413f93ee2c3800e6c681e991d910"
+  },
+  "before": {
+    "applicationFailed": 4,
+    "logSha256": "24370227ba42f8a757338fd5f32b54ce6a4e99dd57708544d1207783037bb358",
+    "nativeDetected": "The sealed legacy queue claimant skipped the fourth credited claim.",
+    "nativeLogSha256": "a4267c98059c72a2a5838badf54b39e1989e095fe2644dff83f32fdf8dc601e3"
+  },
+  "intermediateFailure": {
+    "reason": "The first legacy fixture used host timezone and moving due timestamps inside a single SQL transaction. UTC and a transaction-relative past due time exposed the intended fourth-claim failure.",
+    "logSha256": "5b03826727307953ffd3cbebec6573f4a5d556d511963c23630cdfa9800d02de"
+  },
+  "native": {
+    "result": "PASS: actual claims beyond attempt three, four handoffs, three counted failures, due time, live and expired leases, legacy cap, and role checks.",
+    "creditedHandoffs": 4,
+    "countedFailures": 3,
+    "scope": "Actual queue, cleanup and bookkeeping functions with synthetic supporting relations and generation profile. No managed SQL or Storage.",
+    "logSha256": "8ea2e25d5650421e8a6585e7ae0ff97f1e4343aa5df8a76b1b543e40c2c34c59"
+  },
+  "after": {
+    "focusedCases": 126,
+    "focusedFiles": 5,
+    "unit": [
+      {
+        "passed": 6793,
+        "files": 322,
+        "sha256": "583188cacefca6c0dfb4da83be73c7aed099c3c1034f02420eac7a4eecd89ede"
+      },
+      {
+        "passed": 3,
+        "files": 1,
+        "sha256": "54bed41cd6302886cb761c61558d1f897228ec2cb24f74aae58527f9cc8d80e9"
+      }
+    ]
+  },
+  "statics": {
+    "commands": ["format:check", "typecheck", "lint", "build", "build:worker"],
+    "exitCode": 0,
+    "lintWarnings": 4,
+    "logSha256": "f478670918a30bb81734529aa0178bd25f499c3498611a07424487a6461a3934"
+  },
+  "migrationInventory": "managed-schema-inventory-89.json",
+  "notRun": [
+    "managed migration replay",
+    "adopted Storage cleanup",
+    "account-wide admission retirement",
+    "deployment"
+  ]
+}

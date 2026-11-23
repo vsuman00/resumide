@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "review": "independent AI-assisted source review, no rerun",
+  "files": [
+    {
+      "path": "app/lib/server/evaluation-corpus-drill.ts",
+      "sha256": "08701658b80cfc7db9e0282cdab7f4bc33431ca48a3c05c72e6904fd12c75aeb"
+    },
+    {
+      "path": "tests/unit/evaluation-corpus-drill.test.ts",
+      "sha256": "61a92a0cf9d3b80b35c897fb5225c70ec40dc4d8d7e4695bc6ff598f722dd075"
+    },
+    {
+      "path": "app/lib/server/evaluation-calibration.ts",
+      "sha256": "40bb3e75dc472e716dd264a832474c1eeeff8e44cebe8a2a03be813ad58dd3da"
+    },
+    {
+      "path": "tests/unit/evaluation-calibration.test.ts",
+      "sha256": "47011b1acbb19eca1781d28cdb9309c8c3887166d2a03519dcca2b56fd0e87a7"
+    }
+  ],
+  "blockingFindings": [],
+  "calibration": [
+    "Actual locked-access API denies calibration locked-test reads before reader execution; post-await lock verification retained.",
+    "All dimensions and consistent feature sets enforced; duplicate and foreign/hash-drift observations rejected.",
+    "Missing/withheld/reference-missing pairs retain expected denominator and worst loss. Unknown feature weight cannot be renormalized away.",
+    "Deterministic tie-breaks, sensitivity deltas, rollback version and hashes retained. No production policy mutation or implicit representative authority."
+  ],
+  "corpusDrill": [
+    "Bounded eight-object/256-KiB exact run-scoped synthetic IO ports; source rights/group/owner checks precede IO.",
+    "Intent/terminal audit failures withhold intake/read success and returned bytes; privacy cleanup still attempted and audit failure retained.",
+    "No upsert; positive absence required; ambiguous uploads retain cleanup inventory; readback verifies exact hash.",
+    "Removal requires owned expected bytes, verifies actual absence, retains no-op/remove/audit errors; unknown absence is never success.",
+    "Revoke changes in-memory rights before audit; post-download/post-audit access barrier denies in-flight reads after revocation/deletion. Upload-pending cleanup cannot claim completion."
+  ],
+  "limits": [
+    "These modules consume caller-authenticated actor/authority and current-manifest inputs; they are not a persistent authentication/repository service.",
+    "Injected storage tests are control behavior, not a live Supabase receipt. No DB/Docker/provider operation performed in this review.",
+    "A unique run scope and truthful provider-specific not-found adapter remain caller responsibilities.",
+    "Calibration proposal readiness does not establish sufficient sample size, representative validity, public claims or production adoption. Actual evaluation and external acceptance remain separate."
+  ]
+}

@@ -1,0 +1,1989 @@
+-- DEFERRED PRIVILEGED NATIVE VERIFIER SOURCE: UNPARSED / UNEXECUTED.
+-- Requires an empty isolated disposable database, all preceding migrations, privileged SQL owner,
+-- and no running workers. All fixtures are synthetic and every mutation rolls back.
+-- This script does not prove two-session concurrency, managed restore, SQL validity or release.
+begin;
+do $rrv_external_pin$ begin
+  if encode(extensions.digest(convert_to((select prosrc from pg_catalog.pg_proc where oid=to_regprocedure('private.canonical_correction_write_ready()')),'UTF8'),'sha256'),'hex')<>'f88516e99f6ee34120dc66217eea3191486ff0083d9053615e14cd925cdec999' then raise exception 'RRV_READINESS_PIN_DRIFT' using errcode='23514';end if;
+end;$rrv_external_pin$;
+create function pg_temp.rrv_assert(p_ok boolean,p_case text) returns void language plpgsql set search_path='' as $$
+begin if p_ok is not true then raise exception 'ERA_CASE_%',p_case using errcode='23514'; end if; end; $$;
+create function pg_temp.rrv_store(p_body jsonb,p_revision integer) returns jsonb language plpgsql set search_path='' as $$
+begin
+  insert into public.canonical_resume_versions(id,resume_id,source_resume_version_id,organization_id,owner_id,locale,state,content,created_at,
+    parent_version_id,source_evidence_version_id,revision,idempotency_key,command,request_id)
+    values((p_body->>'versionId')::uuid,(p_body->>'resumeId')::uuid,'10000000-0000-4000-8000-000000000004',
+      (p_body->>'organizationId')::uuid,(p_body->>'ownerId')::uuid,p_body->>'locale',p_body->>'state',p_body,(p_body->>'createdAt')::timestamptz,
+      (p_body->>'parentVersionId')::uuid,(p_body->>'sourceEvidenceVersionId')::uuid,p_revision,gen_random_uuid(),'{"operation":"privileged_metadata_fixture"}','erg-source-fixture');
+  insert into public.resume_facts(canonical_version_id,id,organization_id,owner_id,type,value,state,sources,confirmation)
+    select (p_body->>'versionId')::uuid,(value->>'id')::uuid,(p_body->>'organizationId')::uuid,(p_body->>'ownerId')::uuid,
+      value->>'type',value->>'value',value->>'state',value->'sources',nullif(value->'confirmation','null'::jsonb) from jsonb_array_elements(p_body->'facts');
+  return jsonb_build_object('versionId',p_body->'versionId','revision',p_revision,'contentSha256',
+    encode(extensions.digest(convert_to(p_body::text,'UTF8'),'sha256'),'hex'),'locale',p_body->'locale');
+end;
+$$;
+create function pg_temp.rrv_command(p_normal jsonb,p_key uuid) returns jsonb language sql set search_path='' as $$
+  select jsonb_build_object('normalForm',p_normal,'previewHash',private.grouped_import_command_sha256(private.entry_regroup_atoms(p_normal)),'idempotencyKey',p_key); $$;
+create function pg_temp.rrv_manual(p_head uuid,p_op text,p_fact uuid,p_value text,p_target uuid default null) returns uuid language plpgsql set search_path='' as $$
+declare parent jsonb; doc jsonb; event jsonb; command jsonb; result jsonb; prior text; v uuid:=gen_random_uuid(); created text:='2026-11-13T18:30:00.000Z';
+begin
+  select content into strict parent from public.canonical_resume_versions where id=p_head;
+  doc:=parent;
+  if p_op='rollback' then select content into strict doc from public.canonical_resume_versions where id=p_target;
+  elsif p_op='rename_section' then prior:=doc->'sections'->0->>'title'; doc:=jsonb_set(doc,'{sections,0,title}',to_jsonb(p_value));
+  else
+    select value->>'value' into strict prior from jsonb_array_elements(doc->'facts') where value->>'id'=p_fact::text;
+    doc:=jsonb_set(doc,'{facts}',(select jsonb_agg(case when value->>'id'=p_fact::text then
+      case when p_op='confirm' then value||jsonb_build_object('state','candidate_confirmed','confirmation',jsonb_build_object('actorId',parent->'ownerId','value',prior,'confirmedAt',created))
+      else value||jsonb_build_object('value',p_value,'state','unconfirmed','sources','[]'::jsonb,'confirmation',null) end else value end order by ordinality) from jsonb_array_elements(doc->'facts') with ordinality));
+  end if;
+  event:=jsonb_build_object('id',gen_random_uuid(),'actorId',parent->'ownerId','action',case when p_op='rollback' then 'rollback' else 'edit' end,
+    'targetId',case when p_op='rollback' then v when p_op='rename_section' then (parent->'sections'->0->>'id')::uuid else p_fact end,
+    'priorValue',case when p_op='rollback' then null else prior end,'createdAt',created);
+  doc:=doc||jsonb_build_object('versionId',v,'parentVersionId',p_head,'createdAt',created,'state','review_required','changes',jsonb_build_array(event));
+  command:=jsonb_build_object('operation',p_op,'expectedVersionId',p_head,'idempotencyKey',gen_random_uuid(),'factId',p_fact,
+    'value',case when p_op in ('edit','rename_section') then p_value else null end,'targetVersionId',p_target);
+  if p_op='rename_section' then command:=command||jsonb_build_object('sectionId',parent->'sections'->0->'id'); end if;
+  result:=public.save_canonical_version((parent->>'ownerId')::uuid,'10000000-0000-4000-8000-000000000004',doc,command,'era-native-fixture');
+  perform pg_temp.rrv_assert(result->>'status'='applied','ordinary_'||p_op); return (result->>'versionId')::uuid;
+end; $$;
+do $rrv_native$
+#variable_conflict use_variable
+<<fixture>>
+declare oracle jsonb:=$rrv_oracle${
+  "evidence": {
+    "id": "10000000-0000-4000-8000-000000000001",
+    "ownerId": "10000000-0000-4000-8000-000000000002",
+    "analysisId": "10000000-0000-4000-8000-000000000003",
+    "sourceId": "10000000-0000-4000-8000-000000000004",
+    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "createdAt": "2026-11-13T00:00:00.000Z",
+    "retentionPolicyId": "synthetic/1.0.0",
+    "schemaVersion": "evidence/2.0.0",
+    "fieldExtractorVersion": "evidence-fields/1.0.1",
+    "nativeSource": {
+      "schemaVersion": "native-evidence-v1",
+      "extractorVersion": "unpdf-v1",
+      "offsetUnit": "unicode_code_point",
+      "pages": [
+        {
+          "id": "page-1",
+          "pageNumber": 1,
+          "text": "Experience\nEmployer: Synthetic Alpha Labs\nRole: Platform Engineer\nDates: 2020 - 2022\nEmployer: Synthetic Beta Labs\nRole: Data Engineer\nDates: 2021 - 2023",
+          "method": "native_text",
+          "confidence": "uncalibrated"
+        }
+      ],
+      "spans": [
+        {
+          "id": "page-1-line-1",
+          "pageId": "page-1",
+          "start": 0,
+          "end": 10,
+          "text": "Experience"
+        },
+        {
+          "id": "page-1-line-2",
+          "pageId": "page-1",
+          "start": 11,
+          "end": 41,
+          "text": "Employer: Synthetic Alpha Labs"
+        },
+        {
+          "id": "page-1-line-3",
+          "pageId": "page-1",
+          "start": 42,
+          "end": 65,
+          "text": "Role: Platform Engineer"
+        },
+        {
+          "id": "page-1-line-4",
+          "pageId": "page-1",
+          "start": 66,
+          "end": 84,
+          "text": "Dates: 2020 - 2022"
+        },
+        {
+          "id": "page-1-line-5",
+          "pageId": "page-1",
+          "start": 85,
+          "end": 114,
+          "text": "Employer: Synthetic Beta Labs"
+        },
+        {
+          "id": "page-1-line-6",
+          "pageId": "page-1",
+          "start": 115,
+          "end": 134,
+          "text": "Role: Data Engineer"
+        },
+        {
+          "id": "page-1-line-7",
+          "pageId": "page-1",
+          "start": 135,
+          "end": 153,
+          "text": "Dates: 2021 - 2023"
+        }
+      ],
+      "assertions": [
+        {
+          "field": "name",
+          "value": null,
+          "state": "not_evaluated",
+          "confidence": "uncalibrated",
+          "evidence": null
+        },
+        {
+          "field": "email",
+          "value": null,
+          "state": "not_evaluated",
+          "confidence": "uncalibrated",
+          "evidence": null
+        },
+        {
+          "field": "phone",
+          "value": null,
+          "state": "not_evaluated",
+          "confidence": "uncalibrated",
+          "evidence": null
+        }
+      ]
+    },
+    "ocrSource": null,
+    "ocrFailure": null,
+    "status": "review_required",
+    "scoringEligible": false,
+    "confidence": {
+      "kind": "uncalibrated",
+      "reason": "calibration_not_approved"
+    },
+    "spans": [
+      {
+        "id": "native-page-1-line-1",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Experience",
+        "start": 0,
+        "end": 10,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-2",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Employer: Synthetic Alpha Labs",
+        "start": 11,
+        "end": 41,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-3",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Role: Platform Engineer",
+        "start": 42,
+        "end": 65,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-4",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Dates: 2020 - 2022",
+        "start": 66,
+        "end": 84,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-5",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Employer: Synthetic Beta Labs",
+        "start": 85,
+        "end": 114,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-6",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Role: Data Engineer",
+        "start": 115,
+        "end": 134,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "native-page-1-line-7",
+        "pageId": "page-1",
+        "method": "native_text",
+        "text": "Dates: 2021 - 2023",
+        "start": 135,
+        "end": 153,
+        "box": null,
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      }
+    ],
+    "assertions": [
+      {
+        "id": "assertion-1",
+        "field": "employer",
+        "value": "Synthetic Alpha Labs",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-2",
+            "start": 10,
+            "end": 30
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "assertion-2",
+        "field": "role",
+        "value": "Platform Engineer",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-3",
+            "start": 6,
+            "end": 23
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "assertion-3",
+        "field": "dates",
+        "value": "2020 - 2022",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-4",
+            "start": 7,
+            "end": 18
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "assertion-4",
+        "field": "employer",
+        "value": "Synthetic Beta Labs",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-5",
+            "start": 10,
+            "end": 29
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "assertion-5",
+        "field": "role",
+        "value": "Data Engineer",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-6",
+            "start": 6,
+            "end": 19
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      },
+      {
+        "id": "assertion-6",
+        "field": "dates",
+        "value": "2021 - 2023",
+        "evidence": [
+          {
+            "spanId": "native-page-1-line-7",
+            "start": 7,
+            "end": 18
+          }
+        ],
+        "state": "review_required",
+        "confidence": {
+          "kind": "uncalibrated",
+          "value": null
+        }
+      }
+    ],
+    "fields": [
+      {
+        "field": "name",
+        "state": "not_evaluated"
+      },
+      {
+        "field": "email",
+        "state": "not_evaluated"
+      },
+      {
+        "field": "phone",
+        "state": "not_evaluated"
+      },
+      {
+        "field": "employer",
+        "state": "conflict"
+      },
+      {
+        "field": "role",
+        "state": "conflict"
+      },
+      {
+        "field": "dates",
+        "state": "conflict"
+      },
+      {
+        "field": "education",
+        "state": "not_evaluated"
+      },
+      {
+        "field": "certification",
+        "state": "not_evaluated"
+      }
+    ],
+    "blockers": [
+      "uncalibrated_confidence",
+      "missing_critical_fields",
+      "conflicting_critical_fields"
+    ]
+  },
+  "base": {
+    "schemaVersion": "canonical-resume/1.0.0",
+    "producerVersion": "canonical-engine/1.0.1",
+    "analysisId": "10000000-0000-4000-8000-000000000003",
+    "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "retentionPolicyId": "synthetic/1.0.0",
+    "resumeId": "10000000-0000-4000-8000-000000000005",
+    "versionId": "10000000-0000-4000-8000-000000000100",
+    "parentVersionId": null,
+    "ownerId": "10000000-0000-4000-8000-000000000002",
+    "organizationId": "10000000-0000-4000-8000-000000000006",
+    "locale": "en-IN",
+    "createdAt": "2026-11-13T00:00:00.000Z",
+    "state": "review_required",
+    "sourceEvidenceVersionId": "10000000-0000-4000-8000-000000000001",
+    "contactFactIds": [],
+    "facts": [
+      {
+        "id": "10000000-0000-4000-8000-000000000101",
+        "type": "employer",
+        "value": "Synthetic Alpha Labs",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-2",
+            "start": 10,
+            "end": 30
+          }
+        ],
+        "confirmation": null
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000102",
+        "type": "role",
+        "value": "Platform Engineer",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-3",
+            "start": 6,
+            "end": 23
+          }
+        ],
+        "confirmation": null
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000103",
+        "type": "dates",
+        "value": "2020 - 2022",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-4",
+            "start": 7,
+            "end": 18
+          }
+        ],
+        "confirmation": null
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000104",
+        "type": "employer",
+        "value": "Synthetic Beta Labs",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-5",
+            "start": 10,
+            "end": 29
+          }
+        ],
+        "confirmation": null
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000105",
+        "type": "role",
+        "value": "Data Engineer",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-6",
+            "start": 6,
+            "end": 19
+          }
+        ],
+        "confirmation": null
+      },
+      {
+        "id": "10000000-0000-4000-8000-000000000106",
+        "type": "dates",
+        "value": "2021 - 2023",
+        "state": "unconfirmed",
+        "sources": [
+          {
+            "attemptId": "10000000-0000-4000-8000-000000000001",
+            "spanId": "native-page-1-line-7",
+            "start": 7,
+            "end": 18
+          }
+        ],
+        "confirmation": null
+      }
+    ],
+    "sections": [
+      {
+        "id": "10000000-0000-4000-8000-000000000107",
+        "type": "experience",
+        "title": "Experience",
+        "factIds": [],
+        "entries": [
+          {
+            "id": "10000000-0000-4000-8000-000000000108",
+            "factIds": [
+              "10000000-0000-4000-8000-000000000101"
+            ],
+            "bullets": []
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000109",
+            "factIds": [
+              "10000000-0000-4000-8000-000000000102"
+            ],
+            "bullets": []
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000110",
+            "factIds": [
+              "10000000-0000-4000-8000-000000000103"
+            ],
+            "bullets": []
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000111",
+            "factIds": [
+              "10000000-0000-4000-8000-000000000104"
+            ],
+            "bullets": []
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000112",
+            "factIds": [
+              "10000000-0000-4000-8000-000000000105"
+            ],
+            "bullets": []
+          },
+          {
+            "id": "10000000-0000-4000-8000-000000000113",
+            "factIds": [
+              "10000000-0000-4000-8000-000000000106"
+            ],
+            "bullets": []
+          }
+        ]
+      }
+    ],
+    "changes": [
+      {
+        "id": "10000000-0000-4000-8000-000000000114",
+        "actorId": "10000000-0000-4000-8000-000000000002",
+        "action": "import",
+        "targetId": "10000000-0000-4000-8000-000000000100",
+        "priorValue": null,
+        "createdAt": "2026-11-13T00:00:00.000Z"
+      }
+    ]
+  },
+  "firstCommand": {
+    "normalForm": {
+      "schemaVersion": "canonical-entry-regroup-command/1.0.0",
+      "operation": "approve_whole_entry_regroup",
+      "binding": {
+        "ownerId": "10000000-0000-4000-8000-000000000002",
+        "organizationId": "10000000-0000-4000-8000-000000000006",
+        "resumeId": "10000000-0000-4000-8000-000000000005",
+        "analysisId": "10000000-0000-4000-8000-000000000003",
+        "sourceId": "10000000-0000-4000-8000-000000000004",
+        "attemptId": "10000000-0000-4000-8000-000000000001",
+        "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "evidenceSchemaVersion": "evidence/2.0.0",
+        "fieldExtractorVersion": "evidence-fields/1.0.1",
+        "targetModelVersion": "evidence-targets/1.0.0",
+        "associationModelVersion": "evidence-entry-associations/1.0.0",
+        "producerVersion": "canonical-engine/1.0.4",
+        "admissionPolicyVersion": "whole-entry-regroup-admission/1.0.0",
+        "structuralTextProfileVersion": "a02-structural-text/1.0.0",
+        "correctionProjectionModelVersion": "canonical-corrections/1.0.1",
+        "correctionAdmissionPolicyVersion": "candidate-correction-admission/1.0.0",
+        "regroupModelVersion": "canonical-entry-regroup/1.0.0"
+      },
+      "base": {
+        "versionId": "10000000-0000-4000-8000-000000000100",
+        "revision": 1,
+        "contentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "locale": "en-IN"
+      },
+      "expected": {
+        "reviewRevision": 0,
+        "reviewHeadId": null,
+        "assignmentRevision": 0,
+        "assignmentHeadId": null,
+        "associationRevision": 0,
+        "associationHeadId": null,
+        "regroupRevision": 0,
+        "regroupHeadId": null,
+        "canonicalHeadId": "10000000-0000-4000-8000-000000000100"
+      },
+      "acknowledgementPolicy": "whole_entry_merge_not_fact_confirmation",
+      "acknowledgement": true,
+      "unselectedDisposition": "retain_eligible_original_origins",
+      "selections": [
+        {
+          "pageId": "page-1",
+          "method": "native_text",
+          "sectionId": "10000000-0000-4000-8000-000000000107",
+          "anchorEntryId": "10000000-0000-4000-8000-000000000108",
+          "insertionIndex": 0,
+          "affectedEntryIds": [
+            "10000000-0000-4000-8000-000000000108",
+            "10000000-0000-4000-8000-000000000109",
+            "10000000-0000-4000-8000-000000000110"
+          ],
+          "members": [
+            {
+              "assertionId": "assertion-1",
+              "field": "employer",
+              "factId": "10000000-0000-4000-8000-000000000101",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-2",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 10,
+                  "end": 30,
+                  "pageStart": 21,
+                  "pageEnd": 41
+                }
+              ],
+              "mappedThrough": "current_citations",
+              "originVersionId": null,
+              "location": {
+                "kind": "entry",
+                "sectionId": "10000000-0000-4000-8000-000000000107",
+                "entryId": "10000000-0000-4000-8000-000000000108",
+                "bulletId": null
+              }
+            },
+            {
+              "assertionId": "assertion-2",
+              "field": "role",
+              "factId": "10000000-0000-4000-8000-000000000102",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-3",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 6,
+                  "end": 23,
+                  "pageStart": 48,
+                  "pageEnd": 65
+                }
+              ],
+              "mappedThrough": "current_citations",
+              "originVersionId": null,
+              "location": {
+                "kind": "entry",
+                "sectionId": "10000000-0000-4000-8000-000000000107",
+                "entryId": "10000000-0000-4000-8000-000000000109",
+                "bulletId": null
+              }
+            },
+            {
+              "assertionId": "assertion-3",
+              "field": "dates",
+              "factId": "10000000-0000-4000-8000-000000000103",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-4",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 7,
+                  "end": 18,
+                  "pageStart": 73,
+                  "pageEnd": 84
+                }
+              ],
+              "mappedThrough": "current_citations",
+              "originVersionId": null,
+              "location": {
+                "kind": "entry",
+                "sectionId": "10000000-0000-4000-8000-000000000107",
+                "entryId": "10000000-0000-4000-8000-000000000110",
+                "bulletId": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "previewHash": "f81d2b731d1ef9ca4318775f9ed20631ba367c06addb47c363f4da82bdfb090e",
+    "idempotencyKey": "90000000-0000-4000-8000-000000000010"
+  },
+  "unchangedCommand": {
+    "normalForm": {
+      "schemaVersion": "canonical-entry-regroup-command/1.0.0",
+      "operation": "approve_whole_entry_regroup",
+      "binding": {
+        "ownerId": "10000000-0000-4000-8000-000000000002",
+        "organizationId": "10000000-0000-4000-8000-000000000006",
+        "resumeId": "10000000-0000-4000-8000-000000000005",
+        "analysisId": "10000000-0000-4000-8000-000000000003",
+        "sourceId": "10000000-0000-4000-8000-000000000004",
+        "attemptId": "10000000-0000-4000-8000-000000000001",
+        "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "evidenceSchemaVersion": "evidence/2.0.0",
+        "fieldExtractorVersion": "evidence-fields/1.0.1",
+        "targetModelVersion": "evidence-targets/1.0.0",
+        "associationModelVersion": "evidence-entry-associations/1.0.0",
+        "producerVersion": "canonical-engine/1.0.4",
+        "admissionPolicyVersion": "whole-entry-regroup-admission/1.0.0",
+        "structuralTextProfileVersion": "a02-structural-text/1.0.0",
+        "correctionProjectionModelVersion": "canonical-corrections/1.0.1",
+        "correctionAdmissionPolicyVersion": "candidate-correction-admission/1.0.0",
+        "regroupModelVersion": "canonical-entry-regroup/1.0.0"
+      },
+      "base": {
+        "versionId": "90000000-0000-4000-8000-000000000011",
+        "revision": 2,
+        "contentSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "locale": "en-IN"
+      },
+      "expected": {
+        "reviewRevision": 0,
+        "reviewHeadId": null,
+        "assignmentRevision": 0,
+        "assignmentHeadId": null,
+        "associationRevision": 0,
+        "associationHeadId": null,
+        "regroupRevision": 1,
+        "regroupHeadId": "90000000-0000-4000-8000-000000000013",
+        "canonicalHeadId": "90000000-0000-4000-8000-000000000011"
+      },
+      "acknowledgementPolicy": "whole_entry_merge_not_fact_confirmation",
+      "acknowledgement": true,
+      "unselectedDisposition": "retain_eligible_original_origins",
+      "selections": [
+        {
+          "pageId": "page-1",
+          "method": "native_text",
+          "sectionId": "10000000-0000-4000-8000-000000000107",
+          "anchorEntryId": "10000000-0000-4000-8000-000000000108",
+          "insertionIndex": 0,
+          "affectedEntryIds": [
+            "10000000-0000-4000-8000-000000000108"
+          ],
+          "members": [
+            {
+              "assertionId": "assertion-1",
+              "field": "employer",
+              "factId": "10000000-0000-4000-8000-000000000101",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-2",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 10,
+                  "end": 30,
+                  "pageStart": 21,
+                  "pageEnd": 41
+                }
+              ],
+              "mappedThrough": "current_citations",
+              "originVersionId": null,
+              "location": {
+                "kind": "entry",
+                "sectionId": "10000000-0000-4000-8000-000000000107",
+                "entryId": "10000000-0000-4000-8000-000000000108",
+                "bulletId": null
+              }
+            },
+            {
+              "assertionId": "assertion-2",
+              "field": "role",
+              "factId": "10000000-0000-4000-8000-000000000102",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-3",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 6,
+                  "end": 23,
+                  "pageStart": 48,
+                  "pageEnd": 65
+                }
+              ],
+              "mappedThrough": "current_citations",
+              "originVersionId": null,
+              "location": {
+                "kind": "entry",
+                "sectionId": "10000000-0000-4000-8000-000000000107",
+                "entryId": "10000000-0000-4000-8000-000000000108",
+                "bulletId": null
+              }
+            },
+            {
+              "assertionId": "assertion-3",
+              "field": "dates",
+              "factId": "10000000-0000-4000-8000-000000000103",
+              "citations": [
+                {
+                  "attemptId": "10000000-0000-4000-8000-000000000001",
+                  "spanId": "native-page-1-line-4",
+                  "pageId": "page-1",
+                  "method": "native_text",
+                  "start": 7,
+                  "end": 18,
+                  "pageStart": 73,
+                  "pageEnd": 84
+                }
+              ],
+              "mappedThrough": "current_citations",
+              "originVersionId": null,
+              "location": {
+                "kind": "entry",
+                "sectionId": "10000000-0000-4000-8000-000000000107",
+                "entryId": "10000000-0000-4000-8000-000000000108",
+                "bulletId": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "previewHash": "0431454021de408e3873f92ba63605ff45b18c1e63a5dbbe2848814a8ccf7204",
+    "idempotencyKey": "90000000-0000-4000-8000-000000000021"
+  },
+  "v1": {
+    "original": {
+      "schemaVersion": "canonical-resume/1.0.0",
+      "producerVersion": "canonical-engine/1.0.1",
+      "analysisId": "10000000-0000-4000-8000-000000000003",
+      "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "retentionPolicyId": "synthetic/1.0.0",
+      "resumeId": "10000000-0000-4000-8000-000000000005",
+      "versionId": "40000000-0000-4000-8000-000000000001",
+      "parentVersionId": null,
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "organizationId": "10000000-0000-4000-8000-000000000006",
+      "locale": "en-IN",
+      "createdAt": "2026-11-13T00:00:00.000Z",
+      "state": "review_required",
+      "sourceEvidenceVersionId": "10000000-0000-4000-8000-000000000001",
+      "contactFactIds": [],
+      "facts": [
+        {
+          "id": "40000000-0000-4000-8000-000000000002",
+          "type": "employer",
+          "value": "Synthetic Alpha Labs",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-2",
+              "start": 10,
+              "end": 30
+            }
+          ],
+          "confirmation": null
+        },
+        {
+          "id": "40000000-0000-4000-8000-000000000003",
+          "type": "role",
+          "value": "Platform Engineer",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-3",
+              "start": 6,
+              "end": 23
+            }
+          ],
+          "confirmation": null
+        },
+        {
+          "id": "40000000-0000-4000-8000-000000000004",
+          "type": "dates",
+          "value": "2020 - 2022",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-4",
+              "start": 7,
+              "end": 18
+            }
+          ],
+          "confirmation": null
+        },
+        {
+          "id": "40000000-0000-4000-8000-000000000005",
+          "type": "employer",
+          "value": "Synthetic Beta Labs",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-5",
+              "start": 10,
+              "end": 29
+            }
+          ],
+          "confirmation": null
+        },
+        {
+          "id": "40000000-0000-4000-8000-000000000006",
+          "type": "role",
+          "value": "Data Engineer",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-6",
+              "start": 6,
+              "end": 19
+            }
+          ],
+          "confirmation": null
+        },
+        {
+          "id": "40000000-0000-4000-8000-000000000007",
+          "type": "dates",
+          "value": "2021 - 2023",
+          "state": "unconfirmed",
+          "sources": [
+            {
+              "attemptId": "10000000-0000-4000-8000-000000000001",
+              "spanId": "native-page-1-line-7",
+              "start": 7,
+              "end": 18
+            }
+          ],
+          "confirmation": null
+        }
+      ],
+      "sections": [
+        {
+          "id": "40000000-0000-4000-8000-000000000008",
+          "type": "experience",
+          "title": "Experience",
+          "factIds": [],
+          "entries": [
+            {
+              "id": "40000000-0000-4000-8000-000000000009",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000002"
+              ],
+              "bullets": []
+            },
+            {
+              "id": "40000000-0000-4000-8000-00000000000a",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000003"
+              ],
+              "bullets": []
+            },
+            {
+              "id": "40000000-0000-4000-8000-00000000000b",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000004"
+              ],
+              "bullets": []
+            },
+            {
+              "id": "40000000-0000-4000-8000-00000000000c",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000005"
+              ],
+              "bullets": []
+            },
+            {
+              "id": "40000000-0000-4000-8000-00000000000d",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000006"
+              ],
+              "bullets": []
+            },
+            {
+              "id": "40000000-0000-4000-8000-00000000000e",
+              "factIds": [
+                "40000000-0000-4000-8000-000000000007"
+              ],
+              "bullets": []
+            }
+          ]
+        }
+      ],
+      "changes": [
+        {
+          "id": "40000000-0000-4000-8000-00000000000f",
+          "actorId": "10000000-0000-4000-8000-000000000002",
+          "action": "import",
+          "targetId": "40000000-0000-4000-8000-000000000001",
+          "priorValue": null,
+          "createdAt": "2026-11-13T00:00:00.000Z"
+        }
+      ]
+    },
+    "command": {
+      "normalForm": {
+        "schemaVersion": "grouped-original-command/1.0.0",
+        "operation": "approve_and_import_grouped_original",
+        "binding": {
+          "ownerId": "10000000-0000-4000-8000-000000000002",
+          "organizationId": "10000000-0000-4000-8000-000000000006",
+          "resumeId": "10000000-0000-4000-8000-000000000005",
+          "analysisId": "10000000-0000-4000-8000-000000000003",
+          "sourceId": "10000000-0000-4000-8000-000000000004",
+          "attemptId": "10000000-0000-4000-8000-000000000001",
+          "inputSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "evidenceSchemaVersion": "evidence/2.0.0",
+          "fieldExtractorVersion": "evidence-fields/1.0.1",
+          "targetModelVersion": "evidence-targets/1.0.0",
+          "associationModelVersion": "evidence-entry-associations/1.0.0",
+          "producerVersion": "canonical-engine/1.0.3",
+          "admissionPolicyVersion": "grouped-original-admission/1.0.0",
+          "structuralTextProfileVersion": "a02-structural-text/1.0.0",
+          "correctionProjectionModelVersion": "canonical-corrections/1.0.1",
+          "correctionAdmissionPolicyVersion": "candidate-correction-admission/1.0.0",
+          "effectiveLocale": "en-IN"
+        },
+        "expected": {
+          "reviewRevision": 0,
+          "reviewHeadId": null,
+          "assignmentRevision": 0,
+          "assignmentHeadId": null,
+          "associationRevision": 0,
+          "associationHeadId": null,
+          "canonicalHeadId": null
+        },
+        "acknowledgementPolicy": "relationship_only_not_fact_confirmation",
+        "acknowledgement": true,
+        "unselectedDisposition": "retain_original",
+        "selections": [
+          {
+            "pageId": "page-1",
+            "method": "native_text",
+            "members": [
+              {
+                "assertionId": "assertion-1",
+                "field": "employer",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-2",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 10,
+                    "end": 30,
+                    "pageStart": 21,
+                    "pageEnd": 41
+                  }
+                ]
+              },
+              {
+                "assertionId": "assertion-2",
+                "field": "role",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-3",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 6,
+                    "end": 23,
+                    "pageStart": 48,
+                    "pageEnd": 65
+                  }
+                ]
+              },
+              {
+                "assertionId": "assertion-3",
+                "field": "dates",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-4",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 7,
+                    "end": 18,
+                    "pageStart": 73,
+                    "pageEnd": 84
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "pageId": "page-1",
+            "method": "native_text",
+            "members": [
+              {
+                "assertionId": "assertion-4",
+                "field": "employer",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-5",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 10,
+                    "end": 29,
+                    "pageStart": 95,
+                    "pageEnd": 114
+                  }
+                ]
+              },
+              {
+                "assertionId": "assertion-5",
+                "field": "role",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-6",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 6,
+                    "end": 19,
+                    "pageStart": 121,
+                    "pageEnd": 134
+                  }
+                ]
+              },
+              {
+                "assertionId": "assertion-6",
+                "field": "dates",
+                "citations": [
+                  {
+                    "attemptId": "10000000-0000-4000-8000-000000000001",
+                    "spanId": "native-page-1-line-7",
+                    "pageId": "page-1",
+                    "method": "native_text",
+                    "start": 7,
+                    "end": 18,
+                    "pageStart": 142,
+                    "pageEnd": 153
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "previewHash": "c0f67f0c0992f443854c74a5d1ab49e20a063a46ec7973e2347558b1aec679fd",
+      "idempotencyKey": "90000000-0000-4000-8000-000000000001"
+    }
+  },
+  "jd": {
+    "first": {
+      "schemaVersion": "requirements/2.0.0",
+      "producerVersion": "jd-relations/1.0.0",
+      "id": "c81719e5-3c00-4b44-bcdf-59fb89b58689",
+      "parentVersionId": null,
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "organizationId": "10000000-0000-4000-8000-000000000006",
+      "analysisId": "10000000-0000-4000-8000-000000000003",
+      "jobId": "10000000-0000-4000-8000-000000000700",
+      "createdAt": "2026-11-14T11:05:51.755Z",
+      "retentionPolicyId": "candidate-active-30d/1.0.0",
+      "inputSha256": "efc8778839e745b3c50012dc14e06b0e2aa8b4e2165d88b6e7b1a8c6abc54837",
+      "locale": "en-IN",
+      "domain": "software-engineering",
+      "state": "review_required",
+      "sourceText": "Requirements\nTypeScript or SQL required\nAt least 2 years experience required",
+      "scoringEligible": false,
+      "mappingPolicy": {
+        "version": "jd-local-aliases/1.0.0",
+        "lexiconSha256": "e5298fd95320299996a4f5eceff3fc7afcd61ed636aaec386e1d4107a7500fa2",
+        "externalTaxonomy": null
+      },
+      "relationPolicy": {
+        "version": "jd-local-relation-rules/1.0.0",
+        "sha256": "fd69dde2640bcdc1cdd76ce622015cb577090d61581515585f7cdfe0cdcd8cdc"
+      },
+      "requirements": [
+        {
+          "id": "b36a0770-20c4-400b-a722-c6fe293df3fd",
+          "type": "skill",
+          "value": "TypeScript",
+          "importance": "required",
+          "importanceBasis": "explicit",
+          "importanceEvidence": {
+            "start": 13,
+            "end": 39,
+            "quote": "TypeScript or SQL required"
+          },
+          "derivation": "exact",
+          "minimumYears": null,
+          "negated": false,
+          "ambiguity": [
+            "skill_alternative_review"
+          ],
+          "dedupGroup": "45b56aa6ff1c714dc76ff1d65b8376b3330c79f52a8e691ab3f4f429c6f5609d",
+          "evidence": {
+            "spanId": "jd-13-39",
+            "start": 13,
+            "end": 39,
+            "quote": "TypeScript or SQL required"
+          },
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          },
+          "mapping": {
+            "kind": "unmapped",
+            "policyVersion": "jd-local-aliases/1.0.0",
+            "conceptId": null,
+            "canonicalValue": null,
+            "prospectiveCreditGroup": null
+          },
+          "tokenEvidence": [
+            {
+              "spanId": "jd-13-23",
+              "start": 13,
+              "end": 23,
+              "quote": "TypeScript"
+            }
+          ]
+        },
+        {
+          "id": "6c608cca-b837-43b6-83f0-d7432cafce51",
+          "type": "skill",
+          "value": "SQL",
+          "importance": "required",
+          "importanceBasis": "explicit",
+          "importanceEvidence": {
+            "start": 13,
+            "end": 39,
+            "quote": "TypeScript or SQL required"
+          },
+          "derivation": "exact",
+          "minimumYears": null,
+          "negated": false,
+          "ambiguity": [
+            "skill_alternative_review"
+          ],
+          "dedupGroup": "9007013565835b88ad9a7f79eaf05db3b62851db8bb9b9254f21832917cc8e45",
+          "evidence": {
+            "spanId": "jd-13-39",
+            "start": 13,
+            "end": 39,
+            "quote": "TypeScript or SQL required"
+          },
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          },
+          "mapping": {
+            "kind": "unmapped",
+            "policyVersion": "jd-local-aliases/1.0.0",
+            "conceptId": null,
+            "canonicalValue": null,
+            "prospectiveCreditGroup": null
+          },
+          "tokenEvidence": [
+            {
+              "spanId": "jd-27-30",
+              "start": 27,
+              "end": 30,
+              "quote": "SQL"
+            }
+          ]
+        },
+        {
+          "id": "21d80a66-14f9-4470-b8b4-409c8878dc7d",
+          "type": "experience",
+          "value": "At least 2 years experience required",
+          "importance": "required",
+          "importanceBasis": "explicit",
+          "importanceEvidence": {
+            "start": 40,
+            "end": 76,
+            "quote": "At least 2 years experience required"
+          },
+          "derivation": "exact",
+          "minimumYears": 2,
+          "negated": false,
+          "ambiguity": [],
+          "dedupGroup": "7d48241e5ef5d270b89fc81c10f1b4b08eb10e6d68ff3046a5f23842ec2c96ce",
+          "evidence": {
+            "spanId": "jd-40-76",
+            "start": 40,
+            "end": 76,
+            "quote": "At least 2 years experience required"
+          },
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          },
+          "mapping": null,
+          "tokenEvidence": []
+        }
+      ],
+      "retainedClauses": [
+        {
+          "evidence": {
+            "spanId": "jd-13-39",
+            "start": 13,
+            "end": 39,
+            "quote": "TypeScript or SQL required"
+          },
+          "importance": "required",
+          "negated": false,
+          "interpretation": "partial_vocabulary",
+          "reviewRequired": true,
+          "requirementIds": [
+            "b36a0770-20c4-400b-a722-c6fe293df3fd",
+            "6c608cca-b837-43b6-83f0-d7432cafce51"
+          ]
+        },
+        {
+          "evidence": {
+            "spanId": "jd-40-76",
+            "start": 40,
+            "end": 76,
+            "quote": "At least 2 years experience required"
+          },
+          "importance": "required",
+          "negated": false,
+          "interpretation": "partial_vocabulary",
+          "reviewRequired": true,
+          "requirementIds": [
+            "21d80a66-14f9-4470-b8b4-409c8878dc7d"
+          ]
+        }
+      ],
+      "relations": {
+        "clauses": [
+          {
+            "id": "527a9192f9f441a17d38109a50cc4b50f993caa87e8f48cb2025e1b1c9c833aa",
+            "evidence": {
+              "spanId": "jd-13-39",
+              "start": 13,
+              "end": 39,
+              "quote": "TypeScript or SQL required"
+            },
+            "reviewRequired": true,
+            "scope": {
+              "importance": "required",
+              "negated": false
+            },
+            "skillExpression": {
+              "kind": "any_of",
+              "evidence": {
+                "spanId": "jd-13-30",
+                "start": 13,
+                "end": 30,
+                "quote": "TypeScript or SQL"
+              },
+              "operands": [
+                {
+                  "kind": "atom",
+                  "value": "TypeScript",
+                  "evidence": {
+                    "spanId": "jd-13-23",
+                    "start": 13,
+                    "end": 23,
+                    "quote": "TypeScript"
+                  },
+                  "requirementIds": [
+                    "b36a0770-20c4-400b-a722-c6fe293df3fd"
+                  ],
+                  "mapping": {
+                    "kind": "unmapped",
+                    "policyVersion": "jd-local-aliases/1.0.0",
+                    "conceptId": null,
+                    "canonicalValue": null,
+                    "prospectiveCreditGroup": null
+                  }
+                },
+                {
+                  "kind": "atom",
+                  "value": "SQL",
+                  "evidence": {
+                    "spanId": "jd-27-30",
+                    "start": 27,
+                    "end": 30,
+                    "quote": "SQL"
+                  },
+                  "requirementIds": [
+                    "6c608cca-b837-43b6-83f0-d7432cafce51"
+                  ],
+                  "mapping": {
+                    "kind": "unmapped",
+                    "policyVersion": "jd-local-aliases/1.0.0",
+                    "conceptId": null,
+                    "canonicalValue": null,
+                    "prospectiveCreditGroup": null
+                  }
+                }
+              ],
+              "operatorEvidence": [
+                {
+                  "spanId": "jd-24-26",
+                  "start": 24,
+                  "end": 26,
+                  "quote": "or"
+                }
+              ]
+            },
+            "duration": {
+              "kind": "not_stated",
+              "evidence": null,
+              "lower": null,
+              "upper": null,
+              "operatorEvidence": [],
+              "candidateEvidence": [],
+              "reason": null,
+              "subjectBinding": "literal_clause_only",
+              "evaluated": false
+            },
+            "prospectiveCreditGroups": [],
+            "numericCredit": null
+          },
+          {
+            "id": "d7187884862e8434e94d6fe54e948e66d15847b28b4164f719b71dd0db4fba3b",
+            "evidence": {
+              "spanId": "jd-40-76",
+              "start": 40,
+              "end": 76,
+              "quote": "At least 2 years experience required"
+            },
+            "reviewRequired": true,
+            "scope": {
+              "importance": "required",
+              "negated": false
+            },
+            "skillExpression": {
+              "kind": "unknown",
+              "reason": "no_discovered_operands_review",
+              "evidence": {
+                "spanId": "jd-40-76",
+                "start": 40,
+                "end": 76,
+                "quote": "At least 2 years experience required"
+              },
+              "observedRequirementIds": [
+                "21d80a66-14f9-4470-b8b4-409c8878dc7d"
+              ]
+            },
+            "duration": {
+              "kind": "at_least",
+              "evidence": {
+                "spanId": "jd-40-56",
+                "start": 40,
+                "end": 56,
+                "quote": "At least 2 years"
+              },
+              "lower": {
+                "value": 2,
+                "inclusive": true,
+                "evidence": {
+                  "spanId": "jd-49-50",
+                  "start": 49,
+                  "end": 50,
+                  "quote": "2"
+                }
+              },
+              "upper": null,
+              "operatorEvidence": [
+                {
+                  "spanId": "jd-40-48",
+                  "start": 40,
+                  "end": 48,
+                  "quote": "At least"
+                }
+              ],
+              "candidateEvidence": [
+                {
+                  "spanId": "jd-40-56",
+                  "start": 40,
+                  "end": 56,
+                  "quote": "At least 2 years"
+                }
+              ],
+              "reason": null,
+              "subjectBinding": "literal_clause_only",
+              "evaluated": false
+            },
+            "prospectiveCreditGroups": [],
+            "numericCredit": null
+          }
+        ]
+      },
+      "warnings": [
+        "uncalibrated_requirements",
+        "domain_pack_review_pending",
+        "local_alias_policy_not_admitted",
+        "clause_interpretation_review_pending"
+      ]
+    },
+    "second": {
+      "schemaVersion": "requirements/2.0.0",
+      "producerVersion": "jd-relations/1.0.0",
+      "id": "f8d8ad68-8ef5-475c-b891-332f54256eb9",
+      "parentVersionId": "c81719e5-3c00-4b44-bcdf-59fb89b58689",
+      "ownerId": "10000000-0000-4000-8000-000000000002",
+      "organizationId": "10000000-0000-4000-8000-000000000006",
+      "analysisId": "10000000-0000-4000-8000-000000000003",
+      "jobId": "10000000-0000-4000-8000-000000000700",
+      "createdAt": "2026-11-14T11:05:51.767Z",
+      "retentionPolicyId": "candidate-active-30d/1.0.0",
+      "inputSha256": "ee390a71dbf9233edb95c41ee34c74670f84b338ab948e138272b5f81437b766",
+      "locale": "en-IN",
+      "domain": "software-engineering",
+      "state": "review_required",
+      "sourceText": "Requirements\nTypeScript and SQL required\nAt least 3 years experience required",
+      "scoringEligible": false,
+      "mappingPolicy": {
+        "version": "jd-local-aliases/1.0.0",
+        "lexiconSha256": "e5298fd95320299996a4f5eceff3fc7afcd61ed636aaec386e1d4107a7500fa2",
+        "externalTaxonomy": null
+      },
+      "relationPolicy": {
+        "version": "jd-local-relation-rules/1.0.0",
+        "sha256": "fd69dde2640bcdc1cdd76ce622015cb577090d61581515585f7cdfe0cdcd8cdc"
+      },
+      "requirements": [
+        {
+          "id": "8f0928d7-13b7-4cc5-bae8-605255c3640f",
+          "type": "skill",
+          "value": "TypeScript",
+          "importance": "required",
+          "importanceBasis": "explicit",
+          "importanceEvidence": {
+            "start": 13,
+            "end": 40,
+            "quote": "TypeScript and SQL required"
+          },
+          "derivation": "exact",
+          "minimumYears": null,
+          "negated": false,
+          "ambiguity": [],
+          "dedupGroup": "45b56aa6ff1c714dc76ff1d65b8376b3330c79f52a8e691ab3f4f429c6f5609d",
+          "evidence": {
+            "spanId": "jd-13-40",
+            "start": 13,
+            "end": 40,
+            "quote": "TypeScript and SQL required"
+          },
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          },
+          "mapping": {
+            "kind": "unmapped",
+            "policyVersion": "jd-local-aliases/1.0.0",
+            "conceptId": null,
+            "canonicalValue": null,
+            "prospectiveCreditGroup": null
+          },
+          "tokenEvidence": [
+            {
+              "spanId": "jd-13-23",
+              "start": 13,
+              "end": 23,
+              "quote": "TypeScript"
+            }
+          ]
+        },
+        {
+          "id": "4003961c-c146-4ddb-a73d-34e8658fc6cd",
+          "type": "skill",
+          "value": "SQL",
+          "importance": "required",
+          "importanceBasis": "explicit",
+          "importanceEvidence": {
+            "start": 13,
+            "end": 40,
+            "quote": "TypeScript and SQL required"
+          },
+          "derivation": "exact",
+          "minimumYears": null,
+          "negated": false,
+          "ambiguity": [],
+          "dedupGroup": "9007013565835b88ad9a7f79eaf05db3b62851db8bb9b9254f21832917cc8e45",
+          "evidence": {
+            "spanId": "jd-13-40",
+            "start": 13,
+            "end": 40,
+            "quote": "TypeScript and SQL required"
+          },
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          },
+          "mapping": {
+            "kind": "unmapped",
+            "policyVersion": "jd-local-aliases/1.0.0",
+            "conceptId": null,
+            "canonicalValue": null,
+            "prospectiveCreditGroup": null
+          },
+          "tokenEvidence": [
+            {
+              "spanId": "jd-28-31",
+              "start": 28,
+              "end": 31,
+              "quote": "SQL"
+            }
+          ]
+        },
+        {
+          "id": "194e36b4-e4ca-4622-b648-3a2f4629ae6b",
+          "type": "experience",
+          "value": "At least 3 years experience required",
+          "importance": "required",
+          "importanceBasis": "explicit",
+          "importanceEvidence": {
+            "start": 41,
+            "end": 77,
+            "quote": "At least 3 years experience required"
+          },
+          "derivation": "exact",
+          "minimumYears": 3,
+          "negated": false,
+          "ambiguity": [],
+          "dedupGroup": "31fd48c34b63a0780ba50c9f75aab4df84eaed691f948275fa7301543532ad42",
+          "evidence": {
+            "spanId": "jd-41-77",
+            "start": 41,
+            "end": 77,
+            "quote": "At least 3 years experience required"
+          },
+          "confidence": {
+            "kind": "uncalibrated",
+            "value": null
+          },
+          "mapping": null,
+          "tokenEvidence": []
+        }
+      ],
+      "retainedClauses": [
+        {
+          "evidence": {
+            "spanId": "jd-13-40",
+            "start": 13,
+            "end": 40,
+            "quote": "TypeScript and SQL required"
+          },
+          "importance": "required",
+          "negated": false,
+          "interpretation": "partial_vocabulary",
+          "reviewRequired": true,
+          "requirementIds": [
+            "8f0928d7-13b7-4cc5-bae8-605255c3640f",
+            "4003961c-c146-4ddb-a73d-34e8658fc6cd"
+          ]
+        },
+        {
+          "evidence": {
+            "spanId": "jd-41-77",
+            "start": 41,
+            "end": 77,
+            "quote": "At least 3 years experience required"
+          },
+          "importance": "required",
+          "negated": false,
+          "interpretation": "partial_vocabulary",
+          "reviewRequired": true,
+          "requirementIds": [
+            "194e36b4-e4ca-4622-b648-3a2f4629ae6b"
+          ]
+        }
+      ],
+      "relations": {
+        "clauses": [
+          {
+            "id": "f86b0ab9c3ddc822de1b65a22ea9ce57b50e22c4331195a4d11bfa2dafbedde7",
+            "evidence": {
+              "spanId": "jd-13-40",
+              "start": 13,
+              "end": 40,
+              "quote": "TypeScript and SQL required"
+            },
+            "reviewRequired": true,
+            "scope": {
+              "importance": "required",
+              "negated": false
+            },
+            "skillExpression": {
+              "kind": "all_of",
+              "evidence": {
+                "spanId": "jd-13-31",
+                "start": 13,
+                "end": 31,
+                "quote": "TypeScript and SQL"
+              },
+              "operands": [
+                {
+                  "kind": "atom",
+                  "value": "TypeScript",
+                  "evidence": {
+                    "spanId": "jd-13-23",
+                    "start": 13,
+                    "end": 23,
+                    "quote": "TypeScript"
+                  },
+                  "requirementIds": [
+                    "8f0928d7-13b7-4cc5-bae8-605255c3640f"
+                  ],
+                  "mapping": {
+                    "kind": "unmapped",
+                    "policyVersion": "jd-local-aliases/1.0.0",
+                    "conceptId": null,
+                    "canonicalValue": null,
+                    "prospectiveCreditGroup": null
+                  }
+                },
+                {
+                  "kind": "atom",
+                  "value": "SQL",
+                  "evidence": {
+                    "spanId": "jd-28-31",
+                    "start": 28,
+                    "end": 31,
+                    "quote": "SQL"
+                  },
+                  "requirementIds": [
+                    "4003961c-c146-4ddb-a73d-34e8658fc6cd"
+                  ],
+                  "mapping": {
+                    "kind": "unmapped",
+                    "policyVersion": "jd-local-aliases/1.0.0",
+                    "conceptId": null,
+                    "canonicalValue": null,
+                    "prospectiveCreditGroup": null
+                  }
+                }
+              ],
+              "operatorEvidence": [
+                {
+                  "spanId": "jd-24-27",
+                  "start": 24,
+                  "end": 27,
+                  "quote": "and"
+                }
+              ]
+            },
+            "duration": {
+              "kind": "not_stated",
+              "evidence": null,
+              "lower": null,
+              "upper": null,
+              "operatorEvidence": [],
+              "candidateEvidence": [],
+              "reason": null,
+              "subjectBinding": "literal_clause_only",
+              "evaluated": false
+            },
+            "prospectiveCreditGroups": [],
+            "numericCredit": null
+          },
+          {
+            "id": "0ddabae0abf8fb434495c9fb6baa013f46b82039f821a8444884d7b0692170d6",
+            "evidence": {
+              "spanId": "jd-41-77",
+              "start": 41,
+              "end": 77,
+              "quote": "At least 3 years experience required"
+            },
+            "reviewRequired": true,
+            "scope": {
+              "importance": "required",
+              "negated": false
+            },
+            "skillExpression": {
+              "kind": "unknown",
+              "reason": "no_discovered_operands_review",
+              "evidence": {
+                "spanId": "jd-41-77",
+                "start": 41,
+                "end": 77,
+                "quote": "At least 3 years experience required"
+              },
+              "observedRequirementIds": [
+                "194e36b4-e4ca-4622-b648-3a2f4629ae6b"
+              ]
+            },
+            "duration": {
+              "kind": "at_least",
+              "evidence": {
+                "spanId": "jd-41-57",
+                "start": 41,
+                "end": 57,
+                "quote": "At least 3 years"
+              },
+              "lower": {
+                "value": 3,
+                "inclusive": true,
+                "evidence": {
+                  "spanId": "jd-50-51",
+                  "start": 50,
+                  "end": 51,
+                  "quote": "3"
+                }
+              },
+              "upper": null,
+              "operatorEvidence": [
+                {
+                  "spanId": "jd-41-49",
+                  "start": 41,
+                  "end": 49,
+                  "quote": "At least"
+                }
+              ],
+              "candidateEvidence": [
+                {
+                  "spanId": "jd-41-57",
+                  "start": 41,
+                  "end": 57,
+                  "quote": "At least 3 years"
+                }
+              ],
+              "reason": null,
+              "subjectBinding": "literal_clause_only",
+              "evaluated": false
+            },
+            "prospectiveCreditGroups": [],
+            "numericCredit": null
+          }
+        ]
+      },
+      "warnings": [
+        "uncalibrated_requirements",
+        "domain_pack_review_pending",
+        "local_alias_policy_not_admitted",
+        "clause_interpretation_review_pending"
+      ]
+    }
+  }
+}$rrv_oracle$::jsonb;
+  owner_id uuid:='10000000-0000-4000-8000-000000000002';analysis_id uuid:='10000000-0000-4000-8000-000000000003';
+  source_id uuid:='10000000-0000-4000-8000-000000000004';root_id uuid:='10000000-0000-4000-8000-000000000005';org_id uuid:='10000000-0000-4000-8000-000000000006';job_id uuid:='10000000-0000-4000-8000-000000000700';
+  base jsonb;key_value jsonb;normal jsonb;command jsonb;result jsonb;context jsonb;selected jsonb;raw jsonb;c jsonb;fresh jsonb;
+  head1 uuid;confirmed_old uuid;edited_id uuid;confirmed_edit uuid;head2 uuid;restored uuid;legacy_restored uuid;first_batch uuid;fact_id uuid;
+  scope jsonb;loaded jsonb;headers_view jsonb;memo_before bigint;memo_after bigint;event_id uuid;latest_attempt uuid:='10000000-0000-4000-8000-000000000701';scalar bigint;metric text;role_name text;
+begin
+  perform pg_temp.rrv_assert(private.canonical_correction_write_ready(),'successor138_ready');
+  perform pg_temp.rrv_assert(has_function_privilege('service_role','public.read_requirement_relationship_context(uuid,uuid,jsonb)','EXECUTE'),'reader_service');
+  foreach role_name in array array['anon','authenticated'] loop
+    perform pg_temp.rrv_assert(not has_function_privilege(role_name,'public.read_requirement_relationship_context(uuid,uuid,jsonb)','EXECUTE'),'reader_denied_'||role_name);
+  end loop;
+  perform pg_temp.rrv_assert(not has_function_privilege('service_role','private.requirement_header_context(jsonb,jsonb,jsonb)','EXECUTE')
+    and not has_function_privilege('service_role','private.requirement_relationship_charge(jsonb,text,text,jsonb)','EXECUTE')
+    and not has_function_privilege('service_role','public.apply_canonical_entry_regroup(uuid,uuid,jsonb,text)','EXECUTE')
+    and not has_function_privilege('service_role','public.import_canonical_grouped_original(uuid,uuid,jsonb,jsonb,text)','EXECUTE'),'private_and_writers_still_denied');
+  -- These are frozen actual Node/Core and v1 helper outputs, not invented accepted DB approvals.
+  perform pg_temp.rrv_assert(private.grouped_import_command_sha256(private.entry_regroup_atoms(oracle->'firstCommand'->'normalForm'))=oracle->'firstCommand'->>'previewHash','frozen_node_first_hash');
+  perform pg_temp.rrv_assert(private.job_requirement_relations_valid(oracle->'jd'->'first') and private.job_requirement_relations_valid(oracle->'jd'->'second'),'actual_jd_helper_oracles');
+  insert into auth.users(id,aud,role,email,raw_app_meta_data,raw_user_meta_data) values(owner_id,'authenticated','authenticated','rrv-source@example.test','{"provider":"email","providers":["email"]}','{}');
+  insert into public.organizations(id,owner_id,name) values(org_id,owner_id,'Synthetic header context');
+  insert into public.memberships(organization_id,user_id,role) values(org_id,owner_id,'owner');
+  insert into public.resumes(id,organization_id,owner_id,display_name) values(root_id,org_id,owner_id,'Synthetic header context');
+  insert into public.resume_versions(id,resume_id,organization_id,owner_id,storage_key,checksum,bytes,media_type,page_count) values(source_id,root_id,org_id,owner_id,'rrv-source/'||source_id,repeat('a',64),1024,'application/pdf',null);
+  insert into public.jobs(id,organization_id,owner_id,title,description) values(job_id,org_id,owner_id,'Software engineering',oracle->'jd'->'first'->>'sourceText');
+  insert into public.analyses(id,resume_version_id,organization_id,owner_id,job_id,status,idempotency_key) values(analysis_id,source_id,org_id,owner_id,job_id,'needs_ocr',gen_random_uuid());
+  delete from public.analysis_jobs j where j.analysis_id=fixture.analysis_id;
+  insert into public.document_evidence_attempts(id,analysis_id,organization_id,owner_id,resume_version_id,input_sha256,attempt_number,envelope)
+    values((oracle->'evidence'->>'id')::uuid,analysis_id,org_id,owner_id,source_id,repeat('a',64),1,oracle->'evidence');
+  result:=public.save_job_requirement_relations(owner_id,analysis_id,oracle->'jd'->'first',null,gen_random_uuid(),'rrv-jd-first');
+  perform pg_temp.rrv_assert(result->>'status'='applied','actual_jd_first_save');
+  -- Labelled privileged raw legacy fixture; this is NOT a grouped admission or semantic claim.
+  base:=oracle->'base';key_value:=pg_temp.rrv_store(base,1);fact_id:=(base->'facts'->0->>'id')::uuid;
+  insert into public.canonical_resume_heads(resume_id,version_id,revision,owner_id,organization_id) values(root_id,(base->>'versionId')::uuid,1,owner_id,org_id);
+  selected:=jsonb_build_object('canonicalVersionId',null,'requirementVersionId',null);
+  context:=public.read_requirement_relationship_context(owner_id,analysis_id,selected);
+  perform pg_temp.rrv_assert(context->>'status'='available' and context->>'authority'='owned_header_relations_only' and context->'scoringEligible'='false'
+    and context->'headerSnapshot'->>'snapshotFamily'='none' and context->'headerSnapshot'->'creationKind'='null' and jsonb_array_length(context->'headerSnapshot'->'groups')=0,'legacy_none_header_context');
+  perform pg_temp.rrv_assert(context->'sourceMetadata'->'pageCount'='null','actual_nullable_page_count');
+  update public.resume_versions set page_count=21 where id=source_id;
+  context:=public.read_requirement_relationship_context(owner_id,analysis_id,selected);
+  perform pg_temp.rrv_assert(context->'sourceMetadata'->'pageCount'='21','declared21_not_observed1_or_clamped');
+  result:=public.save_job_requirement_relations(owner_id,analysis_id,oracle->'jd'->'second',(oracle->'jd'->'first'->>'id')::uuid,gen_random_uuid(),'rrv-jd-second');
+  perform pg_temp.rrv_assert(result->>'status'='applied','actual_jd_child_save');
+  context:=public.read_requirement_relationship_context(owner_id,analysis_id,jsonb_build_object('canonicalVersionId',base->'versionId','requirementVersionId',oracle->'jd'->'first'->'id'));
+  perform pg_temp.rrv_assert(context->'requirements'->'versionId'=oracle->'jd'->'first'->'id' and context->'heads'->'requirementHeadId'=oracle->'jd'->'second'->'id','historical_jd_distinct_from_current_head');
+  -- ONLY native base-content SHA changes from the frozen first command; values/IDs/source order stay frozen.
+  normal:=jsonb_set(oracle->'firstCommand'->'normalForm','{base,contentSha256}',key_value->'contentSha256');
+  command:=pg_temp.rrv_command(normal,(oracle->'firstCommand'->>'idempotencyKey')::uuid);
+  result:=public.apply_canonical_entry_regroup(owner_id,analysis_id,command,'rrv-real-regroup');head1:=(result->>'versionId')::uuid;first_batch:=(result->>'batchId')::uuid;
+  perform pg_temp.rrv_assert(result->>'status'='applied','actual_regroup_writer_called_as_privileged_fixture_owner');
+  context:=public.read_requirement_relationship_context(owner_id,analysis_id,selected);
+  perform pg_temp.rrv_assert(context->'canonical'->>'versionId'=head1::text and context->'headerSnapshot'->>'snapshotFamily'='regroup'
+    and jsonb_array_length(context->'headerSnapshot'->'groups')=1 and context->'headerSnapshot'->'groups'->0->>'originFamily'='regroup','real_regroup_header_only_positive');
+  perform pg_temp.rrv_assert(not (context ? 'semanticEdges') and context->'scoringEligible'='false','no_semantic_or_numeric_promotion');
+  confirmed_old:=pg_temp.rrv_manual(head1,'confirm',fact_id,null);
+  edited_id:=pg_temp.rrv_manual(confirmed_old,'edit',fact_id,'Synthetic Revised Alpha Labs');
+  confirmed_edit:=pg_temp.rrv_manual(edited_id,'confirm',fact_id,null);
+  context:=public.read_requirement_relationship_context(owner_id,analysis_id,selected);
+  perform pg_temp.rrv_assert(jsonb_array_length(context->'headerSnapshot'->'groups')=0,'ordinary_edit_invalidates_active_complete_entry');
+  context:=public.read_requirement_relationship_context(owner_id,analysis_id,jsonb_build_object('canonicalVersionId',head1,'requirementVersionId',oracle->'jd'->'first'->'id'));
+  perform pg_temp.rrv_assert(jsonb_array_length(context->'headerSnapshot'->'groups')=1 and context->'canonical'->>'versionId'=head1::text,'explicit_historical_header_survives_current_edit');
+  -- Real acknowledged reapproval of edited+confirmed current member: only actual saved capture/base/origin fields are substituted.
+  select content into strict raw from public.canonical_resume_versions where id=confirmed_edit;
+  normal:=oracle->'unchangedCommand'->'normalForm';
+  normal:=jsonb_set(normal,'{base}',jsonb_build_object('versionId',confirmed_edit,'revision',5,'contentSha256',encode(extensions.digest(convert_to(raw::text,'UTF8'),'sha256'),'hex'),'locale',raw->'locale'));
+  normal:=jsonb_set(jsonb_set(normal,'{expected,canonicalHeadId}',to_jsonb(confirmed_edit)),'{expected,regroupHeadId}',to_jsonb(first_batch));
+  perform pg_temp.rrv_assert(normal->'selections'->0->'members'->0->>'field'='employer','named_employer_origin_slot');
+  normal:=jsonb_set(jsonb_set(normal,'{selections,0,members,0,mappedThrough}','"owned_ancestor_chain"'),'{selections,0,members,0,originVersionId}',to_jsonb(confirmed_old));
+  result:=public.apply_canonical_entry_regroup(owner_id,analysis_id,pg_temp.rrv_command(normal,gen_random_uuid()),'rrv-real-edited-reapproval');head2:=(result->>'versionId')::uuid;
+  perform pg_temp.rrv_assert(result->>'status'='applied','real_edited_confirmed_reapproval');
+  context:=public.read_requirement_relationship_context(owner_id,analysis_id,selected);
+  perform pg_temp.rrv_assert(context->'headerSnapshot'->'groups'->0->'members'->0->>'currentValue'='Synthetic Revised Alpha Labs'
+    and context->'headerSnapshot'->'groups'->0->'members'->0->>'sourceValue'='Synthetic Alpha Labs'
+    and context->'headerSnapshot'->'groups'->0->'members'->0->>'originVersionId'=confirmed_old::text
+    and context->'headerSnapshot'->'groups'->0->'members'->0->>'currentState'='candidate_confirmed','current_declaration_never_relabels_observed_quote');
+  restored:=pg_temp.rrv_manual(head2,'rollback',null,null,head1);
+  context:=public.read_requirement_relationship_context(owner_id,analysis_id,selected);
+  perform pg_temp.rrv_assert(context->'headerSnapshot'->'groups'->0->>'batchId'=first_batch::text,'exact_target_origin_restored');
+  legacy_restored:=pg_temp.rrv_manual(restored,'rollback',null,null,(base->>'versionId')::uuid);
+  context:=public.read_requirement_relationship_context(owner_id,analysis_id,selected);
+  perform pg_temp.rrv_assert(context->'headerSnapshot'->>'snapshotFamily'='regroup' and context->'headerSnapshot'->>'creationKind'='restore'
+    and jsonb_array_length(context->'headerSnapshot'->'groups')=0,'legacy_target_restore_preserves_explicit_empty_marker');
+  -- Isolate destructive privileged fixture reset: genuine v1 import starts with no canonical head/rows.
+  begin
+    delete from public.canonical_resume_heads where resume_id=root_id;
+    delete from public.canonical_resume_versions where resume_id=root_id and owner_id=fixture.owner_id;
+    result:=public.import_canonical_grouped_original(owner_id,analysis_id,oracle->'v1'->'command',oracle->'v1'->'original','rrv-real-v1-import');
+    perform pg_temp.rrv_assert(result->>'status'='applied','real_v1_first_import');
+    context:=public.read_requirement_relationship_context(owner_id,analysis_id,selected);
+    perform pg_temp.rrv_assert(context->'headerSnapshot'->>'snapshotFamily'='association' and context->'headerSnapshot'->>'creationKind'='grouped_import'
+      and jsonb_array_length(context->'headerSnapshot'->'groups')=2 and not exists(select 1 from jsonb_array_elements(context->'headerSnapshot'->'groups') g(value) where value->>'originFamily'<>'association'),'real_v1_association_family_positive');
+    begin
+      delete from public.candidate_entry_association_members where id=(select id from public.candidate_entry_association_members where owner_id=fixture.owner_id limit 1);
+      context:=public.read_requirement_relationship_context(owner_id,analysis_id,selected);
+      perform pg_temp.rrv_assert(context->>'status'='unavailable' and (select count(*)=3 from jsonb_object_keys(context)),'missing_member_refuses_without_private_payload');
+      raise exception 'RRV_BRANCH_ROLLBACK' using errcode='PZ001';
+    exception when sqlstate 'PZ001' then perform pg_temp.rrv_assert(true,'isolated_fixture_branch_rolled_back');end;
+    raise exception 'RRV_BRANCH_ROLLBACK' using errcode='PZ001';
+  exception when sqlstate 'PZ001' then perform pg_temp.rrv_assert(true,'isolated_fixture_branch_rolled_back');end;
+  -- Later attempt/history must not preempt an explicitly selected older immutable context.
+  insert into public.document_evidence_attempts(id,analysis_id,organization_id,owner_id,resume_version_id,input_sha256,attempt_number,envelope)
+    values(latest_attempt,analysis_id,org_id,owner_id,source_id,repeat('a',64),2,jsonb_set(oracle->'evidence','{id}',to_jsonb(latest_attempt)));
+  insert into public.evidence_corrections(id,attempt_id,analysis_id,organization_id,owner_id,actor_id,revision,expected_revision,field,operation,value,candidate_id,idempotency_key,request_id)
+    select gen_random_uuid(),(oracle->'evidence'->>'id')::uuid,analysis_id,org_id,owner_id,owner_id,n,n-1,'role','correct','Synthetic later role '||n,null,gen_random_uuid(),'rrv-later-prefix' from generate_series(1,1001) n;
+  context:=public.read_requirement_relationship_context(owner_id,analysis_id,jsonb_build_object('canonicalVersionId',head1,'requirementVersionId',oracle->'jd'->'first'->'id'));
+  perform pg_temp.rrv_assert(context->>'status'='available' and context->'attempt'->'id'=oracle->'evidence'->'id' and jsonb_array_length(context->'headerSnapshot'->'groups')=1,'historical_original_attempt_despite_later1001');
+  -- One new header projection must not retain another full section plan per active group.
+  scope:=private.entry_regroup_scope(owner_id,analysis_id,(oracle->'evidence'->>'id')::uuid);
+  select content into strict raw from public.canonical_resume_versions where id=head1;
+  loaded:=private.entry_regroup_prove_data(scope,jsonb_build_object('versionId',head1,'revision',2,'contentSha256',encode(extensions.digest(convert_to(raw::text,'UTF8'),'sha256'),'hex'),'locale',raw->'locale'),1,private.entry_regroup_cache());
+  select count(*) into memo_before from jsonb_object_keys(loaded->'cache'->'resolutions');
+  headers_view:=private.requirement_header_context(scope,loaded->'data',loaded->'cache');
+  select count(*) into memo_after from jsonb_object_keys(headers_view->'cache'->'resolutions');
+  perform pg_temp.rrv_assert(memo_before=memo_after and jsonb_array_length(headers_view->'headerSnapshot'->'groups')=1,'temporary_context_resolution_evicted_preserving_prior_memo');
+  context:=public.read_requirement_relationship_context(gen_random_uuid(),analysis_id,selected);
+  perform pg_temp.rrv_assert(context->>'status'='not_found' and (select count(*)=3 from jsonb_object_keys(context)),'foreign_owner_no_payload');
+  begin
+    insert into public.data_requests(organization_id,user_id,kind) values(org_id,owner_id,'deletion');
+    context:=public.read_requirement_relationship_context(owner_id,analysis_id,selected);
+    perform pg_temp.rrv_assert(context->>'status'='not_found' and (select count(*)=3 from jsonb_object_keys(context)),'privacy_deletion_no_payload');
+    raise exception 'RRV_BRANCH_ROLLBACK' using errcode='PZ001';
+  exception when sqlstate 'PZ001' then perform pg_temp.rrv_assert(true,'isolated_fixture_branch_rolled_back');end;
+  begin
+    grant execute on function private.jd_relation_utf16_length(text) to authenticated;
+    perform pg_temp.rrv_assert(not private.canonical_correction_write_ready(),'jd_acl_drift_detected');
+    context:=public.read_requirement_relationship_context(owner_id,analysis_id,selected);
+    perform pg_temp.rrv_assert(context->>'status'='unavailable','profile_drift_refuses');
+    raise exception 'RRV_BRANCH_ROLLBACK' using errcode='PZ001';
+  exception when sqlstate 'PZ001' then perform pg_temp.rrv_assert(true,'isolated_fixture_branch_rolled_back');end;
+  -- Private arithmetic boundary controls; never submitted caller cache or public authority.
+  fresh:=private.requirement_relationship_charge(private.entry_regroup_cache(),'requirements','rrv-cost','{"key":"scalar"}');
+  scalar:=2000000-(fresh->>'work')::bigint;
+  c:=private.requirement_relationship_charge(jsonb_set(private.entry_regroup_cache(),'{work}',to_jsonb(scalar)),'requirements','rrv-boundary','{"key":"scalar"}');
+  perform pg_temp.rrv_assert(c->'work'='2000000','shared_work_exact_boundary');
+  begin
+    perform private.entry_regroup_work(c,1);raise exception 'RRV_MISSING_BOUNDARY_REFUSAL' using errcode='23514';
+  exception when sqlstate 'P0C03' then perform pg_temp.rrv_assert(true,'shared_work_overflow_refused');end;
+  perform pg_temp.rrv_assert(private.canonical_correction_write_ready(),'profile_restored_after_isolated_refusals');
+  raise notice 'RRV_PREPARED_NATIVE_CASES_COMPLETE_ROLLBACK_REQUIRED';
+end;$rrv_native$;
+rollback;

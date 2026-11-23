@@ -1,0 +1,392 @@
+[
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "owner_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "organization_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "resume_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "analysis_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "source_resume_version_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "evidence_attempt_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "input_sha256",
+    "type": "text",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "association_revision",
+    "type": "integer",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "previous_batch_id",
+    "type": "uuid",
+    "notNull": false
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "idempotency_key",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "command",
+    "type": "jsonb",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "command_bytes",
+    "type": "bytea",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "command_sha256",
+    "type": "text",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "codec_version",
+    "type": "text",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "result_version_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "result_revision",
+    "type": "integer",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "storage_key",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "result_content_sha256",
+    "type": "text",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_batches",
+    "name": "created_at",
+    "type": "timestamptz",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "batch_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "owner_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "organization_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "resume_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "source_resume_version_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "result_version_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "group_order",
+    "type": "integer",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "page_id",
+    "type": "text",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "method",
+    "type": "text",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "section_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "entry_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_groups",
+    "name": "source_selection",
+    "type": "jsonb",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "group_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "batch_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "owner_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "organization_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "resume_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "source_resume_version_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "result_version_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "source_order",
+    "type": "integer",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "entry_order",
+    "type": "integer",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "assertion_id",
+    "type": "text",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "field",
+    "type": "text",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "fact_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "original_entry_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.candidate_entry_association_members",
+    "name": "citations",
+    "type": "jsonb",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_snapshots",
+    "name": "canonical_version_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_snapshots",
+    "name": "owner_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_snapshots",
+    "name": "organization_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_snapshots",
+    "name": "resume_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_snapshots",
+    "name": "source_resume_version_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_snapshots",
+    "name": "evidence_attempt_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_snapshots",
+    "name": "origin_batch_id",
+    "type": "uuid",
+    "notNull": false
+  },
+  {
+    "table": "public.canonical_entry_association_snapshots",
+    "name": "origin_kind",
+    "type": "text",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_snapshots",
+    "name": "inherited_from_version_id",
+    "type": "uuid",
+    "notNull": false
+  },
+  {
+    "table": "public.canonical_entry_association_snapshots",
+    "name": "restored_from_version_id",
+    "type": "uuid",
+    "notNull": false
+  },
+  {
+    "table": "public.canonical_entry_association_links",
+    "name": "canonical_version_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_links",
+    "name": "group_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_links",
+    "name": "owner_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_links",
+    "name": "organization_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_links",
+    "name": "resume_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_links",
+    "name": "source_resume_version_id",
+    "type": "uuid",
+    "notNull": true
+  },
+  {
+    "table": "public.canonical_entry_association_links",
+    "name": "origin_batch_id",
+    "type": "uuid",
+    "notNull": true
+  }
+]

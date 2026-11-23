@@ -1,0 +1,47 @@
+# U03 canonical rejected-draft recovery
+
+Status: **IMPLEMENTED; focused checks PASS; Root combined gate pending.** This four-file packet follows `u03-canonical-draft-allocation.json` and the coordinator contract. The existing frontend worktree remains at `a0b239299d75b0bd64b588fe743ebe2975fb28b9` plus preserved dirty inputs. No shared plan or configuration changed.
+
+## Reproduced behavior
+
+The initial named RED run exposed three authenticated, strictly parsed route failures: rejected edit commands at 409 and 422, and a rejected section rename at 409, lost their submitted command. A real client React Router submission also confirmed that its default 4xx behavior did not refresh the current loader. The no-reflection control passed. Four initial static-render cases had a detached-container accessibility-query error; those failures were test setup errors, not product evidence.
+
+After attaching each static-render container to the document, only those four cases ran again. Each then failed because the retained-draft region was absent: edit, section rename, historical view and missing target. These local static requests use the actual route action, authentication/parser boundary and Router rendering, with a mocked mutation rejection. They do not prove a native browser or managed database result.
+
+## Repair
+
+A failed action returns a retained command only after authentication and successful strict parsing, and only for `edit` or `rename_section`. Invalid, unauthenticated and successful submissions do not echo draft data. The response remains private and uncached. A client-side structural guard permits revalidation for this retained error response without importing a runtime server parser into client code.
+
+The ordinary fact editor and retained recovery forms post to the unqualified canonical route. An old history query therefore does not trap the failed response on its formerly current version. The old command remains separate from the refreshed model. The retained panel displays the parsed text safely, preserves visual whitespace and offers an immutable exact retry with its original key, version, target and value.
+
+A distinct new-attempt form shows the current saved value and retained proposal. It uses the current head, fresh loader key and the same actual fact or section ID. It requires a fresh native review checkbox and checks native validity on JavaScript submission. No saved confirmation is granted by this acknowledgement. An edit still produces an unconfirmed correction under the existing domain rules. A section rename keeps its existing semantics.
+
+Historical views and missing targets keep the draft readable without enabling either recovery mutation. No target is inferred from its value, field or nearby position. The ordinary editor for the retained fact is hidden to avoid silently prefilling a fresh attempt with the old draft. The review acknowledgement resets when its exact head, target, value or key binding changes and after a persisted `pageshow`; the page-memory draft survives those resets.
+
+The first affected two-file run passed 39/40 cases. Its remaining assertion initially inspected the former checkbox after explicit loader revalidation. Waiting for the current head revealed another actual behavior: React Router clears action data on this reload, removing the draft panel. The component now retains only the already parsed command in page memory, bound to analysis, resume, source and owner identity. New feedback replaces or clears it, and a source change discards it. There is no local storage or draft text in a URL. Page reload still loses this temporary memory; the panel tells the candidate to copy the text before leaving or reloading.
+
+## Verification and preserved receipts
+
+All original test declarations remain byte-identical: 14 unit declarations expand to 21 original cases, plus 10 original component cases. Their bodies and assertions were not removed, disabled or weakened. The final files contain 25 route cases and 15 component cases. One extra affected two-file run occurred while refining the loader assertion because a command sequence continued after a preparation assertion failed; that 39/40 failed receipt is retained rather than hidden. The earlier 282-case campaign was not repeated.
+
+After the page-memory repair, only the affected client recovery case ran and passed. Its final follow-up also passed with the source-identity clearing assertion. It checks the fresh head/key after reload, unchanged exact retry, fresh acknowledgement, persisted history reset, native checked-property restoration and source-change clearing. The remaining 39 cases passed before that last production delta; Root's combined seven-file gate must verify the final integrated candidate. This handoff does not claim a final 40/40 run at the final hashes.
+
+Scoped final TypeScript passed with three roots, three ambient inputs, 474 source files and zero diagnostics. Scoped lint, formatting and `git diff --check` passed. Source comparison found no changed or missing original test declaration. The sealed Node 22 evidence directory is `/private/tmp/resumide-u03-canonical-draft-t7uaq0u3/`:
+
+- `red.json/log`: initial route/client failures and disclosed static-render setup errors.
+- `ssr-red.json/log`: four corrected static-render product failures.
+- `green.json/log` and `revalidation-followup.json/log`: preserved 39/40 intermediate results.
+- `memory-followup.json/log` and `source-binding-followup.json/log`: affected-case passes.
+- `types.json`, `static-final.json`, related logs and `assertion-preservation.json`: final scoped static checks and preservation evidence.
+
+Behavioral receipts record stable scoped source hashes and absent owned process groups. They used sealed fake configuration without dotenv or live credentials. The React Router hydration-fallback warning is retained in the logs; it did not fail these checks. No database, SQL, provider, Docker, browser, owner-file, Git mutation or deployment ran. Native history behavior, visual review, managed concurrency and formal release acceptance remain separate gates.
+
+## Final source packet
+
+| File                                             | SHA-256                                                            |
+| ------------------------------------------------ | ------------------------------------------------------------------ |
+| `app/routes/analysis.canonical.tsx`              | `126f64cb143b9acca874353c81355f285bc06f1e71852ea723c4065e69ce3acd` |
+| `tests/unit/canonical-route.test.ts`             | `91ff494d1b551744ce5c911afa574b56935fca1aa5f6eebb6bf3fd62f89ffc2c` |
+| `tests/components/CanonicalCorrections.test.tsx` | `3ad7337cee4085b5bdb2c080a07717673906c150cc6230cfcb44f1b1ce2098d0` |
+
+Original baselines are route `50f0f006`, unit `0256c28f` and component `c4512586`; the allocation records their full hashes. Root owns durable receipt integration, the combined gate and shared task status.

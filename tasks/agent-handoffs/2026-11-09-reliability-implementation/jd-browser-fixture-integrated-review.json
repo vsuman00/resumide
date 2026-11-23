@@ -1,0 +1,73 @@
+{
+  "status": "VERIFIED_LOCAL_SOURCE_ONLY",
+  "recordedAt": "2026-11-21T06:16:45.687385+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "dirtyScope": "11 new harness files; prior raw application/schema/config unchanged",
+  "receipt": "jd-browser-fixture-85486e7d-6958-400d-9b82-1c8e818dfa12.json",
+  "receiptSha256": "fe3f1b10b1a31017bea67a9ca2cc0846c66b4e659d66993379b61c5a3c5ed54e",
+  "preservedFailedReceipt": "jd-browser-fixture-97ff123d-3802-4b98-80c6-8a54c96f9735.json",
+  "checks": [
+    {
+      "label": "affected-source-format",
+      "code": 0
+    },
+    {
+      "label": "affected-tests",
+      "code": 0
+    },
+    {
+      "label": "typecheck",
+      "code": 0
+    },
+    {
+      "label": "lint",
+      "code": 0
+    },
+    {
+      "label": "standalone-harness-lint",
+      "code": 0
+    }
+  ],
+  "freshTests": 135,
+  "freshTestFiles": 3,
+  "checkedHashes": {
+    "gateInputs": 1014,
+    "priorRawInputs": 993,
+    "integratedFiles": 11,
+    "carriedBuildSources": 403,
+    "carriedCompleteBuildFiles": 105
+  },
+  "sourceDriftDuringGate": [],
+  "sourceDriftAfterGate": [],
+  "rawReportSha256": "f3f1d7f69f8eaeb0a1d9ad49c607692ceae653304b7635ce58e8d78218431da5",
+  "logSha256": "07e41f5e1ba25918fdd6080c50e9cdf737300ce2391e5ab54fc50f63d9f034bf",
+  "absentCommandGroupsAndController": [8138, 8147, 8160, 8184, 8255, 8126],
+  "buildEvidence": "Carried by exact source/artifact hashes; no new build performed",
+  "actualBrowser": "NOT_RUN",
+  "sqlExecution": "NOT_RUN",
+  "fullFixtureCleanup": "BLOCKED_ADMISSION_RETIREMENT_UNAVAILABLE",
+  "targetAdmitted": false,
+  "expectedTargetUrl": null,
+  "deployment": "HOLD",
+  "lintWarnings": 4,
+  "independentSourceReviews": [
+    {
+      "agent": "jd_browser_backend_resume",
+      "scope": "Runtime/frontend source against routes and final hashes; retained failed receipt",
+      "result": "ACK_NO_NEW_CONCRETE_DEFECT",
+      "readOnly": true
+    },
+    {
+      "agent": "jd_browser_frontend_resume",
+      "scope": "Backend owned polling/evidence/writers and truthful cleanup against admission/privacy source",
+      "result": "ACK_NO_NEW_MATERIAL_ISSUE",
+      "readOnly": true
+    },
+    {
+      "agent": "jd_browser_runtime_resume",
+      "scope": "135/3 exact report/log, 1014 source hashes, carried403/105 build bytes/membership, five command groups/controller",
+      "result": "ACK",
+      "readOnly": true
+    }
+  ]
+}

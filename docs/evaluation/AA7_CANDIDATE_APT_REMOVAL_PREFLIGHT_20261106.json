@@ -1,0 +1,82 @@
+{
+  "status": "pass",
+  "imageId": "sha256:19d2a00a2a830173bf1fae07dddfcac7d54be3047e58b276af031d3cbd1018ac",
+  "scope": "Installed dependency/status metadata and native APT simulation only",
+  "network": "none",
+  "rootReadOnly": true,
+  "user": "65532:65532",
+  "hostMounts": 0,
+  "forwardedEnvironment": 0,
+  "actualRemovalPerformed": false,
+  "buildPerformed": false,
+  "projectEnvironmentChanged": false,
+  "exitCode": 0,
+  "metadata": {
+    "statusSha256": "0329f319be88a385e431929c6aa985b1bc4260532373849508db3eba6f49d0cb",
+    "installedPackageCount": 190,
+    "targets": {
+      "apt": {
+        "Package": "apt",
+        "Version": "2.6.1",
+        "Architecture": "arm64",
+        "Status": "install ok installed",
+        "Essential": null,
+        "Protected": null,
+        "Priority": "required",
+        "Depends": "adduser, gpgv | gpgv2 | gpgv1, libapt-pkg6.0 (>= 2.6.1), debian-archive-keyring, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libgnutls30 (>= 3.7.5), libseccomp2 (>= 2.4.2), libstdc++6 (>= 11), libsystemd0",
+        "Pre-Depends": null
+      },
+      "libapt-pkg6.0": {
+        "Package": "libapt-pkg6.0",
+        "Version": "2.6.1",
+        "Architecture": "arm64",
+        "Status": "install ok installed",
+        "Essential": null,
+        "Protected": null,
+        "Priority": "optional",
+        "Depends": "libbz2-1.0, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libgcrypt20 (>= 1.10.0), liblz4-1 (>= 0.0~r127), liblzma5 (>= 5.1.1alpha+20120614), libstdc++6 (>= 11), libsystemd0 (>= 221), libudev1 (>= 183), libxxhash0 (>= 0.7.1), libzstd1 (>= 1.5.2), zlib1g (>= 1:1.2.2.3)",
+        "Pre-Depends": null
+      }
+    },
+    "reverseDependencies": [
+      {
+        "package": "apt",
+        "field": "Depends",
+        "targets": ["libapt-pkg6.0"],
+        "value": "adduser, gpgv | gpgv2 | gpgv1, libapt-pkg6.0 (>= 2.6.1), debian-archive-keyring, libc6 (>= 2.34), libgcc-s1 (>= 3.0), libgnutls30 (>= 3.7.5), libseccomp2 (>= 2.4.2), libstdc++6 (>= 11), libsystemd0"
+      }
+    ],
+    "closureManifestSha256": "abf9544cad5aa54ab023c4bb597c01b44f7a4bdb9435eab867d17b711065e0c8",
+    "targetPackageClosureFileOverlaps": {
+      "apt": [],
+      "libapt-pkg6.0": []
+    },
+    "simulation": {
+      "argv": [
+        "apt-get",
+        "--simulate",
+        "-o",
+        "Debug::NoLocking=true",
+        "--no-auto-remove",
+        "purge",
+        "apt",
+        "libapt-pkg6.0"
+      ],
+      "exitCode": 0,
+      "stdout": "NOTE: This is only a simulation!\n      apt-get needs root privileges for real execution.\n      Keep also in mind that locking is deactivated,\n      so don't depend on the relevance to the real current situation!\nReading package lists...\nBuilding dependency tree...\nReading state information...\nThe following packages were automatically installed and are no longer required:\n  adduser debian-archive-keyring gpgv libgnutls30 libhogweed6 libnettle8\n  libp11-kit0 libseccomp2 libtasn1-6 libxxhash0\nUse 'apt autoremove' to remove them.\nThe following packages will be REMOVED:\n  apt* libapt-pkg6.0*\nWARNING: The following essential packages will be removed.\nThis should NOT be done unless you know exactly what you are doing!\n  apt libapt-pkg6.0 (due to apt)\n0 upgraded, 0 newly installed, 2 to remove and 0 not upgraded.\nPurg apt [2.6.1]\nPurg libapt-pkg6.0 [2.6.1]\n",
+      "stderr": "",
+      "plannedRemovals": [
+        {
+          "operation": "Purg",
+          "package": "apt"
+        },
+        {
+          "operation": "Purg",
+          "package": "libapt-pkg6.0"
+        }
+      ],
+      "actualRemovalPerformed": false
+    }
+  },
+  "ownedContainerAbsent": true
+}

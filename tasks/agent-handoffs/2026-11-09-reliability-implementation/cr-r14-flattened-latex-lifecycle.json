@@ -1,0 +1,57 @@
+{
+  "id": "CR-R14-S10",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_EXACT_IMAGE_LIFECYCLE",
+  "admissionReceipt": "cr-r14-local-pdf-primary-admission.json",
+  "admissionReceiptSha256": "afdfc6b82faf8ede045e36690c1992d5c3457a7efae7f83c258981f14df31231",
+  "evidenceTier": "Actual immutable local Docker worker using synthetic inputs",
+  "verifier": {
+    "imageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "profile": "focused-lifecycle",
+    "checks": [
+      {
+        "name": "production-cancel-cleanup",
+        "pass": true
+      },
+      {
+        "name": "active-production-cancellation-cleanup",
+        "pass": true
+      },
+      {
+        "name": "real-paused-worker-wall-timeout-cleanup",
+        "pass": true,
+        "elapsedMs": 20156
+      },
+      {
+        "name": "actual-two-active-admission-and-cleanup",
+        "pass": true
+      },
+      {
+        "name": "same-process-benign-recovery",
+        "pass": true,
+        "pages": 2,
+        "pdfSha256": "d649b6b2bedbd7622f95a919e994b40ece49c1df268bc1a4c98ba07756c32926"
+      }
+    ],
+    "checksExecuted": 5
+  },
+  "sourceHashes": {
+    "scripts/verify-latex-sandbox.ts": "f20e72330d165333f9b0bd5256308151531ad317fe6905298462b968871a1e64",
+    "scripts/verify-latex-lifecycle.ts": "940f5d74920c2be069b4f94c55956afe185b32b062682e1c54a6fbed1c819f8e",
+    "scripts/latex-test-fixtures.ts": "4876b560d3f4ee9b9077f1737f20151003086c83795e0312231e7bc9b7f3113b",
+    "package.json": "a967d277f7da84c3ab8c879bf2d57d557b7701b0ea641f226a8df595fe9bc992"
+  },
+  "runtimeLogSha256": "d48d624ea6095945aae18af866457ee6271299fb216f40df6f9d8593058d7718",
+  "nativeOperation": "The test holds worker input open without sending document bytes. Recovery sends an ordinary two-page LaTeX document to the real compiler.",
+  "ownedContainersRemaining": 0,
+  "tests": {
+    "typecheck": "pass",
+    "check:latex:source": "pass"
+  },
+  "open": [
+    "The harness fallback cleanup path was not exercised.",
+    "Broader runtime and release acceptance remains open."
+  ]
+}

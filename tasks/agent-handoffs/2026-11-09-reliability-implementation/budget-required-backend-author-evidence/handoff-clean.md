@@ -1,0 +1,15 @@
+# Mandatory technical budget for owned provider claims
+
+Source implementation is frozen for Root integration under `budget-required-contract.json` SHA `a41b99990fd04267017e823f21043b1965ba378057b83741a973b6cb7c7198d9`. No Native acceptance or activation is claimed.
+
+The CLI-created forward migration is `20261115182650_mandatory_ai_budget_dispatch.sql`, SHA `dea94b91a3f8b03e3f81e18a4b44a71e49bf88a387446f1277913aa401130d8e`. It inserts one guard after each existing no-dispatch replay exit. Fresh A12 claims reject SQL or JSON null budget. Fresh A13 claims also reject a missing or JSON-null stored technical policy version. Existing strict technical/source validation still follows these guards.
+
+The remaining seven function changes renew exact checker pins. Seven Node profile files renew actual digests. There are no schema, seal, permission, flag, price, policy-parser or late-accounting changes. A12 writing policy has no technical policy field; none was added. Earlier policy, replay, settlement, outcome, finish and publication bodies are preserved. Existing admitted historical attempts can finish through their unchanged static paths.
+
+The initial test run failed both actual predecessor source assertions. The next run passed seven assertions and failed the author inventory assertion because the text replay helper omitted an older `changes` manifest. The helper was corrected; product bodies were unaffected. The affected consumer gate then recorded 140 passes and nine stale fingerprint failures. Root authorized seven historical test bridges. Their first author run exposed incorrectly scoped fixture declarations and one whole-file fixture mismatch; the corrected successor passed. Every failed log and receipt remains in the release packet.
+
+Final verification: 156 tests across 10 files passed with stable source, one Vitest worker, and sealed fake environment. Scoped ESLint and Prettier checks passed on 15 files. All 748 prior expect-expression spans and 40 frozen profile objects remain byte-for-byte present. Root owns the integrated unit/component/type/lint/web/worker gate. No author broad suite or build was run.
+
+Evidence and immutable snapshots are in `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-budget-required-backend-ab7dh9vh/release.json`. Receipts bind source manifests, exact command logs, start identities, process groups and child closure. Each child had a 120-second and 8 MiB log bound; network and dotenv reads were denied. CLI version/help/new used the installed 2.117.0 binary and an empty HOME.
+
+`scripts/verify-mandatory-ai-budget.sql` is an unparsed, unexecuted, privileged mutating rollback-only draft. It checks installed pins/readiness and function-drift refusal in a future disposable database. It does not establish actual null-claim transaction behavior, provider execution, concurrency, physical cleanup or release approval. No SQL parsing/execution, DB, hosted service, actual environment, provider, dependency, Git or deployment action occurred. Full expiry/fold/purge, unknown holds, foreign actors, restore floor and Native/representative/owner/release acceptance remain open.

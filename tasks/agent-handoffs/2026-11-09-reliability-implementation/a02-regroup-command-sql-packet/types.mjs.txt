@@ -1,0 +1,7 @@
+import {createRequire} from 'node:module';
+const root="/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats";const require=createRequire(root+'/package.json');const ts=require('typescript');
+const file=ts.readConfigFile(root+'/tsconfig.json',ts.sys.readFile);if(file.error)throw Error('TSC_CONFIG_FAILED');
+const parsed=ts.parseJsonConfigFileContent(file.config,ts.sys,root);const roots=['tests/unit/entry-regroup-command-sql.test.ts'].map(x=>root+'/'+x);
+const program=ts.createProgram(roots,{...parsed.options,noEmit:true});const diagnostics=ts.getPreEmitDiagnostics(program);
+process.stdout.write(JSON.stringify({roots:roots.length,sourceFiles:program.getSourceFiles().filter(f=>!f.isDeclarationFile&&f.fileName.startsWith(root)).length,diagnostics:diagnostics.length})+'\n');
+if(diagnostics.length){process.stdout.write(ts.formatDiagnosticsWithColorAndContext(diagnostics,{getCurrentDirectory:()=>root,getCanonicalFileName:x=>x,getNewLine:()=>'\n'}));process.exitCode=1;}

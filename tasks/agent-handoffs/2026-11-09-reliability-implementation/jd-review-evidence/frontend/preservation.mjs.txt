@@ -1,0 +1,11 @@
+import ts from '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/typescript/lib/typescript.js';
+import {readFileSync,writeFileSync} from 'node:fs';
+const receipt='/private/tmp/resumide-u04-history-u7pp19rw';
+const root='/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats';
+function cases(src){const sf=ts.createSourceFile('test.ts',src,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);const result=new Map();function visit(node){if(ts.isCallExpression(node)&&node.arguments.length&&ts.isStringLiteralLike(node.arguments[0])&&(ts.isIdentifier(node.expression)&&node.expression.text==='it'||ts.isCallExpression(node.expression)&&ts.isPropertyAccessExpression(node.expression.expression)&&node.expression.expression.expression.getText(sf)==='it'&&node.expression.expression.name.text==='each'))result.set(node.arguments[0].text,node.getText(sf));ts.forEachChild(node,visit);}visit(sf);return result;}
+const prior=cases(readFileSync(receipt+'/baseline-1.txt','utf8')),current=cases(readFileSync(root+'/tests/unit/job-requirement-route.test.ts','utf8'));
+const changed=[...prior.keys()].filter(key=>prior.get(key)!==current.get(key));
+function serverDeclarations(src){const sf=ts.createSourceFile('route.tsx',src,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);return sf.statements.filter(node=>ts.isFunctionDeclaration(node)&&['loader','action','enabled'].includes(node.name?.text)).map(node=>node.getText(sf));}
+const serverUnchanged=JSON.stringify(serverDeclarations(readFileSync(receipt+'/baseline-0.txt','utf8')))===JSON.stringify(serverDeclarations(readFileSync(root+'/app/routes/analysis.requirements.tsx','utf8')));
+const result={oldCaseDeclarations:prior.size,currentCaseDeclarations:current.size,changedOrMissingOldCases:changed,serverLoaderActionEnabledByteIdentical:serverUnchanged};
+writeFileSync(receipt+'/assertion-preservation.json',JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));process.exit(changed.length||!serverUnchanged?1:0);

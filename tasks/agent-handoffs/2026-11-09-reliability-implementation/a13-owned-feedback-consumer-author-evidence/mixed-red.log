@@ -1,0 +1,44 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/initial-feedback-consumer.test.ts (14 tests | 2 failed | 12 skipped) 68ms
+   ↓ exposes recoverable owned-feedback unavailability without losing legacy result
+   ↓ refuses actual owned-feedback access denial instead of displaying a stale legacy result
+   ↓ projects actual owned current publication with retained compatibility indices and no private payload
+   ↓ projects actual owned historical publication with retained compatibility indices and no private payload
+   ↓ does not pair independently fetched altered feedback with valid publication proof
+   ↓ malformed mapping and foreign owned data remain unverified without borrowing proof
+   ↓ keeps actual pending metadata separate from saved unverified suggestions
+   ↓ retains explicit legacy_unbound from the actual read protocol
+   ↓ honestly classifies actual deterministic-only publication without completing writing
+   ↓ does not call Native readers before authentication and preserves scoped SQL filters
+   ↓ pure server projection fails closed for foreign scope and retained-text swaps
+   ↓ real read helper propagates access denial and never exposes raw details
+   × mixed source/editorial children remain editorial: [ 'source_claim', …(1) ] 49ms
+   × mixed source/editorial children remain editorial: [ 'editorial_observation', …(1) ] 18ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-consumer.test.ts > mixed source/editorial children remain editorial: [ 'source_claim', …(1) ]
+ FAIL  tests/unit/initial-feedback-consumer.test.ts > mixed source/editorial children remain editorial: [ 'editorial_observation', …(1) ]
+AssertionError: expected 'source_claim' to be 'editorial_observation' // Object.is equality
+
+Expected: "editorial_observation"
+Received: "source_claim"
+
+ ❯ tests/unit/initial-feedback-consumer.test.ts:575:106
+    573|   expect([part.title.kind,part.explanation.kind]).toEqual(vector.kinds…
+    574|   const provenance=projectInitialFeedbackConsumer(f.read,f.feedback,f.…
+    575|   expect(provenance.tips.find(t=>t.category==='toneAndStyle'&&t.compat…
+       |                                                                                                          ^
+    576|   expect(visibleFeedbackGroups(f.feedback,false,provenance).flatMap(g=…
+    577| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 12 skipped (14)
+   Start at  16:01:12
+   Duration  432ms (transform 167ms, setup 0ms, import 302ms, tests 68ms, environment 0ms)
+

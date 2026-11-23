@@ -1,0 +1,28 @@
+{
+  "task": "CR-U03",
+  "status": "READ_ONLY_AUDIT_BEFORE_REPRODUCTION",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "rootHashes": {
+    "app/routes/analysis.canonical.tsx": "50f0f0061efba370ab1cc40d0ff8b0c9f687b574dbccedc1aaa073bf8e808ebf",
+    "app/components/AuthoringWorkspace.tsx": "1059f826db304d395907ccaff91117942af2cfbe2a7f1a86855b66a14a2275cb",
+    "app/lib/authoring-ui.ts": "1acf3ab6915d8a553962be60f07554d9f5cb9c73cb1ad16b4b0183db0604cd89",
+    "app/lib/server/canonical-content.ts": "b0e4f8d7f0fb032252fbca538ba2207df6cbd27e33b382a5f9ffb29bea511bf5",
+    "app/lib/server/canonical-repository.ts": "c50eed9f614ef6221ebecc3268a626d4511cd250dafb9042040dbc1541ae4d53",
+    "app/lib/server/authoring-repository.ts": "465c694a79f441b5fcffe19cfb38e7de95c29633f70cdedca6bab639b1f3a05c",
+    "tests/unit/authoring-forms.test.ts": "23c0184a6ecc8a5903bdd3a0a5261bfba380607421cdcbf1caf3f72ba4e58bb9",
+    "tests/unit/canonical-route.test.ts": "0256c28fedaa6959417d478ebf316a6803596ea46af9c50eabebdfa2c0e592b1"
+  },
+  "reviewers": {
+    "a04_frontend": "Exact displayed draft/value/version/target, keyboard confirmation, pageshow/history, acknowledgement reset and draft retention in canonical/authoring UI",
+    "a04_backend": "Exact immutable fact confirmation, source/target/head binding, content edits/rollback/AI acceptance and server form validation; read-only",
+    "a04_runtime": "SQL confirm/CAS/idempotency and export/score uncertainty floors, identify existing tested controls and true native evidence gaps; read-only"
+  },
+  "boundaries": [
+    "Read current integrated Root sources; old worker copies may be stale",
+    "No edits/tests until concrete failure hypothesis and bounded file ownership are agreed",
+    "Do not repeat closed282 test gate or provider/compiler/owner-file campaigns",
+    "No SQL parsing/application/execution, hosted operations, Docker database, new provider/key/data/Git/deployment",
+    "Preserve exact-value confirmation, unconfirmed materialized facts, source provenance and withheld authoritative numbers"
+  ],
+  "next": "Root reviews findings and assigns a concrete UI/backend repair only if needed; native/browser gates stay separate."
+}

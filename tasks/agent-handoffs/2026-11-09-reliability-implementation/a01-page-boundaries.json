@@ -1,0 +1,49 @@
+{
+  "task": "CR-A01-S01",
+  "status": "VERIFIED_SCOPED_ENGINEERING",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "files": {
+    "app/lib/server/ocr/pdf-detection.ts": "d31e93982dfeb7fa864f13a97672b6c648c3b9e92c4af96f46c7f47e75dd0113",
+    "app/lib/server/document-extraction.ts": "66d48644a13c08b109ba9b9d60d064b6bd1f62458b2a3cd01bce2dffdacac926",
+    "tests/unit/ocr/extraction-router.test.ts": "68bda4a2e480479ebcc47f74924d97c7505a5d2318289cad2aa0758bb68c2b3a",
+    "tests/unit/document-extraction.test.ts": "426738614f7caee0d878655447e0e90b86f6d7843e048931a354fe031a16fd26",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend.md": "62f66e27c958e99c5cefbd70100bb65cbf7bec522ac07c776cfca4601aec54d0"
+  },
+  "reviewer": "root coordinator",
+  "redChronology": [
+    {
+      "phase": "initial array cases",
+      "failed": 9,
+      "passed": 15
+    },
+    {
+      "phase": "declared count cases",
+      "failed": 14,
+      "passed": 15
+    },
+    {
+      "phase": "root-review sparse arrays and single-page document fallback",
+      "failed": 4,
+      "passed": 29
+    }
+  ],
+  "finalFocused": {
+    "passed": 33,
+    "exitCode": 0
+  },
+  "affectedConsumers": {
+    "passed": 105,
+    "files": 6,
+    "exitCode": 0
+  },
+  "workerChecks": [
+    "scoped ESLint",
+    "scoped Prettier"
+  ],
+  "schemaChanges": false,
+  "providerRequests": 0,
+  "databaseOperations": 0,
+  "dockerOperations": 0,
+  "fullTask": "CR-A01 remains PARTIAL: content-quality diagnostics still required",
+  "integratedVerification": "PASS: integrated-verify-01.json, 1527 tests/162 files and source-stable type/lint/web/worker checks"
+}

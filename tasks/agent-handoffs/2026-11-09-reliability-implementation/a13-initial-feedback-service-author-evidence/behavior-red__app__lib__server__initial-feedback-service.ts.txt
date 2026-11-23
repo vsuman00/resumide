@@ -1,0 +1,494 @@
+import { createHash } from "node:crypto";
+import { zodResponseFormat } from "openai/helpers/zod";
+import {
+  createInitialFeedbackOperationRepository,
+  InitialFeedbackOperationError,
+  type InitialFeedbackOperationClient,
+  type InitialFeedbackOperationScope,
+  type InitialFeedbackWinningDispatch,
+  type InitialFeedbackBudgetClaim,
+} from "./initial-feedback-operation-repository";
+import {
+  createInitialFeedbackPublicationRepository,
+  matchesInitialFeedbackPublication,
+} from "./initial-feedback-publication-repository";
+import {
+  INITIAL_FEEDBACK_CAPABILITIES,
+  InitialFeedbackProfileSchema,
+  type InitialFeedbackProfile,
+  type InitialFeedbackPrepare,
+  type InitialFeedbackOperation,
+  type InitialFeedbackCompletion,
+  type InitialFeedbackPublication,
+  type InitialFeedbackContext,
+} from "./initial-feedback-operation-contract";
+import {
+  InitialFeedbackAiFailure,
+  resolveInitialFeedbackGeneration,
+  type InitialFeedbackRawTransport,
+  type InitialFeedbackRawCapture,
+} from "./initial-feedback-ai";
+import { compileInitialFeedbackPlan } from "./initial-feedback-plan";
+import { ProseGenerationSchema, PROSE_INSTRUCTIONS } from "./qualitative-prose";
+import { buildRewriteSources } from "./rewrite-sources";
+import { runProviderAttempt, type ProviderUsage } from "./provider-attempt";
+import {
+  createAiBudgetClient,
+  AiBudgetError,
+  type AiBudgetReceipt,
+} from "./ai-budget";
+import {
+  runBudgetedAiAttempt,
+  reserveAiBudgetTokens,
+} from "./ai-budget-attempt";
+import { readOwnedAiUsage } from "./owned-ai-usage";
+
+export type InitialFeedbackServiceResult =
+  | { kind: "published"; publication: InitialFeedbackPublication }
+  | {
+      kind: "pending";
+      operationId: string;
+      attemptId: string | null;
+      reason:
+        | "pending"
+        | "claim_not_won"
+        | "accounting_unavailable"
+        | "finish_unresolved";
+    };
+export interface InitialFeedbackServiceOptions {
+  scope: InitialFeedbackOperationScope;
+  expectedProfile: InitialFeedbackProfile;
+  aiEnabled: boolean;
+  tokenLimit: string;
+  audit: { processId: string; requestId: string };
+  authorize: (context: InitialFeedbackContext) => Promise<void>;
+  createTransport: (
+    context: InitialFeedbackContext,
+  ) => InitialFeedbackRawTransport;
+  retryAfterAttemptId?: string | null;
+  signal?: AbortSignal;
+  rpcTimeoutMs?: number;
+  now?: () => number;
+}
+/** Provider key is a framed source codec, not a Native JSONB binding digest. */
+export function initialFeedbackProviderKey(
+  operation: InitialFeedbackOperation,
+  attemptId: string,
+): string {
+  const p = operation.binding.policy,
+    h = createHash("sha256").update("INITIAL-FEEDBACK-PROVIDER/1\n", "utf8");
+  for (const atom of [
+    operation.ownerId,
+    operation.organizationId,
+    operation.analysisId,
+    operation.operationId,
+    attemptId,
+    operation.bindingSha256,
+    p.model,
+    p.promptVersion,
+  ])
+    h.update(`T${Buffer.byteLength(atom, "utf8")}:${atom};`, "utf8");
+  return "initial-feedback-v1-" + h.digest("hex");
+}
+const wireUsage = (u: ProviderUsage | null) =>
+  u === null
+    ? null
+    : {
+        inputTokens: String(u.inputTokens),
+        outputTokens: String(u.outputTokens),
+      };
+const partial = (
+  reason:
+    | "ai_disabled"
+    | "historical_inputs"
+    | "source_resource_limit"
+    | "pre_dispatch_unavailable",
+): InitialFeedbackCompletion => ({
+  kind: "deterministic_only",
+  reason,
+  plan: null,
+  observation: null,
+  generationFailure: null,
+});
+/** No flags, env, worker adoption or provider construction is implicit here. */
+export async function runInitialFeedbackService(
+  client: InitialFeedbackOperationClient,
+  options: InitialFeedbackServiceOptions,
+): Promise<InitialFeedbackServiceResult> {
+  const { scope, signal } = options,
+    now = options.now ?? Date.now,
+    timeoutMs = options.rpcTimeoutMs ?? 5000;
+  const expected = InitialFeedbackProfileSchema.safeParse(
+    options.expectedProfile,
+  );
+  if (
+    !expected.success ||
+    typeof options.aiEnabled !== "boolean" ||
+    !/^(0|[1-9][0-9]{0,127})$/u.test(options.tokenLimit) ||
+    typeof options.authorize !== "function" ||
+    typeof options.createTransport !== "function"
+  )
+    throw new InitialFeedbackOperationError("invalid");
+  const publication = createInitialFeedbackPublicationRepository(
+    client,
+    {ownerId:scope.ownerId,organizationId:scope.organizationId,analysisId:scope.analysisId,lease:scope.lease},
+    expected.data,
+    { timeoutMs, now },
+  );
+  const operations = createInitialFeedbackOperationRepository(client, scope, {
+    timeoutMs,
+    now,
+  });
+  const pending = (
+    op: InitialFeedbackOperation,
+    reason: Extract<
+      InitialFeedbackServiceResult,
+      { kind: "pending" }
+    >["reason"],
+  ): InitialFeedbackServiceResult => ({
+    kind: "pending",
+    operationId: op.operationId,
+    attemptId: op.attempts.at(-1)?.attemptId ?? null,
+    reason,
+  });
+  async function finish(
+    op: InitialFeedbackOperation,
+    attemptId: string | null,
+    completion: InitialFeedbackCompletion,
+  ) {
+    try {
+      return {
+        kind: "published" as const,
+        publication: await publication.finish(
+          op,
+          attemptId,
+          completion,
+          options.audit,
+          { signal },
+        ),
+      };
+    } catch (error) {
+      if (
+        !(error instanceof InitialFeedbackOperationError) ||
+        error.mutationStatus !== "unknown"
+      )
+        throw error;
+      // Exact owned lookup BEFORE any storage-failure handling. Never downgrade
+      // a published result or pretend an unavailable lookup proves no commit.
+      try {
+        const read = await publication.read();
+        if (read.status === "available") {
+          if (
+            matchesInitialFeedbackPublication(
+              read.publication,
+              op,
+              attemptId,
+              completion,
+            )
+          )
+            return {
+              kind: "published" as const,
+              publication: read.publication,
+            };
+          throw new InitialFeedbackOperationError("stale", "refused");
+        }
+      } catch (e) {
+        if (e instanceof InitialFeedbackOperationError && e.code === "stale")
+          throw e;
+      }
+      return pending(op, "finish_unresolved");
+    }
+  }
+  const read = await publication.read({ signal });
+  if (read.status === "available")
+    return { kind: "published", publication: read.publication };
+  if (read.status === "pending" && !options.retryAfterAttemptId) {
+    if (
+      !options.aiEnabled &&
+      read.operation.attempts.every((a) => a.claimedAt === null)
+    )
+      return finish(read.operation, null, partial("ai_disabled"));
+    return pending(read.operation, "pending");
+  }
+  const prepared = await operations.prepare(
+    options.retryAfterAttemptId ?? null,
+    { signal },
+  );
+  if (prepared.status !== "prepared")
+    return pending(prepared.operation, "pending");
+  const op = prepared.operation,
+    attemptId = prepared.attempt.attemptId,
+    context = prepared.context;
+  if (!options.aiEnabled) return finish(op, null, partial("ai_disabled"));
+  if (context.generationEligibility !== "eligible")
+    return finish(op, null, partial(context.generationEligibility));
+  try {
+    await publication.assertReady(INITIAL_FEEDBACK_CAPABILITIES, { signal });
+    await runProviderAttempt({
+      timeoutMs,
+      signal,
+      failure: () => new InitialFeedbackOperationError("unavailable"),
+      execute: () => options.authorize(context),
+    });
+    const usage = await readOwnedAiUsage(
+      client,
+      {
+        ownerId: scope.ownerId,
+        organizationId: scope.organizationId,
+        analysisId: scope.analysisId,
+      },
+      {
+        profileVersion: expected.data.profileVersion,
+        usageSha256: expected.data.usageSha256,
+      },
+      { timeoutMs, signal, now },
+    );
+    if (BigInt(usage.totalTokens) >= BigInt(options.tokenLimit))
+      throw new InitialFeedbackOperationError("unavailable");
+  } catch {
+    return finish(op, null, partial("pre_dispatch_unavailable"));
+  }
+  let winning: InitialFeedbackWinningDispatch | null = null,
+    claimInvoked = false,
+    claimLost = false;
+  let observed: ProviderUsage | null = null,
+    technicalRecorded = false,
+    technicalFailed = false;
+  let originalFailure: unknown = null,
+    capture: InitialFeedbackRawCapture | null = null;
+  const observe = async (usage: ProviderUsage | null) => {
+    // Preserve safe observed counters before awaited accounting can replace errors.
+    observed = usage;
+    if (!winning) throw new InitialFeedbackOperationError("unavailable");
+    try {
+      await operations.settle(winning, {
+        usage: wireUsage(usage),
+        errorCode: null,
+      });
+      technicalRecorded = true;
+    } catch (error) {
+      technicalFailed = true;
+      throw error;
+    }
+  };
+  const executeRaw = async () => {
+    try {
+      return await options.createTransport(context).execute({
+        originalSource: context.scoringContext.extraction.text,
+        jobTitle:
+          context.scoringContext.job.kind === "owned_job"
+            ? context.scoringContext.job.title
+            : "",
+        jobDescription:
+          context.scoringContext.job.kind === "owned_job"
+            ? context.scoringContext.job.description
+            : "",
+        idempotencyKey: initialFeedbackProviderKey(op, attemptId),
+        signal,
+        onObservedUsage: observe,
+      });
+    } catch (error) {
+      originalFailure = error;
+      throw error;
+    }
+  };
+  const p = op.binding.policy;
+  let genericAccounted = false;
+  try {
+    if (p.budgetPolicyVersion === null) {
+      claimInvoked = true;
+      const claim = await operations.claim(prepared, null, { signal });
+      if (claim.status !== "won") {
+        claimLost = true;
+        return pending(op, "claim_not_won");
+      }
+      winning = claim.dispatch;
+      capture = await executeRaw();
+    } else {
+      let reserved: AiBudgetReceipt | null = null;
+      const scopedRpc = async (name: string, args: Record<string, unknown>) => {
+        if (name === "ai_budget_claim_dispatch") {
+          claimInvoked = true;
+          const claim = await operations.claim(
+            prepared,
+            args as InitialFeedbackBudgetClaim,
+            { signal },
+          );
+          if (claim.status !== "won") claimLost = true;
+          else winning = claim.dispatch;
+          return { data: claim.claim.budget, error: null };
+        }
+        if (name === "ai_budget_release") {
+          if (
+            claimInvoked ||
+            !reserved ||
+            reserved.replayed ||
+            reserved.state !== "reserved"
+          )
+            throw new AiBudgetError("AI_BUDGET_STATE");
+        } else if (name !== "ai_budget_reserve_next" && !winning)
+          throw new AiBudgetError("AI_BUDGET_STATE");
+        return runProviderAttempt({
+          timeoutMs,
+          failure: () => new AiBudgetError("AI_BUDGET_UNAVAILABLE"),
+          execute: async () => await client.rpc(name, args),
+        });
+      };
+      const base = createAiBudgetClient({ rpc: scopedRpc });
+      const budget = {
+        ...base,
+        settle: async (...args: Parameters<typeof base.settle>) => {
+          const r = await base.settle(...args);
+          genericAccounted = true;
+          return r;
+        },
+        markUnknown: async (...args: Parameters<typeof base.markUnknown>) => {
+          const r = await base.markUnknown(...args);
+          genericAccounted = true;
+          return r;
+        },
+      };
+      const s = context.scoringContext,
+        user = JSON.stringify({
+          resumeText: s.extraction.text,
+          sources: buildRewriteSources(s.extraction.text),
+          jobTitle: s.job.kind === "owned_job" ? s.job.title : "",
+          jobDescription: s.job.kind === "owned_job" ? s.job.description : "",
+        });
+      capture = await runBudgetedAiAttempt({
+        client: budget,
+        binding: {
+          userId: scope.ownerId,
+          organizationId: scope.organizationId,
+          operationId: op.operationId,
+          attemptId,
+          surface: "qualitative",
+          payloadSha256: op.bindingSha256,
+          model: p.model,
+          promptPolicyVersion: p.promptVersion,
+          policyVersion: p.budgetPolicyVersion,
+          ...reserveAiBudgetTokens({
+            system: PROSE_INSTRUCTIONS,
+            user,
+            schema: zodResponseFormat(
+              ProseGenerationSchema,
+              "initial_feedback_generation",
+            ),
+            maxOutputTokens: p.maxOutputTokens,
+          }),
+        },
+        signal,
+        onAdmitted: (r) => {
+          reserved = r;
+        },
+        execute: async (recordUsage) => {
+          const raw = await executeRaw();
+          recordUsage(raw.raw.usage);
+          if (raw.raw.usage === null)
+            throw new InitialFeedbackAiFailure("AI_PROVIDER_UNAVAILABLE", null);
+          return { value: raw, usage: raw.raw.usage };
+        },
+      });
+    }
+  } catch (error) {
+    if (!originalFailure) originalFailure = error;
+    if (!winning) {
+      if (claimInvoked) return pending(op, "claim_not_won");
+      return finish(op, null, partial("pre_dispatch_unavailable"));
+    }
+  }
+  if (claimLost || !winning) return pending(op, "claim_not_won");
+  if (technicalFailed) return pending(op, "accounting_unavailable");
+  if (!technicalRecorded) {
+    try {
+      await observe(observed);
+    } catch {
+      return pending(op, "accounting_unavailable");
+    }
+  }
+  if (p.budgetPolicyVersion !== null && !genericAccounted)
+    return pending(op, "accounting_unavailable");
+  let completion: InitialFeedbackCompletion;
+  if (originalFailure || capture === null || observed === null) {
+    const error =
+      originalFailure instanceof InitialFeedbackAiFailure
+        ? originalFailure
+        : null;
+    const code =
+      error?.code === "AI_TIMEOUT"
+        ? "timeout"
+        : error?.code === "AI_CANCELLED"
+          ? "cancelled"
+          : error?.generationFailure
+            ? "invalid_output"
+            : "provider_failed";
+    try {
+      await operations.settle(winning, {
+        usage: wireUsage(observed),
+        errorCode: code,
+      });
+    } catch {
+      return pending(op, "accounting_unavailable");
+    }
+    completion = {
+      kind: "deterministic_only",
+      reason: error?.generationFailure
+        ? "invalid_output"
+        : "provider_unavailable",
+      plan: null,
+      observation: null,
+      generationFailure: error?.generationFailure ?? null,
+    };
+  } else {
+    try {
+      const resolved = resolveInitialFeedbackGeneration(
+        context.scoringContext.extraction.text,
+        capture,
+      );
+      const compiled = compileInitialFeedbackPlan(
+        context.scoringContext.extraction.text,
+        resolved,
+      );
+      if (compiled.status === "available")
+        completion = {
+          kind: "assessed",
+          plan: compiled.plan,
+          observation: compiled.recordedObservation,
+          generationFailure: null,
+        };
+      else {
+        await operations.settle(winning, {
+          usage: wireUsage(observed),
+          errorCode: "unsupported_output",
+        });
+        completion = {
+          kind: "deterministic_only",
+          reason: "unsupported_output",
+          plan: null,
+          observation: compiled.recordedObservation,
+          generationFailure: null,
+        };
+      }
+    } catch (error) {
+      try {
+        await operations.settle(winning, {
+          usage: wireUsage(observed),
+          errorCode: "invalid_output",
+        });
+      } catch {
+        return pending(op, "accounting_unavailable");
+      }
+      completion = {
+        kind: "deterministic_only",
+        reason: "invalid_output",
+        plan: null,
+        observation: null,
+        generationFailure:
+          error instanceof InitialFeedbackAiFailure
+            ? error.generationFailure
+            : null,
+      };
+    }
+  }
+  return finish(op, attemptId, completion);
+}

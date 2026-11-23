@@ -34,3 +34,21 @@ it("applies browser policy at the framework boundary without losing private load
   expect(response.headers.get("Cache-Control")).toBe("private, no-store");
   expect(response.headers.get("Set-Cookie")).toContain("session=value");
 });
+
+it.each([
+  ["no-referrer", "no-referrer"],
+  ["unsafe-url", "strict-origin-when-cross-origin"],
+])(
+  "enforces the referrer policy with route setting %s",
+  async (policy, expected) => {
+    const response = await responseSecurity(
+      {
+        request: new Request("https://example.test/auth/callback"),
+        context: new RouterContextProvider(),
+      },
+      async () =>
+        new Response(null, { headers: { "Referrer-Policy": policy } }),
+    );
+    expect(response.headers.get("Referrer-Policy")).toBe(expected);
+  },
+);

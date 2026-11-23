@@ -1,0 +1,68 @@
+{
+  "id": "CR-U19-S12",
+  "status": "VERIFIED_LOCAL_HISTORY_SOURCE_BROWSER_ZOOM",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR on loopback with simulated Supabase Auth, Data API and Storage and two synthetic accounts",
+  "sources": {
+    "app/routes/home.tsx": "087b9e4e325b3d205cfcb49c381aded0418a947e7bebcbd554f2eec6c5db6e77",
+    "app/routes/analyses.tsx": "dc33e7fb9561d54ea671e9e6610ec817c6d41fb44aabe8abc98978cd3756197d",
+    "app/routes/resume.tsx": "66bfb2e16fa0a7a4ddf225929fa62ef3b7fe5f1f9d48c3e7dd96c0caf1b505e6",
+    "app/routes/analysis.source.ts": "d840612ab870d6dc45c4f7f803dc86f714cdf611f7c200dadcf9a32c2ac7276a",
+    "app/app.css": "fa2339a37afc7950868135da61a0c089fc082735058b83a4133851aee7665a90",
+    "scripts/verify-local-history-source-zoom.ts": "a739a7eb2e63f1c321815c336f95803079e11868a996d9a1c498ffcb30cca94b",
+    "scripts/local-fixture-browser.ts": "e8f78771b4545f1ec7cdf4145a9412f0c94f01f46e44f2f5a2e36d427a177609"
+  },
+  "baseline": {
+    "keyboardPagination": "Pressing Next opened page 2 at 320 CSS pixels and left the history heading unfocused.",
+    "contrast": [
+      {
+        "target": ".history-status",
+        "logSha256": "fda0641f8c291fa9c169f991e38ebd223a85ebe3dafe882dc3238023d81fd24f"
+      },
+      {
+        "target": ".latest-analysis-score > span",
+        "logSha256": "685718677e5f2a758f47d7d950b9dd965d9895882e74270d3f5373e5bd8d48e3"
+      }
+    ],
+    "fixtureRepair": "The synthetic saved result was missing its writer payload. Added an empty saved draft that satisfies the result schema.",
+    "fixtureLogSha256": "dbecede2b5f77599c34d00a35c77c2b92df1c0ef11a7a125a6279969b7cb6aca"
+  },
+  "browser": {
+    "version": "Chromium 153.0.8010.12",
+    "script": "scripts/verify-local-history-source-zoom.ts",
+    "pageZoomPercent": 200,
+    "effectiveViewportWidthsCssPx": [390, 320],
+    "ssrEntrySha256": "f1cc2b5f8578afa32fc31c18e7644f8f9eaa61004aba293cc4158a1d369720c1",
+    "logSha256": "964690331edb2c24473fa45b8d03bd1b39181238ab34b44ba3fb129ac42530f7",
+    "result": {
+      "sortKeptFocus": true,
+      "paginationFocusedHeadingAndTabReachedSort": true,
+      "historyActionsAndOriginalPdfLinkFitAt320": true,
+      "historySeriousOrCriticalAxeViolationsLightAndDark": 0,
+      "keyboardOpenedPrivatePdf": 200,
+      "ownerReceivedExactSourceBytes": true,
+      "corruptSourceStatus": 503,
+      "sourceRevokedDuringReadStatus": 404,
+      "anonymousAndForeignSourceStatus": 404,
+      "anonymousAndForeignRequestsMadeNoStorageReads": true,
+      "historyReloadSignOutBackAccountSwitchAndRelogin": true,
+      "inflightAndPendingDeletionExcludedHistory": true
+    }
+  },
+  "checks": {
+    "node": "22.23.4",
+    "focusedTestsPassed": 46,
+    "focusedTestFiles": 5,
+    "focusedTestsLogSha256": "d57130cbd5a2cf4e80e42bd9dbede2871a0123536e0d6d9b68bdbe09c28663a1",
+    "publicSmokeTestsPassed": 31,
+    "publicSmokeLogSha256": "2a090fd783f4726ba1e28742da180362f9c3663cc4d336e59f3e07d3225b791f",
+    "typecheck": "passed",
+    "lint": "passed with four existing JD clause-order warnings",
+    "changedTypeScriptFormatting": "passed",
+    "cssFormatting": "The formatter diff is confined to existing rewrite styles outside this change.",
+    "webBuildLogSha256": "c646ae2a3d09b32aa2af078c270cfc5666fb1ff741de6b295815b14d6c510d59",
+    "workerBuildLogSha256": "158ba6d7d560751ec75a7475ea345a2230daf4a82152454285e1922dad77a6d2"
+  },
+  "manualScreenReaderVerified": false,
+  "managedSupabaseVerified": false
+}

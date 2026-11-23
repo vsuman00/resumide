@@ -1,0 +1,60 @@
+{
+  "status": "VERIFIED_SCOPED_SOURCE_APPLICATION_PARENT_PARTIAL",
+  "at": "2026-11-10T18:41:48.342807+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "dirtyScope": "Preserved main checkout plus reviewed U03 packets; no Git mutation.",
+  "initialGate": "u03-integrated-8779993b-e9be-4f97-97fc-01b4c3bba1cd.json",
+  "finalAffectedGate": "u03-retention-e0a36cc1-1e3a-4660-a508-a34546e8eeff.json",
+  "independentReview": "u03-retention-independent-review.json",
+  "sourceReview": {
+    "reviewer": "a04_runtime",
+    "routeSha256": "aa6bd75349f6fc507f5358105d9a411384418dbc87f094d833014eae7cbf7d9b",
+    "contractSha256": "863494592ad45ee72d07cd92d8b5b15a71b00a4a52120a00100d6c46c4927613",
+    "result": "SOURCE_ACK; unrelated-success/failure draft loss repaired, native/exactretry/own-resolution/distinctkeys/sourceboundary/overflow floors reviewed; no reviewer execution."
+  },
+  "verification": {
+    "finalCanonicalTestsPassed": 47,
+    "finalCanonicalTestFiles": 2,
+    "unchangedAuthoringCasesCarriedForward": 60,
+    "combinedUniqueCases": 107,
+    "freshSevenFilePassAfterLastDelta": false,
+    "fullTypecheck": "PASS",
+    "lint": "PASS",
+    "webBuild": "PASS",
+    "workerBuild": "PASS",
+    "sourceInputsStableAndRehashed": 703,
+    "ownedGroupsIndependentlyAbsent": 5,
+    "artifactHashesVerified": {
+      "build/server/index.js": {
+        "bytes": 865229,
+        "sha256": "4667b295c98001baefb54274484040c42ee1814458c9707432be28249029db50"
+      },
+      "build/worker/analysis.mjs": {
+        "bytes": 168159,
+        "sha256": "cfc31ea7d0f630a0fee9de130cc17226dd633ba84f3c04edadf0e1b68062aca9"
+      }
+    }
+  },
+  "integrationRecords": [
+    "u03-authoring-integration.json",
+    "u03-canonical-integration.json",
+    "u03-retention-integration.json"
+  ],
+  "preservedFailures": "See archived initial acknowledgement/preview failures; canonical SSR harness issue, rejected draft/revalidation failures, review-driven Router losses, key failures and disclosed fixture diagnostics. No assertion suppression.",
+  "evidenceTier": "Actual strict parsers, repositories and React Router rendering with mocked service/storage boundaries; scoped static/source review and web/worker builds.",
+  "notProven": [
+    "native browser/no-JS/visual/accessibility journeys",
+    "managed SQL/storage roles, concurrency, exact live export, restore and cleanup",
+    "full CR-U03/64-task acceptance, empirical calibration or release"
+  ],
+  "externalOperations": {
+    "database": 0,
+    "provider": 0,
+    "docker": 0,
+    "browser": 0,
+    "ownerFile": 0,
+    "GitMutation": 0,
+    "deployment": 0
+  },
+  "flags": "Unchanged/default-off; proof digest does not establish human review or score validity."
+}

@@ -1,0 +1,318 @@
+import type { FeedbackZod } from "../../app/lib/server/schema";
+/** @vitest-environment jsdom */
+import { cleanup, render, screen, within } from "@testing-library/react";
+import { afterEach, expect, it } from "vitest";
+import CitedWritingSuggestions from "../../app/components/CitedWritingSuggestions";
+
+afterEach(cleanup);
+it("separates suggestion titles, explanations and exact excerpts without ratings", () => {
+  const quote = "Built reliable tests.\nMaintained regression coverage.";
+  const tips = [
+    {
+      type: "good" as const,
+      tip: "Keep the concrete outcome",
+      explanation: "The source supports this observation.",
+      quote,
+    },
+    {
+      type: "improve" as const,
+      tip: "Clarify the scope",
+      explanation: "Confirm the scope before adding detail.",
+      quote: "Maintained regression coverage.",
+    },
+    {
+      type: "improve" as const,
+      tip: "Uncited proposal",
+      explanation: "Hidden without a citation.",
+    },
+  ];
+  render(
+    <CitedWritingSuggestions
+      feedback={{
+        toneAndStyle: { tips },
+        content: { tips: [] },
+        structure: { tips: [] },
+        skills: { tips: [] },
+      }}
+    />,
+  );
+  const group = screen.getByRole("region", { name: "Tone and style" });
+  expect(
+    within(group).getByRole("heading", {
+      name: "Keep the concrete outcome",
+      level: 4,
+    }),
+  ).toBeTruthy();
+  expect(within(group).getByText("Unverified observation")).toBeTruthy();
+  expect(within(group).getByText("Suggested change")).toBeTruthy();
+  expect(group.querySelector("blockquote")?.textContent).toBe(quote);
+  expect(within(group).getByText("2 cited notes")).toBeTruthy();
+  expect(screen.queryByText("Uncited proposal")).toBeNull();
+  expect(screen.getByText("Qualitative ratings are unavailable.")).toBeTruthy();
+});
+
+it("explains empty groups and omits whitespace-only citations", () => {
+  const area = {
+    tips: [
+      {
+        type: "improve" as const,
+        tip: "Do not display",
+        explanation: "No source",
+        quote: " \n ",
+      },
+    ],
+  };
+  render(
+    <CitedWritingSuggestions
+      feedback={{
+        toneAndStyle: area,
+        content: area,
+        structure: area,
+        skills: area,
+      }}
+    />,
+  );
+  expect(
+    screen.getAllByText("No cited suggestions for this area."),
+  ).toHaveLength(4);
+  expect(screen.queryByText("Do not display")).toBeNull();
+});
+
+it("requires owned provenance before calling a cited legacy row a strength", () => {
+  const area = {
+    tips: [
+      {
+        type: "good" as const,
+        tip: "Keep this wording",
+        explanation: "Review the saved wording.",
+        quote: "Built services using Python",
+      },
+    ],
+  };
+  render(
+    <CitedWritingSuggestions
+      feedback={{
+        toneAndStyle: area,
+        content: { tips: [] },
+        structure: { tips: [] },
+        skills: { tips: [] },
+      }}
+    />,
+  );
+  expect(screen.queryByText("Source-backed feedback")).toBeNull();
+  expect(screen.queryByText("Strength to keep")).toBeNull();
+  expect(screen.getByText("Unverified observation")).toBeTruthy();
+});
+
+import { compileInitialFeedbackPlan } from "../../app/lib/server/initial-feedback-plan";
+import { createInitialFeedbackPublicationPolicy } from "../../app/lib/server/initial-feedback-publication-policy";
+import { InitialFeedbackPublicationSchema } from "../../app/lib/server/initial-feedback-operation-contract";
+import {
+  BASELINE_SEMANTICS,
+  legacyCategoryFromProse,
+} from "../../app/lib/server/qualitative-prose";
+import { projectInitialFeedbackConsumer } from "../../app/lib/server/initial-feedback-consumer";
+import { scoreExtractedResume } from "../../app/lib/server/scoring-stage";
+import { createHash } from "node:crypto";
+import {
+  isFeedbackStrength,
+  visibleFeedbackGroups,
+} from "../../app/lib/result-feedback";
+const uuid = (n: number) =>
+  `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+
+// AI-authored neutral synthetic source. Real scorer/compiler/strict Native DTO
+// decoding supply content/mappings; UUIDs and PG digests are fake-RPC metadata.
+function ownedFixture() {
+  const text = "Built a dashboard.\nI did not lead a team.";
+  const d = scoreExtractedResume({
+    text,
+    pageCount: 1,
+    pageTexts: [text],
+    textChecksum: createHash("sha256").update(text).digest("hex"),
+    jobDescription: "Python required",
+  });
+  const raw = {
+    toneAndStyle: {
+      tips: [
+        {
+          type: "good" as const,
+          tip: "I led a team.",
+          explanation: "Clarifies wording.",
+          quote: "I did not lead a team.",
+        },
+        {
+          type: "good" as const,
+          tip: "Created a dashboard.",
+          explanation: "Built a dashboard.",
+          quote: "Built a dashboard.",
+        },
+        {
+          type: "good" as const,
+          tip: "Review the wording.",
+          explanation: "Clarifies wording.",
+          quote: "I did not lead a team.",
+        },
+        {
+          type: "good" as const,
+          tip: "What outcome can you verify?",
+          explanation:
+            "Leave this unanswered if the information is unavailable.",
+          quote: "Built a dashboard.",
+        },
+      ],
+    },
+    content: { tips: [] },
+    structure: { tips: [] },
+    skills: { tips: [] },
+    writer: { summary: null, bullets: [] },
+  };
+  const compiled = compileInitialFeedbackPlan(text, raw);
+  if (compiled.status !== "available")
+    throw Error("Real compiler fixture unavailable");
+  const policy = createInitialFeedbackPublicationPolicy({
+    model: "unit-model",
+    maxOutputTokens: 1200,
+    attemptLimit: 1,
+    budgetPolicyVersion: null,
+  });
+  const binding = {
+    schemaVersion: "initial-feedback-binding/1.0.0",
+    analysisId: uuid(1),
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    resumeId: uuid(4),
+    resumeVersionId: uuid(5),
+    scoringInputSha256: "a".repeat(64),
+    deterministicContentSha256: "b".repeat(64),
+    resultChecksum: d.resultChecksum,
+    sourceTextSha256: d.inputTextChecksum,
+    jobId: uuid(6),
+    jobSha256: "c".repeat(64),
+    policy,
+  };
+  const feedback: FeedbackZod = {
+    scoreSemantics: BASELINE_SEMANTICS,
+    overallScore: d.score,
+    ATS: {
+      score: d.score,
+      tips: d.ruleTrace.slice(0, 4).map((t) => ({
+        type: t.passed ? ("good" as const) : ("improve" as const),
+        tip: t.detail,
+      })),
+    },
+    toneAndStyle: legacyCategoryFromProse(compiled.rendered.prose.toneAndStyle),
+    content: legacyCategoryFromProse(compiled.rendered.prose.content),
+    structure: legacyCategoryFromProse(compiled.rendered.prose.structure),
+    skills: legacyCategoryFromProse(compiled.rendered.prose.skills),
+  };
+  const publication = InitialFeedbackPublicationSchema.parse({
+    schemaVersion: "initial-feedback-publication/1.0.0",
+    publicationId: uuid(9),
+    state: "assessed",
+    reason: null,
+    binding,
+    plan: compiled.plan,
+    recordedObservation: compiled.recordedObservation,
+    generationFailure: null,
+    ownedSupport: {
+      schemaVersion: "initial-feedback-native-support/1.0.0",
+      scope: "retained_output_only",
+      bindingSha256: "d".repeat(64),
+      planSha256: "e".repeat(64),
+      parts: compiled.rendered.parts,
+      mapping: compiled.rendered.mapping,
+    },
+    prose: compiled.rendered.prose,
+    compatibility: {
+      deterministicResult: d,
+      feedback,
+      writer: compiled.rendered.prose.writer,
+    },
+    receipt: {
+      schemaVersion: "initial-feedback-receipt/1.0.0",
+      operationId: uuid(7),
+      attemptId: uuid(8),
+      publicationId: uuid(9),
+      analysisId: uuid(1),
+      ownerId: uuid(2),
+      bindingSha256: "d".repeat(64),
+      publicationSha256: "f".repeat(64),
+      resultSha256: "1".repeat(64),
+      writerSha256: "2".repeat(64),
+      runId: uuid(10),
+      createdAt: "2026-11-15T00:00:00.123456Z",
+      replayed: false,
+    },
+  });
+  const scope = {
+    ownerId: uuid(2),
+    organizationId: uuid(3),
+    analysisId: uuid(1),
+  };
+  const read = {
+    schemaVersion: "initial-feedback-read/1.0.0",
+    status: "available",
+    currentness: "current",
+    publication,
+  };
+  return { d, compiled, feedback, publication, scope, read };
+}
+
+it("shows actual retained source, editorial and question meanings without promoting raw good types", () => {
+  const f = ownedFixture(),
+    provenance = projectInitialFeedbackConsumer(f.read, f.feedback, f.scope);
+  render(
+    <CitedWritingSuggestions feedback={f.feedback} provenance={provenance} />,
+  );
+  expect(screen.getByText("Strength to keep")).toBeTruthy();
+  expect(screen.getByText("Editing suggestion")).toBeTruthy();
+  expect(screen.getByText("Question to review")).toBeTruthy();
+  expect(screen.queryByText("I led a team.")).toBeNull();
+  expect(screen.getByText("Created a dashboard.")).toBeTruthy();
+  expect(screen.getByText("What outcome can you verify?")).toBeTruthy();
+  expect(
+    visibleFeedbackGroups(f.feedback, false, provenance)
+      .flatMap((g) => g.tips)
+      .filter(isFeedbackStrength),
+  ).toHaveLength(1);
+});
+it("makes historical publication context explicit without changing saved quotations", () => {
+  const f = ownedFixture(),
+    provenance = projectInitialFeedbackConsumer(
+      { ...f.read, currentness: "historical" },
+      f.feedback,
+      f.scope,
+    );
+  render(
+    <CitedWritingSuggestions feedback={f.feedback} provenance={provenance} />,
+  );
+  expect(screen.getByText(/earlier source or job description/)).toBeTruthy();
+  expect(screen.getAllByText("Built a dashboard.").length).toBeGreaterThan(0);
+});
+it("preserves uncited legacy content as unverified when the legacy route includes it", () => {
+  const area = {
+    tips: [
+      {
+        type: "good" as const,
+        tip: "Uncited saved claim",
+        explanation: "An earlier saved explanation.",
+      },
+    ],
+  };
+  render(
+    <CitedWritingSuggestions
+      feedback={{
+        toneAndStyle: area,
+        content: { tips: [] },
+        structure: { tips: [] },
+        skills: { tips: [] },
+      }}
+      includeUncited
+    />,
+  );
+  expect(screen.getByText("Uncited saved claim")).toBeTruthy();
+  expect(screen.getByText("An earlier saved explanation.")).toBeTruthy();
+  expect(screen.getByText("No saved excerpt.")).toBeTruthy();
+  expect(screen.queryByText("Strength to keep")).toBeNull();
+});

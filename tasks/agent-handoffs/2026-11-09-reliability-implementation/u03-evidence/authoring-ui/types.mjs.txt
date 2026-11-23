@@ -1,0 +1,14 @@
+import ts from '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/typescript/lib/typescript.js';
+import {writeFileSync} from 'node:fs';
+import {join} from 'node:path';
+const root='/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats';
+const config=ts.readConfigFile(join(root,'tsconfig.json'),ts.sys.readFile);if(config.error)throw Error('Config read failed');
+const parsed=ts.parseJsonConfigFileContent(config.config,ts.sys,root);
+const roots=['app/components/AuthoringWorkspace.tsx','tests/components/WorkspaceRepairs.test.tsx','e2e/authoring.spec.ts'].map(p=>join(root,p));
+const ambient=parsed.fileNames.filter(p=>p.endsWith('.d.ts'));
+const program=ts.createProgram([...roots,...ambient],{...parsed.options,noEmit:true,incremental:false});
+const diagnostics=[...parsed.errors,...ts.getPreEmitDiagnostics(program)];
+const result={roots:roots.length,ambient:ambient.length,sourceFiles:program.getSourceFiles().length,diagnosticCount:diagnostics.length,typescript:ts.version};
+writeFileSync('/private/tmp/resumide-u03-ack-vc219k4e/types.json',JSON.stringify(result,null,2)+'\n');
+if(diagnostics.length)process.stderr.write(ts.formatDiagnosticsWithColorAndContext(diagnostics,{getCanonicalFileName:p=>p,getCurrentDirectory:()=>root,getNewLine:()=>String.fromCharCode(10)}));
+process.stdout.write(JSON.stringify(result)+'\n');process.exit(diagnostics.length?1:0);

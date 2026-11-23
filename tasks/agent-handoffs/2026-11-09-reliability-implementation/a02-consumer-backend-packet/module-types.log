@@ -1,0 +1,253 @@
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m213[0m:[93m15[0m - [91merror[0m[90m TS18047: [0m'parsed' is possibly 'null'.
+
+[7m213[0m   const row = parsed.data;
+[7m   [0m [91m              ~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m214[0m:[93m7[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m214[0m   if (row.status !== "available")
+[7m   [0m [91m      ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m216[0m:[93m7[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m216[0m       row.status,
+[7m   [0m [91m      ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m217[0m:[93m7[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m217[0m       row.status === "not_found" ? "unavailable" : "retry_exact",
+[7m   [0m [91m      ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m218[0m:[93m7[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m218[0m       row.status === "not_found" ? 404 : 503,
+[7m   [0m [91m      ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m220[0m:[93m18[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m220[0m   const source = row.source;
+[7m   [0m [91m                 ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m220[0m:[93m22[0m - [91merror[0m[90m TS2339: [0mProperty 'source' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'source' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m220[0m   const source = row.source;
+[7m   [0m [91m                     ~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m224[0m:[93m5[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m224[0m     row.attempt.id !== source.attemptId ||
+[7m   [0m [91m    ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m224[0m:[93m9[0m - [91merror[0m[90m TS2339: [0mProperty 'attempt' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'attempt' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m224[0m     row.attempt.id !== source.attemptId ||
+[7m   [0m [91m        ~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m225[0m:[93m6[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m225[0m     (row.canCommit && !row.compatibilityReady) ||
+[7m   [0m [91m     ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m225[0m:[93m10[0m - [91merror[0m[90m TS2339: [0mProperty 'canCommit' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'canCommit' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m225[0m     (row.canCommit && !row.compatibilityReady) ||
+[7m   [0m [91m         ~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m225[0m:[93m24[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m225[0m     (row.canCommit && !row.compatibilityReady) ||
+[7m   [0m [91m                       ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m225[0m:[93m28[0m - [91merror[0m[90m TS2339: [0mProperty 'compatibilityReady' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'compatibilityReady' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m225[0m     (row.canCommit && !row.compatibilityReady) ||
+[7m   [0m [91m                           ~~~~~~~~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m226[0m:[93m6[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m226[0m     (row.freshImportAllowed && row.captured.canonicalHeadId !== null)
+[7m   [0m [91m     ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m226[0m:[93m10[0m - [91merror[0m[90m TS2339: [0mProperty 'freshImportAllowed' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'freshImportAllowed' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m226[0m     (row.freshImportAllowed && row.captured.canonicalHeadId !== null)
+[7m   [0m [91m         ~~~~~~~~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m226[0m:[93m32[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m226[0m     (row.freshImportAllowed && row.captured.canonicalHeadId !== null)
+[7m   [0m [91m                               ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m226[0m:[93m36[0m - [91merror[0m[90m TS2339: [0mProperty 'captured' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'captured' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m226[0m     (row.freshImportAllowed && row.captured.canonicalHeadId !== null)
+[7m   [0m [91m                                   ~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m230[0m:[93m50[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m230[0m   const review = deriveEvidenceEntryAssociations(row.attempt.envelope, source);
+[7m   [0m [91m                                                 ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m230[0m:[93m54[0m - [91merror[0m[90m TS2339: [0mProperty 'attempt' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'attempt' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m230[0m   const review = deriveEvidenceEntryAssociations(row.attempt.envelope, source);
+[7m   [0m [91m                                                     ~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m233[0m:[93m53[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m233[0m   const evidence = DocumentEvidenceSchema.safeParse(row.attempt.envelope);
+[7m   [0m [91m                                                    ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m233[0m:[93m57[0m - [91merror[0m[90m TS2339: [0mProperty 'attempt' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'attempt' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m233[0m   const evidence = DocumentEvidenceSchema.safeParse(row.attempt.envelope);
+[7m   [0m [91m                                                        ~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m256[0m:[93m30[0m - [91merror[0m[90m TS18048: [0m'evidence.data' is possibly 'undefined'.
+
+[7m256[0m   const assertions = new Map(evidence.data.assertions.map((a) => [a.id, a]));
+[7m   [0m [91m                             ~~~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m287[0m:[93m15[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m287[0m     captured: row.captured,
+[7m   [0m [91m              ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m287[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'captured' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'captured' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m287[0m     captured: row.captured,
+[7m   [0m [91m                  ~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m288[0m:[93m25[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m288[0m     compatibilityReady: row.compatibilityReady,
+[7m   [0m [91m                        ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m288[0m:[93m29[0m - [91merror[0m[90m TS2339: [0mProperty 'compatibilityReady' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'compatibilityReady' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m288[0m     compatibilityReady: row.compatibilityReady,
+[7m   [0m [91m                            ~~~~~~~~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m289[0m:[93m17[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m289[0m     canPreview: row.freshImportAllowed && groups.length > 0,
+[7m   [0m [91m                ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m289[0m:[93m21[0m - [91merror[0m[90m TS2339: [0mProperty 'freshImportAllowed' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'freshImportAllowed' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m289[0m     canPreview: row.freshImportAllowed && groups.length > 0,
+[7m   [0m [91m                    ~~~~~~~~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m290[0m:[93m16[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m290[0m     canCommit: row.canCommit,
+[7m   [0m [91m               ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m290[0m:[93m20[0m - [91merror[0m[90m TS2339: [0mProperty 'canCommit' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'canCommit' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m290[0m     canCommit: row.canCommit,
+[7m   [0m [91m                   ~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m329[0m:[93m5[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m329[0m     row.captured.canonicalHeadId !== null ||
+[7m   [0m [91m    ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m329[0m:[93m9[0m - [91merror[0m[90m TS2339: [0mProperty 'captured' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'captured' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m329[0m     row.captured.canonicalHeadId !== null ||
+[7m   [0m [91m        ~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m330[0m:[93m20[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m330[0m     Object.entries(row.captured).some(
+[7m   [0m [91m                   ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m330[0m:[93m24[0m - [91merror[0m[90m TS2339: [0mProperty 'captured' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'captured' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m330[0m     Object.entries(row.captured).some(
+[7m   [0m [91m                       ~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m332[0m:[93m9[0m - [91merror[0m[90m TS18048: [0m'request.data' is possibly 'undefined'.
+
+[7m332[0m         request.data.expected[key as keyof typeof request.data.expected] !==
+[7m   [0m [91m        ~~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m332[0m:[93m51[0m - [91merror[0m[90m TS2532: [0mObject is possibly 'undefined'.
+
+[7m332[0m         request.data.expected[key as keyof typeof request.data.expected] !==
+[7m   [0m [91m                                                  ~~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m339[0m:[93m5[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m339[0m     row.source,
+[7m   [0m [91m    ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m339[0m:[93m9[0m - [91merror[0m[90m TS2339: [0mProperty 'source' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'source' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m339[0m     row.source,
+[7m   [0m [91m        ~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m346[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'selectedGroupIds' does not exist on type 'GroupedOriginalCommandPreparation'.
+  Property 'selectedGroupIds' does not exist on type 'Unavailable'.
+
+[7m346[0m     selectedGroupIds: prepared.selectedGroupIds,
+[7m   [0m [91m                               ~~~~~~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m348[0m:[93m27[0m - [91merror[0m[90m TS2339: [0mProperty 'previewHash' does not exist on type 'GroupedOriginalCommandPreparation'.
+  Property 'previewHash' does not exist on type 'Unavailable'.
+
+[7m348[0m     previewHash: prepared.previewHash,
+[7m   [0m [91m                          ~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m379[0m:[93m5[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m379[0m     row.source,
+[7m   [0m [91m    ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m379[0m:[93m9[0m - [91merror[0m[90m TS2339: [0mProperty 'source' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'source' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m379[0m     row.source,
+[7m   [0m [91m        ~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m384[0m:[93m8[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m384[0m   if (!row.canCommit) fail("unavailable", "unavailable", 503);
+[7m   [0m [91m       ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m384[0m:[93m12[0m - [91merror[0m[90m TS2339: [0mProperty 'canCommit' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'canCommit' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m384[0m   if (!row.canCommit) fail("unavailable", "unavailable", 503);
+[7m   [0m [91m           ~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m387[0m:[93m21[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m387[0m     organizationId: row.source.organizationId,
+[7m   [0m [91m                    ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m387[0m:[93m25[0m - [91merror[0m[90m TS2339: [0mProperty 'source' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'source' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m387[0m     organizationId: row.source.organizationId,
+[7m   [0m [91m                        ~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m388[0m:[93m15[0m - [91merror[0m[90m TS18048: [0m'row' is possibly 'undefined'.
+
+[7m388[0m     resumeId: row.source.resumeId,
+[7m   [0m [91m              ~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m388[0m:[93m19[0m - [91merror[0m[90m TS2339: [0mProperty 'source' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "available"; compatibilityReady: boolean; canCommit: boolean; freshImportAllowed: boolean; scoringEligible: false; source: { ownerId: string; ... 5 more ...; inputSha256: string; }; captured: { ...; }; attempt: { ...; }; } | { ...; }'.
+  Property 'source' does not exist on type '{ schemaVersion: "grouped-original-read/1.0.0"; status: "unavailable" | "not_found"; scoringEligible: false; }'.
+
+[7m388[0m     resumeId: row.source.resumeId,
+[7m   [0m [91m                  ~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m389[0m:[93m13[0m - [91merror[0m[90m TS18048: [0m'parsed.data' is possibly 'undefined'.
+
+[7m389[0m     locale: parsed.data.binding.effectiveLocale,
+[7m   [0m [91m            ~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m397[0m:[93m32[0m - [91merror[0m[90m TS2339: [0mProperty 'normalForm' does not exist on type 'GroupedOriginalCommandNormalization'.
+  Property 'normalForm' does not exist on type 'Unavailable'.
+
+[7m397[0m         normalForm: normalized.normalForm,
+[7m   [0m [91m                               ~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m398[0m:[93m33[0m - [91merror[0m[90m TS2339: [0mProperty 'previewHash' does not exist on type 'GroupedOriginalCommandNormalization'.
+  Property 'previewHash' does not exist on type 'Unavailable'.
+
+[7m398[0m         previewHash: normalized.previewHash,
+[7m   [0m [91m                                ~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m399[0m:[93m36[0m - [91merror[0m[90m TS2339: [0mProperty 'idempotencyKey' does not exist on type 'GroupedOriginalCommandNormalization'.
+  Property 'idempotencyKey' does not exist on type 'Unavailable'.
+
+[7m399[0m         idempotencyKey: normalized.idempotencyKey,
+[7m   [0m [91m                                   ~~~~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m412[0m:[93m9[0m - [91merror[0m[90m TS18048: [0m'parsed.data' is possibly 'undefined'.
+
+[7m412[0m         parsed.data.expected.associationRevision + 1 ||
+[7m   [0m [91m        ~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m421[0m:[93m18[0m - [91merror[0m[90m TS18048: [0m'refusal.data' is possibly 'undefined'.
+
+[7m421[0m   const status = refusal.data.status;
+[7m   [0m [91m                 ~~~~~~~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m483[0m:[93m26[0m - [91merror[0m[90m TS18048: [0m'reader' is possibly 'undefined'.
+
+[7m483[0m       const part = await reader.read();
+[7m   [0m [91m                         ~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m520[0m:[93m13[0m - [91merror[0m[90m TS18048: [0m'reader' is possibly 'undefined'.
+
+[7m520[0m       await reader.cancel();
+[7m   [0m [91m            ~~~~~~[0m
+[96mapp/lib/server/grouped-import-repository.ts[0m:[93m524[0m:[93m5[0m - [91merror[0m[90m TS18048: [0m'reader' is possibly 'undefined'.
+
+[7m524[0m     reader.releaseLock();
+[7m   [0m [91m    ~~~~~~[0m
+{"roots":3,"sourceFiles":33,"diagnostics":57}

@@ -1,0 +1,76 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ✓ tests/unit/jd-clause-order-http-route.test.ts (12 tests) 144ms
+ ❯ tests/unit/jd-clause-order-http.test.ts (31 tests | 1 failed) 175ms
+     ✓ parses only decision/undo and requires the exact independent accept acknowledgement 20ms
+     ✓ accepts framed-valid command JSON beyond16KiB without changing command authority 3ms
+     ✓ rejects duplicate decoded form and nested JSON keys, files and wrong content types 3ms
+     ✓ retains the 64KiB boundary and bounded cancellation without waiting for hostile cleanup 13ms
+     ✓ executes the real repository with actual profile/readiness and the original four-argument Native command 13ms
+     ✓ fails denied readiness before writing without a legacy RPC fallback 9ms
+     ✓ maps exact conflict versus unconfirmed writes 409/'review_again' 6ms
+     ✓ maps exact conflict versus unconfirmed writes 503/'retry_exact' 6ms
+     ✓ maps exact conflict versus unconfirmed writes 503/'retry_exact' 9ms
+     ✓ keeps unknown transport errors private and retains exact retry guidance 5ms
+     ✓ accepts only an accepted2 receipt and a distinct canonical lowercase undo key 1ms
+     × proves owned accepted2/event consistency and restores the original two-revision base through guarded undo 4ms
+     ✓ refuses accepted event mismatch owner_id before undo 1ms
+     ✓ refuses accepted event mismatch organization_id before undo 1ms
+     ✓ refuses accepted event mismatch resume_id before undo 0ms
+     ✓ refuses accepted event mismatch analysis_id before undo 0ms
+     ✓ refuses accepted event mismatch base_version_id before undo 0ms
+     ✓ refuses accepted event mismatch result_version_id before undo 0ms
+     ✓ refuses accepted event mismatch idempotency_key before undo 1ms
+     ✓ refuses accepted event mismatch retention_policy_id before undo 0ms
+     ✓ refuses a changed original command, stored receipt and foreign accepted source before dispatch 1ms
+     ✓ refuses post-RPC undo event mismatch command as unknown, with no second undo 1ms
+     ✓ refuses post-RPC undo event mismatch result as unknown, with no second undo 1ms
+     ✓ refuses post-RPC undo event mismatch owner_id as unknown, with no second undo 1ms
+     ✓ refuses post-RPC undo event mismatch base_version_id as unknown, with no second undo 0ms
+     ✓ refuses post-RPC undo event mismatch result_version_id as unknown, with no second undo 0ms
+     ✓ refuses post-RPC undo event mismatch idempotency_key as unknown, with no second undo 1ms
+     ✓ preserves exact-key replay while never exposing the internal receipt1 0ms
+     ✓ maps stale guarded undo to review_again and unknown undo to retry_exact 1ms
+     ✓ bounds a stalled owned undo read and forbids late read/write continuations 1ms
+     ✓ propagates undo SDK cancellation and keeps uncertain commit as exact retry without late publication 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/jd-clause-order-http.test.ts > bounded clause-order HTTP and v2 undo adapter > proves owned accepted2/event consistency and restores the original two-revision base through guarded undo
+AssertionError: expected "vi.fn()" to be called once with arguments: [ { from: [Function from] }, …(4) ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -1,8 +1,9 @@
+  [
+    {
+      "from": [Function from],
++     "rpc": [Function rpc],
+    },
+    "30000000-0000-4000-8000-000000000004",
+    "30000000-0000-4000-8000-000000000001",
+    {
+      "action": "undo",
+
+
+Number of calls: 1
+
+ ❯ tests/unit/jd-clause-order-http.test.ts:512:24
+    510|       },
+    511|     });
+    512|     expect(mocks.undo).toHaveBeenCalledExactlyOnceWith(
+       |                        ^
+    513|       client,
+    514|       f.owned.analysisId,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 42 passed (43)
+   Start at  04:55:22
+   Duration  741ms (transform 688ms, setup 0ms, import 998ms, tests 319ms, environment 0ms)
+

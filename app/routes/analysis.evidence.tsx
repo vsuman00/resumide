@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { useEffect, useRef } from "react";
 import {
   data,
   Form,
@@ -25,10 +26,223 @@ import {
   loadEvidenceReview,
   readEvidenceCorrectionForm,
 } from "~/lib/server/evidence-review";
+import {
+  deriveEvidenceEntryAssociations,
+  type EntryAssociationGroup,
+  type EntryAssociationMember,
+  type EntryAssociationUnresolvedReason,
+} from "~/lib/server/evidence-entry-associations";
 import { CRITICAL_FIELDS } from "~/lib/server/evidence-fields";
 import { PublicApiError } from "~/lib/server/errors";
 
 type Args = { request: Request; params: { id?: string } };
+type ReviewModel = Awaited<ReturnType<typeof loadEvidenceReview>>;
+type Observation = ReviewModel["targets"]["observations"][number];
+type ExistingEntryGroup = ReviewModel["targets"]["groups"][number];
+const observationFieldLabels = {
+  name: "Name",
+  email: "Email",
+  phone: "Phone",
+  employer: "Employer",
+  role: "Role",
+  dates: "Dates",
+  education: "Education",
+  certification: "Certification",
+} satisfies Record<Observation["field"], string>;
+const associationReasonLabels = {
+  out_of_scope_field:
+    "This field is outside the supported work entry linking review. Review it separately below.",
+  outside_supported_employment_section:
+    "This field was not in a supported, clearly labelled work section. Review its source before linking it.",
+  unsupported_labelled_layout:
+    "The extracted layout does not establish a supported entry link. Compare the source fields.",
+  missing_employer_anchor:
+    "No employer label anchors this possible entry link. Review the source before linking it.",
+  incomplete_labelled_block:
+    "The labelled fields do not establish a complete employer and role link. Review the source.",
+  ambiguous_labelled_block:
+    "Repeated labels or multiple candidate values leave this entry link unresolved. Review the source.",
+  unsupported_extractor:
+    "These extracted fields cannot be linked automatically. Review the original candidate.",
+} satisfies Record<EntryAssociationUnresolvedReason, string>;
+
+function resolveAssociationMember(
+  member: EntryAssociationMember,
+  targets: ReviewModel["targets"],
+): Observation | null {
+  const observation = targets.observations.find(
+    (item) => item.id === member.observationId,
+  );
+  const target = targets.targets.find((item) => item.id === member.targetId);
+  if (
+    !observation ||
+    !target ||
+    observation.assertionId !== member.assertionId ||
+    observation.targetId !== target.id ||
+    observation.field !== member.field ||
+    target.field !== member.field ||
+    target.slotId !== member.assertionId ||
+    !target.observationIds.includes(observation.id) ||
+    observation.citations.length !== member.citations.length ||
+    !member.citations.every((citation, index) => {
+      const source = observation.citations[index];
+      return (
+        source !== undefined &&
+        citation.spanId === source.spanId &&
+        citation.pageId === source.pageId &&
+        citation.method === source.method &&
+        citation.start === source.start &&
+        citation.end === source.end &&
+        citation.pageStart === source.pageStart &&
+        citation.pageEnd === source.pageEnd
+      );
+    })
+  )
+    return null;
+  return observation;
+}
+
+function SourceObservation({ observation }: { observation: Observation }) {
+  return (
+    <div>
+      <dt>{observationFieldLabels[observation.field]}</dt>
+      <dd>
+        {observation.value}
+        <ul>
+          {observation.citations.map((citation, index) => (
+            <li key={`${citation.spanId}-${index}`}>
+              <a href={`#source-${encodeURIComponent(citation.spanId)}`}>
+                {citation.method === "local_ocr"
+                  ? "View cited OCR text"
+                  : "View cited PDF text"}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </dd>
+    </div>
+  );
+}
+
+function EntryCandidate({
+  group,
+  targets,
+}: {
+  group: EntryAssociationGroup | ExistingEntryGroup;
+  targets: ReviewModel["targets"];
+}) {
+  const members: EntryAssociationMember[] = [];
+  if ("members" in group) members.push(...group.members);
+  else {
+    for (const [index, observationId] of group.observationIds.entries()) {
+      const observation = targets.observations.find(
+        (item) => item.id === observationId,
+      );
+      if (observation)
+        members.push({
+          observationId,
+          assertionId: observation.assertionId,
+          targetId: group.targetIds[index],
+          field: observation.field,
+          citations: observation.citations,
+        });
+    }
+  }
+  const observations: Observation[] = [];
+  let resolved =
+    members.length === group.observationIds.length &&
+    members.length === group.targetIds.length;
+  for (const [index, member] of members.entries()) {
+    const observation = resolveAssociationMember(member, targets);
+    if (
+      !observation ||
+      member.observationId !== group.observationIds[index] ||
+      member.targetId !== group.targetIds[index] ||
+      !observation.citations.every(
+        (citation) =>
+          citation.pageId === group.pageId &&
+          citation.method === group.method &&
+          (!("spanId" in group) || citation.spanId === group.spanId),
+      )
+    )
+      resolved = false;
+    else observations.push(observation);
+  }
+  const label =
+    group.kind === "employment"
+      ? "Possible employment entry"
+      : group.kind === "education"
+        ? "Possible education entry"
+        : "Possible certification entry";
+  return (
+    <article
+      id={`entry-${group.id}`}
+      aria-label={label}
+      className="account-card"
+    >
+      <h4>{label}</h4>
+      {resolved ? (
+        <>
+          <p>
+            Unverified entry link ·{" "}
+            {group.method === "local_ocr" ? "OCR text" : "PDF text"}
+          </p>
+          <dl>
+            {observations.map((observation) => (
+              <SourceObservation
+                key={observation.id}
+                observation={observation}
+              />
+            ))}
+          </dl>
+        </>
+      ) : (
+        <p>
+          This suggested entry could not be matched to the current source.
+          Reload the evidence before reviewing its links.
+        </p>
+      )}
+    </article>
+  );
+}
+const nativePageReasonLabels = {
+  no_native_text: "No native text was extracted.",
+  limited_native_text: "Limited native text was extracted.",
+  replacement_character:
+    "Extracted native text contains a replacement character.",
+  invalid_unicode_scalar:
+    "Extracted text contains an invalid character sequence. Compare this page with your PDF.",
+  unexpected_control_character:
+    "Extracted native text contains an unexpected control character.",
+  duplicate_native_page_text:
+    "Identical native text was extracted from another page.",
+} satisfies Record<
+  ReviewModel["nativePageDiagnostics"]["pages"][number]["reasons"][number],
+  string
+>;
+const extractionBlockerLabels = {
+  uncalibrated_confidence: "Extraction confidence is uncalibrated.",
+  missing_critical_fields: "Some critical fields have no extracted candidate.",
+  conflicting_critical_fields:
+    "The saved extraction recorded conflicting candidate values. Review their source and entry relationships.",
+  missing_ocr_pages:
+    "OCR evidence is missing for pages with little or no native text.",
+  ocr_failure: "This extraction attempt recorded an OCR failure.",
+  no_text: "No extracted text was recorded.",
+} satisfies Record<ReviewModel["evidence"]["blockers"][number], string>;
+const ocrFailureLabels = {
+  unsupported: "OCR was unsupported for this extraction attempt.",
+  timeout: "OCR timed out during this extraction attempt.",
+  cancelled: "OCR was cancelled during this extraction attempt.",
+  resource_limit:
+    "OCR exceeded a resource limit during this extraction attempt.",
+  engine_failure: "The OCR engine failed during this extraction attempt.",
+  invalid_request: "The OCR request was invalid for this extraction attempt.",
+  invalid_output: "The OCR output was invalid for this extraction attempt.",
+} satisfies Record<
+  NonNullable<ReviewModel["evidence"]["ocrFailure"]>["code"],
+  string
+>;
 const privateHeaders = () =>
   new Headers({
     "Cache-Control": "private, no-store",
@@ -70,9 +284,14 @@ export async function loader({ request, params }: Args) {
       params.id ?? "",
       user.id,
     );
+    const entryAssociations = deriveEvidenceEntryAssociations(
+      review.evidence,
+      review.targets.binding,
+    );
     return data(
       {
         ...review,
+        entryAssociations,
         scoringDiagnosticsEnabled: getServerConfig().SCORING_V2_ENABLED,
         canonicalEnabled: getServerConfig().CANONICAL_AUTHORING_ENABLED,
         jobReviewEnabled: getServerConfig().JOB_INTELLIGENCE_ENABLED,
@@ -164,7 +383,12 @@ export function meta() {
 export default function AnalysisEvidence() {
   const review = useLoaderData<typeof loader>();
   const feedback = useActionData<typeof action>();
-  const busy = useNavigation().state === "submitting";
+  const navigationState = useNavigation().state;
+  const busy = navigationState === "submitting";
+  const feedbackRef = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (navigationState === "idle" && feedback) feedbackRef.current?.focus();
+  }, [navigationState, feedback]);
   return (
     <WorkspaceShell
       eyebrow="Document evidence"
@@ -176,7 +400,12 @@ export default function AnalysisEvidence() {
         revision {review.revision}. Scoring is unavailable.
       </p>
       {feedback ? (
-        <p role={feedback.error ? "alert" : "status"} aria-live="polite">
+        <p
+          ref={feedbackRef}
+          tabIndex={-1}
+          role={feedback.error ? "alert" : "status"}
+          aria-live="polite"
+        >
           {feedback.error ?? feedback.success}
         </p>
       ) : null}
@@ -208,8 +437,217 @@ export default function AnalysisEvidence() {
           Review job description
         </Link>
       ) : null}
+      <section aria-labelledby="page-extraction-review-heading">
+        <h2 id="page-extraction-review-heading">Page extraction review</h2>
+        <p>
+          Native text availability describes extracted text length. Reliability
+          and accuracy are unassessed.
+        </p>
+        {review.nativePageDiagnostics.pages.map((page) => (
+          <article
+            key={page.pageId}
+            aria-label={`Page ${page.pageNumber} extraction review`}
+            className="account-card"
+          >
+            <h3>Page {page.pageNumber}</h3>
+            <p>
+              {page.nativeTextAvailable
+                ? "Native text detected."
+                : "Little or no native text detected."}
+            </p>
+            <details>
+              <summary>Text detection details</summary>
+              <p>
+                Native text length: {page.nonWhitespaceUtf16Units}{" "}
+                non-whitespace UTF-16 units.
+              </p>
+              <p>
+                Native text is treated as available at 8 or more non-whitespace
+                UTF-16 units. This count does not assess reliability or
+                accuracy.
+              </p>
+            </details>
+            <p>
+              {review.evidence.ocrSource?.pages.some(
+                (source) => source.pageId === page.pageId,
+              )
+                ? "OCR evidence recorded for this page."
+                : "No OCR evidence recorded for this page."}
+            </p>
+            {page.reasons.length ? (
+              <ul>
+                {page.reasons.map((reason) => (
+                  <li key={reason}>{nativePageReasonLabels[reason]}</li>
+                ))}
+              </ul>
+            ) : (
+              <p>
+                No listed native-text review reasons were recorded. Reliability
+                and accuracy remain unassessed.
+              </p>
+            )}
+            {page.duplicatePageIds.length ? (
+              <p>
+                Matching extracted text on pages:{" "}
+                {review.nativePageDiagnostics.pages
+                  .filter((other) =>
+                    page.duplicatePageIds.includes(other.pageId),
+                  )
+                  .map((other) => other.pageNumber)
+                  .join(", ")}
+                .
+              </p>
+            ) : null}
+          </article>
+        ))}
+      </section>
+      <section aria-labelledby="recorded-extraction-limits-heading">
+        <h2 id="recorded-extraction-limits-heading">
+          Recorded extraction limits
+        </h2>
+        <ul>
+          {review.evidence.blockers.map((blocker) => (
+            <li key={blocker}>{extractionBlockerLabels[blocker]}</li>
+          ))}
+        </ul>
+        <h3>Recorded OCR outcome</h3>
+        <p>
+          {review.evidence.ocrFailure
+            ? ocrFailureLabels[review.evidence.ocrFailure.code]
+            : "No OCR failure was recorded for this extraction attempt."}
+        </p>
+      </section>
+      <section aria-labelledby="entry-association-review-heading">
+        <h2 id="entry-association-review-heading">Review entry links</h2>
+        <p>
+          These are unverified suggestions from extracted text. They do not
+          change your structured resume or confirm work history. Confirming an
+          individual field below does not confirm these links.
+        </p>
+        {review.entryAssociations.state === "unavailable" ? (
+          <p>
+            Entry links are unavailable for this extraction. Review the original
+            candidates below.
+          </p>
+        ) : (
+          <>
+            <h3>Possible employment entries</h3>
+            {review.entryAssociations.groups.length ? (
+              review.entryAssociations.groups.map((group) => (
+                <EntryCandidate
+                  key={group.id}
+                  group={group}
+                  targets={review.targets}
+                />
+              ))
+            ) : (
+              <p>
+                No supported multiline work entry links were suggested. Review
+                the existing candidates and unresolved fields below.
+              </p>
+            )}
+            {review.entryAssociations.preservedGroupIds.length > 0 && (
+              <section aria-label="Existing extracted entry candidates">
+                <h3>Existing extracted entry candidates</h3>
+                <p>These original entry links also remain unverified.</p>
+                {review.entryAssociations.preservedGroupIds.map((groupId) => {
+                  const group = review.targets.groups.find(
+                    (item) => item.id === groupId,
+                  );
+                  return group ? (
+                    <EntryCandidate
+                      key={groupId}
+                      group={group}
+                      targets={review.targets}
+                    />
+                  ) : (
+                    <p key={groupId}>
+                      An original entry link could not be matched to this
+                      evidence. Reload before reviewing it.
+                    </p>
+                  );
+                })}
+              </section>
+            )}
+            <section aria-label="Entry links needing review">
+              <h3>Links needing review</h3>
+              {review.targets.notices.some(
+                (notice) => notice.code === "native_ocr_values_differ",
+              ) && (
+                <p>
+                  PDF text and OCR disagree on some extracted values. Review
+                  each source separately.
+                </p>
+              )}
+              {review.targets.notices.some(
+                (notice) => notice.code === "ambiguous_labelled_context",
+              ) && (
+                <p>
+                  Some labels support more than one possible link. Review their
+                  source before deciding which fields belong together.
+                </p>
+              )}
+              {review.entryAssociations.unresolved.map((member) => {
+                const observation = resolveAssociationMember(
+                  member,
+                  review.targets,
+                );
+                return (
+                  <article
+                    key={member.observationId}
+                    aria-label="Entry link needing review"
+                    className="account-card"
+                  >
+                    {observation ? (
+                      <>
+                        <p>{associationReasonLabels[member.reason]}</p>
+                        <dl>
+                          <SourceObservation observation={observation} />
+                        </dl>
+                      </>
+                    ) : (
+                      <p>
+                        These source references could not be matched safely.
+                        Review the original candidates below.
+                      </p>
+                    )}
+                  </article>
+                );
+              })}
+              {review.entryAssociations.unresolved.length === 0 && (
+                <p>
+                  No additional unresolved fields were listed by this review.
+                  Suggested entry links remain unverified.
+                </p>
+              )}
+            </section>
+          </>
+        )}
+        <p>
+          Qualifications have not been assessed. A field not observed here does
+          not establish that you lack a qualification.
+        </p>
+        {review.targets.coverage.some(
+          (field) => field.state === "unobserved",
+        ) && (
+          <p>
+            Not observed in this extraction:{" "}
+            {review.targets.coverage
+              .filter((field) => field.state === "unobserved")
+              .map((field) => observationFieldLabels[field.field])
+              .join(", ")}
+            .
+          </p>
+        )}
+      </section>
       <section aria-labelledby="original-evidence-heading">
         <h2 id="original-evidence-heading">Original extracted candidates</h2>
+        <p>
+          This is original extraction history. Different employers, roles or
+          dates across separate entries do not by themselves establish a
+          contradiction. Recorded states remain unchanged; unresolved or
+          conflicting candidates still need source review.
+        </p>
         <p>
           Confirm only values supported by the cited source. Your confirmation
           records your decision; it does not validate OCR accuracy.
@@ -225,7 +663,7 @@ export default function AnalysisEvidence() {
                 ? "Employment dates"
                 : field.field.charAt(0).toUpperCase() + field.field.slice(1)}
             </h3>
-            <p>Extraction state: {field.state.replaceAll("_", " ")}</p>
+            <p>Recorded aggregate state: {field.state.replaceAll("_", " ")}</p>
             {review.evidence.assertions
               .filter((candidate) => candidate.field === field.field)
               .map((candidate) => (

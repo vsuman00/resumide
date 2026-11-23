@@ -1,0 +1,48 @@
+{
+  "id": "CR-U17-S01",
+  "status": "VERIFIED_LOCAL_ACCOUNT_SESSIONS_WITH_SIMULATED_AUTH",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Built SSR on loopback and installed Supabase SDK with two synthetic browser sessions",
+  "sources": {
+    "app/routes/account.tsx": "211fd162f98d453f131a8a8cf9e8b203e3b942cb385e04ac8242a8f75ab5a11d",
+    "app/lib/server/auth.ts": "48f40dde12fb0fd0b5bd496d0b216de42bf30a450e3367e3e6d16a786631abf6",
+    "app/lib/server/supabase.ts": "ba72b9a96c9d49137eb83a4097f4ccd0a3aa88e53d3274a47eada13a97b8394c",
+    "tests/unit/account-session.test.ts": "5b8ff9c06483892724cc877e587537cd33bb32ed4c551c3ba74fb484051735f8",
+    "scripts/verify-local-account-sessions.ts": "356e616ad6ffa16e1318b950d0b1cd4f0823e4ac82f5b4d1987a21a7d179801a",
+    "scripts/local-fixture-browser.ts": "372fa419ba68e5c15b742dbb4acd267a0359b67c1b8eb8b9ea5319a5c36e22f4",
+    "package-lock.json": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41"
+  },
+  "baseline": {
+    "failedTests": 5,
+    "logSha256": "2919b4018a26b282048d99b4b2c19dad61ea252a018e66586ff9c32bfa0252ca"
+  },
+  "focusedTests": {
+    "command": "vitest run tests/unit/account-session.test.ts tests/unit/auth.test.ts tests/unit/auth-recovery.test.ts tests/unit/auth-logout.test.ts tests/unit/response-security.test.ts tests/unit/privacy-route.test.ts tests/unit/privacy-export-route.test.ts tests/unit/privacy-operations.test.ts tests/unit/privacy-deletion-access.test.ts tests/unit/privacy.test.ts",
+    "passed": 202,
+    "files": 10,
+    "logSha256": "79984b2cd12d84a4c8fb5134fc84b50c1730a92b0dd30b08f5e100e49a3018a0"
+  },
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed with four existing warnings",
+    "browserFixtureLint": "passed",
+    "webBuildLogSha256": "9346cca62154bf63636a89ea1f0c7bbf24bfd885f59fd6467a1eb3cdb8710fdc",
+    "workerBuildLogSha256": "2bf38d68daabffc481a2f8b62df97b602f48c471a7109d188e504ff93203d9c0"
+  },
+  "browser": {
+    "reportSha256": "4faa0b96b1d18691b28ebf81d7b58e56c621becb91c43be3a3649466ad5e4753",
+    "result": {
+      "browser": "Chromium",
+      "refreshCalls": 1,
+      "logoutStatuses": [403, 204],
+      "rotatedCookieSurvivedDenial": true,
+      "otherSessionSurvivedDenial": true,
+      "currentSessionSurvivedSuccess": true,
+      "simulatedRevokedSessionDenied": true,
+      "newSignInSucceeded": true,
+      "managedAuthVerified": false
+    }
+  },
+  "managedSessionRevocationVerified": false,
+  "fullConsumerPrivacyGateVerified": false
+}

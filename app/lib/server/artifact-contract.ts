@@ -64,6 +64,8 @@ export const hash = (value: string | Uint8Array) =>
   createHash("sha256").update(value).digest("hex");
 export const normalizeArtifactText = (value: string) =>
   value.normalize("NFC").replace(/\s+/gu, "");
+export class ArtifactPlanError extends Error {}
+
 export function safeArtifactLink(value: string): string | null {
   try {
     const url = new URL(value);
@@ -89,14 +91,18 @@ export function buildRenderPlan(raw: unknown): RenderPlan {
   if (
     !TEMPLATE.locales.includes(doc.locale as (typeof TEMPLATE.locales)[number])
   )
-    throw new Error("Choose a supported English locale before exporting.");
+    throw new ArtifactPlanError(
+      "Choose a supported English locale before exporting.",
+    );
   const pendingCount = doc.facts.filter(
     (f) => f.state === "unconfirmed",
   ).length;
   if (!doc.facts.length)
-    throw new Error("Import and review your resume facts before exporting.");
+    throw new ArtifactPlanError(
+      "Import and review your resume facts before exporting.",
+    );
   if (pendingCount)
-    throw new Error(
+    throw new ArtifactPlanError(
       `Review and confirm ${pendingCount} unconfirmed ${pendingCount === 1 ? "fact" : "facts"} before exporting.`,
     );
   const facts = new Map(doc.facts.map((f) => [f.id, f]));
@@ -128,13 +134,15 @@ export function buildRenderPlan(raw: unknown): RenderPlan {
       if (fact.type === "link") {
         link = safeArtifactLink(fact.value);
         if (!link)
-          throw new Error(
+          throw new ArtifactPlanError(
             "Correct the unsupported or unsafe link before exporting.",
           );
       } else if (fact.type === "email") {
         link = safeArtifactLink(`mailto:${fact.value}`);
         if (!link)
-          throw new Error("Correct the email address before exporting.");
+          throw new ArtifactPlanError(
+            "Correct the email address before exporting.",
+          );
       }
       const block = {
         id,
@@ -165,7 +173,7 @@ export function buildRenderPlan(raw: unknown): RenderPlan {
           bullet.text !==
             bullet.factIds.map((id) => facts.get(id)!.value).join(" ")
         )
-          throw new Error(
+          throw new ArtifactPlanError(
             "Review a bullet that no longer matches its current facts.",
           );
       }
@@ -188,7 +196,7 @@ export function buildRenderPlan(raw: unknown): RenderPlan {
           bullet.text !==
             bullet.factIds.map((id) => facts.get(id)!.value).join(" ")
         )
-          throw new Error(
+          throw new ArtifactPlanError(
             "Review a bullet that no longer matches its current facts.",
           );
         add(bullet.factIds);
@@ -224,7 +232,7 @@ export function buildRenderPlan(raw: unknown): RenderPlan {
   }
   const text = blocks.map((b) => b.text).join("\n");
   if (text.length > TEMPLATE.maxCharacters || blocks.length > 1200)
-    throw new Error(
+    throw new ArtifactPlanError(
       "Shorten the resume to the supported export size before exporting.",
     );
   if (
@@ -238,7 +246,7 @@ export function buildRenderPlan(raw: unknown): RenderPlan {
       );
     })
   )
-    throw new Error(
+    throw new ArtifactPlanError(
       "Remove unsupported control or directional characters before exporting.",
     );
   return {

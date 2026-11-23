@@ -1,0 +1,21 @@
+{
+  "status": "SOURCE_ACK",
+  "reviewed": {
+    "app/lib/server/jd-clause-order-http.ts": "bc7cab9e9a2fbceb8d53720f8599a2b047ef4d36330abfa1dc8b0deab4cf3119",
+    "app/routes/analysis.author.clause-order.ts": "3fc8b51378b99cdcee1484e028f21235b88b66850962ea6529df506d3479ab34"
+  },
+  "findingsClosed": [
+    "Undo execution lacked whole-flow deadline/cancellation; actual scoped select/RPC signal combination plus active checks now prevent late new work",
+    "Additional JSON16k cap was stricter than frozen framed16k/body64k; removed while actual codec and whole-body limits remain"
+  ],
+  "reviewScope": [
+    "Actual owned accepted canonical version and owner-filtered v2 event/receipt/source/retention correlation",
+    "Existing guarded undo target from accepted event base, not confirmation parent",
+    "Actual post-RPC undo event exact command/key/base/result/revision/scope correlation before strict public undo2",
+    "Strict body fields, nested JSON duplicate detection, authentication/three flags/origin/private headers/closed recovery",
+    "Five-second undo SDK cancellation and late result refusal"
+  ],
+  "remainingScopedFindings": [],
+  "evidence": "Read-only source review only; no reviewer tests, statics, DB, SQL parsing/execution, browser or runtime acceptance",
+  "ownFrozenRelease": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-decisions-adoption-backend-x3fe6qcc/release.json"
+}

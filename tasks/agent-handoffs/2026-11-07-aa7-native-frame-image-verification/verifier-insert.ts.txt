@@ -1,0 +1,82 @@
+  const nativeFrameProbeSource = await readFile(
+    "scripts/latex-runtime/verify-native-frame.py",
+    "utf8",
+  );
+  const nativeFrameSuiteSource = await readFile(
+    "scripts/latex-runtime/native-poppler/verify_consumer.py",
+    "utf8",
+  );
+  const frozenFrameSuiteSha256 =
+    "8d36bb9de1fcf0cf900e0d8c08c05a255b05e165bab7c40aeef28ffc6386bd1d";
+  assert.equal(
+    createHash("sha256").update(nativeFrameProbeSource).digest("hex"),
+    hashes["scripts/latex-runtime/verify-native-frame.py"],
+  );
+  assert.equal(
+    createHash("sha256").update(nativeFrameSuiteSource).digest("hex"),
+    frozenFrameSuiteSha256,
+  );
+  assert.equal(
+    hashes["scripts/latex-runtime/native-poppler/verify_consumer.py"],
+    frozenFrameSuiteSha256,
+  );
+  const nativeFrame = await rawLatexAttempt(imageId, "", {
+    entrypoint: "/usr/bin/python3",
+    args: ["-I", "-B", "-c", nativeFrameProbeSource],
+    input: JSON.stringify({
+      suiteSource: nativeFrameSuiteSource,
+      runtimeInstallVerifierSha256:
+        hashes["scripts/latex-runtime/native-poppler/install-runtime.py"],
+    }),
+  });
+  assert.equal(nativeFrame.value.passed, true);
+  assert.equal(nativeFrame.value.protocol, "RESUMIDE_BBOX/1");
+  assert.equal(
+    nativeFrame.value.currentPackageVersion,
+    "25.03.0-5+deb13u4+resumide1",
+  );
+  assert.deepEqual(nativeFrame.value.installedCohort, [
+    "libpoppler147",
+    "poppler-utils",
+  ]);
+  assert.equal(nativeFrame.value.installedElfCount, 14);
+  assert.equal(nativeFrame.value.nativeAbiExports, 2716);
+  assert.equal(nativeFrame.value.samePdfNativeFixtures, 7);
+  assert.equal(nativeFrame.value.pdftotextNoOpenJpegBinding, true);
+  assert.equal(nativeFrame.value.supervisorFrameWiring, true);
+  assert.equal(
+    nativeFrame.value.consumerSha256,
+    hashes["scripts/latex-runtime/native_geometry.py"],
+  );
+  assert.equal(nativeFrame.value.consumerSuite.cases, 107);
+  assert.equal(nativeFrame.value.consumerSuite.testMethods, 6);
+  assert.equal(nativeFrame.value.consumerSuite.passed, true);
+  assert.equal(nativeFrame.value.consumerSuite.consumerStable, true);
+  assert.equal(nativeFrame.value.upstream.executed, 71);
+  assert.equal(nativeFrame.value.upstream.qtCompleteClasses, 56);
+  if (nativeFrame.value.upstream.allNativeTestsPassed) {
+    assert.equal(nativeFrame.value.upstream.passed, 71);
+    assert.equal(nativeFrame.value.upstream.failed, 0);
+    assert.equal(nativeFrame.value.upstream.actualCtestExitCode, 0);
+    assert.equal(nativeFrame.value.upstream.engineeringException, null);
+  } else {
+    assert.equal(nativeFrame.value.upstream.passed, 70);
+    assert.equal(nativeFrame.value.upstream.failed, 1);
+    assert.equal(nativeFrame.value.upstream.actualCtestExitCode, 8);
+    assert.equal(nativeFrame.value.upstream.engineeringException.id, "E010");
+    assert.deepEqual(
+      nativeFrame.value.upstream.engineeringException
+        .unexecutedLaterAssertionLines,
+      [312, 313, 314, 315],
+    );
+  }
+  assert.equal(nativeFrame.value.pdfInputsGenerated, false);
+  assert.equal(nativeFrame.value.pdfNativeDecodingRequested, false);
+  assert.equal(nativeFrame.value.sourceBuildsRequested, false);
+  assert.equal(nativeFrame.value.temporaryFilesRemoved, true);
+  checks.push({
+    name: "native-frame-provenance-and-frozen-consumer",
+    ...nativeFrame.value,
+    durationMs: nativeFrame.durationMs,
+  });
+

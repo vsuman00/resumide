@@ -1,0 +1,52 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > supports keyboard accordion semantics
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > names scores and gives keyword evidence text beyond color
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > labels the stored high count band as text availability with reliability unassessed
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > labels the stored medium count band as text availability with reliability unassessed
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > labels the stored low count band as text availability with reliability unassessed
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > bounds an empty warning list to recorded warnings without assuring page reliability
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > shows saved-text review observations from real parser output 0
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > shows saved-text review observations from real parser output 1
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > shows saved-text review observations from real parser output 2
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > shows saved-text review observations from real parser output 3
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > shows saved-text review observations from real parser output 4
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > observes identical real saved-text groups without claiming duplicate PDF pages
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > withholds derived saved-text reasons for missing metadata and never scans fallback pages
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > withholds derived saved-text reasons for count_mismatch metadata and never scans fallback pages
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > withholds derived saved-text reasons for nonsequential metadata and never scans fallback pages
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > withholds derived saved-text reasons for unsupported_bounds metadata and never scans fallback pages
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > keeps recorded saved-page warnings and an empty reason list unassessed
+ × tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > bounds the saved-page fallback for a schema-valid oversized declared page count 8ms
+   → Invalid array length
+ ↓ tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > lets a reader select each parse page and see its limitations
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/Phase6Accessibility.test.tsx > Phase 6 accessible evidence controls > bounds the saved-page fallback for a schema-valid oversized declared page count
+RangeError: Invalid array length
+ ❯ ParseView app/components/ParseView.tsx:66:13
+     64|   const pages = parseView.pages.length
+     65|     ? parseView.pages
+     66|     : Array.from({ length: Math.max(1, totalPages) }, (_, index) => ({
+       |             ^
+     67|         pageNumber: index + 1,
+     68|         text: "",
+ ❯ Object.react_stack_bottom_frame ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/cjs/react-dom-client.development.js:23863:20
+ ❯ renderWithHooks ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/cjs/react-dom-client.development.js:5529:22
+ ❯ updateFunctionComponent ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/cjs/react-dom-client.development.js:8897:19
+ ❯ beginWork ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/cjs/react-dom-client.development.js:10522:18
+ ❯ runWithFiberInDEV ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/cjs/react-dom-client.development.js:1522:13
+ ❯ performUnitOfWork ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/cjs/react-dom-client.development.js:15140:22
+ ❯ workLoopSync ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/cjs/react-dom-client.development.js:14956:41
+ ❯ renderRootSync ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/react-dom/cjs/react-dom-client.development.js:14936:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 18 skipped (19)
+   Start at  15:08:26
+   Duration  842ms (transform 94ms, setup 0ms, import 235ms, tests 8ms, environment 517ms)
+

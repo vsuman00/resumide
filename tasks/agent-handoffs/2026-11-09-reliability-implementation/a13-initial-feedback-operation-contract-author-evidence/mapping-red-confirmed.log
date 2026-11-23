@@ -1,0 +1,56 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/initial-feedback-operation-contract.test.ts (24 tests | 1 failed | 22 skipped) 67ms
+     ✓ accepts actual original scorer/context and actual compiled retained publication 59ms
+     × rejects a duplicated retained part that drops another 8ms
+     ↓ preserves exact partial producer semantics
+     ↓ refuses original context mismatch ownerId
+     ↓ refuses original context mismatch organizationId
+     ↓ refuses original context mismatch analysisId
+     ↓ refuses original context mismatch resumeVersionId
+     ↓ refuses original context mismatch jobSha256
+     ↓ rejects changed numeric output with unchanged producer checksum
+     ↓ rejects noncanonical UUID, SHA, unknown nested fields and unpaired text
+     ↓ rejects non-native timestamp 2026-02-30T00:00:00Z
+     ↓ rejects non-native timestamp 2026-11-15T00:00:00+00:00
+     ↓ rejects non-native timestamp 0000-01-01T00:00:00Z
+     ↓ rejects non-native timestamp 2026-11-15T00:00:00.1234567Z
+     ↓ requires sorted unique provider ordinals and known terminal previous attempts
+     ↓ keeps unknown usage distinct from actual zero and rejects unsafe/noncanonical counters
+     ↓ correlates claim permission to open operation, actual dispatched attempt and budget mode
+     ↓ accepts an exact existing R03 envelope only when bound to this claim
+     ↓ rejects mutually exclusive capture kinds and incomplete plan/observation
+     ↓ rejects altered deterministic projection, model ratings and foreign receipts
+     ↓ does not turn missing publication into empty assessed feedback
+     ↓ defines exact staged full readiness without fabricating a released profile
+     ↓ checks BigInt partition totals/current period/unknown holds without number coercion
+     ↓ bounds cycles, deep/oversized data and non-JSON objects before parsing
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-operation-contract.test.ts > initial feedback operation contract, pure synthetic metadata with real content producers > rejects a duplicated retained part that drops another
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/unit/initial-feedback-operation-contract.test.ts:268:67
+    266|       p.ownedSupport.parts.tips[0],
+    267|     );
+    268|     expect(InitialFeedbackPublicationSchema.safeParse(p).success).toBe…
+       |                                                                   ^
+    269|   });
+    270|   it("preserves exact partial producer semantics", () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 22 skipped (24)
+   Start at  13:12:59
+   Duration  454ms (transform 155ms, setup 0ms, import 322ms, tests 67ms, environment 0ms)
+

@@ -1,0 +1,701 @@
+{
+  "profile": {
+    "schemaVersion": "owned-ai-budget-export-readiness/1.0.0",
+    "profileVersion": "owned-ai-budget-export-profile/1.0.0",
+    "checkerSha256": "bd56c1cb7bfe8b0716a6b3d10a0a7a499ca21007cf2482f2f26089efae0d2456",
+    "exportSha256": "36eeb7a8e50e81d69c134bc4c9dd6c6f994543e13216c2f1c1684fb02578ba8f",
+    "metadataSha256": "c4325e98c94bff7bf2cd775a875f6253b8d13e8e40f9a5ea0d4ce60eb86256e2"
+  },
+  "bodies": {
+    "private.owned_ai_budget_export_number": "53549a12d1f02a2df1121ad8345cb3670f7b9e5329e000f31f5c90923f349bde",
+    "public.export_owned_ai_budget_records": "36eeb7a8e50e81d69c134bc4c9dd6c6f994543e13216c2f1c1684fb02578ba8f",
+    "public.read_owned_ai_budget_export_readiness": "c4325e98c94bff7bf2cd775a875f6253b8d13e8e40f9a5ea0d4ce60eb86256e2",
+    "private.owned_ai_budget_export_ready": "bd56c1cb7bfe8b0716a6b3d10a0a7a499ca21007cf2482f2f26089efae0d2456"
+  },
+  "manifest": [
+    {
+      "signature": "private.owned_ai_budget_export_number(numeric,numeric)",
+      "sha256": "53549a12d1f02a2df1121ad8345cb3670f7b9e5329e000f31f5c90923f349bde",
+      "resultType": "text",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "i",
+      "acl": "private"
+    },
+    {
+      "signature": "public.export_owned_ai_budget_records(uuid)",
+      "sha256": "36eeb7a8e50e81d69c134bc4c9dd6c6f994543e13216c2f1c1684fb02578ba8f",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "s",
+      "acl": "optional_service"
+    },
+    {
+      "signature": "public.read_owned_ai_budget_export_readiness()",
+      "sha256": "c4325e98c94bff7bf2cd775a875f6253b8d13e8e40f9a5ea0d4ce60eb86256e2",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "s",
+      "acl": "metadata"
+    },
+    {
+      "signature": "private.ai_budget_integer(numeric)",
+      "sha256": "863c4d9ec3f71c48829128a6fd0ebad472a6f1bbbab2b7ad548fc8eca4477d70",
+      "resultType": "boolean",
+      "language": "sql",
+      "definer": false,
+      "strict": true,
+      "volatility": "i",
+      "acl": "private"
+    },
+    {
+      "signature": "private.ai_budget_cost(numeric,numeric,numeric,numeric)",
+      "sha256": "d23346e5553140981353ddf58fbce895d3fcfdf252658007250eb162fc82fbda",
+      "resultType": "numeric",
+      "language": "sql",
+      "definer": false,
+      "strict": true,
+      "volatility": "i",
+      "acl": "private"
+    },
+    {
+      "signature": "private.ai_budget_binding_sha256(uuid,uuid,jsonb)",
+      "sha256": "d1718008235bfbcd89cc4047890b554f582ad13f57ccc518902f918704548587",
+      "resultType": "text",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": true,
+      "volatility": "i",
+      "acl": "private"
+    },
+    {
+      "signature": "private.ai_budget_immutable()",
+      "sha256": "95448e43a5a6d3bdd94474aa90da6b9d7b512e61c31abcb390c08f7238742206",
+      "resultType": "trigger",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "v",
+      "acl": "private"
+    },
+    {
+      "signature": "private.ai_budget_projection_identity()",
+      "sha256": "dba0e340be6e7d29af9dfd0939ab49aa8699b702368ea2c3f23890ea3be689b6",
+      "resultType": "trigger",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "v",
+      "acl": "private"
+    }
+  ],
+  "columns": {
+    "ai_budget_policies": [
+      [
+        "version",
+        "text",
+        true
+      ],
+      [
+        "model",
+        "text",
+        true
+      ],
+      [
+        "monthly_token_limit",
+        "numeric",
+        true
+      ],
+      [
+        "monthly_cost_limit_microusd",
+        "numeric",
+        true
+      ],
+      [
+        "input_microusd_per_million",
+        "numeric",
+        true
+      ],
+      [
+        "output_microusd_per_million",
+        "numeric",
+        true
+      ],
+      [
+        "max_attempts",
+        "integer",
+        true
+      ],
+      [
+        "enabled",
+        "boolean",
+        true
+      ],
+      [
+        "created_at",
+        "timestamp with time zone",
+        true
+      ]
+    ],
+    "ai_budget_period_openings": [
+      [
+        "organization_id",
+        "uuid",
+        true
+      ],
+      [
+        "period",
+        "date",
+        true
+      ],
+      [
+        "pool_policy_version",
+        "text",
+        true
+      ],
+      [
+        "opening_spent_tokens",
+        "numeric",
+        true
+      ],
+      [
+        "opening_spent_cost_microusd",
+        "numeric",
+        true
+      ],
+      [
+        "unresolved_legacy_attempts",
+        "integer",
+        true
+      ],
+      [
+        "created_at",
+        "timestamp with time zone",
+        true
+      ]
+    ],
+    "ai_budget_pools": [
+      [
+        "organization_id",
+        "uuid",
+        true
+      ],
+      [
+        "period",
+        "date",
+        true
+      ],
+      [
+        "pool_policy_version",
+        "text",
+        true
+      ],
+      [
+        "token_limit",
+        "numeric",
+        true
+      ],
+      [
+        "cost_limit_microusd",
+        "numeric",
+        true
+      ],
+      [
+        "reserved_tokens",
+        "numeric",
+        true
+      ],
+      [
+        "reserved_cost_microusd",
+        "numeric",
+        true
+      ],
+      [
+        "spent_tokens",
+        "numeric",
+        true
+      ],
+      [
+        "spent_cost_microusd",
+        "numeric",
+        true
+      ],
+      [
+        "created_at",
+        "timestamp with time zone",
+        true
+      ]
+    ],
+    "ai_budget_operations": [
+      [
+        "id",
+        "uuid",
+        true
+      ],
+      [
+        "organization_id",
+        "uuid",
+        true
+      ],
+      [
+        "user_id",
+        "uuid",
+        true
+      ],
+      [
+        "surface",
+        "text",
+        true
+      ],
+      [
+        "model",
+        "text",
+        true
+      ],
+      [
+        "prompt_policy_version",
+        "text",
+        true
+      ],
+      [
+        "policy_version",
+        "text",
+        true
+      ],
+      [
+        "reserved_input_tokens",
+        "numeric",
+        true
+      ],
+      [
+        "reserved_output_tokens",
+        "numeric",
+        true
+      ],
+      [
+        "input_microusd_per_million",
+        "numeric",
+        true
+      ],
+      [
+        "output_microusd_per_million",
+        "numeric",
+        true
+      ],
+      [
+        "attempt_limit",
+        "integer",
+        true
+      ],
+      [
+        "created_at",
+        "timestamp with time zone",
+        true
+      ]
+    ],
+    "ai_budget_attempts": [
+      [
+        "id",
+        "uuid",
+        true
+      ],
+      [
+        "operation_id",
+        "uuid",
+        true
+      ],
+      [
+        "organization_id",
+        "uuid",
+        true
+      ],
+      [
+        "ordinal",
+        "integer",
+        true
+      ],
+      [
+        "period",
+        "date",
+        true
+      ],
+      [
+        "state",
+        "text",
+        true
+      ],
+      [
+        "reserved_cost_microusd",
+        "numeric",
+        true
+      ],
+      [
+        "actual_input_tokens",
+        "numeric",
+        false
+      ],
+      [
+        "actual_output_tokens",
+        "numeric",
+        false
+      ],
+      [
+        "actual_cost_microusd",
+        "numeric",
+        false
+      ],
+      [
+        "created_at",
+        "timestamp with time zone",
+        true
+      ],
+      [
+        "updated_at",
+        "timestamp with time zone",
+        true
+      ]
+    ],
+    "ai_budget_reconciliation_operators": [
+      [
+        "organization_id",
+        "uuid",
+        true
+      ],
+      [
+        "operator_id",
+        "uuid",
+        true
+      ],
+      [
+        "enabled",
+        "boolean",
+        true
+      ]
+    ],
+    "ai_budget_events": [
+      [
+        "id",
+        "uuid",
+        true
+      ],
+      [
+        "attempt_id",
+        "uuid",
+        true
+      ],
+      [
+        "kind",
+        "text",
+        true
+      ],
+      [
+        "input_tokens",
+        "numeric",
+        false
+      ],
+      [
+        "output_tokens",
+        "numeric",
+        false
+      ],
+      [
+        "cost_microusd",
+        "numeric",
+        false
+      ],
+      [
+        "reconciliation_id",
+        "uuid",
+        false
+      ],
+      [
+        "operator_id",
+        "uuid",
+        false
+      ],
+      [
+        "created_at",
+        "timestamp with time zone",
+        true
+      ]
+    ]
+  },
+  "keys": [
+    {
+      "table": "ai_budget_policies",
+      "kind": "p",
+      "columns": [
+        "version"
+      ]
+    },
+    {
+      "table": "ai_budget_period_openings",
+      "kind": "p",
+      "columns": [
+        "organization_id",
+        "period"
+      ]
+    },
+    {
+      "table": "ai_budget_period_openings",
+      "kind": "f",
+      "columns": [
+        "organization_id"
+      ],
+      "references": "public.organizations",
+      "target": [
+        "id"
+      ]
+    },
+    {
+      "table": "ai_budget_period_openings",
+      "kind": "f",
+      "columns": [
+        "pool_policy_version"
+      ],
+      "references": "private.ai_budget_policies",
+      "target": [
+        "version"
+      ]
+    },
+    {
+      "table": "ai_budget_pools",
+      "kind": "p",
+      "columns": [
+        "organization_id",
+        "period"
+      ]
+    },
+    {
+      "table": "ai_budget_pools",
+      "kind": "f",
+      "columns": [
+        "pool_policy_version"
+      ],
+      "references": "private.ai_budget_policies",
+      "target": [
+        "version"
+      ]
+    },
+    {
+      "table": "ai_budget_pools",
+      "kind": "f",
+      "columns": [
+        "organization_id",
+        "period"
+      ],
+      "references": "private.ai_budget_period_openings",
+      "target": [
+        "organization_id",
+        "period"
+      ]
+    },
+    {
+      "table": "ai_budget_operations",
+      "kind": "p",
+      "columns": [
+        "id"
+      ]
+    },
+    {
+      "table": "ai_budget_operations",
+      "kind": "u",
+      "columns": [
+        "id",
+        "organization_id"
+      ]
+    },
+    {
+      "table": "ai_budget_operations",
+      "kind": "f",
+      "columns": [
+        "organization_id"
+      ],
+      "references": "public.organizations",
+      "target": [
+        "id"
+      ]
+    },
+    {
+      "table": "ai_budget_operations",
+      "kind": "f",
+      "columns": [
+        "user_id"
+      ],
+      "references": "auth.users",
+      "target": [
+        "id"
+      ]
+    },
+    {
+      "table": "ai_budget_operations",
+      "kind": "f",
+      "columns": [
+        "policy_version"
+      ],
+      "references": "private.ai_budget_policies",
+      "target": [
+        "version"
+      ]
+    },
+    {
+      "table": "ai_budget_attempts",
+      "kind": "p",
+      "columns": [
+        "id"
+      ]
+    },
+    {
+      "table": "ai_budget_attempts",
+      "kind": "u",
+      "columns": [
+        "operation_id",
+        "ordinal"
+      ]
+    },
+    {
+      "table": "ai_budget_attempts",
+      "kind": "f",
+      "columns": [
+        "operation_id",
+        "organization_id"
+      ],
+      "references": "private.ai_budget_operations",
+      "target": [
+        "id",
+        "organization_id"
+      ]
+    },
+    {
+      "table": "ai_budget_attempts",
+      "kind": "f",
+      "columns": [
+        "organization_id",
+        "period"
+      ],
+      "references": "private.ai_budget_pools",
+      "target": [
+        "organization_id",
+        "period"
+      ]
+    },
+    {
+      "table": "ai_budget_reconciliation_operators",
+      "kind": "p",
+      "columns": [
+        "organization_id",
+        "operator_id"
+      ]
+    },
+    {
+      "table": "ai_budget_reconciliation_operators",
+      "kind": "f",
+      "columns": [
+        "organization_id"
+      ],
+      "references": "public.organizations",
+      "target": [
+        "id"
+      ]
+    },
+    {
+      "table": "ai_budget_reconciliation_operators",
+      "kind": "f",
+      "columns": [
+        "operator_id"
+      ],
+      "references": "auth.users",
+      "target": [
+        "id"
+      ]
+    },
+    {
+      "table": "ai_budget_events",
+      "kind": "p",
+      "columns": [
+        "id"
+      ]
+    },
+    {
+      "table": "ai_budget_events",
+      "kind": "u",
+      "columns": [
+        "reconciliation_id"
+      ]
+    },
+    {
+      "table": "ai_budget_events",
+      "kind": "u",
+      "columns": [
+        "attempt_id",
+        "kind"
+      ]
+    },
+    {
+      "table": "ai_budget_events",
+      "kind": "f",
+      "columns": [
+        "attempt_id"
+      ],
+      "references": "private.ai_budget_attempts",
+      "target": [
+        "id"
+      ]
+    },
+    {
+      "table": "ai_budget_events",
+      "kind": "f",
+      "columns": [
+        "operator_id"
+      ],
+      "references": "auth.users",
+      "target": [
+        "id"
+      ]
+    }
+  ],
+  "triggers": [
+    {
+      "table": "ai_budget_policies",
+      "name": "ai_budget_policies_immutable",
+      "signature": "private.ai_budget_immutable()",
+      "type": 27
+    },
+    {
+      "table": "ai_budget_period_openings",
+      "name": "ai_budget_openings_immutable",
+      "signature": "private.ai_budget_immutable()",
+      "type": 27
+    },
+    {
+      "table": "ai_budget_operations",
+      "name": "ai_budget_operations_immutable",
+      "signature": "private.ai_budget_immutable()",
+      "type": 27
+    },
+    {
+      "table": "ai_budget_events",
+      "name": "ai_budget_events_immutable",
+      "signature": "private.ai_budget_immutable()",
+      "type": 27
+    },
+    {
+      "table": "ai_budget_pools",
+      "name": "ai_budget_pool_identity",
+      "signature": "private.ai_budget_projection_identity()",
+      "type": 19
+    },
+    {
+      "table": "ai_budget_attempts",
+      "name": "ai_budget_attempt_identity",
+      "signature": "private.ai_budget_projection_identity()",
+      "type": 19
+    }
+  ],
+  "migrationSha256": "de681bc0447b72918698f431f9ea189aef42617c7dde541f5ce685451cfe9bdf"
+}

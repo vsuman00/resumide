@@ -1,0 +1,178 @@
+{
+  "mapping-red": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "-t",
+      "duplicated retained part"
+    ],
+    "expectedExit": 1
+  },
+  "mapping-red-actual": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "-t",
+      "accepts actual original|duplicated retained part"
+    ],
+    "expectedExit": 1
+  },
+  "mapping-red-confirmed": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "-t",
+      "accepts actual original|duplicated retained part"
+    ],
+    "expectedExit": 1
+  },
+  "mapping-green": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "-t",
+      "accepts actual original|duplicated retained part"
+    ],
+    "expectedExit": 0
+  },
+  "policy-vectors": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-operation-contract-pyu_cryd/policy-vectors.cjs"
+    ],
+    "expectedExit": 0
+  },
+  "policy-vectors-final": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-operation-contract-pyu_cryd/policy-vectors.cjs"
+    ],
+    "expectedExit": 0
+  },
+  "finite": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "tests/unit/initial-feedback-publication-policy.test.ts",
+      "tests/unit/initial-feedback-result-validation.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "types": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-operation-contract-pyu_cryd/types.cjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/initial-feedback-operation-contract.ts",
+      "app/lib/server/initial-feedback-publication-policy.ts",
+      "app/lib/server/legacy-scoring-input.ts",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "tests/unit/initial-feedback-publication-policy.test.ts",
+      "tests/unit/initial-feedback-result-validation.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/initial-feedback-operation-contract.ts",
+      "app/lib/server/initial-feedback-publication-policy.ts",
+      "app/lib/server/legacy-scoring-input.ts",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "tests/unit/initial-feedback-publication-policy.test.ts",
+      "tests/unit/initial-feedback-result-validation.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "affected-final": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "tests/unit/initial-feedback-publication-policy.test.ts",
+      "-t",
+      "matches current source|deterministic-only projection"
+    ],
+    "expectedExit": 0
+  },
+  "types-final": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-operation-contract-pyu_cryd/types.cjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint-final": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/initial-feedback-operation-contract.ts",
+      "app/lib/server/initial-feedback-publication-policy.ts",
+      "app/lib/server/legacy-scoring-input.ts",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "tests/unit/initial-feedback-publication-policy.test.ts",
+      "tests/unit/initial-feedback-result-validation.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format-final": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/initial-feedback-operation-contract.ts",
+      "app/lib/server/initial-feedback-publication-policy.ts",
+      "app/lib/server/legacy-scoring-input.ts",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "tests/unit/initial-feedback-publication-policy.test.ts",
+      "tests/unit/initial-feedback-result-validation.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "resource-final": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "-t",
+      "bounds cycles"
+    ],
+    "expectedExit": 0
+  },
+  "types-terminal": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-operation-contract-pyu_cryd/types.cjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint-terminal": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/initial-feedback-operation-contract.ts",
+      "app/lib/server/initial-feedback-publication-policy.ts",
+      "app/lib/server/legacy-scoring-input.ts",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "tests/unit/initial-feedback-publication-policy.test.ts",
+      "tests/unit/initial-feedback-result-validation.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format-terminal": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/initial-feedback-operation-contract.ts",
+      "app/lib/server/initial-feedback-publication-policy.ts",
+      "app/lib/server/legacy-scoring-input.ts",
+      "tests/unit/initial-feedback-operation-contract.test.ts",
+      "tests/unit/initial-feedback-publication-policy.test.ts",
+      "tests/unit/initial-feedback-result-validation.test.ts"
+    ],
+    "expectedExit": 0
+  }
+}

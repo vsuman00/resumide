@@ -1,0 +1,369 @@
+import { reviseCanonical } from "../../app/lib/server/canonical-content";
+import { createHash } from "node:crypto";
+import * as drafting from "../../app/lib/server/jd-clause-order-drafting";
+import * as relationship from "../../app/lib/server/requirement-relationship-context";
+import { expect, it, vi } from "vitest";
+import { loadScoreDiagnostics } from "../../app/lib/server/score-v2-repository";
+import {
+  createJdClauseOrderFixture,
+  jdClauseOrderFixtureId,
+} from "../fixtures/jd-clause-order";
+import { createJdClauseOrderStore } from "../fixtures/jd-clause-order-store";
+it("releases a real clause-order draft from the actual owned typed reader when server enabled", async () => {
+  const f = await createJdClauseOrderFixture();
+  const store = createJdClauseOrderStore(f.context);
+  const model = await loadScoreDiagnostics(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+    {},
+    undefined,
+    { clauseOrderPreview: true },
+  );
+  expect(model).toHaveProperty("jdClauseOrderPlan.state", "available");
+  expect(model).toHaveProperty(
+    "jdClauseOrderPlan.drafts.0.after",
+    "Developed tools using Git; Built services using Python",
+  );
+});
+
+const ok = (data: unknown) => ({ data, error: null });
+const enabled = { clauseOrderPreview: true };
+const run = (
+  f: Awaited<ReturnType<typeof createJdClauseOrderFixture>>,
+  store = createJdClauseOrderStore(f.context),
+  options: Parameters<typeof loadScoreDiagnostics>[3] = {},
+) =>
+  loadScoreDiagnostics(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+    options,
+    undefined,
+    enabled,
+  );
+const expected = (
+  f: Awaited<ReturnType<typeof createJdClauseOrderFixture>>,
+) => ({
+  analysisId: f.owned.analysisId,
+  ownerId: f.owned.ownerId,
+  canonicalVersionId: f.context.canonical.versionId,
+  requirementVersionId: f.context.requirements.versionId,
+});
+it.each(["omitted", "false"])(
+  "does no preview work and releases no new data when %s",
+  async (kind) => {
+    const f = await createJdClauseOrderFixture();
+    const store = createJdClauseOrderStore(f.context);
+    const spy = vi.spyOn(drafting, "buildJdClauseOrderPlan");
+    try {
+      const model = await loadScoreDiagnostics(
+        store.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        {},
+        undefined,
+        kind === "false" ? { clauseOrderPreview: false } : undefined,
+      );
+      expect(model).not.toHaveProperty("jdClauseOrderPlan");
+      expect(spy).not.toHaveBeenCalled();
+      expect(store.rpc).toHaveBeenCalledTimes(2);
+    } finally {
+      spy.mockRestore();
+    }
+  },
+);
+it("cannot enable the trusted server option through raw read/query options", async () => {
+  const f = await createJdClauseOrderFixture(),
+    store = createJdClauseOrderStore(f.context);
+  await expect(
+    loadScoreDiagnostics(store.client, f.owned.analysisId, f.owned.ownerId, {
+      clauseOrderPreview: true,
+    }),
+  ).rejects.toMatchObject({ status: 422 });
+  expect(store.rpc).not.toHaveBeenCalled();
+});
+it("returns exact kernel output and preserves old diagnostics/priorities without extra RPC", async () => {
+  const f = await createJdClauseOrderFixture(),
+    store = createJdClauseOrderStore(f.context),
+    model = await run(f, store),
+    old = await loadScoreDiagnostics(
+      createJdClauseOrderStore(f.context).client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+    );
+  expect(model.diagnostics).toEqual(old.diagnostics);
+  expect(model.typedCoverage).toEqual(old.typedCoverage);
+  expect(model.jdRecommendations).toEqual(old.jdRecommendations);
+  expect(store.rpc).toHaveBeenCalledTimes(2);
+  expect(model.jdClauseOrderPlan?.drafts[0]).toEqual(
+    drafting.buildJdClauseOrderDraft(
+      f.context,
+      { analysisId: f.owned.analysisId, ownerId: f.owned.ownerId },
+      {
+        canonicalVersionId: f.context.canonical.versionId,
+        requirementVersionId: f.context.requirements.versionId,
+        clauseId: f.context.requirements.content.relations.clauses[0].id,
+        targetFactId: f.targetFactId,
+      },
+    ),
+  );
+  expect(model.jdClauseOrderPlan).toMatchObject({
+    inspectedPairCount: 1,
+    truncated: false,
+    scoreValue: null,
+    scoreDelta: null,
+    qualificationCredit: "not_assessed",
+  });
+});
+it("explicitly withholds historical selections without substituting a fresh head", async () => {
+  const f = await createJdClauseOrderFixture(),
+    store = createJdClauseOrderStore(f.context),
+    historical = structuredClone(f.context),
+    prior = f.context.ancestors[0];
+  historical.canonical = {
+    versionId: prior.versionId,
+    revision: prior.revision,
+    contentSha256: prior.contentSha256,
+    locale: prior.content.locale,
+    content: prior.content,
+  };
+  historical.ancestors = [];
+  historical.headerSnapshot = {
+    ...historical.headerSnapshot,
+    canonicalVersionId: prior.versionId,
+    canonicalContentSha256: prior.contentSha256,
+  };
+  store.rpc.mockResolvedValue(ok(historical));
+  const model = await run(f, store, { canonical: prior.versionId });
+  expect(model.historical).toBe(true);
+  expect(model.canonical.versionId).toBe(prior.versionId);
+  expect(model.jdClauseOrderPlan).toMatchObject({
+    state: "unavailable",
+    reason: "historical_inputs",
+    drafts: [],
+    inspectedPairCount: 0,
+    truncated: false,
+  });
+});
+it("returns no-admitted state for real unsupported target grammar while retaining diagnostics", async () => {
+  const f = await createJdClauseOrderFixture({
+      clauses: ["Built services using Python"],
+    }),
+    model = await run(f);
+  expect(model.jdClauseOrderPlan).toMatchObject({
+    state: "unavailable",
+    reason: "no_admitted_pairs",
+    drafts: [],
+    inspectedPairCount: 0,
+    truncated: false,
+  });
+  expect(model).toHaveProperty("typedCoverage.state", "available");
+});
+it("returns unsupported state for complete-context limits without removing diagnostics or priorities", async () => {
+  const f = await createJdClauseOrderFixture({
+    header:
+      Array(120).fill(" ".repeat(900)).join("\n") +
+      "\nExperience\nSoftware Engineer at Orchard Labs",
+  });
+  expect(f.text.length).toBeGreaterThan(100000);
+  const model = await run(f);
+  expect(model.jdClauseOrderPlan).toMatchObject({
+    state: "unavailable",
+    reason: "unsupported_context",
+    drafts: [],
+    inspectedPairCount: 0,
+    truncated: false,
+  });
+  expect(model).toHaveProperty("typedCoverage.state", "available");
+  expect(model.jdRecommendations).toBeDefined();
+  expect(model.diagnostics.readinessAggregate).toBeNull();
+});
+it.each([null, 2])(
+  "keeps diagnostics when source page coverage %s is unsupported for preview",
+  async (pageCount) => {
+    const f = await createJdClauseOrderFixture({ pageCount }),
+      model = await run(f);
+    expect(model.jdClauseOrderPlan).toMatchObject({
+      state: "unavailable",
+      reason: "unsupported_context",
+      drafts: [],
+      inspectedPairCount: 0,
+      truncated: false,
+    });
+    expect(model.diagnostics).toBeDefined();
+  },
+);
+it.each([50, 51])(
+  "caps detailed checks at 50 and reports truncation for %s eligible pairs that fail full source review",
+  async (pairs) => {
+    const f = await createJdClauseOrderFixture({
+        header: "Experience\nPlanned work:",
+        jdText: "Requirements\n" + Array(pairs).fill("Git required").join("\n"),
+      }),
+      model = await run(f),
+      plan = model.jdClauseOrderPlan!;
+    expect(plan.inspectedPairCount).toBe(50);
+    expect(plan.truncated).toBe(pairs === 51);
+    expect(plan.drafts).toHaveLength(0);
+    expect(plan.reason).toBe("no_admitted_pairs");
+    expect(plan).not.toHaveProperty("total");
+  },
+);
+it.each([5, 6])(
+  "does not claim completeness when five visible drafts leave unexamined saved pairs: %s",
+  async (pairs) => {
+    const f = await createJdClauseOrderFixture({
+        header: "Experience",
+        jdText: "Requirements\n" + Array(pairs).fill("Git required").join("\n"),
+      }),
+      model = await run(f),
+      plan = model.jdClauseOrderPlan!;
+    expect(plan.drafts).toHaveLength(5);
+    expect(plan.inspectedPairCount).toBe(5);
+    expect(plan.truncated).toBe(pairs === 6);
+    expect(plan.drafts.map((d) => d.selection.clauseId)).toEqual(
+      f.context.requirements.content.relations.clauses
+        .slice(0, 5)
+        .map((c) => c.id),
+    );
+  },
+);
+it("strictly validates owned context once for a 50-pair scan and keeps deterministic identity", async () => {
+  const f = await createJdClauseOrderFixture({
+      header: "Experience\nPlanned work:",
+      jdText: "Requirements\n" + Array(51).fill("Git required").join("\n"),
+    }),
+    spy = vi.spyOn(relationship, "validateRequirementRelationshipContext");
+  let plan: ReturnType<typeof drafting.buildJdClauseOrderPlan>;
+  try {
+    plan = drafting.buildJdClauseOrderPlan(f.context, expected(f));
+    expect(spy).toHaveBeenCalledTimes(1);
+  } finally {
+    spy.mockRestore();
+  }
+  expect(plan!).toEqual(
+    drafting.buildJdClauseOrderPlan(f.context, expected(f)),
+  );
+  expect(plan!).toMatchObject({ inspectedPairCount: 50, truncated: true });
+  const { id, ...body } = plan!;
+  expect(id).toBe(
+    createHash("sha256").update(JSON.stringify(body)).digest("hex"),
+  );
+  expect(drafting.JdClauseOrderPlanSchema.parse(plan!)).toEqual(plan);
+  expect(
+    drafting.JdClauseOrderPlanSchema.safeParse({
+      ...plan!,
+      inspectedPairCount: 0,
+    }).success,
+  ).toBe(false);
+});
+it.each([
+  "source",
+  "privacy",
+  "head",
+  "canonical-hash",
+  "requirement-hash",
+  "pair",
+  "page-count",
+])("does not release preview after final %s changes", async (kind) => {
+  const f = await createJdClauseOrderFixture(),
+    store = createJdClauseOrderStore(f.context, (read, sequence) =>
+      kind === "pair" &&
+      read.table === "analyses" &&
+      read.columns === "job_id" &&
+      sequence.filter((r) => r.table === "analyses" && r.columns === "job_id")
+        .length === 2
+        ? ok({ job_id: jdClauseOrderFixtureId(999) })
+        : undefined,
+    ),
+    final = structuredClone(f.context);
+  if (kind === "source") final.source.sourceId = jdClauseOrderFixtureId(999);
+  if (kind === "head")
+    final.heads.canonicalHeadId = jdClauseOrderFixtureId(999);
+  if (kind === "canonical-hash") final.canonical.contentSha256 = "f".repeat(64);
+  if (kind === "requirement-hash")
+    final.requirements.contentSha256 = "f".repeat(64);
+  if (kind === "page-count") final.sourceMetadata.pageCount = 2;
+  store.rpc
+    .mockImplementationOnce(async () => ok(f.context))
+    .mockImplementationOnce(async () =>
+      kind === "privacy"
+        ? ok({
+            schemaVersion: "requirement-relationship-context/1.0.0",
+            status: "not_found",
+            scoringEligible: false,
+          })
+        : ok(final),
+    );
+  await expect(run(f, store)).rejects.toHaveProperty("status");
+});
+it("rejects wrong-owner initial source instead of hiding it as unsupported preview", async () => {
+  const f = await createJdClauseOrderFixture();
+  await expect(
+    loadScoreDiagnostics(
+      createJdClauseOrderStore(f.context).client,
+      f.owned.analysisId,
+      jdClauseOrderFixtureId(999),
+      {},
+      undefined,
+      enabled,
+    ),
+  ).rejects.toHaveProperty("status");
+});
+it("orders actual confirmed fact pairs before advancing to the next fact", async () => {
+  const lines = [
+    "Built services using Python; Developed tools using Git",
+    "Built storage using PostgreSQL; Created tools using Git",
+  ];
+  const f = await createJdClauseOrderFixture({
+    header: "Experience",
+    clauses: lines,
+    jdText: "Requirements\nGit required\nPreferred\nGit preferred",
+  });
+  const current = f.context.canonical,
+    second = current.content.facts.find((fact) => fact.value === lines[1])!;
+  const next = reviseCanonical(
+    current.content,
+    { operation: "confirm", factId: second.id },
+    new Date(Date.parse(current.content.createdAt) + 1000).toISOString(),
+  );
+  const context = structuredClone(f.context);
+  context.ancestors = [
+    {
+      versionId: current.versionId,
+      revision: current.revision,
+      contentSha256: current.contentSha256,
+      content: current.content,
+    },
+    ...context.ancestors,
+  ];
+  context.canonical = {
+    ...current,
+    versionId: next.versionId,
+    revision: current.revision + 1,
+    contentSha256: "d".repeat(64),
+    content: next,
+  };
+  context.heads.canonicalHeadId = next.versionId;
+  context.heads.canonicalHeadRevision = context.canonical.revision;
+  context.headerSnapshot.canonicalVersionId = next.versionId;
+  context.headerSnapshot.canonicalContentSha256 =
+    context.canonical.contentSha256;
+  const model = await run({ ...f, context }, createJdClauseOrderStore(context)),
+    clauses = context.requirements.content.relations.clauses;
+  expect(
+    model.jdClauseOrderPlan?.drafts.map((d) => [
+      d.target.factId,
+      d.relevance.clauseId,
+    ]),
+  ).toEqual(
+    [f.targetFactId, second.id].flatMap((factId) =>
+      clauses.map((clause) => [factId, clause.id]),
+    ),
+  );
+  expect(model.jdClauseOrderPlan).toMatchObject({
+    inspectedPairCount: 4,
+    truncated: false,
+  });
+});

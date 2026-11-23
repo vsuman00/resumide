@@ -1,0 +1,355 @@
+{
+  "schemaVersion": "consumer-ats-counterfactuals/1.0.0",
+  "executedAt": "2026-11-09T07:01:33.326Z",
+  "scope": "pure known synthetic and counterfactuals; no database, rendering, live provider or external ATS validation",
+  "rootBase": "a0b239299d75b0bd64b588fe743ebe2975fb28b9 plus dirty source",
+  "sourceHashes": {
+    "tests/fixtures/scoring-v2.ts": "3b2424b5075828c6983d04c389cb0d0813f87cfe844752b86eb167095b4a2f19",
+    "app/lib/server/job-requirements.ts": "21d541ee26daca3f9159a7ac1fe140a3f1617b8bab7dc3f275d113e3c01cb20a",
+    "app/lib/server/score-v2-engine.ts": "d265843789a362f82753ad9f7b3284467b899bc003c25ca72e42c2dd9c7f8f4b",
+    "app/lib/server/writer-grounding.ts": "1bd479ea61c4ff1edb1b4a31168447b10045360e0cb57f09e07b8b133675d9d6",
+    "app/lib/server/canonical-content.ts": "b0e4f8d7f0fb032252fbca538ba2207df6cbd27e33b382a5f9ffb29bea511bf5",
+    "app/lib/server/authoring-contract.ts": "93241918891f2743a81ef4c7b4b2e17b3030d0e3b5928ff1f2595212d3e30291",
+    "app/lib/server/artifact-contract.ts": "3c4e5f4b291a5124d762ba3cf6e4a9ce2979204f9b50d454d2f5d229e41bfb4a",
+    "app/lib/server/matching/taxonomy.ts": "c04476c0a026a7e79dc47c1d0351d1dd82a238501800f22346309bb929cea3d4"
+  },
+  "cases": [
+    {
+      "id": "jd-exact-typescript-required",
+      "passed": true,
+      "expected": [
+        "TypeScript"
+      ],
+      "observed": [
+        "TypeScript"
+      ],
+      "classification": "regression"
+    },
+    {
+      "id": "jd-no-java-substring-in-javascript",
+      "passed": true,
+      "expected": [
+        "JavaScript"
+      ],
+      "observed": [
+        "JavaScript"
+      ],
+      "classification": "regression"
+    },
+    {
+      "id": "jd-company-benefits-resume-discovery",
+      "passed": true,
+      "expected": [
+        "Python",
+        "SQL"
+      ],
+      "observed": [
+        "Python",
+        "SQL"
+      ],
+      "classification": "regression"
+    },
+    {
+      "id": "jd-approved-taxonomy-alias-js",
+      "passed": false,
+      "expected": [
+        "JavaScript"
+      ],
+      "observed": [],
+      "classification": "feature-gap"
+    },
+    {
+      "id": "jd-approved-taxonomy-alias-postgres",
+      "passed": false,
+      "expected": [
+        "PostgreSQL"
+      ],
+      "observed": [],
+      "classification": "feature-gap"
+    },
+    {
+      "id": "jd-years-clause-separation",
+      "passed": true,
+      "expected": [
+        5,
+        2
+      ],
+      "observed": [
+        5,
+        2
+      ],
+      "classification": "regression"
+    },
+    {
+      "id": "jd-negation-clause-separation",
+      "passed": true,
+      "expected": [
+        true,
+        "contextual"
+      ],
+      "observed": [
+        true,
+        "contextual"
+      ],
+      "classification": "regression"
+    },
+    {
+      "id": "jd-exact-evidence-codepoints",
+      "passed": true,
+      "expected": true,
+      "observed": true,
+      "classification": "regression"
+    },
+    {
+      "id": "uncalibrated-authoritative-values-withheld",
+      "passed": true,
+      "expected": true,
+      "observed": true,
+      "classification": "regression"
+    },
+    {
+      "id": "listed-skill-not-inferred-proficiency",
+      "passed": true,
+      "expected": "candidate_confirmation_required",
+      "observed": "candidate_confirmation_required",
+      "classification": "regression"
+    },
+    {
+      "id": "missing-skill-stays-unknown-not-false-failure",
+      "passed": true,
+      "expected": "not_evaluated",
+      "observed": "not_evaluated",
+      "classification": "regression"
+    },
+    {
+      "id": "keyword-stuffing-and-repeat-no-extra-credit",
+      "passed": true,
+      "expected": [
+        [
+          "TypeScript",
+          "candidate_confirmation_required",
+          "required"
+        ],
+        [
+          "Kubernetes",
+          "not_evaluated",
+          "required"
+        ],
+        [
+          "3 years software experience required",
+          "satisfied",
+          "required"
+        ]
+      ],
+      "observed": [
+        [
+          "TypeScript",
+          "candidate_confirmation_required",
+          "required"
+        ],
+        [
+          "Kubernetes",
+          "not_evaluated",
+          "required"
+        ],
+        [
+          "3 years software experience required",
+          "satisfied",
+          "required"
+        ]
+      ],
+      "classification": "regression"
+    },
+    {
+      "id": "missing-page-coverage",
+      "passed": true,
+      "expected": 0.5,
+      "observed": 0.5,
+      "classification": "regression"
+    },
+    {
+      "id": "missing-page-numerical-withholding",
+      "passed": true,
+      "expected": true,
+      "observed": true,
+      "classification": "regression"
+    },
+    {
+      "id": "writer-valid-same-fact",
+      "passed": true,
+      "expected": 1,
+      "observed": 1,
+      "classification": "regression"
+    },
+    {
+      "id": "writer-invented-digit-metric",
+      "passed": true,
+      "expected": 0,
+      "observed": 0,
+      "classification": "regression"
+    },
+    {
+      "id": "writer-invented-taxonomy-skill",
+      "passed": true,
+      "expected": 0,
+      "observed": 0,
+      "classification": "regression"
+    },
+    {
+      "id": "writer-invented-proper-employer",
+      "passed": true,
+      "expected": 0,
+      "observed": 0,
+      "classification": "regression"
+    },
+    {
+      "id": "writer-invented-spelled-out-impact",
+      "passed": false,
+      "expected": 0,
+      "observed": 1,
+      "classification": "truthfulness-defect"
+    },
+    {
+      "id": "writer-invented-lowercase-team-scope",
+      "passed": false,
+      "expected": 0,
+      "observed": 1,
+      "classification": "truthfulness-defect"
+    },
+    {
+      "id": "writer-invented-causal-outcome",
+      "passed": false,
+      "expected": 0,
+      "observed": 1,
+      "classification": "truthfulness-defect"
+    },
+    {
+      "id": "writer-unlisted-lowercase-skill",
+      "passed": false,
+      "expected": 0,
+      "observed": 1,
+      "classification": "truthfulness-defect"
+    },
+    {
+      "id": "writer-summary-invented-lowercase-scope",
+      "passed": false,
+      "expected": null,
+      "observed": "Built a dashboard and led a global team.",
+      "classification": "truthfulness-defect"
+    },
+    {
+      "id": "writer-cross-contribution-metric",
+      "passed": true,
+      "expected": 0,
+      "observed": 0,
+      "classification": "regression"
+    },
+    {
+      "id": "author-source-bound-ready-patch",
+      "passed": true,
+      "expected": "ready",
+      "observed": "ready",
+      "classification": "regression"
+    },
+    {
+      "id": "author-accepts-only-exact-patch",
+      "passed": true,
+      "expected": "cf26720f-0a5e-45c2-88fc-6f6d40335b50",
+      "observed": "cf26720f-0a5e-45c2-88fc-6f6d40335b50",
+      "classification": "regression"
+    },
+    {
+      "id": "author-edit-preserves-original",
+      "passed": true,
+      "expected": "{\"schemaVersion\":\"canonical-resume/1.0.0\",\"producerVersion\":\"canonical-engine/1.0.1\",\"analysisId\":\"22222222-2222-4222-8222-222222222222\",\"inputSha256\":\"ea4a18f0cc0b871490cc9da44341a3e9173b0a5df8cfdd6f3ca0f6ea48a4e025\",\"retentionPolicyId\":\"test-synthetic/1.0.0\",\"resumeId\":\"66666666-6666-4666-8666-666666666666\",\"versionId\":\"af73afae-1b25-4371-8871-4e568c1ee118\",\"parentVersionId\":\"b9f161f2-c149-425e-b9fe-a3edc17c2c29\",\"ownerId\":\"11111111-1111-4111-8111-111111111111\",\"organizationId\":\"33333333-3333-4333-8333-333333333333\",\"locale\":\"en-IN\",\"createdAt\":\"2026-10-12T00:00:00Z\",\"state\":\"review_required\",\"sourceEvidenceVersionId\":\"44444444-4444-4444-8444-444444444444\",\"contactFactIds\":[\"5ab29c0f-e58b-4c2c-9441-fce99f12c562\",\"a64896e5-b75e-4ff6-abf0-069ee5d9e67c\",\"02084f8f-1c56-4a07-a16c-5a8676e23dca\"],\"facts\":[{\"id\":\"5ab29c0f-e58b-4c2c-9441-fce99f12c562\",\"type\":\"email\",\"value\":\"fictional@example.test\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-2\",\"start\":7,\"end\":29}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"fictional@example.test\"}},{\"id\":\"a64896e5-b75e-4ff6-abf0-069ee5d9e67c\",\"type\":\"phone\",\"value\":\"+91 9876543210\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-3\",\"start\":7,\"end\":21}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"+91 9876543210\"}},{\"id\":\"02084f8f-1c56-4a07-a16c-5a8676e23dca\",\"type\":\"name\",\"value\":\"Fictional Person\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-1\",\"start\":6,\"end\":22}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"Fictional Person\"}},{\"id\":\"eb76d922-507c-4ef1-ace2-171fe1fa6bb4\",\"type\":\"employer\",\"value\":\"Fictional Company\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-5\",\"start\":10,\"end\":27}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"Fictional Company\"}},{\"id\":\"6e691141-f189-4fd4-8ade-f3d90bb416be\",\"type\":\"role\",\"value\":\"Software Engineer\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-6\",\"start\":6,\"end\":23}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"Software Engineer\"}},{\"id\":\"b948bf6a-b597-4907-89fc-0c91ae8d0071\",\"type\":\"dates\",\"value\":\"2020-01-01 - 2022-01-01\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-7\",\"start\":7,\"end\":30}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"2020-01-01 - 2022-01-01\"}},{\"id\":\"6553d2c7-cb00-4784-b76e-daeeeae36bce\",\"type\":\"dates\",\"value\":\"2021-01-01 - 2023-01-01\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-8\",\"start\":7,\"end\":30}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"2021-01-01 - 2023-01-01\"}},{\"id\":\"6e0c178c-06ad-4129-96c9-48fa85178733\",\"type\":\"education\",\"value\":\"Bachelor\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-11\",\"start\":11,\"end\":19}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"Bachelor\"}},{\"id\":\"cff8374b-39ea-423c-8849-3a153b2b2738\",\"type\":\"certification\",\"value\":\"AWS\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-16\",\"start\":15,\"end\":18}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"AWS\"}},{\"id\":\"949a7b4a-78e8-43c1-8224-3495834beb7f\",\"type\":\"contribution\",\"value\":\"Built reliable services\\nResult: Fewer release failures\\nScope: Internal release workflow\",\"state\":\"candidate_confirmed\",\"sources\":[],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"Built reliable services\\nResult: Fewer release failures\\nScope: Internal release workflow\"}},{\"id\":\"ea56ae59-4a25-4574-8e21-0bca3cfc9b95\",\"type\":\"skill\",\"value\":\"SQL\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-13\",\"start\":0,\"end\":3}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"SQL\"}},{\"id\":\"94d527a7-1cc0-42df-9f27-a575712eb710\",\"type\":\"skill\",\"value\":\"TypeScript\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-14\",\"start\":0,\"end\":10}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"TypeScript\"}},{\"id\":\"b987dcfc-acb0-4725-b04a-7f48fa2db065\",\"type\":\"dates\",\"value\":\"2020-01-01 - 2022-01-01\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-7\",\"start\":7,\"end\":30}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"2020-01-01 - 2022-01-01\"}},{\"id\":\"72c39177-8203-4ffd-86f6-c6697cfd14f8\",\"type\":\"dates\",\"value\":\"2021-01-01 - 2023-01-01\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-8\",\"start\":7,\"end\":30}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"2021-01-01 - 2023-01-01\"}}],\"sections\":[{\"id\":\"820e8223-518d-443c-9bdb-d672b008e840\",\"type\":\"other\",\"title\":\"Imported content\",\"factIds\":[],\"entries\":[{\"id\":\"7ef98e57-958e-4abc-adbb-e863df6e53f6\",\"factIds\":[\"02084f8f-1c56-4a07-a16c-5a8676e23dca\"],\"bullets\":[]},{\"id\":\"18eb881d-5f08-4789-a4ff-a58769fdaaf8\",\"factIds\":[\"5ab29c0f-e58b-4c2c-9441-fce99f12c562\"],\"bullets\":[]},{\"id\":\"b7608cb9-e892-41aa-9761-2c52920862d3\",\"factIds\":[\"a64896e5-b75e-4ff6-abf0-069ee5d9e67c\"],\"bullets\":[]}]},{\"id\":\"86de5915-0380-48c2-94a3-b45b72fbf869\",\"type\":\"experience\",\"title\":\"Experience\",\"factIds\":[],\"entries\":[{\"id\":\"3509c0e2-0fd7-4b0a-a9d1-db0363cf68b2\",\"factIds\":[\"6e691141-f189-4fd4-8ade-f3d90bb416be\",\"b987dcfc-acb0-4725-b04a-7f48fa2db065\"],\"bullets\":[{\"id\":\"9012ea82-93f2-46f2-9e3a-a184868b2f6c\",\"text\":\"Built reliable services\",\"factIds\":[\"949a7b4a-78e8-43c1-8224-3495834beb7f\"]}]},{\"id\":\"6c1690eb-8b22-4f88-897e-dd7e0a894e1f\",\"factIds\":[\"6e691141-f189-4fd4-8ade-f3d90bb416be\",\"72c39177-8203-4ffd-86f6-c6697cfd14f8\"],\"bullets\":[]}]},{\"id\":\"2af30816-5b20-4e77-9e0e-74ae8950c45f\",\"type\":\"education\",\"title\":\"Education\",\"factIds\":[],\"entries\":[{\"id\":\"f85f86ed-4bab-4fdc-985a-d25535bd2523\",\"factIds\":[\"6e0c178c-06ad-4129-96c9-48fa85178733\"],\"bullets\":[]}]},{\"id\":\"69fe5ec2-1b02-43bd-acba-583127a79bdf\",\"type\":\"skills\",\"title\":\"Skills\",\"factIds\":[],\"entries\":[{\"id\":\"433e5fc8-f006-49f5-9d1e-dd5e0da2ef78\",\"factIds\":[],\"bullets\":[{\"id\":\"41a3f8b7-93c5-46ed-a930-a25d2d6d1537\",\"text\":\"SQL\",\"factIds\":[\"ea56ae59-4a25-4574-8e21-0bca3cfc9b95\"]}]},{\"id\":\"d5987e16-2576-4864-a5c8-39ca4d0b3f3f\",\"factIds\":[],\"bullets\":[{\"id\":\"8c83d16a-aa5b-43cd-8a90-caf81a62cd1d\",\"text\":\"TypeScript\",\"factIds\":[\"94d527a7-1cc0-42df-9f27-a575712eb710\"]}]}]},{\"id\":\"fdd8803e-371e-4c1e-beab-3c2813747bd9\",\"type\":\"certifications\",\"title\":\"Certifications\",\"factIds\":[],\"entries\":[{\"id\":\"ebc1a28c-077f-4d79-8e55-17a31a6cbf5c\",\"factIds\":[\"cff8374b-39ea-423c-8849-3a153b2b2738\"],\"bullets\":[]}]}],\"changes\":[{\"id\":\"b1078db3-0758-4c47-afa8-8366330c6a43\",\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"action\":\"edit\",\"targetId\":\"94d527a7-1cc0-42df-9f27-a575712eb710\",\"priorValue\":\"TypeScript\",\"createdAt\":\"2026-10-12T00:00:00Z\"}]}",
+      "observed": "{\"schemaVersion\":\"canonical-resume/1.0.0\",\"producerVersion\":\"canonical-engine/1.0.1\",\"analysisId\":\"22222222-2222-4222-8222-222222222222\",\"inputSha256\":\"ea4a18f0cc0b871490cc9da44341a3e9173b0a5df8cfdd6f3ca0f6ea48a4e025\",\"retentionPolicyId\":\"test-synthetic/1.0.0\",\"resumeId\":\"66666666-6666-4666-8666-666666666666\",\"versionId\":\"af73afae-1b25-4371-8871-4e568c1ee118\",\"parentVersionId\":\"b9f161f2-c149-425e-b9fe-a3edc17c2c29\",\"ownerId\":\"11111111-1111-4111-8111-111111111111\",\"organizationId\":\"33333333-3333-4333-8333-333333333333\",\"locale\":\"en-IN\",\"createdAt\":\"2026-10-12T00:00:00Z\",\"state\":\"review_required\",\"sourceEvidenceVersionId\":\"44444444-4444-4444-8444-444444444444\",\"contactFactIds\":[\"5ab29c0f-e58b-4c2c-9441-fce99f12c562\",\"a64896e5-b75e-4ff6-abf0-069ee5d9e67c\",\"02084f8f-1c56-4a07-a16c-5a8676e23dca\"],\"facts\":[{\"id\":\"5ab29c0f-e58b-4c2c-9441-fce99f12c562\",\"type\":\"email\",\"value\":\"fictional@example.test\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-2\",\"start\":7,\"end\":29}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"fictional@example.test\"}},{\"id\":\"a64896e5-b75e-4ff6-abf0-069ee5d9e67c\",\"type\":\"phone\",\"value\":\"+91 9876543210\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-3\",\"start\":7,\"end\":21}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"+91 9876543210\"}},{\"id\":\"02084f8f-1c56-4a07-a16c-5a8676e23dca\",\"type\":\"name\",\"value\":\"Fictional Person\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-1\",\"start\":6,\"end\":22}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"Fictional Person\"}},{\"id\":\"eb76d922-507c-4ef1-ace2-171fe1fa6bb4\",\"type\":\"employer\",\"value\":\"Fictional Company\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-5\",\"start\":10,\"end\":27}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"Fictional Company\"}},{\"id\":\"6e691141-f189-4fd4-8ade-f3d90bb416be\",\"type\":\"role\",\"value\":\"Software Engineer\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-6\",\"start\":6,\"end\":23}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"Software Engineer\"}},{\"id\":\"b948bf6a-b597-4907-89fc-0c91ae8d0071\",\"type\":\"dates\",\"value\":\"2020-01-01 - 2022-01-01\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-7\",\"start\":7,\"end\":30}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"2020-01-01 - 2022-01-01\"}},{\"id\":\"6553d2c7-cb00-4784-b76e-daeeeae36bce\",\"type\":\"dates\",\"value\":\"2021-01-01 - 2023-01-01\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-8\",\"start\":7,\"end\":30}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"2021-01-01 - 2023-01-01\"}},{\"id\":\"6e0c178c-06ad-4129-96c9-48fa85178733\",\"type\":\"education\",\"value\":\"Bachelor\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-11\",\"start\":11,\"end\":19}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"Bachelor\"}},{\"id\":\"cff8374b-39ea-423c-8849-3a153b2b2738\",\"type\":\"certification\",\"value\":\"AWS\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-16\",\"start\":15,\"end\":18}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"AWS\"}},{\"id\":\"949a7b4a-78e8-43c1-8224-3495834beb7f\",\"type\":\"contribution\",\"value\":\"Built reliable services\\nResult: Fewer release failures\\nScope: Internal release workflow\",\"state\":\"candidate_confirmed\",\"sources\":[],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"Built reliable services\\nResult: Fewer release failures\\nScope: Internal release workflow\"}},{\"id\":\"ea56ae59-4a25-4574-8e21-0bca3cfc9b95\",\"type\":\"skill\",\"value\":\"SQL\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-13\",\"start\":0,\"end\":3}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"SQL\"}},{\"id\":\"94d527a7-1cc0-42df-9f27-a575712eb710\",\"type\":\"skill\",\"value\":\"TypeScript\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-14\",\"start\":0,\"end\":10}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"TypeScript\"}},{\"id\":\"b987dcfc-acb0-4725-b04a-7f48fa2db065\",\"type\":\"dates\",\"value\":\"2020-01-01 - 2022-01-01\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-7\",\"start\":7,\"end\":30}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"2020-01-01 - 2022-01-01\"}},{\"id\":\"72c39177-8203-4ffd-86f6-c6697cfd14f8\",\"type\":\"dates\",\"value\":\"2021-01-01 - 2023-01-01\",\"state\":\"candidate_confirmed\",\"sources\":[{\"attemptId\":\"44444444-4444-4444-8444-444444444444\",\"spanId\":\"native-page-1-line-8\",\"start\":7,\"end\":30}],\"confirmation\":{\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"confirmedAt\":\"2026-10-12T00:00:00Z\",\"value\":\"2021-01-01 - 2023-01-01\"}}],\"sections\":[{\"id\":\"820e8223-518d-443c-9bdb-d672b008e840\",\"type\":\"other\",\"title\":\"Imported content\",\"factIds\":[],\"entries\":[{\"id\":\"7ef98e57-958e-4abc-adbb-e863df6e53f6\",\"factIds\":[\"02084f8f-1c56-4a07-a16c-5a8676e23dca\"],\"bullets\":[]},{\"id\":\"18eb881d-5f08-4789-a4ff-a58769fdaaf8\",\"factIds\":[\"5ab29c0f-e58b-4c2c-9441-fce99f12c562\"],\"bullets\":[]},{\"id\":\"b7608cb9-e892-41aa-9761-2c52920862d3\",\"factIds\":[\"a64896e5-b75e-4ff6-abf0-069ee5d9e67c\"],\"bullets\":[]}]},{\"id\":\"86de5915-0380-48c2-94a3-b45b72fbf869\",\"type\":\"experience\",\"title\":\"Experience\",\"factIds\":[],\"entries\":[{\"id\":\"3509c0e2-0fd7-4b0a-a9d1-db0363cf68b2\",\"factIds\":[\"6e691141-f189-4fd4-8ade-f3d90bb416be\",\"b987dcfc-acb0-4725-b04a-7f48fa2db065\"],\"bullets\":[{\"id\":\"9012ea82-93f2-46f2-9e3a-a184868b2f6c\",\"text\":\"Built reliable services\",\"factIds\":[\"949a7b4a-78e8-43c1-8224-3495834beb7f\"]}]},{\"id\":\"6c1690eb-8b22-4f88-897e-dd7e0a894e1f\",\"factIds\":[\"6e691141-f189-4fd4-8ade-f3d90bb416be\",\"72c39177-8203-4ffd-86f6-c6697cfd14f8\"],\"bullets\":[]}]},{\"id\":\"2af30816-5b20-4e77-9e0e-74ae8950c45f\",\"type\":\"education\",\"title\":\"Education\",\"factIds\":[],\"entries\":[{\"id\":\"f85f86ed-4bab-4fdc-985a-d25535bd2523\",\"factIds\":[\"6e0c178c-06ad-4129-96c9-48fa85178733\"],\"bullets\":[]}]},{\"id\":\"69fe5ec2-1b02-43bd-acba-583127a79bdf\",\"type\":\"skills\",\"title\":\"Skills\",\"factIds\":[],\"entries\":[{\"id\":\"433e5fc8-f006-49f5-9d1e-dd5e0da2ef78\",\"factIds\":[],\"bullets\":[{\"id\":\"41a3f8b7-93c5-46ed-a930-a25d2d6d1537\",\"text\":\"SQL\",\"factIds\":[\"ea56ae59-4a25-4574-8e21-0bca3cfc9b95\"]}]},{\"id\":\"d5987e16-2576-4864-a5c8-39ca4d0b3f3f\",\"factIds\":[],\"bullets\":[{\"id\":\"8c83d16a-aa5b-43cd-8a90-caf81a62cd1d\",\"text\":\"TypeScript\",\"factIds\":[\"94d527a7-1cc0-42df-9f27-a575712eb710\"]}]}]},{\"id\":\"fdd8803e-371e-4c1e-beab-3c2813747bd9\",\"type\":\"certifications\",\"title\":\"Certifications\",\"factIds\":[],\"entries\":[{\"id\":\"ebc1a28c-077f-4d79-8e55-17a31a6cbf5c\",\"factIds\":[\"cff8374b-39ea-423c-8849-3a153b2b2738\"],\"bullets\":[]}]}],\"changes\":[{\"id\":\"b1078db3-0758-4c47-afa8-8366330c6a43\",\"actorId\":\"11111111-1111-4111-8111-111111111111\",\"action\":\"edit\",\"targetId\":\"94d527a7-1cc0-42df-9f27-a575712eb710\",\"priorValue\":\"TypeScript\",\"createdAt\":\"2026-10-12T00:00:00Z\"}]}",
+      "classification": "regression"
+    },
+    {
+      "id": "author-edit-immutable-lineage",
+      "passed": true,
+      "expected": true,
+      "observed": true,
+      "classification": "regression"
+    },
+    {
+      "id": "author-edit-does-not-auto-confirm",
+      "passed": true,
+      "expected": "unconfirmed",
+      "observed": "unconfirmed",
+      "classification": "regression"
+    },
+    {
+      "id": "author-stale-patch-rejected",
+      "passed": true,
+      "expected": true,
+      "observed": true,
+      "classification": "regression"
+    },
+    {
+      "id": "author-undo-restores-facts-as-new-version",
+      "passed": true,
+      "expected": true,
+      "observed": true,
+      "classification": "regression"
+    },
+    {
+      "id": "author-invented-acceptance-rejected",
+      "passed": true,
+      "expected": true,
+      "observed": true,
+      "classification": "regression"
+    },
+    {
+      "id": "export-known-pure-observation",
+      "passed": true,
+      "expected": "verified",
+      "observed": "verified",
+      "classification": "regression"
+    },
+    {
+      "id": "export-extra-claim",
+      "passed": true,
+      "expected": "export_verification_failed",
+      "observed": "export_verification_failed",
+      "classification": "regression"
+    },
+    {
+      "id": "export-missing-text",
+      "passed": true,
+      "expected": "export_verification_failed",
+      "observed": "export_verification_failed",
+      "classification": "regression"
+    },
+    {
+      "id": "export-order-corruption",
+      "passed": true,
+      "expected": "export_verification_failed",
+      "observed": "export_verification_failed",
+      "classification": "regression"
+    },
+    {
+      "id": "export-link-anchor-corruption",
+      "passed": true,
+      "expected": "export_verification_failed",
+      "observed": "export_verification_failed",
+      "classification": "regression"
+    },
+    {
+      "id": "export-clipping",
+      "passed": true,
+      "expected": "export_verification_failed",
+      "observed": "export_verification_failed",
+      "classification": "regression"
+    },
+    {
+      "id": "export-unconfirmed-edit-blocked",
+      "passed": true,
+      "expected": true,
+      "observed": true,
+      "classification": "regression"
+    }
+  ],
+  "passed": 32,
+  "failed": 7
+}

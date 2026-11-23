@@ -1,0 +1,83 @@
+{
+  "task": "CR-A14",
+  "stage": "ADDITIVE_V2_ADMISSION_AND_PROJECTED_REVIEW",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "implementationAuthorized": true,
+  "parentCompletion": false,
+  "kernel": {
+    "module": "app/lib/server/jd-clause-order-drafting.ts",
+    "function": "buildJdClauseOrderDraft(rawContext,expected:{analysisId,ownerId},selection)",
+    "selection": [
+      "canonicalVersionId",
+      "requirementVersionId",
+      "clauseId",
+      "targetFactId"
+    ],
+    "draftSchemaVersion": "jd-clause-order-draft/2.0.0",
+    "draftFields": [
+      "schemaVersion",
+      "id",
+      "selection",
+      "binding",
+      "policies",
+      "target",
+      "sourceCitations",
+      "sourceClauses",
+      "relevance",
+      "transform",
+      "before",
+      "after",
+      "support",
+      "scoreValue",
+      "scoreDelta",
+      "qualificationCredit"
+    ],
+    "identity": "sha256(JSON.stringify(ordered body excluding id))",
+    "grammar": "one whole current owner-confirmed directly cited contribution; exactly C0; C1 with optional one final period; explicit Built/Created/Developed object using skill; exact independent same-actor clauses; unique current placement; actual full source scope; saved positive required/preferred atomic JD matches C1 but not C0",
+    "sourceClauses": "exactly two indexed current-fact codepoint half-open spans excluding sole semicolon-space separator and terminal period; each index,start,end,text,sha256",
+    "relevance": [
+      "clauseId",
+      "quote",
+      "importance",
+      "expressionKind",
+      "movedSourceClauseIndex",
+      "conceptId",
+      "sourceSkillValue",
+      "jdSkillValue"
+    ],
+    "transform": {
+      "kind": "reorder_source_clauses",
+      "order": [
+        1,
+        0
+      ],
+      "rendererVersion": "jd-two-clause-renderer/1.0.0",
+      "terminal": [
+        "",
+        "."
+      ]
+    },
+    "support": "actual IR1.0.4 on original full source context and reconstructed result; source_quote/current_fact; writingSupportVersion,sourceSha256,sourceAnchorIds,operations",
+    "numerics": "scoreValue=null;scoreDelta=null;qualificationCredit=not_assessed"
+  },
+  "frontend": {
+    "component": "app/components/JdClauseOrderReview.tsx",
+    "props": "{draft:JdClauseOrderDraft}",
+    "purpose": "Complete projected review, exact before/after/source/JD/order. No saved authority, command/receipt or accept/undo controls until paired actual Native v2 consumer."
+  },
+  "owners": {
+    "backend": [
+      "app/lib/server/jd-clause-order-drafting.ts",
+      "tests/unit/typed-jd-clause-order.test.ts"
+    ],
+    "frontend": [
+      "app/components/JdClauseOrderReview.tsx",
+      "tests/components/JdClauseOrderReview.test.tsx"
+    ],
+    "reviewer": [
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/jd-clause-order-review.md"
+    ],
+    "Root": "contracts,source sync,shared docs,allocation,integration,combined gate"
+  },
+  "boundaries": "source/synthetic/DOM only, sealed Node22.23.4 empty HOME, OS network/root+WT dotenv/commonGit/pointer write denied; no SQL parser/execution/advisors/DB/provider/env/keys/PII/browser/service/OCR/compiler/Docker/dependency/Git/deploy. Existing IR1.0.4, scoring, policies, assertions, failed receipts, history and default-off contracts unchanged. No actual mutation wire/readiness/native migration is allocated yet."
+}

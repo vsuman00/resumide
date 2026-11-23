@@ -148,3 +148,39 @@ describe("canonical draft structural boundary", () => {
     expect(CanonicalResumeDraftSchema.safeParse(value).success).toBe(false);
   });
 });
+
+describe("additive canonical producer reader compatibility", () => {
+  it.each([
+    "canonical-engine/1.0.0",
+    "canonical-engine/1.0.1",
+    "canonical-engine/1.0.2",
+    "canonical-engine/1.0.3",
+    "canonical-engine/1.0.4",
+  ])(
+    "retains exact stored content and trust fields for %s",
+    (producerVersion) => {
+      const value = { ...draft(), producerVersion };
+      expect(CanonicalResumeDraftSchema.parse(value)).toEqual(value);
+    },
+  );
+  it.each(["canonical-engine/1.0.5", "unknown"])(
+    "rejects unadmitted producer %s",
+    (producerVersion) => {
+      expect(
+        CanonicalResumeDraftSchema.safeParse({ ...draft(), producerVersion })
+          .success,
+      ).toBe(false);
+    },
+  );
+});
+
+describe("saved regroup producer adoption", () => {
+  it("reads the guarded regroup producer without changing facts or confirmation", () => {
+    const value = {
+      ...draft(),
+      producerVersion: "canonical-engine/1.0.4",
+      parentVersionId: id(99),
+    };
+    expect(CanonicalResumeDraftSchema.parse(value)).toEqual(value);
+  });
+});

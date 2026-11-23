@@ -1,0 +1,11 @@
+import ts from '/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/node_modules/typescript/lib/typescript.js';
+import {readFileSync,writeFileSync} from 'node:fs';
+const original='/Users/vaibhavsuman/Development/Presonal Project/ResumeATS/resume_ats/tests/components/WorkspaceRepairs.test.tsx';
+const current='/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/tests/components/WorkspaceRepairs.test.tsx';
+const oldText=readFileSync(original,'utf8'),newText=readFileSync(current,'utf8');
+const sf=ts.createSourceFile(original,oldText,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);
+const calls=sf.statements.filter(n=>ts.isExpressionStatement(n)&&ts.isCallExpression(n.expression)&&n.expression.expression.getText(sf)==='it');
+const records=calls.map(n=>({name:n.expression.arguments[0].text,unchanged:newText.includes(n.getText(sf))}));
+if(records.length!==5||records.some(r=>!r.unchanged))throw Error('Existing test body changed');
+writeFileSync('/private/tmp/resumide-u03-ack-vc219k4e/assertion-preservation.json',JSON.stringify({existingTests:records,byteIdenticalBodies:true},null,2)+'\n');
+process.stdout.write(JSON.stringify({existingCases:records.length,byteIdenticalBodies:true})+'\n');

@@ -1,0 +1,33 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/canonical-writing-comparison.test.ts (1 test | 1 failed) 61ms
+   × returns saved writing observations through the actual owned reader 61ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/canonical-writing-comparison.test.ts > returns saved writing observations through the actual owned reader
+AssertionError: expected { …(8) } to have property "writingComparison.schemaVersion" with value 'saved-writing-comparison/1.0.0'
+
+- Expected:
+"saved-writing-comparison/1.0.0"
+
++ Received:
+undefined
+
+ ❯ tests/unit/canonical-writing-comparison.test.ts:256:16
+    254|  const before=f.context.ancestors.at(-1)!;
+    255|  const model=await loadCanonical(store.client,f.owned.analysisId,f.own…
+    256|  expect(model).toHaveProperty("writingComparison.schemaVersion","saved…
+       |                ^
+    257|  expect(model).toHaveProperty("writingComparison.beforeVersionId",befo…
+    258| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  09:52:13
+   Duration  360ms (transform 159ms, setup 0ms, import 231ms, tests 61ms, environment 0ms)
+

@@ -1,0 +1,147 @@
+"""Exercise exact cleanup deferral and retry accounting on local PostgreSQL 17."""
+import ast
+from pathlib import Path
+import subprocess
+from tempfile import TemporaryDirectory
+
+migrations = Path("supabase/migrations")
+
+def source(prefix):
+    file, = migrations.glob(prefix + "_*.sql")
+    return file.read_text()
+
+def section(text, start, end):
+    start_at = text.index(start)
+    return text[start_at:text.index(end, start_at)]
+
+previous = Path(__file__).with_name("admission-cleanup-recovery-native-fixture.py.txt")
+scaffold = next(
+    ast.literal_eval(node.value)
+    for node in ast.parse(previous.read_text()).body
+    if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "scaffold" for t in node.targets)
+)
+scaffold += """
+alter table public.data_requests add column next_attempt_at timestamptz, add column last_error_code text;
+create table public.privacy_request_steps(request_id uuid, status text, attempt_count integer, last_error_code text);
+"""
+
+checks = """
+do $$
+declare
+  owner_id uuid:=gen_random_uuid();
+  foreign_id uuid:=gen_random_uuid();
+  org uuid:=gen_random_uuid();
+  claim_id uuid:=gen_random_uuid();
+  operation_id uuid;
+  upload_id uuid;
+  resume_id uuid;
+  version_id uuid;
+  last_cleaned uuid;
+  last_object uuid;
+  plan jsonb;
+  item jsonb;
+  state text;
+begin
+  insert into auth.users values(owner_id),(foreign_id);
+  insert into public.organizations values(org,owner_id);
+  insert into public.data_requests(id,user_id,kind,status,lease_owner,lease_expires_at,attempt_count,privacy_generation)
+    values(claim_id,owner_id,'deletion','processing','worker',clock_timestamp()+interval '2 minutes',1,1);
+  insert into public.privacy_request_steps values(claim_id,'queued',0,null),(claim_id,'completed',0,null);
+
+  for n in 1..6 loop
+    operation_id:=gen_random_uuid();
+    upload_id:=gen_random_uuid();
+    resume_id:=gen_random_uuid();
+    version_id:=gen_random_uuid();
+    insert into private.analysis_admission_operations(id,organization_id,owner_id,idempotency_key,binding_sha256)
+      values(operation_id,org,owner_id,gen_random_uuid(),repeat('a',64));
+    insert into private.analysis_admission_uploads(id,operation_id,analysis_id,resume_id,version_id,job_id,storage_key)
+      values(upload_id,operation_id,gen_random_uuid(),resume_id,version_id,gen_random_uuid(),
+        'organizations/'||org||'/resumes/'||resume_id||'/versions/'||version_id||'.pdf');
+    insert into private.analysis_admission_upload_transport(upload_id,bucket,dispatched_at,acknowledged_at,object_id)
+      values(upload_id,'resumes',clock_timestamp(),clock_timestamp(),gen_random_uuid());
+  end loop;
+
+  assert not has_table_privilege('service_role','private.analysis_admission_cleanup_progress','INSERT,UPDATE,DELETE');
+  assert not has_function_privilege('authenticated','public.defer_analysis_admission_cleanup(uuid,text,integer)','execute');
+  assert has_function_privilege('service_role','public.defer_analysis_admission_cleanup(uuid,text,integer)','execute');
+  assert has_function_privilege('service_role','public.fail_analysis_admission_cleanup(uuid,text,integer,text,integer)','execute');
+  assert public.fail_analysis_admission_cleanup(claim_id,'worker',1,'FIXTURE_FAILED',3) is null;
+
+  for attempt in 1..4 loop
+    -- Simulate the unchanged queue claim transition, keeping its attempt fence.
+    update public.data_requests set status='processing',lease_owner='worker',
+      lease_expires_at=clock_timestamp()+interval '2 minutes',attempt_count=attempt
+      where id=claim_id;
+    assert not public.defer_analysis_admission_cleanup(claim_id,'worker',attempt);
+    assert not public.defer_analysis_admission_cleanup(claim_id,'other-worker',attempt);
+    if last_cleaned is not null then
+      assert public.complete_analysis_admission_cleanup(claim_id,'worker',attempt,last_cleaned,last_object);
+      assert not public.defer_analysis_admission_cleanup(claim_id,'worker',attempt);
+    end if;
+    plan:=public.claim_analysis_admission_cleanup(claim_id,'worker',attempt);
+    item:=plan->'uploads'->0;
+    assert item is not null;
+    last_cleaned:=(item->>'uploadId')::uuid;
+    last_object:=(item->>'objectId')::uuid;
+    assert public.complete_analysis_admission_cleanup(claim_id,'worker',attempt,last_cleaned,last_object);
+    if attempt=2 then
+      update public.data_requests set lease_expires_at=clock_timestamp()-interval '1 second' where id=claim_id;
+      assert not public.defer_analysis_admission_cleanup(claim_id,'worker',attempt);
+      update public.data_requests set lease_expires_at=clock_timestamp()+interval '2 minutes' where id=claim_id;
+    end if;
+    assert public.defer_analysis_admission_cleanup(claim_id,'worker',attempt);
+    assert not public.defer_analysis_admission_cleanup(claim_id,'worker',attempt);
+    assert not public.fail_analysis_admission_cleanup(claim_id,'worker',attempt,'FIXTURE_FAILED',3);
+    assert (select d.status='queued' and d.attempt_count=attempt and d.lease_owner is null from public.data_requests d where d.id=claim_id);
+    assert (select bool_and(s.attempt_count=0) from public.privacy_request_steps s where s.request_id=claim_id);
+  end loop;
+
+  for attempt in 5..7 loop
+    update public.data_requests set status='processing',lease_owner='worker',
+      lease_expires_at=clock_timestamp()+interval '2 minutes',attempt_count=attempt
+      where id=claim_id;
+    assert not public.defer_analysis_admission_cleanup(claim_id,'worker',attempt);
+    assert not public.fail_analysis_admission_cleanup(claim_id,'worker',attempt-1,'FIXTURE_FAILED',3);
+    assert public.fail_analysis_admission_cleanup(claim_id,'worker',attempt,'FIXTURE_FAILED',3);
+    select status into state from public.data_requests where id=claim_id;
+    assert state=(case when attempt=7 then 'failed' else 'queued' end);
+    assert (select s.attempt_count=attempt-4 from public.privacy_request_steps s where s.request_id=claim_id and status<>'completed');
+  end loop;
+  assert (select deferred_attempts=4 and last_progress_attempt=4
+    from private.analysis_admission_cleanup_progress where request_id=claim_id);
+  plan:=private.analysis_admission_export_records(owner_id);
+  assert plan#>>'{analysisAdmissionRetirementCaptures,0,cleanupDeferredAttempts}'='4';
+  assert plan#>>'{analysisAdmissionRetirementCaptures,0,cleanupLastProgressAttempt}'='4';
+  assert private.analysis_admission_export_records(foreign_id)->'analysisAdmissionRetirementCaptures'='[]'::jsonb;
+  assert (select count(*)=6 from private.analysis_admission_operations);
+end;
+$$;
+"""
+
+sql = "\n".join([
+    scaffold,
+    section(source("20261110080809"),"create table private.analysis_admission_operations","create function private.analysis_admission_denied"),
+    section(source("20261109164851"),"create function private.candidate_owner_lock_keys","-- A false try-lock"),
+    section(source("20261116075250"),"create function private.privacy_generation_claim","create function public.complete_privacy_request"),
+    source("20261121130718"), source("20261121132235"), source("20261121203700"), source("20261121205500"), checks,
+])
+
+with TemporaryDirectory(prefix="resumide-admission-progress-") as tmp:
+    env = {"HOME": tmp, "PATH": "/opt/homebrew/bin:/usr/bin:/bin", "LC_ALL": "C"}
+    data = str(Path(tmp) / "data")
+
+    def run(argv, **options):
+        return subprocess.run(argv, env=env, timeout=25, text=True, check=True, **options)
+
+    assert run(["postgres", "--version"], capture_output=True).stdout.startswith("postgres (PostgreSQL) 17.")
+    run(["initdb", "-D", data, "--no-sync", "--auth=trust", "-U", "fixture_owner"], stdout=subprocess.DEVNULL)
+    try:
+        run(["pg_ctl","-w","-D",data,"-l",str(Path(tmp)/"postgres.log"),
+             "-o",f"-c listen_addresses='' -c unix_socket_directories={tmp} -c unix_socket_permissions=0700","start"],
+            stdout=subprocess.DEVNULL)
+        run(["psql","-X","-v","ON_ERROR_STOP=1","-h",tmp,"-U","fixture_owner","-d","postgres","-Atq"], input=sql)
+        print("PASS: four verified handoffs, three separately counted failures, replay and expiry refusal, and owner-only export.")
+    finally:
+        if (Path(data) / "postmaster.pid").exists():
+            run(["pg_ctl","-w","-D",data,"-m","immediate","stop"], stdout=subprocess.DEVNULL)

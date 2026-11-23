@@ -1,0 +1,416 @@
+import { createHash } from "node:crypto";
+import { z } from "zod";
+
+const uuid = z.uuid().regex(/^[a-f0-9-]+$/u);
+const sha = z.string().regex(/^[a-f0-9]{64}$/u);
+const label = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$/u);
+const stamp = z.iso.datetime().regex(/T\d\d:\d\d:\d\d(?:\.\d{1,6})?Z$/u);
+const integer = z.string().regex(/^(0|[1-9][0-9]{0,127})$/u);
+const safe = integer.refine((v) => BigInt(v) <= 9007199254740991n);
+const positive = safe.refine((v) => BigInt(v) > 0n);
+const rate = integer.refine(
+  (v) => BigInt(v) > 0n && BigInt(v) <= 9223372036854775807n,
+);
+const operation = z.strictObject({
+  id: uuid,
+  organization_id: uuid,
+  user_id: uuid,
+  surface: z.enum(["qualitative", "rewrite", "build"]),
+  payload_sha256: sha,
+  model: label,
+  prompt_policy_version: label,
+  policy_version: label,
+  reserved_input_tokens: positive,
+  reserved_output_tokens: positive,
+  input_microusd_per_million: rate,
+  output_microusd_per_million: rate,
+  attempt_limit: z.number().int().min(1).max(3),
+  binding_sha256: sha,
+  created_at: stamp,
+});
+const attempt = z.strictObject({
+  id: uuid,
+  operation_id: uuid,
+  organization_id: uuid,
+  ordinal: z.number().int().min(1).max(3),
+  period: z.iso.date().regex(/-01$/u),
+  state: z.enum([
+    "reserved",
+    "dispatched",
+    "released",
+    "held_unknown",
+    "settled",
+  ]),
+  reserved_cost_microusd: integer,
+  actual_input_tokens: safe.nullable(),
+  actual_output_tokens: safe.nullable(),
+  actual_cost_microusd: integer.nullable(),
+  created_at: stamp,
+  updated_at: stamp,
+});
+const event = z.strictObject({
+  id: uuid,
+  attempt_id: uuid,
+  kind: z.enum([
+    "reserve",
+    "dispatch",
+    "release",
+    "unknown",
+    "settle",
+    "reconcile",
+  ]),
+  input_tokens: safe.nullable(),
+  output_tokens: safe.nullable(),
+  cost_microusd: integer.nullable(),
+  reconciliation_id: uuid.nullable(),
+  operator_id: uuid.nullable(),
+  evidence_sha256: sha.nullable(),
+  created_at: stamp,
+  operator_disposition: z.enum(["none", "self", "redacted"]),
+});
+const operator = z.strictObject({
+  organization_id: uuid,
+  operator_id: uuid,
+  enabled: z.boolean(),
+  approval_sha256: sha,
+});
+const action = z.strictObject({
+  kind: z.literal("reconcile"),
+  operator_id: uuid,
+  reconciliation_id: uuid,
+  evidence_sha256: sha,
+  created_at: stamp,
+});
+export const OwnedAiBudgetExportSchema = z.strictObject({
+  schemaVersion: z.literal("owned-ai-budget-export/1.0.0"),
+  ownerId: uuid,
+  operations: z.array(operation).max(4096),
+  attempts: z.array(attempt).max(12288),
+  events: z.array(event).max(73728),
+  reconciliationOperators: z.array(operator).max(4096),
+  operatorActions: z.array(action).max(73728),
+  omissions: z.strictObject({
+    sharedPools: z.literal("not_subject_attributable"),
+    periodOpenings: z.literal("not_subject_attributable"),
+    foreignOperatorIdentity: z.literal("redacted"),
+    foreignTargetHistory: z.literal("redacted"),
+  }),
+});
+export type OwnedAiBudgetExport = z.infer<typeof OwnedAiBudgetExportSchema>;
+const profileSchema = z.strictObject({
+  schemaVersion: z.literal("owned-ai-budget-export-readiness/1.0.0"),
+  profileVersion: z.literal("owned-ai-budget-export-profile/1.0.0"),
+  checkerSha256: sha,
+  exportSha256: sha,
+  metadataSha256: sha,
+});
+export type OwnedAiBudgetExportProfile = z.infer<typeof profileSchema>;
+export const OwnedAiBudgetExportReadinessSchema = profileSchema.extend({
+  schemaReady: z.boolean(),
+  exportExecutable: z.boolean(),
+});
+export class OwnedAiBudgetExportError extends Error {
+  readonly code = "unavailable";
+  constructor() {
+    super("Owned AI budget export is unavailable.");
+    this.name = "OwnedAiBudgetExportError";
+  }
+}
+const fail = (): never => {
+  throw new OwnedAiBudgetExportError();
+};
+const cost = (input: string, output: string, op: z.infer<typeof operation>) =>
+  (
+    (BigInt(input) * BigInt(op.input_microusd_per_million) +
+      BigInt(output) * BigInt(op.output_microusd_per_million) +
+      999999n) /
+    1000000n
+  ).toString();
+const timeKey = (s: string) =>
+  s.replace(
+    /(?:\.(\d+))?Z$/u,
+    (_, f: string | undefined) => `.${(f ?? "").padEnd(6, "0")}Z`,
+  );
+const unique = <T>(rows: T[], key: (row: T) => string) => {
+  const map = new Map<string, T>();
+  for (const row of rows) {
+    const k = key(row);
+    if (map.has(k)) fail();
+    map.set(k, row);
+  }
+  return map;
+};
+/** R03's frozen UTF8 atom domain; counters stay exact canonical strings. */
+function binding(op: z.infer<typeof operation>) {
+  const hash = createHash("sha256").update("AIBUDGET1\n", "utf8");
+  for (const atom of [
+    op.user_id,
+    op.organization_id,
+    op.id,
+    op.surface,
+    op.payload_sha256,
+    op.model,
+    op.prompt_policy_version,
+    op.policy_version,
+    op.reserved_input_tokens,
+    op.reserved_output_tokens,
+  ])
+    hash.update(`T${Buffer.byteLength(atom, "utf8")}:${atom};`, "utf8");
+  return hash.digest("hex");
+}
+export function validateOwnedAiBudgetExport(
+  raw: unknown,
+  ownerId: string,
+): OwnedAiBudgetExport {
+  if (!uuid.safeParse(ownerId).success) fail();
+  const parsed = OwnedAiBudgetExportSchema.safeParse(raw);
+  if (!parsed.success || parsed.data.ownerId !== ownerId) fail();
+  const data = parsed.data;
+  if (Buffer.byteLength(JSON.stringify(data), "utf8") > 33554432) fail();
+  const ops = unique(data.operations, (o) => o.id),
+    ats = unique(data.attempts, (a) => a.id);
+  unique(data.events, (e) => e.id);
+  unique(data.events, (e) => `${e.attempt_id}/${e.kind}`);
+  unique(
+    data.reconciliationOperators,
+    (o) => `${o.organization_id}/${o.operator_id}`,
+  );
+  unique(
+    [
+      ...data.events.filter((e) => e.reconciliation_id !== null),
+      ...data.operatorActions,
+    ],
+    (e) => e.reconciliation_id!,
+  );
+  const groups = new Map<string, z.infer<typeof attempt>[]>(),
+    events = new Map<string, z.infer<typeof event>[]>();
+  for (const op of data.operations)
+    if (op.user_id !== ownerId || binding(op) !== op.binding_sha256) fail();
+  for (const a of data.attempts) {
+    const op = ops.get(a.operation_id);
+    if (
+      !op ||
+      a.organization_id !== op.organization_id ||
+      a.ordinal > op.attempt_limit ||
+      timeKey(a.created_at) < timeKey(op.created_at) ||
+      timeKey(a.updated_at) < timeKey(a.created_at)
+    )
+      fail();
+    if (
+      a.reserved_cost_microusd !==
+      cost(op.reserved_input_tokens, op.reserved_output_tokens, op)
+    )
+      fail();
+    if (a.state === "settled") {
+      if (
+        a.actual_input_tokens === null ||
+        a.actual_output_tokens === null ||
+        a.actual_cost_microusd === null ||
+        a.actual_cost_microusd !==
+          cost(a.actual_input_tokens, a.actual_output_tokens, op)
+      )
+        fail();
+    } else if (
+      a.actual_input_tokens !== null ||
+      a.actual_output_tokens !== null ||
+      a.actual_cost_microusd !== null
+    )
+      fail();
+    groups.set(op.id, [...(groups.get(op.id) ?? []), a]);
+  }
+  for (const op of data.operations) {
+    const list = groups.get(op.id) ?? [];
+    const ordinals = list.map((a) => a.ordinal).sort((a, b) => a - b);
+    if (
+      !ordinals.length ||
+      ordinals.some((ordinal, index) => ordinal !== index + 1)
+    )
+      fail();
+  }
+  for (const e of data.events) {
+    const a = ats.get(e.attempt_id);
+    if (!a || timeKey(e.created_at) < timeKey(a.created_at)) fail();
+    const known = e.kind === "settle" || e.kind === "reconcile";
+    if (known) {
+      if (
+        a.state !== "settled" ||
+        e.input_tokens !== a.actual_input_tokens ||
+        e.output_tokens !== a.actual_output_tokens ||
+        e.cost_microusd !== a.actual_cost_microusd
+      )
+        fail();
+    } else if (
+      e.input_tokens !== null ||
+      e.output_tokens !== null ||
+      e.cost_microusd !== null
+    )
+      fail();
+    if (e.kind === "reconcile") {
+      if (
+        e.reconciliation_id === null ||
+        e.evidence_sha256 === null ||
+        !(
+          (e.operator_disposition === "self" && e.operator_id === ownerId) ||
+          (e.operator_disposition === "redacted" && e.operator_id === null)
+        )
+      )
+        fail();
+    } else if (
+      e.operator_disposition !== "none" ||
+      e.operator_id !== null ||
+      e.reconciliation_id !== null ||
+      e.evidence_sha256 !== null
+    )
+      fail();
+    events.set(a.id, [...(events.get(a.id) ?? []), e]);
+  }
+  for (const a of data.attempts) {
+    const kinds = new Set((events.get(a.id) ?? []).map((e) => e.kind));
+    if (!kinds.has("reserve")) fail();
+    const exact = (values: string[]) =>
+      kinds.size === values.length &&
+      values.every((k) => kinds.has(k as z.infer<typeof event>["kind"]));
+    if (a.state === "reserved" && !exact(["reserve"])) fail();
+    if (a.state === "released" && !exact(["reserve", "release"])) fail();
+    if (a.state === "dispatched" && !exact(["reserve", "dispatch"])) fail();
+    if (
+      a.state === "held_unknown" &&
+      !exact(["reserve", "dispatch", "unknown"])
+    )
+      fail();
+    if (
+      a.state === "settled" &&
+      (!kinds.has("dispatch") ||
+        kinds.has("release") ||
+        (!kinds.has("settle") && !kinds.has("reconcile")) ||
+        (kinds.has("unknown") && kinds.has("settle")))
+    )
+      fail();
+    if (
+      a.state === "settled" &&
+      kinds.has("settle") &&
+      kinds.has("reconcile")
+    ) {
+      const op = ops.get(a.operation_id)!;
+      if (
+        BigInt(a.actual_input_tokens!) <= BigInt(op.reserved_input_tokens) &&
+        BigInt(a.actual_output_tokens!) <= BigInt(op.reserved_output_tokens) &&
+        BigInt(a.actual_cost_microusd!) <= BigInt(a.reserved_cost_microusd)
+      )
+        fail();
+    }
+  }
+  if (
+    data.reconciliationOperators.some((o) => o.operator_id !== ownerId) ||
+    data.operatorActions.some((a) => a.operator_id !== ownerId)
+  )
+    fail();
+  return data;
+}
+type Reply = { data: unknown; error: unknown };
+export type OwnedAiBudgetExportClient = {
+  rpc: (
+    name: string,
+    args: Record<string, unknown>,
+  ) => PromiseLike<Reply> & {
+    abortSignal?: (signal: AbortSignal) => PromiseLike<Reply>;
+  };
+};
+export async function readOwnedAiBudgetExport(
+  client: OwnedAiBudgetExportClient,
+  ownerId: string,
+  expectedProfile: OwnedAiBudgetExportProfile,
+  options: {
+    signal?: AbortSignal;
+    timeoutMs?: number;
+    now?: () => number;
+  } = {},
+): Promise<OwnedAiBudgetExport> {
+  const profile = profileSchema.safeParse(expectedProfile),
+    timeout = options.timeoutMs ?? 5000,
+    now = options.now ?? Date.now;
+  if (
+    !profile.success ||
+    !uuid.safeParse(ownerId).success ||
+    !Number.isInteger(timeout) ||
+    timeout < 1 ||
+    timeout > 5000 ||
+    options.signal?.aborted
+  )
+    fail();
+  const expected = profile.data;
+  const started = now();
+  if (!Number.isFinite(started)) fail();
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const aborted = () => controller.abort();
+  options.signal?.addEventListener("abort", aborted, { once: true });
+  const deadline = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new OwnedAiBudgetExportError());
+    }, timeout);
+  });
+  const cancelled = new Promise<never>((_, reject) =>
+    controller.signal.addEventListener(
+      "abort",
+      () => reject(new OwnedAiBudgetExportError()),
+      { once: true },
+    ),
+  );
+  // Observe deadline branches even if a client throws synchronously before racing.
+  void deadline.catch(() => undefined);
+  void cancelled.catch(() => undefined);
+  const invoke = async (name: string, args: Record<string, unknown>) => {
+    if (controller.signal.aborted) fail();
+    const query = client.rpc(name, args);
+    const result = await Promise.race([
+      query.abortSignal ? query.abortSignal(controller.signal) : query,
+      deadline,
+      cancelled,
+    ]);
+    const ended = now();
+    if (
+      !Number.isFinite(ended) ||
+      ended < started ||
+      ended - started >= timeout ||
+      controller.signal.aborted ||
+      result.error
+    )
+      fail();
+    return result.data;
+  };
+  try {
+    const metadata = OwnedAiBudgetExportReadinessSchema.safeParse(
+      await invoke("read_owned_ai_budget_export_readiness", {}),
+    );
+    if (!metadata.success) fail();
+    const ready = metadata.data;
+    if (
+      !ready.schemaReady ||
+      !ready.exportExecutable ||
+      Object.entries(expected).some(
+        ([key, value]) => ready[key as keyof typeof ready] !== value,
+      )
+    )
+      fail();
+    const data = validateOwnedAiBudgetExport(
+      await invoke("export_owned_ai_budget_records", { p_user_id: ownerId }),
+      ownerId,
+    );
+    const ended = now();
+    if (
+      !Number.isFinite(ended) ||
+      ended < started ||
+      ended - started >= timeout ||
+      controller.signal.aborted
+    )
+      fail();
+    return data;
+  } catch {
+    return fail();
+  } finally {
+    if (timer) clearTimeout(timer);
+    options.signal?.removeEventListener("abort", aborted);
+  }
+}

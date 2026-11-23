@@ -1,0 +1,123 @@
+import { isDeepStrictEqual } from "node:util";
+import { InitialFeedbackReadSchema } from "./initial-feedback-operation-contract";
+import { FeedbackSchema } from "./schema";
+import {
+  createInitialFeedbackPublicationReader,
+  type InitialFeedbackPublicationReadScope,
+} from "./initial-feedback-publication-repository";
+import {
+  InitialFeedbackOperationError,
+  type InitialFeedbackOperationClient,
+} from "./initial-feedback-operation-repository";
+import { INITIAL_FEEDBACK_PROFILE } from "./initial-feedback-profile";
+import type { FeedbackProvenance } from "../result-feedback";
+export const isInitialFeedbackConsumerAccessDenied = (error: unknown) =>
+  error instanceof InitialFeedbackOperationError && error.code === "not_found";
+const empty = (status: FeedbackProvenance["status"]): FeedbackProvenance => ({
+  status,
+  currentness: null,
+  publicationState: null,
+  tips: [],
+});
+/** Actual validated owned data plus exact stored compatibility, never quote/type authority. */
+export function projectInitialFeedbackConsumer(
+  rawRead: unknown,
+  rawFeedback: unknown,
+  scope: InitialFeedbackPublicationReadScope,
+): FeedbackProvenance {
+  try {
+    const read = InitialFeedbackReadSchema.safeParse(rawRead),
+      feedback = FeedbackSchema.safeParse(rawFeedback);
+    if (!read.success || !feedback.success) return empty("unavailable");
+    const value = read.data;
+    if (value.status === "legacy_unbound")
+      return value.analysisId === scope.analysisId
+        ? empty("legacy_unbound")
+        : empty("unavailable");
+    if (value.status === "pending")
+      return value.operation.ownerId === scope.ownerId &&
+        value.operation.organizationId === scope.organizationId &&
+        value.operation.analysisId === scope.analysisId
+        ? empty("pending")
+        : empty("unavailable");
+    const p = value.publication;
+    if (
+      p.binding.ownerId !== scope.ownerId ||
+      p.binding.organizationId !== scope.organizationId ||
+      p.binding.analysisId !== scope.analysisId ||
+      !isDeepStrictEqual(p.compatibility.feedback, feedback.data)
+    )
+      return empty("unavailable");
+    const result: FeedbackProvenance = {
+      status: "available",
+      currentness: value.currentness,
+      publicationState: p.state,
+      tips: [],
+    };
+    if (p.state !== "assessed" || p.ownedSupport === null) return result;
+    for (const m of p.ownedSupport.mapping.tips) {
+      const part = p.ownedSupport.parts.tips.find(
+        (t) =>
+          t.category === m.category &&
+          t.originalIndex === m.originalIndex &&
+          t.retainedIndex === m.retainedIndex,
+      );
+      const tip = feedback.data[m.category].tips[m.compatibilityIndex],
+        prose = p.prose?.[m.category].tips[m.retainedIndex];
+      if (
+        !part ||
+        !tip ||
+        !prose ||
+        tip.type !== part.type ||
+        tip.type !== prose.type ||
+        tip.tip !== prose.tip ||
+        tip.explanation !== prose.explanation ||
+        tip.quote !== prose.quote
+      )
+        return empty("unavailable");
+      const classification =
+        part.kind === "clarification_question" ||
+        part.title.kind === "clarification_question" ||
+        part.explanation.kind === "clarification_question"
+          ? "clarification_question"
+          : part.kind === "source_claim" &&
+              part.state === "supported" &&
+              part.title.state === "supported" &&
+              part.explanation.state === "supported"
+            ? "source_claim"
+            : "editorial_observation";
+      result.tips.push({
+        category: m.category,
+        compatibilityIndex: m.compatibilityIndex,
+        classification,
+      });
+    }
+    for (const m of p.ownedSupport.mapping.padding)
+      result.tips.push({
+        category: m.category,
+        compatibilityIndex: m.compatibilityIndex,
+        classification: "compatibility_only",
+      });
+    return result;
+  } catch {
+    return empty("unavailable");
+  }
+}
+export async function loadInitialFeedbackConsumer(
+  client: InitialFeedbackOperationClient,
+  scope: InitialFeedbackPublicationReadScope,
+  feedback: unknown,
+  options: { signal?: AbortSignal } = {},
+): Promise<FeedbackProvenance> {
+  try {
+    const read = await createInitialFeedbackPublicationReader(
+      client,
+      scope,
+      INITIAL_FEEDBACK_PROFILE,
+    ).read(options);
+    return projectInitialFeedbackConsumer(read, feedback, scope);
+  } catch (error) {
+    if (isInitialFeedbackConsumerAccessDenied(error)) throw error;
+    return empty("unavailable");
+  }
+}

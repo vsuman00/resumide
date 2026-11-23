@@ -1,0 +1,191 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/initial-feedback-operation-repository.test.ts (32 tests | 1 failed | 31 skipped) 59ms
+     ↓ uses exact fresh metadata then one prepare RPC, retaining original lease/native hash
+     ↓ refuses missing foundation metadata without mutation/fallback
+     ↓ refuses unknown foundation metadata without mutation/fallback
+     ↓ refuses drift foundation metadata without mutation/fallback
+     ↓ refuses schema foundation metadata without mutation/fallback
+     ↓ refuses staged foundation metadata without mutation/fallback
+     ↓ refuses invalid scope/selector before RPC and does not import caller profile authority
+     ↓ refuses foreign ownerId even when reply internally correlates
+     ↓ refuses foreign organizationId even when reply internally correlates
+     ↓ refuses foreign analysisId even when reply internally correlates
+     ↓ refuses valid but unrequested fresh policy and tampered deterministic checksum
+     ↓ preserves pending captured policy after selector movement; pending cannot be claimed
+     ↓ returns no permission for false/replayed claim and never settles/releases its winner
+     ↓ does not dispatch when claimExecutable is false in fresh admission
+     ↓ does not dispatch when settleExecutable is false in fresh admission
+     ↓ correlates op/attempt/binding and does not mint a token for malformed true claim
+     ↓ winning capability uses private copies despite public nested mutation; forged and cross-instance fail before RPC
+     ↓ settles after candidate cancellation/metadata denial without refreshing content, consent, month or R03
+     ↓ preserves held unknown/terminal error, permits one late known, rejects changed known/error
+     ↓ refuses settlement with wrong identity/counters and retains exact original input for manual retry
+     ↓ maps 22023 to fixed safe mutation outcome without raw messages/retry
+     ↓ maps 42501 to fixed safe mutation outcome without raw messages/retry
+     ↓ maps P0C01 to fixed safe mutation outcome without raw messages/retry
+     ↓ maps P0C03 to fixed safe mutation outcome without raw messages/retry
+     ↓ maps XX000 to fixed safe mutation outcome without raw messages/retry
+     ↓ preaborted prepare and settlement make zero new RPCs
+     ↓ bounds ignored-abort metadata and does not later send the mutation
+     ↓ bounds ambiguous claim without token, no automatic retry/settlement
+     ↓ bounds settlement cancellation and retries exact retained technical input only
+     ↓ rejects immediate valid response after absolute deadline even if timer did not run
+     × preserves actual R03 request and envelope and never assumes queue attempt equals provider ordinal 58ms
+     ↓ rejects malformed known counters and foreign preparation handles without IO
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-operation-repository.test.ts > initial-feedback FOUNDATION RPC boundary (fake RPC, no Native execution) > preserves actual R03 request and envelope and never assumes queue attempt equals provider ordinal
+AssertionError: promise resolved "{ status: 'won', claim: { …(6) }, …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "claim": {
++     "attempt": {
++       "attemptId": "00000000-0000-4000-8000-000000000008",
++       "budgetAttemptId": "00000000-0000-4000-8000-000000000099",
++       "claimedAt": "2026-11-15T00:00:00Z",
++       "errorCode": null,
++       "ordinal": 1,
++       "state": "dispatched",
++       "usage": null,
++     },
++     "budget": {
++       "receipt": {
++         "actualCostMicrousd": null,
++         "actualInputTokens": null,
++         "actualOutputTokens": null,
++         "attemptId": "00000000-0000-4000-8000-000000000099",
++         "attemptLimit": 3,
++         "attemptOrdinal": 1,
++         "bindingSha256": "348c1c7d7b21425bc364b486376613965f962d2249a78e01f74da652aa9490bc",
++         "dispatchAllowed": true,
++         "inputMicrousdPerMillion": "1",
++         "model": "unit-model",
++         "operationId": "00000000-0000-4000-8000-000000000007",
++         "organizationId": "00000000-0000-4000-8000-000000000003",
++         "outputMicrousdPerMillion": "1",
++         "payloadSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
++         "period": "2026-11-01",
++         "policyVersion": "unit-budget/1",
++         "poolBlocked": false,
++         "poolPolicyVersion": "unit-pool/1",
++         "promptPolicyVersion": "qualitative-cited-prose/3.0.0",
++         "replayed": false,
++         "reservedCostMicrousd": "1",
++         "reservedInputTokens": "20",
++         "reservedOutputTokens": "1200",
++         "schemaVersion": "ai-budget/1.0.0",
++         "state": "dispatched",
++         "surface": "qualitative",
++         "userId": "00000000-0000-4000-8000-000000000002",
++       },
++       "schemaVersion": "ai-budget/1.0.0",
++       "status": "ok",
++     },
++     "dispatchAllowed": true,
++     "operation": {
++       "analysisId": "00000000-0000-4000-8000-000000000001",
++       "attemptLimit": 3,
++       "attempts": [
++         {
++           "attemptId": "00000000-0000-4000-8000-000000000008",
++           "budgetAttemptId": "00000000-0000-4000-8000-000000000099",
++           "claimedAt": "2026-11-15T00:00:00Z",
++           "errorCode": null,
++           "ordinal": 1,
++           "state": "dispatched",
++           "usage": null,
++         },
++       ],
++       "binding": {
++         "analysisId": "00000000-0000-4000-8000-000000000001",
++         "deterministicContentSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
++         "jobId": "00000000-0000-4000-8000-000000000006",
++         "jobSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
++         "organizationId": "00000000-0000-4000-8000-000000000003",
++         "ownerId": "00000000-0000-4000-8000-000000000002",
++         "policy": {
++           "attemptLimit": 3,
++           "budgetPolicyVersion": "unit-budget/1",
++           "maxOutputTokens": 1200,
++           "model": "unit-model",
++           "planProfile": {
++             "checkerSha256": "c5d8c0e8e5ac52c8b06a4fad5ea78f6fe6e42297bbbfd51cd2779243c8418b36",
++             "metadataSha256": "3c133694d11334e9430821945c94782b562ab1efb3f26bb8d4e7a9f2699369c5",
++             "policySha256": "972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48",
++             "policyVersion": "initial-feedback-plan-policy/1.0.0",
++             "profileVersion": "initial-feedback-plan-profile/1.0.0",
++             "rendererSha256": "c8bc131aacc7f9ddd8e30dcca8f5f429e78ee84180e5dd4542254883001cedc6",
++             "schemaVersion": "initial-feedback-plan-readiness/1.0.0",
++           },
++           "planSha256": "972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48",
++           "planVersion": "initial-feedback-plan-policy/1.0.0",
++           "promptVersion": "qualitative-cited-prose/3.0.0",
++           "provider": "openai",
++           "scoringInputProfile": {
++             "checkerSha256": "56a92f65d533a2f1b053078dbb372b1271728224e5df1c74b201b4cffb21a8d3",
++             "contextSha256": "d64ba9ac11ba732c983cd195cd7d83fba878e67f4ae0bffc8b6e166a600a8bd9",
++             "exportSha256": "e4c17997fdbec81d931e4838b3522c6c7d3c861b0bfa07b6fb3ab5ece160f0a2",
++             "finishSha256": "5db61206ed04f32af7052fce2d64e2ccf414d6fea13645f58eecf67f616b61a2",
++             "metadataSha256": "f18e6abfd698c4dbf4f7f6040fb577b2e49e78e4125bfd9d31e8166d0e678da8",
++             "profileVersion": "legacy-scoring-profile/1.0.0",
++             "readerSha256": "2ea3c5071d8d56e421a37053127dea08fe8eb08ce91e4de9f5c3b4c4b1172ccf",
++             "schemaVersion": "legacy-scoring-readiness/1.0.0",
++           },
++           "sha256": "43d437a71de6bd8068192acf025ffaff0ecc71dea64e14640202fc464fbe999b",
++           "supportSha256": "230f22333dd468f3bf78395b118330ec1ff78de18be9da5349356e84d0f6bd13",
++           "supportVersion": "qualitative-content-support/1.0.0",
++           "version": "initial-feedback-publication/1.0.0",
++           "writingSupportPolicyVersion": "legacy-source-transforms/1.0.4",
++         },
++         "resultChecksum": "67e06c9ce910ba58e133e747f92bb0699056c6e7a434bfd1c8dbc996411a44a3",
++         "resumeId": "00000000-0000-4000-8000-000000000004",
++         "resumeVersionId": "00000000-0000-4000-8000-000000000005",
++         "schemaVersion": "initial-feedback-binding/1.0.0",
++         "scoringInputSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
++         "sourceTextSha256": "cea9a6a55b06ed97ed4063c21fea3a5c544c72f54062787eb7238b7081100cd3",
++       },
++       "bindingSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
++       "operationId": "00000000-0000-4000-8000-000000000007",
++       "organizationId": "00000000-0000-4000-8000-000000000003",
++       "ownerId": "00000000-0000-4000-8000-000000000002",
++       "publicationId": null,
++       "schemaVersion": "initial-feedback-operation/1.0.0",
++       "state": "open",
++     },
++     "replayed": false,
++     "schemaVersion": "initial-feedback-claim/1.0.0",
++   },
++   "dispatch": {
++     "attemptId": "00000000-0000-4000-8000-000000000008",
++     "bindingSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
++     "claimedAt": "2026-11-15T00:00:00Z",
++     "operationId": "00000000-0000-4000-8000-000000000007",
++     Symbol(validated feedback dispatch): true,
++   },
++   "status": "won",
+  }
+
+ ❯ tests/unit/initial-feedback-operation-repository.test.ts:768:46
+    766|     claim.budget.receipt.attemptId = uuid(99);
+    767|     expect(InitialFeedbackClaimSchema.safeParse(claim).success).toBe(t…
+    768|     await expect(repo.claim(prepared, budget)).rejects.toMatchObject({
+       |                                              ^
+    769|       code: "unavailable", mutationStatus: "unknown",
+    770|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 31 skipped (32)
+   Start at  13:33:58
+   Duration  356ms (transform 134ms, setup 0ms, import 232ms, tests 59ms, environment 0ms)
+

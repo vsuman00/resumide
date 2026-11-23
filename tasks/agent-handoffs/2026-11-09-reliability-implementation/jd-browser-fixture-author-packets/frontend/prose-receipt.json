@@ -1,0 +1,38 @@
+[
+  {
+    "label": "before",
+    "exitCode": 0,
+    "command": [
+      "python3",
+      "/Users/vaibhavsuman/.agents/skills/clean-user-facing-text/scripts/inspect_text.py",
+      "--stylometry",
+      "--json",
+      "/private/tmp/resumide-jd-browser-frontend-12bvqqxw/preimages/tasks/agent-handoffs/2026-11-09-reliability-implementation/jd-browser-fixture-frontend.md"
+    ]
+  },
+  {
+    "label": "after",
+    "exitCode": 0,
+    "command": [
+      "python3",
+      "/Users/vaibhavsuman/.agents/skills/clean-user-facing-text/scripts/inspect_text.py",
+      "--stylometry",
+      "--json",
+      "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/tasks/agent-handoffs/2026-11-09-reliability-implementation/jd-browser-fixture-frontend.md"
+    ]
+  },
+  {
+    "label": "clean",
+    "exitCode": 0,
+    "command": [
+      "python3",
+      "/Users/vaibhavsuman/.agents/skills/clean-user-facing-text/scripts/clean_text.py",
+      "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/tasks/agent-handoffs/2026-11-09-reliability-implementation/jd-browser-fixture-frontend.md",
+      "-o",
+      "/private/tmp/resumide-jd-browser-frontend-12bvqqxw/handoff.cleaned.md",
+      "--stats",
+      "--no-normalize-spaces"
+    ],
+    "bytesUnchanged": true
+  }
+]

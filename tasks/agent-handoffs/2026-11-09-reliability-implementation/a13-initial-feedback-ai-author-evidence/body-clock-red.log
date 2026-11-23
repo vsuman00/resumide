@@ -1,0 +1,76 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/initial-feedback-ai.test.ts (36 tests | 1 failed | 35 skipped) 22ms
+   ↓ uses the installed SDK once and exposes every unassessed raw row before lossless resolution
+   ↓ refuses the whole writer on unknown source references without filtering the first valid row
+   ↓ refuses the whole writer on duplicate source references without filtering the first valid row
+   ↓ does not invent an original for a source with no actual selectable units
+   ↓ strictly rejects unknown generation fields after safe usage observation
+   ↓ observes known usage before refusal rejection and retains an exact content hash
+   ↓ observes known usage before length rejection and retains an exact content hash
+   ↓ observes known usage before malformed rejection and retains an exact content hash
+   ↓ observes known usage before duplicate escaped key rejection and retains an exact content hash
+   ↓ hashes exact received whitespace rather than reconstructed generation JSON
+   ↓ rejects malformed Unicode without a reconstructed raw hash 0
+   ↓ rejects malformed Unicode without a reconstructed raw hash 1
+   ↓ bounds candidate content and preserves usage on oversized output
+   ↓ preserves missing or invalid counters as unknown, never fabricated zero 0
+   ↓ preserves missing or invalid counters as unknown, never fabricated zero 1
+   ↓ preserves missing or invalid counters as unknown, never fabricated zero 2
+   ↓ preserves missing or invalid counters as unknown, never fabricated zero 3
+   ↓ preserves missing or invalid counters as unknown, never fabricated zero 4
+   ↓ retains genuinely observed zero counters
+   ↓ awaits the usage observer before exposing raw output
+   ↓ preserves known counters when the settlement observer throws
+   ↓ cancels before dispatch with zero SDK fetches
+   ↓ retains known counters when cancellation follows observation
+   ↓ bounds a stalled fetch even when cancellation is ignored
+   ↓ bounds a stalled body even when cancellation is ignored
+   ↓ bounds a stalled observer even when cancellation is ignored
+   ↓ checks the absolute injected deadline after observation without waiting for timers
+   ↓ refuses redirects with one fetch and no follow
+   ↓ does not retry SDK HTTP 429 and preserves observed counters
+   ↓ does not retry SDK HTTP 500 and preserves observed counters
+   ↓ sanitizes a network error without retrying or losing the unknown observation
+   ↓ bounds the outer SDK body and does not wait on hostile stream cleanup
+   ↓ refuses an alternate egress endpoint before any SDK request
+   × retains observable counters from complete bounded bytes before an absolute-deadline refusal 21ms
+   ↓ rejects malformed surrogate strings supplied directly to the exported resolver
+   ↓ rejects schema-valid multibyte candidate JSON beyond64KiB in direct resolver calls
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-ai.test.ts > retains observable counters from complete bounded bytes before an absolute-deadline refusal
+AssertionError: expected InitialFeedbackAiFailure: Initial writing… { …(3) } to match object { code: 'AI_TIMEOUT', usage: { …(2) } }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
++ InitialFeedbackAiFailure {
+    "code": "AI_TIMEOUT",
+-   "usage": {
+-     "inputTokens": 11,
+-     "outputTokens": 7,
+-   },
++   "usage": null,
+  }
+
+ ❯ tests/unit/initial-feedback-ai.test.ts:569:17
+    567|   );
+    568|   const error = await failure(s.transport.execute(s.request));
+    569|   expect(error).toMatchObject({ code: "AI_TIMEOUT", usage });
+       |                 ^
+    570|   expect(s.observed).toHaveBeenCalledExactlyOnceWith(usage);
+    571|   expect(s.fetch).toHaveBeenCalledTimes(1);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 35 skipped (36)
+   Start at  13:05:56
+   Duration  258ms (transform 70ms, setup 0ms, import 172ms, tests 22ms, environment 0ms)
+

@@ -1,0 +1,14 @@
+import {createHash} from 'node:crypto';
+import {writeFileSync} from 'node:fs';
+import {extractDocumentForReview} from '/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/app/lib/server/document-extraction';
+import {deriveEvidenceReviewTargets} from '/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/app/lib/server/evidence-targets';
+import {importCanonicalEvidence} from '/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/app/lib/server/canonical-content';
+const pageText=['Experience','Employer: Synthetic North Labs','Role: Engineer','Dates: 2020 - 2022','Employer: Synthetic South Labs','Role: Analyst','Dates: 2021 - 2023'].join('\n');
+const bytes=new Uint8Array([1,2,3]);
+const context={id:'10000000-0000-4000-8000-000000000001',ownerId:'10000000-0000-4000-8000-000000000002',analysisId:'10000000-0000-4000-8000-000000000003',sourceId:'10000000-0000-4000-8000-000000000004',inputSha256:createHash('sha256').update(bytes).digest('hex'),createdAt:'2026-11-13T00:00:00.000Z',retentionPolicyId:'synthetic/1.0.0'};
+const evidence=await extractDocumentForReview({bytes,context,maxBytes:100,maxPages:20,maxCharacters:500000,timeoutMs:1000},async()=>({totalPages:1,text:pageText,pageTexts:[pageText]}));
+const targets=deriveEvidenceReviewTargets(evidence,{ownerId:context.ownerId,analysisId:context.analysisId,sourceId:context.sourceId,inputSha256:context.inputSha256,attemptId:context.id});
+const canonical=importCanonicalEvidence(evidence,{ownerId:context.ownerId,resumeId:'10000000-0000-4000-8000-000000000005',organizationId:'10000000-0000-4000-8000-000000000006'});
+const report={tier:'REAL_EXISTING_PURE_PIPELINE_WITH_INJECTED_SYNTHETIC_NATIVE_LAYERS',assertions:evidence.assertions.length,assertionsByField:Object.fromEntries(['employer','role','dates'].map(field=>[field,evidence.assertions.filter(v=>v.field===field).length])),groups:targets.groups.length,unassignedObservedTargets:targets.targets.filter(v=>v.kind==='unassigned_observation').length,rawFieldStates:evidence.fields.filter(v=>['employer','role','dates'].includes(v.field)),canonicalEntries:canonical.sections.flatMap(s=>s.entries).length,canonicalFacts:canonical.facts.length,factsByEntry:canonical.sections.flatMap(s=>s.entries.map(e=>e.factIds.length)),blockers:evidence.blockers,scoringEligible:evidence.scoringEligible,versions:{evidence:evidence.schemaVersion,fieldExtractor:evidence.fieldExtractorVersion,targets:targets.modelVersion,canonical:canonical.producerVersion},ocrSourcePresent:evidence.ocrSource!==null};
+writeFileSync(new URL('characterization-result.json',import.meta.url),JSON.stringify(report,null,2)+'\n');
+process.stdout.write(JSON.stringify(report)+'\n');

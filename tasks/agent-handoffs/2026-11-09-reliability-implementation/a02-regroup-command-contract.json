@@ -1,0 +1,167 @@
+{
+  "task": "CR-A02-S02 durable whole-entry regroup command normalization",
+  "status": "FROZEN_SOURCE_IMPLEMENTATION_CONTRACT",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "at": "2026-11-13T16:51:04.864913+00:00",
+  "scope": "Pure Node command preparation and private source-only SQL equivalents. No writer, public caller, producer/schema adoption, lifecycle or route in this leaf.",
+  "api": [
+    "prepareCanonicalEntryRegroupCommand(context, rawRequest)",
+    "normalizeCanonicalEntryRegroupCommand(context, rawCommand)"
+  ],
+  "context": {
+    "historicalBaseView": "CanonicalEntryRegroupInput: actual ORIGINAL owned immutable base, row revision, owned parent suffix and captured global analysis review prefix, not current head/history. Attestation high-water revision/head must exactly match original expected review pair.",
+    "sqlBaseContentSha256": "Owned SHA256 of native base.content::text supplied by repository, never computed with JavaScript serialization."
+  },
+  "requestOrder": [
+    "schemaVersion",
+    "operation",
+    "binding",
+    "base",
+    "expected",
+    "selections",
+    "unselectedDisposition"
+  ],
+  "schemaVersion": "canonical-entry-regroup-command/1.0.0",
+  "operation": "approve_whole_entry_regroup",
+  "bindingOrder": [
+    "ownerId",
+    "organizationId",
+    "resumeId",
+    "analysisId",
+    "sourceId",
+    "attemptId",
+    "inputSha256",
+    "evidenceSchemaVersion",
+    "fieldExtractorVersion",
+    "targetModelVersion",
+    "associationModelVersion",
+    "producerVersion",
+    "admissionPolicyVersion",
+    "structuralTextProfileVersion",
+    "correctionProjectionModelVersion",
+    "correctionAdmissionPolicyVersion",
+    "regroupModelVersion"
+  ],
+  "literalChanges": {
+    "producerVersion": "canonical-engine/1.0.4",
+    "admissionPolicyVersion": "whole-entry-regroup-admission/1.0.0",
+    "regroupModelVersion": "canonical-entry-regroup/1.0.0"
+  },
+  "otherModelLiterals": "Exactly existing grouped-original-command/1.0.0 binding literals; locale moves to base, no duplicated locale.",
+  "baseOrder": ["versionId", "revision", "contentSha256", "locale"],
+  "expectedOrder": [
+    "reviewRevision",
+    "reviewHeadId",
+    "assignmentRevision",
+    "assignmentHeadId",
+    "associationRevision",
+    "associationHeadId",
+    "regroupRevision",
+    "regroupHeadId",
+    "canonicalHeadId"
+  ],
+  "selectionWire": {
+    "groupId": "Existing source-derived lookup ID; not an authoritative atom.",
+    "factIds": "2..3 distinct UUIDs in actual source member order; resolve assertion IDs from immutable source via real association helper."
+  },
+  "limits": {
+    "groups": 32,
+    "membersPerGroup": 3,
+    "baseRevisionMin": 1,
+    "baseRevisionMax": 2147483646,
+    "expectedRevisionMax": 2147483647,
+    "identifierUtf16": 100,
+    "globalAtoms": 36,
+    "groupMaxAtoms": 10,
+    "memberAtoms": 14,
+    "maxAtoms": 1700,
+    "framedBytesMax": 131072,
+    "formBytesMax": 16384
+  },
+  "strictness": "Reject unknown keys, missing/sparse arrays, invalid UUID/sha/model literals, malformed prefix pairs, duplicate selections/facts, base/head/locale/source mismatch, incoherent captured history, noncanonical member order and overflow. No truncation or silent sorting.",
+  "prepare": "Resolve compact wire through actual deriveEvidenceEntryAssociations and actual prepareCanonicalEntryRegroup. Preserve original captures. Refuse base revision INT_MAX before result can overflow.",
+  "normalFormOrder": [
+    "schemaVersion",
+    "operation",
+    "binding",
+    "base",
+    "expected",
+    "acknowledgementPolicy",
+    "acknowledgement",
+    "unselectedDisposition",
+    "selections"
+  ],
+  "acknowledgementPolicy": "whole_entry_merge_not_fact_confirmation",
+  "unselectedDisposition": "retain_eligible_original_origins",
+  "commitExtras": {
+    "acknowledgement": true,
+    "previewHash": "SHA256 of generic A02OP1 framed semanticAtoms",
+    "idempotencyKey": "Lowercase UUID; excluded from semantic atoms."
+  },
+  "groupOrder": [
+    "pageId",
+    "method",
+    "sectionId",
+    "anchorEntryId",
+    "insertionIndex",
+    "affectedEntryIds",
+    "members"
+  ],
+  "groupAtoms": [
+    "pageId",
+    "method",
+    "sectionId",
+    "anchorEntryId",
+    "insertionIndex",
+    "affectedEntryIds.length",
+    "...affectedEntryIds",
+    "members.length"
+  ],
+  "memberOrder": [
+    "assertionId",
+    "field",
+    "factId",
+    "citations",
+    "mappedThrough",
+    "originVersionId",
+    "location"
+  ],
+  "citationRule": "Exactly one source citation, with attempt/page/method inherited from enclosing binding/group. Source helper already requires this. Keep full strict citation in normal JSON; atomize count then span/start/end/pageStart/pageEnd.",
+  "memberAtoms": [
+    "assertionId",
+    "field",
+    "factId",
+    "citations.length",
+    "citation.spanId",
+    "citation.start",
+    "citation.end",
+    "citation.pageStart",
+    "citation.pageEnd",
+    "mappedThrough",
+    "originVersionId",
+    "location.kind",
+    "location.entryId",
+    "location.bulletId"
+  ],
+  "redundancy": "Location section inherits group.sectionId; citation attempt/page/method inherit binding/group. Validate all duplicated JSON fields exactly. OriginFactId is always factId for ancestor, null for current; omit from normal form. No opaque observation/target/group hashes, values, draft content, result IDs or timestamps in normal form/atoms.",
+  "globalAtoms": "schemaVersion,operation,bindingOrder17,baseOrder4,expectedOrder9,acknowledgementPolicy,1,unselectedDisposition,selections.length = 36; decimal integer strings, null framed as null, no JSON-key-order dependence.",
+  "baseMeaning": "Owned native immutable base hash plus structural affected entry IDs binds ALL carried content, confirmations and refs. SQL independently derives same whole-entry merge; no expansion of up to 20k carried refs into atoms.",
+  "sql": {
+    "functions": [
+      "private.entry_regroup_original_base(jsonb,jsonb)->jsonb VOLATILE",
+      "private.entry_regroup_resolve(jsonb,jsonb,jsonb)->jsonb VOLATILE",
+      "private.entry_regroup_normalize(jsonb,jsonb)->jsonb VOLATILE",
+      "private.entry_regroup_atoms(jsonb)->text[] IMMUTABLE"
+    ],
+    "policy": "All private, empty search_path, invoker, app/public EXECUTE revoked. No public/writer/profile adoption. Prerequisite source body/DDL proof only. Dedicated strict location/nearest ancestry resolver: exactly one entry/bullet location, same ID/type every step, stop at first source-bearing ancestor; old permissive placement is insufficient. Source binding adapter assembled from verified scope, not caller and not a widened old helper.",
+    "reviewPrefix": "GLOBAL analysis corrections through ORIGINAL capture, may include prior attempts; do not attempt-filter holes. No reuse of current-head correction_scope before replay.",
+    "oracles": "Real Node literal normalForm, atoms and hash with placeholder base SHA. Deferred native fixture substitutes ONLY the contract base SHA field and its single atom slot using SQL digest(base.content::text), everything else remains Node expectation. Independently verify SQL atomization against untouched literal. No JS/native serialization equivalence claim."
+  },
+  "acceptance": [
+    "Real preparation and normalization tests: valid current/ancestor/candidate-edited/confirmed/partial/already-grouped/bullet merges, exact replay captures, reject malformed/stale/mismatched/ambiguous/resource cases.",
+    "At least one realistic 32x3 actual source/Core preparation under current 16KiB form, 2048 atom and 128KiB framing limits; astral identifier/source-offset semantics.",
+    "Private SQL source contract + prepared UNEXECUTED native verifier; no SQL parse/execution claim.",
+    "Independent frontend protocol review, then one Root affected test/types/lint/web/worker gate."
+  ],
+  "boundaries": "No SQL parser/execution, database/environment/keys/providers/PII/browser/Docker/dependency/Git/deploy. Separate worktrees and allocated files only; original failures retained; no old green campaign rerun."
+}

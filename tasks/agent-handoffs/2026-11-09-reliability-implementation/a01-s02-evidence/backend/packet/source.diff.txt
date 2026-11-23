@@ -1,0 +1,118 @@
+--- before/app/lib/server/ocr/pdf-detection.ts
++++ after/app/lib/server/ocr/pdf-detection.ts
+@@ -4,6 +4,7 @@
+   normalizeNativePageLayout,
+   type NativePageLayout,
+ } from "../native-layout";
++import type { NativeEvidence } from "../native-evidence-schema";
+ 
+ export const MIN_USABLE_TEXT_CHARACTERS_PER_PAGE = 8;
+ export const MAX_NATIVE_LAYOUT_ITEMS_PER_PAGE = 10_000;
+@@ -26,6 +27,27 @@
+   pagesNeedingOcr: number[];
+ };
+ 
++export type NativePageDiagnosticReason =
++  | "no_native_text"
++  | "limited_native_text"
++  | "replacement_character"
++  | "invalid_unicode_scalar"
++  | "unexpected_control_character"
++  | "duplicate_native_page_text";
++
++export type NativePageDiagnostics = {
++  modelVersion: "native-page-review/1.0.0";
++  reliability: "unassessed";
++  pages: {
++    pageId: string;
++    pageNumber: number;
++    nativeTextAvailable: boolean;
++    nonWhitespaceUtf16Units: number;
++    reasons: NativePageDiagnosticReason[];
++    duplicatePageIds: string[];
++  }[];
++};
++
+ function copyBytes(bytes: Uint8Array): Uint8Array {
+   const copy = new Uint8Array(bytes.byteLength);
+   copy.set(bytes);
+@@ -34,6 +56,59 @@
+ 
+ function countTextCharacters(text: string): number {
+   return text.replace(/\s/gu, "").length;
++}
++
++// Call only with validated immutable native evidence (20 pages, 500,000 units).
++// These review observations neither measure accuracy nor change OCR selection.
++export function deriveNativePageDiagnostics(
++  native: NativeEvidence,
++): NativePageDiagnostics {
++  const counts = native.pages.map((page) => countTextCharacters(page.text));
++  const exactTextGroups = new Map<string, string[]>();
++  for (const [index, page] of native.pages.entries()) {
++    if (counts[index] < MIN_USABLE_TEXT_CHARACTERS_PER_PAGE) continue;
++    const group = exactTextGroups.get(page.text);
++    if (group) group.push(page.id);
++    else exactTextGroups.set(page.text, [page.id]);
++  }
++  return {
++    modelVersion: "native-page-review/1.0.0",
++    reliability: "unassessed",
++    pages: native.pages.map((page, pageIndex) => {
++      const nonWhitespaceUtf16Units = counts[pageIndex];
++      const reasons: NativePageDiagnosticReason[] = [];
++      if (nonWhitespaceUtf16Units === 0) reasons.push("no_native_text");
++      else if (nonWhitespaceUtf16Units < MIN_USABLE_TEXT_CHARACTERS_PER_PAGE)
++        reasons.push("limited_native_text");
++      if (page.text.includes("\uFFFD")) reasons.push("replacement_character");
++      let invalidScalar = false;
++      let unexpectedControl = false;
++      for (let index = 0; index < page.text.length; index++) {
++        const unit = page.text.charCodeAt(index);
++        if (unit <= 0x08 || (unit >= 0x0e && unit <= 0x1f) || unit === 0x7f)
++          unexpectedControl = true;
++        if (unit >= 0xd800 && unit <= 0xdbff) {
++          const next = page.text.charCodeAt(index + 1);
++          if (next >= 0xdc00 && next <= 0xdfff) index++;
++          else invalidScalar = true;
++        } else if (unit >= 0xdc00 && unit <= 0xdfff) invalidScalar = true;
++      }
++      if (invalidScalar) reasons.push("invalid_unicode_scalar");
++      if (unexpectedControl) reasons.push("unexpected_control_character");
++      const duplicatePageIds =
++        exactTextGroups.get(page.text)?.filter((id) => id !== page.id) ?? [];
++      if (duplicatePageIds.length) reasons.push("duplicate_native_page_text");
++      return {
++        pageId: page.id,
++        pageNumber: page.pageNumber,
++        nativeTextAvailable:
++          nonWhitespaceUtf16Units >= MIN_USABLE_TEXT_CHARACTERS_PER_PAGE,
++        nonWhitespaceUtf16Units,
++        reasons,
++        duplicatePageIds,
++      };
++    }),
++  };
+ }
+ 
+ export function detectPdfTextProfile(args: {
+--- before/app/lib/server/evidence-review.ts
++++ after/app/lib/server/evidence-review.ts
+@@ -5,6 +5,7 @@
+   deriveEvidenceReviewTargets,
+   EVIDENCE_TARGET_MODEL_VERSION,
+ } from "./evidence-targets";
++import { deriveNativePageDiagnostics } from "./ocr/pdf-detection";
+ import type { createSupabaseAdminClient } from "./supabase";
+ 
+ export type EvidenceReviewClient = Pick<
+@@ -372,6 +373,9 @@
+       corrections,
+       revision: head?.revision ?? 0,
+       scoringEligible: false as const,
++      nativePageDiagnostics: deriveNativePageDiagnostics(
++        replayed.envelope.nativeSource,
++      ),
+       targets,
+       historyAttestation,
+     };

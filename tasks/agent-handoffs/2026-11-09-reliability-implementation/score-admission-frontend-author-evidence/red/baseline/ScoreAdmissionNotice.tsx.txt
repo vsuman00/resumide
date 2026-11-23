@@ -1,0 +1,24 @@
+import { useId } from "react";
+
+export interface ScoreAdmissionNoticeProps {
+  dimensions: readonly { blockers: readonly string[] }[];
+  readiness: { blockers: readonly string[] };
+  base: string;
+}
+
+// RED baseline: extract the existing route's raw blocker presentation before
+// adding semantic explanations. This is replaced by the reviewed presentation.
+export default function ScoreAdmissionNotice({
+  dimensions,
+  readiness,
+}: ScoreAdmissionNoticeProps) {
+  const heading = useId();
+  const blockers = [...new Set([...dimensions.flatMap((d) => d.blockers), ...readiness.blockers])];
+  return (
+    <section className="account-card" aria-labelledby={heading}>
+      <h2 id={heading}>Why scores are unavailable</h2>
+      <p>Numeric scores are unavailable while evidence and scoring calibration need review.</p>
+      <ul>{blockers.map((blocker) => <li key={blocker}>{blocker.replaceAll("_", " ")}</li>)}</ul>
+    </section>
+  );
+}

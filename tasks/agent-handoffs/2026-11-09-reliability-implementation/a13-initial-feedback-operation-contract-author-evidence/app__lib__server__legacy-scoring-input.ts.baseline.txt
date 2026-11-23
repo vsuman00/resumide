@@ -1,0 +1,612 @@
+import { createHash } from "node:crypto";
+import { z } from "zod";
+import { ParseViewSchema } from "./schema";
+import { runProviderAttempt } from "./provider-attempt";
+import { LEGACY_SCORING_INPUT_PROFILE } from "./legacy-scoring-input-profile";
+import type { scoreExtractedResume } from "./scoring-stage";
+
+export type LegacyScoringResult = ReturnType<typeof scoreExtractedResume>;
+const uuid = z.uuid().regex(/^[a-f0-9-]+$/u);
+const sha = z.string().regex(/^[a-f0-9]{64}$/u);
+const audit = z.string().regex(/^[\x20-\x7e]{1,128}$/u);
+const timestamp = z.iso
+  .datetime()
+  .regex(/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,6})?Z$/u);
+const MAX_BYTES = 4 * 1024 * 1024;
+export const LegacyScoringLeaseSchema = z.strictObject({
+  workerId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/u),
+  attempt: z.number().int().min(1).max(3),
+  leaseFence: uuid,
+});
+export type LegacyScoringLease = z.infer<typeof LegacyScoringLeaseSchema>;
+const producer = z.strictObject({
+  parserVersion: z.literal("parse-sim-v1"),
+  rulesetVersion: z.literal("ats-rules-v4"),
+  normalizerVersion: z.literal("normalizer-v1"),
+  taxonomyVersion: z.literal("skills-taxonomy-v1"),
+});
+export const LegacyScoringBindingSchema = z.strictObject({
+  schemaVersion: z.literal("legacy-scoring-binding/1.0.0"),
+  analysisId: uuid,
+  ownerId: uuid,
+  organizationId: uuid,
+  resumeId: uuid,
+  resumeVersionId: uuid,
+  fileChecksum: sha,
+  textChecksum: sha,
+  extractionSha256: sha,
+  jobId: uuid.nullable(),
+  jobSha256: sha.nullable(),
+  inputBindingSha256: sha,
+});
+export type LegacyScoringBinding = z.infer<typeof LegacyScoringBindingSchema>;
+export const LegacyScoringInputContextSchema = z.strictObject({
+  schemaVersion: z.literal("legacy-scoring-input/1.0.0"),
+  analysisId: uuid,
+  ownerId: uuid,
+  organizationId: uuid,
+  requestId: audit.nullable(),
+  source: z.strictObject({
+    resumeId: uuid,
+    resumeVersionId: uuid,
+    fileChecksum: sha,
+    bytes: z.number().int().min(1).max(10485760),
+    mediaType: z.literal("application/pdf"),
+  }),
+  extraction: z.strictObject({
+    text: z.string().min(1).max(400000),
+    pageCount: z.number().int().min(1).max(20),
+    pageTexts: z.array(z.string()),
+    textChecksum: sha,
+    extractorVersion: z.string().min(1).max(128),
+    contentSha256: sha,
+  }),
+  job: z.discriminatedUnion("kind", [
+    z.strictObject({
+      kind: z.literal("owned_job"),
+      id: uuid,
+      title: z.string(),
+      description: z.string(),
+      companyName: z.string(),
+      contentSha256: sha,
+    }),
+    z.strictObject({ kind: z.literal("none") }),
+  ]),
+  binding: LegacyScoringBindingSchema,
+  producer,
+});
+export type LegacyScoringInputContext = z.infer<
+  typeof LegacyScoringInputContextSchema
+>;
+const pv = ParseViewSchema.shape;
+const parseView = z.strictObject({
+  ...pv,
+  contact: pv.contact.strict(),
+  sections: z.array(pv.sections.element.strict()),
+  warnings: z.array(pv.warnings.element.strict()),
+  pages: z.array(pv.pages.unwrap().element.strict()),
+});
+const span = z.strictObject({
+  start: z.number().int().min(0),
+  end: z.number().int().min(0),
+  text: z.string(),
+  alias: z.string(),
+});
+const evidence = z.strictObject({
+  occurrenceCount: z.number().int().min(0),
+  spans: z.array(span),
+});
+export const LegacyScoringResultSchema = z.strictObject({
+  score: z.number().int().min(0).max(100),
+  parseView,
+  ruleTrace: z.array(
+    z.strictObject({
+      ruleId: z.string(),
+      label: z.string(),
+      passed: z.boolean(),
+      outcome: z.enum(["passed", "failed", "not_evaluated"]),
+      confidence: z.enum(["high", "none"]),
+      weight: z.number().int().min(0),
+      credit: z.number().min(0).max(1).optional(),
+      detail: z.string(),
+      evidence: z.array(z.string()).optional(),
+    }),
+  ),
+  keywordCoverage: z.strictObject({
+    taxonomyVersion: producer.shape.taxonomyVersion,
+    job: z.array(z.string()),
+    matched: z.array(z.string()),
+    missing: z.array(z.string()),
+    uncertain: z.array(z.string()),
+    evidence: z.array(
+      z.strictObject({
+        term: z.string(),
+        taxonomyId: z.string().nullable(),
+        kind: z.enum(["taxonomy", "keyword"]),
+        uncertain: z.boolean(),
+        job: evidence,
+        resume: evidence,
+      }),
+    ),
+  }),
+  inputTextChecksum: sha,
+  ...producer.shape,
+  resultChecksum: sha,
+});
+export const LegacyScoringReceiptSchema = z.strictObject({
+  schemaVersion: z.literal("legacy-scoring-receipt/1.0.0"),
+  analysisId: uuid,
+  ownerId: uuid,
+  organizationId: uuid,
+  resumeVersionId: uuid,
+  inputBindingSha256: sha,
+  resultChecksum: sha,
+  deterministicContentSha256: sha,
+  createdAt: timestamp,
+  replayed: z.boolean(),
+});
+export type LegacyScoringReceipt = z.infer<typeof LegacyScoringReceiptSchema>;
+export const LegacyScoringWorkerReadSchema = z.discriminatedUnion("status", [
+  z.strictObject({
+    schemaVersion: z.literal("legacy-scoring-read/1.0.0"),
+    status: z.literal("ready"),
+    context: LegacyScoringInputContextSchema,
+  }),
+  z.strictObject({
+    schemaVersion: z.literal("legacy-scoring-read/1.0.0"),
+    status: z.literal("committed"),
+    receipt: LegacyScoringReceiptSchema,
+  }),
+  z.strictObject({
+    schemaVersion: z.literal("legacy-scoring-read/1.0.0"),
+    status: z.literal("skipped"),
+    analysisId: uuid,
+    reason: z.literal("not_scoring"),
+  }),
+]);
+export type LegacyScoringWorkerRead = z.infer<
+  typeof LegacyScoringWorkerReadSchema
+>;
+export const LegacyScoringSavedReadSchema = z.discriminatedUnion("status", [
+  z.strictObject({
+    schemaVersion: z.literal("legacy-scoring-context/1.0.0"),
+    status: z.literal("bound"),
+    currentness: z.enum(["current", "historical"]),
+    context: LegacyScoringInputContextSchema,
+    result: LegacyScoringResultSchema,
+    receipt: LegacyScoringReceiptSchema,
+  }),
+  z.strictObject({
+    schemaVersion: z.literal("legacy-scoring-context/1.0.0"),
+    status: z.literal("legacy_unbound"),
+    analysisId: uuid,
+    reason: z.literal("original_input_binding_missing"),
+  }),
+]);
+export type LegacyScoringSavedRead = z.infer<
+  typeof LegacyScoringSavedReadSchema
+>;
+export const LegacyScoringInputProfileSchema = z.strictObject({
+  schemaVersion: z.literal("legacy-scoring-readiness/1.0.0"),
+  profileVersion: z.literal("legacy-scoring-profile/1.0.0"),
+  checkerSha256: sha,
+  readerSha256: sha,
+  finishSha256: sha,
+  contextSha256: sha,
+  exportSha256: sha,
+  metadataSha256: sha,
+});
+export type LegacyScoringInputProfile = z.infer<
+  typeof LegacyScoringInputProfileSchema
+>;
+const readiness = LegacyScoringInputProfileSchema.extend({
+  schemaReady: z.boolean(),
+  writerExecutable: z.boolean(),
+});
+export class LegacyScoringInputError extends Error {
+  constructor(
+    readonly code:
+      "invalid" | "not_found" | "stale" | "unavailable" | "cancelled",
+  ) {
+    super("Bound deterministic scoring is unavailable.");
+    this.name = "LegacyScoringInputError";
+  }
+}
+type Reply = { data: unknown; error: unknown };
+type Pending = PromiseLike<Reply> & {
+  abortSignal?: (signal: AbortSignal) => PromiseLike<Reply>;
+};
+export interface LegacyScoringInputClient {
+  rpc(name: string, args: Record<string, unknown>): Pending;
+}
+export type LegacyScoringInputOptions = {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  now?: () => number;
+  expectedProfile?: LegacyScoringInputProfile;
+};
+const fail = (code: LegacyScoringInputError["code"] = "unavailable") =>
+  new LegacyScoringInputError(code);
+function bounded(raw: unknown) {
+  const queue: Array<{ value: unknown; depth: number }> = [
+    { value: raw, depth: 0 },
+  ];
+  let bytes = 0,
+    visits = 0;
+  while (queue.length) {
+    const item = queue.pop()!;
+    if (++visits > 250000 || item.depth > 32) throw fail();
+    const v = item.value;
+    if (typeof v === "string") {
+      if (
+        v.length > MAX_BYTES ||
+        v.includes("\0") ||
+        /[\uD800-\uDFFF]/u.test(v)
+      )
+        throw fail();
+      bytes += Buffer.byteLength(JSON.stringify(v), "utf8");
+    } else if (v === null || typeof v === "boolean" || typeof v === "number")
+      bytes += 24;
+    else if (Array.isArray(v)) {
+      if (v.length > 250000) throw fail();
+      bytes += v.length + 2;
+      for (const value of v) queue.push({ value, depth: item.depth + 1 });
+    } else if (v && typeof v === "object") {
+      const entries = Object.entries(v);
+      if (entries.length > 250000) throw fail();
+      for (const [key, value] of entries) {
+        if (
+          key.length > MAX_BYTES ||
+          key.includes("\0") ||
+          /[\uD800-\uDFFF]/u.test(key)
+        )
+          throw fail();
+        bytes += Buffer.byteLength(JSON.stringify(key), "utf8") + 2;
+        queue.push({ value, depth: item.depth + 1 });
+      }
+    } else if (v !== undefined) throw fail();
+    if (bytes > MAX_BYTES) throw fail();
+  }
+  if (Buffer.byteLength(JSON.stringify(raw), "utf8") > MAX_BYTES) throw fail();
+}
+function parse<T>(schema: z.ZodType<T>, raw: unknown): T {
+  try {
+    bounded(raw);
+    const v = schema.safeParse(raw);
+    if (!v.success) throw fail();
+    return v.data;
+  } catch {
+    throw fail();
+  }
+}
+function checkContext(
+  c: LegacyScoringInputContext,
+  analysisId: string,
+  ownerId?: string,
+) {
+  const b = c.binding,
+    s = c.source,
+    x = c.extraction;
+  if (
+    c.analysisId !== analysisId ||
+    (ownerId !== undefined && c.ownerId !== ownerId) ||
+    b.analysisId !== c.analysisId ||
+    b.ownerId !== c.ownerId ||
+    b.organizationId !== c.organizationId ||
+    b.resumeId !== s.resumeId ||
+    b.resumeVersionId !== s.resumeVersionId ||
+    b.fileChecksum !== s.fileChecksum ||
+    b.textChecksum !== x.textChecksum ||
+    b.extractionSha256 !== x.contentSha256 ||
+    createHash("sha256").update(x.text, "utf8").digest("hex") !==
+      x.textChecksum ||
+    Array.from(x.text).length > 200000 ||
+    (c.job.kind === "none"
+      ? b.jobId !== null || b.jobSha256 !== null
+      : b.jobId !== c.job.id || b.jobSha256 !== c.job.contentSha256)
+  )
+    throw fail();
+}
+/** Pure bounded decoder; validates content identity, not independent native authority. */
+export function validateLegacyScoringInputContext(
+  raw: unknown,
+  analysisId: string,
+  ownerId: string,
+): LegacyScoringInputContext {
+  if (!uuid.safeParse(analysisId).success || !uuid.safeParse(ownerId).success)
+    throw fail("invalid");
+  const context = parse(LegacyScoringInputContextSchema, raw);
+  checkContext(context, analysisId, ownerId);
+  return context;
+}
+function checkReceipt(
+  r: LegacyScoringReceipt,
+  b: LegacyScoringBinding,
+  resultChecksum: string,
+) {
+  if (
+    r.analysisId !== b.analysisId ||
+    r.ownerId !== b.ownerId ||
+    r.organizationId !== b.organizationId ||
+    r.resumeVersionId !== b.resumeVersionId ||
+    r.inputBindingSha256 !== b.inputBindingSha256 ||
+    r.resultChecksum !== resultChecksum
+  )
+    throw fail();
+}
+/** Rebuild the existing producer's insertion order, including nested objects.
+ * JSONB transport order is irrelevant; this is not a new canonical hash format.
+ * Strict schemas above admit only these current producer versions and fields. */
+function checkResultChecksum(
+  result: z.infer<typeof LegacyScoringResultSchema>,
+) {
+  const p = result.parseView;
+  const sourceEvidence = (source: z.infer<typeof evidence>) => ({
+    occurrenceCount: source.occurrenceCount,
+    spans: source.spans.map((s) => ({
+      start: s.start,
+      end: s.end,
+      text: s.text,
+      alias: s.alias,
+    })),
+  });
+  const payload = {
+    score: result.score,
+    parseView: {
+      totalPages: p.totalPages,
+      totalLines: p.totalLines,
+      contact: {
+        name: p.contact.name,
+        email: p.contact.email,
+        phone: p.contact.phone,
+        links: p.contact.links,
+        location: p.contact.location,
+      },
+      sections: p.sections.map((s) => ({
+        type: s.type,
+        title: s.title,
+        startLine: s.startLine,
+        lineCount: s.lineCount,
+        bulletCount: s.bulletCount,
+        dateStrings: s.dateStrings,
+      })),
+      warnings: p.warnings.map((w) => ({
+        field: w.field,
+        severity: w.severity,
+        message: w.message,
+      })),
+      pages: p.pages.map((page) => ({
+        pageNumber: page.pageNumber,
+        text: page.text,
+        lineCount: page.lineCount,
+        confidence: page.confidence,
+        warnings: page.warnings,
+      })),
+    },
+    ruleTrace: result.ruleTrace.map((r) => ({
+      ruleId: r.ruleId,
+      label: r.label,
+      passed: r.passed,
+      outcome: r.outcome,
+      confidence: r.confidence,
+      weight: r.weight,
+      ...(r.credit === undefined ? {} : { credit: r.credit }),
+      detail: r.detail,
+      evidence: r.evidence,
+    })),
+    keywordCoverage: {
+      taxonomyVersion: result.keywordCoverage.taxonomyVersion,
+      job: result.keywordCoverage.job,
+      matched: result.keywordCoverage.matched,
+      missing: result.keywordCoverage.missing,
+      uncertain: result.keywordCoverage.uncertain,
+      evidence: result.keywordCoverage.evidence.map((e) => ({
+        term: e.term,
+        taxonomyId: e.taxonomyId,
+        kind: e.kind,
+        uncertain: e.uncertain,
+        job: sourceEvidence(e.job),
+        resume: sourceEvidence(e.resume),
+      })),
+    },
+    inputTextChecksum: result.inputTextChecksum,
+    parserVersion: result.parserVersion,
+    rulesetVersion: result.rulesetVersion,
+    normalizerVersion: result.normalizerVersion,
+    taxonomyVersion: result.taxonomyVersion,
+  };
+  if (
+    createHash("sha256")
+      .update(JSON.stringify(payload), "utf8")
+      .digest("hex") !== result.resultChecksum
+  )
+    throw fail();
+}
+function invocation(
+  client: LegacyScoringInputClient,
+  options: LegacyScoringInputOptions,
+) {
+  const timeoutMs = options.timeoutMs ?? 5000;
+  if (!Number.isInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 5000)
+    throw fail("invalid");
+  const expected = parse(
+    LegacyScoringInputProfileSchema,
+    options.expectedProfile ?? LEGACY_SCORING_INPUT_PROFILE,
+  );
+  const now = options.now ?? Date.now;
+  const readClock = () => {
+    try {
+      return now();
+    } catch {
+      throw fail();
+    }
+  };
+  const started = readClock();
+  const check = () => {
+    if (options.signal?.aborted) throw fail("cancelled");
+    const time = readClock();
+    if (
+      !Number.isFinite(started) ||
+      !Number.isFinite(time) ||
+      time < started ||
+      time - started >= timeoutMs
+    )
+      throw fail();
+    return timeoutMs - (time - started);
+  };
+  const rpc = async (name: string, args: Record<string, unknown>) => {
+    const remaining = check();
+    let result: Reply;
+    try {
+      result = await runProviderAttempt({
+        timeoutMs: Math.max(1, Math.floor(remaining)),
+        signal: options.signal,
+        failure: (reason) =>
+          fail(reason === "cancelled" ? "cancelled" : "unavailable"),
+        execute: async (signal) => {
+          check();
+          const pending = client.rpc(name, args);
+          return await (typeof pending.abortSignal === "function"
+            ? pending.abortSignal(signal)
+            : pending);
+        },
+      });
+    } catch (e) {
+      if (e instanceof LegacyScoringInputError) throw e;
+      throw fail();
+    }
+    check();
+    if (result?.error) {
+      const code =
+        typeof result.error === "object" &&
+        result.error !== null &&
+        "code" in result.error
+          ? result.error.code
+          : null;
+      throw fail(
+        code === "22023"
+          ? "invalid"
+          : code === "42501" || code === "P0002"
+            ? "not_found"
+            : code === "P0C01"
+              ? "stale"
+              : "unavailable",
+      );
+    }
+    return result?.data;
+  };
+  const admit = async (writing: boolean) => {
+    const v = parse(readiness, await rpc("read_legacy_scoring_readiness", {}));
+    for (const key of Object.keys(expected) as Array<keyof typeof expected>)
+      if (v[key] !== expected[key]) throw fail();
+    if (!v.schemaReady || (writing && !v.writerExecutable)) throw fail();
+    check();
+  };
+  check();
+  return { rpc, admit, check };
+}
+export async function loadLegacyScoringInput(
+  client: LegacyScoringInputClient,
+  analysisId: string,
+  lease: LegacyScoringLease,
+  options: LegacyScoringInputOptions = {},
+): Promise<LegacyScoringWorkerRead> {
+  if (
+    !uuid.safeParse(analysisId).success ||
+    !LegacyScoringLeaseSchema.safeParse(lease).success
+  )
+    throw fail("invalid");
+  const frozenLease = LegacyScoringLeaseSchema.parse(lease),
+    call = invocation(client, options);
+  await call.admit(false);
+  const v = parse(
+    LegacyScoringWorkerReadSchema,
+    await call.rpc("read_legacy_scoring_input", {
+      p_analysis_id: analysisId,
+      p_lease: frozenLease,
+    }),
+  );
+  if (v.status === "ready") checkContext(v.context, analysisId);
+  else if (
+    v.status === "committed"
+      ? v.receipt.analysisId !== analysisId
+      : v.analysisId !== analysisId
+  )
+    throw fail();
+  call.check();
+  return v;
+}
+export async function finishLegacyScoringInput(
+  client: LegacyScoringInputClient,
+  raw: {
+    analysisId: string;
+    lease: LegacyScoringLease;
+    binding: LegacyScoringBinding;
+    result: LegacyScoringResult;
+    processId: string;
+    requestId: string;
+  },
+  options: LegacyScoringInputOptions = {},
+): Promise<LegacyScoringReceipt> {
+  const schema = z.strictObject({
+    analysisId: uuid,
+    lease: LegacyScoringLeaseSchema,
+    binding: LegacyScoringBindingSchema,
+    result: LegacyScoringResultSchema,
+    processId: audit,
+    requestId: audit,
+  });
+  const command = parse(schema, raw);
+  if (
+    command.analysisId !== command.binding.analysisId ||
+    command.result.inputTextChecksum !== command.binding.textChecksum ||
+    (command.binding.jobId === null) !== (command.binding.jobSha256 === null)
+  )
+    throw fail("invalid");
+  checkResultChecksum(command.result);
+  const call = invocation(client, options);
+  await call.admit(true);
+  const v = parse(
+    LegacyScoringReceiptSchema,
+    await call.rpc("finish_legacy_scoring_input", {
+      p_analysis_id: command.analysisId,
+      p_lease: command.lease,
+      p_binding: command.binding,
+      p_result: command.result,
+      p_process_id: command.processId,
+      p_request_id: command.requestId,
+    }),
+  );
+  checkReceipt(v, command.binding, command.result.resultChecksum);
+  call.check();
+  return v;
+}
+export async function loadLegacyScoringContext(
+  client: LegacyScoringInputClient,
+  analysisId: string,
+  ownerId: string,
+  options: LegacyScoringInputOptions = {},
+): Promise<LegacyScoringSavedRead> {
+  if (!uuid.safeParse(analysisId).success || !uuid.safeParse(ownerId).success)
+    throw fail("invalid");
+  const call = invocation(client, options);
+  await call.admit(false);
+  const v = parse(
+    LegacyScoringSavedReadSchema,
+    await call.rpc("read_legacy_scoring_context", {
+      p_user_id: ownerId,
+      p_analysis_id: analysisId,
+    }),
+  );
+  if (v.status === "legacy_unbound") {
+    if (v.analysisId !== analysisId) throw fail();
+  } else {
+    checkContext(v.context, analysisId, ownerId);
+    if (v.result.inputTextChecksum !== v.context.binding.textChecksum)
+      throw fail();
+    checkResultChecksum(v.result);
+    checkReceipt(v.receipt, v.context.binding, v.result.resultChecksum);
+  }
+  call.check();
+  return v;
+}

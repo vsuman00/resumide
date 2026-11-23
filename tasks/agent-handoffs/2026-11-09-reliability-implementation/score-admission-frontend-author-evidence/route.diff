@@ -1,0 +1,53 @@
+--- before/analysis.score.tsx
++++ after/analysis.score.tsx
+@@ -16,6 +16,7 @@
+ import RequirementCoverageReview from "~/components/RequirementCoverageReview";
+ import TypedAuthoringBridge from "~/components/TypedAuthoringBridge";
+ import CanonicalRewritePanel from "~/components/CanonicalRewritePanel";
++import ScoreAdmissionNotice from "~/components/ScoreAdmissionNotice";
+ import {
+   loadCanonicalRewriteWorkspaceState,
+   CanonicalRewriteWorkspaceStateSchema,
+@@ -297,11 +298,13 @@
+     d = model.diagnostics;
+   const feedback = useActionData<AuthoringFeedback>();
+   const base = `/analysis/${model.analysisId}`;
++  const canonicalTarget = `${base}/canonical?version=${encodeURIComponent(model.canonical.versionId)}`;
++  const requirementsTarget = `${base}/requirements${model.requirements ? `?version=${encodeURIComponent(model.requirements.versionId)}` : ""}`;
+   return (
+     <WorkspaceShell
+       eyebrow="Evidence review"
+       title="Review scoring diagnostics"
+-      description="Review recovered evidence and missing information before using a score."
++      description="Inspect recovered evidence, job requirements, and the checks that keep numerical scores unavailable."
+     >
+       <div style={{ overflowWrap: "anywhere" }}>
+         {model.authoring && (
+@@ -314,18 +317,21 @@
+         <nav aria-label="Evidence workspace">
+           <Link to={`${base}/evidence`}>Review source evidence</Link>
+           {" · "}
+-          <Link to={`${base}/canonical`}>Review structured resume</Link>
++          <Link to={canonicalTarget}>Review structured resume</Link>
+           {" · "}
+-          <Link to={`${base}/requirements`}>Review job requirements</Link>
++          <Link to={requirementsTarget}>Review job requirements</Link>
+           {model.artifactEnabled && " · "}
+           {model.artifactEnabled && (
+             <Link to={`${base}/export`}>Preview and export resume</Link>
+           )}
+         </nav>
+-        <p>
+-          Numeric scores are unavailable while evidence and scoring calibration
+-          need review. These diagnostics do not predict employer acceptance.
+-        </p>
++        <ScoreAdmissionNotice
++          dimensions={d.score.dimensions}
++          readiness={d.readiness}
++          base={base}
++          canonicalVersionId={model.canonical.versionId}
++          requirementVersionId={model.requirements?.versionId}
++        />
+         {model.historical && (
+           <p role="status">
+             Historical input versions. Changes to the current resume do not

@@ -1,0 +1,55 @@
+
+> test
+> vitest run tests/unit/canonical-route.test.ts tests/components/CanonicalCorrections.test.tsx
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ✓ tests/unit/canonical-route.test.ts (25 tests) 27ms
+stderr | tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery
+No `HydrateFallback` element provided to render during initial hydration
+
+ ❯ tests/components/CanonicalCorrections.test.tsx (15 tests | 1 failed) 567ms
+     ✓ U03 draft retains a validated edit in a native server-rendered rejected response 99ms
+     ✓ U03 draft retains a validated rename_section in a native server-rendered rejected response 30ms
+     × U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery 69ms
+     ✓ U03 draft retains text without permitting a historical recovery or inferred replacement target 15ms
+     ✓ U03 draft retains text without permitting a missing_target recovery or inferred replacement target 12ms
+     ✓ imports a saved correction through the reviewed path and leaves its fact unconfirmed 32ms
+     ✓ shows the exact diff and provenance, applies without retyping, and retains the operation key after a retryable failure 41ms
+     ✓ requires an explicit employer target and acknowledgement before assignment 30ms
+     ✓ reviews an absent-field placement before assigning and then adding an unconfirmed fact 52ms
+     ✓ shows undo provenance and requires fresh assignment before explicit reapply 44ms
+     ✓ keeps previews available and mutations unavailable when authoritative write readiness is false 19ms
+     ✓ keeps original import unavailable until correction write readiness returns 11ms
+     ✓ does not apply into a historical selected version or expose technical identifiers as labels 15ms
+     ✓ disables correction controls while a submission is pending 87ms
+     ✓ preserves the legacy workspace when correction review data is absent 12ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/CanonicalCorrections.test.tsx > candidate correction review > U03 draft reloads current data after a client rejection and separates exact retry from reviewed recovery
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ tests/components/CanonicalCorrections.test.tsx:509:37
+    507|       "checkbox",
+    508|     ) as HTMLInputElement;
+    509|     expect(renewedCheckbox.checked).toBe(false);
+       |                                     ^
+    510|     fireEvent.click(renewedCheckbox);
+    511|     fireEvent(window, new PageTransitionEvent("pageshow", { persisted:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 39 passed (40)
+   Start at  23:43:54
+   Duration  1.20s (transform 265ms, setup 0ms, import 455ms, tests 594ms, environment 354ms)
+

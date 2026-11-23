@@ -1,0 +1,35 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/owned-ai-expiry-sql.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/owned-ai-expiry-sql.test.ts [ tests/unit/owned-ai-expiry-sql.test.ts ]
+Error: Transform failed with 1 error:
+/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/tests/unit/owned-ai-expiry-sql.test.ts:36:75: ERROR: Expected ";" but found ")"
+  Plugin: vite:esbuild
+  File: /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats/tests/unit/owned-ai-expiry-sql.test.ts:36:75
+  
+  Expected ";" but found ")"
+  34 |     const entries=JSON.parse(body(name).split(`$${tag}$`)[1]) as Array<{signature:string;sha256:string}>;
+  35 |     expect(entries).toHaveLength(count);
+  36 |     for(const row of entries)expect(hash(body(row.signature.split("(")[0])))).toBe(row.sha256);
+     |                                                                             ^
+  37 |    }
+  38 |    expect(OWNED_AI_EXPIRY_PROFILE.checkerSha256).toBe(hash(body("private.owned_ai_expiry_ready")));
+  
+ ❯ failureErrorWithLog ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  19:26:58
+   Duration  70ms (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+

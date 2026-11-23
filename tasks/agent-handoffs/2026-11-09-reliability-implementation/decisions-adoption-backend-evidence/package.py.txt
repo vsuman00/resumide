@@ -1,0 +1,35 @@
+from pathlib import Path
+import json,hashlib,shutil,subprocess
+w=Path('/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats');t=Path(__file__).parent;b=Path('tasks/agent-handoffs/2026-11-09-reliability-implementation');sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+files=['app/lib/server/jd-clause-order-readiness.ts','app/lib/server/jd-clause-order-repository.ts','tests/unit/jd-clause-order-readiness.test.ts','tests/unit/jd-clause-order-mutation-repository.test.ts'];product=[]
+for f in files:
+ p=w/f;copy=t/'snapshots'/f;copy.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(p,copy);product.append({'path':f,'preimageSha256':None,'sha256':sha(p),'snapshot':str(copy)})
+receipts=[];groups=set()
+for p in sorted(t.glob('*.json')):
+ try:v=json.loads(p.read_text())
+ except:continue
+ if 'commands' not in v:continue
+ for c in v['commands']:
+  if c.get('processGroup'):groups.add(c['processGroup'])
+ receipts.append({'path':str(p),'sha256':sha(p),'log':v.get('log'),'logSha256':v.get('logSha256'),'commands':v['commands'],'sourceStable':v['sourceStable']})
+ps=subprocess.check_output(['/bin/ps','-axo','pid=,pgid=,command='],text=True);active=[line for line in ps.splitlines() if len(line.split())>1 and int(line.split()[1]) in groups];assert not active
+(t/'process-groups.json').write_text(json.dumps({'allAbsent':True,'groups':sorted(groups),'method':'Independent ps PID/PGID inventory after command closures'},indent=2)+'\n')
+first=json.loads((t/'readiness-first.json').read_text())['sourceBefore'];final=json.loads((t/'statics-lint-final.json').read_text())['sourceAfter'];excluded=files+['app/lib/jd-clause-order-decisions.ts'];changed=[f for f,v in first.items() if f not in excluded and final.get(f)!=v];assert not changed
+(t/'old-source-preservation.json').write_text(json.dumps({'comparedExistingInputs':sum(f not in excluded for f in first),'changed':changed,'baseline':'readiness-first.sourceBefore','final':'statics-lint-final.sourceAfter','ownedFilesAndApprovedReadonlyDependencyExcluded':excluded,'readonlyDependencySync':str(t/'readonly-dependency-sync.json')},indent=2)+'\n')
+contracts=[b/'decisions-adoption-contract.json',Path('app/lib/server/jd-clause-order-readiness-profile.ts'),Path('app/lib/jd-clause-order-decisions.ts')]
+release={'status':'FROZEN_BACKEND_CONSUMER_SOURCE_SYNTHETIC','baseHead':'a0b239299d75b0bd64b588fe743ebe2975fb28b9','worktree':str(w),'product':product,'contractsAndReadonlyDependencies':{str(p):sha(w/p) for p in contracts},'checks':{'test':'57/2 PASS:34 repository +23 readiness','testReceipt':str(t/'consumer-successor.json'),'lint':'4 owned files PASS','format':'4 owned files PASS','formatterOnlyAfterBehaviorGate':True},'receiptsIncludingFailures':receipts,'proofs':{str(t/f):sha(t/f) for f in ['process-groups.json','old-source-preservation.json','readonly-dependency-sync.json']},'failureClassification':{'consumer-first':'3 new fixture expectations failed: observed inspected count13 vs assumed5, actual RPC p_selection vs assumed p_options for accept/reject. Corrected only new tests; failures preserved.','initialPackagingAssertion':'Initial preservation comparison included authorized readonly browser dependency b7bf92->51582. Corrected exclusion is explicitly bound to archived dependency sync; no product/test change.'},'limitations':['New feature has no predecessor function; no fabricated missing-module RED','Fake SDK and actual pure producer/context only; no actual database/Native/provider/service/browser/network/env/dependency/Git operations','No author broad tests/type/build; Root owns integrated gates','New write remains denied by trusted actual readiness and Native ACL; no grant/flag activation']}
+(t/'release.json').write_text(json.dumps(release,indent=2)+'\n')
+text='''# CR-A14 owned decision consumers
+
+Implemented the real readiness and repository consumers in four new files. Disabled workspace calls return before any RPC. Enabled calls load the pinned owned pair, build the existing bounded plan, require the trusted seven-field metadata, then compare the complete owned context again before releasing up to five real proposals. Unsupported, historical or not-ready contexts return no mutation workspace. Existing read-only previews remain separate.
+
+Actions validate the request key, owner and analysis, rebuild the immutable ORIGINAL pair, require actual readiness, then call the supplied Supabase RPC directly and validate the exact v2 receipt. Later heads are not substituted into the original command. Five-second flow deadlines and SDK cancellation prevent late publication or automatic retries; an unknown action result preserves the caller's original command and key.
+
+The focused author gate passed 57 cases in two files: 34 repository and 23 readiness. Four files passed ESLint and Prettier. Existing source inputs and the old preview test are unchanged, apart from the explicitly archived read-only browser dependency transfer. All process groups are absent. The first consumer receipt retains three incorrect test expectations: inspected count was 13 rather than five, and the actual context RPC argument is p_selection rather than p_options. Only the new tests were corrected. The two post-proof deadline checks requested in source review are covered by controlled-clock regressions.
+
+Immutable packet: `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-decisions-adoption-backend-x3fe6qcc/release.json`.
+
+This is source/synthetic evidence using actual producer/context builders and fake supplied SDK requests. No SQL parsing or execution, database, provider, browser, service, environment data, dependencies, Git changes, activation or deployment ran. No missing-module failure is presented as a product RED. Root owns the combined type, lint and build gates. HTTP, undo and UI delivery are paired agent work; full Native acceptance remains separate.
+'''
+(w/b/'decisions-adoption-backend.md').write_text(text)
+print(json.dumps({'release':str(t/'release.json'),'sha256':sha(t/'release.json'),'groupsAbsent':len(groups),'preservedInputs':sum(f not in excluded for f in first),'handoffSha256':sha(w/b/'decisions-adoption-backend.md')},indent=2))

@@ -1,0 +1,63 @@
+{
+  "status": "SOURCE_REPAIR_AUTHORIZED_NOT_RUNTIME",
+  "task": "CR-A01-PAGECOUNT / CR-R16 / CR-U06 prerequisite",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "sourceBaseline": "jd-browser-source-sync.json (989 raw inputs)",
+  "finding": "Review extraction discards actual extractor totalPages, persists envelope only, and returns without storing source page_count; strict JD2 correctly refuses missing stored count. Source diagnosis, not deployed prevalence.",
+  "backendLeaf": {
+    "files": [
+      "app/lib/server/document-extraction.ts",
+      "app/lib/server/extraction-stage.ts",
+      "tests/unit/document-extraction.test.ts",
+      "tests/unit/analysis-worker-fence.test.ts",
+      "B/document-page-count-backend.md"
+    ],
+    "api": "extractDocumentForReviewWithMetadata(args,extractor)->{envelope,pageCount}; keep original API/envelope bytes; worker same persist_document_evidence operation plus p_page_count outside envelope",
+    "proof": "Actual controlled extractor count carried by legacy and fenced stage transport. RED first. One parser call, full page texts including blanks; safe integer declared count within limits and exact equality, no envelope-length inference."
+  },
+  "runtimeLeaf": {
+    "files": [
+      "supabase/migrations/20261117060054_document_evidence_page_count.sql",
+      "tests/unit/document-page-count-sql.test.ts",
+      "app/lib/server/worker-readiness.ts",
+      "tests/unit/worker-readiness.test.ts",
+      "B/document-page-count-runtime.md"
+    ],
+    "native": "Required five-argument overload preserving old four-argument signature. Exact old/new dispatcher keysets, explicit no fallback; source/owner/org/checksum/privacy/row locks and actual pre/post lease. New atomic evidence+count only, reject known conflicts and legacy unknown replay. Readiness before queue in either fencing mode. Root integrates trusted profile from actual final source.",
+    "migration": "CLI-generated exact path in document-page-count-migration-allocation.json; source-only/unapplied",
+    "proof": "Source/lexical/mocked only; no SQL parse/execution or JS SQL simulator."
+  },
+  "frontendLeaf": {
+    "files": [
+      "tests/unit/evidence-page-count-consumer.test.ts",
+      "B/evidence-page-count-frontend.md"
+    ],
+    "proof": "Independent actual consumer keeps historical NULL/mismatch/blank/OCR-unsafe paths refused; current measured complete count can support proper current owned context. No fake stored-count/transaction claim or unnecessary DOM rerun."
+  },
+  "followupStartupLeaf": {
+    "owner": "backend after first leaf",
+    "files": [
+      "scripts/run-worker.ts",
+      "scripts/run-worker-once.ts",
+      "tests/unit/worker-startup.test.ts",
+      "B/document-page-count-startup.md"
+    ],
+    "scope": "Forward evidenceReviewEnabled explicitly into actual pre-claim readiness; no ambient-config dependency. Test both actual entrypoints with no claim on missing readiness."
+  },
+  "rootOwnership": [
+    "shared contracts/trustedprofile",
+    "CLI migration allocation/order",
+    "source transfer/review/integration",
+    "canonical trackers/CONTEXT/evidence"
+  ],
+  "invariants": [
+    "No historical migration/envelope/assertion edits or thresholds/flags/scoring policy change",
+    "No backfill guessed from old envelope; unknown withholding remains",
+    "No duplicate extraction merely for count",
+    "No direct fixture source metadata writes or fabricated confirmation/lease",
+    "No extra dependencies or architecture change",
+    "Legacy worker/persistence behavior retained when review flag off",
+    "New DDL source-only; existing pending80 migration target approval does not authorize successorDDL"
+  ],
+  "execution": "Sealed Node22.23.4/Unicode17/ICU78.3, emptyHOME, OS network/dotenv/Gitwrite denial. No actual SQL/PDF/provider/browser/worker/server/Docker/hosted/env/credentials/deployment. Current80schema packet separate frozen historical operation; no ownerapproval inferred."
+}

@@ -1,0 +1,63 @@
+{
+  "task": "CR-R17-S03",
+  "checkedDate": "2026-11-21",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "checkout": "dirty integration worktree",
+  "status": "VERIFIED_LOCAL",
+  "inputSha256": {
+    "app/lib/server/analysis-ingestion.ts": "4e27c88c13076abeca1bab789c4bfe2c450a6dc4c809bb56a29ee91fc6aaf1ae",
+    "app/lib/server/storage.ts": "d8c4536ea18f7cf8a7b004c1b34c1dfa7f7f192180a46660f39a8d7d9336da67",
+    "app/lib/server/supabase.ts": "ba72b9a96c9d49137eb83a4097f4ccd0a3aa88e53d3274a47eada13a97b8394c",
+    "tests/unit/analysis-ingestion.test.ts": "1c25e65eb3c16f77f32565fa1080139165be844c3097b676c7b20e4c08a28235",
+    "tests/unit/storage.test.ts": "2653738ff8fc0d0b9c7ea7ee15a7e84d4acfe1fb4304bc229338a9612f89224b",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-compensation-native-fixture.py.txt": "f7c3130e75c1f184cbc66630965ab58803fbe1201fbd835dc0970e5a2c8e6eef",
+    "supabase/migrations/20261110080809_analysis_admission_binding.sql": "50df6fadf38bd7aad61296d5f641a3bac4c03374b9594afa34025df6119ff9a3",
+    "supabase/migrations/20261109164851_correction_ledger_foundation.sql": "6105eb84b49c9802a5b3065f72f24532f41387ed1ed8695ae3e5bf656697f999",
+    "supabase/migrations/20261110085512_privacy_write_barrier.sql": "ef62285882a13d9c4e8813161fd55f80333faedda45e7f4f3fb52b22997a0417",
+    "supabase/migrations/20261121130718_analysis_admission_upload_transport.sql": "fa348172dafe1abf2965c113ed484975347b208a280bfad2cd48fb3f497592b8"
+  },
+  "before": {
+    "failed": 6,
+    "passed": 9,
+    "logSha256": "4a350d4c3af199b104d6298456316a80056fd2fe0cbd59be83017ce30a0d88ae"
+  },
+  "focused": {
+    "passed": 98,
+    "files": 4,
+    "groups": [
+      "analysis-ingestion",
+      "storage",
+      "privacy-claim-fence",
+      "privacy-operations"
+    ]
+  },
+  "unit": [
+    {
+      "passed": 6777,
+      "files": 322,
+      "sha256": "cc4710c74d1cde4203e038135e0d66ddb9b3d6a6adbf5dea5fbc1445bf47218b"
+    },
+    {
+      "passed": 3,
+      "files": 1,
+      "sha256": "2eb9c030dca72397178a476e3f8f8de29d13a072f21aaed46ffc11102f6191fd"
+    }
+  ],
+  "staticChecks": {
+    "commands": ["format:check", "typecheck", "lint", "build", "build:worker"],
+    "exitCode": 0,
+    "lintWarnings": 4,
+    "logSha256": "2876260b53e76e78451b1f2761ef4e22fcd74c62507b6686f22ea9bc34a3969c"
+  },
+  "nativeFixture": {
+    "result": "PASS: late acknowledged write, exact pending transition, stale finalize refusal, adopted and foreign upload refusal, idempotent cleanup, and role privileges.",
+    "roleAndTransitionScope": "Actual original admission and transport SQL, privacy write helper and pinned auth body successor. Synthetic supporting relations and legacy queue writer. Both orderings executed sequentially.",
+    "managedStorage": false
+  },
+  "notRun": [
+    "live Supabase Storage",
+    "isolated managed consumer fixture",
+    "account-wide admission retirement",
+    "production activation"
+  ]
+}

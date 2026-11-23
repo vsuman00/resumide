@@ -1,0 +1,64 @@
+{
+  "status": "PASS_INTEGRATED_SOURCE_SYNTHETIC_DOM_ONLY",
+  "receipt": "a11-declaration-integrated-998df5d8-dd2d-4efb-a333-49f691f9641a.json",
+  "summary": {
+    "testFilesPassed": 16,
+    "testsPassed": 229
+  },
+  "sourceInputs": 816,
+  "changedSourceInputsDuringRun": [],
+  "changedPriorInputs": [
+    "app/components/TypedAuthoringBridge.tsx",
+    "app/components/TypedAuthoringReview.tsx",
+    "app/lib/server/typed-authoring-http.ts",
+    "app/lib/server/typed-authoring-readiness-profile.ts",
+    "app/lib/server/typed-authoring-readiness.ts",
+    "app/lib/server/typed-authoring-repository.ts",
+    "app/routes/analysis.score.tsx",
+    "tests/components/TypedAuthoringBridge.test.tsx",
+    "tests/components/TypedAuthoringReview.test.tsx",
+    "tests/unit/typed-authoring-readiness.test.ts"
+  ],
+  "unchangedCommonInputs": 795,
+  "newInputs": [
+    "app/lib/server/typed-authoring-declaration.ts",
+    "app/lib/server/typed-authoring-protocol.ts",
+    "scripts/verify-typed-authoring-declaration.sql",
+    "supabase/migrations/20261114174039_typed_authoring_declaration.sql",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a11-declaration-coordinator.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a11-declaration-integrated-controller.mjs",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a11-declaration-scaffold.json",
+    "tests/unit/typed-authoring-declaration-route.test.ts",
+    "tests/unit/typed-authoring-declaration-score.test.ts",
+    "tests/unit/typed-authoring-declaration.test.ts",
+    "tests/unit/typed-authoring-protocol.test.ts"
+  ],
+  "noLongerCapturedInputs": [
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a11-readiness-integrated-controller.mjs"
+  ],
+  "previousControllerStillPresent": true,
+  "logAndArtifactsRehashed": true,
+  "controllerAbsent": true,
+  "ownedGroupsAbsent": [
+    46192,
+    46290,
+    46416,
+    46472,
+    46579
+  ],
+  "checks": [
+    "npm test -- tests/unit/typed-authoring-declaration.test.ts tests/unit/typed-authoring-protocol.test.ts tests/unit/typed-authoring-declaration-route.test.ts tests/unit/typed-authoring-declaration-score.test.ts tests/components/TypedAuthoringReview.test.tsx tests/components/TypedAuthoringBridge.test.tsx tests/unit/typed-authoring-command-codec.test.ts tests/unit/typed-authoring-readiness.test.ts tests/unit/typed-authoring-readiness-route.test.ts tests/unit/typed-authoring-repository.test.ts tests/unit/typed-authoring-http-route.test.ts tests/unit/typed-authoring-http.test.ts tests/unit/typed-authoring-contract.test.ts tests/unit/typed-authoring-score-route.test.ts tests/unit/authoring-route.test.ts tests/unit/authoring-contract.test.ts",
+    "npm run typecheck",
+    "npm run lint",
+    "npm run build",
+    "npm run build:worker"
+  ],
+  "frozenLegacyContractsUnchanged": true,
+  "limits": [
+    "SQL parsing/execution, native catalog/ACL/transactions/privacy/races/cleanup NOT_RUN",
+    "No providers/browser/services/DB/Docker/dependencies/Git/deployment",
+    "Writer source denies execution and flags unchanged; fullgoal remains active"
+  ],
+  "postDocumentationSourceBindingsUnchanged": true,
+  "documentationChecks": "Closeout links, canonical task graph/counts, newreport/controller/context formatting, scoped diff whitespace, prose hygiene"
+}

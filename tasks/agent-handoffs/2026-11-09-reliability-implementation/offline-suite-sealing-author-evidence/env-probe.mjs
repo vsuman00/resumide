@@ -1,0 +1,4 @@
+import {loadEnv} from '/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/node_modules/vite/dist/node/index.js';
+import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';import {tmpdir} from 'node:os';import {join} from 'node:path';import assert from 'node:assert/strict';
+const d=mkdtempSync(join(tmpdir(),'resumide-private-env-probe-')),key='OWNED_NEUTRAL_ENV_SENTINEL';
+try{writeFileSync(join(d,'.env'),'OWNED_NEUTRAL_ENV_SENTINEL=synthetic-only\n',{mode:0o600});const positive=loadEnv('production',d,'');assert.equal(positive[key],'synthetic-only');const sealed=loadEnv('production',false,'');assert.equal(sealed[key],undefined);console.log(JSON.stringify({installedVite:true,positiveReadsOnlyOwnedTemp:true,falseEnvDirSkipsSentinel:true,realEnvRead:false}));}finally{rmSync(d,{recursive:true});}

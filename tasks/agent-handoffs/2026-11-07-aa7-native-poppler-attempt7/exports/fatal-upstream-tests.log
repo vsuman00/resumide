@@ -1,0 +1,173 @@
+Internal ctest changing into directory: /work/source/poppler-25.03.0/obj-aarch64-linux-gnu
+Test project /work/source/poppler-25.03.0/obj-aarch64-linux-gnu
+      Start 65: check_qt6_signature_basics
+      Start 61: check_qt6_object
+ 1/71 Test #65: check_qt6_signature_basics ............***Failed    0.07 sec
+********* Start testing of TestSignatureBasics *********
+Config: Using QtTest library 6.8.2, Qt 6.8.2 (arm64-little_endian-lp64 shared (dynamic) release build; by GCC 14.2.0), debian 13
+PASS   : TestSignatureBasics::initTestCase()
+PASS   : TestSignatureBasics::testSignatureCount(nss)
+PASS   : TestSignatureBasics::testSignatureCount(gpg)
+PASS   : TestSignatureBasics::testSignatureSizes(nss)
+PASS   : TestSignatureBasics::testSignatureSizes(gpg)
+NSS_Init failed: security library: bad database.
+PASS   : TestSignatureBasics::testSignerInfo(nss)
+PASS   : TestSignatureBasics::testSignerInfo(gpg)
+PASS   : TestSignatureBasics::testSignedRanges(nss)
+PASS   : TestSignatureBasics::testSignedRanges(gpg)
+PASS   : TestSignatureBasics::testPgp(nss)
+FAIL!  : TestSignatureBasics::testPgp(gpg) Compared values are not the same
+   Actual   (siginfo0->getSignerName())     : ""
+   Expected (std::string { "Sune Vuorela" }): "Sune Vuorela"
+   Loc: [./qt6/tests/check_signature_basics.cpp(311)]
+PASS   : TestSignatureBasics::cleanupTestCase()
+Totals: 11 passed, 1 failed, 0 skipped, 0 blacklisted, 65ms
+********* Finished testing of TestSignatureBasics *********
+
+      Start 33: check_qt5_object
+ 2/71 Test #61: check_qt6_object ......................   Passed    0.92 sec
+      Start 20: check_qt5_annotations
+ 3/71 Test #33: check_qt5_object ......................   Passed    0.92 sec
+      Start 48: check_qt6_annotations
+ 4/71 Test #20: check_qt5_annotations .................   Passed    0.10 sec
+      Start 37: check_qt5_signature_basics
+ 5/71 Test #37: check_qt5_signature_basics ............   Passed    0.06 sec
+      Start 54: check_qt6_password
+ 6/71 Test #48: check_qt6_annotations .................   Passed    0.11 sec
+      Start 26: check_qt5_password
+ 7/71 Test #54: check_qt6_password ....................   Passed    0.07 sec
+      Start 56: check_qt6_search
+ 8/71 Test #26: check_qt5_password ....................   Passed    0.06 sec
+      Start 28: check_qt5_search
+ 9/71 Test #56: check_qt6_search ......................   Passed    0.05 sec
+      Start 57: check_qt6_actualtext
+10/71 Test #28: check_qt5_search ......................   Passed    0.05 sec
+      Start 29: check_qt5_actualtext
+11/71 Test #57: check_qt6_actualtext ..................   Passed    0.04 sec
+      Start 16: check_qt5_attachments
+12/71 Test #29: check_qt5_actualtext ..................   Passed    0.04 sec
+      Start 18: check_qt5_fonts
+13/71 Test #16: check_qt5_attachments .................   Passed    0.01 sec
+      Start 17: check_qt5_dateConversion
+14/71 Test #18: check_qt5_fonts .......................   Passed    0.02 sec
+      Start 49: check_qt6_metadata
+15/71 Test #17: check_qt5_dateConversion ..............   Passed    0.01 sec
+      Start 21: check_qt5_metadata
+16/71 Test #49: check_qt6_metadata ....................   Passed    0.02 sec
+      Start 44: check_qt6_attachments
+17/71 Test #21: check_qt5_metadata ....................   Passed    0.02 sec
+      Start 69: check_qt6_overprint
+18/71 Test #44: check_qt6_attachments .................   Passed    0.02 sec
+      Start 50: check_qt6_optcontent
+19/71 Test #69: check_qt6_overprint ...................   Passed    0.02 sec
+      Start 46: check_qt6_fonts
+20/71 Test #50: check_qt6_optcontent ..................   Passed    0.01 sec
+      Start 51: check_qt6_forms
+21/71 Test #46: check_qt6_fonts .......................   Passed    0.02 sec
+      Start 47: check_qt6_links
+22/71 Test #51: check_qt6_forms .......................   Passed    0.02 sec
+      Start 62: check_qt6_stroke_opacity
+23/71 Test #47: check_qt6_links .......................   Passed    0.01 sec
+      Start 41: check_qt5_overprint
+24/71 Test #62: check_qt6_stroke_opacity ..............   Passed    0.01 sec
+      Start 23: check_qt5_forms
+25/71 Test #41: check_qt5_overprint ...................   Passed    0.02 sec
+      Start 19: check_qt5_links
+26/71 Test #23: check_qt5_forms .......................   Passed    0.01 sec
+      Start 66: check_qt6_utf8document
+27/71 Test #19: check_qt5_links .......................   Passed    0.01 sec
+      Start 53: check_qt6_pagemode
+28/71 Test #66: check_qt6_utf8document ................   Passed    0.01 sec
+      Start 52: check_qt6_pagelayout
+29/71 Test #53: check_qt6_pagemode ....................   Passed    0.01 sec
+      Start 45: check_qt6_dateConversion
+30/71 Test #52: check_qt6_pagelayout ..................   Passed    0.01 sec
+      Start 22: check_qt5_optcontent
+31/71 Test #45: check_qt6_dateConversion ..............   Passed    0.01 sec
+      Start 64: check_qt6_outline
+32/71 Test #22: check_qt5_optcontent ..................   Passed    0.01 sec
+      Start 55: check_qt6_permissions
+33/71 Test #64: check_qt6_outline .....................   Passed    0.01 sec
+      Start 70: check_qt6_pagelabelinfo
+34/71 Test #55: check_qt6_permissions .................   Passed    0.01 sec
+      Start 63: check_qt6_utf_conversion
+35/71 Test #70: check_qt6_pagelabelinfo ...............   Passed    0.01 sec
+      Start 71: check_qt6_strings
+36/71 Test #63: check_qt6_utf_conversion ..............   Passed    0.01 sec
+      Start 34: check_qt5_stroke_opacity
+37/71 Test #71: check_qt6_strings .....................   Passed    0.01 sec
+      Start 25: check_qt5_pagemode
+38/71 Test #34: check_qt5_stroke_opacity ..............   Passed    0.01 sec
+      Start 24: check_qt5_pagelayout
+39/71 Test #24: check_qt5_pagelayout ..................   Passed    0.01 sec
+      Start 38: check_qt5_utf8document
+40/71 Test #25: check_qt5_pagemode ....................   Passed    0.01 sec
+      Start 27: check_qt5_permissions
+41/71 Test #38: check_qt5_utf8document ................   Passed    0.01 sec
+      Start 43: check_qt5_strings
+42/71 Test #27: check_qt5_permissions .................   Passed    0.01 sec
+      Start 36: check_qt5_outline
+43/71 Test #43: check_qt5_strings .....................   Passed    0.01 sec
+      Start 35: check_qt5_utf_conversion
+44/71 Test #36: check_qt5_outline .....................   Passed    0.01 sec
+      Start 59: check_qt6_internal_outline
+45/71 Test #35: check_qt5_utf_conversion ..............   Passed    0.01 sec
+      Start 42: check_qt5_pagelabelinfo
+46/71 Test #59: check_qt6_internal_outline ............   Passed    0.01 sec
+      Start 31: check_qt5_internal_outline
+47/71 Test #42: check_qt5_pagelabelinfo ...............   Passed    0.01 sec
+      Start 60: check_qt6_goostring
+48/71 Test #31: check_qt5_internal_outline ............   Passed    0.01 sec
+      Start 58: check_qt6_lexer
+49/71 Test #58: check_qt6_lexer .......................   Passed    0.01 sec
+      Start 30: check_qt5_lexer
+50/71 Test #60: check_qt6_goostring ...................   Passed    0.01 sec
+      Start 32: check_qt5_goostring
+51/71 Test #30: check_qt5_lexer .......................   Passed    0.01 sec
+      Start 10: embed-png-rgb16
+52/71 Test #32: check_qt5_goostring ...................   Passed    0.01 sec
+      Start 12: embed-png-rgba16
+53/71 Test #10: embed-png-rgb16 .......................   Passed    0.01 sec
+      Start  1: embed-png-g1
+54/71 Test #12: embed-png-rgba16 ......................   Passed    0.01 sec
+      Start  5: embed-png-g16
+55/71 Test  #1: embed-png-g1 ..........................   Passed    0.01 sec
+      Start  2: embed-png-g2
+56/71 Test  #5: embed-png-g16 .........................   Passed    0.01 sec
+      Start  7: embed-png-ga16
+57/71 Test  #2: embed-png-g2 ..........................   Passed    0.01 sec
+      Start  8: embed-png-palette
+58/71 Test  #7: embed-png-ga16 ........................   Passed    0.01 sec
+      Start  9: embed-png-rgb8
+59/71 Test  #8: embed-png-palette .....................   Passed    0.01 sec
+      Start  4: embed-png-g8
+60/71 Test  #9: embed-png-rgb8 ........................   Passed    0.01 sec
+      Start  3: embed-png-g4
+61/71 Test  #4: embed-png-g8 ..........................   Passed    0.01 sec
+      Start  6: embed-png-ga8
+62/71 Test  #3: embed-png-g4 ..........................   Passed    0.01 sec
+      Start 11: embed-png-rgba8
+63/71 Test  #6: embed-png-ga8 .........................   Passed    0.01 sec
+      Start 15: embed-malformed-jpeg
+64/71 Test #11: embed-png-rgba8 .......................   Passed    0.01 sec
+      Start 14: embed-jpeg
+65/71 Test #15: embed-malformed-jpeg ..................   Passed    0.01 sec
+      Start 13: embed-malformed-png
+66/71 Test #14: embed-jpeg ............................   Passed    0.01 sec
+      Start 67: check_qt6_distinguished_name_parser
+67/71 Test #67: check_qt6_distinguished_name_parser ...   Passed    0.00 sec
+      Start 68: check_qt6_cidfontswidthsbuilder
+68/71 Test #68: check_qt6_cidfontswidthsbuilder .......   Passed    0.00 sec
+      Start 39: check_qt5_distinguished_name_parser
+69/71 Test #13: embed-malformed-png ...................   Passed    0.01 sec
+      Start 40: check_qt5_cidfontswidthsbuilder
+70/71 Test #40: check_qt5_cidfontswidthsbuilder .......   Passed    0.00 sec
+71/71 Test #39: check_qt5_distinguished_name_parser ...   Passed    0.00 sec
+
+99% tests passed, 1 tests failed out of 71
+
+Total Test time (real) =   1.54 sec
+
+The following tests FAILED:
+	 65 - check_qt6_signature_basics (Failed)
+Errors while running CTest

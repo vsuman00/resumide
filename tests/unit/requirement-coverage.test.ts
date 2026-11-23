@@ -1,0 +1,630 @@
+import { createHash } from "node:crypto";
+import { describe, expect, it } from "vitest";
+import { createRequirementContextFixture } from "../fixtures/requirement-context";
+import {
+  evaluateRequirementCoverage,
+  RequirementCoverageSchema,
+  REQUIREMENT_COVERAGE_POLICY,
+  REQUIREMENT_COVERAGE_POLICY_SHA256,
+  type RequirementCoverage,
+} from "../../app/lib/server/requirement-coverage";
+import { deriveRequirementSemanticEvidence } from "../../app/lib/server/requirement-semantic-evidence";
+
+function available(result: RequirementCoverage) {
+  expect(result.state).toBe("available");
+  if (result.state !== "available") throw Error("EXPECTED_AVAILABLE_COVERAGE");
+  return result;
+}
+async function coverage(
+  options: Parameters<typeof createRequirementContextFixture>[0] = {},
+) {
+  const fixture = await createRequirementContextFixture(options);
+  const result = available(evaluateRequirementCoverage(fixture.context));
+  expect(RequirementCoverageSchema.parse(result)).toEqual(result);
+  return { fixture, result };
+}
+
+describe("actual typed requirement coverage", () => {
+  it("uses the actual builder and strict one-RPC reader without table fallback", async () => {
+    const { fixture, result } = await coverage();
+    expect(fixture.rpcCalls).toHaveLength(1);
+    expect(fixture.rpcCalls[0].name).toBe(
+      "read_requirement_relationship_context",
+    );
+    expect(result.binding.canonical.versionId).toBe(
+      fixture.context.canonical.versionId,
+    );
+    expect(result.binding.requirements.versionId).toBe(
+      fixture.context.requirements.versionId,
+    );
+    expect(result.clauses[0].operands[0]).toMatchObject({
+      state: "not_evaluated",
+      proposedState: "candidate_confirmation_required",
+      reason: "source_confirmation_missing",
+    });
+  });
+
+  it("records a confirmed literal contribution without granting authoritative evaluation", async () => {
+    const { fixture, result } = await coverage({ confirm: true });
+    expect(result.clauses[0]).toMatchObject({
+      state: "not_evaluated",
+      proposedState: "satisfied",
+    });
+    expect(result.clauses[0].operands[0].factIds).toContain(
+      fixture.targetFactId,
+    );
+    expect(result.scoringEligible).toBe(false);
+    expect(
+      result.witnesses.find((w) => w.factId === fixture.targetFactId),
+    ).toMatchObject({
+      basis: "source_quote",
+      tier: "source_contribution",
+      confirmationScope: "current_fact",
+    });
+  });
+
+  it.each(["and", "or"] as const)(
+    "preserves an explicit %s expression and each source operand",
+    async (connector) => {
+      const { result } = await coverage({
+        clauses: [
+          "Built services using Python",
+          "Tested pipelines using PostgreSQL",
+        ],
+        skill: "Python",
+        confirmClauses: [0, 1],
+        jdText: `Requirements\nPython ${connector} PostgreSQL required`,
+      });
+      const clause = result.clauses[0];
+      expect(clause.expressionKind).toBe(
+        connector === "and" ? "all_of" : "any_of",
+      );
+      expect(clause.proposedState).toBe("satisfied");
+      expect(clause.operands.map((o) => o.value)).toEqual([
+        "Python",
+        "PostgreSQL",
+      ]);
+      expect(clause.operands.every((o) => o.state === "not_evaluated")).toBe(
+        true,
+      );
+    },
+  );
+
+  it.each(["and", "or"] as const)(
+    "does not flatten missing evidence in an explicit %s expression",
+    async (connector) => {
+      const { result } = await coverage({
+        clauses: ["Built services using Python"],
+        skill: "Python",
+        confirm: true,
+        jdText: `Requirements\nPython ${connector} PostgreSQL required`,
+      });
+      expect(result.clauses[0].proposedState).toBe(
+        connector === "and" ? "partially_satisfied" : "satisfied",
+      );
+      expect(result.clauses[0].operands[1]).toMatchObject({
+        proposedState: "not_evaluated",
+        matches: [],
+        reason: "no_supporting_witness",
+      });
+    },
+  );
+
+  it.each(["•", "-", "*"])(
+    "interprets %s list formatting with exact saved quotes and unchanged storage",
+    async (marker) => {
+      const jdText = [
+        "🌏 Neutral role",
+        "Requirements",
+        `${marker} Python or PostgreSQL required`,
+        `${marker} 1–4 years of Python experience required`,
+      ].join("\n");
+      const { fixture, result } = await coverage({
+        clauses: ["Used Python from 2020-01-01 to 2022-06-01"],
+        skill: "Python",
+        confirm: true,
+        jdText,
+      });
+      const stored = fixture.context.requirements.content;
+      expect(stored.relations.clauses[0].skillExpression.kind).toBe("unknown");
+      expect(stored.relations.clauses[1].duration.kind).toBe("unknown");
+      const [alternative, tenure] = result.clauses;
+      expect(alternative).toMatchObject({
+        storedExpressionKind: "unknown",
+        expressionKind: "any_of",
+        state: "not_evaluated",
+        durationSubjectInterpretation: { listMarker: { quote: marker } },
+      });
+      expect(alternative.operands.map((operand) => operand.value)).toEqual([
+        "Python",
+        "PostgreSQL",
+      ]);
+      expect(tenure).toMatchObject({
+        evidence: {
+          quote: `${marker} 1–4 years of Python experience required`,
+        },
+        scope: { importance: "required" },
+        expressionKind: "atom",
+        state: "not_evaluated",
+        durationRequirement: {
+          kind: "range",
+          lower: { value: 1, inclusive: true, evidence: { quote: "1" } },
+          upper: { value: 4, inclusive: true, evidence: { quote: "4" } },
+        },
+      });
+      expect(tenure.operands[0].duration?.state).toBe("satisfied");
+      const spans = [
+        alternative.evidence,
+        tenure.evidence,
+        tenure.durationSubjectInterpretation!.listMarker!,
+        tenure.durationRequirement.lower!.evidence,
+        tenure.durationRequirement.upper!.evidence,
+      ];
+      for (const span of spans)
+        expect(Array.from(jdText).slice(span.start, span.end).join("")).toBe(
+          span.quote,
+        );
+      expect(result.scoringEligible).toBe(false);
+    },
+  );
+  it.each([
+    "• No Python or PostgreSQL required",
+    "• Python or PostgreSQL and Redis required",
+    "• Python or ZephyrCircuit required",
+    "• • Python or PostgreSQL required",
+    "•Python or PostgreSQL required",
+    "Notes; - Python or PostgreSQL required",
+  ])("keeps an unsupported bullet expression unresolved: %s", async (line) => {
+    const { result } = await coverage({
+      skill: "Python",
+      jdText: `Requirements\n${line}`,
+    });
+    const clause = result.clauses.find((item) =>
+      item.evidence.quote.includes("Python"),
+    );
+    expect(clause).toMatchObject({
+      expressionKind: "unknown",
+      state: "not_evaluated",
+      proposedState: "not_evaluated",
+      operands: [],
+    });
+  });
+
+  it("deduplicates the same typed alternative with different bullet formatting", async () => {
+    const { result } = await coverage({
+      skill: "Python",
+      jdText:
+        "Requirements\n• Python or PostgreSQL required\nPython or PostgreSQL required",
+    });
+    expect(result.clauses.map((clause) => clause.expressionKind)).toEqual([
+      "any_of",
+      "any_of",
+    ]);
+    expect(result.clauses[1].duplicateOf).toBe(result.clauses[0].id);
+  });
+
+  it("uses exact skills headings without changing the saved JD scope", async () => {
+    const jdText = [
+      "About the job:",
+      "🌱 Software team",
+      "Required Skills:",
+      "Python",
+      "  Preferred Skills:",
+      "PostgreSQL",
+      "Redis required",
+      "MongoDB required but optional",
+      "Mandatory Skills:",
+      "FastAPI",
+      "Responsibilities:",
+      "JavaScript",
+    ].join("\r\n");
+    const { fixture, result } = await coverage({
+      clauses: ["Built services using PostgreSQL"],
+      skill: "PostgreSQL",
+      confirm: true,
+      jdText,
+    });
+    expect(
+      fixture.context.requirements.content.relations.clauses.find(
+        (item) => item.evidence.quote === "PostgreSQL",
+      )?.scope.importance,
+    ).toBe("required");
+    expect(
+      result.clauses.map(({ evidence, scope }) => [
+        evidence.quote,
+        scope.importance,
+      ]),
+    ).toEqual([
+      ["Python", "required"],
+      ["PostgreSQL", "preferred"],
+      ["Redis required", "required"],
+      ["MongoDB required but optional", "unknown"],
+      ["FastAPI", "required"],
+      ["JavaScript", "contextual"],
+    ]);
+    const preferred = result.clauses[1];
+    expect(preferred).toMatchObject({
+      scopeHeading: { quote: "Preferred Skills:" },
+      state: "not_evaluated",
+      proposedState: "satisfied",
+    });
+    const heading = preferred.scopeHeading!;
+    expect(Array.from(jdText).slice(heading.start, heading.end).join("")).toBe(
+      heading.quote,
+    );
+    expect(
+      result.retainedClauses.find(
+        (clause) => clause.evidence.quote === "PostgreSQL",
+      )?.importance,
+    ).toBe("preferred");
+    expect(result.scoringEligible).toBe(false);
+  });
+
+  it("uses a company heading to end an extended skills section", async () => {
+    const { result } = await coverage({
+      skill: "Python",
+      jdText:
+        "Preferred Qualifications:\nPostgreSQL\nMandatory Skills:\nPython\nAbout Acme:\nRedis preferred",
+    });
+    expect(
+      result.clauses.map(({ evidence, scope }) => [
+        evidence.quote,
+        scope.importance,
+      ]),
+    ).toEqual([
+      ["PostgreSQL", "preferred"],
+      ["Python", "required"],
+    ]);
+  });
+
+  it("uses only approved alias equivalence and preserves an unmapped literal identity", async () => {
+    const alias = await coverage({
+      clauses: ["Built services using Postgres"],
+      skill: "Postgres",
+      requiredSkill: "PostgreSQL",
+      confirm: true,
+    });
+    expect(
+      alias.result.clauses[0].operands[0].matches.some(
+        (m) => m.matchKind === "approved_alias",
+      ),
+    ).toBe(true);
+    const literal = await coverage({
+      clauses: ["Built services using Python"],
+      skill: "Python",
+      confirm: true,
+    });
+    expect(
+      literal.result.witnesses.find(
+        (w) => w.factId === literal.fixture.targetFactId,
+      )?.skill.identity,
+    ).toMatchObject({ kind: "literal_only", conceptId: null });
+    expect(
+      literal.result.clauses[0].operands[0].matches.every(
+        (m) => m.matchKind === "exact_literal",
+      ),
+    ).toBe(true);
+  });
+
+  it("keeps a listing separate from contribution and proficiency", async () => {
+    const { result } = await coverage({
+      clauses: ["Built services using Python"],
+      skill: "PostgreSQL",
+      requiredSkill: "PostgreSQL",
+      confirm: true,
+    });
+    expect(result.clauses[0].operands[0]).toMatchObject({
+      proposedState: "not_evaluated",
+      tiers: ["listed"],
+      reason: "listed_skill_not_proficiency",
+      duration: null,
+    });
+  });
+
+  it("records an exact declaration without asking for its confirmation again", async () => {
+    const { fixture, result } = await coverage({
+      edit: "Responsible for services using PostgreSQL",
+      confirm: true,
+    });
+    const operand = result.clauses[0].operands[0];
+    expect(operand.proposedState).toBe("not_evaluated");
+    expect(operand.reason).toBe("declaration_recorded_source_support_missing");
+    expect(
+      result.witnesses.find((w) => w.factId === fixture.targetFactId),
+    ).toMatchObject({
+      tier: "candidate_responsibility",
+      basis: "candidate_declaration",
+    });
+    expect(operand.explanation).toContain("do not need to repeat");
+  });
+
+  it("keeps proficiency unverified even with a confirmed source contribution", async () => {
+    const { result } = await coverage({
+      confirm: true,
+      jdText: "Requirements\nProficiency in PostgreSQL required",
+    });
+    expect(result.clauses[0].operands[0]).toMatchObject({
+      proposedState: "partially_satisfied",
+      reason: "proficiency_not_verified",
+    });
+  });
+
+  it("does not deduplicate a proficiency clause into a different experience requirement", async () => {
+    const { result } = await coverage({
+      clauses: ["Built services using Python"],
+      skill: "Python",
+      confirm: true,
+      jdText:
+        "Requirements\nExperience with Python required.\nProficiency in Python required.",
+    });
+    expect(result.clauses).toHaveLength(2);
+    expect(result.clauses.map((clause) => clause.proposedState)).toEqual([
+      "satisfied",
+      "partially_satisfied",
+    ]);
+    expect(result.clauses[1].duplicateOf).toBeNull();
+    expect(result.clauses[1].dedupGroup).not.toBe(result.clauses[0].dedupGroup);
+  });
+
+  it("retains unknown clauses with zero mapped requirement IDs", async () => {
+    const { fixture, result } = await coverage({
+      jdText:
+        "Requirements\nMust have experience with ZephyrCircuit\nMust have experience with NebulaCircuit\nPython and PostgreSQL or Java required",
+    });
+    expect(result.retainedClauses).toEqual(
+      fixture.context.requirements.content.retainedClauses,
+    );
+    expect(
+      result.retainedClauses.some((c) => c.requirementIds.length === 0),
+    ).toBe(true);
+    expect(
+      result.clauses.some(
+        (c) =>
+          c.expressionKind === "unknown" && c.proposedState === "not_evaluated",
+      ),
+    ).toBe(true);
+    const unknowns = result.clauses.filter((clause) =>
+      /(?:Zephyr|Nebula)Circuit/u.test(clause.evidence.quote),
+    );
+    expect(unknowns).toHaveLength(2);
+    expect(
+      unknowns.every(
+        (clause) =>
+          clause.operands.length === 0 &&
+          clause.sourceRequirementIds.length === 0,
+      ),
+    ).toBe(true);
+    expect(unknowns[1].duplicateOf).toBeNull();
+    expect(unknowns[1].dedupGroup).not.toBe(unknowns[0].dedupGroup);
+  });
+
+  it.each([
+    ["No PostgreSQL experience required", "negated_requirement"],
+    ["PostgreSQL", "importance_unknown"],
+  ])("keeps %s outside automatic satisfaction", async (text, reason) => {
+    const { result } = await coverage({ confirm: true, jdText: text });
+    expect(result.clauses[0]).toMatchObject({
+      proposedState: "not_evaluated",
+      reason,
+    });
+  });
+
+  it("deduplicates repeated alias operands and clauses without deleting their source traces", async () => {
+    const { result } = await coverage({
+      confirm: true,
+      jdText:
+        "Requirements\nPostgreSQL or Postgres required\nPostgres or PostgreSQL required",
+    });
+    expect(result.clauses).toHaveLength(2);
+    expect(result.clauses[0].operands[1].duplicateOf).toBe(
+      result.clauses[0].operands[0].id,
+    );
+    expect(result.clauses[1].duplicateOf).toBe(result.clauses[0].id);
+    expect(result.clauses.every((c) => /^[a-f0-9]{64}$/u.test(c.id))).toBe(
+      true,
+    );
+    expect(new Set(result.clauses.map((c) => c.id)).size).toBe(2);
+  });
+
+  it("unions overlapping actual source intervals instead of summing them", async () => {
+    const options = {
+      clauses: [
+        "Built services using Python",
+        "Used Python from 2020-01-01 to 2022-01-01",
+        "Used Python from 2021-01-01 to 2023-01-01",
+      ],
+      skill: "Python",
+      confirm: true,
+      jdText: "Requirements\nAt least 4 years of Python experience required",
+    };
+    const { result } = await coverage(options);
+    const operand = result.clauses[0].operands[0];
+    expect(operand.duration).toMatchObject({
+      state: "not_satisfied",
+      unionComponents: { exclusiveEnd: 1, inclusiveEnd: 1 },
+    });
+    expect(operand.duration?.durationDays.minimum).toBe(1096);
+    expect(operand.duration?.durationDays.maximum).toBe(1097);
+    expect(operand.proposedState).toBe("partially_satisfied");
+    expect(operand.reason).toBe("duration_not_established");
+    const prefixed = await coverage({
+      ...options,
+      jdText:
+        "Requirements\nMust have at least 4 years of Python experience required",
+    });
+    expect(prefixed.result.clauses[0]).toMatchObject({
+      storedExpressionKind: "unknown",
+      expressionKind: "atom",
+      durationSubjectInterpretation: {
+        state: "derived",
+        subjectBinding: "single_operand",
+      },
+    });
+    expect(prefixed.result.clauses[0].operands[0].duration).toEqual(
+      operand.duration,
+    );
+  });
+
+  it("preserves calendar boundary uncertainty and never promotes a fragment confirmation", async () => {
+    const { result } = await coverage({
+      clauses: [
+        "Used Python from 2020-01-01 to 2022-01-01",
+        "Built services using Python",
+      ],
+      skill: "Python",
+      confirm: true,
+      confirmClauses: [1],
+      jdText: "Requirements\nMore than 2 years of Python experience required",
+    });
+    const operand = result.clauses[0].operands[0];
+    expect(operand.duration).toMatchObject({
+      state: "unknown",
+      reason: "endpoint_or_calendar_ambiguity",
+    });
+    expect(operand.confirmedSourceDuration).toBeNull();
+    expect(result.witnesses.find((w) => w.tier === "dated_use")).toMatchObject({
+      offsetSpace: "source_span",
+      sourceClause: { confirmation: null },
+      confirmationScope: "current_fact",
+    });
+    expect(operand.proposedState).not.toBe("satisfied");
+  });
+
+  it.each([
+    ["At most 1 year of Python experience required", "not_satisfied"],
+    ["Less than 3 years of Python experience required", "satisfied"],
+    ["Exactly 2 years of Python experience required", "unknown"],
+  ])("retains the actual JD bound: %s", async (jdText, state) => {
+    const { result } = await coverage({
+      clauses: ["Used Python from 2020-01-01 to 2022-01-01"],
+      skill: "Python",
+      jdText: `Requirements\n${jdText}`,
+    });
+    expect(result.clauses[0].operands[0].duration?.state).toBe(state);
+    expect(result.clauses[0].operands[0].proposedState).not.toBe("satisfied");
+    expect(result.clauses[0].operands[0].reason).toBe(
+      "source_dated_clause_requires_review",
+    );
+    expect(result.clauses[0].operands[0].explanation).not.toContain(
+      "Your exact declaration is recorded",
+    );
+  });
+
+  it.each([
+    ["either Python or PostgreSQL", "any_of", "alternative_operand"],
+    ["each of Python and PostgreSQL", "all_of", "each_operand"],
+  ] as const)(
+    "derives only the explicit duration subject list %s and keeps skill intervals separate",
+    async (subjects, kind, binding) => {
+      const { fixture, result } = await coverage({
+        clauses: [
+          "Used Python from 2020-01-01 to 2022-01-01",
+          "Used PostgreSQL from 2019-01-01 to 2020-01-01",
+        ],
+        skill: "Python",
+        jdText: `Requirements\nAt least 3 years of ${subjects} experience required`,
+      });
+      const clause = result.clauses[0];
+      expect(
+        fixture.context.requirements.content.relations.clauses[0]
+          .skillExpression.kind,
+      ).toBe("unknown");
+      expect(clause.storedExpressionKind).toBe("unknown");
+      expect(clause.expressionKind).toBe(kind);
+      expect(clause.durationSubjectInterpretation).toMatchObject({
+        state: "derived",
+        subjectBinding: binding,
+      });
+      expect(clause.operands.map((operand) => operand.value)).toEqual([
+        "Python",
+        "PostgreSQL",
+      ]);
+      expect(clause.operands.map((operand) => operand.duration?.state)).toEqual(
+        ["not_satisfied", "not_satisfied"],
+      );
+      expect(clause.state).toBe("not_evaluated");
+    },
+  );
+
+  it.each([
+    "At least 2 years of Python and PostgreSQL experience required",
+    "At least 2 years of Python or PostgreSQL experience required",
+    "At least 2 years of software experience required",
+    "3 years of Python experience required",
+  ])("does not infer a duration subject or comparator in %s", async (text) => {
+    const { result } = await coverage({
+      clauses: ["Used Python from 2020-01-01 to 2022-01-01"],
+      skill: "Python",
+      jdText: `Requirements\n${text}`,
+    });
+    expect(result.clauses[0]).toMatchObject({
+      storedExpressionKind: "unknown",
+      expressionKind: "unknown",
+      operands: [],
+      state: "not_evaluated",
+      proposedState: "not_evaluated",
+    });
+  });
+
+  it("displays only bounded references and reports every omitted witness and fact", async () => {
+    const { result } = await coverage({
+      clauses: Array.from(
+        { length: 24 },
+        (_, index) => `Built service${index} using PostgreSQL`,
+      ),
+      confirm: true,
+    });
+    const operand = result.clauses[0].operands[0];
+    expect(operand.matches).toHaveLength(20);
+    expect(operand.matchingWitnessCount).toBeGreaterThan(20);
+    expect(operand.additionalWitnessCount).toBe(
+      operand.matchingWitnessCount - 20,
+    );
+    expect(operand.additionalFactCount).toBeGreaterThan(0);
+    expect(result.witnessCounts.additionalMatching).toBeGreaterThan(0);
+  });
+
+  it("pins policy, exact selected versions, source and reader profiles with a deterministic digest", async () => {
+    const { fixture, result } = await coverage({ confirm: true });
+    const semantic = deriveRequirementSemanticEvidence(fixture.context);
+    expect(result.binding).toEqual(semantic.binding);
+    expect(result.policy.sha256).toBe(REQUIREMENT_COVERAGE_POLICY_SHA256);
+    expect(result.policy.sha256).toBe(
+      createHash("sha256")
+        .update(JSON.stringify(REQUIREMENT_COVERAGE_POLICY))
+        .digest("hex"),
+    );
+    expect(evaluateRequirementCoverage(fixture.context)).toEqual(result);
+    expect(result.digest).toMatch(/^[a-f0-9]{64}$/u);
+    const { digest, ...withoutDigest } = result;
+    expect(digest).toBe(
+      createHash("sha256").update(JSON.stringify(withoutDigest)).digest("hex"),
+    );
+    expect(
+      RequirementCoverageSchema.safeParse({
+        ...result,
+        policy: { ...result.policy, sha256: "0".repeat(64) },
+      }).success,
+    ).toBe(false);
+  });
+
+  it.each(["source", "canonical", "requirements", "profiles"] as const)(
+    "rejects a swapped %s binding rather than accepting supplied authority",
+    async (key) => {
+      const { fixture } = await coverage();
+      const raw = structuredClone(fixture.context);
+      if (key === "source") raw.source.inputSha256 = "d".repeat(64);
+      if (key === "canonical")
+        raw.canonical.versionId = fixture.context.requirements.versionId;
+      if (key === "requirements") raw.requirements.inputSha256 = "d".repeat(64);
+      if (key === "profiles")
+        Object.assign(raw.profiles, { contextVersion: "unknown" });
+      expect(evaluateRequirementCoverage(raw)).toMatchObject({
+        state: "unavailable",
+        witnesses: [],
+        clauses: [],
+        scoringEligible: false,
+      });
+    },
+  );
+});

@@ -1,4 +1,10 @@
 import { z } from "zod";
+import {
+  buildSavedWritingComparison,
+  type SavedWritingComparison,
+} from "../writing-comparison";
+import { createHash, randomUUID } from "node:crypto";
+import { readCandidatePrivacyAccess } from "./privacy-deletion-policy";
 import type { createSupabaseAdminClient } from "./supabase";
 import {
   CanonicalResumeDraftSchema,
@@ -11,6 +17,25 @@ import {
   rollbackCanonical,
 } from "./canonical-content";
 import { loadEvidenceReview } from "./evidence-review";
+import { getServerConfig } from "./config";
+import {
+  projectCanonicalCorrectionSourceChoices,
+  CANONICAL_CORRECTION_PROJECTION_VERSION,
+} from "./canonical-corrections";
+import {
+  CanonicalCorrectionCommandSchema,
+  CanonicalCorrectionLedgerSchema,
+  CanonicalCorrectionResultSchema,
+  CanonicalCorrectionAssignmentSelectorSchema,
+  parseCanonicalCorrectionJson,
+  type CanonicalCorrectionCommand,
+  type CanonicalCorrectionLedger,
+  type CanonicalCorrectionLocation,
+  type CanonicalCorrectionAssignmentSelector,
+  type CanonicalCorrectionWorkspace,
+  type CanonicalCorrectionWorkspaceItem,
+} from "./canonical-correction-commands";
+export type { CanonicalCorrectionWorkspace } from "./canonical-correction-commands";
 
 type Client = Pick<
   ReturnType<typeof createSupabaseAdminClient>,
@@ -53,6 +78,19 @@ export const CanonicalCommandSchema = z.discriminatedUnion("operation", [
   }),
 ]);
 export type CanonicalCommand = z.infer<typeof CanonicalCommandSchema>;
+export type CanonicalRequestCommand =
+  | CanonicalCommand
+  | {
+      operation: "correction";
+      command: CanonicalCorrectionCommand;
+    };
+type AppliedCanonicalMutationResult = {
+  status: "applied";
+  versionId: string;
+  revision: number;
+  idempotent: boolean;
+  scoringEligible: false;
+};
 export class CanonicalError extends Error {
   constructor(
     readonly status: 404 | 409 | 422 | 503,
@@ -120,44 +158,70 @@ export async function ownedAnalysis(
     .object({ id, owner_id: id, organization_id: id, resume_version_id: id })
     .safeParse(result.data);
   if (!analysis.success || analysis.data.owner_id !== ownerId) throw missing();
-  const source = await client
+  const sourceQuery = client
     .from("resume_versions")
-    .select("id,resume_id,owner_id,organization_id")
+    .select(
+      "id,resume_id,owner_id,organization_id,active_resume:resumes!resume_versions_resume_id_fkey(id,owner_id,organization_id,status)",
+    )
     .eq("id", analysis.data.resume_version_id)
     .eq("owner_id", ownerId)
+    .eq("organization_id", analysis.data.organization_id)
+    .eq("active_resume.owner_id", ownerId)
+    .eq("active_resume.organization_id", analysis.data.organization_id)
+    .eq("active_resume.status", "active")
     .maybeSingle();
+  // Scope reads overlap source loading; source validation keeps precedence.
+  const pendingScope = Promise.all([
+    client
+      .from("memberships")
+      .select("user_id")
+      .eq("organization_id", analysis.data.organization_id)
+      .eq("user_id", ownerId)
+      .maybeSingle(),
+    readCandidatePrivacyAccess(client, ownerId),
+  ]).then(
+    (value) => ({ value }),
+    (error: unknown) => ({ error }),
+  );
+  const source = await sourceQuery;
   if (source.error) throw unavailable();
   const parsed = z
-    .object({ id, resume_id: id, owner_id: id, organization_id: id })
+    .object({
+      id,
+      resume_id: id,
+      owner_id: id,
+      organization_id: id,
+      active_resume: z.unknown(),
+    })
     .safeParse(source.data);
   if (
     !parsed.success ||
+    parsed.data.id !== analysis.data.resume_version_id ||
+    parsed.data.owner_id !== ownerId ||
     parsed.data.organization_id !== analysis.data.organization_id
   )
     throw missing();
-  const root = await client
-    .from("resumes")
-    .select("id")
-    .eq("id", parsed.data.resume_id)
-    .eq("owner_id", ownerId)
-    .eq("organization_id", parsed.data.organization_id)
-    .eq("status", "active")
-    .maybeSingle();
-  const membership = await client
-    .from("memberships")
-    .select("user_id")
-    .eq("organization_id", parsed.data.organization_id)
-    .eq("user_id", ownerId)
-    .maybeSingle();
-  const deletion = await client
-    .from("data_requests")
-    .select("id")
-    .eq("user_id", ownerId)
-    .eq("kind", "deletion")
-    .neq("status", "failed")
-    .limit(1);
-  if (root.error || membership.error || deletion.error) throw unavailable();
-  if (!root.data || !membership.data || deletion.data?.length) throw missing();
+  const scope = await pendingScope;
+  if ("error" in scope) throw scope.error;
+  const [membership, deletion] = scope.value;
+  const deletionState = deletion.state;
+  if (membership.error || deletionState === "unavailable") throw unavailable();
+  if (!membership.data || deletionState === "blocked") throw missing();
+  const root = z
+    .object({
+      id,
+      owner_id: id,
+      organization_id: id,
+      status: z.literal("active"),
+    })
+    .safeParse(parsed.data.active_resume);
+  if (
+    !root.success ||
+    root.data.id !== parsed.data.resume_id ||
+    root.data.owner_id !== ownerId ||
+    root.data.organization_id !== analysis.data.organization_id
+  )
+    throw missing();
   return { ...analysis.data, resumeId: parsed.data.resume_id };
 }
 async function version(
@@ -194,6 +258,23 @@ export async function loadCanonical(
   const offset = options.offset ?? 0;
   if (!Number.isInteger(offset) || offset < 0 || offset > 10000)
     throw new CanonicalError(422, "Choose a valid history page.");
+  const historyQuery = client
+    .from("canonical_resume_versions")
+    .select("id,parent_version_id,revision,created_at")
+    .eq("resume_id", analysis.resumeId)
+    .eq("owner_id", ownerId)
+    .order("revision", { ascending: false })
+    .range(offset, offset + 20);
+  // Handle speculative failures immediately; head validation keeps precedence.
+  const pendingVersions = options.versionId
+    ? Promise.all([
+        version(client, analysis.resumeId, ownerId, options.versionId),
+        historyQuery,
+      ]).then(
+        (value) => ({ value }),
+        (error: unknown) => ({ error }),
+      )
+    : null;
   const head = await client
     .from("canonical_resume_heads")
     .select("version_id,revision")
@@ -211,26 +292,29 @@ export async function loadCanonical(
       history: [],
       nextOffset: null,
       comparison: null,
+      writingComparison: null,
       scoringEligible: false as const,
     };
   const headValue = z
     .object({ version_id: id, revision: z.number().int().positive() })
     .safeParse(head.data);
   if (!headValue.success) throw unavailable();
-  const current = await version(
-    client,
-    analysis.resumeId,
-    ownerId,
-    options.versionId ?? headValue.data.version_id,
-  );
+  const loaded = pendingVersions
+    ? await pendingVersions
+    : {
+        value: await Promise.all([
+          version(
+            client,
+            analysis.resumeId,
+            ownerId,
+            headValue.data.version_id,
+          ),
+          historyQuery,
+        ]),
+      };
+  if ("error" in loaded) throw loaded.error;
+  const [current, list] = loaded.value;
   if (current.sourceId !== analysis.resume_version_id) throw missing();
-  const list = await client
-    .from("canonical_resume_versions")
-    .select("id,parent_version_id,revision,created_at")
-    .eq("resume_id", analysis.resumeId)
-    .eq("owner_id", ownerId)
-    .order("revision", { ascending: false })
-    .range(offset, offset + 20);
   if (list.error) throw unavailable();
   const history = z
     .array(
@@ -244,6 +328,7 @@ export async function loadCanonical(
     .safeParse(list.data);
   if (!history.success) throw unavailable();
   let comparison: ReturnType<typeof compareCanonical> | null = null;
+  let writingComparison: SavedWritingComparison | null = null;
   if (options.compareId) {
     const other = await version(
       client,
@@ -254,7 +339,28 @@ export async function loadCanonical(
     // A root has one serialized lineage; revisions are unique and every child
     // is committed against its current head by the database CAS transaction.
     if (other.sourceId !== current.sourceId) throw missing();
-    comparison = compareCanonical(other.document, current.document);
+    if (
+      current.document.analysisId !== analysisId ||
+      other.document.analysisId !== analysisId ||
+      current.document.organizationId !== analysis.organization_id ||
+      other.document.organizationId !== analysis.organization_id
+    )
+      throw missing();
+    try {
+      comparison = compareCanonical(other.document, current.document);
+      writingComparison = buildSavedWritingComparison({
+        before: other.document,
+        after: current.document,
+        beforeRevision: other.revision,
+        afterRevision: current.revision,
+        changes: comparison,
+      });
+    } catch {
+      throw new CanonicalError(
+        422,
+        "Stored structured comparison failed integrity checks.",
+      );
+    }
   }
   return {
     analysisId,
@@ -264,9 +370,27 @@ export async function loadCanonical(
     history: history.data.slice(0, 20),
     nextOffset: history.data.length > 20 ? offset + 20 : null,
     comparison,
+    writingComparison,
     scoringEligible: false as const,
   };
 }
+export function mutateCanonical(
+  client: Client,
+  analysisId: string,
+  ownerId: string,
+  raw: CanonicalCommand,
+  requestId: string,
+): Promise<AppliedCanonicalMutationResult>;
+export function mutateCanonical(
+  client: Client,
+  analysisId: string,
+  ownerId: string,
+  raw: unknown,
+  requestId: string,
+): Promise<
+  | AppliedCanonicalMutationResult
+  | Awaited<ReturnType<typeof mutateCanonicalCorrection>>
+>;
 export async function mutateCanonical(
   client: Client,
   analysisId: string,
@@ -274,6 +398,31 @@ export async function mutateCanonical(
   raw: unknown,
   requestId: string,
 ) {
+  if (
+    raw &&
+    typeof raw === "object" &&
+    "operation" in raw &&
+    raw.operation === "correction"
+  ) {
+    const wrapper = z
+      .strictObject({
+        operation: z.literal("correction"),
+        command: CanonicalCorrectionCommandSchema,
+      })
+      .safeParse(raw);
+    if (!wrapper.success)
+      throw new CanonicalError(
+        422,
+        "Submit a valid correction review operation.",
+      );
+    return mutateCanonicalCorrection(
+      client,
+      analysisId,
+      ownerId,
+      wrapper.data.command,
+      requestId,
+    );
+  }
   const parsed = CanonicalCommandSchema.safeParse(raw);
   if (!parsed.success)
     throw new CanonicalError(
@@ -283,8 +432,39 @@ export async function mutateCanonical(
   const command = parsed.data;
   const analysis = await ownedAnalysis(client, analysisId, ownerId);
   let document: CanonicalResumeDraft;
+  let originalImportBinding:
+    CanonicalCorrectionWorkspace["corrections"]["binding"] | null = null;
   if (command.operation === "import") {
     const review = await loadEvidenceReview(client, analysisId, ownerId);
+    if (getServerConfig().CANONICAL_CORRECTIONS_ENABLED) {
+      requireCorrectionsEnabled();
+      const ledger = await correctionLedger(client, analysis, ownerId);
+      if (!ledger.writeReady) throw unavailable();
+      const binding = ledger.binding;
+      if (
+        ledger.reviewRevision !== review.revision ||
+        binding.attemptId !== review.attemptId ||
+        binding.attemptId !== review.evidence.id ||
+        binding.ownerId !== review.evidence.ownerId ||
+        binding.analysisId !== review.analysisId ||
+        binding.analysisId !== review.evidence.analysisId ||
+        binding.sourceId !== review.evidence.sourceId ||
+        binding.inputSha256 !== review.evidence.inputSha256 ||
+        binding.evidenceSchemaVersion !== review.evidence.schemaVersion ||
+        binding.fieldExtractorVersion !==
+          (review.evidence.fieldExtractorVersion ?? null) ||
+        binding.targetModelVersion !== review.targets.modelVersion
+      )
+        throw correctionConflict();
+      // Pending proposals must still reach SQL: an exact successful retry is
+      // returned before fresh review/head CAS, without importing again.
+      originalImportBinding = {
+        ...binding,
+        reviewRevision: ledger.reviewRevision,
+        assignmentRevision: ledger.assignmentRevision,
+        canonicalHeadId: ledger.headId,
+      };
+    }
     try {
       document = importCanonicalEvidence(review.evidence, {
         resumeId: analysis.resumeId,
@@ -336,13 +516,29 @@ export async function mutateCanonical(
     targetVersionId:
       "targetVersionId" in command ? command.targetVersionId : null,
   };
-  const result = await client.rpc("save_canonical_version", {
-    p_user_id: ownerId,
-    p_source_id: analysis.resume_version_id,
-    p_body: document,
-    p_command: input,
-    p_request_id: requestId,
-  });
+  let result;
+  if (originalImportBinding) {
+    try {
+      result = await client.rpc("import_canonical_original", {
+        p_user_id: ownerId,
+        p_analysis_id: analysisId,
+        p_binding: originalImportBinding,
+        p_body: document,
+        p_command: input,
+        p_request_id: requestId,
+      });
+    } catch {
+      throw unavailable();
+    }
+  } else {
+    result = await client.rpc("save_canonical_version", {
+      p_user_id: ownerId,
+      p_source_id: analysis.resume_version_id,
+      p_body: document,
+      p_command: input,
+      p_request_id: requestId,
+    });
+  }
   if (result.error) {
     if (["22023", "22P02", "23514"].includes(result.error.code))
       throw new CanonicalError(
@@ -351,27 +547,49 @@ export async function mutateCanonical(
       );
     throw unavailable();
   }
-  if (result.data?.status === "not_found") throw missing();
-  if (result.data?.status === "conflict")
+  const failure = originalImportBinding
+    ? z
+        .strictObject({
+          status: z.enum(["not_found", "conflict", "invalid", "unavailable"]),
+        })
+        .safeParse(result.data)
+    : null;
+  if (
+    originalImportBinding &&
+    !failure?.success &&
+    result.data?.status !== "applied"
+  )
+    throw unavailable();
+  const status = failure?.success ? failure.data.status : result.data?.status;
+  if (status === "not_found") throw missing();
+  if (status === "conflict")
     throw new CanonicalError(
       409,
       "This resume changed or the submission key was reused. Reload and review the latest version.",
     );
-  const applied = z
-    .object({
-      status: z.literal("applied"),
-      versionId: id,
-      revision: z.number().int().positive(),
-      idempotent: z.boolean(),
-    })
-    .safeParse(result.data);
+  if (originalImportBinding && status === "invalid")
+    throw new CanonicalError(
+      422,
+      "The change failed content or provenance validation.",
+    );
+  const appliedShape = {
+    status: z.literal("applied"),
+    versionId: id,
+    revision: z.number().int().positive(),
+    idempotent: z.boolean(),
+  };
+  const applied = (
+    originalImportBinding
+      ? z.strictObject(appliedShape)
+      : z.object(appliedShape)
+  ).safeParse(result.data);
   if (!applied.success) throw unavailable();
   return { ...applied.data, scoringEligible: false as const };
 }
 
 export async function readCanonicalForm(
   request: Request,
-): Promise<CanonicalCommand> {
+): Promise<CanonicalRequestCommand> {
   const contentType = request.headers.get("content-type") ?? "";
   if (!/^application\/x-www-form-urlencoded(?:;|$)/iu.test(contentType))
     throw new CanonicalError(422, "Submit the structured resume form.");
@@ -384,7 +602,7 @@ export async function readCanonicalForm(
       const chunk = await reader.read();
       if (chunk.done) break;
       size += chunk.value.byteLength;
-      if (size > 16384)
+      if (size > 196608)
         throw new CanonicalError(422, "The form exceeds its size limit.");
       chunks.push(chunk.value);
     }
@@ -413,12 +631,30 @@ export async function readCanonicalForm(
     "value",
     "targetVersionId",
     "sectionId",
+    "command",
   ]);
   for (const [key, value] of new URLSearchParams(text)) {
     if (!allowed.has(key) || Object.hasOwn(values, key))
       throw new CanonicalError(422, "Duplicate form fields are invalid.");
     values[key] = value;
   }
+  if (values.operation === "correction") {
+    if (Object.keys(values).length !== 2 || typeof values.command !== "string")
+      throw new CanonicalError(422, "Submit a valid correction review form.");
+    try {
+      return {
+        operation: "correction",
+        command: parseCanonicalCorrectionJson(values.command),
+      };
+    } catch {
+      throw new CanonicalError(
+        422,
+        "Submit a valid correction review operation.",
+      );
+    }
+  }
+  if (size > 16384)
+    throw new CanonicalError(422, "The form exceeds its size limit.");
   if (values.expectedVersionId === "") values.expectedVersionId = null;
   const result = CanonicalCommandSchema.safeParse(values);
   if (!result.success)
@@ -427,4 +663,864 @@ export async function readCanonicalForm(
       "Submit a valid structured resume operation.",
     );
   return result.data;
+}
+
+function requireCorrectionsEnabled() {
+  const config = getServerConfig();
+  if (!config.CANONICAL_CORRECTIONS_ENABLED)
+    throw new CanonicalError(404, "Correction review is not enabled.");
+  if (!config.CANONICAL_AUTHORING_ENABLED || !config.EVIDENCE_REVIEW_ENABLED)
+    throw unavailable();
+}
+const correctionConflict = () =>
+  new CanonicalError(
+    409,
+    "The source, review or resume changed. Reload and review the current values.",
+  );
+function same(left: unknown, right: unknown) {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+type OwnedAnalysis = Awaited<ReturnType<typeof ownedAnalysis>>;
+async function correctionLedger(
+  client: Client,
+  analysis: OwnedAnalysis,
+  ownerId: string,
+) {
+  let result;
+  try {
+    result = await client.rpc("read_candidate_correction_ledger", {
+      p_user_id: ownerId,
+      p_analysis_id: analysis.id,
+    });
+  } catch {
+    throw unavailable();
+  }
+  if (result.error) throw unavailable();
+  const notFound = z
+    .strictObject({
+      schemaVersion: z.literal("candidate-correction-ledger/1.0.0"),
+      status: z.literal("not_found"),
+    })
+    .safeParse(result.data);
+  if (notFound.success) throw missing();
+  try {
+    if (
+      Buffer.byteLength(JSON.stringify(result.data), "utf8") >
+      8 * 1024 * 1024
+    )
+      throw unavailable();
+    const parsed = CanonicalCorrectionLedgerSchema.safeParse(result.data);
+    if (!parsed.success) throw unavailable();
+    const ledger = parsed.data,
+      binding = ledger.binding;
+    if (
+      binding.ownerId !== ownerId ||
+      binding.organizationId !== analysis.organization_id ||
+      binding.resumeId !== analysis.resumeId ||
+      binding.analysisId !== analysis.id ||
+      binding.sourceId !== analysis.resume_version_id
+    )
+      throw unavailable();
+    const operations = new Map(ledger.operations.map((row) => [row.id, row]));
+    const assignments = new Map(ledger.assignments.map((row) => [row.id, row]));
+    const applications = new Map(
+      ledger.applications.map((row) => [row.id, row]),
+    );
+    const snapshots = new Map(
+      ledger.snapshots.map((row) => [row.canonical_version_id, row]),
+    );
+    if (
+      operations.size !== ledger.operations.length ||
+      assignments.size !== ledger.assignments.length ||
+      applications.size !== ledger.applications.length ||
+      snapshots.size !== ledger.snapshots.length ||
+      ledger.assignmentRevision !== ledger.assignments.length
+    )
+      throw unavailable();
+    for (const row of [
+      ...ledger.operations,
+      ...ledger.assignments,
+      ...ledger.applications,
+    ]) {
+      if (
+        row.owner_id !== ownerId ||
+        row.actor_id !== ownerId ||
+        row.organization_id !== binding.organizationId ||
+        row.resume_id !== binding.resumeId ||
+        row.analysis_id !== binding.analysisId ||
+        row.source_resume_version_id !== binding.sourceId ||
+        row.input_sha256 !== binding.inputSha256
+      )
+        throw unavailable();
+    }
+    for (const [index, row] of ledger.assignments.entries()) {
+      const op = operations.get(row.operation_id);
+      if (
+        row.assignment_revision !== index + 1 ||
+        !op ||
+        op.attempt_id !== row.attempt_id ||
+        !op.selected_assignment_ids.includes(row.id) ||
+        op.kind !== "assign" ||
+        (row.supersedes_assignment_id !== null &&
+          (!assignments.has(row.supersedes_assignment_id) ||
+            assignments.get(row.supersedes_assignment_id)!
+              .correction_event_id !== row.correction_event_id ||
+            assignments.get(row.supersedes_assignment_id)!
+              .assignment_revision >= row.assignment_revision))
+      )
+        throw unavailable();
+      if (
+        !CanonicalCorrectionAssignmentSelectorSchema.safeParse(
+          selectorFromAssignment(row),
+        ).success
+      )
+        throw unavailable();
+    }
+    for (const row of ledger.operations) {
+      const receipt = CanonicalCorrectionResultSchema.safeParse({
+        schemaVersion: "candidate-correction-result/1.0.0",
+        status: row.kind === "assign" ? "assigned" : "applied",
+        kind: row.kind,
+        idempotencyKey: row.idempotency_key,
+        operationId: row.id,
+        versionId: row.result_version_id,
+        revision: row.result_revision,
+        assignmentRevision: row.result_assignment_revision,
+        assignmentIds: row.selected_assignment_ids,
+        childVersionIds: row.child_version_ids,
+        idempotent: true,
+        scoringEligible: false,
+      });
+      if (
+        !receipt.success ||
+        row.selected_assignment_ids.some((key) => !assignments.has(key))
+      )
+        throw unavailable();
+    }
+    for (const row of ledger.applications) {
+      const op = operations.get(row.operation_id),
+        assignment = assignments.get(row.assignment_id);
+      if (
+        !op ||
+        !assignment ||
+        op.kind === "assign" ||
+        op.attempt_id !== row.attempt_id ||
+        assignment.attempt_id !== row.attempt_id ||
+        !op.selected_assignment_ids.includes(row.assignment_id) ||
+        !op.child_version_ids.includes(row.result_version_id) ||
+        (row.supersedes_application_id !== null &&
+          (!applications.has(row.supersedes_application_id) ||
+            assignments.get(
+              applications.get(row.supersedes_application_id)!.assignment_id,
+            )?.correction_event_id !== assignment.correction_event_id))
+      )
+        throw unavailable();
+    }
+    for (const row of ledger.snapshots) {
+      if (
+        row.owner_id !== ownerId ||
+        row.organization_id !== binding.organizationId ||
+        row.resume_id !== binding.resumeId ||
+        row.source_resume_version_id !== binding.sourceId ||
+        (row.source_operation_id !== null &&
+          !operations.has(row.source_operation_id))
+      )
+        throw unavailable();
+    }
+    const links = new Set<string>();
+    for (const row of ledger.snapshotFacts) {
+      const key = `${row.canonical_version_id}:${row.fact_id}`;
+      if (
+        links.has(key) ||
+        row.owner_id !== ownerId ||
+        row.organization_id !== binding.organizationId ||
+        !snapshots.has(row.canonical_version_id) ||
+        !applications.has(row.application_id) ||
+        applications.get(row.application_id)!.result_fact_id !== row.fact_id
+      )
+        throw unavailable();
+      links.add(key);
+    }
+    return ledger;
+  } catch {
+    throw unavailable();
+  }
+}
+function selectorFromAssignment(
+  row: CanonicalCorrectionLedger["assignments"][number],
+): CanonicalCorrectionAssignmentSelector {
+  return {
+    eventId: row.correction_event_id,
+    targetKind: row.target_kind,
+    assertionId: row.assertion_id,
+    opaqueTargetId: row.opaque_target_id,
+    mappingMode: row.mapping_mode,
+    baseVersionId: row.base_version_id,
+    factId: row.fact_id,
+    mappingProofKind: row.mapping_proof_kind,
+    originVersionId: row.origin_version_id,
+    originFactId: row.origin_fact_id,
+    location: {
+      kind: row.location_kind,
+      sectionId: row.section_id,
+      entryId: row.entry_id,
+      bulletId: row.bullet_id,
+      newSectionType: row.new_section_type,
+      newSectionTitle: row.new_section_title,
+    },
+    supersedesAssignmentId: row.supersedes_assignment_id,
+  };
+}
+function optionId(value: unknown) {
+  return createHash("sha256").update(JSON.stringify(value)).digest("hex");
+}
+const emptyLocation = (
+  kind: CanonicalCorrectionLocation["kind"],
+): CanonicalCorrectionLocation => ({
+  kind,
+  sectionId: null,
+  entryId: null,
+  bulletId: null,
+  newSectionType: null,
+  newSectionTitle: null,
+});
+function placementChoices(
+  doc: CanonicalResumeDraft | null,
+  field: string,
+  charge: () => void,
+) {
+  const choices: CanonicalCorrectionWorkspaceItem["placementOptions"] = [];
+  const add = (label: string, location: CanonicalCorrectionLocation) => {
+    charge();
+    choices.push({ id: optionId(location), label, location });
+  };
+  if (["name", "email", "phone"].includes(field)) {
+    if (
+      !doc ||
+      !doc.contactFactIds.some((factId) =>
+        doc.facts.some((fact) => fact.id === factId && fact.type === field),
+      )
+    )
+      add("Contact details", emptyLocation("contact"));
+    return choices;
+  }
+  const type =
+    field === "education"
+      ? "education"
+      : field === "certification"
+        ? "certifications"
+        : "experience";
+  for (const section of doc?.sections ?? []) {
+    if (
+      section.type !== type &&
+      !(type === "experience" && section.type === "projects")
+    )
+      continue;
+    for (const [index, entry] of section.entries.entries()) {
+      const label = entry.factIds
+        .map((factId) => doc!.facts.find((fact) => fact.id === factId)?.value)
+        .filter(Boolean)
+        .slice(0, 3)
+        .join(" | ");
+      add(`${section.title} / Entry ${index + 1}${label ? `: ${label}` : ""}`, {
+        ...emptyLocation("entry"),
+        sectionId: section.id,
+        entryId: entry.id,
+      });
+    }
+    add(`${section.title} / New entry`, {
+      ...emptyLocation("new_entry"),
+      sectionId: section.id,
+    });
+  }
+  const title =
+    type === "education"
+      ? "Education"
+      : type === "certifications"
+        ? "Certifications"
+        : "Experience";
+  add(`New ${title.toLowerCase()} section and entry`, {
+    ...emptyLocation("new_section_entry"),
+    newSectionType: type,
+    newSectionTitle: title,
+  });
+  return choices;
+}
+function savedAssignmentLabel(
+  row: CanonicalCorrectionLedger["assignments"][number],
+  documents: CanonicalResumeDraft[],
+  sourceLabel: string,
+) {
+  if (row.mapping_mode === "imported_assertion")
+    return `Original imported ${sourceLabel}`;
+  if (row.location_kind === "contact")
+    return `${sourceLabel} / Contact details`;
+  if (row.location_kind === "new_section_entry")
+    return `${sourceLabel} / ${row.new_section_title} / New entry`;
+  const doc =
+    documents.find((doc) => doc.versionId === row.base_version_id) ??
+    documents[0];
+  const section = doc?.sections.find(
+    (section) => section.id === row.section_id,
+  );
+  if (!section)
+    return `${sourceLabel} / Previously selected target; review its current placement`;
+  if (row.location_kind === "new_entry")
+    return `${sourceLabel} / ${section.title} / New entry`;
+  const index = section.entries.findIndex((entry) => entry.id === row.entry_id);
+  const entry = section.entries[index];
+  const context = entry?.factIds
+    .map((id) => doc.facts.find((fact) => fact.id === id)?.value)
+    .filter(Boolean)
+    .slice(0, 3)
+    .join(" | ");
+  const bullet = entry?.bullets.find((bullet) => bullet.id === row.bullet_id);
+  return `${sourceLabel} / ${section.title}${index >= 0 ? ` / Entry ${index + 1}` : ""}${context ? `: ${context}` : ""}${bullet ? ` / ${bullet.text}` : ""}`;
+}
+async function correctionAncestors(
+  client: Client,
+  analysis: OwnedAnalysis,
+  ownerId: string,
+  current: CanonicalResumeDraft | null,
+) {
+  if (!current) return [];
+  const result: CanonicalResumeDraft[] = [],
+    seen = new Set([current.versionId]);
+  let next = current.parentVersionId,
+    characters = JSON.stringify(current).length;
+  while (next && result.length < 64) {
+    if (seen.has(next)) throw unavailable();
+    let prior;
+    try {
+      prior = await version(client, analysis.resumeId, ownerId, next);
+    } catch (error) {
+      if (error instanceof CanonicalError && error.status === 404) break;
+      throw error;
+    }
+    if (prior.sourceId !== analysis.resume_version_id) throw unavailable();
+    characters += JSON.stringify(prior.document).length;
+    if (characters > 2_000_000) throw unavailable();
+    result.push(prior.document);
+    seen.add(next);
+    next = prior.document.parentVersionId;
+  }
+  return result;
+}
+
+export async function loadCanonicalCorrectionWorkspace(
+  client: Client,
+  analysisId: string,
+  ownerId: string,
+  options: { versionId?: string; offset?: number; compareId?: string } = {},
+): Promise<
+  CanonicalCorrectionWorkspace &
+    Pick<Awaited<ReturnType<typeof loadCanonical>>, "writingComparison">
+> {
+  requireCorrectionsEnabled();
+  const analysis = await ownedAnalysis(client, analysisId, ownerId);
+  const model = await loadCanonical(client, analysisId, ownerId, options);
+  const [review, ledger] = await Promise.all([
+    loadEvidenceReview(client, analysisId, ownerId),
+    correctionLedger(client, analysis, ownerId),
+  ]);
+  if (
+    ledger.headId !== model.headId ||
+    ledger.reviewRevision !== review.revision ||
+    ledger.binding.attemptId !== review.attemptId ||
+    ledger.binding.inputSha256 !== review.evidence.inputSha256 ||
+    ledger.binding.evidenceSchemaVersion !== review.evidence.schemaVersion ||
+    ledger.binding.fieldExtractorVersion !==
+      (review.evidence.fieldExtractorVersion ?? null)
+  )
+    throw correctionConflict();
+  const head =
+    model.headId === null
+      ? null
+      : model.current?.document.versionId === model.headId
+        ? model.current
+        : await version(client, analysis.resumeId, ownerId, model.headId);
+  const current = head?.document ?? null;
+  const ancestors = await correctionAncestors(
+    client,
+    analysis,
+    ownerId,
+    current,
+  );
+  const events = new Map(review.corrections.map((event) => [event.id, event]));
+  for (const row of ledger.assignments) {
+    const event = events.get(row.correction_event_id);
+    if (
+      !event ||
+      event.attempt_id !== row.attempt_id ||
+      event.revision !== row.correction_revision ||
+      event.field !== row.field ||
+      event.operation !== "correct"
+    )
+      throw unavailable();
+  }
+  const latest = new Map<
+    string,
+    CanonicalCorrectionLedger["assignments"][number]
+  >();
+  for (const row of ledger.assignments)
+    if (row.attempt_id === review.attemptId)
+      latest.set(row.correction_event_id, row);
+  const binding = {
+    ...ledger.binding,
+    reviewRevision: ledger.reviewRevision,
+    assignmentRevision: ledger.assignmentRevision,
+    canonicalHeadId: ledger.headId,
+  };
+  const { projection, choicesBySourceTarget } =
+    projectCanonicalCorrectionSourceChoices({
+      review,
+      ownedContext: { ...ledger.binding },
+      expectedBinding: {
+        ...review.targets.binding,
+        resumeId: analysis.resumeId,
+        organizationId: analysis.organization_id,
+        targetModelVersion: review.targets.modelVersion,
+        projectionModelVersion: CANONICAL_CORRECTION_PROJECTION_VERSION,
+        reviewRevision: review.revision,
+        canonicalHeadId: model.headId,
+      },
+      canonicalSnapshot: current
+        ? {
+            sourceId: analysis.resume_version_id,
+            headId: model.headId!,
+            current,
+            ancestors,
+          }
+        : null,
+      selections: [...latest.values()]
+        .filter(
+          (row) =>
+            row.target_kind === "observed_assertion" &&
+            review.targets.observations.some(
+              (observation) =>
+                observation.assertionId === row.assertion_id &&
+                observation.targetId === row.opaque_target_id,
+            ),
+        )
+        .map((row) => ({
+          eventId: row.correction_event_id,
+          sourceTargetId: row.opaque_target_id,
+          ...(row.fact_id !== null &&
+          current?.facts.some((fact) => fact.id === row.fact_id)
+            ? { canonicalFactId: row.fact_id }
+            : {}),
+        })),
+    });
+  if (projection.historyCompleteness !== "complete_captured_prefix")
+    throw unavailable();
+  const snapshot = ledger.snapshots.find(
+    (row) => row.canonical_version_id === model.headId,
+  );
+  if (current?.producerVersion === "canonical-engine/1.0.2" && !snapshot)
+    throw unavailable();
+  const active = new Set(
+    ledger.snapshotFacts
+      .filter((row) => row.canonical_version_id === model.headId)
+      .map((row) => row.application_id),
+  );
+  const applications = new Map(ledger.applications.map((row) => [row.id, row]));
+  for (const link of ledger.snapshotFacts.filter(
+    (row) => row.canonical_version_id === model.headId,
+  )) {
+    const app = applications.get(link.application_id)!,
+      assignment = ledger.assignments.find(
+        (row) => row.id === app.assignment_id,
+      )!;
+    const event = events.get(assignment.correction_event_id),
+      fact = current?.facts.find((value) => value.id === link.fact_id);
+    if (
+      !event ||
+      !fact ||
+      fact.id !== app.result_fact_id ||
+      fact.type !== assignment.field ||
+      fact.value !== event.value ||
+      fact.sources.length !== 0
+    )
+      throw unavailable();
+  }
+  let work = 0,
+    quoteUnits = 0,
+    decodedUnits = 0;
+  const charge = () => {
+    if (++work > 20_000) throw unavailable();
+  };
+  const pointsBySpan = new Map<string, string[]>();
+  const items: CanonicalCorrectionWorkspaceItem[] = projection.items.map(
+    (item) => {
+      const assignment = latest.get(item.event.id) ?? null;
+      const priorApps = ledger.applications
+        .filter(
+          (app) =>
+            ledger.assignments.find((row) => row.id === app.assignment_id)
+              ?.correction_event_id === item.event.id,
+        )
+        .sort(
+          (a, b) =>
+            (ledger.operations.find((op) => op.id === a.operation_id)
+              ?.result_revision ?? 0) -
+              (ledger.operations.find((op) => op.id === b.operation_id)
+                ?.result_revision ?? 0) || a.step_ordinal - b.step_ordinal,
+        );
+      const prior = priorApps.at(-1);
+      const sourceChoices: CanonicalCorrectionWorkspaceItem["sourceChoices"] =
+        item.sourceChoices.map((choice) => {
+          const observation = review.targets.observations.find(
+            (row) =>
+              row.assertionId === choice.assertionId &&
+              row.targetId === choice.targetId,
+          )!;
+          return {
+            targetId: choice.targetId,
+            assertionId: choice.assertionId,
+            field: item.event.field,
+            label: `${item.event.field}: ${observation.value} (${[...new Set(observation.citations.map((ref) => ref.pageId))].join(", ")}; occurrence ${review.targets.observations.filter((row) => row.field === item.event.field).findIndex((row) => row.id === observation.id) + 1})`,
+            quote: observation.citations
+              .map((reference) => {
+                const span = review.evidence.spans.find(
+                  (span) => span.id === reference.spanId,
+                )!;
+                quoteUnits += reference.end - reference.start;
+                if (quoteUnits > 2_000_000) throw unavailable();
+                let points = pointsBySpan.get(span.id);
+                if (!points) {
+                  decodedUnits += span.text.length;
+                  if (decodedUnits > 2_000_000) throw unavailable();
+                  points = Array.from(span.text);
+                  pointsBySpan.set(span.id, points);
+                }
+                return points.slice(reference.start, reference.end).join("");
+              })
+              .join("\n"),
+            references: observation.citations.map(
+              ({ pageId, method, spanId, start, end }) => ({
+                pageId,
+                method,
+                spanId,
+                start,
+                end,
+              }),
+            ),
+          };
+        });
+      if (item.state === "requires_add") {
+        const target = review.targets.targets.find(
+          (target) =>
+            target.field === item.event.field &&
+            target.kind === "unobserved_field",
+        );
+        if (target)
+          sourceChoices.push({
+            targetId: target.id,
+            assertionId: null,
+            field: item.event.field,
+            label: `${item.event.field}: not observed in this document`,
+            quote: null,
+            references: [],
+          });
+      }
+      const placements =
+        item.state === "requires_add" ||
+        (current &&
+          sourceChoices.some(
+            (source) => !choicesBySourceTarget.get(source.targetId)?.length,
+          ))
+          ? placementChoices(current, item.event.field, charge)
+          : [];
+      const choices: CanonicalCorrectionWorkspaceItem["assignmentOptions"] = [];
+      const addOption = (
+        label: string,
+        selector: CanonicalCorrectionAssignmentSelector,
+      ) => {
+        charge();
+        const parsed =
+          CanonicalCorrectionAssignmentSelectorSchema.safeParse(selector);
+        if (!parsed.success) throw unavailable();
+        choices.push({ id: optionId(selector), label, selector: parsed.data });
+      };
+      for (const source of sourceChoices) {
+        const canonicalChoices =
+          choicesBySourceTarget.get(source.targetId) ?? [];
+        const base = {
+          eventId: item.event.id,
+          targetKind: source.assertionId
+            ? ("observed_assertion" as const)
+            : ("unobserved_field" as const),
+          assertionId: source.assertionId,
+          opaqueTargetId: source.targetId,
+          supersedesAssignmentId: assignment?.id ?? null,
+        };
+        if (!current && source.assertionId) {
+          addOption(`Import ${source.label}, then apply its correction`, {
+            ...base,
+            mappingMode: "imported_assertion",
+            baseVersionId: null,
+            factId: null,
+            mappingProofKind: "current_citations",
+            originVersionId: null,
+            originFactId: null,
+            location: emptyLocation(
+              ["name", "email", "phone"].includes(item.event.field)
+                ? "contact"
+                : "entry",
+            ),
+          });
+        } else {
+          for (const candidate of canonicalChoices) {
+            const { originVersionId, originFactId } = candidate;
+            for (const location of candidate.locations) {
+              const section = current?.sections.find(
+                (section) => section.id === location.sectionId,
+              );
+              const entryIndex =
+                section?.entries.findIndex(
+                  (entry) => entry.id === location.entryId,
+                ) ?? -1;
+              const label =
+                location.kind === "contact"
+                  ? `Contact ${item.event.field}`
+                  : `${section?.title ?? "Section"}${entryIndex >= 0 ? ` / Entry ${entryIndex + 1}` : ""} / ${candidate.currentValue}`;
+              addOption(`${source.label} / ${label}`, {
+                ...base,
+                mappingMode: "existing",
+                baseVersionId: model.headId,
+                factId: candidate.factId,
+                mappingProofKind:
+                  candidate.mappedThrough === "current_citations"
+                    ? "current_citations"
+                    : "owned_origin_chain",
+                originVersionId,
+                originFactId,
+                location: {
+                  ...location,
+                  newSectionType: null,
+                  newSectionTitle: null,
+                },
+              });
+            }
+          }
+        }
+        if (
+          (!current && !source.assertionId) ||
+          (current && !canonicalChoices.length)
+        ) {
+          for (const placement of placements)
+            addOption(
+              `Add candidate-authored ${source.label}: ${placement.label}`,
+              {
+                ...base,
+                mappingMode: "add",
+                baseVersionId: null,
+                factId: null,
+                mappingProofKind: "explicit_candidate_add",
+                originVersionId: null,
+                originFactId: null,
+                location: placement.location,
+              },
+            );
+        }
+      }
+      let state: CanonicalCorrectionWorkspaceItem["state"] = assignment
+        ? "ready_to_apply"
+        : item.state === "requires_add"
+          ? "requires_add"
+          : "needs_assignment";
+      if (
+        item.event.operation !== "correct" ||
+        (["unmapped", "blocked_by_newer_ambiguity"].includes(item.state) &&
+          !choices.length)
+      )
+        state = "blocked";
+      if (prior) {
+        state = active.has(prior.id)
+          ? "applied"
+          : assignment?.mapping_mode === "existing" &&
+              assignment.base_version_id !== model.headId
+            ? "needs_reassignment"
+            : "needs_reapply";
+      } else if (
+        assignment?.mapping_mode === "existing" &&
+        assignment.base_version_id !== model.headId
+      )
+        state = "needs_reassignment";
+      if (item.state === "stale") state = "stale";
+      if (item.state === "superseded") state = "superseded";
+      if (item.state === "blocked_by_newer_ambiguity") state = "blocked";
+      return {
+        event: item.event,
+        projectionState: item.state,
+        state,
+        currentValue: item.currentValue,
+        proposedValue: item.proposedFact?.value ?? null,
+        sourceChoices,
+        assignmentOptions: choices,
+        placementOptions: placements,
+        assignment: assignment
+          ? {
+              id: assignment.id,
+              label: savedAssignmentLabel(
+                assignment,
+                current ? [current, ...ancestors] : [],
+                sourceChoices.find(
+                  (choice) => choice.assertionId === assignment.assertion_id,
+                )?.label ?? `${item.event.field}: previously selected source`,
+              ),
+              revision: assignment.assignment_revision,
+              baseVersionId: assignment.base_version_id,
+              mappingMode: assignment.mapping_mode,
+            }
+          : null,
+        applications: priorApps.map((app) => ({
+          id: app.id,
+          assignmentId: app.assignment_id,
+          resultVersionId: app.result_version_id,
+          resultFactId: app.result_fact_id,
+          active: active.has(app.id),
+        })),
+        priorApplicationId: prior?.id ?? null,
+        actionKeys: {
+          assign: randomUUID(),
+          apply: randomUUID(),
+          add: randomUUID(),
+          reapply: randomUUID(),
+        },
+        confirmationGranted: false,
+      };
+    },
+  );
+  return {
+    ...model,
+    corrections: {
+      schemaVersion: "canonical-correction-workspace/1.0.0",
+      writeReady:
+        ledger.writeReady &&
+        (!model.current || model.current.document.versionId === model.headId),
+      binding,
+      projection,
+      items,
+      snapshot: {
+        state: snapshot ? "recorded" : "legacy_unrecorded",
+        originKind: snapshot?.origin_kind ?? null,
+        restoredFromVersionId: snapshot?.restored_from_version_id ?? null,
+        activeApplicationIds: [...active],
+      },
+    },
+  };
+}
+
+export async function mutateCanonicalCorrection(
+  client: Client,
+  analysisId: string,
+  ownerId: string,
+  raw: unknown,
+  requestId: string,
+) {
+  requireCorrectionsEnabled();
+  const parsed = CanonicalCorrectionCommandSchema.safeParse(raw);
+  if (
+    !parsed.success ||
+    typeof requestId !== "string" ||
+    !requestId.trim() ||
+    requestId.length > 100
+  )
+    throw new CanonicalError(
+      422,
+      "Submit a valid correction review operation.",
+    );
+  const command = parsed.data;
+  const analysis = await ownedAnalysis(client, analysisId, ownerId);
+  if (command.sourceId !== analysis.resume_version_id)
+    throw correctionConflict();
+  const ledger = await correctionLedger(client, analysis, ownerId);
+  if (!ledger.writeReady) throw unavailable();
+  let original: CanonicalResumeDraft | null = null;
+  if (
+    command.kind !== "assign" &&
+    command.expectedVersionId === null &&
+    ledger.headId === null
+  ) {
+    const review = await loadEvidenceReview(client, analysisId, ownerId);
+    if (
+      review.attemptId !== command.attemptId ||
+      review.evidence.inputSha256 !== command.inputSha256 ||
+      review.evidence.sourceId !== command.sourceId ||
+      review.evidence.schemaVersion !== command.evidenceSchemaVersion ||
+      (review.evidence.fieldExtractorVersion ?? null) !==
+        command.fieldExtractorVersion
+    )
+      throw correctionConflict();
+    try {
+      original = importCanonicalEvidence(review.evidence, {
+        resumeId: analysis.resumeId,
+        organizationId: analysis.organization_id,
+        ownerId,
+      });
+    } catch {
+      throw new CanonicalError(
+        422,
+        "The original evidence failed structured import validation.",
+      );
+    }
+  }
+  let result;
+  try {
+    result = await client.rpc(
+      command.kind === "assign"
+        ? "assign_candidate_correction_targets"
+        : "apply_candidate_corrections",
+      {
+        p_user_id: ownerId,
+        p_analysis_id: analysisId,
+        p_command: command,
+        p_request_id: requestId,
+        ...(command.kind === "assign" ? {} : { p_import_body: original }),
+      },
+    );
+  } catch {
+    throw unavailable();
+  }
+  if (result.error) {
+    if (["22023", "22P02", "23514"].includes(result.error.code))
+      throw new CanonicalError(
+        422,
+        "The correction failed content or provenance validation.",
+      );
+    throw unavailable();
+  }
+  const status = z
+    .strictObject({
+      schemaVersion: z.literal("candidate-correction-result/1.0.0"),
+      status: z.enum(["not_found", "conflict", "unavailable", "invalid"]),
+    })
+    .safeParse(result.data);
+  if (status.success) {
+    if (status.data.status === "not_found") throw missing();
+    if (status.data.status === "conflict") throw correctionConflict();
+    if (status.data.status === "invalid")
+      throw new CanonicalError(
+        422,
+        "The correction failed content or provenance validation.",
+      );
+    throw unavailable();
+  }
+  const receipt = CanonicalCorrectionResultSchema.safeParse(result.data);
+  if (
+    !receipt.success ||
+    receipt.data.kind !== command.kind ||
+    receipt.data.idempotencyKey !== command.idempotencyKey ||
+    receipt.data.assignmentIds.length !== command.selectors.length ||
+    receipt.data.assignmentRevision < command.expectedAssignmentRevision ||
+    (command.kind === "assign"
+      ? receipt.data.versionId !== command.expectedVersionId
+      : !same(
+          [...receipt.data.assignmentIds].sort(),
+          command.selectors.map((selector) => selector.assignmentId).sort(),
+        ))
+  )
+    throw unavailable();
+  return receipt.data;
 }

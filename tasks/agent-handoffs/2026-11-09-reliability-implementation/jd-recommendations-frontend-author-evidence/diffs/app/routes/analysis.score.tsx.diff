@@ -1,0 +1,20 @@
+--- before/app/routes/analysis.score.tsx
++++ after/app/routes/analysis.score.tsx
+@@ -17,6 +17,7 @@
+ import TypedAuthoringBridge from "~/components/TypedAuthoringBridge";
+ import CanonicalRewritePanel from "~/components/CanonicalRewritePanel";
+ import ScoreAdmissionNotice from "~/components/ScoreAdmissionNotice";
++import JdRecommendations from "~/components/JdRecommendations";
+ import {
+   loadCanonicalRewriteWorkspaceState,
+   CanonicalRewriteWorkspaceStateSchema,
+@@ -338,6 +339,9 @@
+             update this view.
+           </p>
+         )}
++        {model.jdRecommendations && (
++          <JdRecommendations plan={model.jdRecommendations} base={base} />
++        )}
+         {model.typedCoverage && (
+           <>
+             {model.typedAuthoring ? (

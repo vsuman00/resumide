@@ -1,0 +1,73 @@
+{
+  "task": "CR-A01-S08",
+  "status": "MANAGED_RUNNER_SOURCE_VERIFIED_RUNTIME_NOT_RUN",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "packetHash": "310f2c7174f4b6f9ab69bd38fc59b6d84ffeabdee55b2d2cdc5da6ffa034ed76",
+  "sourceSha256": {
+    "scripts/verify-managed-document-worker.ts": "67daa81a94e615c2b2b7b99c20f02c17a0ee4163d7144936162a6dfde8ead555",
+    "scripts/managed-test-target.ts": "be04eefb20fdbd05f23921597c2f035ba4bd9eb2204a22abb27177c42067cb5a",
+    "scripts/verify-managed-document-worker-ready.sql": "e5f3657e4ae2dd23f4ab585044c611278c5a322560186c21f127ea994be43eb4",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/managed-schema-worker-successor-93.json": "727c71d2a058c096fd72475daa4b3efc33c5dbaa15c6f91becb9fbbf0ce71383",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/cr-a01-managed-runner.md": "32799cad74d77c3f4a3dc0b3cf8ef3cc9ad89fecc2c446ae3210d79deacad3be"
+  },
+  "admissionChecks": [
+    {
+      "case": "missing-ledger",
+      "stage": "admission",
+      "detachedNetworkStubReached": false,
+      "logSha256": "9b1e928e73206a653d8616823ad52044fac690cdc5d4b5b8acc52c13f6ea30f6"
+    },
+    {
+      "case": "previous-run",
+      "stage": "admission",
+      "detachedNetworkStubReached": false,
+      "logSha256": "9b1e928e73206a653d8616823ad52044fac690cdc5d4b5b8acc52c13f6ea30f6"
+    },
+    {
+      "case": "shared-target",
+      "stage": "admission",
+      "detachedNetworkStubReached": false,
+      "logSha256": "9b1e928e73206a653d8616823ad52044fac690cdc5d4b5b8acc52c13f6ea30f6"
+    },
+    {
+      "case": "valid-local-receipt",
+      "stage": "readiness",
+      "detachedNetworkStubReached": true,
+      "logSha256": "68950430921b8f3a959837b0ef5b2863c5311f78b4739d2fb35836bd3ed3885d"
+    },
+    {
+      "case": "wrong-packet",
+      "stage": "admission",
+      "detachedNetworkStubReached": false,
+      "logSha256": "9b1e928e73206a653d8616823ad52044fac690cdc5d4b5b8acc52c13f6ea30f6"
+    },
+    {
+      "case": "wrong-target",
+      "stage": "admission",
+      "detachedNetworkStubReached": false,
+      "logSha256": "9b1e928e73206a653d8616823ad52044fac690cdc5d4b5b8acc52c13f6ea30f6"
+    }
+  ],
+  "verification": {
+    "node": "22.23.4",
+    "testFiles": 5,
+    "testsPassed": 282,
+    "testLogSha256": "148504f5341a444535e6c2bbe1fcbfcc05badf643dd5251aa433b05eecaeec6e",
+    "commands": [
+      "scoped Prettier",
+      "scoped ESLint",
+      "npm run typecheck",
+      "npm run lint",
+      "npm run build",
+      "npm run build:worker"
+    ],
+    "exitCode": 0,
+    "lintExistingWarnings": 4,
+    "buildLogSha256": "908cb23c4cda2590c023c5d341cfea52f625fc03dd0a531b2c86f6205c705b05"
+  },
+  "unexecuted": [
+    "Managed target fixture creation and actual HTTP upload",
+    "Managed worker recovery and physical Storage cleanup",
+    "Private fixture retention reconciliation"
+  ]
+}

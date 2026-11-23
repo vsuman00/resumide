@@ -1,0 +1,427 @@
+{
+  "schemaVersion": "reliability-regression-manifest/1.0.0",
+  "task": "CR-C01",
+  "status": "INVENTORY_ONLY_NO_REPAIR_CLAIM",
+  "provenance": {
+    "schemaVersion": "reliability-regressions/1.0.0",
+    "datasetType": "known_synthetic_development",
+    "origin": "preserved_consumer_audit_and_authored_source_review_hypotheses",
+    "humanValidation": "not_evaluated",
+    "representativeValidity": false,
+    "externalAtsValidation": false,
+    "unseenHoldout": false,
+    "privateCandidateMaterial": false,
+    "baselineHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+    "baselineSourceInputs": 615
+  },
+  "baseline": {
+    "head": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+    "dirtyWorkingTree": true,
+    "sourceInputCount": 615,
+    "sourceManifest": "tasks/agent-handoffs/2026-11-09-consumer-validation/source-manifest.json"
+  },
+  "fixture": {
+    "path": "tests/fixtures/reliability-regressions.ts",
+    "sha256": "22788ee9f8eb90e9b2aa640946be6fad03819e192fb66491289b5364e1a0ceaa",
+    "caseCount": 25
+  },
+  "cases": [
+    {
+      "group": "unsupportedWriter",
+      "id": "writer-invented-spelled-out-impact",
+      "baselineStatus": "observed_failure",
+      "repairTasks": ["CR-A11", "CR-A12", "CR-A13"],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-ats/counterfactual-results.json",
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "unsupportedWriter",
+      "id": "writer-invented-lowercase-team-scope",
+      "baselineStatus": "observed_failure",
+      "repairTasks": ["CR-A11", "CR-A12", "CR-A13"],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-ats/counterfactual-results.json",
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "unsupportedWriter",
+      "id": "writer-invented-causal-outcome",
+      "baselineStatus": "observed_failure",
+      "repairTasks": ["CR-A11", "CR-A12", "CR-A13"],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-ats/counterfactual-results.json",
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "unsupportedWriter",
+      "id": "writer-unlisted-lowercase-skill",
+      "baselineStatus": "observed_failure",
+      "repairTasks": ["CR-A11", "CR-A12", "CR-A13"],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-ats/counterfactual-results.json",
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "unsupportedWriter",
+      "id": "writer-summary-invented-lowercase-scope",
+      "baselineStatus": "observed_failure",
+      "repairTasks": ["CR-A11", "CR-A12", "CR-A13"],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-ats/counterfactual-results.json",
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "unsupportedDownstream",
+      "id": "rewrite-source-id-schema-does-not-close-semantic-gap",
+      "baselineStatus": "observed_failure",
+      "repairTasks": ["CR-A12", "CR-A13"],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-ats/downstream-results.json",
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "unsupportedDownstream",
+      "id": "review-schema-does-not-close-semantic-gap",
+      "baselineStatus": "observed_failure",
+      "repairTasks": ["CR-A12", "CR-A13"],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-ats/downstream-results.json",
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "correctionFlow",
+      "id": "correction-flow-consumer-expectation",
+      "baselineStatus": "observed_failure",
+      "repairTasks": [
+        "CR-A02",
+        "CR-A03",
+        "CR-C02",
+        "CR-A04",
+        "CR-U01",
+        "CR-U02",
+        "CR-U18"
+      ],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-journeys/results.json",
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "aliases",
+      "id": "jd-approved-taxonomy-alias-js",
+      "baselineStatus": "observed_coverage_gap",
+      "repairTasks": ["CR-A07", "CR-A08", "CR-A09"],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-ats/counterfactual-results.json",
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "aliases",
+      "id": "jd-approved-taxonomy-alias-postgres",
+      "baselineStatus": "observed_coverage_gap",
+      "repairTasks": ["CR-A07", "CR-A08", "CR-A09"],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-ats/counterfactual-results.json",
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "nativeProfile",
+      "id": "native-profile-short-page-array",
+      "baselineStatus": "unexecuted_source_hypothesis",
+      "repairTasks": ["CR-A01"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "nativeProfile",
+      "id": "native-profile-overlong-page-array",
+      "baselineStatus": "unexecuted_source_hypothesis",
+      "repairTasks": ["CR-A01"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "nativeProfile",
+      "id": "native-profile-missing-multipage-boundaries",
+      "baselineStatus": "unexecuted_source_hypothesis",
+      "repairTasks": ["CR-A01"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "nativeProfile",
+      "id": "native-profile-single-page-legacy-fallback",
+      "baselineStatus": "unexecuted_guard_control",
+      "repairTasks": ["CR-A01"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "nativeProfile",
+      "id": "native-profile-explicit-no-text-pages",
+      "baselineStatus": "unexecuted_guard_control",
+      "repairTasks": ["CR-A01"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "nativeProfile",
+      "id": "native-profile-mixed-no-text-page",
+      "baselineStatus": "unexecuted_guard_control",
+      "repairTasks": ["CR-A01"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "relationshipHypotheses",
+      "id": "writer-direction-reversal",
+      "baselineStatus": "unexecuted_source_hypothesis",
+      "repairTasks": ["CR-A11"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "relationshipHypotheses",
+      "id": "writer-negation-removal",
+      "baselineStatus": "unexecuted_source_hypothesis",
+      "repairTasks": ["CR-A11"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "relationshipHypotheses",
+      "id": "writer-metric-relationship-swap",
+      "baselineStatus": "unexecuted_source_hypothesis",
+      "repairTasks": ["CR-A11"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "entityHypotheses",
+      "id": "distinct-employers-are-not-global-field-conflicts",
+      "baselineStatus": "unexecuted_source_hypothesis",
+      "repairTasks": ["CR-A02", "CR-A03", "CR-C02"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "entityHypotheses",
+      "id": "correction-requires-entity-target",
+      "baselineStatus": "unexecuted_source_hypothesis",
+      "repairTasks": ["CR-A02", "CR-A03", "CR-C02"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "entityHypotheses",
+      "id": "correction-for-unimported-fact",
+      "baselineStatus": "unexecuted_source_hypothesis",
+      "repairTasks": ["CR-A02", "CR-A03", "CR-C02"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "jdMeaning",
+      "id": "explicit-unfamiliar-jd-clause",
+      "baselineStatus": "unexecuted_source_hypothesis",
+      "repairTasks": ["CR-A07", "CR-A08", "CR-A09", "CR-A10"],
+      "baselineEvidence": null,
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "jdMeaning",
+      "id": "framework-alternative-not-two-mandatory-skills",
+      "baselineStatus": "observed_review_state",
+      "repairTasks": ["CR-A07", "CR-A08", "CR-A09", "CR-A10"],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-ats/python-ai-coverage-results.json",
+      "newExecutionClaimed": false
+    },
+    {
+      "group": "jdMeaning",
+      "id": "experience-range-preserves-upper-bound",
+      "baselineStatus": "observed_review_state",
+      "repairTasks": ["CR-A07", "CR-A08", "CR-A09", "CR-A10"],
+      "baselineEvidence": "tasks/agent-handoffs/2026-11-09-consumer-ats/python-ai-coverage-results.json",
+      "newExecutionClaimed": false
+    }
+  ],
+  "findings": [
+    {
+      "finding": "CV01",
+      "class": "authentication_environment",
+      "baseline": "Two first-call HTTP401 attempts; quality unmeasured.",
+      "tier": "bounded_live_provider",
+      "blocker": "No new call without a concrete authentication correction.",
+      "tasks": ["CR-R01", "CR-R02", "CR-U10", "CR-G01"],
+      "fixtureCases": []
+    },
+    {
+      "finding": "CV02",
+      "class": "compiler_environment",
+      "baseline": "Image unavailable; two pinned asset-transport build failures.",
+      "tier": "actual_worker_compiler_browser",
+      "blocker": "Current immutable compiler build/runtime unavailable.",
+      "tasks": ["CR-R12", "CR-R14", "CR-R18", "CR-U08", "CR-U11"],
+      "fixtureCases": []
+    },
+    {
+      "finding": "CV03",
+      "class": "observed_semantic_defect",
+      "baseline": "Five unsafe writer vectors and two downstream paths retained unsupported claims.",
+      "tier": "pure_unit_injected_transport_then_live_quality",
+      "blocker": "Fact and relationship support not implemented; no automatic canonical fabrication demonstrated.",
+      "tasks": ["CR-A11", "CR-A12", "CR-A13", "CR-A14", "CR-U05", "CR-U06"],
+      "fixtureCases": [
+        "writer-invented-spelled-out-impact",
+        "writer-invented-lowercase-team-scope",
+        "writer-invented-causal-outcome",
+        "writer-unlisted-lowercase-skill",
+        "writer-summary-invented-lowercase-scope",
+        "rewrite-source-id-schema-does-not-close-semantic-gap",
+        "review-schema-does-not-close-semantic-gap"
+      ]
+    },
+    {
+      "finding": "CV04",
+      "class": "observed_correction_flow_defect",
+      "baseline": "Correction persisted separately; canonical kept original and did not disclose repeat correction.",
+      "tier": "pure_projection_then_managed_sql_browser_export",
+      "blocker": "Target/provenance and SQL admission contracts precede materialization.",
+      "tasks": [
+        "CR-A02",
+        "CR-A03",
+        "CR-C02",
+        "CR-A04",
+        "CR-U01",
+        "CR-U02",
+        "CR-U18"
+      ],
+      "fixtureCases": ["correction-flow-consumer-expectation"]
+    },
+    {
+      "finding": "CV05",
+      "class": "ocr_quality_and_integration_gap",
+      "baseline": "Worker controls passed separately; uploaded scans unsupported. Block-font CER0.17105 legacy and0.18421 fusion remain failed.",
+      "tier": "locked_synthetic_runtime_then_owned_upload_worker_browser",
+      "blocker": "No production reuse of syntheticOcr; declared quality/admission and actual integration required.",
+      "tasks": ["CR-A01", "CR-A05", "CR-A06", "CR-R15", "CR-R24", "CR-U09"],
+      "fixtureCases": []
+    },
+    {
+      "finding": "CV06",
+      "class": "observed_draft_coverage_gap",
+      "baseline": "JS/Postgres aliases undiscovered; no adopted universal taxonomy promise.",
+      "tier": "pure_parser_then_sql_rpc_browser",
+      "blocker": "Raw quotation, concept mapping and relation persistence need versioned contracts.",
+      "tasks": ["CR-A07", "CR-A08", "CR-A09", "CR-A10", "CR-U04"],
+      "fixtureCases": [
+        "jd-approved-taxonomy-alias-js",
+        "jd-approved-taxonomy-alias-postgres"
+      ]
+    },
+    {
+      "finding": "CV07",
+      "class": "generic_build_fact_guard_gap",
+      "baseline": "Generic content rewrite has a different fact guard from resume mode.",
+      "tier": "pure_server_then_controlled_browser_actual_compile",
+      "blocker": "Shared server-side all-mode factual support and context-bound confirmation required.",
+      "tasks": ["CR-A11", "CR-R06", "CR-U07", "CR-U08"],
+      "fixtureCases": []
+    },
+    {
+      "finding": "CV08",
+      "class": "availability_error_classification",
+      "baseline": "Known absent compiler image returned cleanup_failed and process quarantine.",
+      "tier": "mocked_container_boundary_then_actual_worker_recovery",
+      "blocker": "Distinguish known absence from ambiguous create/cleanup without weakening isolation.",
+      "tasks": ["CR-R12", "CR-R13", "CR-R14", "CR-U11"],
+      "fixtureCases": []
+    }
+  ],
+  "coverageGaps": [
+    {
+      "gap": "Native text completeness and multi-entity meaning",
+      "status": "source_review_hypotheses_not_yet_executed",
+      "tasks": ["CR-A01", "CR-A02", "CR-A03"],
+      "note": "Eight-character availability is not accuracy. Owner-file presence/conflicts remain one-off observations, not fixture truth."
+    },
+    {
+      "gap": "JD role coverage versus rubric meaning",
+      "status": "narrow_known_synthetic_guard_pass",
+      "tasks": ["CR-A07", "CR-A08", "CR-A09", "CR-A10"],
+      "note": "21 vocabulary strings across22 requirements and9checks are not21 verified qualifications."
+    },
+    {
+      "gap": "Uncalibrated scores and factual export",
+      "status": "withholding_and_confirmation_guards_retained",
+      "tasks": ["CR-A15", "CR-U18", "CR-G02"],
+      "note": "No numerical policy adoption, employer ATS score or representative validity from this inventory."
+    },
+    {
+      "gap": "Actual auth/email/OAuth, private history/deletion and accessibility",
+      "status": "conditional_or_partial_actual_evidence",
+      "tasks": [
+        "CR-U12",
+        "CR-U13",
+        "CR-U14",
+        "CR-U15",
+        "CR-U16",
+        "CR-U17",
+        "CR-U19"
+      ],
+      "note": "Synthetic sessions are not actual email/OAuth delivery or a human assistive-technology study."
+    },
+    {
+      "gap": "Global leases, real load/restore/signals and cleanup",
+      "status": "actual_isolated_target_required",
+      "tasks": [
+        "CR-R08",
+        "CR-R11",
+        "CR-R17",
+        "CR-R20",
+        "CR-R21",
+        "CR-R22",
+        "CR-R23"
+      ],
+      "note": "Never globally claim then filter on shared Supabase; Docker DB and loopback-only historical verifiers remain ineligible."
+    },
+    {
+      "gap": "Current images and full advisory disposition",
+      "status": "runtime_blocked_or_unmeasured",
+      "tasks": ["CR-R12", "CR-R14", "CR-R18", "CR-R24"],
+      "note": "Green npm production audit does not clear native/container advisories or parser-host admission."
+    }
+  ],
+  "receiptHashes": {
+    "docs/evaluation/CONSUMER_VALIDATION_20261109.md": "092a46d0381e1920c0a9c47e5b310780e89e5e538d5ad691251a31eb7db49a49",
+    "docs/evaluation/CONSUMER_VALIDATION_20261109.json": "35b412820a134853d26858fe06a8d55d2398b7bf001d1feef96ba621ceca568b",
+    "tasks/agent-handoffs/2026-11-09-consumer-validation/source-manifest.json": "e0e497c1f11771ec8af01fd62834f15e77e963dd5907f5d5c46ee3b7273b5fc3",
+    "tasks/agent-handoffs/2026-11-09-consumer-ats/counterfactual-results.json": "028bf354de056cbee41901d98b28426709d964f9e93122fb1b51613cc6e8ff6a",
+    "tasks/agent-handoffs/2026-11-09-consumer-ats/downstream-results.json": "19d7bcd890f5ad74aa40d2b30ee7a9c49bf01210757a5b53f6ea8489261a5a45",
+    "tasks/agent-handoffs/2026-11-09-consumer-ats/python-ai-coverage-results.json": "f76456daf7d11c64d85e691c576dc66eebf3bd615d5f4913ee037848ebe5a070",
+    "tasks/agent-handoffs/2026-11-09-consumer-journeys/results.json": "a1dc6fd348ab0b2de6629af6e46e7de06fd9580bf5f1f8b031f280f439d560ab"
+  },
+  "sourceHashes": {
+    "app/lib/server/writer-grounding.ts": "1bd479ea61c4ff1edb1b4a31168447b10045360e0cb57f09e07b8b133675d9d6",
+    "app/lib/server/writer-proposals.ts": "cc1a8c3fd3e63c64f39463e708d8426bb9d20e35b5c9b59f12c99e7af3675e5c",
+    "app/lib/server/rewrite-ai.ts": "7d93c4db10cf4eac473c4cf22a31578e0a07cdef6c9952b708659dd1f026e300",
+    "app/lib/server/rewrite-service.ts": "c1171ef5b8b51431eee16d3fd9541035d8c86a1f9e741c9179f5921a659f5337",
+    "app/lib/server/qualitative-prose.ts": "a88c869032919317680f3aba633e5fd2cf46cfb79483daea4424b0939b3a654a",
+    "app/lib/server/qualitative-stage.ts": "d541c2aa000a8b79c48e5df75c21c0d6b66d2b568921e4a09ba8df1f16c64032",
+    "app/lib/server/canonical-content.ts": "b0e4f8d7f0fb032252fbca538ba2207df6cbd27e33b382a5f9ffb29bea511bf5",
+    "app/lib/server/canonical-repository.ts": "e3006273398857eb9c73100d45334d2c26324a032d9a9dee03c87a8f8986cf4b",
+    "app/lib/server/evidence-review.ts": "ebe01bc60589b48725544bc28668f66e854d71010dffafebf78d7d272d89476c",
+    "app/lib/server/job-requirements.ts": "21d541ee26daca3f9159a7ac1fe140a3f1617b8bab7dc3f275d113e3c01cb20a",
+    "app/lib/server/job-domain.ts": "0fe2151018a43ba6fbd5fbc0a87d0ee3972d903a6ce55f5b8b08e7603a80dbc2",
+    "app/lib/server/document-extraction.ts": "008a4461b8ad6b5375ffb81ff7d90fb38ee8aeaed191b4c3087dd8a9ad71ee59",
+    "app/lib/server/ocr/pdf-detection.ts": "fecea75867dfa0724bb95d26df552b635c18b51856ec786dd71b4577b8bf1a17",
+    "app/lib/server/ocr/selective.ts": "2d647df8cd51d36fd1fbd489cc7464d8ef3b8f098fc674743b871ea8a7f04325",
+    "app/lib/server/score-v2-contract.ts": "99cbdfa7220d620e07eef937a8d5162814a4dde9b9105a395565fd1290658f88",
+    "app/lib/server/build-assist.ts": "fcf452ab04fd247de4374727a3d8e3b0ae551420ce5f5659f6d684e9b65e3b65"
+  },
+  "locks": {
+    "existingFailedReceiptsUnchanged": true,
+    "noThresholdChanges": true,
+    "developmentCasesNotUnseenHoldout": true,
+    "hypothesesMustBeReproducedBeforeFixes": true,
+    "newFixtureVersionsPreservePriorLabels": true,
+    "realCandidateMaterialExcluded": true,
+    "noNewAppOrProviderDbExecution": true
+  },
+  "limits": {
+    "sourceReviewRelationshipAndEntityCases": "not_yet_executed",
+    "aliasHistoricalIdContainsApproved": "label_only_no_taxonomy_adoption_claim",
+    "correctionExpectation": "requires_real_propagation_not_warning_only",
+    "statisticalOrExternalValidity": false
+  }
+}

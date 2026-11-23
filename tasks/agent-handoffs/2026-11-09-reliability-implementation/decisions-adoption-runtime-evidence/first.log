@@ -1,0 +1,109 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ✓ tests/unit/jd-clause-order-http-route.test.ts (12 tests) 149ms
+ ❯ tests/unit/jd-clause-order-http.test.ts (28 tests | 9 failed) 159ms
+     ✓ parses only decision/undo and requires the exact independent accept acknowledgement 19ms
+     ✓ rejects duplicate decoded form and nested JSON keys, files and wrong content types 4ms
+     × retains the 64KiB boundary and bounded cancellation without waiting for hostile cleanup 2ms
+     ✓ executes the real repository with actual profile/readiness and the original four-argument Native command 13ms
+     ✓ fails denied readiness before writing without a legacy RPC fallback 10ms
+     ✓ maps exact conflict versus unconfirmed writes 409/'review_again' 7ms
+     ✓ maps exact conflict versus unconfirmed writes 503/'retry_exact' 6ms
+     ✓ maps exact conflict versus unconfirmed writes 503/'retry_exact' 8ms
+     ✓ keeps unknown transport errors private and retains exact retry guidance 5ms
+     ✓ accepts only an accepted2 receipt and a distinct canonical lowercase undo key 1ms
+     × proves owned accepted2/event consistency and restores the original two-revision base through guarded undo 1ms
+     ✓ refuses accepted event mismatch owner_id before undo 0ms
+     ✓ refuses accepted event mismatch organization_id before undo 0ms
+     ✓ refuses accepted event mismatch resume_id before undo 0ms
+     ✓ refuses accepted event mismatch analysis_id before undo 0ms
+     ✓ refuses accepted event mismatch base_version_id before undo 0ms
+     ✓ refuses accepted event mismatch result_version_id before undo 0ms
+     ✓ refuses accepted event mismatch idempotency_key before undo 0ms
+     ✓ refuses accepted event mismatch retention_policy_id before undo 0ms
+     ✓ refuses a changed original command, stored receipt and foreign accepted source before dispatch 0ms
+     × refuses post-RPC undo event mismatch command as unknown, with no second undo 2ms
+     × refuses post-RPC undo event mismatch result as unknown, with no second undo 0ms
+     × refuses post-RPC undo event mismatch owner_id as unknown, with no second undo 1ms
+     × refuses post-RPC undo event mismatch base_version_id as unknown, with no second undo 0ms
+     × refuses post-RPC undo event mismatch result_version_id as unknown, with no second undo 0ms
+     × refuses post-RPC undo event mismatch idempotency_key as unknown, with no second undo 0ms
+     ✓ preserves exact-key replay while never exposing the internal receipt1 1ms
+     × maps stale guarded undo to review_again and unknown undo to retry_exact 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/jd-clause-order-http.test.ts > bounded clause-order HTTP and v2 undo adapter > retains the 64KiB boundary and bounded cancellation without waiting for hostile cleanup
+Error: The clause-order request could not be completed.
+ ❯ Module.readJdClauseOrderHttpForm app/lib/server/jd-clause-order-http.ts:218:15
+    216|           : values.has("reviewAcknowledgement"))
+    217|       )
+    218|         throw new JdClauseOrderHttpError(422);
+       |               ^
+    219|       budget.check();
+    220|       return {
+ ❯ tests/unit/jd-clause-order-http.test.ts:65:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/9]⎯
+
+ FAIL  tests/unit/jd-clause-order-http.test.ts > bounded clause-order HTTP and v2 undo adapter > proves owned accepted2/event consistency and restores the original two-revision base through guarded undo
+Error: The clause-order request could not be completed.
+ ❯ validateJdClauseOrderUndoEvent app/lib/server/jd-clause-order-http.ts:317:11
+    315|     return { command, receipt: stored };
+    316|   } catch {
+    317|     throw new JdClauseOrderHttpError(422);
+       |           ^
+    318|   }
+    319| }
+ ❯ Module.executeJdClauseOrderHttp app/lib/server/jd-clause-order-http.ts:374:3
+ ❯ tests/unit/jd-clause-order-http.test.ts:79:170
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/9]⎯
+
+ FAIL  tests/unit/jd-clause-order-http.test.ts > bounded clause-order HTTP and v2 undo adapter > refuses post-RPC undo event mismatch command as unknown, with no second undo
+ FAIL  tests/unit/jd-clause-order-http.test.ts > bounded clause-order HTTP and v2 undo adapter > refuses post-RPC undo event mismatch result as unknown, with no second undo
+ FAIL  tests/unit/jd-clause-order-http.test.ts > bounded clause-order HTTP and v2 undo adapter > refuses post-RPC undo event mismatch owner_id as unknown, with no second undo
+ FAIL  tests/unit/jd-clause-order-http.test.ts > bounded clause-order HTTP and v2 undo adapter > refuses post-RPC undo event mismatch base_version_id as unknown, with no second undo
+ FAIL  tests/unit/jd-clause-order-http.test.ts > bounded clause-order HTTP and v2 undo adapter > refuses post-RPC undo event mismatch result_version_id as unknown, with no second undo
+ FAIL  tests/unit/jd-clause-order-http.test.ts > bounded clause-order HTTP and v2 undo adapter > refuses post-RPC undo event mismatch idempotency_key as unknown, with no second undo
+AssertionError: expected Error: The clause-order request could not… { …(3) } to match object { status: 503, …(2) }
+
+- Expected
++ Received
+
+- {
+-   "reason": "invalid_result",
+-   "recovery": "retry_exact",
+-   "status": 503,
++ JdClauseOrderHttpError {
++   "reason": "invalid_input",
++   "recovery": "review_again",
++   "status": 422,
+  }
+
+ ❯ tests/unit/jd-clause-order-http.test.ts:82:557
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/9]⎯
+
+ FAIL  tests/unit/jd-clause-order-http.test.ts > bounded clause-order HTTP and v2 undo adapter > maps stale guarded undo to review_again and unknown undo to retry_exact
+AssertionError: expected 422 to be 409 // Object.is equality
+
+- Expected
++ Received
+
+- 409
++ 422
+
+ ❯ tests/unit/jd-clause-order-http.test.ts:84:596
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/9]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  9 failed | 31 passed (40)
+   Start at  04:50:03
+   Duration  659ms (transform 578ms, setup 0ms, import 853ms, tests 308ms, environment 0ms)
+

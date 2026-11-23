@@ -1,4 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
+import { OWNED_LEGACY_AI_USAGE_PROFILE } from "../../app/lib/server/owned-legacy-ai-usage-profile";
+import { AI_BUDGET_SOURCE_PROFILE } from "../../app/lib/server/ai-budget-source-profile";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { OWNED_AI_BUDGET_EXPORT_PROFILE } from "../../app/lib/server/owned-ai-budget-export-profile";
+import { OWNED_AI_DISPOSITION_PROFILE } from "../../app/lib/server/owned-ai-disposition-profile";
+import {
+  INITIAL_FEEDBACK_PROFILE,
+  OWNED_AI_RETIREMENT_PROFILE,
+} from "../../app/lib/server/initial-feedback-profile";
 import {
   buildExportManifest,
   retentionCutoff,
@@ -14,10 +24,145 @@ import {
   type RetentionRepository,
 } from "../../app/lib/server/retention";
 
-const database = vi.hoisted(() => ({ from: vi.fn(), rpc: vi.fn() }));
-vi.mock("../../app/lib/server/supabase", () => ({
-  createSupabaseAdminClient: () => database,
+const database = vi.hoisted(() => ({
+  from: vi.fn(),
+  rpc: vi.fn(),
+  rewriteExport: vi.fn(),
 }));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseAdminClient: () => ({
+    from: database.from,
+    rpc: (name: string, args: unknown) =>
+      ownedAiFixtureReply(name, args) ??
+      (name === "export_legacy_scoring_inputs"
+        ? Promise.resolve({
+            data: {
+              schemaVersion: "legacy-scoring-export/1.0.0",
+              scoringInputs: [],
+            },
+            error: null,
+          })
+        : name === "export_canonical_rewrite_records"
+          ? database.rewriteExport(name, args)
+          : database.rpc(name, args)),
+  }),
+}));
+function ownedAiFixtureReply(name: string, args: unknown) {
+  if (name === "read_owned_legacy_ai_usage_readiness")
+    return Promise.resolve({
+      data: {
+        ...OWNED_LEGACY_AI_USAGE_PROFILE,
+        schemaReady: true,
+        exportExecutable: true,
+      },
+      error: null,
+    });
+  if (name === "export_owned_legacy_ai_usage_records")
+    return Promise.resolve({
+      data: {
+        schemaVersion: "owned-legacy-ai-usage-export/1.0.0",
+        ownerId: (args as { p_user_id: string }).p_user_id,
+        records: [],
+      },
+      error: null,
+    });
+  if (name === "read_ai_budget_source_readiness")
+    return Promise.resolve({
+      data: {
+        ...AI_BUDGET_SOURCE_PROFILE,
+        schemaReady: true,
+        reserveExecutable: false,
+        exportExecutable: true,
+      },
+      error: null,
+    });
+  if (name === "export_owned_ai_budget_sources")
+    return Promise.resolve({
+      data: {
+        schemaVersion: "owned-ai-budget-sources/2.0.0",
+        ownerId: (args as { p_user_id: string }).p_user_id,
+        sources: [],
+      },
+      error: null,
+    });
+  if (name === "read_owned_ai_disposition_readiness")
+    return Promise.resolve({
+      data: {
+        ...OWNED_AI_DISPOSITION_PROFILE,
+        schemaReady: true,
+        exportExecutable: true,
+        accessExecutable: false,
+      },
+      error: null,
+    });
+  if (name === "export_owned_ai_disposition_records")
+    return Promise.resolve({
+      data: {
+        schemaVersion: "owned-ai-disposition-export/1.0.0",
+        ownerId: (args as { p_user_id: string }).p_user_id,
+        accounts: [],
+        operations: [],
+      },
+      error: null,
+    });
+  const data =
+    name === "read_owned_ai_budget_export_readiness"
+      ? {
+          ...OWNED_AI_BUDGET_EXPORT_PROFILE,
+          schemaReady: true,
+          exportExecutable: true,
+        }
+      : name === "export_owned_ai_budget_records"
+        ? {
+            schemaVersion: "owned-ai-budget-export/1.0.0",
+            ownerId: (args as { p_user_id: string }).p_user_id,
+            operations: [],
+            attempts: [],
+            events: [],
+            reconciliationOperators: [],
+            operatorActions: [],
+            omissions: {
+              sharedPools: "not_subject_attributable",
+              periodOpenings: "not_subject_attributable",
+              foreignOperatorIdentity: "redacted",
+              foreignTargetHistory: "redacted",
+            },
+          }
+        : name === "read_initial_feedback_readiness"
+          ? {
+              ...INITIAL_FEEDBACK_PROFILE,
+              schemaReady: true,
+              readerExecutable: true,
+              prepareExecutable: true,
+              claimExecutable: true,
+              settleExecutable: true,
+              finishExecutable: true,
+              usageExecutable: true,
+              exportExecutable: true,
+            }
+          : name === "export_initial_feedback_records"
+            ? {
+                schemaVersion: "initial-feedback-export/1.0.0",
+                operations: [],
+                attempts: [],
+                publications: [],
+              }
+            : name === "read_owned_ai_retirement_readiness"
+              ? {
+                  ...OWNED_AI_RETIREMENT_PROFILE,
+                  schemaReady: true,
+                  exportExecutable: true,
+                }
+              : name === "export_owned_ai_retirement_records"
+                ? {
+                    schemaVersion: "owned-ai-retirement-export/1.0.0",
+                    retirements: [],
+                  }
+                : undefined;
+  return data === undefined
+    ? undefined
+    : Promise.resolve({ data, error: null });
+}
 function mockCanonicalExport(response: unknown) {
   database.rpc.mockImplementation(() => {
     const r = response as {
@@ -29,6 +174,14 @@ function mockCanonicalExport(response: unknown) {
       data: r.data
         ? {
             ...r.data,
+            // Complete workspace fixtures now require the ten ledger collections.
+            ...Object.fromEntries(
+              entryMetadataCollections.map((key) => [key, []]),
+            ),
+            // Paired regroup exports also require five valid empty collections.
+            ...Object.fromEntries(
+              regroupMetadataCollections.map((key) => [key, []]),
+            ),
             jobRequirementVersions: [],
             jobRequirements: [],
             authoringEvents: [],
@@ -40,7 +193,7 @@ function mockCanonicalExport(response: unknown) {
 
 describe("privacy operations", () => {
   it("exports immutable evidence and corrections only through the request owner's filters", async () => {
-    const owner = "owner-1";
+    const owner = "60000000-0000-4000-8000-000000000001";
     const evidence = {
       id: "attempt-1",
       owner_id: owner,
@@ -70,7 +223,11 @@ describe("privacy operations", () => {
             table === "document_evidence_attempts"
               ? [
                   evidence,
-                  { ...evidence, id: "other-attempt", owner_id: "other-owner" },
+                  {
+                    ...evidence,
+                    id: "other-attempt",
+                    owner_id: "60000000-0000-4000-8000-000000000002",
+                  },
                 ]
               : table === "evidence_corrections"
                 ? [
@@ -78,7 +235,7 @@ describe("privacy operations", () => {
                     {
                       ...correction,
                       id: "other-correction",
-                      owner_id: "other-owner",
+                      owner_id: "60000000-0000-4000-8000-000000000002",
                     },
                   ]
                 : [];
@@ -91,10 +248,10 @@ describe("privacy operations", () => {
     }));
     const repository = new SupabasePrivacyRequestRepository();
     const manifest = await repository.buildExportManifest({
-      id: "request-1",
+      id: "60000000-0000-4000-8000-000000000010",
       kind: "export",
       userId: owner,
-      organizationId: "organization-1",
+      organizationId: "60000000-0000-4000-8000-000000000007",
       attempt: 1,
       workerId: "worker-1",
     });
@@ -115,7 +272,9 @@ describe("privacy operations", () => {
       { p_user_id: owner },
     );
     expect(manifest.records.authoringEvents).toEqual([]);
-    expect(JSON.stringify(manifest)).not.toContain("other-owner");
+    expect(JSON.stringify(manifest)).not.toContain(
+      "60000000-0000-4000-8000-000000000002",
+    );
   });
 
   it.each([
@@ -152,10 +311,10 @@ describe("privacy operations", () => {
     }));
     await expect(
       new SupabasePrivacyRequestRepository().buildExportManifest({
-        id: "request-1",
+        id: "60000000-0000-4000-8000-000000000010",
         kind: "export",
-        userId: "owner-1",
-        organizationId: "organization-1",
+        userId: "60000000-0000-4000-8000-000000000001",
+        organizationId: "60000000-0000-4000-8000-000000000007",
         attempt: 1,
         workerId: "worker-1",
       }),
@@ -169,10 +328,10 @@ describe("privacy operations", () => {
     mockCanonicalExport({ data: { resumeFacts: [] }, error: null });
     await expect(
       new SupabasePrivacyRequestRepository().buildExportManifest({
-        id: "request-1",
+        id: "60000000-0000-4000-8000-000000000010",
         kind: "export",
-        userId: "owner-1",
-        organizationId: "organization-1",
+        userId: "60000000-0000-4000-8000-000000000001",
+        organizationId: "60000000-0000-4000-8000-000000000007",
         attempt: 1,
         workerId: "worker-1",
       }),
@@ -199,10 +358,10 @@ describe("privacy operations", () => {
     );
     await expect(
       new SupabasePrivacyRequestRepository().buildExportManifest({
-        id: "request-1",
+        id: "60000000-0000-4000-8000-000000000010",
         kind: "export",
-        userId: "owner-1",
-        organizationId: "org-1",
+        userId: "60000000-0000-4000-8000-000000000001",
+        organizationId: "60000000-0000-4000-8000-000000000008",
         attempt: 1,
         workerId: "worker-1",
       }),
@@ -212,7 +371,7 @@ describe("privacy operations", () => {
   it("builds a versioned export manifest without raw resume text", () => {
     const manifest = buildExportManifest({
       generatedAt: "2026-09-11T00:00:00.000Z",
-      account: { id: "user-1" },
+      account: { id: "60000000-0000-4000-8000-000000000003" },
       records: {
         analyses: [{ id: "analysis-1", status: "completed" }],
         consents: [
@@ -242,10 +401,10 @@ describe("privacy operations", () => {
   it("completes an export request and is safe to replay", async () => {
     const repository: PrivacyRequestRepository = {
       claim: vi.fn().mockResolvedValue({
-        id: "request-1",
+        id: "60000000-0000-4000-8000-000000000010",
         kind: "export",
-        userId: "user-1",
-        organizationId: "org-1",
+        userId: "60000000-0000-4000-8000-000000000003",
+        organizationId: "60000000-0000-4000-8000-000000000008",
         attempt: 1,
         workerId: "privacy-worker-1",
       }),
@@ -262,7 +421,7 @@ describe("privacy operations", () => {
     );
     expect(repository.complete).toHaveBeenCalledWith(
       expect.objectContaining({
-        id: "request-1",
+        id: "60000000-0000-4000-8000-000000000010",
         workerId: "privacy-worker-1",
       }),
       { version: "resumide-export-v1" },
@@ -273,10 +432,10 @@ describe("privacy operations", () => {
   it("deletes every object before completing deletion", async () => {
     const repository: PrivacyRequestRepository = {
       claim: vi.fn().mockResolvedValue({
-        id: "request-2",
+        id: "60000000-0000-4000-8000-000000000011",
         kind: "deletion",
-        userId: "user-1",
-        organizationId: "org-1",
+        userId: "60000000-0000-4000-8000-000000000003",
+        organizationId: "60000000-0000-4000-8000-000000000008",
         attempt: 1,
         workerId: "privacy-worker-1",
       }),
@@ -293,17 +452,17 @@ describe("privacy operations", () => {
     const remove = vi.fn().mockResolvedValue(undefined);
 
     await processPrivacyRequest(repository, remove, {
-      id: "request-2",
+      id: "60000000-0000-4000-8000-000000000011",
       kind: "deletion",
-      userId: "user-1",
-      organizationId: "org-1",
+      userId: "60000000-0000-4000-8000-000000000003",
+      organizationId: "60000000-0000-4000-8000-000000000008",
       attempt: 1,
       workerId: "privacy-worker-1",
     });
 
     expect(remove).toHaveBeenCalledTimes(2);
     expect(repository.complete).toHaveBeenCalledWith(
-      expect.objectContaining({ id: "request-2" }),
+      expect.objectContaining({ id: "60000000-0000-4000-8000-000000000011" }),
       { deleted: true },
     );
   });
@@ -328,7 +487,584 @@ describe("privacy operations", () => {
     expect(repository.fail).toHaveBeenCalledWith(
       "item-1",
       "STORAGE_DELETE_FAILED",
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+        timeoutMs: expect.any(Number),
+      }),
     );
     expect(repository.complete).not.toHaveBeenCalled();
   });
+});
+
+const entryMetadataCollections = [
+  "candidateCorrectionOperations",
+  "candidateCorrectionAssignments",
+  "candidateCorrectionApplications",
+  "canonicalCorrectionSnapshots",
+  "canonicalCorrectionSnapshotFacts",
+  "candidateEntryAssociationBatches",
+  "candidateEntryAssociationGroups",
+  "candidateEntryAssociationMembers",
+  "canonicalEntryAssociationSnapshots",
+  "canonicalEntryAssociationLinks",
+] as const;
+
+describe("complete owned correction and relationship metadata export", () => {
+  it("keeps all ten nonempty metadata collections from the actual workspace RPC consumer", async () => {
+    const owner = "60000000-0000-4000-8000-000000000004";
+    const metadata = Object.fromEntries(
+      entryMetadataCollections.map((key, index) => [
+        key,
+        [
+          {
+            id: `synthetic-${index}`,
+            owner_id: owner,
+            retained: { ordinal: index },
+          },
+        ],
+      ]),
+    );
+    database.from.mockImplementation(() => ({
+      select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
+    }));
+    const legacy = {
+      canonicalResumeVersions: [{ id: "synthetic-version" }],
+      resumeFacts: [],
+      canonicalResumeHeads: [],
+      changeEvents: [],
+      jobRequirementVersions: [],
+      jobRequirements: [],
+      authoringEvents: [],
+      ...Object.fromEntries(regroupMetadataCollections.map((key) => [key, []])),
+    };
+    database.rpc.mockResolvedValue({
+      data: { ...legacy, ...metadata },
+      error: null,
+    });
+    const manifest =
+      await new SupabasePrivacyRequestRepository().buildExportManifest({
+        id: "metadata-request",
+        kind: "export",
+        userId: owner,
+        organizationId: "metadata-org",
+        attempt: 1,
+        workerId: "metadata-worker",
+      });
+    for (const key of entryMetadataCollections)
+      expect(manifest.records[key]).toEqual(metadata[key]);
+    expect(manifest.records.canonicalResumeVersions).toEqual(
+      legacy.canonicalResumeVersions,
+    );
+    expect(database.rpc).toHaveBeenLastCalledWith(
+      "export_resume_workspace_records",
+      { p_user_id: owner },
+    );
+  });
+
+  it.each(entryMetadataCollections)(
+    "fails closed when required %s is absent",
+    async (key) => {
+      const data: Record<string, unknown> = {
+        canonicalResumeVersions: [],
+        resumeFacts: [],
+        canonicalResumeHeads: [],
+        changeEvents: [],
+        jobRequirementVersions: [],
+        jobRequirements: [],
+        authoringEvents: [],
+        ...Object.fromEntries(
+          regroupMetadataCollections.map((name) => [name, []]),
+        ),
+        ...Object.fromEntries(
+          entryMetadataCollections.map((name) => [name, []]),
+        ),
+      };
+      delete data[key];
+      database.from.mockImplementation(() => ({
+        select: () => ({
+          eq: () => Promise.resolve({ data: [], error: null }),
+        }),
+      }));
+      database.rpc.mockResolvedValue({ data, error: null });
+      await expect(
+        new SupabasePrivacyRequestRepository().buildExportManifest({
+          id: "metadata-request",
+          kind: "export",
+          userId: "60000000-0000-4000-8000-000000000004",
+          organizationId: "metadata-org",
+          attempt: 1,
+          workerId: "metadata-worker",
+        }),
+      ).rejects.toThrow("Privacy export data is unavailable.");
+    },
+  );
+
+  it.each(entryMetadataCollections)(
+    "fails closed on malformed or foreign %s without exposing row data",
+    async (key) => {
+      database.from.mockImplementation(() => ({
+        select: () => ({
+          eq: () => Promise.resolve({ data: [], error: null }),
+        }),
+      }));
+      for (const rows of [
+        null,
+        {},
+        [null],
+        [{ owner_id: 7 }],
+        [
+          {
+            owner_id: "60000000-0000-4000-8000-000000000002",
+            private_detail: "synthetic hidden detail",
+          },
+        ],
+      ]) {
+        database.rpc.mockResolvedValue({
+          data: {
+            canonicalResumeVersions: [],
+            resumeFacts: [],
+            canonicalResumeHeads: [],
+            changeEvents: [],
+            jobRequirementVersions: [],
+            jobRequirements: [],
+            authoringEvents: [],
+            ...Object.fromEntries(
+              regroupMetadataCollections.map((name) => [name, []]),
+            ),
+            ...Object.fromEntries(
+              entryMetadataCollections.map((name) => [name, []]),
+            ),
+            [key]: rows,
+          },
+          error: null,
+        });
+        await expect(
+          new SupabasePrivacyRequestRepository().buildExportManifest({
+            id: "metadata-request",
+            kind: "export",
+            userId: "60000000-0000-4000-8000-000000000004",
+            organizationId: "metadata-org",
+            attempt: 1,
+            workerId: "metadata-worker",
+          }),
+        ).rejects.toThrow("Privacy export data is unavailable.");
+      }
+    },
+  );
+});
+
+describe("entry ledger SQL source contract, without parsing or execution", () => {
+  const migration = readFileSync(
+    new URL(
+      "../../supabase/migrations/20261113130533_grouped_original_atomic_import.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const verifier = readFileSync(
+    new URL(
+      "../../scripts/verify-entry-association-ledger.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  );
+  const tables = [
+    "candidate_entry_association_batches",
+    "candidate_entry_association_groups",
+    "candidate_entry_association_members",
+    "canonical_entry_association_snapshots",
+    "canonical_entry_association_links",
+  ];
+
+  it("declares five private stores, inherited privacy guards and a guarded stable complete export", () => {
+    expect(migration.match(/create table public\./g)).toHaveLength(5);
+    for (const table of tables) {
+      expect(migration).toContain(
+        `alter table public.${table} enable row level security;`,
+      );
+      expect(migration).toContain(
+        `create trigger zz_candidate_privacy_write before insert or update on public.${table} for each row execute function private.guard_candidate_privacy_write('owner_id');`,
+      );
+    }
+    expect(migration).not.toMatch(
+      /create policy|grant (?:select|insert|update|delete)|create function public\.import/i,
+    );
+    expect(
+      migration.match(
+        /language plpgsql volatile security invoker set search_path=''/g,
+      ),
+    ).toHaveLength(4);
+    for (const name of [
+      "prefix(jsonb)",
+      "validate_head(uuid)",
+      "write_snapshot(uuid,jsonb)",
+      "group_active(uuid,uuid)",
+      "export_records(uuid)",
+    ])
+      expect(
+        migration.slice(
+          migration.lastIndexOf("revoke all on function private."),
+        ),
+      ).toContain(`private.entry_association_${name}`);
+    expect(migration).toContain(
+      "9b0c182dc6c9703174f6f6ca5e0f05bb19d0b17a3318030dfe8091661f3420e9",
+    );
+    expect(migration).toContain("octet_length(snapshot::text)>33554432");
+    for (const key of entryMetadataCollections)
+      expect(migration).toContain(`'${key}',coalesce(`);
+    expect(migration.match(/where t.owner_id=p_user_id/g)).toHaveLength(10);
+    expect(migration.trimEnd().endsWith("commit;")).toBe(true);
+  });
+
+  it("pins neutral reference data and finite deferred lifecycle controls without a SQL runner", () => {
+    const encoded = verifier.match(
+      /\$oracle\$\n([\s\S]*?)\n\$oracle\$::jsonb;/,
+    )?.[1];
+    expect(encoded).toBeTruthy();
+    expect(createHash("sha256").update(encoded!).digest("hex")).toBe(
+      "51629fece781c8b4a26793c881cad90beca7b0cba7e2a88f9f2da84c9062ea8f",
+    );
+    const reference = JSON.parse(encoded!);
+    expect(reference.fixture.id).toBe("two_jobs_overlap");
+    expect(reference.normalForm.selections).toEqual(
+      reference.fixture.selections,
+    );
+    expect(reference.fixture.placement.mappings).toHaveLength(2);
+    for (const label of [
+      "ordered_members_refused",
+      "whole_group_lifecycle_",
+      "origin_history_retained_",
+      "target_legacy_empty",
+      "root_cascade_all_five",
+      "unrelated_lineage_retained",
+      "foreign_export_excludes_",
+    ])
+      expect(verifier).toContain(label);
+    expect(verifier).toContain(
+      "array['confirm','rename_section','add','rollback_origin','edit','rollback_origin','rollback_edit']",
+    );
+    expect(verifier).toContain("ENTRY_LEDGER_TARGET_NOT_ADMITTED");
+    expect(verifier).toContain("set local statement_timeout='20s'");
+    expect(verifier.trimEnd().endsWith("rollback;")).toBe(true);
+  });
+});
+
+const regroupMetadataCollections = [
+  "candidateEntryRegroupBatches",
+  "candidateEntryRegroupGroups",
+  "candidateEntryRegroupMembers",
+  "canonicalEntryRegroupSnapshots",
+  "canonicalEntryRegroupLinks",
+] as const;
+
+function regroupWorkspaceExport(owner: string): Record<string, unknown[]> {
+  return {
+    canonicalResumeVersions: [{ id: "synthetic-owned-version" }],
+    resumeFacts: [],
+    canonicalResumeHeads: [],
+    changeEvents: [],
+    jobRequirementVersions: [],
+    jobRequirements: [],
+    authoringEvents: [],
+    ...Object.fromEntries(
+      entryMetadataCollections.map((key, index) => [
+        key,
+        [{ owner_id: owner, retained: { ordinal: index } }],
+      ]),
+    ),
+    candidateEntryRegroupBatches: [
+      {
+        id: "synthetic-regroup-batch",
+        owner_id: owner,
+        base_revision: 1,
+        result_revision: 2,
+        command: { operation: "synthetic-whole-entry-regroup" },
+      },
+    ],
+    candidateEntryRegroupGroups: [
+      {
+        id: "synthetic-regroup-group",
+        owner_id: owner,
+        affected_entry_ids: ["synthetic-anchor", "synthetic-donor"],
+        source_selection: { members: ["synthetic-observation"] },
+      },
+    ],
+    candidateEntryRegroupMembers: [
+      {
+        id: "synthetic-regroup-member",
+        owner_id: owner,
+        mapped_through: "current_citations",
+        original_bullet_id: null,
+        origin_version_id: null,
+        origin_fact_id: null,
+        citations: [{ spanId: "synthetic-span", start: 0, end: 1 }],
+      },
+    ],
+    canonicalEntryRegroupSnapshots: [
+      {
+        canonical_version_id: "synthetic-regroup-version",
+        owner_id: owner,
+        composition_version: "entry-regroup-composition/1.0.0",
+        creation_kind: "legacy_bridge",
+        creating_regroup_batch_id: null,
+        inherited_from_version_id: null,
+        restored_from_version_id: null,
+      },
+    ],
+    canonicalEntryRegroupLinks: [
+      {
+        canonical_version_id: "synthetic-regroup-version",
+        owner_id: owner,
+        origin_family: "association",
+        association_group_id: "synthetic-original-group",
+        association_batch_id: "synthetic-original-batch",
+        regroup_group_id: null,
+        regroup_batch_id: null,
+        original_approval_version_id: "synthetic-original-version",
+      },
+      {
+        canonical_version_id: "synthetic-regroup-version",
+        owner_id: owner,
+        origin_family: "regroup",
+        association_group_id: null,
+        association_batch_id: null,
+        regroup_group_id: "synthetic-regroup-group",
+        regroup_batch_id: "synthetic-regroup-batch",
+        original_approval_version_id: "synthetic-regroup-origin-version",
+      },
+    ],
+  };
+}
+
+describe("complete owned regroup metadata export", () => {
+  it("preserves all five nonempty regroup arrays and the old ten through the actual RPC consumer", async () => {
+    const owner = "60000000-0000-4000-8000-000000000005";
+    const records = regroupWorkspaceExport(owner);
+    database.from.mockImplementation(() => ({
+      select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
+    }));
+    database.rpc.mockResolvedValue({ data: records, error: null });
+    const manifest =
+      await new SupabasePrivacyRequestRepository().buildExportManifest({
+        id: "60000000-0000-4000-8000-000000000012",
+        kind: "export",
+        userId: owner,
+        organizationId: "60000000-0000-4000-8000-000000000009",
+        attempt: 1,
+        workerId: "regroup-worker",
+      });
+    for (const key of [
+      ...entryMetadataCollections,
+      ...regroupMetadataCollections,
+    ])
+      expect(manifest.records[key]).toEqual(records[key]);
+    expect(manifest.records.canonicalResumeVersions).toEqual(
+      records.canonicalResumeVersions,
+    );
+    expect(database.rpc).toHaveBeenLastCalledWith(
+      "export_resume_workspace_records",
+      { p_user_id: owner },
+    );
+  });
+
+  it("refuses a complete old workspace response that omits all five regroup arrays", async () => {
+    const records: Record<string, unknown> = regroupWorkspaceExport(
+      "60000000-0000-4000-8000-000000000005",
+    );
+    for (const key of regroupMetadataCollections) delete records[key];
+    database.from.mockImplementation(() => ({
+      select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
+    }));
+    database.rpc.mockResolvedValue({ data: records, error: null });
+    await expect(
+      new SupabasePrivacyRequestRepository().buildExportManifest({
+        id: "60000000-0000-4000-8000-000000000012",
+        kind: "export",
+        userId: "60000000-0000-4000-8000-000000000005",
+        organizationId: "60000000-0000-4000-8000-000000000009",
+        attempt: 1,
+        workerId: "regroup-worker",
+      }),
+    ).rejects.toEqual(new Error("Privacy export data is unavailable."));
+  });
+
+  it.each(regroupMetadataCollections)(
+    "requires %s while all other fourteen metadata arrays are present",
+    async (key) => {
+      const records: Record<string, unknown> = regroupWorkspaceExport(
+        "60000000-0000-4000-8000-000000000005",
+      );
+      delete records[key];
+      database.from.mockImplementation(() => ({
+        select: () => ({
+          eq: () => Promise.resolve({ data: [], error: null }),
+        }),
+      }));
+      database.rpc.mockResolvedValue({ data: records, error: null });
+      await expect(
+        new SupabasePrivacyRequestRepository().buildExportManifest({
+          id: "60000000-0000-4000-8000-000000000012",
+          kind: "export",
+          userId: "60000000-0000-4000-8000-000000000005",
+          organizationId: "60000000-0000-4000-8000-000000000009",
+          attempt: 1,
+          workerId: "regroup-worker",
+        }),
+      ).rejects.toEqual(new Error("Privacy export data is unavailable."));
+    },
+  );
+
+  it.each(regroupMetadataCollections)(
+    "refuses malformed or foreign rows in %s without returning a partial export",
+    async (key) => {
+      database.from.mockImplementation(() => ({
+        select: () => ({
+          eq: () => Promise.resolve({ data: [], error: null }),
+        }),
+      }));
+      for (const rows of [
+        null,
+        {},
+        [null],
+        [{}],
+        [{ owner_id: 7 }],
+        [
+          {
+            owner_id: "60000000-0000-4000-8000-000000000006",
+            private_detail: "synthetic hidden",
+          },
+        ],
+      ]) {
+        const records = {
+          ...regroupWorkspaceExport("60000000-0000-4000-8000-000000000005"),
+          [key]: rows,
+        };
+        database.rpc.mockResolvedValue({ data: records, error: null });
+        await expect(
+          new SupabasePrivacyRequestRepository().buildExportManifest({
+            id: "60000000-0000-4000-8000-000000000012",
+            kind: "export",
+            userId: "60000000-0000-4000-8000-000000000005",
+            organizationId: "60000000-0000-4000-8000-000000000009",
+            attempt: 1,
+            workerId: "regroup-worker",
+          }),
+        ).rejects.toEqual(new Error("Privacy export data is unavailable."));
+      }
+    },
+  );
+});
+
+const rewriteExportCollections = [
+  "canonicalRewriteOperations",
+  "canonicalRewriteVersions",
+  "canonicalRewriteHeads",
+] as const;
+const emptyRewriteExport = () => ({
+  schemaVersion: "canonical-rewrite-export/1.0.0",
+  canonicalRewriteOperations: [],
+  canonicalRewriteVersions: [],
+  canonicalRewriteHeads: [],
+});
+beforeEach(() =>
+  database.rewriteExport
+    .mockReset()
+    .mockResolvedValue({ data: emptyRewriteExport(), error: null }),
+);
+function rewritePrivacyFixture() {
+  const owner = "50000000-0000-4000-8000-000000000001";
+  mockCanonicalExport({
+    data: {
+      canonicalResumeVersions: [],
+      resumeFacts: [],
+      canonicalResumeHeads: [],
+      changeEvents: [],
+    },
+    error: null,
+  });
+  database.from.mockImplementation(() => ({
+    select: () => ({ eq: () => Promise.resolve({ data: [], error: null }) }),
+  }));
+  const request = {
+    id: "50000000-0000-4000-8000-000000000002",
+    kind: "export" as const,
+    userId: owner,
+    organizationId: "50000000-0000-4000-8000-000000000003",
+    attempt: 1,
+    workerId: "synthetic-rewrite-privacy",
+  };
+  return { owner, request, repository: new SupabasePrivacyRequestRepository() };
+}
+describe("canonical rewrite privacy export", () => {
+  it("includes all three private rewrite collections through an exact owner RPC", async () => {
+    const f = rewritePrivacyFixture();
+    const records = {
+      schemaVersion: "canonical-rewrite-export/1.0.0",
+      ...Object.fromEntries(
+        rewriteExportCollections.map((key, index) => [
+          key,
+          [
+            {
+              id: `synthetic-${index}`,
+              owner_id: f.owner,
+              retained: { ordinal: index },
+            },
+          ],
+        ]),
+      ),
+    };
+    database.rewriteExport.mockResolvedValue({ data: records, error: null });
+    const manifest = await f.repository.buildExportManifest(f.request);
+    for (const key of rewriteExportCollections)
+      expect(manifest.records[key]).toEqual(
+        records[key as keyof typeof records],
+      );
+    expect(database.rewriteExport).toHaveBeenCalledWith(
+      "export_canonical_rewrite_records",
+      { p_user_id: f.owner },
+    );
+    expect(manifest.records.canonicalResumeVersions).toEqual([]);
+  });
+  it.each(["rpc_error", "missing", "unknown_schema", "foreign"] as const)(
+    "fails closed for %s rather than exporting an incomplete account",
+    async (kind) => {
+      const f = rewritePrivacyFixture();
+      let data: unknown = emptyRewriteExport(),
+        error: unknown = null;
+      if (kind === "rpc_error")
+        error = { code: "42883", message: "PRIVATE_REWRITE_EXPORT_DETAIL" };
+      if (kind === "missing") data = null;
+      if (kind === "unknown_schema")
+        data = {
+          ...emptyRewriteExport(),
+          schemaVersion: "canonical-rewrite-export/2.0.0",
+        };
+      if (kind === "foreign")
+        data = {
+          ...emptyRewriteExport(),
+          canonicalRewriteOperations: [
+            {
+              owner_id: "60000000-0000-4000-8000-000000000002",
+              private_detail: "PRIVATE_REWRITE_EXPORT_DETAIL",
+            },
+          ],
+        };
+      database.rewriteExport.mockResolvedValue({ data, error });
+      const work = f.repository.buildExportManifest(f.request);
+      await expect(work).rejects.toThrow("Privacy export data is unavailable.");
+      await expect(work).rejects.not.toThrow("PRIVATE_REWRITE_EXPORT_DETAIL");
+    },
+  );
+  it.each(rewriteExportCollections)(
+    "fails closed if required %s is absent",
+    async (key) => {
+      const f = rewritePrivacyFixture();
+      const data: Record<string, unknown> = emptyRewriteExport();
+      delete data[key];
+      database.rewriteExport.mockResolvedValue({ data, error: null });
+      await expect(f.repository.buildExportManifest(f.request)).rejects.toThrow(
+        "Privacy export data is unavailable.",
+      );
+    },
+  );
 });

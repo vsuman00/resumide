@@ -1,0 +1,78 @@
+{
+  "status": "FROZEN_SOURCE_CANDIDATE",
+  "task": "CR-A12 explicit missing writer workspace initialization",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "predecessorReceipt": "a12-compat-a13-core-integrated-baa52dca-78e8-4ea3-84db-43cf1e64e3cf.json",
+  "predecessorInputs": 851,
+  "sourceDesign": "backend-a12-workspace-bootstrap-design.md",
+  "scope": "Real read-only GET missing state, explicit bounded authenticated create-if-absent POST and reachable consumer; full64-task scope preserved.",
+  "ownership": {
+    "backend": [
+      "app/lib/server/canonical-rewrite-workspace.ts",
+      "app/routes/analysis.rewrite.workspace.ts",
+      "tests/unit/canonical-rewrite-workspace.test.ts",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a12-workspace-bootstrap.md"
+    ],
+    "frontend": [
+      "app/routes/analysis.score.tsx",
+      "app/components/CanonicalRewritePanel.tsx",
+      "tests/unit/canonical-rewrite-score.test.ts",
+      "tests/components/CanonicalRewritePanel.test.tsx",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a12-workspace-bootstrap.md"
+    ],
+    "runtime": [
+      "supabase/migrations/20261115042554_canonical_rewrite_workspace.sql",
+      "app/lib/server/canonical-rewrite-workspace-profile.ts",
+      "scripts/verify-canonical-rewrite-workspace.sql",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a12-workspace-bootstrap.md",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a12-workspace-bootstrap-peer.md"
+    ],
+    "root": [
+      "app/routes.ts registration",
+      "shared contracts/migrationorder/integration/gate",
+      "plans/design/privacy/CONTEXT"
+    ]
+  },
+  "contract": {
+    "stateRpc": "read_canonical_rewrite_workspace_state(p_user_id,p_analysis_id,p_selection,p_policy)",
+    "nativeState": "schemaVersion canonical-rewrite-workspace-state/1.0.0; available={schemaVersion,status,context,readiness}; initialization_required={schemaVersion,status,relationshipContext,readiness}. Strict actual owned relationship context, no invented draft/token/projection or inference from generic notfound.",
+    "bootstrapReadiness": "CANONICAL_REWRITE_WORKSPACE_PROFILE: schemaVersion canonical-rewrite-workspace-readiness/1.0.0,profileVersion canonical-rewrite-workspace-profile/1.0.0,checkerSha256,readerSha256,initializerSha256,metadataSha256; readiness adds schemaReady/initializerExecutable. Separate from unchanged canonical1.0.1; initializer default-denied/service-only reads.",
+    "clientState": "available carries actual CanonicalRewriteWorkspace; missing carries actual derived TypedAuthoringBinding and canInitialize only with currentheads/nativecapability/flags. No raw proofbool/caller binding authority.",
+    "initializeRpc": "initialize_canonical_rewrite_workspace(p_user_id,p_analysis_id,p_selection,p_policy)",
+    "initializeNative": "schemaVersion canonical-rewrite-workspace-initialization/1.0.0, created:boolean,state:actual available nativeState after insertion/existing validation.",
+    "http": "POST /analysis/:id/rewrite/workspace; exactly2UUID form fields canonicalVersionId/requirementVersionId, bounded unique fields/UTF8/body/deadline; sameorigin/auth/rewrite+authoring+scoring flags and private headers. No AI flag prerequisite, provider, consent audit, AI operation or rate/budget consumption.",
+    "creation": "Owner/privacy/source/currentheads and rowlocks; validate existing unique summary slot unchanged. If absent insert exact {summary:null,bullets:[]} with DB-generatedID/time and unique barrier; no onconflictupdate, backfill or scored persistence. Return realcontext/tokens.",
+    "semantics": "Idempotent slot creation/current-read, NOT immutable original initreceipt. Explicit manual retry same selectors; stale refuses; prior rows/history/operation requests preserved. GET never writes.",
+    "ui": "Clear setup action only on admitted missing state; bounded whole fetch/body/manual recovery. Success revalidates, never generates or rebases pending generation. Next separate consent/newgeneration uses actual ID/time. Empty projection is no saved generatedprose.",
+    "httpResult": "{kind:'workspace_initialized',created:boolean,workspace:actualCanonicalRewriteWorkspace}"
+  },
+  "acceptance": [
+    "Actual no-writer fake store current loader/panel reproduces missing setup, no missing-module RED",
+    "GET missing0writes; POSTexactoneempty; repeated/concurrent no duplicates/content/time updates; existingempty/legacy/current/historical preserve",
+    "Malformed/duplicate fields, foreignowner/org/source, privacy/staleheads/deniedprofile failclosed prewrite/provider",
+    "Initialization actualtokens feed unchanged generation prepare/claim/settlement/finish/replay; no automaticgeneration/rebase",
+    "Source Native invariants+deferredproducer verifier UNPARSED/UNEXECUTED; one fresh affected application gate+fulltypes/lint/web/worker after sourcefreeze"
+  ],
+  "boundaries": "Pinned sealed Node22 source/synthetic/DOM/fakeRPC only; noSQLparse/execution/advisors/DB/hostedwrites/services/browser/compiler/Docker/provider/actualenv/keys/PII/dependencies/Git/deploy. Supabase direct; noDockerDB. Preserve defaultoff/mutator denied/scoringguards/old receipts/candidates/policies.",
+  "migration": "supabase/migrations/20261115042554_canonical_rewrite_workspace.sql",
+  "scaffoldSha256": "03de1f62ba6880ba66a78a0352d74e63fccf737eeab9a91628902b45ac130a45",
+  "integratedFiles": {
+    "supabase/migrations/20261115042554_canonical_rewrite_workspace.sql": "bba1f7031822de372f8ad8b75c4fb762ce634ce5ea26a19dd7f42eed8451f8f8",
+    "app/lib/server/canonical-rewrite-workspace-profile.ts": "c35d78e62ad391f8800291ee313d78c105541fc917339c5ed54009d0d19c8ac2",
+    "scripts/verify-canonical-rewrite-workspace.sql": "cdecf0d192dbec62dbf89615fd14cfbe8c81abb92fe6c9ab703147998d770abb",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a12-workspace-bootstrap.md": "823ccb81906990b1a8eaef0b568bfb029d23f17ab89abb595a6e0f3a93af3a7f",
+    "app/lib/server/canonical-rewrite-workspace.ts": "f73e1f4722b72d1bbfe685d7e2460a2864a8ad2b49dda30a4b678c4c618b08de",
+    "app/routes/analysis.rewrite.workspace.ts": "99d74a89bfcdc57a38373a3f92142ef80a5ad2201c1b4228f737ab49a407dcf4",
+    "tests/unit/canonical-rewrite-workspace.test.ts": "208d19001f6f93942de9c11899394becbc1db034c4fee6dd4562ef4d8a4352fd",
+    "app/routes/analysis.score.tsx": "c84ae0965ec5182cd31b137948c55a4cf6b39f4d439f9f212dcaf406e7682b72",
+    "app/components/CanonicalRewritePanel.tsx": "370162aadc0af706fb94ce2a1a9576f3f9fc0e714581c6d0e9c1f8bdbf233d5c",
+    "tests/unit/canonical-rewrite-score.test.ts": "a0fa7b958ce7546953cde37ff093d708652f1ad006329f3b0bbf00563aa5b0c7",
+    "tests/components/CanonicalRewritePanel.test.tsx": "03ae07a3cc368c8e49b892030d74195444e3e7f0752ffe04a307c6ac5bd627cf",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a12-workspace-bootstrap.md": "cd32a5a207a634dfbdd5364975f56312ee7b16d7d494ab90cbd17c58c6c6e827",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a12-workspace-bootstrap.md": "5daba2f9a606aca856aaf83ec6f0f32bcaaf92e2fcef91009ae9167a73a86794",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/runtime-a12-workspace-bootstrap-peer.md": "4dccdb8477b31fec99f39bf64b8436c218cdaf7c539151fe6ea60b376717be7f",
+    "app/routes.ts": "b49bc5517a17765c254899481c57cea4d7774b10c11930c9b63dd8826a094f38"
+  },
+  "sourceReview": "a12-workspace-bootstrap-source-review.json",
+  "remaining": "Native catalog/roles/transactions/privacy/uniqueness races/committed cleanup and actual browser/provider/consumer acceptance; fullA12/A13/reliability goal remain open."
+}

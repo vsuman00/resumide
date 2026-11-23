@@ -1,0 +1,9 @@
+{
+  "status": "COORDINATOR_SOURCE_REQUIREMENT_CORRECTION",
+  "parentContract": "a13-worker-adoption-contract.json",
+  "parentSha256": "6dfee3f455c4876ad1dd90519df8dff59610d1720f0fcecc2e5354490336d3b3",
+  "supersededClause": "claim loser before consent/rate/quota sideeffects",
+  "correction": "Saved publication and prepare-pending replay precede fresh admission sideeffects. A claim loser is only known after the pre-claim consent/rate/quota admission; those bounded admission attempts may occur. Claim losers must never call SDK, create duplicate technical spend, settle/release/mark the winning attempt or fall back to legacy persistence.",
+  "reason": "Existing verified service performs authorization and shared quota before claim; adapter cannot reverse that without changing once-dispatch/budget semantics. No need to modify frozen service or weaken consent.",
+  "scope": "Only new adapter contract overstatement corrected; original e6/131 protocol/core/policies and existing service bytes unchanged."
+}

@@ -1,0 +1,131 @@
+{
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--write",
+      "app/lib/server/initial-feedback-operation-repository.ts",
+      "tests/unit/initial-feedback-operation-repository.test.ts"
+    ],
+    "expectedExit": 0,
+    "allowedChanges": [
+      "app/lib/server/initial-feedback-operation-repository.ts",
+      "tests/unit/initial-feedback-operation-repository.test.ts"
+    ]
+  },
+  "finite": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-operation-repository.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "types": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-operation-repository-6gxej7c8/types.mjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/initial-feedback-operation-repository.ts",
+      "tests/unit/initial-feedback-operation-repository.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format-check": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/initial-feedback-operation-repository.ts",
+      "tests/unit/initial-feedback-operation-repository.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "budget-followup": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-operation-repository.test.ts",
+      "-t",
+      "preserves actual R03 request"
+    ],
+    "expectedExit": 0
+  },
+  "format-fixture": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--write",
+      "tests/unit/initial-feedback-operation-repository.test.ts"
+    ],
+    "expectedExit": 0,
+    "allowedChanges": [
+      "tests/unit/initial-feedback-operation-repository.test.ts"
+    ]
+  },
+  "budget-link-red": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-operation-repository.test.ts",
+      "-t",
+      "preserves actual R03 request"
+    ],
+    "expectedExit": 1
+  },
+  "budget-link-green": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-operation-repository.test.ts",
+      "-t",
+      "preserves actual R03 request"
+    ],
+    "expectedExit": 0
+  },
+  "format-link": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--write",
+      "app/lib/server/initial-feedback-operation-repository.ts",
+      "tests/unit/initial-feedback-operation-repository.test.ts"
+    ],
+    "expectedExit": 0,
+    "allowedChanges": [
+      "app/lib/server/initial-feedback-operation-repository.ts",
+      "tests/unit/initial-feedback-operation-repository.test.ts"
+    ]
+  },
+  "types-final": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-operation-repository-6gxej7c8/types.mjs"
+    ],
+    "expectedExit": 0
+  },
+  "lint-final": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/initial-feedback-operation-repository.ts",
+      "tests/unit/initial-feedback-operation-repository.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format-final": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/initial-feedback-operation-repository.ts",
+      "tests/unit/initial-feedback-operation-repository.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "handoff-format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--write",
+      "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-a13-initial-feedback-operation-repository.md"
+    ],
+    "expectedExit": 0
+  }
+}

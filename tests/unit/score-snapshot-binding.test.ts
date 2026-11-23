@@ -1,0 +1,369 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { loadScoreDiagnostics } from "../../app/lib/server/score-v2-repository";
+import {
+  CanonicalError,
+  loadCanonical,
+} from "../../app/lib/server/canonical-repository";
+import { loadJobRequirements } from "../../app/lib/server/job-requirement-repository";
+import {
+  LOCAL_JD_RELATION_MODEL_VERSION,
+  parseJobRequirementsWithRelations,
+} from "../../app/lib/server/job-requirements";
+import { JobRequirementRelationsSchema } from "../../app/lib/server/job-requirement-admission";
+import * as scoreEngine from "../../app/lib/server/score-v2-engine";
+import { RequirementRelationshipContextError } from "../../app/lib/server/requirement-relationship-context";
+import { scoreFixture } from "../fixtures/scoring-v2";
+
+const readers = vi.hoisted(() => ({
+  canonical: vi.fn(),
+  requirements: vi.fn(),
+}));
+vi.mock("../../app/lib/server/canonical-repository", async (original) => ({
+  ...(await original<
+    typeof import("../../app/lib/server/canonical-repository")
+  >()),
+  loadCanonical: readers.canonical,
+}));
+vi.mock(
+  "../../app/lib/server/job-requirement-repository",
+  async (original) => ({
+    ...(await original<
+      typeof import("../../app/lib/server/job-requirement-repository")
+    >()),
+    loadJobRequirements: readers.requirements,
+  }),
+);
+
+const owner = "10000000-0000-4000-8000-000000000001";
+const analysisId = "20000000-0000-4000-8000-000000000001";
+const version = "30000000-0000-4000-8000-000000000001";
+const other = "40000000-0000-4000-8000-000000000001";
+
+it.each(["owner", "analysis", "version"])(
+  "rejects a mismatched %s in an internal scoring snapshot",
+  async (binding) => {
+    const query = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi
+        .fn()
+        .mockResolvedValue({ data: { job_id: null }, error: null }),
+    };
+    const client = { from: vi.fn(() => query) };
+    const snapshot = {
+      analysisId: binding === "analysis" ? other : analysisId,
+      current: {
+        document: {
+          ownerId: binding === "owner" ? other : owner,
+          versionId: version,
+        },
+      },
+    };
+    await expect(
+      loadScoreDiagnostics(
+        client as unknown as Parameters<typeof loadScoreDiagnostics>[0],
+        analysisId,
+        owner,
+        { canonical: binding === "version" ? other : version },
+        snapshot as unknown as Parameters<typeof loadScoreDiagnostics>[4],
+      ),
+    ).rejects.toThrow("Scoring input binding failed.");
+    expect(client.from).toHaveBeenCalledTimes(1);
+    expect(client.from).toHaveBeenCalledWith("analyses");
+  },
+);
+
+function storedTypedRequirements(input: ReturnType<typeof scoreFixture>) {
+  const local = parseJobRequirementsWithRelations(
+    "Requirements\nPython or SQL required\nAt least 3 years of Python experience required",
+    input.requirements,
+    { modelVersion: LOCAL_JD_RELATION_MODEL_VERSION },
+  );
+  // Validate a complete stored row before providing it through the owned reader.
+  return JobRequirementRelationsSchema.parse({
+    schemaVersion: "requirements/2.0.0",
+    producerVersion: "jd-relations/1.0.0",
+    id: local.id,
+    parentVersionId: local.parentVersionId,
+    ownerId: local.ownerId,
+    organizationId: local.organizationId,
+    analysisId: local.analysisId,
+    jobId: local.jobId,
+    createdAt: local.createdAt,
+    retentionPolicyId: local.retentionPolicyId,
+    inputSha256: local.inputSha256,
+    locale: local.locale,
+    domain: local.domain,
+    state: local.state,
+    sourceText: local.sourceText,
+    scoringEligible: false,
+    mappingPolicy: local.mappingPolicy,
+    relationPolicy: local.relations.policy,
+    requirements: local.requirements,
+    retainedClauses: local.retainedClauses,
+    relations: {
+      clauses: local.relations.clauses.map(({ scope, ...clause }) => ({
+        ...clause,
+        scope: { importance: scope.importance, negated: scope.negated },
+      })),
+    },
+    warnings: local.warnings,
+  });
+}
+
+type QueryResult = { data: unknown; error: unknown };
+function scoreReadScenario(kind: "typed" | "legacy" | "no-JD" = "typed") {
+  const input = scoreFixture();
+  const document =
+    kind === "typed" ? storedTypedRequirements(input) : input.requirements;
+  const canonical: Awaited<ReturnType<typeof loadCanonical>> = {
+    analysisId: input.canonical.analysisId,
+    resumeId: input.canonical.resumeId,
+    current: {
+      document: input.canonical,
+      revision: 1,
+      sourceId: input.evidence.sourceId,
+    },
+    headId: input.canonical.versionId,
+    history: [],
+    nextOffset: null,
+    comparison: null,
+    writingComparison: null,
+    scoringEligible: false,
+  };
+  const requirements: Awaited<ReturnType<typeof loadJobRequirements>> | null =
+    kind === "no-JD"
+      ? null
+      : {
+          analysisId: input.canonical.analysisId,
+          sourceText: document.sourceText,
+          current: { document, revision: 1 },
+          headId: document.id,
+          history: [],
+          nextOffset: null,
+          scoringEligible: false,
+        };
+  readers.canonical.mockResolvedValue(canonical);
+  readers.requirements.mockResolvedValue(requirements);
+  const analysisRow: QueryResult = {
+    data: { job_id: requirements ? document.jobId : null },
+    error: null,
+  };
+  const finalAnalysisRow = structuredClone(analysisRow);
+  const evidenceData = {
+    envelope: input.evidence,
+    resume_version_id: input.evidence.sourceId,
+    input_sha256: input.canonical.inputSha256,
+  };
+  const evidenceRow: QueryResult = { data: evidenceData, error: null };
+  const sourceRow: QueryResult = { data: { page_count: 1 }, error: null };
+  const rows: Record<string, QueryResult[]> = {
+    analyses: [analysisRow, finalAnalysisRow],
+    document_evidence_attempts: [evidenceRow],
+    resume_versions: [sourceRow],
+  };
+  const offsets: Record<string, number> = {};
+  const client = { from: vi.fn(), rpc: vi.fn() } satisfies Parameters<
+    typeof loadScoreDiagnostics
+  >[0];
+  client.from.mockImplementation((table: string) => {
+    if (!Object.hasOwn(rows, table))
+      throw Error("Unexpected scoring read table.");
+    return {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(async () => {
+        const offset = offsets[table] ?? 0;
+        offsets[table] = offset + 1;
+        return rows[table][Math.min(offset, rows[table].length - 1)];
+      }),
+    };
+  });
+  return {
+    input,
+    document,
+    canonical,
+    requirements,
+    client,
+    evidenceData,
+    evidenceRow,
+    sourceRow,
+    finalAnalysisRow,
+    read: (options: Parameters<typeof loadScoreDiagnostics>[3] = {}) =>
+      loadScoreDiagnostics(
+        client,
+        input.canonical.analysisId,
+        input.canonical.ownerId,
+        options,
+      ),
+  };
+}
+
+const typedUnavailable = "Relationship context is unavailable.";
+
+describe("A09 score typed JD boundary", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    readers.canonical.mockReset();
+    readers.requirements.mockReset();
+  });
+
+  it.each(["current", "historical"] as const)(
+    "fails closed for a %s stored v2 row when the owned typed context is unavailable",
+    async (selection) => {
+      const scenario = scoreReadScenario();
+      scenario.client.rpc.mockResolvedValue({
+        data: null,
+        error: { code: "42883" },
+      });
+      if (selection === "historical") {
+        if (!scenario.requirements) throw Error("Expected a stored JD.");
+        scenario.requirements.headId = other;
+      }
+      const before = JSON.stringify(scenario.document);
+      const build = vi.spyOn(scoreEngine, "buildScoreDiagnostics");
+      const error = await scenario
+        .read({ requirements: scenario.document.id })
+        .then(
+          () => null,
+          (failure: unknown) => failure,
+        );
+      expect.soft(error).toMatchObject({
+        status: 503,
+        message: typedUnavailable,
+        reason: "unavailable",
+      });
+      expect(error).toBeInstanceOf(RequirementRelationshipContextError);
+      expect(build.mock.calls.length).toBe(0);
+      expect(readers.requirements).toHaveBeenCalledWith(
+        scenario.client,
+        scenario.input.canonical.analysisId,
+        scenario.input.canonical.ownerId,
+        { versionId: scenario.document.id },
+      );
+      expect(JSON.stringify(scenario.document)).toBe(before);
+      expect(scenario.client.rpc).toHaveBeenCalledTimes(1);
+      expect(scenario.client.rpc).toHaveBeenCalledWith(
+        "read_requirement_relationship_context",
+        {
+          p_analysis_id: scenario.input.canonical.analysisId,
+          p_user_id: scenario.input.canonical.ownerId,
+          p_selection: {
+            canonicalVersionId: scenario.input.canonical.versionId,
+            requirementVersionId: scenario.document.id,
+          },
+        },
+      );
+    },
+  );
+
+  it.each([404, 503] as const)(
+    "preserves an owned-reader denial %s before typed abstention",
+    async (status) => {
+      const scenario = scoreReadScenario();
+      const build = vi.spyOn(scoreEngine, "buildScoreDiagnostics");
+      const failure = new CanonicalError(status, "Owned JD unavailable.");
+      readers.requirements.mockRejectedValueOnce(failure);
+      await expect(scenario.read()).rejects.toBe(failure);
+      expect(build).not.toHaveBeenCalled();
+      expect(scenario.client.rpc).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["expectedCanonical", "expectedRequirements"] as const)(
+    "preserves %s conflict precedence over evidence failure and typed abstention",
+    async (selector) => {
+      const scenario = scoreReadScenario();
+      scenario.evidenceRow.error = Error("Synthetic unavailable evidence.");
+      const build = vi.spyOn(scoreEngine, "buildScoreDiagnostics");
+      await expect(scenario.read({ [selector]: other })).rejects.toMatchObject({
+        status: 409,
+        message: "Scoring inputs changed. Reload before continuing.",
+      });
+      expect(build).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["hash", "source"] as const)(
+    "preserves %s evidence integrity failure before typed abstention",
+    async (binding) => {
+      const scenario = scoreReadScenario();
+      if (binding === "hash")
+        scenario.evidenceData.input_sha256 = "0".repeat(64);
+      else scenario.evidenceData.resume_version_id = other;
+      const build = vi.spyOn(scoreEngine, "buildScoreDiagnostics");
+      await expect(scenario.read()).rejects.toMatchObject({
+        status: 422,
+        message: "Scoring evidence failed integrity checks.",
+      });
+      expect(build).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["evidenceRow", "sourceRow"] as const)(
+    "preserves %s storage failure before typed abstention",
+    async (row) => {
+      const scenario = scoreReadScenario();
+      scenario[row].error = Error("Synthetic unavailable scoring input.");
+      const build = vi.spyOn(scoreEngine, "buildScoreDiagnostics");
+      await expect(scenario.read()).rejects.toMatchObject({
+        status: 503,
+        message: "Scoring inputs are unavailable.",
+      });
+      expect(build).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["legacy", "no-JD"] as const)(
+    "preserves the %s diagnostics path and withheld dimensions",
+    async (kind) => {
+      const scenario = scoreReadScenario(kind);
+      const build = vi.spyOn(scoreEngine, "buildScoreDiagnostics");
+      const model = await scenario.read();
+      expect(build).toHaveBeenCalledTimes(1);
+      expect(build.mock.calls[0][0].requirements).toBe(
+        kind === "legacy" ? scenario.document : null,
+      );
+      expect(model.diagnostics.score.state).toBe("withheld");
+      expect(
+        model.diagnostics.score.dimensions.every(
+          (dimension) => dimension.value === null && !dimension.eligible,
+        ),
+      ).toBe(true);
+      expect(readers.canonical).toHaveBeenCalledTimes(2);
+      expect(readers.requirements).toHaveBeenCalledTimes(
+        kind === "legacy" ? 2 : 0,
+      );
+      expect(scenario.client.rpc).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["canonical head", "JD head", "job binding", "privacy"] as const)(
+    "preserves the final legacy %s check",
+    async (change) => {
+      const scenario = scoreReadScenario("legacy");
+      const build = vi.spyOn(scoreEngine, "buildScoreDiagnostics");
+      if (change === "canonical head")
+        readers.canonical
+          .mockResolvedValueOnce(scenario.canonical)
+          .mockResolvedValueOnce({ ...scenario.canonical, headId: other });
+      else if (change === "JD head")
+        readers.requirements
+          .mockResolvedValueOnce(scenario.requirements)
+          .mockResolvedValueOnce({ ...scenario.requirements, headId: other });
+      else if (change === "job binding")
+        scenario.finalAnalysisRow.data = { job_id: other };
+      else
+        readers.canonical
+          .mockResolvedValueOnce(scenario.canonical)
+          .mockRejectedValueOnce(
+            new CanonicalError(404, "Source unavailable."),
+          );
+      await expect(scenario.read()).rejects.toMatchObject({
+        status: change === "privacy" ? 404 : 409,
+      });
+      expect(build).toHaveBeenCalledTimes(1);
+      expect(scenario.client.rpc).not.toHaveBeenCalled();
+    },
+  );
+});

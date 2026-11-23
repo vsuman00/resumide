@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   destroy: vi.fn(),
+  extractText: vi.fn(),
   getPage: vi.fn(),
   items: [] as unknown[],
   pages: 1,
@@ -12,12 +13,13 @@ vi.mock("unpdf", () => ({
     destroy: mocks.destroy,
     getPage: mocks.getPage,
   }),
-  extractText: vi.fn(),
+  extractText: mocks.extractText,
 }));
 import {
   extractPdfTextLayers,
   MAX_NATIVE_LAYOUT_ITEMS_PER_PAGE,
 } from "../../app/lib/server/ocr/pdf-detection";
+import { extractResumeText } from "../../app/lib/server/extract";
 
 describe("native layout resource bounds", () => {
   const limits = { maxPages: 2, maxCharacters: 100, includeLayout: true };
@@ -25,6 +27,10 @@ describe("native layout resource bounds", () => {
     mocks.pages = 1;
     mocks.items = [];
     mocks.destroy.mockReset().mockResolvedValue(undefined);
+    mocks.extractText.mockReset().mockResolvedValue({
+      totalPages: 2,
+      text: ["x".repeat(101), "later"],
+    });
     mocks.getPage.mockReset().mockImplementation(async () => ({
       getTextContent: async () => ({ items: mocks.items, styles: {} }),
       getViewport: () => ({
@@ -63,6 +69,48 @@ describe("native layout resource bounds", () => {
       pageId: "page-1",
       blocks: [],
     });
+    expect(mocks.destroy).toHaveBeenCalledOnce();
+  });
+
+  it.each([extractPdfTextLayers, extractResumeText])(
+    "stops parsing additional text-only pages when the first page exceeds the text limit",
+    async (extractor) => {
+      mocks.pages = 2;
+      mocks.items = [{ str: "x".repeat(101) }];
+      await expect(
+        extractor(new Uint8Array(), { maxPages: 2, maxCharacters: 100 }),
+      ).rejects.toMatchObject({ code: "TEXT_LIMIT" });
+      expect(mocks.getPage.mock.calls).toEqual([[1]]);
+      expect(mocks.destroy).toHaveBeenCalledOnce();
+    },
+  );
+  it("preserves the primary page-limit failure when PDF teardown rejects", async () => {
+    mocks.pages = 3;
+    mocks.destroy.mockRejectedValue(new Error("Synthetic teardown refusal"));
+    await expect(
+      extractPdfTextLayers(new Uint8Array(), limits),
+    ).rejects.toMatchObject({ code: "PAGE_LIMIT" });
+    expect(mocks.destroy).toHaveBeenCalledOnce();
+  });
+
+  it("stops at the first cancelled page boundary and still tears down the document", async () => {
+    mocks.pages = 2;
+    const controller = new AbortController();
+    mocks.getPage.mockImplementationOnce(async () => ({
+      getTextContent: async () => {
+        controller.abort();
+        return { items: [{ str: "Synthetic text" }], styles: {} };
+      },
+      cleanup: vi.fn(),
+    }));
+    await expect(
+      extractPdfTextLayers(new Uint8Array(), {
+        maxPages: 2,
+        maxCharacters: 100,
+        signal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ code: "TIMEOUT" });
+    expect(mocks.getPage.mock.calls).toEqual([[1]]);
     expect(mocks.destroy).toHaveBeenCalledOnce();
   });
 });

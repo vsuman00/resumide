@@ -1,0 +1,209 @@
+/** @vitest-environment jsdom */
+import { cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router";
+import { afterEach, expect, it } from "vitest";
+import JdClauseOrderReview from "../../app/components/JdClauseOrderReview";
+import { createJdClauseOrderFixture } from "../fixtures/jd-clause-order";
+import { buildJdClauseOrderDraft } from "../../app/lib/server/jd-clause-order-drafting";
+
+afterEach(cleanup);
+async function fixture(preferred = false) {
+  const f = await createJdClauseOrderFixture({
+    jdText: `Requirements\nGit ${preferred ? "preferred" : "required"}`,
+  });
+  const selection = {
+    canonicalVersionId: f.context.canonical.versionId,
+    requirementVersionId: f.context.requirements.versionId,
+    clauseId: f.context.requirements.content.relations.clauses[0].id,
+    targetFactId: f.targetFactId,
+  };
+  const draft = buildJdClauseOrderDraft(
+    f.context,
+    { analysisId: f.owned.analysisId, ownerId: f.owned.ownerId },
+    selection,
+  );
+  return { ...f, draft };
+}
+function show(f: Awaited<ReturnType<typeof fixture>>) {
+  return render(
+    <MemoryRouter>
+      <JdClauseOrderReview draft={f.draft} />
+    </MemoryRouter>,
+  );
+}
+it("shows the complete actual current and reconstructed wording without truncation", async () => {
+  const f = await fixture();
+  show(f);
+  expect(f.draft.before).toBe(
+    "Built services using Python; Developed tools using Git",
+  );
+  expect(f.draft.after).toBe(
+    "Developed tools using Git; Built services using Python",
+  );
+  expect(
+    screen.getByRole("blockquote", { name: "Complete current wording" })
+      .textContent,
+  ).toBe(f.draft.before);
+  expect(
+    screen.getByRole("blockquote", { name: "Complete proposed wording" })
+      .textContent,
+  ).toBe(f.draft.after);
+});
+it.each<[boolean, string]>([
+  [false, "Required job requirement"],
+  [true, "Preferred job requirement"],
+])(
+  "shows the exact saved JD quote and actual importance for preferred=%s",
+  async (preferred, label) => {
+    const f = await fixture(preferred);
+    show(f);
+    expect(
+      screen.getByRole("blockquote", { name: "Exact saved JD quote" })
+        .textContent,
+    ).toBe(f.draft.relevance.quote);
+    expect(screen.getByText(label)).toBeTruthy();
+    expect(
+      screen.getByText(
+        /This explains the order, not proficiency, duration or qualification/u,
+      ),
+    ).toBeTruthy();
+  },
+);
+it("shows both exact source clauses in the real nonidentity order and their codepoint references", async () => {
+  const f = await fixture();
+  show(f);
+  const order = within(
+    screen.getByRole("list", { name: "Proposed clause order" }),
+  );
+  expect(
+    order.getAllByRole("blockquote").map((node) => node.textContent),
+  ).toEqual([f.draft.sourceClauses[1].text, f.draft.sourceClauses[0].text]);
+  expect(
+    screen.getByText(/Move source clause 2 before source clause 1/u),
+  ).toBeTruthy();
+  for (const clause of f.draft.sourceClauses) {
+    expect(
+      Array.from(f.draft.before).slice(clause.start, clause.end).join(""),
+    ).toBe(clause.text);
+    expect(
+      order.getByText(
+        new RegExp(
+          `Current-fact codepoint characters ${clause.start} to ${clause.end}`,
+          "u",
+        ),
+      ),
+    ).toBeTruthy();
+  }
+});
+it("labels the whole exact source claim as current support rather than saved proposal provenance", async () => {
+  const f = await fixture();
+  show(f);
+  expect(
+    screen.getByRole("blockquote", { name: "Whole quoted source claim" })
+      .textContent,
+  ).toBe(f.draft.before);
+  expect(
+    screen.getByText(
+      /Source quotation and current candidate confirmation are not independent verification/u,
+    ),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(
+      /These citations describe the current wording, not a saved version of the proposal/u,
+    ),
+  ).toBeTruthy();
+});
+it("shows real citation references and links to the source workspace without inventing an attempt selector", async () => {
+  const f = await fixture();
+  show(f);
+  expect(f.draft.sourceCitations.length).toBeGreaterThan(0);
+  const citations = within(
+    screen.getByRole("list", { name: "Current source citations" }),
+  );
+  expect(
+    citations.getAllByRole("link").map((node) => node.getAttribute("href")),
+  ).toEqual(
+    f.draft.sourceCitations.map(
+      (c) =>
+        `/analysis/${f.owned.analysisId}/evidence#source-${encodeURIComponent(c.spanId)}`,
+    ),
+  );
+  for (const c of f.draft.sourceCitations) {
+    expect(citations.getByText(c.spanId)).toBeTruthy();
+    expect(
+      citations.getByText(new RegExp(`characters ${c.start} to ${c.end}`, "u")),
+    ).toBeTruthy();
+  }
+});
+it("keeps exact pinned fact and JD version links and renderer references", async () => {
+  const f = await fixture();
+  show(f);
+  const base = `/analysis/${f.owned.analysisId}`;
+  expect(
+    screen
+      .getByRole("link", {
+        name: "Inspect the current fact and pinned version",
+      })
+      .getAttribute("href"),
+  ).toBe(
+    `${base}/canonical?version=${f.draft.binding.canonical.versionId}#fact-${f.draft.target.factId}`,
+  );
+  expect(
+    screen
+      .getByRole("link", { name: "Inspect the saved job requirements" })
+      .getAttribute("href"),
+  ).toBe(
+    `${base}/requirements?version=${f.draft.binding.requirements.versionId}`,
+  );
+  expect(screen.getByText(f.draft.transform.rendererVersion)).toBeTruthy();
+});
+it("stays projected with no save, acknowledgement, decision or undo control and no numeric credit", async () => {
+  const f = await fixture();
+  const { container } = show(f);
+  expect(screen.getByRole("status").textContent).toContain(
+    "Projected review only. This draft has not been saved.",
+  );
+  expect(
+    screen.getByText(
+      /The proposed wording has no saved source references or confirmation/u,
+    ),
+  ).toBeTruthy();
+  expect(
+    screen.getByText(
+      /Numeric score and score change: unavailable. Qualification credit: not assessed/u,
+    ),
+  ).toBeTruthy();
+  expect(
+    container.querySelectorAll("form,input,button,textarea,select"),
+  ).toHaveLength(0);
+  expect(container.textContent).not.toMatch(
+    /AI-generated|\d+%|score (?:gain|increase)/iu,
+  );
+  expect(f.draft.scoreValue).toBeNull();
+  expect(f.draft.scoreDelta).toBeNull();
+  expect(f.draft.qualificationCredit).toBe("not_assessed");
+});
+it("uses unique labelled regions and keyboard-accessible source and version references", async () => {
+  const f = await fixture();
+  render(
+    <MemoryRouter>
+      <JdClauseOrderReview draft={f.draft} />
+      <JdClauseOrderReview draft={f.draft} />
+    </MemoryRouter>,
+  );
+  const regions = screen.getAllByRole("region", {
+    name: "Review JD-focused clause order",
+  });
+  expect(regions).toHaveLength(2);
+  expect(regions[0].getAttribute("aria-labelledby")).not.toBe(
+    regions[1].getAttribute("aria-labelledby"),
+  );
+  const controls = regions[0].querySelectorAll("a,summary");
+  expect(controls.length).toBeGreaterThan(0);
+  const user = userEvent.setup();
+  for (const node of controls) {
+    await user.tab();
+    expect(document.activeElement).toBe(node);
+  }
+});

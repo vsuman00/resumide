@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DEFAULT_OPENAI_MODEL } from "./openai-model.ts";
 import {
   DEFAULT_OPENAI_BASE_URL,
   isAllowedOpenAiBaseUrl,
@@ -8,6 +9,19 @@ const ServerConfigSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
+  BUILD_AI_ASSIST_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  LATEX_CONVERTER_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  LATEX_COMPILER_IMAGE: z
+    .string()
+    .regex(/^sha256:[a-f0-9]{64}$/)
+    .or(z.literal(""))
+    .default(""),
   APP_ORIGIN: z.url().default("http://localhost:5173"),
   SUPABASE_URL: z.url(),
   SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
@@ -25,11 +39,31 @@ const ServerConfigSchema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
+  CANONICAL_CORRECTIONS_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   ARTIFACT_RENDERING_ENABLED: z
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
   AUTHORING_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  TYPED_AUTHORING_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  CANONICAL_REWRITE_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  INITIAL_FEEDBACK_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  LEGACY_SCORING_INPUT_ENABLED: z
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
@@ -41,7 +75,19 @@ const ServerConfigSchema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
+  JOB_RELATIONS_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   NATIVE_LAYOUT_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  ANALYSIS_ADMISSION_BINDING_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  ANALYSIS_FENCING_ENABLED: z
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
@@ -57,6 +103,15 @@ const ServerConfigSchema = z.object({
     .enum(["true", "false"])
     .default("true")
     .transform((value) => value === "true"),
+  AI_BUDGET_ENABLED: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
+  AI_BUDGET_POLICY_VERSION: z
+    .string()
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$/)
+    .or(z.literal(""))
+    .default(""),
   AI_MONTHLY_TOKEN_LIMIT: z.coerce
     .number()
     .int()
@@ -68,7 +123,7 @@ const ServerConfigSchema = z.object({
     .string()
     .default(DEFAULT_OPENAI_BASE_URL)
     .refine(isAllowedOpenAiBaseUrl, "approved OpenAI egress is required"),
-  OPENAI_MODEL: z.string().min(1).default("gpt-5.6-luna"),
+  OPENAI_MODEL: z.string().min(1).default(DEFAULT_OPENAI_MODEL),
   OPENAI_TIMEOUT_MS: z.coerce
     .number()
     .int()
@@ -150,10 +205,15 @@ const ServerConfigSchema = z.object({
 export type ServerConfig = z.infer<typeof ServerConfigSchema>;
 
 const AnalysisConfigSchema = ServerConfigSchema.pick({
+  INITIAL_FEEDBACK_ENABLED: true,
+  LEGACY_SCORING_INPUT_ENABLED: true,
+  ANALYSIS_FENCING_ENABLED: true,
   NATIVE_EVIDENCE_ENABLED: true,
   NATIVE_LAYOUT_ENABLED: true,
   EVIDENCE_REVIEW_ENABLED: true,
   AI_ENABLED: true,
+  AI_BUDGET_ENABLED: true,
+  AI_BUDGET_POLICY_VERSION: true,
   AI_MONTHLY_TOKEN_LIMIT: true,
   OPENAI_API_KEY: true,
   OPENAI_BASE_URL: true,
@@ -189,6 +249,28 @@ export class ServerConfigError extends Error {
   }
 }
 
+function assertInitialFeedbackDependencies(
+  config: Pick<
+    AnalysisConfig,
+    | "INITIAL_FEEDBACK_ENABLED"
+    | "LEGACY_SCORING_INPUT_ENABLED"
+    | "ANALYSIS_FENCING_ENABLED"
+  >,
+) {
+  if (
+    config.INITIAL_FEEDBACK_ENABLED &&
+    (!config.LEGACY_SCORING_INPUT_ENABLED || !config.ANALYSIS_FENCING_ENABLED)
+  ) {
+    throw new ServerConfigError([
+      {
+        code: "custom",
+        path: ["INITIAL_FEEDBACK_ENABLED"],
+        message: "Original scoring input and analysis fencing must be enabled.",
+      },
+    ]);
+  }
+}
+
 export function parseServerConfig(
   environment: NodeJS.ProcessEnv = process.env,
 ): ServerConfig {
@@ -196,6 +278,32 @@ export function parseServerConfig(
   if (!parsed.success) {
     throw new ServerConfigError(parsed.error.issues);
   }
+  if (
+    parsed.data.CANONICAL_CORRECTIONS_ENABLED &&
+    (!parsed.data.CANONICAL_AUTHORING_ENABLED ||
+      !parsed.data.EVIDENCE_REVIEW_ENABLED)
+  ) {
+    throw new ServerConfigError([
+      {
+        code: "custom",
+        path: ["CANONICAL_CORRECTIONS_ENABLED"],
+        message: "Canonical authoring and evidence review must be enabled.",
+      },
+    ]);
+  }
+  if (
+    parsed.data.JOB_RELATIONS_ENABLED &&
+    !parsed.data.JOB_INTELLIGENCE_ENABLED
+  ) {
+    throw new ServerConfigError([
+      {
+        code: "custom",
+        path: ["JOB_RELATIONS_ENABLED"],
+        message: "Job intelligence must be enabled.",
+      },
+    ]);
+  }
+  assertInitialFeedbackDependencies(parsed.data);
   return parsed.data;
 }
 
@@ -206,6 +314,7 @@ export function parseAnalysisConfig(
   if (!parsed.success) {
     throw new ServerConfigError(parsed.error.issues);
   }
+  assertInitialFeedbackDependencies(parsed.data);
   return parsed.data;
 }
 

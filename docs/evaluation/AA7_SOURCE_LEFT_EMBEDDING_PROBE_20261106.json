@@ -1,0 +1,126 @@
+{
+  "kind": "owned-synthetic-postgrest-left-prototype",
+  "startedAt": "2026-11-06T10:38:06.112Z",
+  "finishedAt": "2026-11-06T10:38:09.009Z",
+  "node": "22.23.4",
+  "query": {
+    "startedAt": "2026-11-06T10:38:06.703Z",
+    "selector": "id,resume_id,owner_id,organization_id,active_resume:resumes!resume_versions_resume_id_fkey(id,owner_id,organization_id,status)",
+    "cases": [
+      {
+        "label": "valid-object-and-id-binding",
+        "expected": "positive",
+        "status": 200,
+        "elapsedMs": 112.442,
+        "error": false,
+        "topLevelNull": false,
+        "sourceObject": true,
+        "sourceBound": true,
+        "parentObject": true,
+        "parentBound": true,
+        "embeddedParentNull": false,
+        "productionGuardMustDeny": false,
+        "pass": true
+      },
+      {
+        "label": "wrong-source-owner",
+        "expected": "source-null",
+        "status": 200,
+        "elapsedMs": 90.784,
+        "error": false,
+        "topLevelNull": true,
+        "sourceObject": false,
+        "sourceBound": false,
+        "parentObject": false,
+        "parentBound": false,
+        "embeddedParentNull": false,
+        "productionGuardMustDeny": true,
+        "pass": true
+      },
+      {
+        "label": "wrong-source-organization",
+        "expected": "source-null",
+        "status": 200,
+        "elapsedMs": 110.424,
+        "error": false,
+        "topLevelNull": true,
+        "sourceObject": false,
+        "sourceBound": false,
+        "parentObject": false,
+        "parentBound": false,
+        "embeddedParentNull": false,
+        "productionGuardMustDeny": true,
+        "pass": true
+      },
+      {
+        "label": "wrong-parent-owner",
+        "expected": "parent-null",
+        "status": 200,
+        "elapsedMs": 97.719,
+        "error": false,
+        "topLevelNull": false,
+        "sourceObject": true,
+        "sourceBound": true,
+        "parentObject": false,
+        "parentBound": false,
+        "embeddedParentNull": true,
+        "productionGuardMustDeny": true,
+        "pass": true
+      },
+      {
+        "label": "wrong-parent-organization",
+        "expected": "parent-null",
+        "status": 200,
+        "elapsedMs": 74.749,
+        "error": false,
+        "topLevelNull": false,
+        "sourceObject": true,
+        "sourceBound": true,
+        "parentObject": false,
+        "parentBound": false,
+        "embeddedParentNull": true,
+        "productionGuardMustDeny": true,
+        "pass": true
+      },
+      {
+        "label": "exact-owned-parent-marked-deleted",
+        "expected": "parent-null",
+        "status": 200,
+        "elapsedMs": 108.743,
+        "error": false,
+        "topLevelNull": false,
+        "sourceObject": true,
+        "sourceBound": true,
+        "parentObject": false,
+        "parentBound": false,
+        "embeddedParentNull": true,
+        "productionGuardMustDeny": true,
+        "pass": true
+      }
+    ],
+    "restored": true,
+    "fixtureCleanup": true,
+    "finishedAt": "2026-11-06T10:38:08.964Z"
+  },
+  "terminal": {
+    "code": 0,
+    "signal": null
+  },
+  "groupCleanupConfirmed": true,
+  "fixtureSourceSha256": "6737e83c26cb89cf99c7e0da23e406323c97ba8f0b315ccc7ee71b5fecfd093d",
+  "probeSourceSha256": "6579372534095625d6b4c5cfeb7340571a78a0079e3b7f4dc23f6155f7af9acd",
+  "cleanup": {
+    "ownersCreated": 1,
+    "restoredActiveBeforeCleanup": true,
+    "fixtureCleanup": true,
+    "independentSqlRelations": 13,
+    "allOwnedRowsRemaining": 0,
+    "storageUploads": 0,
+    "rateKeyOperations": 0,
+    "privateFilesRemoved": true
+  },
+  "limitations": [
+    "LEFT join metadata prototype only; production must explicitly deny missing or mismatched embedded parent.",
+    "No model, browser, server, Docker, migration or production source edits."
+  ]
+}

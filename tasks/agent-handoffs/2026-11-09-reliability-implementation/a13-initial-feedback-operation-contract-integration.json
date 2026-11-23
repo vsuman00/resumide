@@ -1,0 +1,33 @@
+{
+  "status": "HELD_SOURCE_CHECKPOINT_PARTIAL_INTEGRATION",
+  "files": {
+    "app/lib/server/initial-feedback-operation-contract.ts": "52e9b4e31ee45a8010596c2b64de03b2b57b84f047029bf65c2794040c8549da",
+    "app/lib/server/initial-feedback-publication-policy.ts": "b4c33a5bfebf9fe1b22253c40ea8bf84050b63f2da8472ead2b73a1dc44aa6c8",
+    "app/lib/server/legacy-scoring-input.ts": "57246d936a251b14b0df1e9b51dd147063da9997820b670ddeb2948e5f08fefa",
+    "tests/unit/initial-feedback-operation-contract.test.ts": "f69ac6eba160b54a6afc71a9ae90a9200b63e858e1fd1534684359b2b1978e57",
+    "tests/unit/initial-feedback-publication-policy.test.ts": "5fdaa9c764c517be57e4f3153dc62bd611cb70498efb67176f52c0807cb95579",
+    "tests/unit/initial-feedback-result-validation.test.ts": "b600ca776dde2ab4f247ec199c5968bbcc3216e493f8922740a8521246e78338"
+  },
+  "authorHandoff": "PENDING",
+  "combinedGate": "PENDING",
+  "frontendDependencyTransfers": {
+    "app/lib/server/legacy-scoring-input.ts": {
+      "frontPreimage": "e5d487996953e2075122a3b20fbcb5d07c4915d41a81291ae5fd13cd3ba8e3e5",
+      "postimage": "57246d936a251b14b0df1e9b51dd147063da9997820b670ddeb2948e5f08fefa",
+      "includesPriorReviewedCorrection": "backend-a13-scoring-input-checksum-fix.md"
+    },
+    "app/lib/server/legacy-scoring-input-profile.ts": {
+      "frontPreimage": "b18bbcd0242245d3a4b47ddbb1477bc121c7e3c566ef06bd00f0a5b081016b94",
+      "postimage": "f2b2410fe652fbbf1963bbbbba5f9e5e1928f2bb177e5262d9edee30a99a101c",
+      "source": "Previously reviewed Root current frozen source profile."
+    },
+    "app/lib/server/initial-feedback-plan-profile.ts": {
+      "frontPreimage": null,
+      "postimage": "e9f53e3e9e409fcf69b2c3cf420e3639323fdca8bf1d79f603cf1fc78618e3a1",
+      "source": "Previously reviewed Root current frozen source profile."
+    }
+  },
+  "partialCopyAttempt": "Initial two new files copied; legacy helper preimage guard stopped before overwrite when frontend was at historical e5. Reviewed known e5\u219228 checksum correction and b18\u2192f2 source profile, then explicitly synced exact reviewed dependencies. No unrelated files changed.",
+  "resourceCorrection": "Sole conservative +2 object punctuation bytes in bounded preflight; API/policy unchanged. Author affected resource case and static checks pass; Root fresh combined gate pending.",
+  "resourceCopyPreflight": "First patch-location proof refused before copying because the added line was at object branch rather than entries; exact one-line delta then verified."
+}

@@ -1,0 +1,39 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/components/CitedWritingSuggestions.test.tsx (3 tests | 1 failed | 2 skipped) 17ms
+   ↓ separates suggestion titles, explanations and exact excerpts without ratings
+   ↓ explains empty groups and omits whitespace-only citations
+   × requires owned provenance before calling a cited legacy row a strength 17ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/CitedWritingSuggestions.test.tsx > requires owned provenance before calling a cited legacy row a strength
+AssertionError: expected <p class="_eyebrow_7872c0"></p> to be null
+
+- Expected:
+null
+
++ Received:
+<p
+  class="_eyebrow_7872c0"
+>
+  Source-backed feedback
+</p>
+
+ ❯ tests/components/CitedWritingSuggestions.test.tsx:83:56
+     81|   const area={tips:[{type:'good' as const,tip:'Keep this wording',expl…
+     82|   render(<CitedWritingSuggestions feedback={{toneAndStyle:area,content…
+     83|   expect(screen.queryByText('Source-backed feedback')).toBeNull();
+       |                                                        ^
+     84|   expect(screen.queryByText('Strength to keep')).toBeNull();
+     85|   expect(screen.getByText('Unverified observation')).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 2 skipped (3)
+   Start at  15:43:42
+   Duration  699ms (transform 44ms, setup 0ms, import 124ms, tests 17ms, environment 492ms)
+

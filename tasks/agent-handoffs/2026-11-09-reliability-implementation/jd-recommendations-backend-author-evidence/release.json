@@ -1,0 +1,410 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_TEST_RELEASE",
+  "task": "CR-A14_JD_RECOMMENDATIONS",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "worktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats",
+  "files": {
+    "app/lib/server/jd-recommendations.ts": {
+      "preimage": null,
+      "postimage": "4b8092d0e62714e8f5cada20da5623807ae37029bc184eaba1f6214830f0f250",
+      "changed": true,
+      "bytes": 8963,
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/snapshots/app/lib/server/jd-recommendations.ts",
+      "preimageSnapshot": null
+    },
+    "app/lib/server/score-v2-repository.ts": {
+      "preimage": "bcdfef98b11c60f8e5344a5f03a86ae97ddc9db90db5eda9fd1d11d927746e23",
+      "postimage": "1935edd1acf129c7b50ae25ce5f9347f9659da53f2936a0e025553946a0daf5c",
+      "changed": true,
+      "bytes": 11281,
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/snapshots/app/lib/server/score-v2-repository.ts",
+      "preimageSnapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/preimages/score-v2-repository.ts"
+    },
+    "tests/unit/jd-recommendations.test.ts": {
+      "preimage": null,
+      "postimage": "7cbdca2b41b2913d693078d0936050f4f994201e2a9545797eaed8de91046ad4",
+      "changed": true,
+      "bytes": 9686,
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/snapshots/tests/unit/jd-recommendations.test.ts",
+      "preimageSnapshot": null
+    },
+    "tests/unit/jd-recommendations-repository.test.ts": {
+      "preimage": null,
+      "postimage": "7e943b57a2ae1efd0ef41b205956f6aba72ebf42900a8233b57e0b7342b9e63a",
+      "changed": true,
+      "bytes": 11102,
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/snapshots/tests/unit/jd-recommendations-repository.test.ts",
+      "preimageSnapshot": null
+    },
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/jd-recommendations-backend.md": {
+      "preimage": null,
+      "postimage": "24a11d80f519d516550cd8f72bbc62ba5f496f6b9f277a3797b7654199ea2ce5",
+      "changed": true,
+      "bytes": 3024,
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/snapshots/tasks/agent-handoffs/2026-11-09-reliability-implementation/jd-recommendations-backend.md",
+      "preimageSnapshot": null
+    }
+  },
+  "contracts": {
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/jd-recommendations-contract.json": {
+      "sha256": "c0a9cdba2d6f569d6b05ebd2b09bcad472c92626aece61e390a38f1c0369620a",
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/contracts/jd-recommendations-contract.json"
+    },
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/jd-recommendations-backend-allocation.json": {
+      "sha256": "4417154adac541219f9e9db0b5f77435bceece352487e5c607b104ba9db2380b",
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/contracts/jd-recommendations-backend-allocation.json"
+    },
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/jd-recommendations-source-sync.json": {
+      "sha256": "523e2819ac98ef5f4adaa8aa8e436baaf4ebb7e210238d8f9afbf6e207fa313e",
+      "snapshot": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/contracts/jd-recommendations-source-sync.json"
+    }
+  },
+  "classification": {
+    "productDefectFound": true,
+    "capability": "Actual typed read previously omitted JD recommendations",
+    "productionFilesChanged": 2,
+    "newTests": 36,
+    "productRedClaimed": true,
+    "firstRun": "1 actual reader assertion failed because plan was missing; no missing-module RED",
+    "fixtureFailures": [
+      "28pass5fail: unsupported-term interpretation, responsibility declaration grammar, shared fake final analysis snapshot",
+      "34pass1fail: bare API is not an admitted positive typed witness; preserved as review scope"
+    ],
+    "final": "36/2 PASS stable, scoped4file ESLint/Prettier PASS",
+    "numericPolicyChanged": false
+  },
+  "source": {
+    "initialReceipt": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/red-capability.json",
+    "initialManifestIncludesAuthoredRepositoryTest": true,
+    "finalManifest": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/source-final-manifest.json",
+    "finalManifestSha256": "a991c5dc081be1aec2b2b2269135715906dbae100423135f2552427bd0c7aee6",
+    "inputCount": 942,
+    "changedSinceInitialCheck": [
+      "app/lib/server/jd-recommendations.ts",
+      "app/lib/server/score-v2-repository.ts",
+      "tests/unit/jd-recommendations-repository.test.ts",
+      "tests/unit/jd-recommendations.test.ts"
+    ],
+    "outsideOwnedChanges": []
+  },
+  "receipts": {
+    "format-write-fixture": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/format-write-fixture.json",
+      "sha256": "a4777aefabcb4fa1cbf875e6149780ef9bebff875c4e4ab38a8928e5ee1e9700",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/format-write-fixture.log",
+      "logSha256": "9d9ff4d82f848b94e8e3616ddb0a5e7fd84b12db3546fd10be413fed7cb66d22",
+      "sourceStable": false,
+      "start": {
+        "processGroup": 92989,
+        "startIdentity": "92989 92989 Mon Nov 16 09:16:33 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 92989,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "format-write-owned": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/format-write-owned.json",
+      "sha256": "521dd69939757d27348d261cc5cf1474dc72bc8222abd8d2f08cdb05bf0e9117",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/format-write-owned.log",
+      "logSha256": "1d81255cb3b3e1a3e22c8f39dc6b78429b708d3c1440f2454cc8d6da24c3c6d2",
+      "sourceStable": false,
+      "start": {
+        "processGroup": 92781,
+        "startIdentity": "92781 92781 Mon Nov 16 09:15:31 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 92781,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "format-write-partial": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/format-write-partial.json",
+      "sha256": "a7245bb3ebd375c8890d1a57b7428508ca06724a777ff0397f3882df29ff18b3",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/format-write-partial.log",
+      "logSha256": "9bc9edecfda5b75c2ef25420138219be023ae0d5783e249b3358c77565e8c871",
+      "sourceStable": false,
+      "start": {
+        "processGroup": 93325,
+        "startIdentity": "93325 93325 Mon Nov 16 09:16:51 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 93325,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "green-final": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/green-final.json",
+      "sha256": "dd31f6d211b87be595a0f4e7e61b42eb117824e3346f82a44771d9424673ccfd",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/green-final.log",
+      "logSha256": "ceab8cdacfc321736e37ed10248d6622ed060adf2c4111bccbd461a5c5f2c219",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 92816,
+        "startIdentity": "92816 92816 Mon Nov 16 09:15:43 2026"
+      },
+      "close": {
+        "code": 1,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 1,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 92816,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "green-first": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/green-first.json",
+      "sha256": "5222a98c104f9a72450cfb9168a087dfa6bdb509057848ae6f0cb06ac55e14bd",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/green-first.log",
+      "logSha256": "cb3106103c4f575f62e424d07cc412ba40171fac9bdc57d47218225de6615600",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 92508,
+        "startIdentity": "92508 92508 Mon Nov 16 09:13:57 2026"
+      },
+      "close": {
+        "code": 1,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 1,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 92508,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "green-fixture-successor": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/green-fixture-successor.json",
+      "sha256": "7d80c84b2a28a97467c022de3dcbdbbb658f25c98a2fbf9adb6f37a694b4a5b2",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/green-fixture-successor.log",
+      "logSha256": "f6ffbe2dfa419db318b1b7e2d833b07a3192698a0477adc8214affbb097d99e6",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 92670,
+        "startIdentity": "92670 92670 Mon Nov 16 09:14:47 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 92670,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "green-partial-successor": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/green-partial-successor.json",
+      "sha256": "5390f5a1fc18f495cbc88b091eea0b5f4d3be4c561df417db1294754ffd885e1",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/green-partial-successor.log",
+      "logSha256": "8cae853ccb8107a08e0cb35086bbf05c92bd4798b642c861f37ba798174bcfa0",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 93613,
+        "startIdentity": "93613 93613 Mon Nov 16 09:17:08 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 93613,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "red-capability": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/red-capability.json",
+      "sha256": "ba3016d4b391850c3cc20d29d1d68d00f01486cfcb578b7f2774bca0ffaad3ae",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/red-capability.log",
+      "logSha256": "5898b0bc760b57ffae9d049c6bafae855de6cc9b4d850c5baa8ed2034727730e",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 92147,
+        "startIdentity": "92147 92147 Mon Nov 16 09:11:52 2026"
+      },
+      "close": {
+        "code": 1,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 1,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 92147,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "statics-format-handoff": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/statics-format-handoff.json",
+      "sha256": "1bf360aaab72d3b46d2f91d52efe5f4b1fdea0b44fec215c5dd85e6f8f0ceb4c",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/statics-format-handoff.log",
+      "logSha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 94023,
+        "startIdentity": "94023 94023 Mon Nov 16 09:18:59 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 94023,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "statics-format-owned": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/statics-format-owned.json",
+      "sha256": "a948141bdf291f7a89088b9a3498e5e4f10436340227fb49694153b7c5dd41e9",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/statics-format-owned.log",
+      "logSha256": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 93756,
+        "startIdentity": "93756 93756 Mon Nov 16 09:17:10 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 93756,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    },
+    "statics-lint-owned": {
+      "path": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/statics-lint-owned.json",
+      "sha256": "d1747307ecde46903869a1bc94782207b1916bd4c92cc3901bad8001cc36edd0",
+      "log": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/statics-lint-owned.log",
+      "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sourceStable": true,
+      "start": {
+        "processGroup": 93704,
+        "startIdentity": "93704 93704 Mon Nov 16 09:17:09 2026"
+      },
+      "close": {
+        "code": 0,
+        "signal": null
+      },
+      "commands": [
+        {
+          "code": 0,
+          "signal": null,
+          "startFailed": false,
+          "abortRequested": null,
+          "processGroup": 93704,
+          "manualGroupCleanupRequired": false,
+          "groupCleanupConfirmed": true
+        }
+      ]
+    }
+  },
+  "processGroups": {
+    "checkedAt": "2026-11-16T09:19:22.443Z",
+    "groups": [
+      92989,
+      92781,
+      93325,
+      92816,
+      92508,
+      92670,
+      93613,
+      92147,
+      94023,
+      93756,
+      93704
+    ],
+    "remaining": [],
+    "allAbsent": true
+  },
+  "proseHygiene": {
+    "before": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/handoff-before.json",
+    "clean": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-jd-recommendations-backend-ebn5jo09/handoff-clean.log",
+    "densityTier": "low",
+    "score": 0.1225,
+    "unicodeChanges": 0
+  },
+  "boundaries": "PinnedNode22.23.4,1Vitestworker,120s/8MiB,sealed fake env/empty HOME,OS network/backend dotenv/shared Git-write denied in all phases. Root dotenv reads and WT Git pointer writes additionally denied in final successor/statics; early runner policy gap preserved. No Native/parser/DB/providers/OCR/compiler/browser/deps/actualenv/Git/deploy; no author fullsuite/types/build.",
+  "requiredLater": [
+    "Root combined affected/static/build gate",
+    "Actual representative calibration/domain validity and explicit policy adoption",
+    "Formal owner/release acceptance",
+    "Full privacy adoption remains independent and incomplete"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "status": "PASS_TEXT_SOURCE_REVIEW_ONLY",
+  "migration": "supabase/migrations/20261114192207_canonical_rewrite_compatibility.sql",
+  "migrationSha256": "00833163ac60a1d80909b6b73533525e7dbc7697f62388dcc17d01d74b62c248",
+  "guardedChains": [
+    {
+      "signature": "public.finish_canonical_rewrite(uuid,uuid,uuid,text,jsonb,jsonb,text)",
+      "before": "fa8caa7e6818545b495bf35f7b085a02a8e1f3d08e10f87ee33cacd68dcf38ed",
+      "after": "cb7a256fbacd55d494fb72196308e6c06e8c7faabb40c18a9ea2bba97a3c5828"
+    },
+    {
+      "signature": "public.read_canonical_rewrite_readiness()",
+      "before": "acedde01a4395048f4fc63be4745a956738dcc2db2c678d398b762309d0daad4",
+      "after": "5893270fa1d8e45f41a4f383b3b4ce6ced7e2edce41ab65e9ad017507d740011"
+    },
+    {
+      "signature": "private.canonical_rewrite_ready()",
+      "before": "99b9446c08605d6bf1dd201ebe11f0b96e0efbec9c5474bdff584b71b0567cff",
+      "after": "e98f6ec0de0a09ec002a85d97d007cb71a49c261bbcba746d82c688a7281251b"
+    }
+  ],
+  "catalogBodiesMatched": 21,
+  "profilePinsMatched": 7,
+  "finishDelta": "Only541-byte protected legacy AI-run INSERT removed; operation remains run metadata, other atomic content writes unchanged.",
+  "legacyScoreGuardUnchanged": true,
+  "usage": "Legacy totals plus all claimed canonical states; claimed_at UTC month; unknownnull count separate; no newstore/debit/erasureapproval.",
+  "sqlParsing": "NOT_RUN",
+  "sqlExecution": "NOT_RUN",
+  "remaining": "Native catalog/ACL/transaction/privacy/races/cleanup/month-dispatch proof and global budget-off atomic cap unproved.",
+  "freshWorkspacePrerequisite": "Reader currently requires existing writer_drafts(summary); Root found only legacy scored/qualitative insertion producers. Exact freshv2 bootstrap path is under separate source validation/design; this compatibility leaf does not claim initial workspace availability."
+}

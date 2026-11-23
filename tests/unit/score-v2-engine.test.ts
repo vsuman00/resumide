@@ -2,12 +2,224 @@ import { randomUUID, createHash } from "node:crypto";
 import { describe, it, expect } from "vitest";
 import { scoreFixture, SCORE_SOURCE } from "../fixtures/scoring-v2";
 import { parseJobRequirements } from "../../app/lib/server/job-requirements";
+import { reviseCanonical } from "../../app/lib/server/canonical-content";
+import {
+  getDraftScorePolicy,
+  WithheldScoreV2Schema,
+} from "../../app/lib/server/score-v2-contract";
 import {
   buildScoreDiagnostics,
   confirmedExperienceMonths,
   normalizeWeightedRules,
 } from "../../app/lib/server/score-v2-engine";
 describe("AA4 deterministic diagnostics", () => {
+  it("records an edited and confirmed certification declaration without inventing source evidence", () => {
+    const input = scoreFixture();
+    const fact = input.canonical.facts.find(
+      (item) => item.type === "certification",
+    )!;
+    input.canonical = reviseCanonical(input.canonical, {
+      operation: "edit",
+      factId: fact.id,
+      value: "Azure",
+    });
+    input.canonical = reviseCanonical(input.canonical, {
+      operation: "confirm",
+      factId: fact.id,
+    });
+    input.requirements = parseJobRequirements(
+      "Azure certification required",
+      input.requirements,
+    );
+    const declared = input.canonical.facts.find((item) => item.id === fact.id)!;
+    expect(declared).toMatchObject({
+      state: "candidate_confirmed",
+      sources: [],
+      confirmation: { actorId: input.canonical.ownerId, value: "Azure" },
+    });
+    const diagnostics = buildScoreDiagnostics(input);
+    expect(
+      diagnostics.alignment.find((item) => item.type === "certification"),
+    ).toMatchObject({
+      state: "not_evaluated",
+      proposedState: "not_evaluated",
+      reason: expect.stringContaining("declaration is recorded"),
+      factIds: [fact.id],
+    });
+    expect(diagnostics.score.state).toBe("withheld");
+    expect(
+      diagnostics.score.dimensions.every(
+        (item) =>
+          item.value === null && !item.eligible && item.coverage === null,
+      ),
+    ).toBe(true);
+    expect(diagnostics.readiness.blockers).toContain(
+      "calibration_not_approved",
+    );
+    expect(declared.sources).toEqual([]);
+  });
+  it.each(["cited", "uncited"])(
+    "reviews proficiency for an already declared %s skill without asking for repeated confirmation",
+    (source) => {
+      const input = scoreFixture();
+      const skill = input.canonical.facts.find(
+        (item) => item.type === "skill" && item.value === "SQL",
+      )!;
+      if (source === "uncited") {
+        input.canonical = reviseCanonical(input.canonical, {
+          operation: "edit",
+          factId: skill.id,
+          value: skill.value,
+        });
+        input.canonical = reviseCanonical(input.canonical, {
+          operation: "confirm",
+          factId: skill.id,
+        });
+      }
+      const diagnostics = buildScoreDiagnostics(input);
+      expect(
+        diagnostics.alignment.find((item) => item.value === "SQL"),
+      ).toMatchObject({
+        state: "not_evaluated",
+        proposedState: "not_evaluated",
+        reason: expect.stringContaining(
+          "proficiency and skill-specific duration",
+        ),
+        factIds: [skill.id],
+      });
+      expect(
+        diagnostics.score.dimensions.every((item) => item.value === null),
+      ).toBe(true);
+    },
+  );
+  it.each(["cited", "uncited"])(
+    "still requests confirmation for an unconfirmed %s certification",
+    (source) => {
+      const input = scoreFixture();
+      const fact = input.canonical.facts.find(
+        (item) => item.type === "certification",
+      )!;
+      if (source === "uncited")
+        input.canonical = reviseCanonical(input.canonical, {
+          operation: "edit",
+          factId: fact.id,
+          value: fact.value,
+        });
+      else {
+        fact.state = "unconfirmed";
+        fact.confirmation = null;
+      }
+      expect(
+        buildScoreDiagnostics(input).alignment.find(
+          (item) => item.type === "certification",
+        ),
+      ).toMatchObject({
+        state: "not_evaluated",
+        proposedState: "candidate_confirmation_required",
+      });
+    },
+  );
+  it.each([false, true])(
+    "does not merge uncited declaration with a different unconfirmed cited duplicate (reverse=%s)",
+    (reverse) => {
+      const input = scoreFixture();
+      const citedFact = structuredClone(
+        input.canonical.facts.find((item) => item.type === "certification")!,
+      );
+      input.canonical = reviseCanonical(input.canonical, {
+        operation: "edit",
+        factId: citedFact.id,
+        value: citedFact.value,
+      });
+      input.canonical = reviseCanonical(input.canonical, {
+        operation: "confirm",
+        factId: citedFact.id,
+      });
+      citedFact.id = randomUUID();
+      citedFact.state = "unconfirmed";
+      citedFact.confirmation = null;
+      input.canonical.facts.push(citedFact);
+      if (reverse) input.canonical.facts.reverse();
+      expect(
+        buildScoreDiagnostics(input).alignment.find(
+          (item) => item.type === "certification",
+        ),
+      ).toMatchObject({
+        proposedState: "not_evaluated",
+        reason: expect.stringContaining("no matching source citation"),
+        factIds: expect.arrayContaining([citedFact.id]),
+      });
+    },
+  );
+  it.each(["actor", "value"])(
+    "rejects an invalid exact declaration %s rather than acknowledging it",
+    (kind) => {
+      const input = scoreFixture();
+      const fact = input.canonical.facts.find(
+        (item) => item.type === "certification",
+      )!;
+      if (kind === "actor") fact.confirmation!.actorId = randomUUID();
+      else fact.confirmation!.value = "Another certification";
+      expect(() => buildScoreDiagnostics(input)).toThrow();
+    },
+  );
+  it("does not use an uncited declared role for date arithmetic", () => {
+    const input = scoreFixture();
+    const role = input.canonical.facts.find((item) => item.type === "role")!;
+    input.canonical = reviseCanonical(input.canonical, {
+      operation: "edit",
+      factId: role.id,
+      value: role.value,
+    });
+    input.canonical = reviseCanonical(input.canonical, {
+      operation: "confirm",
+      factId: role.id,
+    });
+    expect(confirmedExperienceMonths(input.canonical)).toBeNull();
+    expect(
+      buildScoreDiagnostics(input).alignment.find(
+        (item) => item.type === "experience",
+      )?.proposedState,
+    ).toBe("not_evaluated");
+  });
+  it("versions regenerated diagnostics while retaining historical withheld readers", () => {
+    const input = scoreFixture();
+    const first = buildScoreDiagnostics(input);
+    expect(first.score.producerVersion).toBe("score-v2/1.0.3");
+    expect(buildScoreDiagnostics(input)).toEqual(first);
+    for (const producerVersion of [
+      "score-v2/preparation-1.0.0",
+      "score-v2/1.0.0",
+      "score-v2/1.0.1",
+      "score-v2/1.0.2",
+      "score-v2/1.0.3",
+    ])
+      expect(
+        WithheldScoreV2Schema.safeParse({ ...first.score, producerVersion })
+          .success,
+      ).toBe(true);
+    expect(
+      WithheldScoreV2Schema.safeParse({
+        ...first.score,
+        producerVersion: "score-v2/99.0.0",
+      }).success,
+    ).toBe(false);
+    const fingerprint = (producer: string) =>
+      createHash("sha256")
+        .update(
+          JSON.stringify({
+            producer,
+            policy: getDraftScorePolicy(),
+            evidence: input.evidence,
+            canonical: input.canonical,
+            requirements: input.requirements,
+            expectedPageCount: input.evidence.nativeSource.pages.length,
+          }),
+        )
+        .digest("hex");
+    expect(first.score.inputSha256).toBe(fingerprint("score-v2/1.0.3"));
+    expect(first.score.inputSha256).not.toBe(fingerprint("score-v2/1.0.2"));
+  });
   it("does not satisfy a subject-specific degree with an unrelated degree", () => {
     const input = scoreFixture(
       SCORE_SOURCE.replace(
@@ -137,6 +349,44 @@ describe("AA4 deterministic diagnostics", () => {
     d.value = "2020-02-30 - 2022-01-01";
     expect(confirmedExperienceMonths(input.canonical)).toBeNull();
   });
+  it.each([
+    "At most 2 years of professional experience required",
+    "More than 3 years of professional experience required",
+    "Exactly 2 years of professional experience required",
+    "3 years of professional experience maximum required",
+    "1.5 years of professional experience required",
+    "2 years of professional experience or 4 years of leadership experience required",
+    "2 years of hospitality experience required",
+  ])("does not infer minimum-only tenure from %s", (clause) => {
+    const input = scoreFixture();
+    input.requirements = parseJobRequirements(clause, input.requirements);
+    expect(confirmedExperienceMonths(input.canonical)).toBe(36);
+    const diagnostics = buildScoreDiagnostics(input);
+    expect(
+      diagnostics.alignment.find((item) => item.type === "experience"),
+    ).toMatchObject({
+      state: "not_evaluated",
+      proposedState: "not_evaluated",
+      reason: expect.stringContaining("explicit minimum"),
+      factIds: [],
+    });
+    expect(
+      diagnostics.score.dimensions.every((item) => item.value === null),
+    ).toBe(true);
+  });
+  it.each([
+    "Must have 3 years experience",
+    "At least 3 years of professional experience required",
+    "• 3+ years of work experience required",
+  ])("retains a minimum-only tenure observation for %s", (clause) => {
+    const input = scoreFixture();
+    input.requirements = parseJobRequirements(clause, input.requirements);
+    expect(
+      buildScoreDiagnostics(input).alignment.find(
+        (item) => item.type === "experience",
+      ),
+    ).toMatchObject({ state: "not_evaluated", proposedState: "satisfied" });
+  });
   it("keeps negation, unknown importance, credential and skill evidence distinct", () => {
     const r = buildScoreDiagnostics(scoreFixture());
     expect(r.alignment.find((a) => a.type === "authorization")).toMatchObject({
@@ -148,7 +398,10 @@ describe("AA4 deterministic diagnostics", () => {
       proposedState: "satisfied",
     });
     expect(r.alignment.find((a) => a.value === "SQL")).toMatchObject({
-      proposedState: "candidate_confirmation_required",
+      proposedState: "not_evaluated",
+      reason: expect.stringContaining(
+        "proficiency and skill-specific duration",
+      ),
     });
     expect(r.alignment.find((a) => a.value === "Python")).toMatchObject({
       importance: "unknown",
@@ -194,7 +447,8 @@ describe("AA4 deterministic diagnostics", () => {
       (a) => a.value === "SQL",
     )!;
     expect(grouped.sourceRequirementIds).toHaveLength(2);
-    expect(grouped.proposedState).toBe("candidate_confirmation_required");
+    expect(grouped.proposedState).toBe("not_evaluated");
+    expect(grouped.reason).toContain("proficiency and skill-specific duration");
   });
   it("does not infer absent qualifications from unrecovered or aliased words", () => {
     const input = scoreFixture();

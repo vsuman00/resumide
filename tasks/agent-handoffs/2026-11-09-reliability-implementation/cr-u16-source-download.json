@@ -1,0 +1,57 @@
+{
+  "id": "CR-U16-S01",
+  "status": "VERIFIED_LOCAL_PRIVATE_SOURCE",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated worktree, original synthetic PDF only",
+  "sourceHashes": {
+    "app/routes/analysis.source.ts": "d840612ab870d6dc45c4f7f803dc86f714cdf611f7c200dadcf9a32c2ac7276a",
+    "app/lib/server/canonical-repository.ts": "23c4402d3c20e341b4072d1faf3af93237a520cc0ae755010192629aaa985afd",
+    "app/lib/server/extract.ts": "ccd4e5f4bed86f060270a465b2ec933a6be5a5e7485329e1df584f4b8f0ff550",
+    "tests/unit/source-route.test.ts": "5a1ac835edc5eea6b40e698c9661128976b618ca34d2c09ee6346d2dbd6ae245",
+    "e2e/native-layout.spec.ts": "4f77a75f838b3cde8555754fe935d199b17310e737f70d5615cf6c8e3a48d96b"
+  },
+  "redRouteCases": 8,
+  "focusedTests": {
+    "exitCode": 0,
+    "files": 5,
+    "passed": 102
+  },
+  "typecheck": {
+    "exitCode": 0
+  },
+  "lint": {
+    "exitCode": 0,
+    "errors": 0,
+    "existingHookWarnings": 4
+  },
+  "build": {
+    "exitCode": 0
+  },
+  "workerBuild": {
+    "exitCode": 0
+  },
+  "browser": {
+    "exitCode": 0,
+    "engine": "Chromium",
+    "app": "Built SSR on loopback",
+    "backend": "Simulated Supabase Auth, Data API and Storage",
+    "reportSha256": "2f715fd96b65ef0b7379c38564429ae416e5ff900cd565b301928bc88b9b97c1",
+    "verificationScriptSha256": "e98fe9c5e863e67184c6262983a1267683acf2fd2c0ff2a70af9545969a372fd",
+    "result": {
+      "ownerExactPdf": 200,
+      "wrongBytes": 503,
+      "revokedDuringDownload": 404,
+      "anonymous": 404,
+      "foreign": 404,
+      "storageReads": 3,
+      "externalRequests": 0
+    },
+    "initialHarnessFailure": "Missing synthetic OpenAI configuration caused HTTP 500 before the source test. The passing run used an inert configuration value with AI disabled."
+  },
+  "managedBrowserSpecExtended": true,
+  "managedBrowserRun": false,
+  "remaining": [
+    "managed source and lifecycle verification",
+    "history reload and signed-out/back-navigation acceptance"
+  ]
+}

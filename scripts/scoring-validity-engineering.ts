@@ -191,7 +191,7 @@ export function scoringEngineeringBenchmark() {
   return {
     schemaVersion: "scoring-validity-engineering/1.0.0",
     scope: "known synthetic engineering only",
-    engineVersion: "score-v2/1.0.1",
+    engineVersion: buildScoreDiagnostics(base).score.producerVersion,
     policyId: "software-engineering-en-IN/draft-1.0.0",
     engineeringPassed: true,
     releasePassed: false,

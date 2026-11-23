@@ -1,0 +1,11 @@
+# Declared document page count
+
+The review extraction branch dropped the parser's declared total before persistence. A real JavaScript stage/extraction test with a controlled two-page extractor reproduced `p_page_count=undefined` in both legacy and fenced requests. The immutable envelope already contained both represented pages. The two failing assertions and all 13 passing predecessor worker cases are preserved in the RED receipt; this was not a missing-module or Native database failure.
+
+Added `extractDocumentForReviewWithMetadata`, which returns the existing envelope plus `pageCount` from the same parser call's `layers.totalPages`. The existing `extractDocumentForReview` API still returns only the envelope. Existing profile validation requires a safe positive declared total and complete page texts, including blanks; the helper also enforces the supplied maximum. The explicit one-page legacy aggregate fallback remains supported. No count is inferred from envelope length, and no metadata is inserted into the immutable envelope.
+
+The worker passes the measured count outside the envelope through the existing `persist_document_evidence` operation. The legacy extraction branch is unchanged. Historical unknown counts are not backfilled; blank/OCR-unsafe evidence still withholds scoring and source authority. The paired Native overload/dispatcher, readiness and entrypoint forwarding are separate coordinated leaves.
+
+Author verification: 56 passing cases in three files, four-file ESLint and formatting checks. The entire original document test block and all original worker test cases remain present byte-for-byte. An initial formatting check flagged the two test files; its receipt is retained, and the test-only formatting successor passes. All prior source outside the four owned application/test paths remains unchanged.
+
+Evidence is source/synthetic only: actual stage and pure extraction/reconciliation code with controlled extractor and fake SDK responses. No actual PDF parsing, standalone worker, database, SQL parser/execution, provider, browser, service, credential read, dependency change, Git operation or deployment ran. This repair does not establish deployed prevalence or a successful real browser fixture. The original fixture task remains blocked on completing and verifying this producer chain.

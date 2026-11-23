@@ -1,0 +1,97 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+stderr | tests/components/Privacy.test.tsx > withdraws completed-export downloads while a visible deletion is queued and preserves request tracking
+No `HydrateFallback` element provided to render during initial hydration
+
+ ✓ tests/components/Privacy.test.tsx (13 tests) 410ms
+ ✓ tests/unit/typed-authoring-score-route.test.ts (20 tests) 419ms
+ ❯ tests/unit/typed-authoring-http-route.test.ts (37 tests | 3 failed) 704ms
+   ✓ denies disabled SCORING_V2_ENABLED with zero authentication or owned I/O 101ms
+   ✓ denies disabled AUTHORING_ENABLED with zero authentication or owned I/O 26ms
+   ✓ denies disabled TYPED_AUTHORING_ENABLED with zero authentication or owned I/O 16ms
+   ✓ keeps GET and non-POST methods private and method-rejected without authentication 13ms
+   ✓ rejects a foreign browser origin before session or admin I/O 16ms
+   ✓ denies an unauthenticated submit and preserves refreshed private cookies 23ms
+   ✓ rejects an invalid analysis identifier before privileged owned access 14ms
+   ✓ previews an actual supported local change without provider or mutation RPC 60ms
+   ✓ does not release a preview for foreign owned context 15ms
+   ✓ does not release a preview for withdrawn owned context 16ms
+   ✓ does not release a preview for stale owned context 22ms
+   ✓ rejects malformed missing_ack before owned admin access 12ms
+   ✓ rejects malformed wrong_ack before owned admin access 19ms
+   ✓ rejects malformed reject_ack before owned admin access 12ms
+   ✓ rejects malformed duplicate_field before owned admin access 11ms
+   ✓ rejects malformed unknown_field before owned admin access 16ms
+   ✓ rejects malformed decoded_duplicate before owned admin access 11ms
+   ✓ rejects malformed unknown_command before owned admin access 14ms
+   ✓ rejects malformed file before owned admin access 16ms
+   ✓ rejects unsupported_type without admin or provider 13ms
+   ✓ rejects body_cap without admin or provider 14ms
+   ✓ rejects command_cap without admin or provider 11ms
+   ✓ dispatches exact actual accept command through the single atomic RPC 21ms
+   ✓ dispatches exact actual reject command through the single atomic RPC 19ms
+   ✓ retries the exact original command and key without rebasing after a moved head 18ms
+   ✓ returns uncertain denied native writes as retry-exact without claiming a save 18ms
+   ✓ refuses an exact but foreign-owner command before any owned read or write 10ms
+   ✓ does not rebase a changed selected requirement or claim value into the current command 19ms
+   ✓ undoes the actual owned recorded acceptance to its original base via guarded legacy undo 18ms
+   ✓ does not undo missing_event or publish an uncertain success 12ms
+   ✓ does not undo tampered_receipt or publish an uncertain success 11ms
+   ✓ does not undo foreign_event or publish an uncertain success 10ms
+   ✓ does not undo stale_head or publish an uncertain success 15ms
+   ✓ does not undo withdrawn or publish an uncertain success 11ms
+   × withholds HTTP authoring under scoped durable authority: prepared 18ms
+   × withholds HTTP authoring under scoped durable authority: capability_missing 16ms
+   × withholds HTTP authoring under scoped durable authority: foreign_reply 16ms
+ ✓ tests/unit/typed-authoring-declaration-score.test.ts (6 tests) 210ms
+ ✓ tests/unit/canonical-rewrite-score.test.ts (15 tests) 890ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/typed-authoring-http-route.test.ts > withholds HTTP authoring under scoped durable authority: prepared
+AssertionError: expected 200 to be 404 // Object.is equality
+
+- Expected
++ Received
+
+- 404
++ 200
+
+ ❯ tests/unit/typed-authoring-http-route.test.ts:899:29
+    897|     if (reason === "foreign_reply") f.store.privacy.replyOwner = id(99…
+    898|     const response = await action(f.args(f.decisions()));
+    899|     expect(response.status).toBe(reason === "prepared" ? 404 : 503);
+       |                             ^
+    900|     expect(f.store.rpc).not.toHaveBeenCalled();
+    901|     expect(fetch).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/unit/typed-authoring-http-route.test.ts > withholds HTTP authoring under scoped durable authority: capability_missing
+ FAIL  tests/unit/typed-authoring-http-route.test.ts > withholds HTTP authoring under scoped durable authority: foreign_reply
+AssertionError: expected 200 to be 503 // Object.is equality
+
+- Expected
++ Received
+
+- 503
++ 200
+
+ ❯ tests/unit/typed-authoring-http-route.test.ts:899:29
+    897|     if (reason === "foreign_reply") f.store.privacy.replyOwner = id(99…
+    898|     const response = await action(f.args(f.decisions()));
+    899|     expect(response.status).toBe(reason === "prepared" ? 404 : 503);
+       |                             ^
+    900|     expect(f.store.rpc).not.toHaveBeenCalled();
+    901|     expect(fetch).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  3 failed | 88 passed (91)
+   Start at  13:54:46
+   Duration  1.47s (transform 1.13s, setup 0ms, import 1.87s, tests 2.63s, environment 268ms)
+
+JSON report written to /var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-disposition-consumer-access-nded8qqr/green-tests.json

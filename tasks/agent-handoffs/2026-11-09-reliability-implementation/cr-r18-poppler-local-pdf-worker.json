@@ -1,0 +1,747 @@
+{
+  "id": "CR-R18-S15",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "status": "VERIFIED_LOCAL_OPT_IN_POPPLER_RUNTIME_AND_IMAGE_SCAN",
+  "priorEvidenceSha256": "612ff114977fee1c0b3929f434f936f42b9ab176b376cdc09ffa651fa7141a27",
+  "sourceHashes": {
+    "scripts/latex-runtime/Dockerfile": "a1cbc3ac19eafbd9c840d9be8134ddc90c5ffc49358729884fd24053c1552f6e",
+    "scripts/latex-runtime/.dockerignore": "d7782d30a73afb26a83eaf20c093bff7070b943cb7ac3d0996191f332a44bf18",
+    "scripts/latex-runtime/native-poppler/build-local-pdf.py": "969b7e49b1f50e6b5546e814535ee7bc6de9134f164e7283226e28f3a468a1f0",
+    "scripts/latex-runtime/native-poppler/install-local-pdf.py": "d30e1803b7d6ad8f5b8bf644825c05d150b16b8d72190c9d29163ab233ada201",
+    "scripts/latex-test-fixtures.ts": "240e1aba675cdf575c7e372d8f142805063d60d290438b858ef3eb703b5e9d76"
+  },
+  "defaultWorkerSwitched": false,
+  "deployed": false,
+  "releaseAccepted": false,
+  "native": {
+    "build": {
+      "exitCode": 0,
+      "elapsedSeconds": 262.831,
+      "logSha256": "70b5d6435e3c1227e50393be8a0907d28bbf4cc2efdfe242a242c1a177c6adc3",
+      "logBytes": 158510,
+      "boundReached": null,
+      "startedWithFreeBytes": 23412436992
+    },
+    "receiptSha256": "861d2f801b9d4aae14374d89d2414ada57ce4163029a7f632ea659c499f00794",
+    "cohort": {
+      "libpoppler147": {
+        "file": "libpoppler147_25.03.0-5+deb13u4+resumide2_arm64.deb",
+        "version": "25.03.0-5+deb13u4+resumide2",
+        "sha256": "fef01f0913d6a69e4dd1526face940267e79d9c221405f4f8d665e5b2e88f57b",
+        "source": "poppler",
+        "depends": "libc6 (>= 2.38), libfontconfig1 (>= 2.12.6), libfreetype6 (>= 2.2.1), libgpgmepp6t64 (>= 1.24.2), libjpeg62-turbo (>= 1.3.1), liblcms2-2 (>= 2.2+git20110628), libnspr4 (>= 2:4.9-2~), libnss3 (>= 2:3.16), libpng16-16t64 (>= 1.6.46), libstdc++6 (>= 13.1), libtiff6 (>= 4.0.3), zlib1g (>= 1:1.1.4)"
+      },
+      "poppler-utils": {
+        "file": "poppler-utils_25.03.0-5+deb13u4+resumide2_arm64.deb",
+        "version": "25.03.0-5+deb13u4+resumide2",
+        "sha256": "78b7dea7a905dda3d5aa38ceec9437745d43f28002e4b723be524b538d129661",
+        "source": "poppler",
+        "depends": "libpoppler147 (= 25.03.0-5+deb13u4+resumide2), libc6 (>= 2.38), libcairo2 (>= 1.17.8), libfreetype6 (>= 2.2.1), liblcms2-2 (>= 2.2+git20110628), libstdc++6 (>= 13.1)"
+      }
+    },
+    "keptAbiExports": 2716,
+    "parityPdfs": 7,
+    "consumerCases": 107,
+    "publicIssue": "https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1105820",
+    "publicGpgFixtureProbe": {
+      "default": {
+        "import": {
+          "exit": 0,
+          "status": [
+            "KEY_CONSIDERED",
+            "IMPORTED",
+            "IMPORT_OK",
+            "IMPORT_RES"
+          ]
+        },
+        "detachedPadded": {
+          "exit": 2,
+          "status": [
+            "UNEXPECTED",
+            "NEWSIG",
+            "KEY_CONSIDERED",
+            "SIG_ID",
+            "GOODSIG",
+            "VALIDSIG",
+            "TRUST_UNDEFINED",
+            "FAILURE"
+          ]
+        },
+        "detachedFirstPacket": {
+          "exit": 0,
+          "status": [
+            "NEWSIG",
+            "KEY_CONSIDERED",
+            "SIG_ID",
+            "GOODSIG",
+            "VALIDSIG",
+            "TRUST_UNDEFINED"
+          ]
+        },
+        "detachedStandardPadding": {
+          "exit": 2,
+          "status": [
+            "UNEXPECTED",
+            "NEWSIG",
+            "KEY_CONSIDERED",
+            "SIG_ID",
+            "GOODSIG",
+            "VALIDSIG",
+            "TRUST_UNDEFINED",
+            "FAILURE"
+          ]
+        }
+      },
+      "weakKeyCertificationFixtureOnly": {
+        "import": {
+          "exit": 0,
+          "status": [
+            "KEY_CONSIDERED",
+            "IMPORTED",
+            "IMPORT_OK",
+            "IMPORT_RES"
+          ]
+        },
+        "detachedPadded": {
+          "exit": 2,
+          "status": [
+            "UNEXPECTED",
+            "NEWSIG",
+            "KEY_CONSIDERED",
+            "SIG_ID",
+            "GOODSIG",
+            "VALIDSIG",
+            "TRUST_UNDEFINED",
+            "FAILURE"
+          ]
+        },
+        "detachedFirstPacket": {
+          "exit": 0,
+          "status": [
+            "NEWSIG",
+            "KEY_CONSIDERED",
+            "SIG_ID",
+            "GOODSIG",
+            "VALIDSIG",
+            "TRUST_UNDEFINED"
+          ]
+        },
+        "detachedStandardPadding": {
+          "exit": 2,
+          "status": [
+            "UNEXPECTED",
+            "NEWSIG",
+            "KEY_CONSIDERED",
+            "SIG_ID",
+            "GOODSIG",
+            "VALIDSIG",
+            "TRUST_UNDEFINED",
+            "FAILURE"
+          ]
+        }
+      },
+      "imageId": "sha256:503c2679c3c81824a8b9c396ca141b0a5780d86215050428013d7c36bec5613a",
+      "fixtureSha256": "086c4a90f8a5e15c0ac0e327565eee7c0b771c742d37a14a6e4adc28eaa3adf6",
+      "keySha256": "d4e0bc6969ba06ead202652e35b3e31e3a0ec0e8244185fa67cf2cb7115e8900",
+      "detachedSignatureSha256": "84193b2baaf7162688ea4d726348c59bce784a0c770068e43cf92fbbaad5319b"
+    },
+    "originalFullCtest": {
+      "build": {
+        "exitCode": 1,
+        "elapsedSeconds": 264.855,
+        "logSha256": "d04c6b0bbf4152509a96bc7b298f6e711cdfe3240c1aa8fb53cfa7efcfb7c3ef",
+        "logBytes": 156164,
+        "boundReached": null,
+        "startedWithFreeBytes": 23422595072
+      },
+      "tests": 71,
+      "passed": 70,
+      "failedClass": "check_qt6_signature_basics",
+      "junitSha256": "a09c74f60386e976341d88127aedae0e5dbdad1e705ce7f174f156c559612552",
+      "acceptedUnderE010": false,
+      "exactSameExecutableAndLibraryBindingAsPositiveRun": true
+    },
+    "originalFixtureControl": {
+      "fixtureSha256": "086c4a90f8a5e15c0ac0e327565eee7c0b771c742d37a14a6e4adc28eaa3adf6",
+      "junitSha256": "82d174df93c21ab7ab6203df4a4fc8aca35881652c677bc4bd8463fa9c4dd9bd",
+      "actualExitCode": 8,
+      "compatibleFixtureSha256": "562ca68a5284efc252ddf1fa594e1312f36923c20a4c2b6e33b272c667e73775",
+      "assertion": "testPgp(gpg) empty signer on original PDF",
+      "signedRangesSha256": "4ee44d0082f868e8d09606065d3bde65b95021397480fd3a01a4e7ff700a3800",
+      "detachedSignatureSha256": "84193b2baaf7162688ea4d726348c59bce784a0c770068e43cf92fbbaad5319b"
+    },
+    "paddingNormalizedCtest": {
+      "passed": 71,
+      "tests": 71,
+      "qtClasses": 56,
+      "bothPgpBackendsPassed": true,
+      "junitSha256": "111080451517e22649a40b449ebc0ccf225795e19a7f22b20b30a43aa6accd11",
+      "bindingSha256": "cd50336124d80a4f1055af6a152523fede4d785ce4a3ad60ffef69d8a9e214df",
+      "originalFixtureRestored": true,
+      "runtimeSignaturePolicyChanged": false
+    }
+  },
+  "runtime": {
+    "candidate": {
+      "exitCode": 0,
+      "elapsedSeconds": 4.017,
+      "logSha256": "106faf20c229cbc4afebcd3ecdbca47e21c9d5b35f9dd716f95b986a9181b870",
+      "logBytes": 40909,
+      "boundReached": null,
+      "startedWithFreeBytes": 21702742016,
+      "tag": "resumide-latex:localpdf-861d2f801b9d-zeyjgo0i",
+      "packageBuildReceiptSha256": "861d2f801b9d4aae14374d89d2414ada57ce4163029a7f632ea659c499f00794",
+      "imageId": "sha256:48987b182f06c94b1572d78b6ebfe95bd459cbddfc5069193fbae985842c1246"
+    },
+    "firstImageBuild": {
+      "exitCode": 0,
+      "elapsedSeconds": 2.012,
+      "logSha256": "e94815434fbec95f32a089e842749045eaa64ed40138b26a7229e37d2728f4da",
+      "logBytes": 40618,
+      "boundReached": null,
+      "startedWithFreeBytes": 22014681088,
+      "tag": "resumide-latex:localpdf-861d2f801b9d-gugacocd",
+      "packageBuildReceiptSha256": "861d2f801b9d4aae14374d89d2414ada57ce4163029a7f632ea659c499f00794",
+      "imageId": "sha256:4ac46f6587feaccc205f1dadbbd060d0c97044335393c4319a0a24596a67ad21"
+    },
+    "firstOutcome": "An ordinary compile returned runtime_unavailable; /etc/ld.so.cache was the only differing sealed input.",
+    "installed": {
+      "packageVersion": "25.03.0-5+deb13u4+resumide2",
+      "removedPackages": [
+        "libcurl3t64-gnutls",
+        "libgssapi-krb5-2",
+        "libk5crypto3",
+        "libkrb5-3",
+        "libkrb5support0"
+      ],
+      "unchangedPackageCount": 209,
+      "sourceReceiptSha256": "861d2f801b9d4aae14374d89d2414ada57ce4163029a7f632ea659c499f00794",
+      "upstream": {
+        "ctestExecutables": 71,
+        "passedExecutables": 71,
+        "failedExecutables": 0,
+        "failedOrSkipped": 0,
+        "skippedExecutables": 0,
+        "actualCtestExitCode": 0,
+        "allNativeTestsPassed": true,
+        "qtOutcomes": {
+          "check_qt5_attachments": {
+            "reportedPassedIncludingInitCleanup": 7,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_dateConversion": {
+            "reportedPassedIncludingInitCleanup": 19,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_fonts": {
+            "reportedPassedIncludingInitCleanup": 10,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_links": {
+            "reportedPassedIncludingInitCleanup": 6,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_annotations": {
+            "reportedPassedIncludingInitCleanup": 9,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_metadata": {
+            "reportedPassedIncludingInitCleanup": 27,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_optcontent": {
+            "reportedPassedIncludingInitCleanup": 8,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_forms": {
+            "reportedPassedIncludingInitCleanup": 9,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_pagelayout": {
+            "reportedPassedIncludingInitCleanup": 5,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_pagemode": {
+            "reportedPassedIncludingInitCleanup": 7,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_password": {
+            "reportedPassedIncludingInitCleanup": 11,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_permissions": {
+            "reportedPassedIncludingInitCleanup": 3,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_search": {
+            "reportedPassedIncludingInitCleanup": 10,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_actualtext": {
+            "reportedPassedIncludingInitCleanup": 55,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_lexer": {
+            "reportedPassedIncludingInitCleanup": 3,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_internal_outline": {
+            "reportedPassedIncludingInitCleanup": 7,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_goostring": {
+            "reportedPassedIncludingInitCleanup": 12,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_object": {
+            "reportedPassedIncludingInitCleanup": 5,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_stroke_opacity": {
+            "reportedPassedIncludingInitCleanup": 4,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_utf_conversion": {
+            "reportedPassedIncludingInitCleanup": 16,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_outline": {
+            "reportedPassedIncludingInitCleanup": 3,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_signature_basics": {
+            "reportedPassedIncludingInitCleanup": 10,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_utf8document": {
+            "reportedPassedIncludingInitCleanup": 3,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_distinguished_name_parser": {
+            "reportedPassedIncludingInitCleanup": 53,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_cidfontswidthsbuilder": {
+            "reportedPassedIncludingInitCleanup": 5,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_overprint": {
+            "reportedPassedIncludingInitCleanup": 3,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_pagelabelinfo": {
+            "reportedPassedIncludingInitCleanup": 8,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt5_strings": {
+            "reportedPassedIncludingInitCleanup": 35,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_attachments": {
+            "reportedPassedIncludingInitCleanup": 7,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_dateConversion": {
+            "reportedPassedIncludingInitCleanup": 19,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_fonts": {
+            "reportedPassedIncludingInitCleanup": 10,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_links": {
+            "reportedPassedIncludingInitCleanup": 6,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_annotations": {
+            "reportedPassedIncludingInitCleanup": 9,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_metadata": {
+            "reportedPassedIncludingInitCleanup": 27,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_optcontent": {
+            "reportedPassedIncludingInitCleanup": 8,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_forms": {
+            "reportedPassedIncludingInitCleanup": 9,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_pagelayout": {
+            "reportedPassedIncludingInitCleanup": 5,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_pagemode": {
+            "reportedPassedIncludingInitCleanup": 7,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_password": {
+            "reportedPassedIncludingInitCleanup": 11,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_permissions": {
+            "reportedPassedIncludingInitCleanup": 3,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_search": {
+            "reportedPassedIncludingInitCleanup": 10,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_actualtext": {
+            "reportedPassedIncludingInitCleanup": 55,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_lexer": {
+            "reportedPassedIncludingInitCleanup": 3,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_internal_outline": {
+            "reportedPassedIncludingInitCleanup": 7,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_goostring": {
+            "reportedPassedIncludingInitCleanup": 12,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_object": {
+            "reportedPassedIncludingInitCleanup": 5,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_stroke_opacity": {
+            "reportedPassedIncludingInitCleanup": 4,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_utf_conversion": {
+            "reportedPassedIncludingInitCleanup": 16,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_outline": {
+            "reportedPassedIncludingInitCleanup": 3,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_signature_basics": {
+            "reportedPassedIncludingInitCleanup": 12,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_utf8document": {
+            "reportedPassedIncludingInitCleanup": 3,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_distinguished_name_parser": {
+            "reportedPassedIncludingInitCleanup": 53,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_cidfontswidthsbuilder": {
+            "reportedPassedIncludingInitCleanup": 6,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_overprint": {
+            "reportedPassedIncludingInitCleanup": 3,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_pagelabelinfo": {
+            "reportedPassedIncludingInitCleanup": 8,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          },
+          "check_qt6_strings": {
+            "reportedPassedIncludingInitCleanup": 35,
+            "failed": 0,
+            "skipped": 0,
+            "blacklisted": 0
+          }
+        },
+        "qtClassesWithPositiveMethodEvidence": 56,
+        "selfContainedQtExecutables": 18,
+        "engineeringException": null,
+        "debianIgnoredTestExitNotUsedAsAcceptance": true,
+        "junitSha256": "111080451517e22649a40b449ebc0ccf225795e19a7f22b20b30a43aa6accd11"
+      },
+      "signatureFixture": {
+        "fixtureSha256": "086c4a90f8a5e15c0ac0e327565eee7c0b771c742d37a14a6e4adc28eaa3adf6",
+        "junitSha256": "82d174df93c21ab7ab6203df4a4fc8aca35881652c677bc4bd8463fa9c4dd9bd",
+        "actualExitCode": 8,
+        "compatibleFixtureSha256": "562ca68a5284efc252ddf1fa594e1312f36923c20a4c2b6e33b272c667e73775",
+        "assertion": "testPgp(gpg) empty signer on original PDF",
+        "signedRangesSha256": "4ee44d0082f868e8d09606065d3bde65b95021397480fd3a01a4e7ff700a3800",
+        "detachedSignatureSha256": "84193b2baaf7162688ea4d726348c59bce784a0c770068e43cf92fbbaad5319b"
+      },
+      "changedClosureFiles": [
+        "/etc/ld.so.cache"
+      ],
+      "texLinkageUnchanged": true,
+      "runtimeEngineeringCandidate": true
+    },
+    "unchangedExpatSha256": "412785950405602c14248340928f1b088244007ba842e691d3b2425ca391998a"
+  },
+  "verification": {
+    "profilePaperCases": 6,
+    "profilePaperReceiptSha256": "b6ce4de4f61fd3c5c98899413a4097d733f209f3d5fe1585e07a9aeea7a9e087",
+    "sampleP95Ms": 1010,
+    "pairedRenderSha256": "8e1924414f10720b10d3eaa37be667eb79133669c0ea5b791ee8a254e7d7a031",
+    "twoPngPagesByteIdentical": true,
+    "embeddedFontsPerOutput": 8,
+    "chromeReceiptSha256": "a6ccccfd812631733533cf1d0e8cd14f89f1f56c6e8b7b86a805ad2457b5b2df",
+    "chrome": {
+      "status": "build_pdf_lifecycle_verified_with_real_compiler",
+      "compilerImage": "sha256:48987b182f06c94b1572d78b6ebfe95bd459cbddfc5069193fbae985842c1246",
+      "compilations": [
+        "77f4f8dc66cc1e103f8d7c503b1d0aba38d3ee9e7f1b9b5bb26531533d425f49",
+        "14c765c47ab01e9eb72699038538b5e15849b1df5807507fd450c6d59b9a982d",
+        "77f4f8dc66cc1e103f8d7c503b1d0aba38d3ee9e7f1b9b5bb26531533d425f49"
+      ],
+      "verifiedPdfHashes": [
+        "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f",
+        "3ec3c5e17be268457834e91528b760dd8b1f9c206effd64040db2a4810d195f0",
+        "19b9af083f30c809fd7b10664a4913158f76fcee5a476e2d5217d89373bc941f"
+      ],
+      "rateAdmissions": 6,
+      "suggestionCalls": 1,
+      "compileAttempts": 5,
+      "verifiedSignInNewTabAndRetry": true,
+      "rejectedEmptyPdf": true,
+      "canvasAndTextVerified": true,
+      "verifiedBrowserZoom": true,
+      "browser": "Google Chrome"
+    },
+    "chromeServices": "synthetic auth, rate admission and AI",
+    "ownedCompilerContainersAfterTests": 0,
+    "focusedUnitTests": 192,
+    "typecheck": true,
+    "lintErrors": 0,
+    "existingJdLintWarnings": 4,
+    "latexSourceChecks": true,
+    "containerSourceChecks": true
+  },
+  "scanner": {
+    "imageArchive": {
+      "sha256": "fa00dd39e73e5c3c17fe67bc96cbc731590c1b63b2b99199776a77931d33b993",
+      "bytes": 268591104
+    },
+    "dockerImageId": "sha256:48987b182f06c94b1572d78b6ebfe95bd459cbddfc5069193fbae985842c1246",
+    "platformManifestDigest": "sha256:c72f24f9269704f1e2cebf25cd2c96527c9680bf7a9dfddec3464155e61f6420",
+    "configDigest": "sha256:860b73994ebd548ddef2a5660de373c9b8c4dc7f73b4aa71594d78f59279e046",
+    "compressedAndUncompressedLayersVerified": 18,
+    "allPredecessorLayersPreserved": true,
+    "run": {
+      "status": "EXACT_IMAGE_SCAN_COMPLETE",
+      "image": "latex-localpdf-sealed-arm64",
+      "dockerImageId": "sha256:48987b182f06c94b1572d78b6ebfe95bd459cbddfc5069193fbae985842c1246",
+      "scannerImageId": "sha256:860b73994ebd548ddef2a5660de373c9b8c4dc7f73b4aa71594d78f59279e046",
+      "exitCode": 0,
+      "elapsedSeconds": 5.257,
+      "rawBytes": 4955145,
+      "rawSha256": "ac228c6418af8b77d706fee79cde58da5f4ba6e880f6261ba7fd7d9af3ef41f4",
+      "scannerArguments": [
+        "image",
+        "--input",
+        "/private/tmp/resumide-r18-scanner-trust.3GSoHm/latex-localpdf-sealed-arm64.tar",
+        "--cache-dir",
+        "/private/tmp/resumide-r18-scanner-trust.3GSoHm/scan-cache",
+        "--cache-backend",
+        "memory",
+        "--config",
+        "/private/tmp/resumide-r18-scanner-trust.3GSoHm/scan-config.yaml",
+        "--ignorefile",
+        "/private/tmp/resumide-r18-scanner-trust.3GSoHm/no-ignores",
+        "--scanners",
+        "vuln",
+        "--pkg-types",
+        "os,library",
+        "--severity",
+        "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL",
+        "--detection-priority",
+        "comprehensive",
+        "--offline-scan",
+        "--disable-telemetry",
+        "--skip-version-check",
+        "--skip-db-update",
+        "--skip-java-db-update",
+        "--skip-check-update",
+        "--skip-vex-repo-update",
+        "--list-all-pkgs",
+        "--show-suppressed",
+        "--ignore-unfixed=false",
+        "--format",
+        "json",
+        "--exit-code",
+        "0",
+        "--timeout",
+        "2m",
+        "--parallel",
+        "2",
+        "--max-image-size",
+        "2GB",
+        "--no-progress"
+      ],
+      "dbFilesVerifiedUnchanged": true
+    },
+    "mode": "comprehensive",
+    "counts": {
+      "CRITICAL": 0,
+      "HIGH": 84,
+      "MEDIUM": 189,
+      "LOW": 650,
+      "UNKNOWN": 21
+    },
+    "rawMatches": 944,
+    "removedMatches": 131,
+    "newMatches": 0,
+    "removedHighMatches": 58,
+    "removedHighAdvisoryIds": 16,
+    "openHighAfterExpatReview": 80,
+    "report": "docs/evaluation/RESUMIDE_WORKER_TRIVY_20261122_LATEX_LOCAL_PDF_ARM64.json.gz",
+    "reportSha256": "5574d63c988b163fb30079078effef9c81dbba65205b9805ae5d7d11a87e77b5",
+    "sbom": {
+      "schema": "http://cyclonedx.org/schema/bom-1.7.schema.json",
+      "schemas": {
+        "bom-1.7.schema.json": "71152f97948eeeca2fd4a1434a9d29aab35d377be11828b504d029dfeeb1925a",
+        "cryptography-defs.schema.json": "95897594e42f7229523fd7a03272da284e0591b1c49550a8b62a355df6357249",
+        "jsf-0.82.schema.json": "2faf5eb3651f2ae5f46091a131770d8d847bbd121139d19c85fc7051bfa58c46",
+        "spdx.schema.json": "33863a360fc4d348e183d89c1ca7aa0877f481e7eb55be2d4102a30386188a10"
+      },
+      "structureValidated": true,
+      "skippedOptionalFormats": [
+        "iri-reference",
+        "idn-email"
+      ],
+      "packages": 215,
+      "osMetadataComponents": 1,
+      "allReportPackagePurlsMatch": true,
+      "imageId": "sha256:48987b182f06c94b1572d78b6ebfe95bd459cbddfc5069193fbae985842c1246",
+      "file": "docs/evaluation/RESUMIDE_LATEX_WORKER_SBOM_20261122_LOCAL_PDF_ARM64.cdx.json",
+      "sha256": "97c15800f8c91bb6e854900363e8b5da26a13c6c2f1d766f579866c161e26206"
+    },
+    "comparisonKey": [
+      "groupType",
+      "packageName",
+      "advisoryId",
+      "severity"
+    ],
+    "versionAwareComparison": {
+      "removedRows": 163,
+      "newRows": 32,
+      "newRowsAreRetainedAdvisoryMatchesWithChangedInstalledVersion": true,
+      "highRowsRekeyed": 0
+    },
+    "scope": "Effective package inventory and filesystem. The opt-in layer retains the predecessor image layers."
+  },
+  "remaining": [
+    "Formal worker admission for the opt-in image",
+    "Remaining LaTeX high and OCR advisory dispositions",
+    "Main production-image scan and SBOM",
+    "Formal release acceptance"
+  ]
+}

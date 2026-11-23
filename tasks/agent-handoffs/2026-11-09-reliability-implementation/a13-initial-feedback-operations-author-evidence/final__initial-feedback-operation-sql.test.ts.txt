@@ -1,0 +1,523 @@
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { describe, expect, it } from "vitest";
+import { INITIAL_FEEDBACK_OPERATION_PROFILE as profile } from "../../app/lib/server/initial-feedback-operation-profile";
+
+// Source-byte/protocol checks only: NO SQL parser, execution, or concurrency proof.
+const read = (path: string) =>
+  readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+const sql = read(
+  "supabase/migrations/20261115072701_initial_feedback_operations.sql",
+);
+const hash = (s: string) =>
+  createHash("sha256").update(s, "utf8").digest("hex");
+const bodyIn = (text: string, name: string) => {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const m = new RegExp(
+    `create(?: or replace)? function ${escaped}\\([\\s\\S]*?\\)\\s*returns [\\s\\S]*?\\bas\\s+(\\$[A-Za-z0-9_]*\\$)([\\s\\S]*?)\\1;`,
+    "u",
+  ).exec(text);
+  if (!m) throw new Error(`Missing source routine: ${name}`);
+  return m[2];
+};
+const body = (name: string) => bodyIn(sql, name);
+const jsonTag = (text: string, tag: string) =>
+  JSON.parse(text.split(`$${tag}$`)[1]);
+type Entry = {
+  signature: string;
+  sha256: string;
+  acl: string;
+  strict: boolean;
+};
+const checker = body("private.initial_feedback_operation_ready");
+const catalog = jsonTag(checker, "ifo_catalog") as Entry[];
+const prepare = body("public.prepare_initial_feedback");
+const claim = body("public.claim_initial_feedback_dispatch");
+const settle = body("public.settle_initial_feedback_attempt");
+const original = body("private.ifo_original");
+// ACTUAL imported source-factory vectors (88d5d62b artifact); NOT admitted seeds.
+// The on version is explicitly synthetic. These checks do not execute PG framing.
+const sourceVectors = {
+  header: "INITIAL-FEEDBACK-POLICY/1\n",
+  atomOrder: [
+    "version",
+    "provider",
+    "model",
+    "promptVersion",
+    "maxOutputTokens",
+    "attemptLimit",
+    "budgetPolicyVersion",
+    "supportVersion",
+    "supportSha256",
+    "planVersion",
+    "planSha256",
+    "writingSupportPolicyVersion",
+    "scoringInputProfile.schemaVersion",
+    "scoringInputProfile.profileVersion",
+    "scoringInputProfile.checkerSha256",
+    "scoringInputProfile.readerSha256",
+    "scoringInputProfile.finishSha256",
+    "scoringInputProfile.contextSha256",
+    "scoringInputProfile.exportSha256",
+    "scoringInputProfile.metadataSha256",
+    "planProfile.schemaVersion",
+    "planProfile.profileVersion",
+    "planProfile.policyVersion",
+    "planProfile.policySha256",
+    "planProfile.checkerSha256",
+    "planProfile.rendererSha256",
+    "planProfile.metadataSha256",
+  ],
+  vectors: [
+    {
+      evidence: "ACTUAL_FACTORY_VECTOR_NOT_REGISTRY_SEED_OR_ACTIVATION",
+      budgetPolicyVersionSynthetic: false,
+      policy: {
+        version: "initial-feedback-publication/1.0.0",
+        provider: "openai",
+        model: "gpt-6-luna",
+        promptVersion: "qualitative-cited-prose/3.0.0",
+        maxOutputTokens: 1200,
+        attemptLimit: 1,
+        budgetPolicyVersion: null,
+        supportVersion: "qualitative-content-support/1.0.0",
+        supportSha256:
+          "230f22333dd468f3bf78395b118330ec1ff78de18be9da5349356e84d0f6bd13",
+        planVersion: "initial-feedback-plan-policy/1.0.0",
+        planSha256:
+          "972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48",
+        writingSupportPolicyVersion: "legacy-source-transforms/1.0.4",
+        scoringInputProfile: {
+          schemaVersion: "legacy-scoring-readiness/1.0.0",
+          profileVersion: "legacy-scoring-profile/1.0.0",
+          checkerSha256:
+            "56a92f65d533a2f1b053078dbb372b1271728224e5df1c74b201b4cffb21a8d3",
+          readerSha256:
+            "2ea3c5071d8d56e421a37053127dea08fe8eb08ce91e4de9f5c3b4c4b1172ccf",
+          finishSha256:
+            "5db61206ed04f32af7052fce2d64e2ccf414d6fea13645f58eecf67f616b61a2",
+          contextSha256:
+            "d64ba9ac11ba732c983cd195cd7d83fba878e67f4ae0bffc8b6e166a600a8bd9",
+          exportSha256:
+            "e4c17997fdbec81d931e4838b3522c6c7d3c861b0bfa07b6fb3ab5ece160f0a2",
+          metadataSha256:
+            "f18e6abfd698c4dbf4f7f6040fb577b2e49e78e4125bfd9d31e8166d0e678da8",
+        },
+        planProfile: {
+          schemaVersion: "initial-feedback-plan-readiness/1.0.0",
+          profileVersion: "initial-feedback-plan-profile/1.0.0",
+          policyVersion: "initial-feedback-plan-policy/1.0.0",
+          policySha256:
+            "972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48",
+          checkerSha256:
+            "c5d8c0e8e5ac52c8b06a4fad5ea78f6fe6e42297bbbfd51cd2779243c8418b36",
+          rendererSha256:
+            "c8bc131aacc7f9ddd8e30dcca8f5f429e78ee84180e5dd4542254883001cedc6",
+          metadataSha256:
+            "3c133694d11334e9430821945c94782b562ab1efb3f26bb8d4e7a9f2699369c5",
+        },
+        sha256:
+          "5f5eace5226885c3bbaf6c430e656034edbb3f12e42ffa4634faffd8f94619ca",
+      },
+      framedUtf8:
+        "INITIAL-FEEDBACK-POLICY/1\nT34:initial-feedback-publication/1.0.0;T6:openai;T10:gpt-6-luna;T29:qualitative-cited-prose/3.0.0;T4:1200;T1:1;N;T33:qualitative-content-support/1.0.0;T64:230f22333dd468f3bf78395b118330ec1ff78de18be9da5349356e84d0f6bd13;T34:initial-feedback-plan-policy/1.0.0;T64:972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48;T30:legacy-source-transforms/1.0.4;T30:legacy-scoring-readiness/1.0.0;T28:legacy-scoring-profile/1.0.0;T64:56a92f65d533a2f1b053078dbb372b1271728224e5df1c74b201b4cffb21a8d3;T64:2ea3c5071d8d56e421a37053127dea08fe8eb08ce91e4de9f5c3b4c4b1172ccf;T64:5db61206ed04f32af7052fce2d64e2ccf414d6fea13645f58eecf67f616b61a2;T64:d64ba9ac11ba732c983cd195cd7d83fba878e67f4ae0bffc8b6e166a600a8bd9;T64:e4c17997fdbec81d931e4838b3522c6c7d3c861b0bfa07b6fb3ab5ece160f0a2;T64:f18e6abfd698c4dbf4f7f6040fb577b2e49e78e4125bfd9d31e8166d0e678da8;T37:initial-feedback-plan-readiness/1.0.0;T35:initial-feedback-plan-profile/1.0.0;T34:initial-feedback-plan-policy/1.0.0;T64:972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48;T64:c5d8c0e8e5ac52c8b06a4fad5ea78f6fe6e42297bbbfd51cd2779243c8418b36;T64:c8bc131aacc7f9ddd8e30dcca8f5f429e78ee84180e5dd4542254883001cedc6;T64:3c133694d11334e9430821945c94782b562ab1efb3f26bb8d4e7a9f2699369c5;",
+      byteLength: 1268,
+      sha256:
+        "5f5eace5226885c3bbaf6c430e656034edbb3f12e42ffa4634faffd8f94619ca",
+    },
+    {
+      evidence: "ACTUAL_FACTORY_VECTOR_NOT_REGISTRY_SEED_OR_ACTIVATION",
+      budgetPolicyVersionSynthetic: true,
+      policy: {
+        version: "initial-feedback-publication/1.0.0",
+        provider: "openai",
+        model: "gpt-6-luna",
+        promptVersion: "qualitative-cited-prose/3.0.0",
+        maxOutputTokens: 1200,
+        attemptLimit: 1,
+        budgetPolicyVersion: "synthetic-budget-policy/1",
+        supportVersion: "qualitative-content-support/1.0.0",
+        supportSha256:
+          "230f22333dd468f3bf78395b118330ec1ff78de18be9da5349356e84d0f6bd13",
+        planVersion: "initial-feedback-plan-policy/1.0.0",
+        planSha256:
+          "972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48",
+        writingSupportPolicyVersion: "legacy-source-transforms/1.0.4",
+        scoringInputProfile: {
+          schemaVersion: "legacy-scoring-readiness/1.0.0",
+          profileVersion: "legacy-scoring-profile/1.0.0",
+          checkerSha256:
+            "56a92f65d533a2f1b053078dbb372b1271728224e5df1c74b201b4cffb21a8d3",
+          readerSha256:
+            "2ea3c5071d8d56e421a37053127dea08fe8eb08ce91e4de9f5c3b4c4b1172ccf",
+          finishSha256:
+            "5db61206ed04f32af7052fce2d64e2ccf414d6fea13645f58eecf67f616b61a2",
+          contextSha256:
+            "d64ba9ac11ba732c983cd195cd7d83fba878e67f4ae0bffc8b6e166a600a8bd9",
+          exportSha256:
+            "e4c17997fdbec81d931e4838b3522c6c7d3c861b0bfa07b6fb3ab5ece160f0a2",
+          metadataSha256:
+            "f18e6abfd698c4dbf4f7f6040fb577b2e49e78e4125bfd9d31e8166d0e678da8",
+        },
+        planProfile: {
+          schemaVersion: "initial-feedback-plan-readiness/1.0.0",
+          profileVersion: "initial-feedback-plan-profile/1.0.0",
+          policyVersion: "initial-feedback-plan-policy/1.0.0",
+          policySha256:
+            "972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48",
+          checkerSha256:
+            "c5d8c0e8e5ac52c8b06a4fad5ea78f6fe6e42297bbbfd51cd2779243c8418b36",
+          rendererSha256:
+            "c8bc131aacc7f9ddd8e30dcca8f5f429e78ee84180e5dd4542254883001cedc6",
+          metadataSha256:
+            "3c133694d11334e9430821945c94782b562ab1efb3f26bb8d4e7a9f2699369c5",
+        },
+        sha256:
+          "fd7f080752a0aaddd1f9330aa27f2c8bad7daee0feb342030105258c5713de8a",
+      },
+      framedUtf8:
+        "INITIAL-FEEDBACK-POLICY/1\nT34:initial-feedback-publication/1.0.0;T6:openai;T10:gpt-6-luna;T29:qualitative-cited-prose/3.0.0;T4:1200;T1:1;T25:synthetic-budget-policy/1;T33:qualitative-content-support/1.0.0;T64:230f22333dd468f3bf78395b118330ec1ff78de18be9da5349356e84d0f6bd13;T34:initial-feedback-plan-policy/1.0.0;T64:972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48;T30:legacy-source-transforms/1.0.4;T30:legacy-scoring-readiness/1.0.0;T28:legacy-scoring-profile/1.0.0;T64:56a92f65d533a2f1b053078dbb372b1271728224e5df1c74b201b4cffb21a8d3;T64:2ea3c5071d8d56e421a37053127dea08fe8eb08ce91e4de9f5c3b4c4b1172ccf;T64:5db61206ed04f32af7052fce2d64e2ccf414d6fea13645f58eecf67f616b61a2;T64:d64ba9ac11ba732c983cd195cd7d83fba878e67f4ae0bffc8b6e166a600a8bd9;T64:e4c17997fdbec81d931e4838b3522c6c7d3c861b0bfa07b6fb3ab5ece160f0a2;T64:f18e6abfd698c4dbf4f7f6040fb577b2e49e78e4125bfd9d31e8166d0e678da8;T37:initial-feedback-plan-readiness/1.0.0;T35:initial-feedback-plan-profile/1.0.0;T34:initial-feedback-plan-policy/1.0.0;T64:972b648ccc90b29c0c88fc504ac2746ab1489e17f05cfd2048cb487a2b38cc48;T64:c5d8c0e8e5ac52c8b06a4fad5ea78f6fe6e42297bbbfd51cd2779243c8418b36;T64:c8bc131aacc7f9ddd8e30dcca8f5f429e78ee84180e5dd4542254883001cedc6;T64:3c133694d11334e9430821945c94782b562ab1efb3f26bb8d4e7a9f2699369c5;",
+      byteLength: 1296,
+      sha256:
+        "fd7f080752a0aaddd1f9330aa27f2c8bad7daee0feb342030105258c5713de8a",
+    },
+  ],
+};
+
+describe("initial feedback operation foundation source (unparsed/unexecuted)", () => {
+  it("pins all actual new routine bodies and five nonrecursive profile values", () => {
+    const names = [...sql.matchAll(/create function ([^(]+)/gu)].map(
+      (m) => m[1],
+    );
+    expect(names).toHaveLength(21);
+    const pinned = [
+      ["checkerSha256", "private.initial_feedback_operation_ready"],
+      ["prepareSha256", "public.prepare_initial_feedback"],
+      ["claimSha256", "public.claim_initial_feedback_dispatch"],
+      ["settleSha256", "public.settle_initial_feedback_attempt"],
+      ["metadataSha256", "public.read_initial_feedback_operation_readiness"],
+    ] as const;
+    for (const [key, name] of pinned)
+      expect(profile[key]).toBe(hash(body(name)));
+    expect(catalog).toHaveLength(44);
+    for (const name of names.filter(
+      (x) => x !== "private.initial_feedback_operation_ready",
+    ))
+      expect(
+        catalog.find((x) => x.signature.split("(")[0] === name)?.sha256,
+      ).toBe(hash(body(name)));
+    expect(
+      catalog.some(
+        (x) => x.signature === "private.initial_feedback_operation_ready()",
+      ),
+    ).toBe(false);
+  });
+
+  it("closes current R19 budget and lease postimages rather than their old source bodies", () => {
+    const r19 = read(
+      "supabase/migrations/20261110085512_privacy_write_barrier.sql",
+    );
+    const patches = jsonTag(r19, "manifest") as Array<{
+      signature: string;
+      patches: Array<{ old: string; new: string; count: number }>;
+    }>;
+    for (const [signature, file] of [
+      [
+        "private.ai_budget_transition(uuid,uuid,jsonb,text)",
+        "20261110062548_technical_ai_budget.sql",
+      ],
+      [
+        "private.lock_analysis_stage_lease(uuid,text,integer,uuid)",
+        "20261110082455_analysis_stage_write_fencing.sql",
+      ],
+    ]) {
+      const name = signature.split("(")[0];
+      let text = bodyIn(read(`supabase/migrations/${file}`), name);
+      for (const patch of patches.find((x) => x.signature === signature)!
+        .patches) {
+        expect(text.split(patch.old)).toHaveLength(patch.count + 1);
+        text = text.replaceAll(patch.old, patch.new);
+      }
+      expect(catalog.find((x) => x.signature === signature)?.sha256).toBe(
+        hash(text),
+      );
+    }
+    expect(
+      catalog.find((x) => x.signature === "private.legacy_scoring_ready()")
+        ?.sha256,
+    ).toBe("56a92f65d533a2f1b053078dbb372b1271728224e5df1c74b201b4cffb21a8d3");
+    expect(
+      catalog.find(
+        (x) =>
+          x.signature ===
+          "private.legacy_scoring_stored_source(private.analysis_scoring_inputs)",
+      )?.sha256,
+    ).toBe("abe9dc88974b51a20422def9f71810341e5c4fe2a7bb4e7705cd394c67f5b178");
+  });
+
+  it("preserves the frozen numerical and pure-renderer foundation files", () => {
+    expect(
+      hash(read("supabase/migrations/20261115045834_legacy_scoring_input.sql")),
+    ).toBe("2cb4e2e684d4f4270085a541911422637b811aba8b02ce668f5dab4833dc8f80");
+    expect(
+      hash(
+        read("supabase/migrations/20261115054612_initial_feedback_plan.sql"),
+      ),
+    ).toBe("7a67f96d68eff03ce1efdfe0bdf3c551799af714a9465efe3d4eadb1bfb16ff8");
+    expect(sql).not.toContain("create or replace");
+    expect(sql).not.toMatch(
+      /insert into public\.(?:analysis_results|analysis_ai_runs|writer_drafts)/gu,
+    );
+  });
+
+  it("matches actual source-policy atoms and technical bounds without JSONB emulation", () => {
+    const frame = body("private.ifo_policy_frame");
+    const policy = body("private.ifo_policy_valid");
+    const groups = [
+      ...frame.matchAll(/foreach key in array array\[([^\]]+)\]/gu),
+    ].map((m) => [...m[1].matchAll(/'([^']+)'/gu)].map((x) => x[1]));
+    const order = [
+      ...groups[0],
+      ...groups[1].map((x) => `scoringInputProfile.${x}`),
+      ...groups[2].map((x) => `planProfile.${x}`),
+    ];
+    expect(order).toEqual(sourceVectors.atomOrder);
+    expect(frame).toContain("E'INITIAL-FEEDBACK-POLICY/1\\n'");
+    expect(body("private.ifo_atom")).toContain(
+      "octet_length(convert_to(p_value,'UTF8'))",
+    );
+    expect(body("private.ifo_atom")).toContain("return 'N;'");
+    expect(policy).toContain("::numeric not between 256 and 8000");
+    expect(policy).toContain(
+      "promptVersion' is distinct from 'qualitative-cited-prose/3.0.0'",
+    );
+    expect(policy).toContain(
+      "private.ifo_sha(private.ifo_policy_frame(p_policy))",
+    );
+    for (const v of sourceVectors.vectors) {
+      expect(hash(v.framedUtf8)).toBe(v.sha256);
+      expect(Buffer.byteLength(v.framedUtf8, "utf8")).toBe(v.byteLength);
+      expect(v.policy.sha256).toBe(v.sha256);
+    }
+    expect(sourceVectors.vectors[0].sha256).not.toBe(
+      sourceVectors.vectors[1].sha256,
+    );
+    expect(sql).not.toContain("insert into private.initial_feedback_policies");
+    expect(sql).not.toContain(
+      "insert into private.initial_feedback_selections",
+    );
+  });
+
+  it("admits the original immutable record and digests before exposing pending context", () => {
+    for (const s of [
+      "for key share skip locked",
+      "private.legacy_scoring_stored_source(s)",
+      "for share skip locked",
+      "private.legacy_scoring_row_sha256(d)",
+      "private.ifo_sha(core::text)",
+    ])
+      expect(original).toContain(s);
+    expect(original).not.toContain("legacy_scoring_input_data");
+    expect(prepare.indexOf("private.legacy_scoring_access")).toBeLessThan(
+      prepare.indexOf("private.ifo_original(a)"),
+    );
+    expect(prepare).toContain(
+      "op.binding is distinct from private.ifo_binding(original,op.binding->'policy')",
+    );
+    expect(prepare.indexOf("'status','pending'")).toBeLessThan(
+      prepare.indexOf("private.ifo_selected_policy"),
+    );
+    expect(prepare.indexOf("'status','pending'")).toBeLessThan(
+      prepare.indexOf("private.ifo_context"),
+    );
+    expect(prepare).toContain(
+      "'context',null,'dispatchAllowed',false,'replayed',true",
+    );
+    expect(prepare).toContain(
+      "'context',ctx,'dispatchAllowed',false,'replayed',false",
+    );
+  });
+
+  it("bounds explicit retries by native ordinals and known terminal failures", () => {
+    expect(prepare).toContain("att.attempt_id<>p_retry_after_attempt_id");
+    expect(prepare).toContain("att.state<>'failed' or att.usage is null");
+    expect(prepare).toContain("att.ordinal>=op.attempt_limit");
+    expect(prepare).toContain("next_ordinal:=att.ordinal+1");
+    expect(prepare).not.toContain("attempt')::integer+1");
+    const guard = body("private.ifo_attempt_guard");
+    expect(guard).toContain("new.ordinal<>previous.ordinal+1");
+    expect(guard).toContain("previous.usage is null");
+    expect(guard).toContain("new.ordinal>op.attempt_limit");
+  });
+
+  it("resolves an already-consumed retry selector to its stored next attempt before fresh checks", () => {
+    const lookup = prepare.indexOf(
+      "from private.initial_feedback_attempts previous_attempt",
+    );
+    const historicalReturn = prepare.indexOf(
+      "private.ifo_attempt_json(replayed_attempt)",
+    );
+    expect(lookup).toBeGreaterThan(0);
+    expect(prepare).toContain(
+      "next_attempt.ordinal=previous_attempt.ordinal+1",
+    );
+    expect(prepare).toContain(
+      "previous_attempt.attempt_id=p_retry_after_attempt_id",
+    );
+    expect(prepare).toContain("previous_attempt.operation_id=op.operation_id");
+    expect(historicalReturn).toBeGreaterThan(lookup);
+    expect(historicalReturn).toBeLessThan(
+      prepare.indexOf("att.attempt_id<>p_retry_after_attempt_id"),
+    );
+    expect(historicalReturn).toBeLessThan(
+      prepare.indexOf("private.ifo_selected_policy"),
+    );
+  });
+
+  it("keeps claim replay before fresh lease/policy and permits only one reserved transition", () => {
+    expect(claim).toContain(
+      "op.state<>'open' or op.publication_id is not null or att.state<>'reserved'",
+    );
+    expect(
+      claim.indexOf("'dispatchAllowed',false,'replayed',true"),
+    ).toBeLessThan(claim.indexOf("private.ifo_selected_policy"));
+    expect(claim).toContain(
+      "where attempt_id=att.attempt_id and state='reserved' returning * into att",
+    );
+    expect(claim.match(/'dispatchAllowed',true/gu)).toHaveLength(1);
+    expect(claim).toContain("a.status<>'qualitative_review'");
+    expect(claim).toContain("private.lock_analysis_stage_lease");
+    expect(claim).toContain("private.ifp_document");
+  });
+
+  it("requires native mode and current actual user consent in both budget branches", () => {
+    expect(body("private.ifo_selected_policy")).toContain(
+      "where organization_id=p_org and enabled for share skip locked",
+    );
+    expect(claim).toContain("pol->'budgetPolicyVersion'='null'::jsonb");
+    expect(claim.indexOf("from public.consents")).toBeLessThan(
+      claim.indexOf("pol->'budgetPolicyVersion'='null'"),
+    );
+    expect(claim).toContain(
+      "user_id=a.owner_id and purpose='qualitative_ai' and policy_version='candidate-ai-v1'",
+    );
+    expect(claim).not.toMatch(/consents[^;]+organization_id/gu);
+    expect(claim).not.toContain("p_enabled");
+    expect(claim).not.toContain("p_consent");
+  });
+
+  it("binds R03 exactly and never adopts an unrelated generic claim winner", () => {
+    for (const s of [
+      "req->>'attemptId' is distinct from att.attempt_id::text",
+      "req->>'operationId' is distinct from op.operation_id::text",
+      "req->>'payloadSha256' is distinct from op.binding_sha256",
+      "req->>'policyVersion' is distinct from pol->>'budgetPolicyVersion'",
+    ])
+      expect(claim).toContain(s);
+    expect(claim).toContain(
+      "public.ai_budget_claim_dispatch(a.owner_id,a.organization_id,req)",
+    );
+    expect(claim).toContain(
+      "from public.organizations where id=a.organization_id for update skip locked",
+    );
+    expect(claim).toContain("for update skip locked");
+    expect(claim.indexOf("public.ai_budget_claim_dispatch")).toBeLessThan(
+      claim.indexOf("set state='dispatched'"),
+    );
+    expect(claim).toContain("if budget->>'status'='denied' then");
+    expect(claim).toContain(
+      "'dispatchAllowed' is distinct from 'true'::jsonb then perform private.ifo_fail('stale')",
+    );
+    expect(claim).not.toMatch(/ai_budget_(?:settle|release|mark_unknown)\(/gu);
+  });
+
+  it("settles static metadata after withdrawal without clearing known usage or double debit", () => {
+    for (const s of [
+      "op.binding_sha256<>p_binding_sha256",
+      "att.claimed_at is null",
+      "att.usage is distinct from actual",
+      "coalesce(usage,actual)",
+      "att.error_code<>p_error_code",
+      "then 'held_unknown'",
+      "then 'failed' else 'known'",
+    ])
+      expect(settle).toContain(s);
+    expect(settle).not.toMatch(
+      /from public\.|legacy_scoring_access|legacy_scoring_stored_source|lock_analysis_stage_lease|ifo_selected_policy|ai_budget_settle\(/gu,
+    );
+    expect(settle).not.toMatch(
+      /(?:expires_at|expired|interval |usage=0|usage='0')/gu,
+    );
+    expect(body("private.ifo_usage_valid")).toContain(
+      "jsonb_typeof(p_usage->key) is distinct from 'string'",
+    );
+    expect(body("private.ifo_usage_valid")).toContain(
+      "::numeric>9007199254740991",
+    );
+    expect(sql).not.toMatch(
+      /references public\.(?:analyses|resumes|resume_versions)/gu,
+    );
+    expect(sql).toContain("references auth.users(id) on delete restrict");
+    expect(sql).toContain(
+      "erasure/unlink/retention is an explicit adoption hold",
+    );
+  });
+
+  it("exposes only real foundation metadata and keeps all data/private ACLs denied", () => {
+    const metadata = body("public.read_initial_feedback_operation_readiness");
+    const keys = [
+      ...metadata.matchAll(/(?:\(|,)\s*'([A-Za-z][A-Za-z0-9]*)'\s*,/gu),
+    ].map((m) => m[1]);
+    expect(keys).toEqual([
+      "schemaVersion",
+      "profileVersion",
+      "schemaReady",
+      "prepareExecutable",
+      "claimExecutable",
+      "settleExecutable",
+      "checkerSha256",
+      "prepareSha256",
+      "claimSha256",
+      "settleSha256",
+      "metadataSha256",
+    ]);
+    expect(sql.match(/grant execute on function/gu)).toHaveLength(1);
+    expect(sql).toContain(
+      "grant execute on function public.read_initial_feedback_operation_readiness() to service_role",
+    );
+    expect(sql).not.toMatch(
+      /create function public\.(?:finish_initial_feedback|read_initial_feedback|export_initial_feedback_records|read_initial_feedback_usage|read_initial_feedback_readiness)\(/gu,
+    );
+    expect(checker).toContain("has_any_column_privilege");
+    expect(checker).toContain("c.confdeltype='r'");
+    expect(checker).toContain("tgtype=31");
+    expect(checker).toContain("private.legacy_scoring_ready() is not true");
+    expect(checker).toContain(
+      "private.initial_feedback_plan_ready() is not true",
+    );
+    expect(sql).toContain("actual CHECK/default reconciliation");
+    expect(sql).toContain("late known usage fill after partial publication");
+  });
+
+  it("keeps the native verifier explicitly privileged, mutating, scoped and deferred", () => {
+    const draft = read("scripts/verify-initial-feedback-operations.sql");
+    expect(draft).toContain("SQL UNPARSED/UNEXECUTED");
+    expect(draft).toContain("current_user=function_owner");
+    expect(draft).toContain("off_id<>on_id");
+    for (const label of [
+      "fresh_prepare_no_dispatch",
+      "exact_prepare_replay_no_context",
+      "one_claim_only_budget_off",
+      "unknown_is_not_zero_or_retry",
+      "late_known_after_source_withdrawal",
+      "same_tx_one_claim_budget_on",
+      "technical_mirror_has_no_second_debit",
+    ])
+      expect(draft).toContain(label);
+    expect(draft).toContain("set constraints all immediate;\nrollback;");
+    expect(draft).toContain(
+      "No single-session assertion is a concurrency/lock-contention proof",
+    );
+    expect(draft).not.toContain("grant execute");
+  });
+});

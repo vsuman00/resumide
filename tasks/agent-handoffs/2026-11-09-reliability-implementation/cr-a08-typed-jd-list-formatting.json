@@ -1,0 +1,65 @@
+{
+  "id": "CR-A08-S02",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_LOCAL_TYPED_COVERAGE_AND_OWNED_READER",
+  "evidenceTier": "Synthetic typed coverage, owned repository wire fixture, SQL source contracts and UI component tests",
+  "before": {
+    "regressionsFailed": 3,
+    "finding": "The three marked lines each lost source-approved alternatives and inclusive range reading."
+  },
+  "after": {
+    "producer": "score-v2/typed-1.0.1",
+    "coveragePolicy": "typed-fact-coverage/1.1.0",
+    "durationSubjectPolicy": "job-duration-subject-rules/1.1.0",
+    "storedProducer": "jd-relations/1.0.0",
+    "supportedMarkerControls": 3,
+    "unresolvedScopeControls": 6,
+    "deduplicationControl": "Equivalent marked and plain alternatives share one group.",
+    "ownedRead": "A stored unknown expression is read as an OR in coverage with the exact literal and same clause ID.",
+    "authoritativeDimensions": "withheld",
+    "focusedTestFilesPassed": 18,
+    "focusedTestsPassed": 525,
+    "typecheck": "pass",
+    "lint": {
+      "errors": 0,
+      "warnings": 4
+    },
+    "webBuild": "pass",
+    "workerBuild": "pass"
+  },
+  "benchmarks": {
+    "jobIntelligence": {
+      "syntheticDocuments": 2,
+      "producer": "jd-parser/1.0.2"
+    },
+    "scoringValidity": {
+      "syntheticEngineeringPassed": true,
+      "releasePassed": false
+    }
+  },
+  "sourceHashes": {
+    "app/lib/server/job-relations.ts": "60e1fe23f5df611077b0c1ed0147ffe367dd7f73aa6bea250d3310053db7ac62",
+    "app/lib/server/job-duration-subject.ts": "91fe7f848247220ab1009e7941096d9d9750691ae3f8ff64525c455a3a083d3a",
+    "app/lib/server/requirement-coverage.ts": "f2d134157d7c8a01cc50454d5d3a07caa347359dabaea3cfdcc8b487f8131430",
+    "app/lib/server/typed-score-diagnostics.ts": "5fb062352c770f310895d4c159d6f86f6617d8e9493c5cd4761c2a09971f35fa",
+    "app/lib/server/score-v2-contract.ts": "bdfd6b9c9d6365b6e1ffab8cbc81c473744338b11c7d100a1ac302e8fa019202",
+    "app/lib/server/authoring-contract.ts": "ac3cfa01552e1ce6b9753e86a8d05c4930a78faa08aec6851ee3ca2b161e8d84",
+    "tests/unit/requirement-coverage.test.ts": "cc64f89c4ed4ab652d7ae7e82c2e79722891d8a9e97d20c2126aa505312e2281",
+    "tests/unit/typed-score-repository.test.ts": "c019db0c84aa1a30f6624168598666ee7a7674fa178104f2101c873900a97003"
+  },
+  "logHashes": {
+    "before": "e920fe2234aa4c3c23ab67598c67f0f4503f15367616002fa68416be4f502f6d",
+    "final": "77cba2e44e3523715406ee8583617845901acc79ac86e4c81759bfd554fa88e9",
+    "types": "b63c0de51fcb1526e23a41bde9c50d3e1af56b2b08d9bfe50e3d977251642455",
+    "lint": "44f8e8569eab5563a615e4a095db9b679e65d71f39119c3b700b380df224aa6f",
+    "web": "a6f8996f70ffdd611315233e0843cca3edd3a1fa1fde7daf10dc90fb612b0a2f",
+    "worker": "6f2cdf3b9683212e243929be47faf3db92fa04540b10f2c8f7e2388c5e74668f",
+    "benchmark-jd": "9e0e97b57f4e8fff6d8765e4e15dbf0569baa7607d14f1bc3c7465e3527de28c",
+    "benchmark-score": "e001dc104b50b5d54fe78b61737252d79979f02501022de68f822b982bb097d5"
+  },
+  "open": [
+    "Managed review of stored JD inputs, representative validation and numerical scoring approval remain open."
+  ]
+}

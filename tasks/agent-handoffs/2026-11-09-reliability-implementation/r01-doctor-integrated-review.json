@@ -1,0 +1,80 @@
+{
+  "status": "PASS_SOURCE_FAKE_SDK_TYPES_LINT_BUILDS_NO_LIVE_ACCESS",
+  "at": "2026-11-13T19:48:11.746378+00:00",
+  "receipt": "r01-doctor-allocation-integrated-59edd1b1-4f52-4276-b78f-0ced39b232e5.json",
+  "receiptSha256": "9d017744ffb340fb7463fd915395a4e832e61509765f3c150b842cf93b5b237b",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "testedScope": "Dirty main plus exact four-file allocated doctor candidate; no Git mutation.",
+  "tests": {
+    "testFilesPassed": 1,
+    "testsPassed": 75
+  },
+  "sourceInputs": 755,
+  "allSourceHashesMatched": true,
+  "changedDuringGate": [],
+  "priorAdmissionInputsRehashed": 755,
+  "priorChangedInputs": {
+    "app/lib/server/ai-readiness.ts": {
+      "before": "fc94be6bcf99b7c49266e7fff8cc93fb51fc1f8baff037fd99852712cc92bbec",
+      "after": "4a78fa139eb59ed1dee143662d0426048617db8514220ca98158cb55cd3bac9d"
+    },
+    "scripts/doctor-ai.ts": {
+      "before": "62a9ebf803643533d22197631f289c6ec9a6c96c2f3b57dde97f3680ff207abb",
+      "after": "a1b00636e541b5136c309f6c5d50e9b68d99e2cd7422bfd6e122ce4528d30526"
+    },
+    "scripts/verify-live-openai-model.ts": {
+      "before": "d9979e25f422cae17d2124981f0c4ed54fb10b94a7c2d4ce95311528e9b73a5a",
+      "after": "17eb0e6465e56d76c6b74682b88051afcb914b2b9ec96f83b6bf1b36ef3bc08f"
+    },
+    "tests/unit/ai-readiness.test.ts": {
+      "before": "410ce738586858c141227e022d7b43abce4a070cc37abd15bbf47b92da6cf4eb",
+      "after": "0aba1a5a2d214c95b69bfb1f5ff3ad9ac9249bdccee7ec89c666d065974ed819"
+    }
+  },
+  "priorUnchangedInputs": 751,
+  "allFifteenAdmissionAuthorFilesUnchanged": true,
+  "logMatch": true,
+  "groups": [
+    {
+      "processGroup": 50845,
+      "absent": true
+    },
+    {
+      "processGroup": 50864,
+      "absent": true
+    },
+    {
+      "processGroup": 50885,
+      "absent": true
+    },
+    {
+      "processGroup": 50902,
+      "absent": true
+    },
+    {
+      "processGroup": 50923,
+      "absent": true
+    }
+  ],
+  "artifacts": {
+    "build/server/index.js": {
+      "bytes": 1159015,
+      "sha256": "7b287811606c3c30bf2d3569ff070be67b06640116f0edf2acfaa976e832cede"
+    },
+    "build/worker/analysis.mjs": {
+      "bytes": 168501,
+      "sha256": "40cd5faf8baa5d4baff4fa128f4072685c8f807bc7643d138cdaac56fbf81e71"
+    }
+  },
+  "allFourCandidateHashesMatched": true,
+  "rootSession": 55130,
+  "rootSessionStatus": "CLOSED_EXIT_ZERO",
+  "providerRequests": 0,
+  "databaseOperations": 0,
+  "dockerOperations": 0,
+  "browserTests": "NOT_RUN",
+  "realEnvironmentOrKeysRead": false,
+  "liveModelAccessOrUsefulness": "NOT_TESTED_BY_THIS_INTERFACE",
+  "sqlParsing": "NOT_RUN",
+  "sqlExecution": "NOT_RUN"
+}

@@ -1,0 +1,1179 @@
+{
+  "status": "REPORTS_EXPORTED_BASELINE_RESULT_ONLY",
+  "directory": "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-baseline-signature-v2-j2aj_jol",
+  "manifestSha256": "aa17b701b16977f1efd41d1b9064da4893171e82e1b1c158f8ce88f32b1b801a",
+  "runtimeAdopted": false,
+  "purpose": "baseline assertion diagnostic only",
+  "hostFloorBytes": 5176082432,
+  "hostDeadlineSeconds": 300,
+  "outerLogCapBytes": 16777216,
+  "scannerForbiddenUntilMainRestored": true,
+  "startedUnix": 1793992629.4810612,
+  "sourcesBefore": {
+    "manifest": "aa17b701b16977f1efd41d1b9064da4893171e82e1b1c158f8ce88f32b1b801a",
+    "files": 16,
+    "bytes": 12707841
+  },
+  "freeBefore": 10018365440,
+  "command": [
+    "/usr/local/bin/docker",
+    "build",
+    "--pull=false",
+    "--platform",
+    "linux/arm64",
+    "--target",
+    "reports",
+    "--progress",
+    "plain",
+    "--iidfile",
+    "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-aa7-baseline-signature-v2-j2aj_jol/image.iid",
+    "--tag",
+    "resumide-poppler-baseline:aa7-20261107-j2aj_jol",
+    "--file",
+    "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-licenses/resume_ats/scripts/latex-runtime/native-poppler/baseline-signature/Dockerfile.v2",
+    "/Users/vaibhavsuman/.codex/worktrees/aa7-20261106-licenses/resume_ats/scripts/latex-runtime"
+  ],
+  "environmentNames": [
+    "HOME",
+    "LANG",
+    "PATH",
+    "TMPDIR"
+  ],
+  "buildExitCode": 0,
+  "buildSignal": null,
+  "operations": [
+    {
+      "name": "image-inspect",
+      "command": [
+        "/usr/local/bin/docker",
+        "image",
+        "inspect",
+        "sha256:e50b667aec22d78d0316582a136f6253dcf870d84208b7655587f120074c5f12"
+      ],
+      "exitCode": 0,
+      "stdoutSha256": "6289a4429f4604ef6a00b40030e2baed83980740a3f3b9797d4a52bf7bff408d",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "container-create",
+      "command": [
+        "/usr/local/bin/docker",
+        "create",
+        "--name",
+        "aa7-baseline-report-j2aj_jol",
+        "--label",
+        "resumide.aa7.baseline-report=aa7-baseline-report-j2aj_jol",
+        "--network",
+        "none",
+        "--read-only",
+        "--user",
+        "65532:65532",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "sha256:e50b667aec22d78d0316582a136f6253dcf870d84208b7655587f120074c5f12",
+        "/never-execute"
+      ],
+      "exitCode": 0,
+      "stdoutSha256": "f9072231a75892fe154e23f2c62b1e2e7454fa7b46364b48bf49672c3ca5e8bd",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "container-inspect",
+      "command": [
+        "/usr/local/bin/docker",
+        "inspect",
+        "743869a50ab65a79a3d7fc35c3ce49d58153f4eaba7d47eaa78e0b5ac49fa714"
+      ],
+      "exitCode": 0,
+      "stdoutSha256": "d6ef964897431f95305dd022b27dae60f90aa03529d40f3bb99466d9a63e1adf",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "reportsImageID": "sha256:e50b667aec22d78d0316582a136f6253dcf870d84208b7655587f120074c5f12",
+  "exportedReports": [
+    {
+      "name": "diagnostic-outcome.json",
+      "bytes": 41216,
+      "sha256": "42463c8cdc06cc234fcd84edda4c36101bab32ad6e0acb17ad2f96ef3404d402",
+      "tarSha256": "3153157d47369609f6179916cf9b46adab4b3ed5dd0d5b6dfc2c00bd5a94da7a"
+    },
+    {
+      "name": "original-configure-only.log",
+      "bytes": 12065,
+      "sha256": "4b8ee29b51d1968ac36a3cd71986051ce7f2bec77fb943c73253695d1cf6547b",
+      "tarSha256": "d05ea9d21691032a76f301d578eb8ce9473cd8d1f5b93dd980ece6d4e2ef6e91"
+    },
+    {
+      "name": "original-moc-only.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tarSha256": "e3c3de6b08348341b041f2c4ba311893c6b11cb1d84feec61879e69c05013eb3"
+    },
+    {
+      "name": "original-object-0.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tarSha256": "07c042267939351c94a26579ea7ec4aa01b86de108ba909332344becfcc190d4"
+    },
+    {
+      "name": "original-object-1.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tarSha256": "71a64a08c5386875b8bdb1540bbe8bd6b9843c9285c3ffb66f966fa6a622f6f6"
+    },
+    {
+      "name": "original-link-baseline-sdk.log",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "tarSha256": "7c531a6198b2e62a9086de3a2c06ad158177d0d967679008733bb651d7a3bc0e"
+    },
+    {
+      "name": "baseline-ldd.log",
+      "bytes": 5963,
+      "sha256": "bfd654fd709644c5c6a3bf59272f1214c6f91804cb0a713f7d1790ca4f2d43e4",
+      "tarSha256": "4bbcc3a576a1c7c99b5c09a7b9eda1e47e6f9e82c643b4f6a42835d072756a3a"
+    },
+    {
+      "name": "baseline-dynamic-metadata.log",
+      "bytes": 2120,
+      "sha256": "c2cccdb2dcf1d76a0adc8682a4173df8a536a2e8cb580ded0b89a3e3a3d953c6",
+      "tarSha256": "2c36c8dffd0f0eaeae35810d50e5b042faf2f107e92d00c67fd129c856051224"
+    },
+    {
+      "name": "full-baseline-signature-class.log",
+      "bytes": 21382,
+      "sha256": "3c7380f805d6a543b5933a3f83368c8dcf8dd16fbe4e55881ec696ee2ce1783e",
+      "tarSha256": "3b2d509f55df3cdd05c9fe1559af970af624370a10990ff764830a653c074bec"
+    },
+    {
+      "name": "sdk-install.json",
+      "bytes": 5632,
+      "sha256": "40346073d486506cc603032ef7118156e65a5d7a8c595bcc6c6e1b2da18b610d",
+      "tarSha256": "e9e41029af06f8f5c880b210027a6419dd43df5e4de561cc50e0239797e6c827"
+    },
+    {
+      "name": "baseline-signature.xml",
+      "bytes": 31524,
+      "sha256": "05705b77c4aeafb8f60d3fbf9354258eedb05805b930332ca2c69f88e656b120",
+      "tarSha256": "f8f7f8f12856ca8a358f8239908d9c10b425449bcf376369de7364ed911693a1"
+    }
+  ],
+  "exportBytes": 119902,
+  "outcome": {
+    "purpose": "baseline diagnostic only; cannot clear candidate",
+    "runtimeAdopted": false,
+    "signatureConfig": {
+      "ENABLE_SIGNATURES": [
+        "#define ENABLE_SIGNATURES 1"
+      ],
+      "ENABLE_NSS3": [
+        "#define ENABLE_NSS3 1"
+      ],
+      "ENABLE_GPGME": [
+        "#define ENABLE_GPGME 1"
+      ],
+      "ENABLE_PGP_SIGNATURES": [
+        "/* #undef ENABLE_PGP_SIGNATURES */"
+      ]
+    },
+    "sdkSubstitutions": [
+      {
+        "original": "../src/libpoppler-qt6.so.3.10.0",
+        "installed": "/usr/lib/aarch64-linux-gnu/libpoppler-qt6.so.3.10.0",
+        "sha256": "d8ea8a26e232cc5b1c73d0b8a24759e147dac85a944691aec1167889b6ccd707"
+      },
+      {
+        "original": "../../libpoppler.so.147.0.0",
+        "installed": "/usr/lib/aarch64-linux-gnu/libpoppler.so.147.0.0",
+        "sha256": "1f0501fa504e2afc71bf2416459eb9a436a86e0be1431147fffb61d7262a2b8b"
+      }
+    ],
+    "dynamicBindings": [
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libQt6Test.so.6.8.2",
+        "bytes": 462056,
+        "sha256": "283731f01ca93466b3fed5e662f5bf4a4f3a9d0d267706b0dcbfb0d1bbef630b"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libpoppler.so.147.0.0",
+        "bytes": 3760784,
+        "sha256": "1f0501fa504e2afc71bf2416459eb9a436a86e0be1431147fffb61d7262a2b8b"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libgpgmepp.so.6.21.2",
+        "bytes": 526392,
+        "sha256": "8e7dbd1ef6d247f2c450b25520d6a602316e06d028be2ee9937faf54cbf138d8"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libQt6Core.so.6.8.2",
+        "bytes": 5929096,
+        "sha256": "22fe5be5ca8e7bcac0d4703282aca363da27257e4cc59020cb7b8b110431eae1"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libstdc++.so.6.0.33",
+        "bytes": 2502136,
+        "sha256": "fff1f0050a33ddf29c44634c7639ac16e2573a61e3daab4fcc4c007b432ccf19"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libc.so.6",
+        "bytes": 1716616,
+        "sha256": "70fa4c4cf57eabeb96097cce47582d02379c4cd1de3db3e98ade4dd7089a1b13"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+        "bytes": 201344,
+        "sha256": "1b882eddacd494b060413a8aa4f0a4754ee3f84775e68cecbf8a86092b59cca6"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libgcc_s.so.1",
+        "bytes": 133768,
+        "sha256": "9a146967dc38c3820c5dc21c3209812655f66b6551264072b187bd0e787947e0"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libfreetype.so.6.20.2",
+        "bytes": 854184,
+        "sha256": "037c1e131385f08bf00cf6159b5f4a8063876312787d754407ca228d75dafc3e"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libz.so.1.3.1",
+        "bytes": 133600,
+        "sha256": "6fe00acadf8119ff245855e5dcc7f26c6c0ffaf4bfa2baa88feab58f23727d65"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libfontconfig.so.1.12.1",
+        "bytes": 329664,
+        "sha256": "6a9db1b9262267a0c291de43c0e827263fed8d3f39138d1d7853d2a8d45ba8ad"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libjpeg.so.62.3.0",
+        "bytes": 395344,
+        "sha256": "c16e513a19cbc9a5a296d71000cf59b0221c66ae3c0d0305110a44662a4b9b87"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libcurl-gnutls.so.4.8.0",
+        "bytes": 988200,
+        "sha256": "41c467f8c7835cbc112dba00b1fb3966d6945e1f033ac96fbcb376ce8a78a640"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libopenjp2.so.2.5.3",
+        "bytes": 461288,
+        "sha256": "4aef3d9074095224e3fe50176cdd3a72390ab7d134ccd1d05c7ea4b30dcfee7d"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/liblcms2.so.2.0.16",
+        "bytes": 471976,
+        "sha256": "e43cba450fda72874926b827d69ec7dfc669e6bdd2420e5ed37935d1d2be3b40"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libpng16.so.16.48.0",
+        "bytes": 264200,
+        "sha256": "41715da71b74e9dc84731aa71d28919d6d6314943c7fe84a94ebf1bc110d10b5"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libtiff.so.6.1.0",
+        "bytes": 591896,
+        "sha256": "0ba2c529e3b06cee7dfde35f4de3fb1a99eedc3802d12f3eb0acc434332ccca6"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libnss3.so",
+        "bytes": 1447264,
+        "sha256": "edb9516fad67f66b5ce8514afb6fb2bc539a479bb1d352f19c887eb6cbb00cd6"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libsmime3.so",
+        "bytes": 264456,
+        "sha256": "c52f2a9ab026a419a41e8cab897c60546ecb45481dd68c84191708a6370e6819"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libplc4.so",
+        "bytes": 67680,
+        "sha256": "b60e885a26b70575b1219c8d0fae0a64c02991ebb736b2100757cadd558c933f"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libnspr4.so",
+        "bytes": 266696,
+        "sha256": "00396daf5ba60830460f12aa64c9e4edf52cb57dcb3546de772ac5b1f12c3807"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libm.so.6",
+        "bytes": 591960,
+        "sha256": "a8afb2d1f4a0c5e14c0fc82f794ec839eafe29738907aa92895410f57630bbe2"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libgpgme.so.11.33.2",
+        "bytes": 400432,
+        "sha256": "62a678b215229c03465ceb4ccdbac30cf77ccdc171fc29c0c1e19e06be6c851e"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libicui18n.so.76.1",
+        "bytes": 3803464,
+        "sha256": "49b3a041c31dd191d1e68473e12aa3b3cd69843ab64e8bcd5f688d035f59d722"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libicuuc.so.76.1",
+        "bytes": 2230344,
+        "sha256": "4eb85e84e80c9b2f0ec719fb4a2acaadffad677c0c75408599187a2363f738d3"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libglib-2.0.so.0.8400.4",
+        "bytes": 1511048,
+        "sha256": "a8458849feaa22469c20baf36917c3538bf75d52da710097b5829b6d4a95a6d1"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libdouble-conversion.so.3.1",
+        "bytes": 133064,
+        "sha256": "079e8e109c70985d3446a5fc1781c46579b559dfe597ddcf0b549514f796f1b4"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libb2.so.1.0.4",
+        "bytes": 67664,
+        "sha256": "af37be2c9ace91910600999e9fb5c7ac16dec815671a21bc82838d76b965d308"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libpcre2-16.so.0.14.0",
+        "bytes": 592408,
+        "sha256": "4f94a70a958bb4c16202e6361bdfdde6631b99d731f61099b59d181fcb442874"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libzstd.so.1.5.7",
+        "bytes": 723048,
+        "sha256": "1279c4edfbfb08878b5b7fb40d392c1bdc9b30100d9b7a019d4aefaf10d2046c"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libbz2.so.1.0.4",
+        "bytes": 70584,
+        "sha256": "810fa9b02adc39be4a7542bde79f1da0575e9bbdf8fc3c27deeb1ee97f59fe46"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libbrotlidec.so.1.1.0",
+        "bytes": 67784,
+        "sha256": "7036e36469a0258c92e9254819ece57406e88974af79482969a3fcfdef1b0f60"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libexpat.so.1.13.0",
+        "bytes": 198856,
+        "sha256": "9852d754604063d671c14e66817b2d55d70883ac83208af3d85a8b847e66c522"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libnghttp3.so.9.2.6",
+        "bytes": 206120,
+        "sha256": "82319f388b327a204047d2de787decbd9f592f81e23984d4a1b166306e69667c"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libngtcp2_crypto_gnutls.so.8.2.0",
+        "bytes": 68216,
+        "sha256": "98941573e87ff1da4a1a3886aac398b614038e6239fd7c76c716e09842019476"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libngtcp2.so.16.2.9",
+        "bytes": 330288,
+        "sha256": "8030c7faea4db7f1d05dd9e964444a32ea814c50b62fd657cadff3169ccd952e"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libnghttp2.so.14.28.3",
+        "bytes": 199136,
+        "sha256": "cbee84479172acd6a667a58de811d9039eb03a6d1f6fce543fa9c7c9c3c07e46"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libidn2.so.0.4.0",
+        "bytes": 198744,
+        "sha256": "6ce57885b9ff21ba3fa902c1c515050230d8d6703f12f9a7d1e3d4e27279966e"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/librtmp.so.1",
+        "bytes": 134576,
+        "sha256": "52aab346adb8506ce39846ead65f99ee398142865a4185fd5a9a0aa8504b2d74"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libssh2.so.1.0.1",
+        "bytes": 330208,
+        "sha256": "24f2c629b73a7cbb8290ae4f5ca460d6de280ac8ad0575be7d84e77935a63968"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libpsl.so.5.3.4",
+        "bytes": 132976,
+        "sha256": "582cac0f86e9eb52b4f10e1927c79b23310482c0e0323d201b1d11a1fd9d1db8"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libnettle.so.8.10",
+        "bytes": 329736,
+        "sha256": "81f40d719e01fc7241e60eb8295aca2109cb15197c9080fa6d26175f6defc897"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libgnutls.so.30.40.3",
+        "bytes": 2369280,
+        "sha256": "560c04722d04d0331b0eeda8a249491139ba46bf0e294897ebceb04993380596"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libgssapi_krb5.so.2.2",
+        "bytes": 400544,
+        "sha256": "967b9c108b49481f6cc1358d675a6c1b16754254c84c421c43a5814010e2a215"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libldap.so.2.0.200",
+        "bytes": 396736,
+        "sha256": "52130bdf6f1abdd8b476193cfd532d8c9f3a6d57eeabe06e4edb65b1711be83c"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/liblber.so.2.0.200",
+        "bytes": 67872,
+        "sha256": "87376cef9c124257cec7fc0b5eac1b4c8535f597c6ebae70ad9334385cfb14d3"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libwebp.so.7.1.10",
+        "bytes": 395936,
+        "sha256": "979c17adab6dff218b8bae090e8ec9a1ca1af0116f6c7e0e107f670eacddaed4"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/liblzma.so.5.8.1",
+        "bytes": 198664,
+        "sha256": "abc92a2b9322d612f7a7f418b25965361098d0a534c5527fc692f2f0c33d0f9f"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libLerc.so.4",
+        "bytes": 526368,
+        "sha256": "e365ccd59a08752ba3ed96cb644e9455a207a55d993cf12349ec201c5d699d24"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libjbig.so.0",
+        "bytes": 78528,
+        "sha256": "fe0c644918faea38de24a7a518359eb894a78bb944dc433a43184ce7f4486424"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libdeflate.so.0",
+        "bytes": 133008,
+        "sha256": "b04eeb6d40708bddf45876a92261b3e8a28bef367ae7e2a07f55cd85ba0a2e86"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libnssutil3.so",
+        "bytes": 264496,
+        "sha256": "20f5206760342b8ce0fcb4d7ffdd0d503a205d5b9d327de2300f00df26ee2233"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libplds4.so",
+        "bytes": 67712,
+        "sha256": "903249eda3f6875f93df3ec68a84666c6d1b4d3ae78f9c9fab49d6f1ecef5500"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libassuan.so.9.0.2",
+        "bytes": 133272,
+        "sha256": "b541835f89c9f238e2d8802b96c0a07e2612fb4fd4f33f70cfb9549ea72b5ffc"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libgpg-error.so.0.38.0",
+        "bytes": 198736,
+        "sha256": "6178cac881010e5c37defc08476cd6acced7c13531f3bde72715fcfe801d287a"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libicudata.so.76.1",
+        "bytes": 31917696,
+        "sha256": "b1c6ed9d0c4efef8034d101e17a8521128a616aeed3f128644cb4d1696476165"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libatomic.so.1.2.0",
+        "bytes": 67800,
+        "sha256": "6465c95aef505776652e9caf582d54c67b8e6314ae5a26973bd188b8f5d56c8e"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libpcre2-8.so.0.14.0",
+        "bytes": 657952,
+        "sha256": "4b3eb9a1c37310c689a156a7c0431ec0148a375b9bbe40725a4af7378a6bc1d5"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libgomp.so.1.0.0",
+        "bytes": 331528,
+        "sha256": "a2286e5fa0f7601afdfae2a750536f409bc8c3cc5b0bb9e93a4afc5c3779a510"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libbrotlicommon.so.1.1.0",
+        "bytes": 198880,
+        "sha256": "59581c0e7385320706f110e2a68f11168a7d7f430c2135b1b801ade5c27fd35d"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libunistring.so.5.2.0",
+        "bytes": 2033672,
+        "sha256": "26bda6bd707b57c7d02bb6331adda65906950d4ef8ad7ed82901a7cf81a4d44f"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libhogweed.so.6.10",
+        "bytes": 329736,
+        "sha256": "047d4fde470f4664a0e84ce80c84c9b03672948214be50f51f3915070c9ca4b6"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libgmp.so.10.5.0",
+        "bytes": 529216,
+        "sha256": "8858b931d041b74a8ce9dcb16d9912eb431c4f55b97ca2e58646a1c1bd991852"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libcrypto.so.3",
+        "bytes": 6302952,
+        "sha256": "809909371a1db7d2b9cac4c2fa2eff63eb6169d5979416d94155955a7ad32516"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libp11-kit.so.0.4.1",
+        "bytes": 1889864,
+        "sha256": "6664704a1baa3f6541a7a3af752ab2c008256d56438f70ba18acc59aee3978c7"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libtasn1.so.6.6.4",
+        "bytes": 133136,
+        "sha256": "ccf71c4269a4e770940e01777207b9f771d203bd33f7744910f1bfe032924f42"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libkrb5.so.3.3",
+        "bytes": 928816,
+        "sha256": "deb1db5877ee7535d8434003404b4a4e181ab660a9e5370ba66c4b8e759e1111"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libk5crypto.so.3.1",
+        "bytes": 199432,
+        "sha256": "950c7c9c2da1d5ebaae583a6c4da6b9b41bbbee6a4a8f848a868c0e106fe9335"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libcom_err.so.2.1",
+        "bytes": 67512,
+        "sha256": "6a3258ad8e42f54f4333b8a5b6c671922a4482d261a89f75114b0de3ef565013"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libkrb5support.so.0.1",
+        "bytes": 68648,
+        "sha256": "265157c5541d3cc73f5bb5cf43e8a58e996a25211d716a9ab2ba65b1a787633a"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libsasl2.so.2.0.25",
+        "bytes": 133888,
+        "sha256": "8bfeedd24d410b345ac39c26dfa9970609fe0ca6738a20fd6ac154a232aec152"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libssl.so.3",
+        "bytes": 1195960,
+        "sha256": "b3b9a479537bded757b818bb787413d8f8f636135e6546c84e90688eca1dc842"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libsharpyuv.so.0.1.1",
+        "bytes": 67648,
+        "sha256": "b68429dfdfad881c8b22915d9cc70085c641ac04476445e79bbf6ea9190afe72"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libffi.so.8.1.4",
+        "bytes": 68088,
+        "sha256": "f0527ef7efeaf85fc2f5855d68fddb63bf7b3b90f1228c6b49fb6020b0dca490"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libkeyutils.so.1.10",
+        "bytes": 67512,
+        "sha256": "729c2c3578b96763a2e7148ad5a26f0136958025dff0f309e4267f09b9f61a4a"
+      },
+      {
+        "path": "/usr/lib/aarch64-linux-gnu/libresolv.so.2",
+        "bytes": 67880,
+        "sha256": "cb9756963306434c0fbe3351ded4041a5cc6e6ce37efc175de1093e13b3747fc"
+      }
+    ],
+    "neededLibraries": [
+      "libQt6Test.so.6",
+      "libpoppler.so.147",
+      "libgpgmepp.so.6",
+      "libQt6Core.so.6",
+      "libstdc++.so.6",
+      "libc.so.6",
+      "ld-linux-aarch64.so.1"
+    ],
+    "sdkUsage": [
+      {
+        "original": "../src/libpoppler-qt6.so.3.10.0",
+        "installed": "/usr/lib/aarch64-linux-gnu/libpoppler-qt6.so.3.10.0",
+        "sha256": "d8ea8a26e232cc5b1c73d0b8a24759e147dac85a944691aec1167889b6ccd707",
+        "usage": "unused-by-original-as-needed",
+        "loaded": false
+      },
+      {
+        "original": "../../libpoppler.so.147.0.0",
+        "installed": "/usr/lib/aarch64-linux-gnu/libpoppler.so.147.0.0",
+        "sha256": "1f0501fa504e2afc71bf2416459eb9a436a86e0be1431147fffb61d7262a2b8b",
+        "usage": "loaded-and-hash-bound",
+        "loaded": true
+      }
+    ],
+    "provenance": {
+      "archiveValidSigners": [
+        "4CB50190207B4758A3F73A796ED0E7B82643E131",
+        "B8E5F13176D2A7A75220028078DBA3BC47EF2265",
+        "41587F7DB8C774BCCF131416762F67A0B2C39DE4"
+      ],
+      "developerDscSignatureIndependentlyVerified": false,
+      "sourceVersion": "25.03.0-5+deb13u4",
+      "packageVersion": "25.03.0-5+deb13u4",
+      "originalPackagingHashes": {
+        "debian/copyright": "484de4197d7d27f12f5b18df19e557808fa0bbbd060004bd56385c5f7cbfd880",
+        "debian/libpoppler-glib-doc.install": "7016eea5ac7d4795124c282ef4f2a962020183c2b6edf22191934d9317b9ac76",
+        "debian/libpoppler-cpp2.install": "a2ffd5289cdba93aeeda8d84482da9eaa92adf63ef629f7202f1f0936fed02bf",
+        "debian/libpoppler-glib-dev.install": "1144c4c97cf3e93bc22555ea41a01f0293adbf69a743e889ed01368933a91a7b",
+        "debian/libpoppler-glib8t64.symbols.in": "46dbd6e9ace3bc17b347af28173143e7184f73cd4a07cecd8e02c05017b8b9e0",
+        "debian/libpoppler-glib-doc.links": "0d13fbda8fe1ae7a255acb98ef6f5d86a333948db7035a5a663fe319cffa7d81",
+        "debian/libpoppler147.docs": "067b2123653eba750c206858a6e5b51adc8b973949ea81ae7170f12bdc73008f",
+        "debian/libpoppler-qt6-dev.install": "ebc113bd5f36089cb5af22cb7af36c1d37d0b169e941b1847c095a9800229c00",
+        "debian/libpoppler-qt5-1t64.install": "2d38467c54e8ca2587d51b3360a1d4e76ac6dba9d2a6123a78e918a65b00f5e0",
+        "debian/control": "5905a5d932c30a4feae87ff8a546a90cea6fee7f68884a6a00393921fe62d63b",
+        "debian/libpoppler147.install": "b1600222c579ea80afb590c50a53bd9ff4734427f30142aa50bb1d9b9eb9c4f5",
+        "debian/gbp.conf": "bfb20b0cc578c820de5486ba1b93bf49c37476066c2f4c77f8577f0fa340b768",
+        "debian/rules": "17bc9f7ff6b03c62a5530b5f5845a5151695f5af16a809a3a210ceae1189f5c8",
+        "debian/libpoppler-qt6-3t64.symbols.in": "d3a1d9ee11d6d20d6b646fff27f5f531ad158170f2dae7ae266a83fc4f7b88ad",
+        "debian/libpoppler-private-dev.install": "fb42726672788af73a471cf68d87ae857f79baf78228ed78e62fb8358fbe5cf9",
+        "debian/gir1.2-poppler-0.18.install": "e1caa5fbfc88ae6b72a271bf2fce83e3b73b01db9ed686b8de8b581edfeed05b",
+        "debian/poppler-utils.install": "05e20573758526975d05385ea909e62b3c43d3efcfc238a15d35d4b142a5bd3e",
+        "debian/libpoppler-glib8t64.install": "8ec451554beb9c74ef67460521b50d83e1741f81855956021f70dfcf89c7a1df",
+        "debian/libpoppler-qt6-3t64.install": "3666a57bfc81695989c544a0381293426e2eb9f1bdab979868ea642429daf483",
+        "debian/libpoppler-cpp-dev.install": "492762880d4545f9fcb448f9cdaec7570e823aac5a6a3be1194f2cff8af543a5",
+        "debian/libpoppler-dev.install": "eeb8b544a88b82467f919b5378ef8122b24b4fd84c1654ef139819a16736fbc1",
+        "debian/watch": "388ea03e9574dc70f137d06c397caf5625b8f9540a98cb79bf11fe1ceaf58c7e",
+        "debian/libpoppler-qt5-1t64.symbols.in": "7171d1951f05387257db88af639ddb0cf5b23d5527009574d91940127d3dc935",
+        "debian/libpoppler-qt5-dev.install": "c5c9ea719cb2819b65b14a2162abe9a2013c370e0637f6e4adc096badf4e73cd",
+        "debian/changelog": "3ef035163a6792a06321efbc5f27a736326174f964042a694c1d2083b6ef0209",
+        "debian/source/format": "1be7080d72e6b566df3e236ce2c55efdfbbb8fa1c972d825e5b672ff8773be1a",
+        "debian/tests/qt6": "825f3f2af64ba84b52cfe625e6fe27dc47823987da814f96194ac97998e0db18",
+        "debian/tests/glib": "9b47ce3a03900ec42e6e603c6571eb38de3569fda0d813e56448651f82bc1aef",
+        "debian/tests/test-glib.c": "0c6bb846cee34680b2bf1ffebcc0d58349c0c322af3224f2635912c9c6ea4185",
+        "debian/tests/control": "d17f499fedc765092e1ad205d08602f73bb6acdd0de1d1e98ec5c7ef58027ec2",
+        "debian/tests/cpp": "59728bea85a970c73613564c963afc1131cb3501c3ca39fc0e75732b981eeeec",
+        "debian/tests/qt5": "a95fd54d1e99142df33b9d52b8fce60110bd33ee3774bd2ce667c220884b4c20",
+        "debian/tests/test-qt5.cpp": "e45ee002e41beed4ff8e70858af2b415c39da5bd1d4c5769e4cf099c4adee413",
+        "debian/tests/test-qt6.cpp": "25988d3bafce8af1dea405864c57f83fd92bf987c63bbc7d8be4103c1ec2aeda",
+        "debian/tests/test-cpp.cpp": "c103553185d8926323044349d6c110c2386ef72b76320717fee905e5a438ca0a",
+        "debian/patches/Check-for-duplicate-entries.patch": "fa2e2651d0294549ae2cc9536ed65916a328a95c0afb001710099210f35694cc",
+        "debian/patches/Make-sure-regex-doesn-t-stack-overflow-by-limiting-i.patch": "8b02d05052f1361346b249892171726420b268b18419aa1c8806c1797d40b755",
+        "debian/patches/CVE-2025-32365.patch": "f73a19be6371f890fd64723c128c11565fdf1ac5f4f0e8f8659606cbb7945578",
+        "debian/patches/CVE-2025-50420.patch": "a3d4a97bbc1ef72b25b5679521f1afe6c6e7416426cfa8b68720fe16823b76aa",
+        "debian/patches/CVE-2025-32364.patch": "fa7b9dc62529e49ce684807a7793e9c4b5fef338484adf1a6d9793edba8aa0ee",
+        "debian/patches/malformed-moddate.patch": "03f063b7197a92d529297b6f23490072c66a307f6ab681a7c78a4f3405fed6fd",
+        "debian/patches/CVE-2025-43903.patch": "622b90932eb5850b0c92797c129e867bdcba409debfc4b6e3e74daf0da013d7e",
+        "debian/patches/CVE-2025-52886.patch": "0ab18996920f428f3274395eb28fa1acbe56cfde7bdcd193653f51c2223f2340",
+        "debian/patches/series": "a9eae3fef99cbc8358972a90b28174f12aa2a5cdfb884a4ecf195a464c21bdce",
+        "debian/patches/SplashOutputDev-Fix-integer-overflow-in-tilingPatter.patch": "0db7e3387eb46149086f82dfc4309f5046c6073397dc1aeae7021221d455a2f4",
+        "debian/upstream/metadata": "42d051a86364df6a3c78c025f33aefcdf0a8ec05ce24925444483539c99d61da",
+        "debian/upstream/signing-key.asc": "ee4358beae97083681d5fc859d0d0a691fd15ece0a3275b2db100f8a0f74d414"
+      },
+      "testDataCommit": "0ef006dca68d2206387eca1d36ae06733812e387",
+      "testDataRootTree": "fc4f06024ef19c51600baba9a4d5fba1ec452ec2",
+      "testDataFiles": 65,
+      "testDataManifestSha256": "73ba00c5f6c5a1c38320720de975dffd5c9d2ed8ba733e93e4fe4f09aa5c4a16",
+      "noUnstableBinaries": true
+    },
+    "originalConfigSha256": "5ef800cdc06e8e6d485d92bde0b84edce2118c3ad27aa5cea7f8a055e96936be",
+    "originalLinkSha256": "f0d6d0ddc491889b30a4dbcb5d6f0813b9c3b9e9513618abf749ec54c291eebc",
+    "originalCompileCommands": [
+      {
+        "directory": "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests",
+        "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_STRICT_ITERATORS -DQT_TESTCASE_BUILDDIR=\\\"/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests\\\" -DQT_TESTCASE_SOURCEDIR=\\\"/work/source/poppler-25.03.0/qt6/tests\\\" -DQT_TESTLIB_LIB -DQT_WIDGETS_LIB -DTESTDATADIR=\\\"/work/source/poppler-25.03.0/../test\\\" -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/check_qt6_signature_basics_autogen/include -I/work/source/poppler-25.03.0/qt6/tests -I/work/source/poppler-25.03.0/qt6/tests/../src -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/../src -I/work/source/poppler-25.03.0/qt6/src -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/src -I/work/source/poppler-25.03.0/poppler -I/work/source/poppler-25.03.0 -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/poppler -isystem /usr/include/aarch64-linux-gnu/qt6/QtCore -isystem /usr/include/aarch64-linux-gnu/qt6 -isystem /usr/lib/aarch64-linux-gnu/qt6/mkspecs/linux-g++ -isystem /usr/include/aarch64-linux-gnu/qt6/QtGui -isystem /usr/include/freetype2 -isystem /usr/include/aarch64-linux-gnu/qt6/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt6/QtTest -isystem /usr/include/gpgme++ -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wcast-align -Wformat-security -Wframe-larger-than=65536 -Wlogical-op -Wmissing-format-attribute -Wnon-virtual-dtor -Woverloaded-virtual -Wmissing-declarations -Wundef -Wzero-as-null-pointer-constant -Wshadow -Wsuggest-override -fno-exceptions -fno-check-new -fno-common -fno-operator-names -D_DEFAULT_SOURCE -O2 -DNDEBUG -g -O2 -ffile-prefix-map=/work/source/poppler-25.03.0=. -flto=auto -ffat-lto-objects -fstack-protector-strong -fstack-clash-protection -Wformat -Werror=format-security -mbranch-protection=standard -Wdate-time -D_FORTIFY_SOURCE=2 -std=c++20 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/check_qt6_signature_basics.dir/check_qt6_signature_basics_autogen/mocs_compilation.cpp.o -c /work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/check_qt6_signature_basics_autogen/mocs_compilation.cpp",
+        "file": "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/check_qt6_signature_basics_autogen/mocs_compilation.cpp",
+        "output": "qt6/tests/CMakeFiles/check_qt6_signature_basics.dir/check_qt6_signature_basics_autogen/mocs_compilation.cpp.o"
+      },
+      {
+        "directory": "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests",
+        "command": "/usr/bin/c++ -DQT_CORE_LIB -DQT_GUI_LIB -DQT_NO_DEBUG -DQT_STRICT_ITERATORS -DQT_TESTCASE_BUILDDIR=\\\"/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests\\\" -DQT_TESTCASE_SOURCEDIR=\\\"/work/source/poppler-25.03.0/qt6/tests\\\" -DQT_TESTLIB_LIB -DQT_WIDGETS_LIB -DTESTDATADIR=\\\"/work/source/poppler-25.03.0/../test\\\" -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/check_qt6_signature_basics_autogen/include -I/work/source/poppler-25.03.0/qt6/tests -I/work/source/poppler-25.03.0/qt6/tests/../src -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/../src -I/work/source/poppler-25.03.0/qt6/src -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/src -I/work/source/poppler-25.03.0/poppler -I/work/source/poppler-25.03.0 -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu -I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/poppler -isystem /usr/include/aarch64-linux-gnu/qt6/QtCore -isystem /usr/include/aarch64-linux-gnu/qt6 -isystem /usr/lib/aarch64-linux-gnu/qt6/mkspecs/linux-g++ -isystem /usr/include/aarch64-linux-gnu/qt6/QtGui -isystem /usr/include/freetype2 -isystem /usr/include/aarch64-linux-gnu/qt6/QtWidgets -isystem /usr/include/aarch64-linux-gnu/qt6/QtTest -isystem /usr/include/gpgme++ -Wall -Wextra -Wpedantic -Wno-unused-parameter -Wcast-align -Wformat-security -Wframe-larger-than=65536 -Wlogical-op -Wmissing-format-attribute -Wnon-virtual-dtor -Woverloaded-virtual -Wmissing-declarations -Wundef -Wzero-as-null-pointer-constant -Wshadow -Wsuggest-override -fno-exceptions -fno-check-new -fno-common -fno-operator-names -D_DEFAULT_SOURCE -O2 -DNDEBUG -g -O2 -ffile-prefix-map=/work/source/poppler-25.03.0=. -flto=auto -ffat-lto-objects -fstack-protector-strong -fstack-clash-protection -Wformat -Werror=format-security -mbranch-protection=standard -Wdate-time -D_FORTIFY_SOURCE=2 -std=c++20 -fvisibility=hidden -fvisibility-inlines-hidden -o CMakeFiles/check_qt6_signature_basics.dir/check_signature_basics.cpp.o -c /work/source/poppler-25.03.0/qt6/tests/check_signature_basics.cpp",
+        "file": "/work/source/poppler-25.03.0/qt6/tests/check_signature_basics.cpp",
+        "output": "qt6/tests/CMakeFiles/check_qt6_signature_basics.dir/check_signature_basics.cpp.o"
+      }
+    ],
+    "originalRpathArguments": [
+      "-Wl,-rpath,/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/src:/work/source/poppler-25.03.0/obj-aarch64-linux-gnu"
+    ],
+    "originalTestSha256": "33cb4f22d0c9e6d84a56128bca540e1e1057329540639474f38310cf8a2c7181",
+    "executableSha256": "b19ed1b3719d315a6e734a6cedc27e36bc812fb91dd7f88db2c77984d3a8ea58",
+    "testExitCode": 1,
+    "qtFunctions": [
+      "initTestCase",
+      "testSignatureCount",
+      "testSignatureSizes",
+      "testSignerInfo",
+      "testSignedRanges",
+      "testPgp",
+      "cleanupTestCase"
+    ],
+    "qtIncidents": [
+      {
+        "function": "initTestCase",
+        "attributes": {
+          "type": "pass",
+          "file": "",
+          "line": "0"
+        },
+        "description": null,
+        "dataTags": []
+      },
+      {
+        "function": "testSignatureCount",
+        "attributes": {
+          "type": "pass",
+          "file": "",
+          "line": "0"
+        },
+        "description": null,
+        "dataTags": [
+          "nss"
+        ]
+      },
+      {
+        "function": "testSignatureCount",
+        "attributes": {
+          "type": "pass",
+          "file": "",
+          "line": "0"
+        },
+        "description": null,
+        "dataTags": [
+          "gpg"
+        ]
+      },
+      {
+        "function": "testSignatureSizes",
+        "attributes": {
+          "type": "pass",
+          "file": "",
+          "line": "0"
+        },
+        "description": null,
+        "dataTags": [
+          "nss"
+        ]
+      },
+      {
+        "function": "testSignatureSizes",
+        "attributes": {
+          "type": "pass",
+          "file": "",
+          "line": "0"
+        },
+        "description": null,
+        "dataTags": [
+          "gpg"
+        ]
+      },
+      {
+        "function": "testSignerInfo",
+        "attributes": {
+          "type": "pass",
+          "file": "",
+          "line": "0"
+        },
+        "description": null,
+        "dataTags": [
+          "nss"
+        ]
+      },
+      {
+        "function": "testSignerInfo",
+        "attributes": {
+          "type": "pass",
+          "file": "",
+          "line": "0"
+        },
+        "description": null,
+        "dataTags": [
+          "gpg"
+        ]
+      },
+      {
+        "function": "testSignedRanges",
+        "attributes": {
+          "type": "pass",
+          "file": "",
+          "line": "0"
+        },
+        "description": null,
+        "dataTags": [
+          "nss"
+        ]
+      },
+      {
+        "function": "testSignedRanges",
+        "attributes": {
+          "type": "pass",
+          "file": "",
+          "line": "0"
+        },
+        "description": null,
+        "dataTags": [
+          "gpg"
+        ]
+      },
+      {
+        "function": "testPgp",
+        "attributes": {
+          "type": "pass",
+          "file": "",
+          "line": "0"
+        },
+        "description": null,
+        "dataTags": [
+          "nss"
+        ]
+      },
+      {
+        "function": "testPgp",
+        "attributes": {
+          "type": "fail",
+          "file": "./qt6/tests/check_signature_basics.cpp",
+          "line": "311"
+        },
+        "description": "Compared values are not the same\n   Actual   (siginfo0->getSignerName())     : \"\"\n   Expected (std::string { \"Sune Vuorela\" }): \"Sune Vuorela\"",
+        "dataTags": [
+          "gpg"
+        ]
+      },
+      {
+        "function": "cleanupTestCase",
+        "attributes": {
+          "type": "pass",
+          "file": "",
+          "line": "0"
+        },
+        "description": null,
+        "dataTags": []
+      }
+    ],
+    "qtDataTags": [
+      "gpg",
+      "nss"
+    ],
+    "status": "baseline-test-failed-or-incomplete",
+    "testXmlSha256": "05705b77c4aeafb8f60d3fbf9354258eedb05805b930332ca2c69f88e656b120",
+    "fullUnfilteredClass": true,
+    "candidateAcceptance": false,
+    "phases": [
+      {
+        "name": "original-configure-only",
+        "command": [
+          "debian/rules",
+          "override_dh_auto_configure"
+        ],
+        "cwd": "/work/source/poppler-25.03.0",
+        "exitCode": 0,
+        "signal": null,
+        "seconds": 4.093,
+        "logSha256": "4b8ee29b51d1968ac36a3cd71986051ce7f2bec77fb943c73253695d1cf6547b"
+      },
+      {
+        "name": "original-moc-only",
+        "command": [
+          "cmake",
+          "-E",
+          "cmake_autogen",
+          "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/CMakeFiles/check_qt6_signature_basics_autogen.dir/AutogenInfo.json",
+          "Release"
+        ],
+        "cwd": "None",
+        "exitCode": 0,
+        "signal": null,
+        "seconds": 0.314,
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "original-object-0",
+        "command": [
+          "/usr/bin/c++",
+          "-DQT_CORE_LIB",
+          "-DQT_GUI_LIB",
+          "-DQT_NO_DEBUG",
+          "-DQT_STRICT_ITERATORS",
+          "-DQT_TESTCASE_BUILDDIR=\"/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests\"",
+          "-DQT_TESTCASE_SOURCEDIR=\"/work/source/poppler-25.03.0/qt6/tests\"",
+          "-DQT_TESTLIB_LIB",
+          "-DQT_WIDGETS_LIB",
+          "-DTESTDATADIR=\"/work/source/poppler-25.03.0/../test\"",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/check_qt6_signature_basics_autogen/include",
+          "-I/work/source/poppler-25.03.0/qt6/tests",
+          "-I/work/source/poppler-25.03.0/qt6/tests/../src",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/../src",
+          "-I/work/source/poppler-25.03.0/qt6/src",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/src",
+          "-I/work/source/poppler-25.03.0/poppler",
+          "-I/work/source/poppler-25.03.0",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/poppler",
+          "-isystem",
+          "/usr/include/aarch64-linux-gnu/qt6/QtCore",
+          "-isystem",
+          "/usr/include/aarch64-linux-gnu/qt6",
+          "-isystem",
+          "/usr/lib/aarch64-linux-gnu/qt6/mkspecs/linux-g++",
+          "-isystem",
+          "/usr/include/aarch64-linux-gnu/qt6/QtGui",
+          "-isystem",
+          "/usr/include/freetype2",
+          "-isystem",
+          "/usr/include/aarch64-linux-gnu/qt6/QtWidgets",
+          "-isystem",
+          "/usr/include/aarch64-linux-gnu/qt6/QtTest",
+          "-isystem",
+          "/usr/include/gpgme++",
+          "-Wall",
+          "-Wextra",
+          "-Wpedantic",
+          "-Wno-unused-parameter",
+          "-Wcast-align",
+          "-Wformat-security",
+          "-Wframe-larger-than=65536",
+          "-Wlogical-op",
+          "-Wmissing-format-attribute",
+          "-Wnon-virtual-dtor",
+          "-Woverloaded-virtual",
+          "-Wmissing-declarations",
+          "-Wundef",
+          "-Wzero-as-null-pointer-constant",
+          "-Wshadow",
+          "-Wsuggest-override",
+          "-fno-exceptions",
+          "-fno-check-new",
+          "-fno-common",
+          "-fno-operator-names",
+          "-D_DEFAULT_SOURCE",
+          "-O2",
+          "-DNDEBUG",
+          "-g",
+          "-O2",
+          "-ffile-prefix-map=/work/source/poppler-25.03.0=.",
+          "-flto=auto",
+          "-ffat-lto-objects",
+          "-fstack-protector-strong",
+          "-fstack-clash-protection",
+          "-Wformat",
+          "-Werror=format-security",
+          "-mbranch-protection=standard",
+          "-Wdate-time",
+          "-D_FORTIFY_SOURCE=2",
+          "-std=c++20",
+          "-fvisibility=hidden",
+          "-fvisibility-inlines-hidden",
+          "-o",
+          "CMakeFiles/check_qt6_signature_basics.dir/check_qt6_signature_basics_autogen/mocs_compilation.cpp.o",
+          "-c",
+          "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/check_qt6_signature_basics_autogen/mocs_compilation.cpp"
+        ],
+        "cwd": "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests",
+        "exitCode": 0,
+        "signal": null,
+        "seconds": 0.055,
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "original-object-1",
+        "command": [
+          "/usr/bin/c++",
+          "-DQT_CORE_LIB",
+          "-DQT_GUI_LIB",
+          "-DQT_NO_DEBUG",
+          "-DQT_STRICT_ITERATORS",
+          "-DQT_TESTCASE_BUILDDIR=\"/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests\"",
+          "-DQT_TESTCASE_SOURCEDIR=\"/work/source/poppler-25.03.0/qt6/tests\"",
+          "-DQT_TESTLIB_LIB",
+          "-DQT_WIDGETS_LIB",
+          "-DTESTDATADIR=\"/work/source/poppler-25.03.0/../test\"",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/check_qt6_signature_basics_autogen/include",
+          "-I/work/source/poppler-25.03.0/qt6/tests",
+          "-I/work/source/poppler-25.03.0/qt6/tests/../src",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/../src",
+          "-I/work/source/poppler-25.03.0/qt6/src",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/src",
+          "-I/work/source/poppler-25.03.0/poppler",
+          "-I/work/source/poppler-25.03.0",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu",
+          "-I/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/poppler",
+          "-isystem",
+          "/usr/include/aarch64-linux-gnu/qt6/QtCore",
+          "-isystem",
+          "/usr/include/aarch64-linux-gnu/qt6",
+          "-isystem",
+          "/usr/lib/aarch64-linux-gnu/qt6/mkspecs/linux-g++",
+          "-isystem",
+          "/usr/include/aarch64-linux-gnu/qt6/QtGui",
+          "-isystem",
+          "/usr/include/freetype2",
+          "-isystem",
+          "/usr/include/aarch64-linux-gnu/qt6/QtWidgets",
+          "-isystem",
+          "/usr/include/aarch64-linux-gnu/qt6/QtTest",
+          "-isystem",
+          "/usr/include/gpgme++",
+          "-Wall",
+          "-Wextra",
+          "-Wpedantic",
+          "-Wno-unused-parameter",
+          "-Wcast-align",
+          "-Wformat-security",
+          "-Wframe-larger-than=65536",
+          "-Wlogical-op",
+          "-Wmissing-format-attribute",
+          "-Wnon-virtual-dtor",
+          "-Woverloaded-virtual",
+          "-Wmissing-declarations",
+          "-Wundef",
+          "-Wzero-as-null-pointer-constant",
+          "-Wshadow",
+          "-Wsuggest-override",
+          "-fno-exceptions",
+          "-fno-check-new",
+          "-fno-common",
+          "-fno-operator-names",
+          "-D_DEFAULT_SOURCE",
+          "-O2",
+          "-DNDEBUG",
+          "-g",
+          "-O2",
+          "-ffile-prefix-map=/work/source/poppler-25.03.0=.",
+          "-flto=auto",
+          "-ffat-lto-objects",
+          "-fstack-protector-strong",
+          "-fstack-clash-protection",
+          "-Wformat",
+          "-Werror=format-security",
+          "-mbranch-protection=standard",
+          "-Wdate-time",
+          "-D_FORTIFY_SOURCE=2",
+          "-std=c++20",
+          "-fvisibility=hidden",
+          "-fvisibility-inlines-hidden",
+          "-o",
+          "CMakeFiles/check_qt6_signature_basics.dir/check_signature_basics.cpp.o",
+          "-c",
+          "/work/source/poppler-25.03.0/qt6/tests/check_signature_basics.cpp"
+        ],
+        "cwd": "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests",
+        "exitCode": 0,
+        "signal": null,
+        "seconds": 2.192,
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "original-link-baseline-sdk",
+        "command": [
+          "/usr/bin/c++",
+          "-Wall",
+          "-Wextra",
+          "-Wpedantic",
+          "-Wno-unused-parameter",
+          "-Wcast-align",
+          "-Wformat-security",
+          "-Wframe-larger-than=65536",
+          "-Wlogical-op",
+          "-Wmissing-format-attribute",
+          "-Wnon-virtual-dtor",
+          "-Woverloaded-virtual",
+          "-Wmissing-declarations",
+          "-Wundef",
+          "-Wzero-as-null-pointer-constant",
+          "-Wshadow",
+          "-Wsuggest-override",
+          "-fno-exceptions",
+          "-fno-check-new",
+          "-fno-common",
+          "-fno-operator-names",
+          "-D_DEFAULT_SOURCE",
+          "-O2",
+          "-DNDEBUG",
+          "-g",
+          "-O2",
+          "-ffile-prefix-map=/work/source/poppler-25.03.0=.",
+          "-flto=auto",
+          "-ffat-lto-objects",
+          "-fstack-protector-strong",
+          "-fstack-clash-protection",
+          "-Wformat",
+          "-Werror=format-security",
+          "-mbranch-protection=standard",
+          "-Wdate-time",
+          "-D_FORTIFY_SOURCE=2",
+          "-flto=auto",
+          "-ffat-lto-objects",
+          "-Wl,-z,relro",
+          "-Wl,-z,now",
+          "-Wl,--as-needed",
+          "CMakeFiles/check_qt6_signature_basics.dir/check_qt6_signature_basics_autogen/mocs_compilation.cpp.o",
+          "CMakeFiles/check_qt6_signature_basics.dir/check_signature_basics.cpp.o",
+          "-o",
+          "check_qt6_signature_basics",
+          "-Wl,-rpath,/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/src:/work/source/poppler-25.03.0/obj-aarch64-linux-gnu",
+          "/usr/lib/aarch64-linux-gnu/libpoppler-qt6.so.3.10.0",
+          "/usr/lib/aarch64-linux-gnu/libQt6Widgets.so.6.8.2",
+          "/usr/lib/aarch64-linux-gnu/libQt6Test.so.6.8.2",
+          "/usr/lib/aarch64-linux-gnu/libQt6Gui.so.6.8.2",
+          "/usr/lib/aarch64-linux-gnu/libpoppler.so.147.0.0",
+          "/usr/lib/aarch64-linux-gnu/libgpgmepp.so",
+          "-lpthread",
+          "/usr/lib/aarch64-linux-gnu/libgpgme.so",
+          "-L/usr/lib/aarch64-linux-gnu",
+          "-lassuan",
+          "/usr/lib/aarch64-linux-gnu/libfreetype.so",
+          "/usr/lib/aarch64-linux-gnu/liblcms2.so",
+          "/usr/lib/aarch64-linux-gnu/libGLX.so",
+          "/usr/lib/aarch64-linux-gnu/libOpenGL.so",
+          "/usr/lib/aarch64-linux-gnu/libQt6Core.so.6.8.2"
+        ],
+        "cwd": "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests",
+        "exitCode": 0,
+        "signal": null,
+        "seconds": 0.526,
+        "logSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "baseline-ldd",
+        "command": [
+          "ldd",
+          "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/check_qt6_signature_basics"
+        ],
+        "cwd": "None",
+        "exitCode": 0,
+        "signal": null,
+        "seconds": 0.054,
+        "logSha256": "bfd654fd709644c5c6a3bf59272f1214c6f91804cb0a713f7d1790ca4f2d43e4"
+      },
+      {
+        "name": "baseline-dynamic-metadata",
+        "command": [
+          "readelf",
+          "-d",
+          "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/check_qt6_signature_basics"
+        ],
+        "cwd": "None",
+        "exitCode": 0,
+        "signal": null,
+        "seconds": 0.056,
+        "logSha256": "c2cccdb2dcf1d76a0adc8682a4173df8a536a2e8cb580ded0b89a3e3a3d953c6"
+      },
+      {
+        "name": "full-baseline-signature-class",
+        "command": [
+          "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests/check_qt6_signature_basics",
+          "-o",
+          "/export/baseline-signature.xml,xml",
+          "-o",
+          "-,txt",
+          "-v2"
+        ],
+        "cwd": "/work/source/poppler-25.03.0/obj-aarch64-linux-gnu/qt6/tests",
+        "exitCode": 1,
+        "signal": null,
+        "seconds": 0.101,
+        "logSha256": "3c7380f805d6a543b5933a3f83368c8dcf8dd16fbe4e55881ec696ee2ce1783e"
+      }
+    ],
+    "seconds": 9.387
+  },
+  "containerRemovalExit": 0,
+  "exactContainerAbsent": true,
+  "sourcesAfter": {
+    "manifest": "aa17b701b16977f1efd41d1b9064da4893171e82e1b1c158f8ce88f32b1b801a",
+    "files": 16,
+    "bytes": 12707841
+  },
+  "sourcesUnchanged": true,
+  "logSha256": "ee255ea0666bdf9cf1b10c77bf45708413efb0942b121242500cd02057c2f10f",
+  "logBytes": 9850,
+  "seconds": 15.591,
+  "freeAfter": 9944694784,
+  "finishedUnix": 1793992645.071869
+}

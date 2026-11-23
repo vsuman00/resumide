@@ -1,0 +1,241 @@
+-- R03 owner-wide technical export SOURCE ONLY. SQL UNPARSED/UNEXECUTED.
+-- No existing mutation body, grants, ledger data, policy or retention changes.
+begin;
+set local statement_timeout='10s';
+set local lock_timeout='1s';
+set local idle_in_transaction_session_timeout='15s';
+set local search_path='';
+create function private.owned_ai_budget_export_number(p_value numeric,p_max numeric) returns text
+language plpgsql immutable set search_path='' as $budget_export_0$
+begin
+ if p_value is null then return null;end if;
+ if private.ai_budget_integer(p_value) is not true or (p_max is not null and p_value>p_max)
+   or length(trunc(p_value)::text)>128 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+ return trunc(p_value)::text;
+end;
+$budget_export_0$;
+
+create function public.export_owned_ai_budget_records(p_user_id uuid) returns jsonb
+language plpgsql stable security definer set search_path='' as $budget_export_1$
+declare o private.ai_budget_operations%rowtype;a private.ai_budget_attempts%rowtype;e private.ai_budget_events%rowtype;
+ pol private.ai_budget_policies%rowtype;op private.ai_budget_operations%rowtype;att private.ai_budget_attempts%rowtype;
+ item jsonb;answer jsonb;bytes bigint:=1024;n integer;history text[];
+ ops jsonb[]:=array[]::jsonb[];attempts jsonb[]:=array[]::jsonb[];events jsonb[]:=array[]::jsonb[];
+ operators jsonb[]:=array[]::jsonb[];actions jsonb[]:=array[]::jsonb[];
+begin
+ if p_user_id is null then raise exception 'OWNED_AI_BUDGET_EXPORT_INVALID' using errcode='22023';end if;
+ if private.owned_ai_budget_export_ready() is not true then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+ perform 1 from auth.users where id=p_user_id;
+ if not found then raise exception 'OWNED_AI_BUDGET_EXPORT_NOT_FOUND' using errcode='42501';end if;
+ -- STABLE read: all bounded collections use the same statement snapshot.
+ -- No current membership, candidate source, consent, flag or period filter.
+ n:=0;
+ for o in select * from private.ai_budget_operations where user_id=p_user_id order by id limit 4097 loop
+  n:=n+1;if n>4096 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+  select * into pol from private.ai_budget_policies where version=o.policy_version;
+  if not found or (o.model,o.input_microusd_per_million,o.output_microusd_per_million,o.attempt_limit)
+    is distinct from (pol.model,pol.input_microusd_per_million,pol.output_microusd_per_million,pol.max_attempts)
+   or o.surface not in ('qualitative','rewrite','build') or o.attempt_limit not between 1 and 3
+   or o.model collate "C" !~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$'
+   or o.prompt_policy_version collate "C" !~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$'
+   or o.policy_version collate "C" !~ '^[A-Za-z0-9][A-Za-z0-9._:/-]{0,99}$'
+   or o.payload_sha256 collate "C" !~ '^[a-f0-9]{64}$' or not isfinite(o.created_at)
+   or private.ai_budget_integer(o.reserved_input_tokens) is not true or o.reserved_input_tokens not between 1 and 9007199254740991
+   or private.ai_budget_integer(o.reserved_output_tokens) is not true or o.reserved_output_tokens not between 1 and 9007199254740991
+   or private.ai_budget_integer(o.input_microusd_per_million) is not true or o.input_microusd_per_million not between 1 and 9223372036854775807
+   or private.ai_budget_integer(o.output_microusd_per_million) is not true or o.output_microusd_per_million not between 1 and 9223372036854775807
+   or o.binding_sha256 is distinct from private.ai_budget_binding_sha256(o.user_id,o.organization_id,jsonb_build_object(
+      'operationId',o.id,'surface',o.surface,'payloadSha256',o.payload_sha256,'model',o.model,'promptPolicyVersion',o.prompt_policy_version,
+      'policyVersion',o.policy_version,'reservedInputTokens',trunc(o.reserved_input_tokens)::text,'reservedOutputTokens',trunc(o.reserved_output_tokens)::text))
+   or not exists(select 1 from private.ai_budget_attempts where operation_id=o.id)
+   then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+  item:=to_jsonb(o)||jsonb_build_object('created_at',to_char(o.created_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+   'reserved_input_tokens',private.owned_ai_budget_export_number(o.reserved_input_tokens,9007199254740991),
+   'reserved_output_tokens',private.owned_ai_budget_export_number(o.reserved_output_tokens,9007199254740991),
+   'input_microusd_per_million',private.owned_ai_budget_export_number(o.input_microusd_per_million,9223372036854775807),
+   'output_microusd_per_million',private.owned_ai_budget_export_number(o.output_microusd_per_million,9223372036854775807));
+  bytes:=bytes+octet_length(convert_to(item::text,'UTF8'))+1;if bytes>33554432 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+  ops:=array_append(ops,item);
+ end loop;
+ n:=0;
+ for a in select a.* from private.ai_budget_attempts a join private.ai_budget_operations o on o.id=a.operation_id where o.user_id=p_user_id order by a.operation_id,a.ordinal limit 12289 loop
+  n:=n+1;if n>12288 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+  select * into strict op from private.ai_budget_operations where id=a.operation_id and user_id=p_user_id;
+  if a.organization_id<>op.organization_id or a.ordinal not between 1 and op.attempt_limit
+   or (select count(*) from private.ai_budget_attempts x where x.operation_id=op.id and x.ordinal<=a.ordinal)<>a.ordinal
+   or a.period<>date_trunc('month',a.period)::date or not isfinite(a.period)
+   or not isfinite(a.created_at) or not isfinite(a.updated_at) or a.created_at<op.created_at or a.updated_at<a.created_at
+   or a.state not in ('reserved','dispatched','released','held_unknown','settled')
+   or a.reserved_cost_microusd is distinct from private.ai_budget_cost(op.reserved_input_tokens,op.reserved_output_tokens,op.input_microusd_per_million,op.output_microusd_per_million)
+   or (a.state='settled' and (a.actual_input_tokens is null or a.actual_output_tokens is null or a.actual_cost_microusd is null
+      or private.ai_budget_integer(a.actual_input_tokens) is not true or a.actual_input_tokens>9007199254740991
+      or private.ai_budget_integer(a.actual_output_tokens) is not true or a.actual_output_tokens>9007199254740991
+      or a.actual_cost_microusd is distinct from private.ai_budget_cost(a.actual_input_tokens,a.actual_output_tokens,op.input_microusd_per_million,op.output_microusd_per_million)))
+   or (a.state<>'settled' and (a.actual_input_tokens is not null or a.actual_output_tokens is not null or a.actual_cost_microusd is not null))
+   then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+  select array_agg(kind order by kind) into history from private.ai_budget_events where attempt_id=a.id;
+  if history is null or not ('reserve'=any(history))
+   or (a.state='reserved' and history<>array['reserve']) or (a.state='released' and history<>array['release','reserve'])
+   or (a.state='dispatched' and history<>array['dispatch','reserve']) or (a.state='held_unknown' and history<>array['dispatch','reserve','unknown'])
+   or (a.state='settled' and (not ('dispatch'=any(history)) or 'release'=any(history) or not ('settle'=any(history) or 'reconcile'=any(history))
+      or ('unknown'=any(history) and 'settle'=any(history))
+      or ('settle'=any(history) and 'reconcile'=any(history) and not (a.actual_input_tokens>op.reserved_input_tokens or a.actual_output_tokens>op.reserved_output_tokens or a.actual_cost_microusd>a.reserved_cost_microusd)))) then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+  item:=to_jsonb(a)||jsonb_build_object('period',to_char(a.period,'YYYY-MM-DD'),
+   'created_at',to_char(a.created_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+   'updated_at',to_char(a.updated_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+   'reserved_cost_microusd',private.owned_ai_budget_export_number(a.reserved_cost_microusd,null),
+   'actual_input_tokens',private.owned_ai_budget_export_number(a.actual_input_tokens,9007199254740991),
+   'actual_output_tokens',private.owned_ai_budget_export_number(a.actual_output_tokens,9007199254740991),
+   'actual_cost_microusd',private.owned_ai_budget_export_number(a.actual_cost_microusd,null));
+  bytes:=bytes+octet_length(convert_to(item::text,'UTF8'))+1;if bytes>33554432 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+  attempts:=array_append(attempts,item);
+ end loop;
+ n:=0;
+ -- Only own-attempt history OR the subject's own operator receipt is considered.
+ for e in select e.* from private.ai_budget_events e join private.ai_budget_attempts a on a.id=e.attempt_id
+  join private.ai_budget_operations o on o.id=a.operation_id where o.user_id=p_user_id or e.operator_id=p_user_id order by e.id limit 147457 loop
+  select * into strict att from private.ai_budget_attempts where id=e.attempt_id;
+  select * into strict op from private.ai_budget_operations where id=att.operation_id;
+  if e.kind not in ('reserve','dispatch','release','unknown','settle','reconcile') or not isfinite(e.created_at) or e.created_at<att.created_at
+   or (e.kind in ('settle','reconcile') and (att.state<>'settled' or att.organization_id<>op.organization_id
+     or private.ai_budget_integer(e.input_tokens) is not true or e.input_tokens>9007199254740991
+     or private.ai_budget_integer(e.output_tokens) is not true or e.output_tokens>9007199254740991
+     or private.ai_budget_integer(op.input_microusd_per_million) is not true or op.input_microusd_per_million not between 1 and 9223372036854775807
+     or private.ai_budget_integer(op.output_microusd_per_million) is not true or op.output_microusd_per_million not between 1 and 9223372036854775807
+     or e.cost_microusd is distinct from private.ai_budget_cost(e.input_tokens,e.output_tokens,op.input_microusd_per_million,op.output_microusd_per_million)
+     or (e.input_tokens,e.output_tokens,e.cost_microusd)
+     is distinct from (att.actual_input_tokens,att.actual_output_tokens,att.actual_cost_microusd)))
+   or (e.kind not in ('settle','reconcile') and (e.input_tokens is not null or e.output_tokens is not null or e.cost_microusd is not null))
+   or (e.kind='reconcile' and (e.reconciliation_id is null or e.operator_id is null or e.evidence_sha256 is null or e.evidence_sha256 collate "C" !~ '^[a-f0-9]{64}$'))
+   or (e.kind<>'reconcile' and (e.reconciliation_id is not null or e.operator_id is not null or e.evidence_sha256 is not null))
+   then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+  n:=n+1;if n>147456 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+  if op.user_id=p_user_id then
+   if cardinality(events)>=73728 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+   item:=to_jsonb(e)||jsonb_build_object('created_at',to_char(e.created_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'),
+    'input_tokens',private.owned_ai_budget_export_number(e.input_tokens,9007199254740991),
+    'output_tokens',private.owned_ai_budget_export_number(e.output_tokens,9007199254740991),
+    'cost_microusd',private.owned_ai_budget_export_number(e.cost_microusd,null),
+    'operator_id',case when e.operator_id=p_user_id then e.operator_id else null end,
+    'operator_disposition',case when e.operator_id is null then 'none' when e.operator_id=p_user_id then 'self' else 'redacted' end);
+   bytes:=bytes+octet_length(convert_to(item::text,'UTF8'))+1;if bytes>33554432 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+   events:=array_append(events,item);
+  else
+   if e.kind<>'reconcile' or e.operator_id is distinct from p_user_id or cardinality(actions)>=73728 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+   -- Never to_jsonb(e) here: no foreign event/attempt/op/org/usage is returned.
+   item:=jsonb_build_object('kind','reconcile','operator_id',p_user_id,'reconciliation_id',e.reconciliation_id,
+    'evidence_sha256',e.evidence_sha256,'created_at',to_char(e.created_at at time zone 'UTC','YYYY-MM-DD"T"HH24:MI:SS.US"Z"'));
+   bytes:=bytes+octet_length(convert_to(item::text,'UTF8'))+1;if bytes>33554432 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+   actions:=array_append(actions,item);
+  end if;
+ end loop;
+ n:=0;
+ for item in select to_jsonb(x) from private.ai_budget_reconciliation_operators x where operator_id=p_user_id order by organization_id limit 4097 loop
+  n:=n+1;if n>4096 or (item->>'approval_sha256') collate "C" !~ '^[a-f0-9]{64}$' then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+  bytes:=bytes+octet_length(convert_to(item::text,'UTF8'))+1;if bytes>33554432 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+  operators:=array_append(operators,item);
+ end loop;
+ answer:=jsonb_build_object('schemaVersion','owned-ai-budget-export/1.0.0','ownerId',p_user_id,'operations',to_jsonb(ops),
+  'attempts',to_jsonb(attempts),'events',to_jsonb(events),'reconciliationOperators',to_jsonb(operators),'operatorActions',to_jsonb(actions),
+  'omissions',jsonb_build_object('sharedPools','not_subject_attributable','periodOpenings','not_subject_attributable','foreignOperatorIdentity','redacted','foreignTargetHistory','redacted'));
+ if octet_length(convert_to(answer::text,'UTF8'))>33554432 then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+ return answer;
+end;
+$budget_export_1$;
+
+create function public.read_owned_ai_budget_export_readiness() returns jsonb
+language plpgsql stable security definer set search_path='' as $budget_export_2$
+begin
+ return jsonb_build_object('schemaVersion','owned-ai-budget-export-readiness/1.0.0','profileVersion','owned-ai-budget-export-profile/1.0.0',
+  'schemaReady',private.owned_ai_budget_export_ready(),
+  'exportExecutable',has_function_privilege('service_role',to_regprocedure('public.export_owned_ai_budget_records(uuid)'),'EXECUTE'),
+  'checkerSha256',(select encode(sha256(convert_to(prosrc,'UTF8')),'hex') from pg_catalog.pg_proc where oid=to_regprocedure('private.owned_ai_budget_export_ready()')),
+  'exportSha256',(select encode(sha256(convert_to(prosrc,'UTF8')),'hex') from pg_catalog.pg_proc where oid=to_regprocedure('public.export_owned_ai_budget_records(uuid)')),
+  'metadataSha256',(select encode(sha256(convert_to(prosrc,'UTF8')),'hex') from pg_catalog.pg_proc where oid=to_regprocedure('public.read_owned_ai_budget_export_readiness()')));
+end;
+$budget_export_2$;
+
+create function private.owned_ai_budget_export_ready() returns boolean
+language plpgsql stable set search_path='' as $budget_export_3$
+declare item jsonb;p pg_catalog.pg_proc%rowtype;owner_oid oid;service_oid oid;role_name text;rel pg_catalog.pg_class%rowtype;col jsonb;expected smallint[];
+ manifest jsonb:=$budget_export_catalog$[{"signature":"private.owned_ai_budget_export_number(numeric,numeric)","sha256":"53549a12d1f02a2df1121ad8345cb3670f7b9e5329e000f31f5c90923f349bde","resultType":"text","language":"plpgsql","definer":false,"strict":false,"volatility":"i","acl":"private"},{"signature":"public.export_owned_ai_budget_records(uuid)","sha256":"36eeb7a8e50e81d69c134bc4c9dd6c6f994543e13216c2f1c1684fb02578ba8f","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"s","acl":"optional_service"},{"signature":"public.read_owned_ai_budget_export_readiness()","sha256":"c4325e98c94bff7bf2cd775a875f6253b8d13e8e40f9a5ea0d4ce60eb86256e2","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"s","acl":"metadata"},{"signature":"private.ai_budget_integer(numeric)","sha256":"863c4d9ec3f71c48829128a6fd0ebad472a6f1bbbab2b7ad548fc8eca4477d70","resultType":"boolean","language":"sql","definer":false,"strict":true,"volatility":"i","acl":"private"},{"signature":"private.ai_budget_cost(numeric,numeric,numeric,numeric)","sha256":"d23346e5553140981353ddf58fbce895d3fcfdf252658007250eb162fc82fbda","resultType":"numeric","language":"sql","definer":false,"strict":true,"volatility":"i","acl":"private"},{"signature":"private.ai_budget_binding_sha256(uuid,uuid,jsonb)","sha256":"d1718008235bfbcd89cc4047890b554f582ad13f57ccc518902f918704548587","resultType":"text","language":"plpgsql","definer":false,"strict":true,"volatility":"i","acl":"private"},{"signature":"private.ai_budget_immutable()","sha256":"95448e43a5a6d3bdd94474aa90da6b9d7b512e61c31abcb390c08f7238742206","resultType":"trigger","language":"plpgsql","definer":false,"strict":false,"volatility":"v","acl":"private"},{"signature":"private.ai_budget_projection_identity()","sha256":"dba0e340be6e7d29af9dfd0939ab49aa8699b702368ea2c3f23890ea3be689b6","resultType":"trigger","language":"plpgsql","definer":false,"strict":false,"volatility":"v","acl":"private"}]$budget_export_catalog$::jsonb;
+begin
+ select oid into service_oid from pg_catalog.pg_roles where rolname='service_role';
+ select proowner into owner_oid from pg_catalog.pg_proc where oid=to_regprocedure('public.ai_budget_claim_dispatch(uuid,uuid,jsonb)');
+ if service_oid is null or owner_oid is null then return false;end if;
+ for item in select value from jsonb_array_elements(manifest) loop
+  select * into p from pg_catalog.pg_proc where oid=to_regprocedure(item->>'signature');
+  if not found or p.proowner<>owner_oid or p.prokind<>'f' or p.proretset or p.proisstrict is distinct from (item->>'strict')::boolean
+    or p.prorettype<>to_regtype(item->>'resultType') or p.prolang<>(select oid from pg_catalog.pg_language where lanname=item->>'language')
+    or p.prosecdef is distinct from (item->>'definer')::boolean or p.provolatile<>item->>'volatility'
+    or p.proconfig is distinct from array['search_path=""'] or encode(sha256(convert_to(p.prosrc,'UTF8')),'hex')<>item->>'sha256' then return false;end if;
+  if exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) g where g.grantee<>p.proowner
+    and (item->>'acl'='private' or g.grantee<>service_oid or g.privilege_type<>'EXECUTE' or g.is_grantable)) then return false;end if;
+  foreach role_name in array array['anon','authenticated'] loop if has_function_privilege(role_name,p.oid,'EXECUTE') then return false;end if;end loop;
+  if item->>'acl'='private' and has_function_privilege('service_role',p.oid,'EXECUTE') then return false;end if;
+  if item->>'acl' in ('metadata','service') and not has_function_privilege('service_role',p.oid,'EXECUTE') then return false;end if;
+  if item->>'acl'<>'private' and has_function_privilege('service_role',p.oid,'EXECUTE')
+    and not exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) g where g.grantee=service_oid and g.privilege_type='EXECUTE' and not g.is_grantable) then return false;end if;
+ end loop;
+
+ -- Exact function/table source closures are diagnostic: inherited CHECK/default,
+ -- retention/erasure, actual role/CAS/rollback and caller adoption remain open.
+ select * into p from pg_catalog.pg_proc where oid=to_regprocedure('private.owned_ai_budget_export_ready()');
+ if not found or p.proowner<>owner_oid or p.prokind<>'f' or p.prosecdef or p.proretset or p.proisstrict or p.provolatile<>'s'
+   or p.prorettype<>'boolean'::regtype or p.proconfig is distinct from array['search_path=""']
+   or exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) g where g.grantee<>p.proowner) then return false;end if;
+ foreach role_name in array array['anon','authenticated','service_role'] loop if has_function_privilege(role_name,p.oid,'EXECUTE') then return false;end if;end loop;
+
+
+ for item in select jsonb_build_object('table',key,'columns',value) from jsonb_each($budget_export_columns${"ai_budget_policies":[["version","text",true],["model","text",true],["monthly_token_limit","numeric",true],["monthly_cost_limit_microusd","numeric",true],["input_microusd_per_million","numeric",true],["output_microusd_per_million","numeric",true],["max_attempts","integer",true],["enabled","boolean",true],["created_at","timestamp with time zone",true]],"ai_budget_period_openings":[["organization_id","uuid",true],["period","date",true],["pool_policy_version","text",true],["opening_spent_tokens","numeric",true],["opening_spent_cost_microusd","numeric",true],["unresolved_legacy_attempts","integer",true],["created_at","timestamp with time zone",true]],"ai_budget_pools":[["organization_id","uuid",true],["period","date",true],["pool_policy_version","text",true],["token_limit","numeric",true],["cost_limit_microusd","numeric",true],["reserved_tokens","numeric",true],["reserved_cost_microusd","numeric",true],["spent_tokens","numeric",true],["spent_cost_microusd","numeric",true],["created_at","timestamp with time zone",true]],"ai_budget_operations":[["id","uuid",true],["organization_id","uuid",true],["user_id","uuid",true],["surface","text",true],["model","text",true],["prompt_policy_version","text",true],["policy_version","text",true],["reserved_input_tokens","numeric",true],["reserved_output_tokens","numeric",true],["input_microusd_per_million","numeric",true],["output_microusd_per_million","numeric",true],["attempt_limit","integer",true],["created_at","timestamp with time zone",true]],"ai_budget_attempts":[["id","uuid",true],["operation_id","uuid",true],["organization_id","uuid",true],["ordinal","integer",true],["period","date",true],["state","text",true],["reserved_cost_microusd","numeric",true],["actual_input_tokens","numeric",false],["actual_output_tokens","numeric",false],["actual_cost_microusd","numeric",false],["created_at","timestamp with time zone",true],["updated_at","timestamp with time zone",true]],"ai_budget_reconciliation_operators":[["organization_id","uuid",true],["operator_id","uuid",true],["enabled","boolean",true]],"ai_budget_events":[["id","uuid",true],["attempt_id","uuid",true],["kind","text",true],["input_tokens","numeric",false],["output_tokens","numeric",false],["cost_microusd","numeric",false],["reconciliation_id","uuid",false],["operator_id","uuid",false],["created_at","timestamp with time zone",true]]}$budget_export_columns$::jsonb) loop
+  select * into rel from pg_catalog.pg_class where oid=to_regclass('private.'||(item->>'table'));
+  if not found or rel.relkind<>'r' or not rel.relrowsecurity or rel.relowner<>owner_oid then return false;end if;
+  if exists(select 1 from pg_catalog.pg_policy where polrelid=rel.oid)
+   or exists(select 1 from aclexplode(coalesce(rel.relacl,acldefault('r',rel.relowner))) g where g.grantee<>rel.relowner)
+   or exists(select 1 from pg_catalog.pg_attribute a cross join lateral aclexplode(a.attacl) g where a.attrelid=rel.oid and g.grantee<>rel.relowner) then return false;end if;
+  foreach role_name in array array['anon','authenticated','service_role'] loop
+   if has_table_privilege(role_name,rel.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER') or has_any_column_privilege(role_name,rel.oid,'SELECT,INSERT,UPDATE,REFERENCES') then return false;end if;
+  end loop;
+  if (select count(*) from pg_catalog.pg_attribute where attrelid=rel.oid and attnum>0 and not attisdropped)<>jsonb_array_length(item->'columns') then return false;end if;
+  for col in select value from jsonb_array_elements(item->'columns') loop
+   if not exists(select 1 from pg_catalog.pg_attribute where attrelid=rel.oid and attname=col->>0 and atttypid=to_regtype(col->>1)
+     and attnotnull=(col->>2)::boolean and not attisdropped and attidentity='' and attgenerated='') then return false;end if;
+  end loop;
+  if (select count(*) from pg_catalog.pg_constraint where conrelid=rel.oid and contype in ('p','u','f'))<>
+   (select count(*) from jsonb_array_elements($budget_export_keys$[{"table":"ai_budget_policies","kind":"p","columns":["version"]},{"table":"ai_budget_period_openings","kind":"p","columns":["organization_id","period"]},{"table":"ai_budget_period_openings","kind":"f","columns":["organization_id"],"references":"public.organizations","target":["id"]},{"table":"ai_budget_period_openings","kind":"f","columns":["pool_policy_version"],"references":"private.ai_budget_policies","target":["version"]},{"table":"ai_budget_pools","kind":"p","columns":["organization_id","period"]},{"table":"ai_budget_pools","kind":"f","columns":["pool_policy_version"],"references":"private.ai_budget_policies","target":["version"]},{"table":"ai_budget_pools","kind":"f","columns":["organization_id","period"],"references":"private.ai_budget_period_openings","target":["organization_id","period"]},{"table":"ai_budget_operations","kind":"p","columns":["id"]},{"table":"ai_budget_operations","kind":"u","columns":["id","organization_id"]},{"table":"ai_budget_operations","kind":"f","columns":["organization_id"],"references":"public.organizations","target":["id"]},{"table":"ai_budget_operations","kind":"f","columns":["user_id"],"references":"auth.users","target":["id"]},{"table":"ai_budget_operations","kind":"f","columns":["policy_version"],"references":"private.ai_budget_policies","target":["version"]},{"table":"ai_budget_attempts","kind":"p","columns":["id"]},{"table":"ai_budget_attempts","kind":"u","columns":["operation_id","ordinal"]},{"table":"ai_budget_attempts","kind":"f","columns":["operation_id","organization_id"],"references":"private.ai_budget_operations","target":["id","organization_id"]},{"table":"ai_budget_attempts","kind":"f","columns":["organization_id","period"],"references":"private.ai_budget_pools","target":["organization_id","period"]},{"table":"ai_budget_reconciliation_operators","kind":"p","columns":["organization_id","operator_id"]},{"table":"ai_budget_reconciliation_operators","kind":"f","columns":["organization_id"],"references":"public.organizations","target":["id"]},{"table":"ai_budget_reconciliation_operators","kind":"f","columns":["operator_id"],"references":"auth.users","target":["id"]},{"table":"ai_budget_events","kind":"p","columns":["id"]},{"table":"ai_budget_events","kind":"u","columns":["reconciliation_id"]},{"table":"ai_budget_events","kind":"u","columns":["attempt_id","kind"]},{"table":"ai_budget_events","kind":"f","columns":["attempt_id"],"references":"private.ai_budget_attempts","target":["id"]},{"table":"ai_budget_events","kind":"f","columns":["operator_id"],"references":"auth.users","target":["id"]}]$budget_export_keys$::jsonb) k where k->>'table'=item->>'table') then return false;end if;
+ end loop;
+ for item in select value from jsonb_array_elements($budget_export_keys$[{"table":"ai_budget_policies","kind":"p","columns":["version"]},{"table":"ai_budget_period_openings","kind":"p","columns":["organization_id","period"]},{"table":"ai_budget_period_openings","kind":"f","columns":["organization_id"],"references":"public.organizations","target":["id"]},{"table":"ai_budget_period_openings","kind":"f","columns":["pool_policy_version"],"references":"private.ai_budget_policies","target":["version"]},{"table":"ai_budget_pools","kind":"p","columns":["organization_id","period"]},{"table":"ai_budget_pools","kind":"f","columns":["pool_policy_version"],"references":"private.ai_budget_policies","target":["version"]},{"table":"ai_budget_pools","kind":"f","columns":["organization_id","period"],"references":"private.ai_budget_period_openings","target":["organization_id","period"]},{"table":"ai_budget_operations","kind":"p","columns":["id"]},{"table":"ai_budget_operations","kind":"u","columns":["id","organization_id"]},{"table":"ai_budget_operations","kind":"f","columns":["organization_id"],"references":"public.organizations","target":["id"]},{"table":"ai_budget_operations","kind":"f","columns":["user_id"],"references":"auth.users","target":["id"]},{"table":"ai_budget_operations","kind":"f","columns":["policy_version"],"references":"private.ai_budget_policies","target":["version"]},{"table":"ai_budget_attempts","kind":"p","columns":["id"]},{"table":"ai_budget_attempts","kind":"u","columns":["operation_id","ordinal"]},{"table":"ai_budget_attempts","kind":"f","columns":["operation_id","organization_id"],"references":"private.ai_budget_operations","target":["id","organization_id"]},{"table":"ai_budget_attempts","kind":"f","columns":["organization_id","period"],"references":"private.ai_budget_pools","target":["organization_id","period"]},{"table":"ai_budget_reconciliation_operators","kind":"p","columns":["organization_id","operator_id"]},{"table":"ai_budget_reconciliation_operators","kind":"f","columns":["organization_id"],"references":"public.organizations","target":["id"]},{"table":"ai_budget_reconciliation_operators","kind":"f","columns":["operator_id"],"references":"auth.users","target":["id"]},{"table":"ai_budget_events","kind":"p","columns":["id"]},{"table":"ai_budget_events","kind":"u","columns":["reconciliation_id"]},{"table":"ai_budget_events","kind":"u","columns":["attempt_id","kind"]},{"table":"ai_budget_events","kind":"f","columns":["attempt_id"],"references":"private.ai_budget_attempts","target":["id"]},{"table":"ai_budget_events","kind":"f","columns":["operator_id"],"references":"auth.users","target":["id"]}]$budget_export_keys$::jsonb) loop
+  select * into rel from pg_catalog.pg_class where oid=to_regclass('private.'||(item->>'table'));
+  select array_agg(a.attnum order by k.ordinality) into expected from jsonb_array_elements_text(item->'columns') with ordinality k(name,ordinality)
+   join pg_catalog.pg_attribute a on a.attrelid=rel.oid and a.attname=k.name;
+  if not exists(select 1 from pg_catalog.pg_constraint c where c.conrelid=rel.oid and c.contype=(item->>'kind')::"char" and c.conkey=expected
+    and c.convalidated and not c.condeferrable and (item->>'kind'<>'f' or (c.confrelid=to_regclass(item->>'references') and c.confdeltype='r'
+      and c.confkey=(select array_agg(a.attnum order by k.ordinality) from jsonb_array_elements_text(item->'target') with ordinality k(name,ordinality)
+        join pg_catalog.pg_attribute a on a.attrelid=c.confrelid and a.attname=k.name)))) then return false;end if;
+ end loop;
+ for item in select value from jsonb_array_elements($budget_export_triggers$[{"table":"ai_budget_policies","name":"ai_budget_policies_immutable","signature":"private.ai_budget_immutable()","type":27},{"table":"ai_budget_period_openings","name":"ai_budget_openings_immutable","signature":"private.ai_budget_immutable()","type":27},{"table":"ai_budget_operations","name":"ai_budget_operations_immutable","signature":"private.ai_budget_immutable()","type":27},{"table":"ai_budget_events","name":"ai_budget_events_immutable","signature":"private.ai_budget_immutable()","type":27},{"table":"ai_budget_pools","name":"ai_budget_pool_identity","signature":"private.ai_budget_projection_identity()","type":19},{"table":"ai_budget_attempts","name":"ai_budget_attempt_identity","signature":"private.ai_budget_projection_identity()","type":19}]$budget_export_triggers$::jsonb) loop
+  if not exists(select 1 from pg_catalog.pg_trigger where tgrelid=to_regclass('private.'||(item->>'table')) and tgname=item->>'name'
+   and tgfoid=to_regprocedure(item->>'signature') and tgtype=(item->>'type')::integer and tgenabled='O' and not tgisinternal) then return false;end if;
+ end loop;
+ -- Export structural/source diagnosis only. Existing CHECK/default expressions,
+ -- actual Native role/snapshot/resource and retention/erasure require admission.
+ return true;
+exception when others then return false;
+end;
+$budget_export_3$;
+
+revoke all on function private.owned_ai_budget_export_number(numeric,numeric),public.export_owned_ai_budget_records(uuid),public.read_owned_ai_budget_export_readiness(),private.owned_ai_budget_export_ready() from public,anon,authenticated,service_role;
+grant execute on function public.read_owned_ai_budget_export_readiness() to service_role;
+-- No data RPC grant or claim that existing R03 runtime is ready/activated.
+
+do $budget_export_post$
+declare item record;
+begin
+ for item in select key signature,value #>> '{}' expected from jsonb_each($budget_export_postimages${"private.owned_ai_budget_export_number(numeric,numeric)":"53549a12d1f02a2df1121ad8345cb3670f7b9e5329e000f31f5c90923f349bde","public.export_owned_ai_budget_records(uuid)":"36eeb7a8e50e81d69c134bc4c9dd6c6f994543e13216c2f1c1684fb02578ba8f","public.read_owned_ai_budget_export_readiness()":"c4325e98c94bff7bf2cd775a875f6253b8d13e8e40f9a5ea0d4ce60eb86256e2","private.owned_ai_budget_export_ready()":"bd56c1cb7bfe8b0716a6b3d10a0a7a499ca21007cf2482f2f26089efae0d2456"}$budget_export_postimages$::jsonb) loop
+  if (select encode(sha256(convert_to(prosrc,'UTF8')),'hex') from pg_catalog.pg_proc where oid=to_regprocedure(item.signature)) is distinct from item.expected then
+   raise exception 'OWNED_AI_BUDGET_EXPORT_POSTIMAGE_DRIFT' using errcode='23514';end if;
+ end loop;
+ if private.owned_ai_budget_export_ready() is not true then raise exception 'OWNED_AI_BUDGET_EXPORT_UNAVAILABLE' using errcode='P0B03';end if;
+end;
+$budget_export_post$;
+commit;

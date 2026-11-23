@@ -1,0 +1,14 @@
+{
+  "status": "CONFIRMED_SOURCE_COMPATIBILITY_DEFECT_NOT_NATIVE_EXECUTION",
+  "identifiedAt": "2026-11-14T19:15:12.497165+00:00",
+  "priorApplicationReceipt": "a12-rewrite-integrated-54da8d96-616a-44d0-846b-7abbb9a530d2.json",
+  "files": {
+    "supabase/migrations/20261011140000_document_evidence_review.sql": "33800fe7d65b77bad74889dd21092a51760b8c3ea82dfd60d98196b58d9b234e",
+    "supabase/migrations/20261114181344_canonical_rewrite_operations.sql": "eae5fba6833dc77e2f217470e9ae4f22912b686c561d01491eb46ce9ea915138"
+  },
+  "finding": "Existing before-insert/update trigger on analysis_ai_runs rejects every analysis with document_evidence_attempts. New canonical rewrite finish inserts there, so canonical evidence publication is source-incompatible even if mutators are granted. FakeRPC351 application tests do not exercise native triggers.",
+  "requiredInvariant": "Preserve existing numeric/unreviewed evidence guard and frozen migrations/base profiles; no generic prose flag or service-role bypass.",
+  "next": "Runtime validates exact owned run/readmodel/monthly accounting/privacy/readiness replacement and proposes forward successor. No native mutation before explicit source allocation.",
+  "sqlExecution": "NOT_RUN",
+  "activation": false
+}

@@ -1,0 +1,325 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/components/WritingDiagnosticComparison.test.tsx (9 tests | 8 failed) 71ms
+   × labels projected wording as not saved without inheriting source or confirmation records 47ms
+   × shows text counts and distinct new/resolved warning observations without scoring them 7ms
+   × uses actual saved pair references in either selected direction without claiming an accepted transition 2ms
+   × describes record-only confirmation changes without claiming wording improvement 1ms
+   × labels added claims as absent rather than pretending a zero count or inherited record 1ms
+   × labels removed claims as absent rather than pretending a zero count or inherited record 1ms
+   × keeps no-change previews projected and same-version saved comparisons honest 1ms
+   × shows the complete remaining count alongside the bounded diagnostic rows 4ms
+   ✓ has unique region labels and no mutation controls or qualification promises 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/WritingDiagnosticComparison.test.tsx > labels projected wording as not saved without inheriting source or confirmation records
+TestingLibraryElementError: Unable to find an element with the text: /Proposed text has no saved version, source references or confirmation/u. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<section[39m
+  [33maria-labelledby[39m=[32m"«r0»"[39m
+[36m>[39m
+  [36m<h3[39m
+    [33mid[39m=[32m"«r0»"[39m
+  [36m>[39m
+    [0mProjected writing observations (not saved)[0m
+  [36m</h3>[39m
+  [36m<p>[39m
+    [0mNumeric score and delta: unavailable.[0m
+  [36m</p>[39m
+[36m</section>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/WritingDiagnosticComparison.test.tsx:19:14
+     17|  show(fact({mode:"projected",afterVersionId:null,afterState:"not_saved…
+     18|  const view=within(screen.getByRole("region",{name:"Projected writing …
+     19|  expect(view.getByText(/Proposed text has no saved version, source ref…
+       |              ^
+     20|  expect(view.getByText(before,{exact:false})).toBeTruthy();
+     21|  expect(view.queryByText(after,{exact:false})).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tests/components/WritingDiagnosticComparison.test.tsx > shows text counts and distinct new/resolved warning observations without scoring them
+TestingLibraryElementError: Unable to find an accessible element with the role "table" and name "Writing and record observations"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Saved writing observations":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«r1»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Saved writing observations":
+  [36m<h3[39m
+    [33mid[39m=[32m"«r1»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r1»"[39m
+    [36m>[39m
+      [36m<h3[39m
+        [33mid[39m=[32m"«r1»"[39m
+      [36m>[39m
+        [0mSaved writing observations[0m
+      [36m</h3>[39m
+      [36m<p>[39m
+        [0mNumeric score and delta: unavailable.[0m
+      [36m</p>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/WritingDiagnosticComparison.test.tsx:26:21
+     24| it("shows text counts and distinct new/resolved warning observations w…
+     25|  show(fact());
+     26|  const table=screen.getByRole("table",{name:"Writing and record observ…
+       |                     ^
+     27|  expect(within(table).getByRole("row",{name:"Word count 4 6"})).toBeTr…
+     28|  expect(screen.getByText("Text word-count change: +2.")).toBeTruthy();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tests/components/WritingDiagnosticComparison.test.tsx > uses actual saved pair references in either selected direction without claiming an accepted transition
+TestingLibraryElementError: Unable to find an element with the text: Selected before: revision 7, version 40000000-0000-4000-8000-000000000002.. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r2»"[39m
+    [36m>[39m
+      [36m<h3[39m
+        [33mid[39m=[32m"«r2»"[39m
+      [36m>[39m
+        [0mSaved writing observations[0m
+      [36m</h3>[39m
+      [36m<p>[39m
+        [0mNumeric score and delta: unavailable.[0m
+      [36m</p>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/WritingDiagnosticComparison.test.tsx:37:16
+     35| it("uses actual saved pair references in either selected direction wit…
+     36|  const comparison=saved({beforeVersionId:after,afterVersionId:before,b…
+     37|  expect(screen.getByText(`Selected before: revision 7, version ${after…
+       |                ^
+     38|  expect(screen.getByText(/Comparison direction does not establish chro…
+     39|  expect(screen.getByText(/Recorded source references may describe earl…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tests/components/WritingDiagnosticComparison.test.tsx > describes record-only confirmation changes without claiming wording improvement
+TestingLibraryElementError: Unable to find an element with the text: Record changes only; wording unchanged. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r3»"[39m
+    [36m>[39m
+      [36m<h3[39m
+        [33mid[39m=[32m"«r3»"[39m
+      [36m>[39m
+        [0mSaved writing observations[0m
+      [36m</h3>[39m
+      [36m<p>[39m
+        [0mNumeric score and delta: unavailable.[0m
+      [36m</p>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/WritingDiagnosticComparison.test.tsx:44:16
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  tests/components/WritingDiagnosticComparison.test.tsx > labels added claims as absent rather than pretending a zero count or inherited record
+TestingLibraryElementError: Unable to find an element with the text: Fact added to this selected version. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r4»"[39m
+    [36m>[39m
+      [36m<h3[39m
+        [33mid[39m=[32m"«r4»"[39m
+      [36m>[39m
+        [0mSaved writing observations[0m
+      [36m</h3>[39m
+      [36m<p>[39m
+        [0mNumeric score and delta: unavailable.[0m
+      [36m</p>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/WritingDiagnosticComparison.test.tsx:53:16
+     51| ])("labels %s claims as absent rather than pretending a zero count or …
+     52|  show(saved({items:[fact({changeKind,...fields})]}));
+     53|  expect(screen.getByText(changeKind === "added" ? "Fact added to this …
+       |                ^
+     54|  expect(screen.getAllByRole("cell",{name:"Absent"})).toHaveLength(4);
+     55|  expect(screen.getByText("Text word-count change: unavailable when a f…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  tests/components/WritingDiagnosticComparison.test.tsx > labels removed claims as absent rather than pretending a zero count or inherited record
+TestingLibraryElementError: Unable to find an element with the text: Fact absent from this selected version. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r5»"[39m
+    [36m>[39m
+      [36m<h3[39m
+        [33mid[39m=[32m"«r5»"[39m
+      [36m>[39m
+        [0mSaved writing observations[0m
+      [36m</h3>[39m
+      [36m<p>[39m
+        [0mNumeric score and delta: unavailable.[0m
+      [36m</p>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/WritingDiagnosticComparison.test.tsx:53:16
+     51| ])("labels %s claims as absent rather than pretending a zero count or …
+     52|  show(saved({items:[fact({changeKind,...fields})]}));
+     53|  expect(screen.getByText(changeKind === "added" ? "Fact added to this …
+       |                ^
+     54|  expect(screen.getAllByRole("cell",{name:"Absent"})).toHaveLength(4);
+     55|  expect(screen.getByText("Text word-count change: unavailable when a f…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  tests/components/WritingDiagnosticComparison.test.tsx > keeps no-change previews projected and same-version saved comparisons honest
+TestingLibraryElementError: Unable to find an element with the text: Wording unchanged. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r6»"[39m
+    [36m>[39m
+      [36m<h3[39m
+        [33mid[39m=[32m"«r6»"[39m
+      [36m>[39m
+        [0mProjected writing observations (not saved)[0m
+      [36m</h3>[39m
+      [36m<p>[39m
+        [0mNumeric score and delta: unavailable.[0m
+      [36m</p>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ tests/components/WritingDiagnosticComparison.test.tsx:59:16
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  tests/components/WritingDiagnosticComparison.test.tsx > shows the complete remaining count alongside the bounded diagnostic rows
+TestingLibraryElementError: Unable to find an accessible element with the role "table" and name "Writing and record observations"
+
+Here are the accessible roles:
+
+  region:
+
+  Name "Saved writing observations":
+  [36m<section[39m
+    [33maria-labelledby[39m=[32m"«r7»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Saved writing observations":
+  [36m<h3[39m
+    [33mid[39m=[32m"«r7»"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<section[39m
+      [33maria-labelledby[39m=[32m"«r7»"[39m
+    [36m>[39m
+      [36m<h3[39m
+        [33mid[39m=[32m"«r7»"[39m
+      [36m>[39m
+        [0mSaved writing observations[0m
+      [36m</h3>[39m
+      [36m<p>[39m
+        [0mNumeric score and delta: unavailable.[0m
+      [36m</p>[39m
+    [36m</section>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/@testing-library/dom/dist/query-helpers.js:109:15
+ ❯ tests/components/WritingDiagnosticComparison.test.tsx:66:16
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed | 1 passed (9)
+   Start at  09:54:19
+   Duration  780ms (transform 24ms, setup 0ms, import 100ms, tests 71ms, environment 536ms)
+
+JSON report written to /private/tmp/resumide-writing-comparison-frontend-2qsquby8/comparison-red/tests.json

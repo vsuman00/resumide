@@ -18,6 +18,15 @@ import {
 import { createOcrDiagnosticPilot } from "../tests/fixtures/ocr-pilot";
 import { createOcrPrintPilot } from "../tests/fixtures/ocr-print-pilot";
 import {
+  createOcrReliabilityHoldout,
+  OCR_RELIABILITY_CALIBRATION_ROUND2_VERSION,
+  OCR_RELIABILITY_HOLDOUT_VERSION,
+} from "../tests/fixtures/ocr-reliability-holdout";
+import {
+  createOcrSupportedDevelopmentFixtures,
+  OCR_SUPPORTED_DEVELOPMENT_VERSION,
+} from "../tests/fixtures/ocr-supported-development";
+import {
   evaluateOcrDocument,
   summarizeOcrSegment,
   type OcrObservation,
@@ -34,7 +43,7 @@ const seen = new Set<string>();
 for (const flag of flags) {
   assert.match(
     flag,
-    /^(--require-quality|--manifest-only|--print-pilot|--partition=(development|calibration|locked)|--psm=(3|6)|--dpi=(150|300)|--lock-receipt=[a-f0-9]{64})$/u,
+    /^(--require-quality|--manifest-only|--print-pilot|--reliability-development|--reliability-holdout|--fresh-calibration|--partition=(development|calibration|locked)|--psm=(3|6)|--dpi=(150|300)|--lock-receipt=[a-f0-9]{64})$/u,
     "Unknown checker option",
   );
   const key = flag.split("=")[0];
@@ -42,12 +51,41 @@ for (const flag of flags) {
   seen.add(key);
 }
 const printPilot = flags.includes("--print-pilot");
+const reliabilityDevelopment = flags.includes("--reliability-development");
+const reliabilityHoldout = flags.includes("--reliability-holdout");
+const freshCalibration = flags.includes("--fresh-calibration");
 const partitionFlag = flags.find((flag) => flag.startsWith("--partition="));
 assert.ok(
-  printPilot === Boolean(partitionFlag),
+  [reliabilityDevelopment, reliabilityHoldout, printPilot].filter(Boolean)
+    .length <= 1,
+  "Select one pilot corpus",
+);
+assert.ok(
+  !(reliabilityDevelopment && partitionFlag),
+  "Reliability development fixtures have a fixed development partition",
+);
+assert.ok(
+  reliabilityHoldout || printPilot === Boolean(partitionFlag),
   "Print pilot requires an explicit partition; diagnostic corpus has development only",
 );
 const partition = partitionFlag?.split("=")[1] ?? "development";
+const holdoutPartition =
+  partition === "calibration" || partition === "locked" ? partition : null;
+assert.ok(
+  !freshCalibration ||
+    (reliabilityHoldout && holdoutPartition === "calibration"),
+  "Fresh calibration is available only in the calibration partition",
+);
+if (reliabilityHoldout) {
+  assert.ok(
+    holdoutPartition,
+    "Reliability holdout requires calibration or locked",
+  );
+  assert.ok(
+    flags.includes("--manifest-only") && !flags.includes("--require-quality"),
+    "Reliability holdout currently permits manifest generation only",
+  );
+}
 const lockReceipt = flags
   .find((flag) => flag.startsWith("--lock-receipt="))
   ?.split("=")[1];
@@ -83,9 +121,14 @@ async function assertCleanup(baseline: string[]) {
   );
 }
 
-const allFixtures = printPilot
-  ? await createOcrPrintPilot()
-  : createOcrDiagnosticPilot();
+const allFixtures =
+  reliabilityHoldout && holdoutPartition
+    ? await createOcrReliabilityHoldout(holdoutPartition, freshCalibration)
+    : reliabilityDevelopment
+      ? await createOcrSupportedDevelopmentFixtures()
+      : printPilot
+        ? await createOcrPrintPilot()
+        : createOcrDiagnosticPilot();
 // Rendered variants must stay with their authored family before any recognition.
 const familyPartitions = new Map<string, Set<string>>();
 for (const fixture of allFixtures) {
@@ -102,16 +145,21 @@ const fixtures = allFixtures.filter(
   (fixture) => fixture.manifest.partition === partition,
 );
 assert.ok(fixtures.length, "Selected partition has no fixtures");
-const datasetId = printPilot
-  ? "normal-font-pdf-v1"
-  : "block-glyph-diagnostic-v1";
+const datasetId = freshCalibration
+  ? OCR_RELIABILITY_CALIBRATION_ROUND2_VERSION
+  : reliabilityHoldout
+    ? OCR_RELIABILITY_HOLDOUT_VERSION
+    : reliabilityDevelopment
+      ? OCR_SUPPORTED_DEVELOPMENT_VERSION
+      : printPilot
+        ? "normal-font-pdf-v1"
+        : "block-glyph-diagnostic-v1";
 const selectedVersions = createLocalContainerOcrAdapter({
   bytes: fixtures[0].bytes,
   imageId,
   evaluationConfig,
 }).versions;
-// Bind every authored hash and label before the first recognition. This is a
-// development receipt, NOT a held-out lock or independent-family partition.
+// Bind every authored hash and label before the first recognition.
 const sourceManifest = fixtures.map((fixture) => ({
   ...fixture.manifest,
   segment: fixture.segment,
@@ -185,6 +233,17 @@ for (const fixture of fixtures) {
     totalPages: nativePageTexts.length,
     text: nativePageTexts.join("\n"),
   });
+  if (reliabilityDevelopment) {
+    assert.deepEqual(
+      profile.pagesNeedingOcr,
+      fixture.segment === "mixed" ? [1, 3] : [1],
+    );
+    if (fixture.segment === "mixed")
+      assert.ok(
+        originalNative[1] === fixture.expectedPageTexts?.[1],
+        "Mixed native text differs from the registered reference",
+      );
+  }
   const request: SelectiveOcrRequest = {
     schemaVersion: "selective-ocr-request-v1",
     attemptId: randomUUID(),
@@ -374,7 +433,9 @@ const report = {
   humanValidation: "not_evaluated",
   independentFamilyProtocol: printPilot
     ? "source_family_disjoint_synthetic_partitions_declared_not_independent_human_validation"
-    : "not_satisfied",
+    : reliabilityDevelopment
+      ? "development_only_shared_generator_no_held_out_partition"
+      : "not_satisfied",
   representativeValidity: "not_evaluated",
   fullAA1Gate: "open",
   selection: "revise_and_review_no_production_enablement",

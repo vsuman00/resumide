@@ -1,0 +1,29 @@
+# A12 forward compatibility caller
+
+Released four code/test successors and this handoff from the preserved backend worktree. The original A12 351-case candidate remains historical. This allocation changes only strict readiness metadata, the canonical rewrite usage caller and its fixtures. A13 source, support policy 648e65, the old SQL migrations, public evidence guard, base138/typed13 and production flags remain unchanged. Runtime owns the forward native finish/accounting/helper/profile/verifier; frontend owns the independent real-resource consumer checks. No SQL, provider, actual environment, service, browser, dependency or Git action ran here.
+
+The concrete native-source incompatibility was canonical finish inserting its run into analysis_ai_runs, whose preserved evidence guard rejects that analysis family. Runtime's forward source removes only that insert and retains the canonical operation run ID and immutable publication as its run record. The caller must therefore count both legacy runs and canonical technical usage; the legacy counter alone is incomplete. This document does not claim native execution or activation.
+
+The contract now requires readiness profile1.0.1 and usageSha256. Missing/old metadata fails before provider access. The service calls the actual readCanonicalRewriteUsage helper with authenticated owner, analysis and the owned workspace organization, forwarding cancellation. There is no fallback to get_organization_ai_tokens_used. The strict RPC response binds all12 fields: schema/profile/function hash, owner/organization/analysis, current UTC month endpoints, legacy/canonical/total decimal token counters and unknown-claim count. The helper checks actual profile identity, exact component totals, scope, completion period and deadline; unknown claims cannot become zero.
+
+Budget-off admission compares BigInt(totalTokens) plus the existing bounded request reserve with the configured cap. It is a fresh snapshot check, not an atomic global monthly quota reservation; the read-to-claim concurrency window remains a native acceptance boundary. Budget-on still uses the existing atomic technical budget claim/settlement path. The repository, exact replay ordering, consent/rates, immutable request, saved receipt and provider key are untouched. A saved/status replay does not begin fresh quota/provider work. Fresh denial occurs before the dispatch claim and SDK, while permitted preparation/technical metadata may already exist.
+
+Runtime's usage source counts known canonical usage even for rejected output, keeps unknown claims explicit, excludes never-dispatched reservations, and attributes late settlement to the original claim month. Its SQL remains unparsed/unexecuted. The final read dependencies are actual profile d80052f60c25dbb45210c8ddefaa11fde67a1f817ac43e398a6c89523a93a151 and helper a51cfb8cd780f04cb254f43691f53f8110efa6a656ea85a2069e5ceaac2a4c33. They were copied only after predecessor/absence checks, with prior bytes preserved. Neither production metadata nor catalog hashes were synthesized.
+
+## Checks and preserved receipts
+
+Private packet: `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a12-compatibility-backend-gdzv_kvo` (0700). run.mjs and commands.json retain the exact pinned Node22 commands. Each receipt contains its same-name log/hash, before/after source hashes and process-group cleanup. Original labels are exclusive and must not be overwritten.
+
+- canonical-usage-red.json: two genuine failures on the old actual handler. A legacy counter of zero permitted HTTP200/saved despite separately recorded canonical known usage at the cap or an unknown claim. All28 original cases were unselected, not rewritten. No absent module or native execution was used as the failure.
+- caller-finite.json: 46 passed across the38-case service file and eight contract cases, with776 stable inputs and no drift. It preserves all28 original parser/counter/budget assertions and adds known-cap/unknown, foreign owner/org/analysis, wrong function hash, inconsistent total, prior-month and old/missing readiness boundaries. Successful numeric fixture seeds now become strict decimal-component DTOs; malformed scalar responses remain malformed responses. No assertion is relaxed to admit them.
+- scoped-types.json: five roots,69 source files, zero diagnostics. scoped-lint.json and scoped-format.json passed. All author process groups settled.
+- The46 author checks used helper a10b80f5 and profiled800. During integration review I identified its same-month timer-lag gap: completion did not compare elapsed time with timeoutMs. Runtime captured its own RED, added the absolute elapsed check, and passed31 helper controls plus statics. After all backend handles closed, final helper a51 replaced a10 byte-exact with the old source archived. The caller has no API or source change from that dependency-only correction. No repeated46 run is claimed; Root's fresh combined gate covers a51.
+
+Preservation checks confirm the original service parser block and all28 assertion bodies remain unchanged. The existing contract test differs only in synthetic expected profile1.0.1 plus a required synthetic valid-hex usage hash; it is not catalog evidence. Reversing only those two production metadata changes restores the exact prior contract bytes. Its support policy/functions are unchanged. A13's five released files remain outside this allocation.
+
+## Frozen owned hashes
+
+- `app/lib/server/canonical-rewrite-contract.ts`: `9986127e127171c98520cd4218855bd54c6068df1c2d948c0bed7fa7fcc9882c`
+- `app/lib/server/canonical-rewrite-service.ts`: `4c19b95e96133389ea7b584dd8d8e098f24946f1fc993d73ba2abf013dda8e2e`
+- `tests/unit/canonical-rewrite-service.test.ts`: `730e7c2ed76d64ee4c63e2b517afdb6efdc80bda7675f8822468e98beff8b6e9`
+- `tests/unit/canonical-rewrite-contract.test.ts`: `249a9319d8d1539e67f6132e256a4f05bb11bbb322dd791095a975b6586cf058`

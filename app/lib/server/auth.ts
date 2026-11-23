@@ -7,8 +7,42 @@ export interface SessionReader {
 }
 
 export function safeReturnTo(value: string | null): string {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) return "/";
-  return value;
+  if (
+    !value?.startsWith("/") ||
+    value.startsWith("//") ||
+    invalidPathCharacters(value)
+  )
+    return "/";
+  const origin = "https://resumide.invalid";
+  try {
+    const url = new URL(value, origin);
+    const decodedPath = decodeURIComponent(url.pathname);
+    if (
+      url.origin !== origin ||
+      decodedPath.startsWith("//") ||
+      invalidPathCharacters(decodedPath) ||
+      /^\/auth(?:\/|$)/iu.test(decodedPath)
+    )
+      return "/";
+    return url.pathname + url.search + url.hash;
+  } catch {
+    return "/";
+  }
+}
+
+function invalidPathCharacters(value: string) {
+  for (const character of value) {
+    if (character === "\\" || character < " " || character === "\u007f")
+      return true;
+  }
+  return false;
+}
+
+export function authResponseHeaders(source?: Headers): Headers {
+  const headers = new Headers(source);
+  headers.set("Cache-Control", "private, no-store");
+  headers.set("Referrer-Policy", "no-referrer");
+  return headers;
 }
 
 export async function getAuthenticatedUser(

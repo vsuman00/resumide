@@ -1,0 +1,57 @@
+{
+  "id": "CR-U19-S06",
+  "status": "VERIFIED_LOCAL_TYPED_WORDING_RECOVERY_A11Y",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR on loopback with simulated Supabase Auth and Data API transport and disposable PostgreSQL 17.11",
+  "sources": {
+    "app/components/TypedAuthoringReview.tsx": "f68fbe6230bb0326c9bd91267b3c3ce2a4c890736b333300f374ebcc68cd0169",
+    "app/routes/analysis.author.typed.ts": "6a2c764e9c851bc3343e36147145f88b64b4bdb4867265667ce59a7330bc0bdd",
+    "scripts/verify-local-typed-authoring-journey.ts": "70d324691e3d6a1e77162d78be735e98fac18c2883dd3b05b19ba46491e75080",
+    "scripts/verify-local-typed-score-browser.ts": "9ee3b46dfd64958e5b214a39a251c8c06bb2cc9bece17e1b847df0a2cb0d1374",
+    "scripts/verify-local-typed-score.py": "d1bd1ed8d39b0f9064f0f9438922875be05df7ad88f066b866a1e97e2ef59efa",
+    "package-lock.json": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41"
+  },
+  "baseline": {
+    "firstCheck": "The test's partial label matched a displayed contribution as well as the select. The locator now uses the exact label.",
+    "firstCheckLogSha256": "e6d42af163ad8b8652029538544320405f39712fd71bd9c50f77c4d4584e61ea",
+    "observed": "After Enter submitted the preview at 390 CSS pixels, the complete wording heading did not receive focus.",
+    "logSha256": "2f15386e37c772ea23a1c3020c762f25c022559cc7e18f0ecad574a7fef5f306"
+  },
+  "browser": {
+    "version": "Chromium 153.0.8010.12",
+    "runner": "scripts/verify-local-typed-score.py --browser --authoring",
+    "viewports": ["390x740", "320x640"],
+    "schemaOperations": 100,
+    "orderedDigest": "4e253744226912aab1c9411cb03e528f8fbdaa10984aa5933a88ff380601293a",
+    "logSha256": "c110a21a98f707a0c6a16bc16da2fe3182df6105d715f93de1ffc9802100b537",
+    "result": {
+      "keyboardPreviewFocus": true,
+      "stalePreviewStatus": 409,
+      "staleAlertAndCurrentVersionLinkFocused": true,
+      "staleRecoveryWithForcedColorsAndReducedMotion": true,
+      "acknowledgementAndAcceptControlFitNarrowViewport": true,
+      "wordingPreviewSeriousOrCriticalAxeViolations": 0,
+      "writerExecutable": false,
+      "acceptAndExactRetryStatuses": [503, 503],
+      "bothErrorsFocused": true,
+      "exactRetryRequiredFreshAcknowledgement": true,
+      "retryCommandMatchedOriginal": true,
+      "savedVersionStayedUnchanged": true,
+      "numericScoresWithheld": true
+    }
+  },
+  "checks": {
+    "node": "22.23.4",
+    "focusedTestsPassed": 419,
+    "focusedTestFiles": 27,
+    "testsLogSha256": "f17df27d058f9fac11c15b232fff57c0c45a1cd6154fb58cebf8147892aec702",
+    "typecheck": "passed",
+    "lint": "passed with four existing JD clause-order warnings",
+    "fixtureLint": "passed",
+    "webBuildLogSha256": "31ea3ee2a6ba0e11aa35d0ec176d0d55a53260c39556be404d92928349cd942b",
+    "workerBuildLogSha256": "56dec4d4254b35bab31ed8470b5615ae77df8e2cad549ceb140bb765cd702f2f"
+  },
+  "manualScreenReaderVerified": false,
+  "browserZoomVerified": false,
+  "managedSupabaseVerified": false
+}

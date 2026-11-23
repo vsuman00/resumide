@@ -222,8 +222,9 @@ const Upload = () => {
                   <h2 id="ai-consent-heading">AI-assisted feedback</h2>
                   <p>
                     Resume text is sent to the configured AI provider only to
-                    generate qualitative suggestions. Deterministic ATS evidence
-                    remains available if that step is unavailable.
+                    generate qualitative suggestions. This workflow requires
+                    consent to AI processing. If the provider is unavailable
+                    after consent, deterministic evidence may still be returned.
                   </p>
                 </div>
                 <label className="upload-consent-control">

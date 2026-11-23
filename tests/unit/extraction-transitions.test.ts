@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   status: "quarantined",
@@ -30,11 +30,15 @@ vi.mock("../../app/lib/server/storage", () => ({
 import { processExtractionStage } from "../../app/lib/server/extraction-stage";
 
 beforeEach(() => {
+  vi.stubEnv("AI_ENABLED", "false");
+  vi.stubEnv("OPENAI_API_KEY", "build-ai-harness-no-live-key");
+  vi.stubEnv("ANALYSIS_FENCING_ENABLED", "false");
   mocks.rpc.mockReset().mockResolvedValue({ data: true, error: null });
   mocks.download
     .mockReset()
     .mockRejectedValue(new Error("synthetic storage stop"));
 });
+afterEach(() => vi.unstubAllEnvs());
 describe("extraction entry transitions", () => {
   it.each([
     [

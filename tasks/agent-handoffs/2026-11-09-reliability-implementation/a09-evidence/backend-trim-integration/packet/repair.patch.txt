@@ -1,0 +1,84 @@
+--- before/app/lib/server/job-requirement-admission.ts
++++ after/app/lib/server/job-requirement-admission.ts
+@@ -93,6 +93,7 @@
+   evaluated: z.literal(false),
+ });
+ const requirement = RequirementItemSchema.extend({
++  value: z.string().min(1).max(2000),
+   derivation: z.literal("exact"),
+   minimumYears: z.number().int().min(0).max(100).nullable(),
+   confidence: z.strictObject({
+--- before/tests/unit/job-requirement-admission.test.ts
++++ after/tests/unit/job-requirement-admission.test.ts
+@@ -105,6 +105,35 @@
+   for (const item of first.requirements) expect(encoded).not.toContain(item.id);
+   expect(encoded).not.toContain('"spanId"');
+   expect(JSON.parse(encoded)).toEqual(projectJobRelationSemantics(first));
++});
++it.each([" ", "\t", "\u00a0", "\ufeff"])(
++  "rejects stored v2 literal padding %j without rewriting the value",
++  (padding) => {
++    const doc = construct();
++    const item = doc.requirements.find(
++      (requirement) => requirement.value === "JS",
++    )!;
++    item.value = `${padding}${item.value}${padding}`;
++    expect(JobRequirementRelationsSchema.safeParse(doc).success).toBe(false);
++  },
++);
++it("rejects oversized stored v2 literal padding before it can disappear from the body budget", () => {
++  const doc = construct();
++  const item = doc.requirements.find(
++    (requirement) => requirement.value === "JS",
++  )!;
++  item.value = `${" ".repeat(JOB_RELATION_ADMISSION_PROFILE.budgets.bodyJsonbUtf8Bytes)}${item.value}`;
++  expect(Buffer.byteLength(JSON.stringify(doc), "utf8")).toBeGreaterThan(
++    JOB_RELATION_ADMISSION_PROFILE.budgets.bodyJsonbUtf8Bytes,
++  );
++  expect(JobRequirementRelationsSchema.safeParse(doc).success).toBe(false);
++});
++it("keeps exact v2 literals unchanged and preserves the legacy value trimming contract", () => {
++  const doc = construct();
++  expect(JobRequirementRelationsSchema.parse(doc)).toEqual(doc);
++  const legacy = parseJobRequirements("Requirements\nSQL required", context);
++  legacy.requirements[0].value = " SQL ";
++  expect(JobRequirementsSchema.parse(legacy).requirements[0].value).toBe("SQL");
+ });
+ it.each([
+   "or",
+--- before/tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a09-admission.md
++++ after/tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-a09-admission.md
+@@ -1,6 +1,6 @@
+ # A09 stored JD relation admission
+ 
+-Updated 2026-11-11, Asia/Kolkata. Backend owns only the five files in [the allocation](a09-backend-allocation.json). Base `a0b239299d75b0bd64b588fe743ebe2975fb28b9` plus preserved dirty prerequisites in the existing backend worktree. [Root's final wire](a09-storage-wire.json), SHA256 `181ed171444fdb114e00c45e771dcb4419cba9ac70f25daba62de7e6c50f9d3b`, adds the reviewed rollback guard and exact Unicode profile to the originally approved interface. This source/client leaf is implemented and locally verified. Full A09, SQL/native storage, consumers and release acceptance remain open.
++Updated 2026-11-12, Asia/Kolkata. Backend owns only the five files in [the allocation](a09-backend-allocation.json). Base `a0b239299d75b0bd64b588fe743ebe2975fb28b9` plus preserved dirty prerequisites in the existing backend worktree. [Root's final wire](a09-storage-wire.json), SHA256 `181ed171444fdb114e00c45e771dcb4419cba9ac70f25daba62de7e6c50f9d3b`, adds the reviewed rollback guard and exact Unicode profile to the originally approved interface. This source/client leaf is implemented and locally verified. Full A09, SQL/native storage, consumers and release acceptance remain open.
+ 
+ The actual first RED called the existing `loadJobRequirements` with a handbuilt immutable v2 JS-alias row, its existing registered policy hashes, exact source spans and consistent graph references. No new helper was imported. The unchanged reader rejected the row with422. `handbuilt-reader-red.json/log` preserve that failure, 699 stable inputs and an exited owned group.
+ 
+@@ -24,11 +24,23 @@
+ 
+ | File                                                      | SHA256                                                             |
+ | --------------------------------------------------------- | ------------------------------------------------------------------ |
+-| `app/lib/server/job-requirement-admission.ts`             | `ba4d80e6240a280a3ef49e068b79c855ca26a4433c84eba7bbd00120c8d5da84` |
++| `app/lib/server/job-requirement-admission.ts`             | `488af6707e3a0669b5ab4b6baa387f249e12c56355e8c42c680b4ddf2658282a` |
+ | `app/lib/server/job-requirement-repository.ts`            | `f8d85e09f506eb972f0b7a09561d7b9d1c31fa4660d7bbafc38ed76cd4ef4637` |
+-| `tests/unit/job-requirement-admission.test.ts`            | `6fcd02386c342183b3a4dd0add86229f08db2df2768dfbd1870d30da8c5481a9` |
++| `tests/unit/job-requirement-admission.test.ts`            | `056593774744d95915e4753c5336029cc51a62684d21ddf576871d74e39a73fb` |
+ | `tests/unit/job-requirement-admission-repository.test.ts` | `68ca144cbeea08b7ed577910d59a8ebe84685d30c8e6a7d85f7db20111ad21b6` |
+ 
+ Canonical structural-schema hash: `973fc280196206826f9d41703e2e5bb9a192e7fe6f9365c5f73649ea57715d1c`. Canonical admission-profile hash: `e82d68b1e58cf220d3584a8d510128d4428441a2b02815711e7f198adaeaacb8`. Pretty payload files are `structural-schema.json` (file SHA `94ac1ef144e45a80d1db83a66c9ac8e561def8a8f48cb7e3b8427dbbcb36bf46`) and `admission-profile.json` (file SHA `203aff732abac45585900c0d520cac500d6c628e74af347666eb86f9bd137e80`). Shared Unicode module/profile `a04123ca`/`f3f8335d` and config `f75b7d3c` were supplied by Root and not edited here.
+ 
+ Root owns integration, shared contracts/config, migration order, final affected gate and canonical context/task updates. Runtime owns independent SQL and native differential proof; frontend owns typed display and explicit scoring/authoring abstention. No new legacy schema/parser/RPC body, canonical/suggestion producer, frozen label or threshold changed. No database/SQL, provider, real environment, owner data, Docker/compiler, Git publication or deployment action ran. Full transaction/race/RLS, managed storage/cleanup, consumer and release acceptance remain separate. The installed prose skill checked the new messages and this handoff without changing protected exact values or code.
++
++## November 12 literal-integrity repair
++
++Root allocated a three-file follow-up to `a09_backend_review`: this module, its admission test and this handoff. The [allocation](a09-backend-trim-allocation.json), SHA256 `f2e5582836a4a14c04e878bff12b03e973ab391600bfa9a035a9d9b028f3bbd5`, authorizes the v2-only fix and selected source checks. Base HEAD remains `a0b239299d75b0bd64b588fe743ebe2975fb28b9` with the preserved dirty prerequisites. The original five-file release, its receipts, failures and source bytes were archived before editing as 51 `.txt` files outside source inclusion, under `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a09-trim-a6bbk672/original-packet`. Archive manifest SHA256: `57d0ab18e33c2c505947e54967a2fdda7aea7269e5a104ec2ea22118122a5e31`.
++
++Review found that v2 inherited the legacy requirement value's trimming transform. A padded stored value was silently normalized before semantic comparison, and excessive padding disappeared before body-size validation. The selected RED failed all five rejection cases: space, tab, NBSP, BOM and padding beyond the 1 MiB body budget. Its exact-value and legacy-trimming control passed. The fix overrides only the v2 `value` field with a bounded string that performs no transform. The unchanged legacy schema retains its existing trim behavior.
++
++The repair packet is `/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a09-trim-a6bbk672`. The exact Node22.23.4 runner is `/Users/vaibhavsuman/.codex/tools/resumide-node22/v22.23.4-darwin-arm64/node`. It uses the same sealed synthetic environment, no dotenv/live credentials, 60-second deadline, 8 MiB log cap and before/after hashes of 702 source inputs. `red.json` preserves the expected failure; `green.json` records six selected passing cases with 27 unchanged cases unselected. Each command records no source drift and an exited owned process group. No unchanged full campaign reran.
++
++Scoped types passed with six roots, 37 project source files and zero diagnostics. Scoped lint passed; the final release receipt records scoped formatting. Fresh structural-schema and admission-profile exports are byte-identical to the original files, retaining both pretty-file hashes and canonical hashes above. The one-line schema repair therefore preserves the frozen wire/profile identity while enforcing its existing exact-literal contract. Root owns integration, the combined affected gate and source ACK. Historical receipts above remain evidence for their original source; the original module/test hashes are preserved in the archive rather than relabelled as this repaired revision.
++
++The scope and native-evidence limits remain unchanged: no SQL parsing or execution, database, provider, real environment, owner data, Docker/compiler, Git publication or deployment. Root must integrate the repaired admission module, updated admission test and this handoff together with the unchanged repository module/test. Full A09 and release acceptance remain open.

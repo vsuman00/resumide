@@ -1,0 +1,79 @@
+{
+  "source-red": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-late-settlement-sql.test.ts",
+      "--maxWorkers=1",
+      "--no-file-parallelism"
+    ],
+    "expectedExit": 1
+  },
+  "source-green": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-late-settlement-sql.test.ts",
+      "tests/unit/initial-feedback-publication-sql.test.ts",
+      "tests/unit/owned-ai-usage-sql.test.ts",
+      "--maxWorkers=1",
+      "--no-file-parallelism"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "app/lib/server/initial-feedback-operation-profile.ts",
+      "app/lib/server/initial-feedback-publication-profile.ts",
+      "app/lib/server/initial-feedback-profile.ts",
+      "tests/unit/initial-feedback-late-settlement-sql.test.ts",
+      "tests/unit/initial-feedback-publication-sql.test.ts",
+      "tests/unit/owned-ai-usage-sql.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "app/lib/server/initial-feedback-operation-profile.ts",
+      "app/lib/server/initial-feedback-publication-profile.ts",
+      "app/lib/server/initial-feedback-profile.ts",
+      "tests/unit/initial-feedback-late-settlement-sql.test.ts",
+      "tests/unit/initial-feedback-publication-sql.test.ts",
+      "tests/unit/owned-ai-usage-sql.test.ts"
+    ],
+    "expectedExit": 0
+  },
+  "types": {
+    "args": [
+      "/var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-a13-late-settlement-ylyqwodj/types.cjs"
+    ],
+    "expectedExit": 0
+  },
+  "source-green-successor": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/initial-feedback-late-settlement-sql.test.ts",
+      "tests/unit/initial-feedback-publication-sql.test.ts",
+      "tests/unit/owned-ai-usage-sql.test.ts",
+      "--maxWorkers=1",
+      "--no-file-parallelism"
+    ],
+    "expectedExit": 0
+  },
+  "affected-dependency": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/unit/owned-ai-usage-sql.test.ts",
+      "--maxWorkers=1",
+      "--no-file-parallelism",
+      "-t",
+      "preserves old counters/source profiles while the actual caller always uses the shared helper"
+    ],
+    "expectedExit": 0
+  }
+}

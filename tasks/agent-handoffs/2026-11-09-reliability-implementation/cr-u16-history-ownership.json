@@ -1,0 +1,73 @@
+{
+  "id": "CR-U16-S02",
+  "status": "VERIFIED_LOCAL_HISTORY_AND_ACCESS",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated worktree, synthetic fixtures only",
+  "sources": {
+    "app/routes/home.tsx": "b10ae9c4c658e5c2ad9d26724b90dee73ffa85320fe26ec31b61df1497d1d89a",
+    "app/routes/analyses.tsx": "dc33e7fb9561d54ea671e9e6610ec817c6d41fb44aabe8abc98978cd3756197d",
+    "tests/unit/analysis-history-route.test.ts": "89e5a32c8b2d82147a61a4acf80c9c248f8df392113be57bbcebc2137e5fd7b7"
+  },
+  "baselineFailures": 6,
+  "focusedTests": {
+    "exitCode": 0,
+    "files": 4,
+    "passed": 112
+  },
+  "typecheck": {
+    "exitCode": 0
+  },
+  "lint": {
+    "exitCode": 0,
+    "errors": 0,
+    "existingHookWarnings": 4
+  },
+  "webBuild": {
+    "exitCode": 0,
+    "logSha256": "11710f4a97b5aef6c925d8dac9c5e340ec9f92e33c6ab59198a57178ddbf025d"
+  },
+  "workerBuild": {
+    "exitCode": 0,
+    "logSha256": "a125e221a04088ec91cc8d9c57dfd18e2403bce26d534ef0fadcd16724f2f102"
+  },
+  "browser": {
+    "engine": "Chromium",
+    "app": "Built SSR on loopback",
+    "backend": "Simulated Supabase Auth and Data API",
+    "scriptSha256": "72663162c004ef08787f91761b298d431ddcdda6b8df6f931e057e6e7d5b1fe3",
+    "reportSha256": "3a4f0e29301042b35f19db7e7440b7360c29fa157d01562d2ea518ca60bd21d2",
+    "results": {
+      "ownerHistory": true,
+      "sort": true,
+      "pagination": true,
+      "reload": true,
+      "privateHeaders": true,
+      "signOutBack": true,
+      "foreignSession": true,
+      "ownerRelogin": true,
+      "inflightDeletion": true,
+      "pendingDeletion": true,
+      "externalCalls": 0
+    }
+  },
+  "nativeRls": {
+    "postgresVersion": "17.11 (Homebrew)",
+    "role": "authenticated",
+    "transport": "Unix socket only",
+    "actualMigrationSha256": {
+      "20260909073321_candidate_resume_analysis.sql": "c240103d5bc48d21a9e35bc1593e32f74ba934abba1d8ee1689b06ec3b2956b6",
+      "20260909110000_membership_authorization.sql": "50713ec5b016aa62f21f500c7067383a0400a06a669002576b1618e4d3ea6778"
+    },
+    "cases": {
+      "deletedSourceOmitted": true,
+      "sameOrganizationForeignOwnerExcluded": true,
+      "ownersSeeOnlyOwnRows": true,
+      "revokedOrganizationOmitted": true
+    }
+  },
+  "managedVerification": false,
+  "remaining": [
+    "Managed PostgREST and Supabase Auth execution",
+    "Managed verified deletion and history/source acceptance"
+  ]
+}

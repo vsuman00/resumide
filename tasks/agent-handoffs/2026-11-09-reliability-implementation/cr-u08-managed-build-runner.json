@@ -1,0 +1,57 @@
+{
+  "id": "CR-U08-S08",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "status": "VERIFIED_LOCAL_RUNNER_AND_NATIVE_FIXTURE_CLEANUP",
+  "workspace": "Integrated dirty main checkout",
+  "finding": "The regular managed browser runner selected only the core profile. The Build Auth fixture removed its user but left the private per-user compiler rate bucket.",
+  "command": "node --experimental-strip-types scripts/verify-managed-browser.ts --latex",
+  "admission": {
+    "apiAndDatabaseTargetMustMatch": true,
+    "dedicatedSyntheticTarget": true,
+    "reviewedLinuxArm64ImageIdRequired": true,
+    "browserEndpoint": "Local loopback, with managed Auth in the approved run",
+    "liveAiEnabled": false,
+    "compilerSeparatelyCheckedBeforeAndAfterBrowser": true,
+    "privatePlaywrightArtifactsAndEncryptedLedgers": true
+  },
+  "cleanup": {
+    "deletesOnlyVerifiedJournaledLatexUserKeys": true,
+    "requiresBrowserPassCleanCompilerAndRetainedLedger": true,
+    "blockedByAnyMatchingAuthUserSessionIdentityOrRefreshToken": true,
+    "runsReadOnlyAuditEvenOnBrowserFailure": true,
+    "preservesGlobalForeignAndAiRateKeys": true
+  },
+  "nativeVerification": {
+    "postgres": "17.11 (Homebrew), disposable Unix-socket cluster",
+    "rateSchema": "supabase/migrations/20260909090000_analysis_rate_limit.sql",
+    "authOnlyDeletionPreservedRateRows": 5,
+    "removedExactJournaledBuckets": 2,
+    "remainingUnrelatedBuckets": 3,
+    "replayRemoved": 0,
+    "firstSetupFailures": "The first temporary server startup failed before SQL. A captured retry identified the macOS locale startup failure. The verified run used the existing local fixture convention LC_ALL=C and a private short socket path."
+  },
+  "checks": {
+    "affectedTests": 157,
+    "affectedFiles": 5,
+    "typecheck": "pass",
+    "scopedLint": "pass",
+    "playwrightCasesDiscovered": 7,
+    "noConfigRefusalExit": 2,
+    "reviewedLocalImage": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "actualLocalImageAdmission": "Passed before an injected preflight refusal. No browser or audit was dispatched.",
+    "hostedConnections": 0
+  },
+  "sourceHashes": {
+    "scripts/verify-managed-browser.ts": "c60784d8dc7cccefa4e19a95b474555ec0e38bed796c9f62fced73f02014f26e",
+    "scripts/verify-managed-browser-cleanup.ts": "606c30d6011cc387b23f26efd27d4b4dab4745d1b190730f1a3019ca559ed507",
+    "playwright.latex.config.ts": "bb114286dfac6120d9339d2022c9152c965e5ea4e94c7f5b3ac2a1085ce2aaee",
+    "tests/unit/managed-browser-runner.test.ts": "c6d76bd2abeb1e164ecccc3586fbd5d847c3e26d5eb20f0e8124969148a94872",
+    "tests/unit/managed-browser-cleanup.test.ts": "2d4de5b47df199b414878abb3c2c303b11e745c59b0143d62e365b63e09a48e5"
+  },
+  "open": [
+    "Approved managed target configuration and actual browser execution",
+    "Live Build AI",
+    "Formal accessibility and release acceptance"
+  ]
+}

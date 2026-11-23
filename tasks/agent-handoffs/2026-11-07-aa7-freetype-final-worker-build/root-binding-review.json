@@ -1,0 +1,49 @@
+{
+  "status": "ROOT_EXACT_COHORT_CLOSURE_AND_CRYPTO_BINDING_PASS",
+  "image": "sha256:4b83ffec76083b02a79df7addf5ff1f8e09b6d90135d73915b890b38b7753b16",
+  "packageCount": 216,
+  "packageDelta": {
+    "libfreetype6": [
+      "2.13.3+dfsg-1+deb13u1",
+      "2.13.3+dfsg-1+deb13u1+resumide1"
+    ]
+  },
+  "closureFileCount": 1974,
+  "closureFileDelta": {
+    "/usr/lib/aarch64-linux-gnu/libfreetype.so.6.20.2": [
+      "037c1e131385f08bf00cf6159b5f4a8063876312787d754407ca228d75dafc3e",
+      "eab220e08a609b989d86d98f7b1c97ea24277fd2012f7c73093fbadca1398ead"
+    ]
+  },
+  "allOtherClosureFilesUnchanged": true,
+  "sevenCryptoLibrariesMatchOriginalBinding": true,
+  "unchangedPopplerMetadataFiles": 5,
+  "actualBuildCacheObservations": [
+    {
+      "instruction": "#59 [installation 7/7] RUN --network=none python3 -B /recipe/verify_install.py install && setpriv --no-new-privs --bounding-set=-all --reuid=65532 --regid=65532 --clear-groups -- /usr/bin/python3 -B /recipe/verify_install.py probe",
+      "cached": true
+    },
+    {
+      "instruction": "#61 [native-expat-build 14/14] RUN --network=none python3 /recipe/build.py",
+      "cached": true
+    },
+    {
+      "instruction": "#80 [build 15/15] RUN --network=none setpriv --no-new-privs --bounding-set=-all --reuid=65532 --regid=65532 --clear-groups -- /usr/bin/python3 -B /recipe/build.py",
+      "cached": true
+    },
+    {
+      "instruction": "#88 [native-freetype-installation 8/8] RUN --network=none python3 -B /recipe/verify_install.py install && setpriv --no-new-privs --bounding-set=-all --reuid=65532 --regid=65532 --clear-groups -- /usr/bin/python3 -B /recipe/verify_install.py probe",
+      "cached": true
+    },
+    {
+      "instruction": "#106 [native-freetype-build 16/16] RUN --network=none setpriv --no-new-privs --bounding-set=-all --reuid=65532 --regid=65532 --clear-groups -- /usr/bin/python3 -B /recipe/build.py",
+      "cached": true
+    },
+    {
+      "instruction": "#116 [runtime  6/13] RUN --network=none --mount=type=bind,from=native-freetype-artifacts,source=/,target=/build-input/freetype,readonly --mount=type=bind,from=native-freetype-runtime-verifier,source=/recipe,target=/build-input/freetype-recipe,readonly python3 -I -B /build-input/freetype-recipe/install-runtime.py",
+      "cached": false
+    }
+  ],
+  "historicalNativeVendorTests": "70/71/56 under original FreeType; NOT rerun under final FreeType",
+  "finalRuntimeTestsPending": true
+}

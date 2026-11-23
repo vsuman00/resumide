@@ -1,0 +1,155 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/evidence-entry-associations.test.ts (70 tests | 1 failed | 69 skipped) 17ms
+     ↓ adds two unverified candidates while preserving the characterized legacy gap
+     ↓ supports ASCII structural casing in Employment without modifying values
+     ↓ supports ASCII structural casing in Experience without modifying values
+     ↓ supports ASCII structural casing in WORK EXPERIENCE without modifying values
+     ↓ supports ASCII structural casing in professional experience without modifying values
+     ↓ supports ASCII structural casing in Employment History without modifying values
+     ↓ keeps observations unresolved outside exact supported heading ""
+     ↓ keeps observations unresolved outside exact supported heading "Work History"
+     ↓ keeps observations unresolved outside exact supported heading "Experience Overview"
+     ↓ keeps observations unresolved outside exact supported heading "WorK Experience"
+     ↓ clears employment eligibility at boundary case 0
+     ↓ clears employment eligibility at boundary case 1
+     ↓ clears employment eligibility at boundary case 2
+     ↓ clears employment eligibility at boundary case 3
+     ↓ clears employment eligibility at boundary case 4
+     ↓ clears employment eligibility at boundary case 5
+     ↓ ends blocks at blanks without inheriting an incomplete employer
+     ↓ does not link across pages even when ordinals are adjacent
+     ↓ keeps repeated-label case 0 unresolved
+     ↓ keeps repeated-label case 1 unresolved
+     ↓ keeps repeated-label case 2 unresolved
+     ↓ keeps repeated-label case 3 unresolved
+     ↓ requires Employer and Role, allows optional Dates, and starts afresh at Employer
+     ↓ preserves same-span group IDs and disjoint membership beside a multiline candidate
+     ↓ retains contact, education, certification and duplicate headers as observations
+     × clears context for out-of-scope content beside a preserved employment group 17ms
+     ↓ keeps valid empty evidence reviewable without fabricating absence
+     ↓ preserves current native/OCR disagreement without merging methods
+     ↓ does not carry native employment context into an OCR method/page
+     ↓ is deterministic, immutable and emits references without values or source text
+     ↓ rejects mismatched owned ownerId with no partial references
+     ↓ rejects mismatched owned analysisId with no partial references
+     ↓ rejects mismatched owned sourceId with no partial references
+     ↓ rejects mismatched owned inputSha256 with no partial references
+     ↓ rejects mismatched owned attemptId with no partial references
+     ↓ binds candidate identity to exact evidence ownerId
+     ↓ binds candidate identity to exact evidence analysisId
+     ↓ binds candidate identity to exact evidence sourceId
+     ↓ binds candidate identity to exact evidence inputSha256
+     ↓ binds candidate identity to exact evidence id
+     ↓ rejects forged replay score
+     ↓ rejects forged replay span
+     ↓ rejects forged replay value
+     ↓ rejects forged replay field state
+     ↓ rejects missing or malformed evidence null
+     ↓ rejects missing or malformed evidence undefined
+     ↓ rejects missing or malformed evidence {}
+     ↓ keeps replay-valid historical extractors unavailable and unchanged
+     ↓ rejects excessive 'projected spans' without partial authority
+     ↓ rejects excessive 'assertions' without partial authority
+     ↓ rejects excessive 'assertion references' without partial authority
+     ↓ rejects excessive 'field states' without partial authority
+     ↓ rejects excessive 'blockers' without partial authority
+     ↓ rejects excessive 'native assertions' without partial authority
+     ↓ rejects excessive 'native spans' without partial authority
+     ↓ rejects excessive 'native pages' without partial authority
+     ↓ rejects excessive 'native span text' without partial authority
+     ↓ rejects excessive 'OCR text with malformed native sibling' without partial authority
+     ↓ rejects excessive 'native text' without partial authority
+     ↓ rejects excessive 'projected text' without partial authority
+     ↓ rejects excessive 'OCR pages' without partial authority
+     ↓ rejects excessive 'OCR words' without partial authority
+     ↓ rejects excessive 'OCR native pages' without partial authority
+     ↓ rejects excessive 'OCR selected pages' without partial authority
+     ↓ rejects excessive 'OCR request text' without partial authority
+     ↓ rejects excessive 'OCR page text' without partial authority
+     ↓ rejects excessive 'OCR word text' without partial authority
+     ↓ rejects excessive 'OCR combined text' without partial authority
+     ↓ retains the exact validated twenty-page aggregate native bound
+     ↓ retains the validated thousand-assertion boundary
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/evidence-entry-associations.test.ts > separate nonpersistable entry association review > clears context for out-of-scope content beside a preserved employment group
+AssertionError: expected [ { …(9) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "association": "explicit_labelled_multiline_candidate",
++     "id": "entry-association-46f8c4cd0aea4edae6c573dfb6c6ea5b65a1cb14e54722af96a3fe824dcf8690",
++     "kind": "employment",
++     "members": [
++       {
++         "assertionId": "assertion-4",
++         "citations": [
++           {
++             "end": 21,
++             "method": "native_text",
++             "pageEnd": 90,
++             "pageId": "page-1",
++             "pageStart": 79,
++             "spanId": "native-page-1-line-3",
++             "start": 10,
++           },
++         ],
++         "field": "employer",
++         "observationId": "observation-1a755dba0d804e34811eb80873f20a04956c16f3e6c46ed43e8b77dee52fd287",
++         "targetId": "target-802fa31f09b4cfaf79bdbca640b79c80fdfe79f09b4048b0ae29d730fd0ea51a",
++       },
++       {
++         "assertionId": "assertion-5",
++         "citations": [
++           {
++             "end": 13,
++             "method": "native_text",
++             "pageEnd": 104,
++             "pageId": "page-1",
++             "pageStart": 97,
++             "spanId": "native-page-1-line-4",
++             "start": 6,
++           },
++         ],
++         "field": "role",
++         "observationId": "observation-ff38ee19ac4d392230dbb25dfbca0947fd12ccd57b6f513e2eda59543600bbff",
++         "targetId": "target-e6d5e24bd67ba4413a4dad19aeda8527c170994cc212ff8cc75cecc97e7a8eb4",
++       },
++     ],
++     "method": "native_text",
++     "observationIds": [
++       "observation-1a755dba0d804e34811eb80873f20a04956c16f3e6c46ed43e8b77dee52fd287",
++       "observation-ff38ee19ac4d392230dbb25dfbca0947fd12ccd57b6f513e2eda59543600bbff",
++     ],
++     "pageId": "page-1",
++     "targetIds": [
++       "target-802fa31f09b4cfaf79bdbca640b79c80fdfe79f09b4048b0ae29d730fd0ea51a",
++       "target-e6d5e24bd67ba4413a4dad19aeda8527c170994cc212ff8cc75cecc97e7a8eb4",
++     ],
++     "verified": false,
++   },
++ ]
+
+ ❯ tests/unit/evidence-entry-associations.test.ts:375:27
+    373|       model.groups.map((group) => group.id),
+    374|     );
+    375|     expect(review.groups).toEqual([]);
+       |                           ^
+    376|     expect(
+    377|       review.unresolved.some(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 69 skipped (70)
+   Start at  16:04:26
+   Duration  196ms (transform 81ms, setup 0ms, import 122ms, tests 17ms, environment 0ms)
+

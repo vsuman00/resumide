@@ -1,0 +1,430 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/result-feedback.test.ts (3 tests | 1 failed | 2 skipped) 5ms
+     ↓ excludes unavailable service placeholders from candidate repair and strength counts
+     ↓ only counts cited prose in new envelopes, retaining historical tips
+   × requires owned provenance before raw-good counts become strengths 4ms
+ ❯ tests/unit/initial-feedback-consumer.test.ts (2 tests | 2 failed) 185ms
+   × exposes recoverable owned-feedback unavailability without losing legacy result 167ms
+   × refuses actual owned-feedback access denial instead of displaying a stale legacy result 17ms
+ ❯ tests/components/CitedWritingSuggestions.test.tsx (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/CitedWritingSuggestions.test.tsx [ tests/components/CitedWritingSuggestions.test.tsx ]
+Error: Transform failed with 1 error:
+/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/tests/components/CitedWritingSuggestions.test.tsx:82:119: ERROR: Unexpected ">"
+  Plugin: vite:esbuild
+  File: /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats/tests/components/CitedWritingSuggestions.test.tsx:82:119
+  
+  Unexpected ">"
+  80 |  it("requires owned provenance before calling a cited legacy row a strength",()=>{
+  81 |    const area={tips:[{type:'good' as const,tip:'Keep this wording',explanation:'Review the saved wording.',quote:'Built services using Python'}]};
+  82 |    render(<CitedWritingSuggestions feedback={{toneAndStyle:area,content:{tips:[]},structure:{tips:[]},skills:{tips:[]}}/>);
+     |                                                                                                                         ^
+  83 |    expect(screen.queryByText('Source-backed feedback')).toBeNull();
+  84 |    expect(screen.queryByText('Strength to keep')).toBeNull();
+  
+ ❯ failureErrorWithLog ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:1467:15
+ ❯ ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:736:50
+ ❯ responseCallbacks.<computed> ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:603:9
+ ❯ handleIncomingPacket ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:658:12
+ ❯ Socket.readFromStdout ../../../../Development/Presonal Project/ResumeATS/resume_ats/node_modules/esbuild/lib/main.js:581:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-consumer.test.ts > exposes recoverable owned-feedback unavailability without losing legacy result
+AssertionError: expected { result: { …(9) }, …(5) } to have property "feedbackProvenance.status" with value 'unavailable'
+
+- Expected:
+"unavailable"
+
++ Received:
+undefined
+
+ ❯ tests/unit/initial-feedback-consumer.test.ts:30:22
+     28|  const h=harness();const result=await load();
+     29|  expect(result.data.result.feedback).toEqual(h.feedback);
+     30|  expect(result.data).toHaveProperty('feedbackProvenance.status','unava…
+       |                      ^
+     31|  expect(result.init?.headers).toBeTruthy();
+     32| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  tests/unit/initial-feedback-consumer.test.ts > refuses actual owned-feedback access denial instead of displaying a stale legacy result
+AssertionError: promise resolved "DataWithResponseInit{ …(3) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ DataWithResponseInit {
++   "data": {
++     "legacy": {
++       "createdAt": "2026-11-15T00:00:00Z",
++       "kind": "deterministic_baseline",
++       "label": "Legacy analysis score",
++       "scoringVersion": "ats-rules-v4",
++       "v2Comparable": false,
++       "value": 26,
++     },
++     "nativeLayout": null,
++     "qualitativeUnavailable": false,
++     "result": {
++       "feedback": {
++         "ATS": {
++           "score": 26,
++           "tips": [
++             {
++               "tip": "No email detected.",
++               "type": "improve",
++             },
++             {
++               "tip": "No phone detected (optional but recommended).",
++               "type": "improve",
++             },
++             {
++               "tip": "No 'Experience' section header.",
++               "type": "improve",
++             },
++             {
++               "tip": "No 'Education' section header.",
++               "type": "improve",
++             },
++           ],
++         },
++         "content": {
++           "score": 0,
++           "tips": [
++             {
++               "explanation": "Clarifies wording.",
++               "quote": "Built services using Python",
++               "tip": "Created services using Python",
++               "type": "good",
++             },
++             {
++               "explanation": "Your saved deterministic checks remain available. Writing feedback was not completed.",
++               "tip": "Qualitative feedback is currently unavailable.",
++               "type": "improve",
++             },
++             {
++               "explanation": "Your saved deterministic checks remain available. Writing feedback was not completed.",
++               "tip": "Qualitative feedback is currently unavailable.",
++               "type": "improve",
++             },
++           ],
++         },
++         "overallScore": 26,
++         "scoreSemantics": "deterministic_baseline_no_model_ratings/1.0.0",
++         "skills": {
++           "score": 0,
++           "tips": [
++             {
++               "explanation": "Clarifies wording.",
++               "quote": "Built services using Python",
++               "tip": "Created services using Python",
++               "type": "good",
++             },
++             {
++               "explanation": "Your saved deterministic checks remain available. Writing feedback was not completed.",
++               "tip": "Qualitative feedback is currently unavailable.",
++               "type": "improve",
++             },
++             {
++               "explanation": "Your saved deterministic checks remain available. Writing feedback was not completed.",
++               "tip": "Qualitative feedback is currently unavailable.",
++               "type": "improve",
++             },
++           ],
++         },
++         "structure": {
++           "score": 0,
++           "tips": [
++             {
++               "explanation": "Clarifies wording.",
++               "quote": "Built services using Python",
++               "tip": "Created services using Python",
++               "type": "good",
++             },
++             {
++               "explanation": "Your saved deterministic checks remain available. Writing feedback was not completed.",
++               "tip": "Qualitative feedback is currently unavailable.",
++               "type": "improve",
++             },
++             {
++               "explanation": "Your saved deterministic checks remain available. Writing feedback was not completed.",
++               "tip": "Qualitative feedback is currently unavailable.",
++               "type": "improve",
++             },
++           ],
++         },
++         "toneAndStyle": {
++           "score": 0,
++           "tips": [
++             {
++               "explanation": "Clarifies wording.",
++               "quote": "Built services using Python",
++               "tip": "Created services using Python",
++               "type": "good",
++             },
++             {
++               "explanation": "Your saved deterministic checks remain available. Writing feedback was not completed.",
++               "tip": "Qualitative feedback is currently unavailable.",
++               "type": "improve",
++             },
++             {
++               "explanation": "Your saved deterministic checks remain available. Writing feedback was not completed.",
++               "tip": "Qualitative feedback is currently unavailable.",
++               "type": "improve",
++             },
++           ],
++         },
++       },
++       "jdKeywords": [
++         "Python",
++       ],
++       "keywordEvidence": [
++         {
++           "job": {
++             "occurrenceCount": 1,
++             "spans": [
++               {
++                 "alias": "Python",
++                 "end": 6,
++                 "start": 0,
++                 "text": "Python",
++               },
++             ],
++           },
++           "kind": "taxonomy",
++           "resume": {
++             "occurrenceCount": 1,
++             "spans": [
++               {
++                 "alias": "Python",
++                 "end": 27,
++                 "start": 21,
++                 "text": "Python",
++               },
++             ],
++           },
++           "taxonomyId": "python",
++           "term": "Python",
++           "uncertain": false,
++         },
++       ],
++       "matchedKeywords": [
++         "Python",
++       ],
++       "missingKeywords": [],
++       "parseView": {
++         "contact": {
++           "email": null,
++           "links": [],
++           "location": null,
++           "name": null,
++           "phone": null,
++         },
++         "pages": [
++           {
++             "confidence": "medium",
++             "lineCount": 1,
++             "pageNumber": 1,
++             "text": "Built services using Python",
++             "warnings": [],
++           },
++         ],
++         "sections": [],
++         "totalLines": 1,
++         "totalPages": 1,
++         "warnings": [
++           {
++             "field": "name",
++             "message": "No name detected at the top of the resume.",
++             "severity": "warn",
++           },
++           {
++             "field": "email",
++             "message": "No email address found. Most ATS systems require one.",
++             "severity": "error",
++           },
++           {
++             "field": "phone",
++             "message": "No phone number detected.",
++             "severity": "info",
++           },
++           {
++             "field": "location",
++             "message": "No location line detected (e.g. 'City, ST').",
++             "severity": "info",
++           },
++           {
++             "field": "sections",
++             "message": "No section headers detected (Experience / Education / Skills). ATS relies on them.",
++             "severity": "error",
++           },
++         ],
++       },
++       "ruleTrace": [
++         {
++           "confidence": "high",
++           "credit": 0,
++           "detail": "No email detected.",
++           "evidence": [],
++           "label": "Email address present",
++           "outcome": "failed",
++           "passed": false,
++           "ruleId": "contact.email",
++           "weight": 12,
++         },
++         {
++           "confidence": "high",
++           "credit": 0,
++           "detail": "No phone detected (optional but recommended).",
++           "evidence": [],
++           "label": "Phone number present",
++           "outcome": "failed",
++           "passed": false,
++           "ruleId": "contact.phone",
++           "weight": 4,
++         },
++         {
++           "confidence": "high",
++           "credit": 0,
++           "detail": "No 'Experience' section header.",
++           "evidence": undefined,
++           "label": "Experience section present",
++           "outcome": "failed",
++           "passed": false,
++           "ruleId": "sections.experience",
++           "weight": 14,
++         },
++         {
++           "confidence": "high",
++           "credit": 0,
++           "detail": "No 'Education' section header.",
++           "evidence": undefined,
++           "label": "Education section present",
++           "outcome": "failed",
++           "passed": false,
++           "ruleId": "sections.education",
++           "weight": 8,
++         },
++         {
++           "confidence": "high",
++           "credit": 0,
++           "detail": "No 'Skills' section header.",
++           "evidence": undefined,
++           "label": "Skills section present",
++           "outcome": "failed",
++           "passed": false,
++           "ruleId": "sections.skills",
++           "weight": 10,
++         },
++         {
++           "confidence": "high",
++           "credit": 0,
++           "detail": "No dates detected in the Experience section.",
++           "evidence": [],
++           "label": "Experience section has parseable dates",
++           "outcome": "failed",
++           "passed": false,
++           "ruleId": "dates.parseable",
++           "weight": 10,
++         },
++         {
++           "confidence": "high",
++           "credit": 0,
++           "detail": "0 bullets detected.",
++           "evidence": [
++             "0",
++           ],
++           "label": "Experience section uses bullets",
++           "outcome": "failed",
++           "passed": false,
++           "ruleId": "bullets.experience",
++           "weight": 8,
++         },
++         {
++           "confidence": "high",
++           "credit": 0,
++           "detail": "Only 4 words - may be too short.",
++           "evidence": [
++             "1",
++             "4 words",
++           ],
++           "label": "Resume length is reasonable",
++           "outcome": "failed",
++           "passed": false,
++           "ruleId": "length.reasonable",
++           "weight": 8,
++         },
++         {
++           "confidence": "high",
++           "credit": 1,
++           "detail": "1/1 JD phrases and skills present (100%).",
++           "evidence": [],
++           "label": "JD phrase and skill coverage",
++           "outcome": "passed",
++           "passed": true,
++           "ruleId": "keywords.coverage",
++           "weight": 26,
++         },
++       ],
++       "uncertainKeywords": [],
++       "writer": {
++         "bullets": [],
++         "summary": null,
++       },
++     },
++     "signedResumeUrl": "/analysis/00000000-0000-4000-8000-000000000001/source",
++     "unscoredProse": true,
++   },
++   "init": {
++     "headers": Headers {},
++   },
++   "type": "DataWithResponseInit",
+  }
+
+ ❯ tests/unit/initial-feedback-consumer.test.ts:35:21
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  tests/unit/result-feedback.test.ts > requires owned provenance before raw-good counts become strengths
+AssertionError: expected { type: 'good', …(3) } to match object { classification: 'unverified' }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "classification": "unverified",
++   "explanation": "Review this saved claim.",
++   "quote": "Built services using Python",
++   "tip": "Keep the wording",
++   "type": "good",
+  }
+
+ ❯ tests/unit/result-feedback.test.ts:50:26
+     48|   feedback.content.tips[0]={type:'good',tip:'Keep the wording',explana…
+     49|   const group=visibleFeedbackGroups(feedback).find(g=>g.source==='Cont…
+     50|   expect(group?.tips[0]).toMatchObject({classification:'unverified'});
+       |                          ^
+     51| });
+     52|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  3 failed | 2 skipped (5)
+   Start at  15:41:34
+   Duration  614ms (transform 299ms, setup 0ms, import 464ms, tests 190ms, environment 533ms)
+

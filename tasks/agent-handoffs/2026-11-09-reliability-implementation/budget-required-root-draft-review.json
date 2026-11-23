@@ -1,0 +1,64 @@
+{
+  "status": "PASS_DRAFT_SOURCE_ONLY",
+  "migration": "supabase/migrations/20261115182650_mandatory_ai_budget_dispatch.sql",
+  "migrationSha256": "dea94b91a3f8b03e3f81e18a4b44a71e49bf88a387446f1277913aa401130d8e",
+  "patches": [
+    {
+      "signature": "public.claim_canonical_rewrite_dispatch(uuid,uuid,uuid,text,jsonb)",
+      "before": "77a9357fde10413f08d0276bae3c1b747f44e2de10c1ef757d47eb05b21992aa",
+      "after": "08c3eedd3979e2a3287d5ab8dac9da876daa7c18ad5fdd848661c54949f1aa66"
+    },
+    {
+      "signature": "public.claim_initial_feedback_dispatch(uuid,jsonb,uuid,uuid,text,jsonb)",
+      "before": "8d9ca0645d4457616d6a7fc947658fa89b3b7529042ba6f17f90f1cbc051012a",
+      "after": "f7b45e9f59df53aa5324c6a62b2d800201c2d27b29eac5f76b3bc5a59c3f50a5"
+    },
+    {
+      "signature": "private.canonical_rewrite_ready()",
+      "before": "ef084481faf7a75e5da4dafbabdb8cd9c2aacae542b26c5e90ced4ed25b8ef14",
+      "after": "b8f2c321599054fc5a05bdccdd15ebd8b3bd3bbdc8e7cf233c99cc01b205ffed"
+    },
+    {
+      "signature": "private.canonical_rewrite_workspace_ready()",
+      "before": "32d3e0ecf62b1e053ff2da8d66fa8b949c026447fc64383183404ff438466efe",
+      "after": "bebf3463501e80ef81bf3cdd0bc95a9c263e5354f3fb38fdd8cac9589e098a4e"
+    },
+    {
+      "signature": "private.initial_feedback_operation_ready()",
+      "before": "cfd7be13fbfc2f0a3770ddc02fe931b640d46a2449405fe77b58dd8ef67bd0a6",
+      "after": "906f829eaa3b72c08ea64e4bf848d176118b10cbd7560c9517f5e415fde36579"
+    },
+    {
+      "signature": "private.initial_feedback_ready()",
+      "before": "5c35085cb3a1d089370b93aaa1d4ea88782e5bc0a3d53e2607eebcfc19f2ef98",
+      "after": "8172bbcf76eb371d34e34002d7bf485568f0ca6632446da50ba63a8787c578d7"
+    },
+    {
+      "signature": "private.owned_legacy_ai_usage_ready()",
+      "before": "fd8a87b4b2992f4924b6047ffe9ead49370cf389f80774816b8841bb90855b05",
+      "after": "bf104476ada3f7425aa65a1c12a8023f5c43166dac2c27314905d7c7d8749c43"
+    },
+    {
+      "signature": "private.ai_budget_source_ready()",
+      "before": "0d2605fe5f78efe11b6162fc112a7d542ccfe9260afe503db83806634f5b010d",
+      "after": "8ea2b83fbd6804a631d75e2e21816a0e3907bc7f9c09b30dc536c4b39e0b804e"
+    },
+    {
+      "signature": "private.owned_ai_disposition_ready()",
+      "before": "ef0eaea8b3b8da45247ecd911e49e96239e43bbd32292484d082808b13873e57",
+      "after": "342d370615d1c6076fe7e16c06e13ecfa45b428e971b56c860e6fd0f5a425bf5"
+    }
+  ],
+  "profilesPinOnly": {
+    "app/lib/server/canonical-rewrite-readiness-profile.ts": "623a8db8b00826cf470b1d76ab9895415ff43d0c8c0605bfa560b049cb29b3e7",
+    "app/lib/server/canonical-rewrite-workspace-profile.ts": "a889cc3bb19f46e1a9d99e6ef769a087edf6400143e9c50852883f83fa98dd4e",
+    "app/lib/server/initial-feedback-operation-profile.ts": "502a73fa8411e06b91a4f5d80281b1ca1b64be511b425a45c2d3f5788fbdbe92",
+    "app/lib/server/initial-feedback-profile.ts": "4db801695383e95bbd2a20f370f12ef603702e436e6fd7775e24e34e6dd86a5b",
+    "app/lib/server/owned-legacy-ai-usage-profile.ts": "0627d0a378e7d1e315d2f5b9e271235730f38eaf680469753a8202a86d817a53",
+    "app/lib/server/ai-budget-source-profile.ts": "34c013f590665d2777fde8dec96d44cc621d1f9b7aff516ab8f95cc43c47eb62",
+    "app/lib/server/owned-ai-disposition-profile.ts": "3d0328dacf0b7c0e0e4d7485a59b56024a4c9f60378b1c5e1483b544d6d1ccc9"
+  },
+  "sqlParsed": false,
+  "sqlExecuted": false,
+  "limits": "Final author test packets, peer ACK and integrated verification still pending."
+}

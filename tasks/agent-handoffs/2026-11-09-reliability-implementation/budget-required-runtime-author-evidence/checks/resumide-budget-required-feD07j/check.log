@@ -1,0 +1,61 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/initial-feedback-stage.test.ts (14 tests | 1 failed) 158ms
+     ✓ publishes immutable original inputs before legacy reads and keeps the old transport isolated 87ms
+     ✓ replays an owned publication before consent, quota, rate, claim or SDK 17ms
+     ✓ fails pending safely on every queue replay without redispatch or completion 2ms
+     ✓ publishes AI-off deterministic output without fresh authorization or SDK 5ms
+     ✓ uses existing consent and never manufactures it 3ms
+     ✓ requires a real matching lease and respects cancellation before lookup 1ms
+     ✓ leaves the legacy branch selected when the flag is false 3ms
+     ✓ uses the bounded worker failure path for unresolved accounting and never redispatches 10ms
+     ✓ never dispatches when the once-only claim loses 4ms
+     ✓ uses the exact budget-on selected policy and both accounting paths 9ms
+     ✓ refuses an unselected Native policy before consent, quota or provider with no budget-off fallback 1ms
+     ✓ rejects malformed selected dependencies before scope lookup 1ms
+     × cancels the installed SDK attempt and retains unknown spend without legacy publication or redispatch 6ms
+   ✓ never uses generic reserve for an admitted selected budget worker 7ms
+ ✓ tests/unit/initial-feedback-service.test.ts (17 tests) 183ms
+ ✓ tests/unit/build-assist-budget.test.ts (14 tests) 98ms
+ ✓ tests/unit/build-assist-service.test.ts (33 tests) 83ms
+ ✓ tests/unit/canonical-rewrite-repository.test.ts (29 tests) 1009ms
+ ✓ tests/unit/canonical-rewrite-service.test.ts (40 tests) 1168ms
+ ✓ tests/unit/rewrite-budget.test.ts (12 tests) 47ms
+ ✓ tests/unit/rewrite-service.test.ts (11 tests) 46ms
+ ✓ tests/unit/qualitative-stage-outage.test.ts (10 tests) 33ms
+ ✓ tests/unit/provider-cancellation.test.ts (6 tests) 32ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > cancels the installed SDK attempt and retains unknown spend without legacy publication or redispatch
+AssertionError: expected { …(7) } to match object { state: 'held_unknown', …(2) }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "errorCode": null,
++   "errorCode": "cancelled",
+    "state": "held_unknown",
+    "usage": null,
+  }
+
+ ❯ tests/unit/initial-feedback-stage.test.ts:931:30
+    929|     controller.abort();
+    930|     await expect(running).rejects.toMatchObject({code:"cancelled"});
+    931|     expect(h.op.attempts[0]).toMatchObject({
+       |                              ^
+    932|       state: "held_unknown",
+    933|       usage: null,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 9 passed (10)
+      Tests  1 failed | 185 passed (186)
+   Start at  00:05:18
+   Duration  1.86s (transform 870ms, setup 0ms, import 1.89s, tests 2.86s, environment 0ms)
+
+JSON report written to /tmp/resumide-budget-required-feD07j/tests.json

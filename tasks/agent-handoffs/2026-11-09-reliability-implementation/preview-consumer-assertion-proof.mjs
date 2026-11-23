@@ -1,0 +1,58 @@
+import ts from "../../../node_modules/typescript/lib/typescript.js";
+import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const output = dirname(fileURLToPath(import.meta.url));
+const root = resolve(output, "../../..");
+const printer = ts.createPrinter();
+function base(node) {
+  while (ts.isPropertyAccessExpression(node)) node = node.expression;
+  return node;
+}
+function inspect(text, filename) {
+  const source = ts.createSourceFile(filename, text, ts.ScriptTarget.Latest, true);
+  const assertions = [];
+  const cases = [];
+  function visit(node) {
+    if (ts.isCallExpression(node)) {
+      const target = base(node.expression);
+      if (ts.isCallExpression(target) && ts.isIdentifier(target.expression) && target.expression.text === "expect") {
+        assertions.push({ node, expect: target, text: node.getText(source) });
+      }
+      let origin = target;
+      while (ts.isCallExpression(origin)) origin = base(origin.expression);
+      if (ts.isIdentifier(origin) && ["it", "test", "describe"].includes(origin.text) && node.arguments[0] && ts.isStringLiteralLike(node.arguments[0])) cases.push(node.arguments[0].text);
+    }
+    ts.forEachChild(node, visit);
+  }
+  visit(source);
+  return { source, assertions, cases };
+}
+const results = {};
+for (const [relative, enabled] of [["tests/unit/score-v2-route.test.ts", false], ["tests/unit/typed-score-route.test.ts", true]]) {
+  const old = inspect(readFileSync(resolve(output, "preview-consumer-preimages", relative + ".txt"), "utf8"), relative);
+  const current = inspect(readFileSync(resolve(root, relative), "utf8"), relative);
+  if (JSON.stringify(old.cases) !== JSON.stringify(current.cases) || old.assertions.length !== current.assertions.length) throw Error("Case or assertion count changed");
+  let extended = 0;
+  old.assertions.forEach((before, index) => {
+    const after = current.assertions[index];
+    if (before.text === after.text) return;
+    if (!ts.isPropertyAccessExpression(before.node.expression) || before.node.expression.name.text !== "toHaveBeenCalledWith" || before.expect.arguments[0]?.getText(old.source) !== "mocks.load") throw Error("Unallocated assertion changed");
+    if (before.node.arguments.length !== 4 || after.node.arguments.length !== 6) throw Error("Unexpected reader argument count");
+    const printed = (node, source) => printer.printNode(ts.EmitHint.Unspecified, node, source);
+    if (printed(before.node.expression, old.source) !== printed(after.node.expression, current.source)) throw Error("Existing reader assertion matcher changed");
+    for (let i = 0; i < 4; i++) if (printed(before.node.arguments[i], old.source) !== printed(after.node.arguments[i], current.source)) throw Error("Existing reader assertion argument changed");
+    if (after.node.arguments[4].getText(current.source) !== "undefined") throw Error("Fifth snapshot slot changed");
+    const sixth = after.node.arguments[5];
+    if (!ts.isObjectLiteralExpression(sixth) || sixth.properties.length !== 1) throw Error("Unexpected trusted options assertion");
+    const field = sixth.properties[0];
+    if (!ts.isPropertyAssignment(field) || field.name.getText(current.source) !== "clauseOrderPreview" || field.initializer.getText(current.source) !== "mocks.authoringEnabled") throw Error("Actual authoring flag assertion changed");
+    if (old.source.text.match(/\bauthoringEnabled:\s*(true|false)\b/u)?.[1] !== String(enabled)) throw Error("Original authoring fixture default changed");
+    extended++;
+  });
+  if (extended !== 1) throw Error("Expected one additive signature assertion per file");
+  results[relative] = { completeAssertions: old.assertions.length, caseLabels: old.cases.length, signatureExtensions: extended, originalFourArgumentsPreserved: true, everyOtherAssertionByteIdentical: true };
+}
+writeFileSync(resolve(output, "preview-consumer-assertion-preservation.json"), JSON.stringify({ status: "PASS", files: results }, null, 2) + "\n");
+process.stdout.write(JSON.stringify({ status: "PASS", files: Object.keys(results).length }) + "\n");

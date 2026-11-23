@@ -1,0 +1,488 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/jd-clause-order-consumer-route.test.ts (12 tests | 7 failed) 250ms
+   × publishes real owned producer workspace beside matching score/source/pair and private cookies 108ms
+   ✓ does no new workspace read or serialization when AUTHORING_ENABLED is off 18ms
+   ✓ does no new workspace read or serialization when TYPED_AUTHORING_ENABLED is off 17ms
+   ✓ keeps scoring disabled before auth/admin/new workspace work 6ms
+   ✓ redirects signed out requests without private workspace work 6ms
+   × keeps the trusted source and readonly plan when the writer read is unavailable 14ms
+   × keeps the historical source mount without asking for a fresh decision workspace 14ms
+   × withholds a different actual producer pair instead of rebinding it to the displayed score 19ms
+   × withholds foreign owner/source metadata without serializing it 14ms
+   × withholds a tampered command hash even when its workspace binding matches 13ms
+   × keeps diagnostics and private headers when a bounded owned read fails 14ms
+   ✓ rejects query activation and preserves the score route's readonly action 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/jd-clause-order-consumer-route.test.ts > publishes real owned producer workspace beside matching score/source/pair and private cookies
+AssertionError: expected undefined to deeply equal { …(5) }
+
+- Expected:
+{
+  "binding": {
+    "canonical": {
+      "contentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "revision": 2,
+      "versionId": "086f52ea-bfbc-4818-9d58-36ecbaa95f47",
+    },
+    "heads": {
+      "canonicalHeadId": "086f52ea-bfbc-4818-9d58-36ecbaa95f47",
+      "canonicalHeadRevision": 2,
+      "requirementHeadId": "ef4f5720-5097-42a1-b15a-1beea0131b5f",
+      "requirementHeadRevision": 1,
+    },
+    "profilesSha256": "f1aa440e764197f8aab96ddb9bf5c84dbdfdf177ff04063f15e6c4ccff78df62",
+    "requirements": {
+      "contentSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "inputSha256": "841f8fdac030e82185f0bf06f5adf022b2e7f9096d6a825eb1fee6993ba8727d",
+      "revision": 1,
+      "versionId": "ef4f5720-5097-42a1-b15a-1beea0131b5f",
+    },
+    "source": {
+      "analysisId": "30000000-0000-4000-8000-000000000004",
+      "attemptId": "30000000-0000-4000-8000-000000000006",
+      "inputSha256": "d3955e31aa2a8399c4906a445e7a9f030805a2f8e10085afc14b9dd72ac9cc65",
+      "organizationId": "30000000-0000-4000-8000-000000000002",
+      "ownerId": "30000000-0000-4000-8000-000000000001",
+      "resumeId": "30000000-0000-4000-8000-000000000003",
+      "sourceId": "30000000-0000-4000-8000-000000000005",
+    },
+  },
+  "inspectedPairCount": 1,
+  "proposals": [
+    {
+      "acceptCommand": {
+        "acknowledgement": true,
+        "afterSha256": "f9c413a55428677e40b7cd0b30ff0e62df3c3bda88c28f8912ed84f925961d86",
+        "binding": {
+          "canonical": {
+            "contentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "revision": 2,
+            "versionId": "086f52ea-bfbc-4818-9d58-36ecbaa95f47",
+          },
+          "heads": {
+            "canonicalHeadId": "086f52ea-bfbc-4818-9d58-36ecbaa95f47",
+            "canonicalHeadRevision": 2,
+            "requirementHeadId": "ef4f5720-5097-42a1-b15a-1beea0131b5f",
+            "requirementHeadRevision": 1,
+          },
+          "profilesSha256": "f1aa440e764197f8aab96ddb9bf5c84dbdfdf177ff04063f15e6c4ccff78df62",
+          "requirements": {
+            "contentSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "inputSha256": "841f8fdac030e82185f0bf06f5adf022b2e7f9096d6a825eb1fee6993ba8727d",
+            "revision": 1,
+            "versionId": "ef4f5720-5097-42a1-b15a-1beea0131b5f",
+          },
+          "source": {
+            "analysisId": "30000000-0000-4000-8000-000000000004",
+            "attemptId": "30000000-0000-4000-8000-000000000006",
+            "inputSha256": "d3955e31aa2a8399c4906a445e7a9f030805a2f8e10085afc14b9dd72ac9cc65",
+            "organizationId": "30000000-0000-4000-8000-000000000002",
+            "ownerId": "30000000-0000-4000-8000-000000000001",
+            "resumeId": "30000000-0000-4000-8000-000000000003",
+            "sourceId": "30000000-0000-4000-8000-000000000005",
+          },
+        },
+        "decisionPolicy": {
+          "sha256": "4d0bac1e65e84b0f3dc8531415a05890c6c7f6f7fe65bbbaf6563499843b9d93",
+          "version": "jd-clause-order-decisions/2.0.0",
+        },
+        "draftId": "6911ab257ea4d6e8905018956811c23f8436f692bab4ec392667d57a71603b94",
+        "idempotencyKey": "d52eedf3-9581-4676-bf77-97625fdaa912",
+        "jdClauseId": "13844eac5c4dc1ddb71663c50918d02304e2e05ee4e146ab8a74a3ae7888ff50",
+        "operation": "accept",
+        "policies": {
+          "clauseOrderSha256": "c87de77cad6b14119879634088e0a6f054d87a20937ef1db20f85e13973a1f26",
+          "clauseOrderVersion": "jd-clause-order-rules/2.0.0",
+          "writingSupportVersion": "legacy-source-transforms/1.0.4",
+        },
+        "schemaVersion": "jd-clause-order-command/2.0.0",
+        "sourceCitations": [
+          {
+            "attemptId": "30000000-0000-4000-8000-000000000006",
+            "end": 54,
+            "method": "native_text",
+            "pageEnd": 65,
+            "pageId": "page-1",
+            "pageStart": 11,
+            "spanId": "native-page-1-line-2",
+            "start": 0,
+          },
+        ],
+        "sourceClauses": [
+          {
+            "end": 27,
+            "index": 0,
+            "sha256": "cea9a6a55b06ed97ed4063c21fea3a5c544c72f54062787eb7238b7081100cd3",
+            "start": 0,
+          },
+          {
+            "end": 54,
+            "index": 1,
+            "sha256": "12a95e0802eaba19fb1f53696df996d8fb44f738ff639dd4657e6450d70c141f",
+            "start": 29,
+          },
+        ],
+        "target": {
+          "bulletId": "ef35998f-d33a-4725-a379-48edd2f420ab",
+          "confirmationActorId": "30000000-0000-4000-8000-000000000001",
+          "confirmedAt": "2026-11-17T04:51:25.519Z",
+          "currentValueSha256": "4d3cfe743d3b674d9ed10455a9f8533a325b519add7cb7becc3a9be4f87e3711",
+          "entryId": "f4481f51-c207-492f-b8b4-ec149a19267d",
+          "factId": "f6647a63-833d-43ef-88d1-b08f89d487a2",
+          "sectionId": "dc9907e1-09fb-4dfb-b458-6ff8ed3cf962",
+        },
+        "transform": {
+          "kind": "reorder_source_clauses",
+          "order": [
+            1,
+            0,
+          ],
+          "rendererVersion": "jd-two-clause-renderer/1.0.0",
+          "terminal": "",
+        },
+      },
+      "acceptCommandSha256": "dba331b727730845bac92bfaf65d93349980cb797a03f70ade2fa0ebd3e33c96",
+      "draft": {
+        "after": "Developed tools using Git; Built services using Python",
+        "before": "Built services using Python; Developed tools using Git",
+        "binding": {
+          "canonical": {
+            "contentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "revision": 2,
+            "versionId": "086f52ea-bfbc-4818-9d58-36ecbaa95f47",
+          },
+          "heads": {
+            "canonicalHeadId": "086f52ea-bfbc-4818-9d58-36ecbaa95f47",
+            "canonicalHeadRevision": 2,
+            "requirementHeadId": "ef4f5720-5097-42a1-b15a-1beea0131b5f",
+            "requirementHeadRevision": 1,
+          },
+          "profilesSha256": "f1aa440e764197f8aab96ddb9bf5c84dbdfdf177ff04063f15e6c4ccff78df62",
+          "requirements": {
+            "contentSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "inputSha256": "841f8fdac030e82185f0bf06f5adf022b2e7f9096d6a825eb1fee6993ba8727d",
+            "revision": 1,
+            "versionId": "ef4f5720-5097-42a1-b15a-1beea0131b5f",
+          },
+          "source": {
+            "analysisId": "30000000-0000-4000-8000-000000000004",
+            "attemptId": "30000000-0000-4000-8000-000000000006",
+            "inputSha256": "d3955e31aa2a8399c4906a445e7a9f030805a2f8e10085afc14b9dd72ac9cc65",
+            "organizationId": "30000000-0000-4000-8000-000000000002",
+            "ownerId": "30000000-0000-4000-8000-000000000001",
+            "resumeId": "30000000-0000-4000-8000-000000000003",
+            "sourceId": "30000000-0000-4000-8000-000000000005",
+          },
+        },
+        "id": "6911ab257ea4d6e8905018956811c23f8436f692bab4ec392667d57a71603b94",
+        "policies": {
+          "clauseOrderSha256": "c87de77cad6b14119879634088e0a6f054d87a20937ef1db20f85e13973a1f26",
+          "clauseOrderVersion": "jd-clause-order-rules/2.0.0",
+          "writingSupportVersion": "legacy-source-transforms/1.0.4",
+        },
+        "qualificationCredit": "not_assessed",
+        "relevance": {
+          "clauseId": "13844eac5c4dc1ddb71663c50918d02304e2e05ee4e146ab8a74a3ae7888ff50",
+          "conceptId": null,
+          "expressionKind": "atom",
+          "importance": "required",
+          "jdSkillValue": "Git",
+          "movedSourceClauseIndex": 1,
+          "quote": "Git required",
+          "sourceSkillValue": "Git",
+        },
+        "schemaVersion": "jd-clause-order-draft/2.0.0",
+        "scoreDelta": null,
+        "scoreValue": null,
+        "selection": {
+          "canonicalVersionId": "086f52ea-bfbc-4818-9d58-36ecbaa95f47",
+          "clauseId": "13844eac5c4dc1ddb71663c50918d02304e2e05ee4e146ab8a74a3ae7888ff50",
+          "requirementVersionId": "ef4f5720-5097-42a1-b15a-1beea0131b5f",
+          "targetFactId": "f6647a63-833d-43ef-88d1-b08f89d487a2",
+        },
+        "sourceCitations": [
+          {
+            "attemptId": "30000000-0000-4000-8000-000000000006",
+            "end": 54,
+            "method": "native_text",
+            "pageEnd": 65,
+            "pageId": "page-1",
+            "pageStart": 11,
+            "spanId": "native-page-1-line-2",
+            "start": 0,
+          },
+        ],
+        "sourceClauses": [
+          {
+            "end": 27,
+            "index": 0,
+            "sha256": "cea9a6a55b06ed97ed4063c21fea3a5c544c72f54062787eb7238b7081100cd3",
+            "start": 0,
+            "text": "Built services using Python",
+          },
+          {
+            "end": 54,
+            "index": 1,
+            "sha256": "12a95e0802eaba19fb1f53696df996d8fb44f738ff639dd4657e6450d70c141f",
+            "start": 29,
+            "text": "Developed tools using Git",
+          },
+        ],
+        "support": {
+          "basis": "source_quote",
+          "offsetSpace": "current_fact",
+          "operations": [
+            "normalize_layout",
+            "reorder_independent_clauses",
+            "reorder_independent_clauses",
+          ],
+          "sourceAnchorIds": [
+            "5eee1d8de765a5eb82b914459f90b1c43697535627cf245332cf500a0a80b198",
+          ],
+          "sourceSha256": "d3955e31aa2a8399c4906a445e7a9f030805a2f8e10085afc14b9dd72ac9cc65",
+          "writingSupportVersion": "legacy-source-transforms/1.0.4",
+        },
+        "target": {
+          "bulletId": "ef35998f-d33a-4725-a379-48edd2f420ab",
+          "confirmationActorId": "30000000-0000-4000-8000-000000000001",
+          "confirmedAt": "2026-11-17T04:51:25.519Z",
+          "currentValueSha256": "4d3cfe743d3b674d9ed10455a9f8533a325b519add7cb7becc3a9be4f87e3711",
+          "entryId": "f4481f51-c207-492f-b8b4-ec149a19267d",
+          "factId": "f6647a63-833d-43ef-88d1-b08f89d487a2",
+          "sectionId": "dc9907e1-09fb-4dfb-b458-6ff8ed3cf962",
+        },
+        "transform": {
+          "kind": "reorder_source_clauses",
+          "order": [
+            1,
+            0,
+          ],
+          "rendererVersion": "jd-two-clause-renderer/1.0.0",
+          "terminal": "",
+        },
+      },
+      "rejectCommand": {
+        "acknowledgement": false,
+        "afterSha256": "f9c413a55428677e40b7cd0b30ff0e62df3c3bda88c28f8912ed84f925961d86",
+        "binding": {
+          "canonical": {
+            "contentSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "revision": 2,
+            "versionId": "086f52ea-bfbc-4818-9d58-36ecbaa95f47",
+          },
+          "heads": {
+            "canonicalHeadId": "086f52ea-bfbc-4818-9d58-36ecbaa95f47",
+            "canonicalHeadRevision": 2,
+            "requirementHeadId": "ef4f5720-5097-42a1-b15a-1beea0131b5f",
+            "requirementHeadRevision": 1,
+          },
+          "profilesSha256": "f1aa440e764197f8aab96ddb9bf5c84dbdfdf177ff04063f15e6c4ccff78df62",
+          "requirements": {
+            "contentSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "inputSha256": "841f8fdac030e82185f0bf06f5adf022b2e7f9096d6a825eb1fee6993ba8727d",
+            "revision": 1,
+            "versionId": "ef4f5720-5097-42a1-b15a-1beea0131b5f",
+          },
+          "source": {
+            "analysisId": "30000000-0000-4000-8000-000000000004",
+            "attemptId": "30000000-0000-4000-8000-000000000006",
+            "inputSha256": "d3955e31aa2a8399c4906a445e7a9f030805a2f8e10085afc14b9dd72ac9cc65",
+            "organizationId": "30000000-0000-4000-8000-000000000002",
+            "ownerId": "30000000-0000-4000-8000-000000000001",
+            "resumeId": "30000000-0000-4000-8000-000000000003",
+            "sourceId": "30000000-0000-4000-8000-000000000005",
+          },
+        },
+        "decisionPolicy": {
+          "sha256": "4d0bac1e65e84b0f3dc8531415a05890c6c7f6f7fe65bbbaf6563499843b9d93",
+          "version": "jd-clause-order-decisions/2.0.0",
+        },
+        "draftId": "6911ab257ea4d6e8905018956811c23f8436f692bab4ec392667d57a71603b94",
+        "idempotencyKey": "1afad156-606f-4f2e-afe5-e8b289c48459",
+        "jdClauseId": "13844eac5c4dc1ddb71663c50918d02304e2e05ee4e146ab8a74a3ae7888ff50",
+        "operation": "reject",
+        "policies": {
+          "clauseOrderSha256": "c87de77cad6b14119879634088e0a6f054d87a20937ef1db20f85e13973a1f26",
+          "clauseOrderVersion": "jd-clause-order-rules/2.0.0",
+          "writingSupportVersion": "legacy-source-transforms/1.0.4",
+        },
+        "schemaVersion": "jd-clause-order-command/2.0.0",
+        "sourceCitations": [
+          {
+            "attemptId": "30000000-0000-4000-8000-000000000006",
+            "end": 54,
+            "method": "native_text",
+            "pageEnd": 65,
+            "pageId": "page-1",
+            "pageStart": 11,
+            "spanId": "native-page-1-line-2",
+            "start": 0,
+          },
+        ],
+        "sourceClauses": [
+          {
+            "end": 27,
+            "index": 0,
+            "sha256": "cea9a6a55b06ed97ed4063c21fea3a5c544c72f54062787eb7238b7081100cd3",
+            "start": 0,
+          },
+          {
+            "end": 54,
+            "index": 1,
+            "sha256": "12a95e0802eaba19fb1f53696df996d8fb44f738ff639dd4657e6450d70c141f",
+            "start": 29,
+          },
+        ],
+        "target": {
+          "bulletId": "ef35998f-d33a-4725-a379-48edd2f420ab",
+          "confirmationActorId": "30000000-0000-4000-8000-000000000001",
+          "confirmedAt": "2026-11-17T04:51:25.519Z",
+          "currentValueSha256": "4d3cfe743d3b674d9ed10455a9f8533a325b519add7cb7becc3a9be4f87e3711",
+          "entryId": "f4481f51-c207-492f-b8b4-ec149a19267d",
+          "factId": "f6647a63-833d-43ef-88d1-b08f89d487a2",
+          "sectionId": "dc9907e1-09fb-4dfb-b458-6ff8ed3cf962",
+        },
+        "transform": {
+          "kind": "reorder_source_clauses",
+          "order": [
+            1,
+            0,
+          ],
+          "rendererVersion": "jd-two-clause-renderer/1.0.0",
+          "terminal": "",
+        },
+      },
+      "rejectCommandSha256": "05bce9fc031d1b9bfe7bd86b1739cad03140e236c2218d8009948bb6a4cb2d01",
+      "schemaVersion": "jd-clause-order-proposal/2.0.0",
+    },
+  ],
+  "schemaVersion": "jd-clause-order-workspace/2.0.0",
+  "truncated": false,
+}
+
++ Received:
+undefined
+
+ ❯ tests/unit/jd-clause-order-consumer-route.test.ts:24:45
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  tests/unit/jd-clause-order-consumer-route.test.ts > keeps the trusted source and readonly plan when the writer read is unavailable
+AssertionError: expected undefined to be null
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/jd-clause-order-consumer-route.test.ts:44:45
+     42| it("keeps the trusted source and readonly plan when the writer read is…
+     43|  const f=await fixture();mocks.workspace.mockResolvedValue(null);const…
+     44|  expect(result.data.jdClauseOrderWorkspace).toBeNull();expect(result.d…
+       |                                             ^
+     45| });
+     46| it("keeps the historical source mount without asking for a fresh decis…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  tests/unit/jd-clause-order-consumer-route.test.ts > keeps the historical source mount without asking for a fresh decision workspace
+AssertionError: expected undefined to deeply equal { …(7) }
+
+- Expected:
+{
+  "analysisId": "30000000-0000-4000-8000-000000000004",
+  "attemptId": "30000000-0000-4000-8000-000000000006",
+  "inputSha256": "d3955e31aa2a8399c4906a445e7a9f030805a2f8e10085afc14b9dd72ac9cc65",
+  "organizationId": "30000000-0000-4000-8000-000000000002",
+  "ownerId": "30000000-0000-4000-8000-000000000001",
+  "resumeId": "30000000-0000-4000-8000-000000000003",
+  "sourceId": "30000000-0000-4000-8000-000000000005",
+}
+
++ Received:
+undefined
+
+ ❯ tests/unit/jd-clause-order-consumer-route.test.ts:50:84
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  tests/unit/jd-clause-order-consumer-route.test.ts > withholds a different actual producer pair instead of rebinding it to the displayed score
+AssertionError: expected undefined to be null
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/jd-clause-order-consumer-route.test.ts:54:80
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  tests/unit/jd-clause-order-consumer-route.test.ts > withholds foreign owner/source metadata without serializing it
+AssertionError: expected undefined to be null
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/jd-clause-order-consumer-route.test.ts:58:80
+     56| it("withholds foreign owner/source metadata without serializing it",as…
+     57|  const f=await fixture();mocks.workspace.mockResolvedValue({...f.works…
+     58|  const result=await loader(args(f));expect(result.data.jdClauseOrderWo…
+       |                                                                                ^
+     59| });
+     60| it("withholds a tampered command hash even when its workspace binding …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  tests/unit/jd-clause-order-consumer-route.test.ts > withholds a tampered command hash even when its workspace binding matches
+AssertionError: expected undefined to be null
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/jd-clause-order-consumer-route.test.ts:62:80
+     60| it("withholds a tampered command hash even when its workspace binding …
+     61|  const f=await fixture(),p=f.workspace.proposals[0];mocks.workspace.mo…
+     62|  const result=await loader(args(f));expect(result.data.jdClauseOrderWo…
+       |                                                                                ^
+     63| });
+     64| it("keeps diagnostics and private headers when a bounded owned read fa…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  tests/unit/jd-clause-order-consumer-route.test.ts > keeps diagnostics and private headers when a bounded owned read fails
+AssertionError: expected undefined to be null
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/jd-clause-order-consumer-route.test.ts:66:45
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  7 failed | 5 passed (12)
+   Start at  04:51:23
+   Duration  844ms (transform 375ms, setup 0ms, import 529ms, tests 250ms, environment 0ms)
+
+JSON report written to /private/tmp/resumide-decisions-adoption-frontend-qgjefki3/red-route/tests.json

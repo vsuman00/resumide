@@ -1,0 +1,145 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/worker-readiness.test.ts (110 tests | 2 failed) 269ms
+     × blocks review extraction without the atomic page-count capability (fencing=false) 4ms
+     × blocks review extraction without the atomic page-count capability (fencing=true) 1ms
+     ✓ blocks selected initial feedback without its metadata capabilities 3ms
+     ✓ checks score and correction storage before claiming work 0ms
+     ✓ stops on missing storage without exposing provider error content 0ms
+     ✓ stops enabled capabilities when the required read-only RPC is missing 0ms
+     ✓ checks only the selected capability metadata: {"fencing":true,"budget":false} 0ms
+     ✓ checks only the selected capability metadata: {"fencing":false,"budget":true} 0ms
+     ✓ checks only the selected capability metadata: {"fencing":true,"budget":true} 0ms
+     ✓ keeps disabled AI budget in legacy table-only readiness 0ms
+     ✓ rejects missing, invalid, mismatched or unready capability metadata 0 0ms
+     ✓ rejects missing, invalid, mismatched or unready capability metadata 1 0ms
+     ✓ rejects missing, invalid, mismatched or unready capability metadata 2 0ms
+     ✓ rejects missing, invalid, mismatched or unready capability metadata 3 0ms
+     ✓ rejects missing, invalid, mismatched or unready capability metadata 4 0ms
+     ✓ rejects missing, invalid, mismatched or unready capability metadata 5 0ms
+     ✓ does not issue any query when startup is already aborted 1ms
+     ✓ bounds a missing probe response and aborts its actual query signal 1ms
+     ✓ cannot accept a late success from a query that ignores cancellation 0ms
+     ✓ keeps an explicitly disabled feature on the unchanged worker metadata wire 0ms
+     ✓ checks exact actual metadata and every private capability without data RPCs 0ms
+     ✓ requires private exports even with AI generation disabled 0ms
+     ✓ rejects invalid selected dependencies before any read: {"legacyScoringInputEnabled":false} 0ms
+     ✓ rejects invalid selected dependencies before any read: {} 0ms
+     ✓ rejects invalid selected dependencies before any read: {"analysisFencingEnabled":false} 0ms
+     ✓ rejects invalid selected dependencies before any read: {"initialFeedbackEnabled":"true"} 0ms
+     ✓ rejects invalid selected dependencies before any read: {"legacyScoringInputEnabled":"true"} 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 1ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 1ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects wrong profile or denied capability undefined 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_legacy_scoring_readiness' 0 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_legacy_scoring_readiness' 1 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_legacy_scoring_readiness' 2 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_legacy_scoring_readiness' 3 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_initial_feedback_readiness' 4 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_initial_feedback_readiness' 5 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_initial_feedback_readiness' 6 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_initial_feedback_readiness' 7 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_owned_ai_retirement_readiness' 8 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_owned_ai_retirement_readiness' 9 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_owned_ai_retirement_readiness' 10 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_owned_ai_retirement_readiness' 11 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_owned_ai_budget_export_readiness' 12 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_owned_ai_budget_export_readiness' 13 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_owned_ai_budget_export_readiness' 14 0ms
+     ✓ rejects malformed, missing and open metadata wire 'read_owned_ai_budget_export_readiness' 15 0ms
+     ✓ rejects unavailable metadata read_legacy_scoring_readiness without exposing details 0ms
+     ✓ rejects unavailable metadata read_initial_feedback_readiness without exposing details 1ms
+     ✓ rejects unavailable metadata read_owned_ai_retirement_readiness without exposing details 0ms
+     ✓ rejects unavailable metadata read_owned_ai_budget_export_readiness without exposing details 0ms
+     ✓ shares the original bounded deadline and abort across metadata: deadline 0ms
+     ✓ shares the original bounded deadline and abort across metadata: cancel 0ms
+     ✓ does not give later metadata requests a fresh timeout allowance 0ms
+   ✓ actual 'loop' CLI blocks queue construction and claim on selected metadata failure: 'success' 11ms
+   ✓ actual 'loop' CLI blocks queue construction and claim on selected metadata failure: 'dependency' 7ms
+   ✓ actual 'loop' CLI blocks queue construction and claim on selected metadata failure: 'hash' 5ms
+   ✓ actual 'loop' CLI blocks queue construction and claim on selected metadata failure: 'acl' 5ms
+   ✓ actual 'loop' CLI blocks queue construction and claim on selected metadata failure: 'malformed' 6ms
+   ✓ actual 'loop' CLI blocks queue construction and claim on selected metadata failure: 'missing' 5ms
+   ✓ actual 'loop' CLI blocks queue construction and claim on selected metadata failure: 'timeout' 29ms
+   ✓ actual 'loop' CLI blocks queue construction and claim on selected metadata failure: 'cancel' 53ms
+   ✓ actual 'once' CLI blocks queue construction and claim on selected metadata failure: 'success' 9ms
+   ✓ actual 'once' CLI blocks queue construction and claim on selected metadata failure: 'dependency' 4ms
+   ✓ actual 'once' CLI blocks queue construction and claim on selected metadata failure: 'hash' 6ms
+   ✓ actual 'once' CLI blocks queue construction and claim on selected metadata failure: 'acl' 5ms
+   ✓ actual 'once' CLI blocks queue construction and claim on selected metadata failure: 'malformed' 6ms
+   ✓ actual 'once' CLI blocks queue construction and claim on selected metadata failure: 'missing' 4ms
+   ✓ actual 'once' CLI blocks queue construction and claim on selected metadata failure: 'timeout' 27ms
+   ✓ actual 'once' CLI blocks queue construction and claim on selected metadata failure: 'cancel' 53ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/worker-readiness.test.ts > worker schema readiness > blocks review extraction without the atomic page-count capability (fencing=false)
+ FAIL  tests/unit/worker-readiness.test.ts > worker schema readiness > blocks review extraction without the atomic page-count capability (fencing=true)
+AssertionError: promise resolved "undefined" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+undefined
+
+ ❯ tests/unit/worker-readiness.test.ts:79:74
+     77|     const fixture=clientFor(ready(fencing,false));
+     78|     const options={evidenceReviewEnabled:true,analysisFencingEnabled:f…
+     79|     await expect(assertWorkerSchemaReady(fixture.client as never,optio…
+       |                                                                          ^
+     80|   });
+     81|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 108 passed (110)
+   Start at  06:05:56
+   Duration  495ms (transform 113ms, setup 0ms, import 161ms, tests 269ms, environment 0ms)
+

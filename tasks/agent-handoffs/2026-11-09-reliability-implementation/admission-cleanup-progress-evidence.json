@@ -1,0 +1,54 @@
+{
+  "task": "CR-R17-S06",
+  "checkedDate": "2026-11-21",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "checkout": "dirty integration worktree",
+  "inputSha256": {
+    "app/lib/server/privacy-worker.ts": "111c8986037fdcfe9b16161aeb141eac343457f5aed7ab49567d9144485984ae",
+    "tests/unit/privacy-claim-fence.test.ts": "0cea2781c432c2d40b4dc3533831fd3aa351fc2974252847377c552e24d7e59d",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-cleanup-progress-native-fixture.py.txt": "1df5704bacfe89d4479143df432daae1ea5ef2385f393ee385a26ed1ef157adb",
+    "supabase/migrations/20261121205500_analysis_admission_cleanup_progress.sql": "8fc91e54c9d62db907244f8c97b1ae3e1a2bac3e8f999840d3ac62c98a071b8e",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/admission-cleanup-recovery-native-fixture.py.txt": "646c561c65735786eff003f9036388a0616ba2799e67e29de99cda9fa89ac7ec"
+  },
+  "before": {
+    "failed": 3,
+    "passed": 27,
+    "logSha256": "e023ba25632d3a664feb5b7c50a7f3d2bb47c79e8967cdf6376c947bf8803cf6"
+  },
+  "after": {
+    "focusedCases": 110,
+    "focusedFiles": 4,
+    "unit": [
+      {
+        "passed": 6789,
+        "files": 322,
+        "sha256": "0f9e6347a9e9eba68a12ecd1c1d11fc27450e31ba875dd4b5f525231e006316b"
+      },
+      {
+        "passed": 3,
+        "files": 1,
+        "sha256": "180c7e623d9c31f8c337058e747c4cdea81a2bfbfb3f18ec370ffe2e9f84fa36"
+      }
+    ]
+  },
+  "native": {
+    "result": "PASS: four verified handoffs, three separately counted failures, replay and expiry refusal, and owner-only export.",
+    "verifiedDeferrals": 4,
+    "actualFailures": 3,
+    "expectedFailureLimit": 3,
+    "scope": "Actual progress SQL and inherited claim functions, synthetic support relations and simulated reclaim. No managed catalogue or Storage."
+  },
+  "statics": {
+    "commands": ["format:check", "typecheck", "lint", "build", "build:worker"],
+    "exitCode": 0,
+    "lintWarnings": 4,
+    "logSha256": "f91f5a5d854f2cfebc912400ebf4f550febfb462961da690a6c1fbeed3b71398"
+  },
+  "migrationInventory": "managed-schema-inventory-86.json",
+  "notRun": [
+    "managed migration replay",
+    "live Storage cleanup",
+    "account-wide admission retirement",
+    "deployment"
+  ]
+}

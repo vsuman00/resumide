@@ -1,8 +1,20 @@
 import { z } from "zod";
-import type { CanonicalResumeDraft } from "./canonical-resume-schema";
-import type { ScoreDiagnostics } from "./score-v2-engine";
+import {
+  CanonicalResumeDraftSchema,
+  type CanonicalResumeDraft,
+} from "./canonical-resume-schema";
+import {
+  ScoreDiagnosticsSchema,
+  type ScoreDiagnostics,
+} from "./score-v2-engine";
+import {
+  TypedScoreDiagnosticsSchema,
+  type TypedScoreDiagnostics,
+} from "./typed-score-diagnostics";
+import { getDraftScorePolicy } from "./score-v2-contract";
 import {
   SuggestionPatchSchema,
+  assertAuthoringDiagnosticsAllowed,
   validateSuggestion,
 } from "./authoring-contract";
 export interface AuthoringProposalTransport {
@@ -17,7 +29,7 @@ export async function proposeAuthoring(
   args: {
     enabled: boolean;
     document: CanonicalResumeDraft;
-    diagnostics: ScoreDiagnostics;
+    diagnostics: ScoreDiagnostics | TypedScoreDiagnostics;
     targetFactId: string;
     timeoutMs?: number;
   },
@@ -25,17 +37,61 @@ export async function proposeAuthoring(
 ) {
   if (!args.enabled || !transport)
     return { patches: [], state: "disabled" as const };
+  let document: CanonicalResumeDraft, diagnostics: ScoreDiagnostics;
+  try {
+    document = CanonicalResumeDraftSchema.parse(args.document);
+    const parsedDiagnostics = z
+      .union([ScoreDiagnosticsSchema, TypedScoreDiagnosticsSchema])
+      .parse(args.diagnostics);
+    assertAuthoringDiagnosticsAllowed(parsedDiagnostics);
+    diagnostics = parsedDiagnostics;
+    getDraftScorePolicy(diagnostics.score.policyId);
+    if (
+      diagnostics.score.canonicalVersionId !== document.versionId ||
+      diagnostics.score.ownerId !== document.ownerId ||
+      diagnostics.score.organizationId !== document.organizationId ||
+      diagnostics.score.analysisId !== document.analysisId ||
+      document.sourceEvidenceVersionId === null ||
+      diagnostics.score.evidenceVersionId !==
+        document.sourceEvidenceVersionId ||
+      diagnostics.score.retentionPolicyId !== document.retentionPolicyId ||
+      diagnostics.score.evidenceState !== diagnostics.readiness.state
+    )
+      return { patches: [], state: "invalid_or_unavailable" as const };
+  } catch {
+    return { patches: [], state: "invalid_or_unavailable" as const };
+  }
   if (
-    args.document.locale !== "en-IN" ||
-    args.diagnostics.readiness.state === "unsupported"
+    document.locale !== "en-IN" ||
+    diagnostics.readiness.state === "unsupported"
   )
     return { patches: [], state: "unsupported" as const };
-  const fact = args.document.facts.find((f) => f.id === args.targetFactId);
+  const fact = document.facts.find((f) => f.id === args.targetFactId);
   if (
     !fact ||
     fact.type !== "contribution" ||
     fact.state !== "candidate_confirmed"
   )
+    return { patches: [], state: "clarification_required" as const };
+  // The legacy patch binds an entry. Refuse to choose a first placement when
+  // the current fact occurs in multiple entries, bullets or section references.
+  let placements = document.contactFactIds.includes(fact.id) ? 1 : 0,
+    editablePlacement = false;
+  for (const section of document.sections) {
+    if (section.factIds.includes(fact.id)) placements++;
+    for (const entry of section.entries) {
+      if (entry.factIds.includes(fact.id)) {
+        placements++;
+        editablePlacement = true;
+      }
+      for (const bullet of entry.bullets)
+        if (bullet.factIds.includes(fact.id)) {
+          placements++;
+          editablePlacement = true;
+        }
+    }
+  }
+  if (!editablePlacement || placements !== 1)
     return { patches: [], state: "clarification_required" as const };
   const timeoutMs = z
       .number()
@@ -45,7 +101,7 @@ export async function proposeAuthoring(
       .parse(args.timeoutMs ?? 1000),
     controller = new AbortController();
   const context = JSON.stringify({
-    baseVersionId: args.document.versionId,
+    baseVersionId: document.versionId,
     targetFactId: fact.id,
     value: fact.value,
     sourceFactIds: [fact.id],
@@ -82,7 +138,7 @@ export async function proposeAuthoring(
     const proposals = z.array(SuggestionPatchSchema).max(3).parse(raw);
     if (JSON.stringify(proposals).length > 20000) throw Error("OUTPUT_LIMIT");
     const patches = proposals.map((p) =>
-      validateSuggestion(p, args.document, args.diagnostics),
+      validateSuggestion(p, document, diagnostics),
     );
     if (patches.some((p) => p.targetFactId !== fact.id))
       throw Error("CROSS_TARGET_PROPOSAL");

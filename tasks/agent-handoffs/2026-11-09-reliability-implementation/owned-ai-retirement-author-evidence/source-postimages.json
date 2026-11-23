@@ -1,0 +1,255 @@
+{
+  "preimages": {
+    "public.prepare_deletion_request(uuid,text)": "c4e88149be1466d815a3605c070df0d314062bdfd185f02e6f9fde1f03112251",
+    "public.complete_retention_item(uuid)": "eecff5c5e3cfe431a9a12bd0a6d3c9a080448d3638938f791f72921380d50b6a",
+    "public.read_initial_feedback_usage(uuid,uuid)": "b242c0e264b0dfa5307f742a77e7a3cc0818bc9c18c88b946d9b27ee0a25889f",
+    "private.initial_feedback_ready()": "2a25a380a70725c9fb0af2d8423913595cd61956d2c5308c39c3cc56709ea669"
+  },
+  "bodies": {
+    "private.owned_ai_retirement_guard": "8cbbd706652a3f41eb39db83da3a34757557950bd06364d4b5741fdcf86d7ff2",
+    "private.retire_initial_feedback_publications": "d066dfb3459d527b551ab81a564f85e896220e8b8f88749d21e378bd2b84cce0",
+    "public.export_owned_ai_retirement_records": "dc09528d888b8089e5e87d2d1edf32a8796267683021b2085dac2d0e80f3db27",
+    "public.prepare_deletion_request": "942689c1919b5e1cded75177d96944826e64ab6c8ab6350d0e4ae467622e8022",
+    "public.complete_retention_item": "0307152ae26d0bbcc0239d932e15253849c159c615070b93270c2e8c9b5335be",
+    "public.read_owned_ai_retirement_readiness": "55a9f1dd2000b1a4cd1e258e68b0e56d36872422f7a76ced5c08585fe31d70b7",
+    "private.owned_ai_retirement_ready": "d5742f5ece8d96a2c7dd5628c9faebd479ad2dbbfc470d0ab96755d75f4008b7",
+    "public.read_initial_feedback_usage": "9564c709cea106d8999c61e4db14ce45c40c41eacd23ce54f7fa1ea5c234c223",
+    "private.initial_feedback_ready": "1a04acf95f9daa172cf1874269e6ee0988e0433d5085407f8d9cb6cfd5ff557c"
+  },
+  "retirementManifest": [
+    {
+      "signature": "private.owned_ai_retirement_guard()",
+      "sha256": "8cbbd706652a3f41eb39db83da3a34757557950bd06364d4b5741fdcf86d7ff2",
+      "resultType": "trigger",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "v",
+      "acl": "private"
+    },
+    {
+      "signature": "private.retire_initial_feedback_publications(uuid,uuid,uuid,uuid)",
+      "sha256": "d066dfb3459d527b551ab81a564f85e896220e8b8f88749d21e378bd2b84cce0",
+      "resultType": "void",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "v",
+      "acl": "private"
+    },
+    {
+      "signature": "public.export_owned_ai_retirement_records(uuid)",
+      "sha256": "dc09528d888b8089e5e87d2d1edf32a8796267683021b2085dac2d0e80f3db27",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "v",
+      "acl": "optional_service"
+    },
+    {
+      "signature": "public.prepare_deletion_request(uuid,text)",
+      "sha256": "942689c1919b5e1cded75177d96944826e64ab6c8ab6350d0e4ae467622e8022",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "v",
+      "acl": "service"
+    },
+    {
+      "signature": "public.complete_retention_item(uuid)",
+      "sha256": "0307152ae26d0bbcc0239d932e15253849c159c615070b93270c2e8c9b5335be",
+      "resultType": "boolean",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "v",
+      "acl": "service"
+    },
+    {
+      "signature": "public.read_owned_ai_retirement_readiness()",
+      "sha256": "55a9f1dd2000b1a4cd1e258e68b0e56d36872422f7a76ced5c08585fe31d70b7",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "s",
+      "acl": "metadata"
+    },
+    {
+      "signature": "private.initial_feedback_publication_ready()",
+      "sha256": "e3b968b748f2e67983a034885c920510566bb71c69fc3d7bc0204b7d22b005d4",
+      "resultType": "boolean",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "s",
+      "acl": "private"
+    }
+  ],
+  "fullManifest": [
+    {
+      "signature": "private.initial_feedback_publication_ready()",
+      "sha256": "e3b968b748f2e67983a034885c920510566bb71c69fc3d7bc0204b7d22b005d4",
+      "resultType": "boolean",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "s",
+      "acl": "private"
+    },
+    {
+      "signature": "public.read_initial_feedback(uuid,uuid)",
+      "sha256": "57701a307d3087720642d9b4057eac87b770465e81726c000c5238708bcfc47b",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "v",
+      "acl": "optional_service"
+    },
+    {
+      "signature": "public.finish_initial_feedback(uuid,jsonb,uuid,uuid,text,jsonb,text,text)",
+      "sha256": "966cdb270ca5a4c1ab8fe6a6dd9097b5d46ebb2b2218f8047b794646cca315a8",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "v",
+      "acl": "optional_service"
+    },
+    {
+      "signature": "public.export_initial_feedback_records(uuid)",
+      "sha256": "eefd5842be1eb38fe1e0f17ea148f1708eae634c2a8fe42ab94467c9839fe0cd",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "v",
+      "acl": "optional_service"
+    },
+    {
+      "signature": "private.initial_feedback_operation_ready()",
+      "sha256": "007ba402596474817e3584b4c3359e352f0fef2a1bce0ff878eb8bc0d164b0c5",
+      "resultType": "boolean",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "s",
+      "acl": "private"
+    },
+    {
+      "signature": "public.prepare_initial_feedback(uuid,jsonb,jsonb,uuid)",
+      "sha256": "93b7af8445710cd105e2da67eb27f7d9b8d9c52cd7ec924a6ab6f6aa69548f92",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "v",
+      "acl": "optional_service"
+    },
+    {
+      "signature": "public.settle_initial_feedback_attempt(uuid,uuid,text,jsonb,text)",
+      "sha256": "739919dedaa5080c4bb8f3c556a9f9b1528fb88747edef9764588bd9038d4148",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "v",
+      "acl": "optional_service"
+    },
+    {
+      "signature": "public.claim_initial_feedback_dispatch(uuid,jsonb,uuid,uuid,text,jsonb)",
+      "sha256": "335cef3a4e4f948b4c3b3c17ea9a3159368cab5df6e5a7a1389bc0f46759766a",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "v",
+      "acl": "optional_service"
+    },
+    {
+      "signature": "private.ifo_usage_valid(jsonb)",
+      "sha256": "eaad99f9a4064320c648f12452b1f9a4007d872431c21e98a7eded66b4e9018c",
+      "resultType": "boolean",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "i",
+      "acl": "private"
+    },
+    {
+      "signature": "private.owned_ai_usage_owner(uuid,uuid)",
+      "sha256": "6c8dc21f6ef2cca5778cbfac9808a570507873d2f1ff8ac14f21e7393e18aa16",
+      "resultType": "public.analyses",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "v",
+      "acl": "private"
+    },
+    {
+      "signature": "public.read_initial_feedback_usage(uuid,uuid)",
+      "sha256": "9564c709cea106d8999c61e4db14ce45c40c41eacd23ce54f7fa1ea5c234c223",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "v",
+      "acl": "optional_service"
+    },
+    {
+      "signature": "private.canonical_rewrite_ready()",
+      "sha256": "e98f6ec0de0a09ec002a85d97d007cb71a49c261bbcba746d82c688a7281251b",
+      "resultType": "boolean",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "s",
+      "acl": "private"
+    },
+    {
+      "signature": "public.read_initial_feedback_readiness()",
+      "sha256": "2bafa1e30a02308604ad0114ab114189aef6e8323379e443ab7a96a64b2196d6",
+      "resultType": "jsonb",
+      "language": "plpgsql",
+      "definer": true,
+      "strict": false,
+      "volatility": "s",
+      "acl": "metadata"
+    },
+    {
+      "signature": "private.owned_ai_retirement_ready()",
+      "sha256": "d5742f5ece8d96a2c7dd5628c9faebd479ad2dbbfc470d0ab96755d75f4008b7",
+      "resultType": "boolean",
+      "language": "plpgsql",
+      "definer": false,
+      "strict": false,
+      "volatility": "s",
+      "acl": "private"
+    }
+  ],
+  "profile": {
+    "schemaVersion": "initial-feedback-readiness/1.0.0",
+    "profileVersion": "initial-feedback-readiness-profile/1.0.0",
+    "checkerSha256": "1a04acf95f9daa172cf1874269e6ee0988e0433d5085407f8d9cb6cfd5ff557c",
+    "readerSha256": "57701a307d3087720642d9b4057eac87b770465e81726c000c5238708bcfc47b",
+    "prepareSha256": "93b7af8445710cd105e2da67eb27f7d9b8d9c52cd7ec924a6ab6f6aa69548f92",
+    "claimSha256": "335cef3a4e4f948b4c3b3c17ea9a3159368cab5df6e5a7a1389bc0f46759766a",
+    "settleSha256": "739919dedaa5080c4bb8f3c556a9f9b1528fb88747edef9764588bd9038d4148",
+    "finishSha256": "966cdb270ca5a4c1ab8fe6a6dd9097b5d46ebb2b2218f8047b794646cca315a8",
+    "usageSha256": "9564c709cea106d8999c61e4db14ce45c40c41eacd23ce54f7fa1ea5c234c223",
+    "exportSha256": "eefd5842be1eb38fe1e0f17ea148f1708eae634c2a8fe42ab94467c9839fe0cd",
+    "metadataSha256": "2bafa1e30a02308604ad0114ab114189aef6e8323379e443ab7a96a64b2196d6"
+  },
+  "retirementProfile": {
+    "schemaVersion": "owned-ai-retirement-readiness/1.0.0",
+    "profileVersion": "owned-ai-retirement-profile/1.0.0",
+    "checkerSha256": "d5742f5ece8d96a2c7dd5628c9faebd479ad2dbbfc470d0ab96755d75f4008b7",
+    "captureSha256": "d066dfb3459d527b551ab81a564f85e896220e8b8f88749d21e378bd2b84cce0",
+    "exportSha256": "dc09528d888b8089e5e87d2d1edf32a8796267683021b2085dac2d0e80f3db27",
+    "metadataSha256": "55a9f1dd2000b1a4cd1e258e68b0e56d36872422f7a76ced5c08585fe31d70b7"
+  },
+  "migrationSha256": "ba89d609204d73e0588e1af33b54d46bf0583c810b14f80e843893bea9730cc5"
+}

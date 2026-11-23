@@ -1,0 +1,98 @@
+exec(open('/private/tmp/resumide-document-page-count-runtime/build.py').read())
+# Include the actual content/privacy trigger closure used by the writes.
+for n in ['private.guard_candidate_privacy_write','private.serialize_deletion_request','private.try_lock_candidate_owners']:
+ a=attrs[n].lower();manifest.append({'signature':n+('(uuid[])' if n.endswith('try_lock_candidate_owners') else '()'),'sha256':sha(bodies[n]),'definer':'security definer'in a,'volatility':'v','language':'plpgsql','resultType':'boolean' if n.endswith('try_lock_candidate_owners') else 'trigger','acl':'private'})
+metadata='''
+declare checker_oid regprocedure:=to_regprocedure('private.document_page_count_ready()');
+ writer_oid regprocedure:=to_regprocedure('public.persist_document_evidence(uuid,jsonb,text,text,integer)');
+ metadata_oid regprocedure:=to_regprocedure('public.read_document_page_count_readiness()');
+ fenced_oid regprocedure:=to_regprocedure('public.persist_analysis_stage_v2(uuid,text,integer,uuid,text,jsonb)');
+begin
+ return jsonb_build_object(
+  'schemaVersion','document-page-count-readiness/1.0.0',
+  'profileVersion','document-page-count-native/1.0.0',
+  'checkerSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=checker_oid),
+  'writerSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=writer_oid),
+  'metadataSha256',(select encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex') from pg_catalog.pg_proc p where p.oid=metadata_oid),
+  'schemaReady',private.document_page_count_ready(),
+  'writerExecutable',coalesce(has_function_privilege('service_role',writer_oid,'EXECUTE'),false),
+  'fencedWriterExecutable',coalesce(has_function_privilege('service_role',fenced_oid,'EXECUTE'),false));
+end;
+'''
+manifest.append({'signature':'public.read_document_page_count_readiness()','sha256':sha(metadata),'definer':True,'volatility':'s','language':'plpgsql','resultType':'jsonb','acl':'metadata'})
+checker='''
+declare item jsonb; p pg_catalog.pg_proc%rowtype; owner_oid oid; service_oid oid; role_name text;
+ manifest jsonb:=$page_count_manifest$'''+json.dumps(manifest,separators=(',',':'))+'''$page_count_manifest$::jsonb;
+begin
+ select proowner into owner_oid from pg_catalog.pg_proc where oid=to_regprocedure('public.persist_document_evidence(uuid,jsonb,text,text)');
+ select oid into service_oid from pg_catalog.pg_roles where rolname='service_role';
+ if owner_oid is null or service_oid is null then return false;end if;
+ for item in select e.value from jsonb_array_elements(manifest) e(value) loop
+  select * into p from pg_catalog.pg_proc where oid=to_regprocedure(item->>'signature');
+  if not found or p.proowner<>owner_oid or p.prokind<>'f' or p.proretset or p.proisstrict
+   or p.prosecdef is distinct from (item->>'definer')::boolean or p.provolatile<>item->>'volatility'
+   or p.prolang<>(select oid from pg_catalog.pg_language where lanname=item->>'language')
+   or p.prorettype<>to_regtype(item->>'resultType') or p.proconfig is distinct from array['search_path=""']
+   or encode(extensions.digest(convert_to(p.prosrc,'UTF8'),'sha256'),'hex')<>item->>'sha256' then return false;end if;
+  if exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl where acl.grantee<>p.proowner
+   and (item->>'acl'='private' or acl.grantee<>service_oid or acl.privilege_type<>'EXECUTE' or acl.is_grantable)) then return false;end if;
+  foreach role_name in array array['anon','authenticated'] loop
+   if has_function_privilege(role_name,p.oid,'EXECUTE') then return false;end if;
+  end loop;
+  if item->>'acl'='private' and has_function_privilege('service_role',p.oid,'EXECUTE') then return false;end if;
+  if item->>'acl'<>'private' and has_function_privilege('service_role',p.oid,'EXECUTE') is distinct from exists(
+   select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl
+    where acl.grantee=service_oid and acl.privilege_type='EXECUTE' and not acl.is_grantable) then return false;end if;
+  if item->>'acl'='metadata' and not has_function_privilege('service_role',p.oid,'EXECUTE') then return false;end if;
+ end loop;
+ -- Check the checker attributes/ACL independently; its actual body hash is
+ -- returned to the trusted caller, avoiding recursive self-hash literals.
+ select * into p from pg_catalog.pg_proc where oid=to_regprocedure('private.document_page_count_ready()');
+ if not found or p.proowner<>owner_oid or p.prokind<>'f' or p.proretset or p.proisstrict or p.prosecdef or p.provolatile<>'s'
+  or p.prorettype<>'boolean'::regtype or p.prolang<>(select oid from pg_catalog.pg_language where lanname='plpgsql')
+  or p.proconfig is distinct from array['search_path=""']
+  or exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl where acl.grantee<>p.proowner)
+  then return false;end if;
+ foreach role_name in array array['anon','authenticated','service_role'] loop
+  if has_function_privilege(role_name,p.oid,'EXECUTE') then return false;end if;
+ end loop;
+ if not exists(select 1 from pg_catalog.pg_attribute where attrelid=to_regclass('public.resume_versions')
+   and attname='page_count' and atttypid='integer'::regtype and attnum>0 and not attisdropped) then return false;end if;
+ -- These are actual privacy-write triggers, not a caller capability label.
+ if exists(select 1 from (values ('analyses'),('resume_versions'),('document_evidence_attempts')) required(name)
+  where not exists(select 1 from pg_catalog.pg_trigger t where t.tgrelid=to_regclass('public.'||required.name)
+   and t.tgfoid=to_regprocedure('private.guard_candidate_privacy_write()') and not t.tgisinternal
+   and t.tgqual is null and t.tgenabled='O' and t.tgtype=23 and t.tgnargs=1 and encode(t.tgargs,'escape')=E'owner_id\\\\000')) then return false;end if;
+ if not exists(select 1 from pg_catalog.pg_trigger t where t.tgrelid=to_regclass('public.data_requests')
+  and t.tgfoid=to_regprocedure('private.serialize_deletion_request()') and not t.tgisinternal
+  and t.tgqual is null and t.tgenabled='O' and t.tgtype=23 and t.tgnargs=0 and t.tgargs=''::bytea) then return false;end if;
+ if to_regclass('private.owned_ai_deletion_dispositions') is null then return false;end if;
+ return true;
+exception when others then return false;
+end;
+'''
+# Functions created in transaction before final readiness assertion.
+tail=f"""create function private.document_page_count_ready()
+returns boolean language plpgsql stable set search_path='' as $page_count_checker${checker}$page_count_checker$;
+
+create function public.read_document_page_count_readiness()
+returns jsonb language plpgsql stable security definer set search_path='' as $page_count_metadata${metadata}$page_count_metadata$;
+
+revoke all on function public.persist_document_evidence(uuid,jsonb,text,text,integer),
+ private.document_page_count_ready(),public.read_document_page_count_readiness() from public,anon,authenticated,service_role;
+grant execute on function public.persist_document_evidence(uuid,jsonb,text,text,integer),
+ public.read_document_page_count_readiness() to service_role;
+-- Replacing the dispatcher retains its pre-existing owner and ACL. Neither the
+-- old four-argument writer nor any frozen JD2 function is replaced here.
+do $page_count_final$
+begin
+ if private.document_page_count_ready() is not true then
+  raise exception 'DOCUMENT_PAGE_COUNT_CATALOG_REFUSED' using errcode='23514';end if;
+end;
+$page_count_final$;
+commit;
+"""
+(r/'supabase/migrations/20261117060054_document_evidence_page_count.sql').write_text(prefix+tail)
+profile={'schemaVersion':'document-page-count-readiness/1.0.0','profileVersion':'document-page-count-native/1.0.0','checkerSha256':sha(checker),'writerSha256':sha(writer),'metadataSha256':sha(metadata)}
+(out/'profile.json').write_text(json.dumps(profile,indent=2)+'\n');(out/'manifest.json').write_text(json.dumps(manifest,indent=2)+'\n');(out/'checker.body').write_text(checker);(out/'metadata.body').write_text(metadata)
+print(json.dumps(profile));print('SQL',sha(prefix+tail),len(prefix+tail))

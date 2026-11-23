@@ -1,0 +1,44 @@
+{
+  "task": "CR-A01-S02",
+  "status": "DERIVED_REVIEW_DIAGNOSTICS_CONTRACT",
+  "at": "2026-11-13T09:06:13.626071+00:00",
+  "previousGoalTurn": "PROGRESS: A09 source integrated187/8 plus full checks; canonical evidence updated",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "purpose": "Distinguish native text availability from unassessed reliability and show explicit bounded page review reasons. Full extraction/consumer/native acceptance remains separate.",
+  "helper": "deriveNativePageDiagnostics(native: NativeEvidence): NativePageDiagnostics exported from ocr/pdf-detection.ts",
+  "output": {
+    "modelVersion": "native-page-review/1.0.0",
+    "reliability": "unassessed",
+    "pages": [
+      {
+        "pageId": "same validated source id",
+        "pageNumber": "same source page number",
+        "nativeTextAvailable": "nonWhitespaceUtf16Units >= existing MIN_USABLE_TEXT_CHARACTERS_PER_PAGE (8)",
+        "nonWhitespaceUtf16Units": "existing whitespace/count behavior; not a calibrated quality score",
+        "reasons": [
+          "no_native_text",
+          "limited_native_text",
+          "replacement_character",
+          "invalid_unicode_scalar",
+          "unexpected_control_character",
+          "duplicate_native_page_text"
+        ],
+        "duplicatePageIds": "all other source page IDs whose raw text is exactly equal, source order; only eligible nonempty >=8-unit text"
+      }
+    ]
+  },
+  "reasonRules": {
+    "no_native_text": "nonWhitespaceUtf16Units===0",
+    "limited_native_text": "1..7 non-whitespace UTF16 units",
+    "replacement_character": "raw page contains U+FFFD",
+    "invalid_unicode_scalar": "unpaired UTF16 surrogate; paired supplementary characters stay valid",
+    "unexpected_control_character": "C0 non-whitespace controls U+0000..0008 or U+000E..001F or U+007F; preserve standard whitespace",
+    "duplicate_native_page_text": "exact raw text equality across distinct source pages, no normalization/case folding; eligibility >=8 units; no duplicate blank-page allegation"
+  },
+  "bounds": "Input is already validated immutable NativeEvidence: <=20 pages and <=500000 aggregate UTF16 units. Linear bounded scans; local exact-text grouping only, no persistent hash/text output. No mutation of pages/spans/assertions or source offsets.",
+  "readModel": "Add nativePageDiagnostics only after owned stored-attempt replay/validation. No stored envelope, strict blocker enum, correction wire, schema, SQL, provider, OCR-selection or scoring change.",
+  "legacyUi": "Keep stored parse confidence field/shape and CSS selectors; replace user-visible accuracy/confidence implication with text availability and explicit accuracy-unassessed wording. Replace blanket no-limitations assurance with no additional recorded page warnings plus reliability caveat.",
+  "evidenceUi": "Display derived per-page reasons and relevant existing recorded blockers/OCR availability without raw failure details; unsupported/engine states remain distinct from content review. Type/import implementation waits for exact backend bytes.",
+  "proof": "Actual existing readmodel adverse RED first (no missing-import failure); component/SSR RED for current misleading assurances, then focused GREEN. Preserve old safety tests, private guards, source raw bytes/offsets, OCR calls zero on native-only control and scoringEligible:false. Root runs one combined affected gate.",
+  "nonGoals": "No new routing policy, calibrated confidence/quality measurement, automatic OCR retry, numeric eligibility, database/storage/provider/PII/env/Docker/Git/deploy action; no repeated closed campaigns."
+}

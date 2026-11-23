@@ -1,0 +1,510 @@
+{
+  "status": "READ_ONLY_SOURCE_AUDIT_NOT_TARGET_ADMISSION",
+  "scope": "Finite operator files listed below; not a repository-wide operator inventory. No database/API/tool/network invocation.",
+  "contractSha256": "06724e38696d2e9089c4cdb4ff2de398138095f40a5e618ee09d96b9a400282d",
+  "sourceBefore": {
+    "scripts/managed-test-target.ts": "be04eefb20fdbd05f23921597c2f035ba4bd9eb2204a22abb27177c42067cb5a",
+    "scripts/browser-test-target.ts": "d778b68589a9366564eac2f3faedbd1ef7e35c5628ee63e214eef460c62130a0",
+    "scripts/verify-hosted-supabase.ts": "3b1b612428519bc19bef45837acc472c5498d034c80148524e8c85bdc5a2b99a",
+    "scripts/verify-hosted-phase4.ts": "202b7cf7ebb3fbe117ecf62c219e4de4fc7e01f15739084c6e14951770d47309",
+    "scripts/verify-hosted-rls.ts": "1dd7735fb75b49fe5d8d93a9e025b0650eaf08629672d05abdadb71caa167f6e",
+    "scripts/verify-legacy-worker-compatibility.sql": "31666d5704c0d2b3fb3f7b0cd477dd066d2371b9aa5b7d8c87770bfef00aa136",
+    "scripts/verify-worker-schema-readiness.sql": "baca28a913038818c64c3fda40fc6fa0852daf47df6d9224e37039a4ab94a3e4",
+    "scripts/verify-typed-authoring.sql": "6749ad57b231f7ab0f439550cc68b7fe035fd0ecd2eca94fbd167a6447996154",
+    "scripts/verify-typed-authoring-readiness.sql": "e6d574b313e7d9762920ad703fc539f61452ab1b759db12aadeffe9cd56af9fe",
+    "scripts/verify-typed-authoring-declaration.sql": "f6892bb7f540ad3f059f0045944a687629d5ebd59d01bc35c4c07e2d7e40c92d",
+    "scripts/verify-native-evidence.sql": "59343ffdb6e1bd4efa74279499a65f169e4c8f4c130971f362e33d1a75449dbf",
+    "scripts/verify-canonical-storage.sql": "35f5f5a40ccb65e937b7ced00b93a95223b77fcc8e7dde82612fd56e25e04a8b",
+    "scripts/verify-canonical-resume.ts": "d3e0dcf5149b90d6c71697d4fa817c1fbec2594f28ed1ebe91e0855eeb2d1bb8",
+    "scripts/verify-lease-fencing.sql": "e59831953a563cb82e7705a828a8f0193cd6357d581bd8041b99f4ff32f52b4c",
+    "scripts/verify-canonical-restore.ts": "c2f2851054463f22c98f2d58fe932f1e77b4ff4df218e13eb9e7335663d2f249",
+    "scripts/verify-restore.ts": "3989a808caa2306cf51ff21fa58be9d3f7e1dba12d2284eb9ce351db6743381c",
+    "package.json": "1422b25b5c1f193c89a77a64b6892c7263ac4bdc8efd7ed7d0416626b1fb15b4",
+    ".github/workflows/ci.yml": "1a7023bca5d6409807f1f80d5ebfd0ae3d1ddbb2d05c7a1336fc526534d6e2c1",
+    "scripts/verify-empty-supabase-target.sql": "4ace1923c8c84bba1bc9ffd164739e11542c8c8e876c5703e14e0bda9a5f6e7f"
+  },
+  "operators": [
+    {
+      "path": "scripts/managed-test-target.ts",
+      "sha256": "be04eefb20fdbd05f23921597c2f035ba4bd9eb2204a22abb27177c42067cb5a",
+      "kind": "local declaration and ledger guard",
+      "sourceAnchors": {
+        "capabilityRefusal": 157,
+        "evidenceTier": 232,
+        "warning": 148
+      },
+      "admission": "Only owned-fixtures accepted; native-sql/global-queue/restore unconditionally refused",
+      "actualSourceSideEffects": [
+        "Checks managed HTTPS URL, matching sealed declarations and exact private ledger inode/owner/mode/parent; separate append helper appends+fsyncs local ledger"
+      ],
+      "phaseA": "not a native-SQL target admission",
+      "doesNotProve": [
+        "Management identity",
+        "Project isolation/freshness",
+        "Actual authentication",
+        "Sealed child/network enforcement",
+        "Global Native authority"
+      ]
+    },
+    {
+      "path": "scripts/browser-test-target.ts",
+      "sha256": "d778b68589a9366564eac2f3faedbd1ef7e35c5628ee63e214eef460c62130a0",
+      "kind": "browser fixture declaration guard",
+      "sourceAnchors": {
+        "localBypass": 19,
+        "managedDeclarations": 21,
+        "localLedgerWrite": 49
+      },
+      "admission": "Managed URL plus explicit synthetic declarations/private ledger; loopback hostname returns early",
+      "actualSourceSideEffects": [
+        "Checks declarations; recordBrowserFixture appends owner/storage selectors to local ledger for managed targets"
+      ],
+      "phaseA": "excluded: no browser/fixtures in PhaseA",
+      "doesNotProve": [
+        "External project identity",
+        "Exclusive project use",
+        "SQL/global-queue admission"
+      ]
+    },
+    {
+      "path": "scripts/verify-hosted-supabase.ts",
+      "sha256": "3b1b612428519bc19bef45837acc472c5498d034c80148524e8c85bdc5a2b99a",
+      "kind": "configured-target API reachability probe",
+      "sourceAnchors": {
+        "admin": 3,
+        "query": 5
+      },
+      "admission": "Uses current admin client; no managed-target guard",
+      "actualSourceSideEffects": [
+        "HEAD/count query of analyses, prints status/code only"
+      ],
+      "phaseA": "not an isolated-target admission; no automatic invocation",
+      "doesNotProve": [
+        "Management identity",
+        "Empty inventory",
+        "Exclusive use",
+        "Schema/catalogue correctness"
+      ]
+    },
+    {
+      "path": "scripts/verify-hosted-phase4.ts",
+      "sha256": "202b7cf7ebb3fbe117ecf62c219e4de4fc7e01f15739084c6e14951770d47309",
+      "kind": "mutating hosted synthetic operator",
+      "sourceAnchors": {
+        "createUser": 59,
+        "storageUpload": 85,
+        "stage": 223,
+        "cleanup": 281
+      },
+      "admission": "Configured admin/storage clients; no native admission guard",
+      "actualSourceSideEffects": [
+        "Creates Auth user/workspace/membership, uploads synthetic object, inserts app records, invokes qualitative stage with injected transport then without injected transport, checks persisted results, attempts storage/record/user cleanup"
+      ],
+      "phaseA": "excluded",
+      "doesNotProve": [
+        "Native isolation",
+        "Provider inertness under arbitrary configuration",
+        "Current mandatory-budget compatibility",
+        "Guaranteed cleanup after ambiguous failures"
+      ]
+    },
+    {
+      "path": "scripts/verify-hosted-rls.ts",
+      "sha256": "1dd7735fb75b49fe5d8d93a9e025b0650eaf08629672d05abdadb71caa167f6e",
+      "kind": "mutating hosted Auth/RLS operator",
+      "sourceAnchors": {
+        "createUser": 36,
+        "signIn": 77,
+        "cleanup": 146
+      },
+      "admission": "Configured admin and publishable clients; no native admission guard",
+      "actualSourceSideEffects": [
+        "Creates two Auth users and private data_request, authenticates both, reads tenant data and denied worker RPC, deletes users in finally"
+      ],
+      "phaseA": "excluded",
+      "doesNotProve": [
+        "Schema-only behavior",
+        "No Auth/session side effects",
+        "Independent target isolation"
+      ]
+    },
+    {
+      "path": "scripts/verify-legacy-worker-compatibility.sql",
+      "sha256": "31666d5704c0d2b3fb3f7b0cd477dd066d2371b9aa5b7d8c87770bfef00aa136",
+      "kind": "read-only legacy catalogue verifier",
+      "sourceAnchors": {
+        "readOnly": 5,
+        "catalogue": 11,
+        "noIsolation": 2
+      },
+      "admission": "Separate exact approved target/bridge packet; header expressly not authorization",
+      "actualSourceSideEffects": [
+        "BEGIN READ ONLY with10s statement/1s lock/15s idle; reads function/ACL/source/index metadata; no fixture/job/provider/index DDL"
+      ],
+      "phaseA": "possible only if explicitly selected in exact approved PhaseA packet; new JD2 catalogue remains selected contract target",
+      "doesNotProve": [
+        "Behavioral cancellation/release correctness",
+        "Current target identity",
+        "Native fixture/race acceptance"
+      ]
+    },
+    {
+      "path": "scripts/verify-worker-schema-readiness.sql",
+      "sha256": "baca28a913038818c64c3fda40fc6fa0852daf47df6d9224e37039a4ab94a3e4",
+      "kind": "read-only metadata probe with DO",
+      "sourceAnchors": {
+        "readOnly": 4,
+        "admission": 12,
+        "metadata": 22
+      },
+      "admission": "Separate managed read-only allocation and run ID; GUCs only accident guards",
+      "actualSourceSideEffects": [
+        "READ ONLY transaction; checks worker readiness catalogue and selected/invalid/missing-policy replies; reads policy namespace; no pool opening/seeding or action RPC"
+      ],
+      "phaseA": "only if separately included; no fixture/grant needed after exact schema, never inferred from GUC",
+      "doesNotProve": [
+        "Credentials",
+        "Transaction behavior",
+        "Target isolation",
+        "Configured policy activation"
+      ]
+    },
+    {
+      "path": "scripts/verify-typed-authoring.sql",
+      "sha256": "6749ad57b231f7ab0f439550cc68b7fe035fd0ecd2eca94fbd167a6447996154",
+      "kind": "privileged mutating rollback-only verifier",
+      "sourceAnchors": {
+        "warning": 1,
+        "admission": 13,
+        "rollback": 140
+      },
+      "admission": "Separately admitted isolated native-SQL target and exact fixture/source allocation; GUCs do not supply isolation",
+      "actualSourceSideEffects": [
+        "Requires real producer-created owned canonical/JD/header fixture and Node command",
+        "Creates temporary helper/sequence and a trigger on public.authoring_events",
+        "Calls accept/reject/replay/fault actions then outer ROLLBACK"
+      ],
+      "phaseA": "excluded: fixture/grant/action work belongs later Native phase",
+      "doesNotProve": [
+        "New JD2 acceptance",
+        "Current permission to run",
+        "Concurrency/PostgREST role execution",
+        "Actual rollback/cleanup until executed"
+      ]
+    },
+    {
+      "path": "scripts/verify-typed-authoring-readiness.sql",
+      "sha256": "e6d574b313e7d9762920ad703fc539f61452ab1b759db12aadeffe9cd56af9fe",
+      "kind": "privileged mutating rollback-only verifier",
+      "sourceAnchors": {
+        "warning": 1,
+        "admission": 15,
+        "rollback": 106
+      },
+      "admission": "Separately admitted isolated native-SQL target and exact fixture/source allocation; GUCs do not supply isolation",
+      "actualSourceSideEffects": [
+        "Requires owned current typed JD, recorded legacy event and real manual body",
+        "Temporarily grants service/authenticated execution and grant option, alters function volatility/table grants in rolled-back subtransactions",
+        "Runs old action/replay and manual write then ROLLBACK; frozen expected profile is historical1.0"
+      ],
+      "phaseA": "excluded: fixture/grant/action work belongs later Native phase",
+      "doesNotProve": [
+        "New JD2 acceptance",
+        "Current permission to run",
+        "Concurrency/PostgREST role execution",
+        "Actual rollback/cleanup until executed"
+      ]
+    },
+    {
+      "path": "scripts/verify-typed-authoring-declaration.sql",
+      "sha256": "f6892bb7f540ad3f059f0045944a687629d5ebd59d01bc35c4c07e2d7e40c92d",
+      "kind": "privileged mutating rollback-only verifier",
+      "sourceAnchors": {
+        "warning": 1,
+        "admission": 13,
+        "rollback": 103
+      },
+      "admission": "Separately admitted isolated native-SQL target and exact fixture/source allocation; GUCs do not supply isolation",
+      "actualSourceSideEffects": [
+        "Requires actual current citation-free declaration/command and prior1.0 event",
+        "Calls independent old/new validators, source proof, accept/replay; verifies two child versions and event",
+        "SET CONSTRAINTS ALL IMMEDIATE and outer ROLLBACK"
+      ],
+      "phaseA": "excluded: fixture/grant/action work belongs later Native phase",
+      "doesNotProve": [
+        "New JD2 acceptance",
+        "Current permission to run",
+        "Concurrency/PostgREST role execution",
+        "Actual rollback/cleanup until executed"
+      ]
+    },
+    {
+      "path": "scripts/verify-native-evidence.sql",
+      "sha256": "59343ffdb6e1bd4efa74279499a65f169e4c8f4c130971f362e33d1a75449dbf",
+      "kind": "legacy mutating evidence verifier",
+      "sourceAnchors": {
+        "authInsert": 36,
+        "persistence": 51,
+        "rollback": 115
+      },
+      "admission": "Header says local/hosted; no independent managed native admission",
+      "actualSourceSideEffects": [
+        "Inserts auth.users, resumes, resume_versions, analysis and invokes persistence/replay/denial probes",
+        "Nested subtransaction catches ZAA01 sentinel to roll fixtures back; outer DO completes"
+      ],
+      "phaseA": "excluded",
+      "doesNotProve": [
+        "Schema-only behavior",
+        "Target isolation",
+        "Current producer/lease compatibility",
+        "Actual rollback until run"
+      ]
+    },
+    {
+      "path": "scripts/verify-canonical-storage.sql",
+      "sha256": "35f5f5a40ccb65e937b7ced00b93a95223b77fcc8e7dde82612fd56e25e04a8b",
+      "kind": "legacy mutating canonical/RLS verifier",
+      "sourceAnchors": {
+        "fixture": 1,
+        "role": 71,
+        "rollback": 115
+      },
+      "admission": "No independent native target admission",
+      "actualSourceSideEffects": [
+        "Creates synthetic Auth/app/version records, changes local role for RLS probes, checks immutable/content/cascade behavior",
+        "Nested synthetic fixture rollback"
+      ],
+      "phaseA": "excluded",
+      "doesNotProve": [
+        "Schema-only behavior",
+        "New authority semantics",
+        "Global isolation"
+      ]
+    },
+    {
+      "path": "scripts/verify-canonical-resume.ts",
+      "sha256": "d3e0dcf5149b90d6c71697d4fa817c1fbec2594f28ed1ebe91e0855eeb2d1bb8",
+      "kind": "mutating application/native integration operator",
+      "sourceAnchors": {
+        "fixtures": 15,
+        "retentionClaim": 431,
+        "privacyClaim": 491,
+        "cleanup": 532
+      },
+      "admission": "Creates two actual configured-target canonical fixtures",
+      "actualSourceSideEffects": [
+        "Imports/edits/confirms canonical records and calls direct RPC negatives",
+        "Calls claim_expired_resume_objects and claim_privacy_request plus deletion preparation; these include global claim authority",
+        "Finally fixture cleanup"
+      ],
+      "phaseA": "excluded; owned fixtures do not authorize global claims",
+      "doesNotProve": [
+        "No unrelated work selection",
+        "PhaseA emptiness",
+        "Native isolation"
+      ]
+    },
+    {
+      "path": "scripts/verify-lease-fencing.sql",
+      "sha256": "e59831953a563cb82e7705a828a8f0193cd6357d581bd8041b99f4ff32f52b4c",
+      "kind": "global queue/sweep mutating verifier",
+      "sourceAnchors": {
+        "warning": 1,
+        "sanity": 26,
+        "emptyQueue": 27
+      },
+      "admission": "Separately verified exclusively allocated isolated direct target; empty queue/GUC are negative sanity only",
+      "actualSourceSideEffects": [
+        "Creates fixture/helper structures and performs global claim/sweep/lease/fencing scenarios"
+      ],
+      "phaseA": "excluded",
+      "doesNotProve": [
+        "Exclusive use from a queue snapshot",
+        "Shared-project safety"
+      ]
+    },
+    {
+      "path": "scripts/verify-canonical-restore.ts",
+      "sha256": "c2f2851054463f22c98f2d58fe932f1e77b4ff4df218e13eb9e7335663d2f249",
+      "kind": "Docker database dump/restore operator",
+      "sourceAnchors": {
+        "docker": 22,
+        "container": 13,
+        "cleanup": 191
+      },
+      "admission": "Requires AA2_TEST_DB_CONTAINER and creates real app fixture",
+      "actualSourceSideEffects": [
+        "Runs docker exec psql/dump/restore into disposable database, cleanup removes dump/database and fixture"
+      ],
+      "phaseA": "excluded: Docker/restore forbidden",
+      "doesNotProve": [
+        "Managed native admission",
+        "Independent nonrollback restore authority"
+      ]
+    },
+    {
+      "path": "scripts/verify-restore.ts",
+      "sha256": "3989a808caa2306cf51ff21fa58be9d3f7e1dba12d2284eb9ce351db6743381c",
+      "kind": "synthetic source/filesystem restore exercise",
+      "sourceAnchors": {
+        "synthetic": 137,
+        "cleanup": 145
+      },
+      "admission": "No hosted target; synthetic adapters and temporary journal",
+      "actualSourceSideEffects": [
+        "Runs manifest checks and actual temporary floor scenarios; removes temporary directory"
+      ],
+      "phaseA": "no hosted schema evidence; not needed for PhaseA",
+      "doesNotProve": [
+        "Real external fencing/checkpoints",
+        "Actual database restore/Native schema"
+      ]
+    },
+    {
+      "path": "package.json",
+      "sha256": "1422b25b5c1f193c89a77a64b6892c7263ac4bdc8efd7ed7d0416626b1fb15b4",
+      "kind": "operator command dispatch",
+      "sourceAnchors": {
+        "dotenv": 54,
+        "reset": 37
+      },
+      "admission": "No admission by npm script name",
+      "actualSourceSideEffects": [
+        "check:hosted:supabase/test:hosted:phase4/test:hosted:rls load .env",
+        "test:db resets local database and invokes mutating verifiers; not a read-only catalogue command"
+      ],
+      "phaseA": "do not use these commands for PhaseA",
+      "doesNotProve": [
+        "Explicit isolated target binding",
+        "Permission to reset/apply/claim"
+      ]
+    },
+    {
+      "path": ".github/workflows/ci.yml",
+      "sha256": "1a7023bca5d6409807f1f80d5ebfd0ae3d1ddbb2d05c7a1336fc526534d6e2c1",
+      "kind": "local CI service/test orchestration",
+      "sourceAnchors": {
+        "start": 51,
+        "reset": 66,
+        "restore": 78
+      },
+      "admission": "Hosted fresh-project admission absent",
+      "actualSourceSideEffects": [
+        "Starts local Supabase, resets DB, runs browser/transaction fixtures and Docker restore step"
+      ],
+      "phaseA": "excluded: neither managed native admission nor permitted Docker fallback",
+      "doesNotProve": [
+        "Actual isolated hosted project proof",
+        "Schema-only behavior"
+      ]
+    },
+    {
+      "path": "scripts/verify-empty-supabase-target.sql",
+      "sha256": "4ace1923c8c84bba1bc9ffd164739e11542c8c8e876c5703e14e0bda9a5f6e7f",
+      "kind": "new read-only pre-schema empty-target gate",
+      "sourceAnchors": {
+        "snapshot": 5,
+        "major17": 14,
+        "aggregates": 21,
+        "history": 37,
+        "result": 47
+      },
+      "admission": "External owner/control-plane/executor binding required; no CSET/env/label creates admission",
+      "actualSourceSideEffects": [
+        "Read-only repeatable snapshot with15s statement/1s lock/20s idle limits; requires PostgreSQL17, Auth/Storage tables, zero users/objects/buckets, no public/private r/p/f/m relations and zero migration history rows if table present",
+        "Fixed presence-guarded readonly history query; no fixtures/tempDDL/DML/grants/reset/drop; only metadata pass row after guards"
+      ],
+      "phaseA": "Selected concrete pre-schema gate, DRAFT/UNPARSED/UNEXECUTED",
+      "doesNotProve": [
+        "External identity/exclusive use",
+        "No future concurrent writer",
+        "Managed DDL rights",
+        "Schema application or Native behavior"
+      ]
+    }
+  ],
+  "knownHistoricalNativeReceipt": {
+    "path": "tasks/agent-handoffs/2026-11-09-reliability-implementation/r11-native-schema-preflight.json",
+    "sha256": "e19635c9dc21dbd601f2f3237ba55657b026c02331ec973ba0c7d1fcea5dab89",
+    "status": "READ_ONLY_NATIVE_CATALOG_VERIFIED",
+    "operations": {
+      "successfulCatalogSelects": 3,
+      "failedCatalogSelects": 1,
+      "failedSelectSqlstate": "42601",
+      "failedSelectReason": "Corrected one aggregate-parenthesis syntax error before catalog access",
+      "migrationInventoryReads": 1,
+      "localResponseExtractionFailures": 2,
+      "rowsWritten": 0,
+      "migrationsApplied": 0,
+      "workerClaims": 0,
+      "providerRequests": 0,
+      "candidateDataScans": 0
+    },
+    "isolation": "NOT_PROVED",
+    "nativeWriteAdmission": "NOT_GRANTED",
+    "meaning": "Historical metadata access confirms connectivity existed, not current fresh-project identity or permission. No DBURL credential block is inferred."
+  },
+  "pendingLegacyExistingProjectAction": {
+    "migration": "supabase/migrations/20261110101800_legacy_worker_compatibility_bridge.sql",
+    "sha256": "a54196112e51a5109ccc143ac20887568bec2e7021dd98328312ba615d69d418",
+    "scope": "Three legacy routine bodies and exact optional legacy index shape; existing configured/deployed project only; still pending, not incorporated into new PhaseA authority"
+  },
+  "requiredExternalTargetEvidence": [
+    "Explicit project_ref plus management-plane project ID/organization/creation state and current operator identity/permissions; bind actual SQL executor target to same ref",
+    "Fresh standalone project or separately evidenced isolated branch; no inferred free/zero-cost entitlement; creation/branch costs require actual quote and owner approval",
+    "Exclusive-use owner/control-plane evidence: no deployed apps, workers, cron/integrations, external clients or keys distributed to processes; database session/queue counts are supporting snapshots, not isolation",
+    "Metadata-only privileged aggregate inventory before DDL: Auth users/identities/sessions where supported, Storage objects, all existing application/queue/accounting/retained tables zero; distinguish built-in catalogue/config rows; no candidate payload/identities exported",
+    "Exact ordered80 local versions/names/SHA inventory plus scope of historical grants/reference seeds; no extra fixtures/grants/policy/flags",
+    "One apply_migration per local file, stop on failure/ambiguity; record actual remote history version/name vs local version/hash, since tool has no version parameter; no assumed history equality/repair",
+    "Final exact read-only catalogue operator hashes and actual schema/ACL/source metadata; JD2 writer/helpers denied and no new activation; no connections from apps/workers"
+  ],
+  "notAvailableAsExistingAdmission": [
+    "No existing owned-fixtures/native-sql guard composition",
+    "No currently selected admitted fresh ref/exclusive proof/cost authorization in this source packet",
+    "No complete80-migration Native execution/managed Auth DDL rights established",
+    "No real Native behavioral/race/rollback proof from these source files"
+  ],
+  "phaseAFeasibleNext": "Prepare concrete owner approval packet for one fresh isolated project. After approval, first actual action is read-only management identity/executor binding and bounded aggregate empty inventory; DDL follows only when those satisfy the packet. Connected SQL is available; target authority, not a missing credential string, is the unresolved decision.",
+  "phaseAMigrationEffects": "Exact80 unchanged migration SQL reproduces historical DDL/grants/reference or policy metadata seeds; no extra activation GRANT or blanket REVOKE. JD2 writer/helpers denied. No application/worker connections.",
+  "managementSqlToolBoundary": {
+    "source": "Root-provided tool metadata, not invoked in this audit",
+    "ddlTool": "apply_migration(name,query,project_id); no version argument",
+    "readTool": "execute_sql for read-only SQL",
+    "history": "Bind each local file version/name/SHA to observed remote version/name; do not assume matching numbers or repair migration history",
+    "cost": "Fresh project/branch creation requires real organization quote and explicit nonzero spend approval; branch hourly risk; no free guarantee"
+  },
+  "sourceAfter": {
+    "scripts/managed-test-target.ts": "be04eefb20fdbd05f23921597c2f035ba4bd9eb2204a22abb27177c42067cb5a",
+    "scripts/browser-test-target.ts": "d778b68589a9366564eac2f3faedbd1ef7e35c5628ee63e214eef460c62130a0",
+    "scripts/verify-hosted-supabase.ts": "3b1b612428519bc19bef45837acc472c5498d034c80148524e8c85bdc5a2b99a",
+    "scripts/verify-hosted-phase4.ts": "202b7cf7ebb3fbe117ecf62c219e4de4fc7e01f15739084c6e14951770d47309",
+    "scripts/verify-hosted-rls.ts": "1dd7735fb75b49fe5d8d93a9e025b0650eaf08629672d05abdadb71caa167f6e",
+    "scripts/verify-legacy-worker-compatibility.sql": "31666d5704c0d2b3fb3f7b0cd477dd066d2371b9aa5b7d8c87770bfef00aa136",
+    "scripts/verify-worker-schema-readiness.sql": "baca28a913038818c64c3fda40fc6fa0852daf47df6d9224e37039a4ab94a3e4",
+    "scripts/verify-typed-authoring.sql": "6749ad57b231f7ab0f439550cc68b7fe035fd0ecd2eca94fbd167a6447996154",
+    "scripts/verify-typed-authoring-readiness.sql": "e6d574b313e7d9762920ad703fc539f61452ab1b759db12aadeffe9cd56af9fe",
+    "scripts/verify-typed-authoring-declaration.sql": "f6892bb7f540ad3f059f0045944a687629d5ebd59d01bc35c4c07e2d7e40c92d",
+    "scripts/verify-native-evidence.sql": "59343ffdb6e1bd4efa74279499a65f169e4c8f4c130971f362e33d1a75449dbf",
+    "scripts/verify-canonical-storage.sql": "35f5f5a40ccb65e937b7ced00b93a95223b77fcc8e7dde82612fd56e25e04a8b",
+    "scripts/verify-canonical-resume.ts": "d3e0dcf5149b90d6c71697d4fa817c1fbec2594f28ed1ebe91e0855eeb2d1bb8",
+    "scripts/verify-lease-fencing.sql": "e59831953a563cb82e7705a828a8f0193cd6357d581bd8041b99f4ff32f52b4c",
+    "scripts/verify-canonical-restore.ts": "c2f2851054463f22c98f2d58fe932f1e77b4ff4df218e13eb9e7335663d2f249",
+    "scripts/verify-restore.ts": "3989a808caa2306cf51ff21fa58be9d3f7e1dba12d2284eb9ce351db6743381c",
+    "package.json": "1422b25b5c1f193c89a77a64b6892c7263ac4bdc8efd7ed7d0416626b1fb15b4",
+    ".github/workflows/ci.yml": "1a7023bca5d6409807f1f80d5ebfd0ae3d1ddbb2d05c7a1336fc526534d6e2c1",
+    "scripts/verify-empty-supabase-target.sql": "4ace1923c8c84bba1bc9ffd164739e11542c8c8e876c5703e14e0bda9a5f6e7f"
+  },
+  "pairedCatalogueSourceReview": {
+    "path": "scripts/verify-jd-clause-order-catalog.sql",
+    "owner": "backend",
+    "reviewedWorktree": "/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats",
+    "sha256": "5fceed10fa4e97ca6c3839690c42ad6297ccd6a737998f316c5e153e7c77e21e",
+    "tier": "Independent narrow source review only; no reviewer tests/SQL parse/execution",
+    "finding": "No scoped finding; actual23/44 descriptors checked before metadata routine invocation, newwriters denied, historical grants inventoried",
+    "integration": "Root binds actual final backend artifact separately"
+  },
+  "previousFrozenTwoFileAudit": {
+    "release": "/private/tmp/resumide-native-schema-target-runtime/release.json",
+    "sha256": "ecb2265b7c80341c2a7cf2ef4cc168e418cbef7e763c4efaec5e238083f9921e"
+  }
+}

@@ -1,0 +1,443 @@
+import { createHash } from "node:crypto";
+import { z } from "zod";
+import {
+  JobRequirementsSchema,
+  RequirementItemSchema,
+  parseJobRequirementsWithRelations,
+  LOCAL_JD_RELATION_MODEL_VERSION,
+} from "./job-requirements";
+import { SqlCompatibleIsoDateTimeSchema } from "./iso-datetime";
+import {
+  JOB_ALIAS_LEXICON_SHA256,
+  JOB_ALIAS_POLICY_VERSION,
+} from "./job-aliases";
+import {
+  LOCAL_JOB_RELATION_POLICY_SHA256,
+  LOCAL_JOB_RELATION_POLICY_VERSION,
+} from "./job-relations";
+import {
+  JOB_RELATION_UNICODE_PROFILE,
+  JOB_RELATION_UNICODE_SHA256,
+  assertJobRelationUnicodeRuntime,
+} from "./job-relation-unicode";
+
+const sha = (value: string | Uint8Array) =>
+  createHash("sha256").update(value).digest("hex");
+const digest = z.string().regex(/^[a-f0-9]{64}$/u);
+const uuid = z.uuid();
+const importance = z.enum(["required", "preferred", "contextual", "unknown"]);
+const span = z.strictObject({
+  spanId: z.string().min(1).max(100),
+  start: z.number().int().min(0).max(20000),
+  end: z.number().int().positive().max(20000),
+  quote: z.string().min(1).max(2000),
+});
+const mapping = z.strictObject({
+  kind: z.enum(["exact", "alias", "unmapped"]),
+  policyVersion: z.literal(JOB_ALIAS_POLICY_VERSION),
+  conceptId: z.string().min(1).max(100).nullable(),
+  canonicalValue: z.string().min(1).max(100).nullable(),
+  prospectiveCreditGroup: digest.nullable(),
+});
+const atom = z.strictObject({
+  kind: z.literal("atom"),
+  value: z.string().min(1).max(2000),
+  evidence: span,
+  requirementIds: z.array(uuid).min(1).max(300),
+  mapping,
+});
+const expression = z.discriminatedUnion("kind", [
+  atom,
+  z.strictObject({
+    kind: z.literal("any_of"),
+    evidence: span,
+    operands: z.array(atom).min(2).max(32),
+    operatorEvidence: z.array(span).min(1).max(31),
+  }),
+  z.strictObject({
+    kind: z.literal("all_of"),
+    evidence: span,
+    operands: z.array(atom).min(2).max(32),
+    operatorEvidence: z.array(span).min(1).max(31),
+  }),
+  z.strictObject({
+    kind: z.literal("unknown"),
+    reason: z.string().min(1).max(100),
+    evidence: span,
+    observedRequirementIds: z.array(uuid).max(300),
+  }),
+]);
+const bound = z.strictObject({
+  value: z.number().int().min(0).max(100),
+  inclusive: z.boolean(),
+  evidence: span,
+});
+const duration = z.strictObject({
+  kind: z.enum([
+    "range",
+    "at_least",
+    "more_than",
+    "at_most",
+    "less_than",
+    "exactly",
+    "unknown",
+    "not_stated",
+  ]),
+  evidence: span.nullable(),
+  lower: bound.nullable(),
+  upper: bound.nullable(),
+  operatorEvidence: z.array(span).max(3),
+  candidateEvidence: z.array(span).max(8),
+  reason: z.string().min(1).max(100).nullable(),
+  subjectBinding: z.literal("literal_clause_only"),
+  evaluated: z.literal(false),
+});
+const requirement = RequirementItemSchema.extend({
+  value: z.string().min(1).max(2000),
+  derivation: z.literal("exact"),
+  minimumYears: z.number().int().min(0).max(100).nullable(),
+  confidence: z.strictObject({
+    kind: z.literal("uncalibrated"),
+    value: z.null(),
+  }),
+  mapping: mapping.nullable(),
+  tokenEvidence: z.array(span).max(1000),
+});
+const retained = z.strictObject({
+  evidence: span,
+  importance,
+  negated: z.boolean(),
+  interpretation: z.enum(["unmapped", "partial_vocabulary"]),
+  reviewRequired: z.literal(true),
+  requirementIds: z.array(uuid).max(300),
+});
+const clause = z.strictObject({
+  id: digest,
+  evidence: span,
+  reviewRequired: z.literal(true),
+  scope: z.strictObject({ importance, negated: z.boolean() }),
+  skillExpression: expression,
+  duration,
+  prospectiveCreditGroups: z.array(digest).max(32),
+  numericCredit: z.null(),
+});
+const structure = z.strictObject({
+  schemaVersion: z.literal("requirements/2.0.0"),
+  producerVersion: z.literal("jd-relations/1.0.0"),
+  id: uuid,
+  parentVersionId: uuid.nullable(),
+  ownerId: uuid,
+  organizationId: uuid,
+  analysisId: uuid,
+  jobId: uuid,
+  createdAt: SqlCompatibleIsoDateTimeSchema,
+  retentionPolicyId: z.literal("candidate-active-30d/1.0.0"),
+  inputSha256: digest,
+  locale: z.string().min(2).max(20),
+  domain: z.string().min(1).max(80),
+  state: z.enum(["review_required", "unsupported", "insufficient"]),
+  sourceText: z.string().max(20000),
+  scoringEligible: z.literal(false),
+  mappingPolicy: z.strictObject({
+    version: z.literal(JOB_ALIAS_POLICY_VERSION),
+    lexiconSha256: z.literal(JOB_ALIAS_LEXICON_SHA256),
+    externalTaxonomy: z.null(),
+  }),
+  relationPolicy: z.strictObject({
+    version: z.literal(LOCAL_JOB_RELATION_POLICY_VERSION),
+    sha256: z.literal(LOCAL_JOB_RELATION_POLICY_SHA256),
+  }),
+  requirements: z.array(requirement).max(300),
+  retainedClauses: z.array(retained).max(300),
+  relations: z.strictObject({ clauses: z.array(clause).max(300) }),
+  warnings: z.array(z.string().min(1).max(100)).max(30),
+});
+type Document = z.infer<typeof structure>;
+type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
+const invalid = (): never => {
+  throw Error("JD_RELATION_STORED_INVALID");
+};
+
+function unicode(value: string) {
+  for (let index = 0; index < value.length; index++) {
+    const unit = value.charCodeAt(index);
+    if (unit === 0 || (unit >= 0xdc00 && unit <= 0xdfff)) invalid();
+    if (unit >= 0xd800 && unit <= 0xdbff) {
+      const next = value.charCodeAt(++index);
+      if (!(next >= 0xdc00 && next <= 0xdfff)) invalid();
+    }
+  }
+}
+function canonical(value: Json, spaces = false): string {
+  if (typeof value === "string") {
+    unicode(value);
+    return JSON.stringify(value);
+  }
+  if (value === null || typeof value === "boolean")
+    return JSON.stringify(value);
+  if (typeof value === "number") {
+    if (!Number.isSafeInteger(value)) return invalid();
+    return String(value === 0 ? 0 : value);
+  }
+  if (Array.isArray(value))
+    return `[${value.map((item) => canonical(item, spaces)).join(spaces ? ", " : ",")}]`;
+  const keys = Object.keys(value).sort();
+  return `{${keys
+    .map((key) => {
+      if (!/^[\x20-\x7e]+$/u.test(key)) invalid();
+      return `${JSON.stringify(key)}:${spaces ? " " : ""}${canonical(value[key], spaces)}`;
+    })
+    .join(spaces ? ", " : ",")}}`;
+}
+function freeze<T>(value: T): T {
+  if (value !== null && typeof value === "object") {
+    for (const child of Object.values(value)) freeze(child);
+    Object.freeze(value);
+  }
+  return value;
+}
+export const JOB_RELATION_JSON_SCHEMA = freeze(
+  z.toJSONSchema(structure, { target: "draft-7" }),
+);
+export const JOB_RELATION_ADMISSION_PROFILE = freeze({
+  schemaVersion: "jd-relation-admission/1.0.0",
+  storedSchemaVersion: "requirements/2.0.0",
+  producerVersion: "jd-relations/1.0.0",
+  semanticCodecVersion: "jd-relation-command/1.0.0",
+  jsonSchemaSha256: sha(canonical(JOB_RELATION_JSON_SCHEMA as Json)),
+  aliasPolicy: {
+    version: JOB_ALIAS_POLICY_VERSION,
+    sha256: JOB_ALIAS_LEXICON_SHA256,
+  },
+  relationPolicy: {
+    version: LOCAL_JOB_RELATION_POLICY_VERSION,
+    sha256: LOCAL_JOB_RELATION_POLICY_SHA256,
+  },
+  unicodePolicy: {
+    version: JOB_RELATION_UNICODE_PROFILE.schemaVersion,
+    sha256: JOB_RELATION_UNICODE_SHA256,
+  },
+  budgets: {
+    sourceUtf16: 20000,
+    clauseUtf16: 2000,
+    requirements: 300,
+    clauses: 300,
+    tokens: 1000,
+    operands: 32,
+    nodes: 1024,
+    rawDepth: 8,
+    durationCandidates: 8,
+    bodyJsonbUtf8Bytes: 1048576,
+  },
+});
+export const JOB_RELATION_ADMISSION_PROFILE_SHA256 = sha(
+  canonical(JOB_RELATION_ADMISSION_PROFILE),
+);
+
+function build(
+  sourceText: string,
+  owned: {
+    ownerId: string;
+    organizationId: string;
+    analysisId: string;
+    jobId: string;
+    parentVersionId: string | null;
+    locale: string;
+    domain: string;
+  },
+): Document {
+  const local = parseJobRequirementsWithRelations(sourceText, owned, {
+    modelVersion: LOCAL_JD_RELATION_MODEL_VERSION,
+  });
+  return structure.parse({
+    schemaVersion: "requirements/2.0.0",
+    producerVersion: "jd-relations/1.0.0",
+    id: local.id,
+    parentVersionId: local.parentVersionId,
+    ownerId: local.ownerId,
+    organizationId: local.organizationId,
+    analysisId: local.analysisId,
+    jobId: local.jobId,
+    createdAt: local.createdAt,
+    retentionPolicyId: local.retentionPolicyId,
+    inputSha256: local.inputSha256,
+    locale: local.locale,
+    domain: local.domain,
+    state: local.state,
+    sourceText: local.sourceText,
+    scoringEligible: false,
+    mappingPolicy: local.mappingPolicy,
+    relationPolicy: local.relations.policy,
+    requirements: local.requirements,
+    retainedClauses: local.retainedClauses,
+    relations: {
+      clauses: local.relations.clauses.map((item) => ({
+        id: item.id,
+        evidence: item.evidence,
+        reviewRequired: item.reviewRequired,
+        scope: {
+          importance: item.scope.importance,
+          negated: item.scope.negated,
+        },
+        skillExpression: item.skillExpression,
+        duration: item.duration,
+        prospectiveCreditGroups: item.prospectiveCreditGroups,
+        numericCredit: item.numericCredit,
+      })),
+    },
+    warnings: local.warnings,
+  });
+}
+const utf8 = (a: string, b: string) =>
+  Buffer.compare(Buffer.from(a), Buffer.from(b));
+const bySpan = (
+  a: { evidence: { start: number; end: number } },
+  b: { evidence: { start: number; end: number } },
+) => a.evidence.start - b.evidence.start || a.evidence.end - b.evidence.end;
+const without = (value: Record<string, Json>, keys: readonly string[]) =>
+  Object.fromEntries(
+    Object.entries(value).filter(([key]) => !keys.includes(key)),
+  );
+
+function project(doc: Document): Json {
+  const requirements = [...doc.requirements].sort(
+    (a, b) => bySpan(a, b) || utf8(a.type, b.type) || utf8(a.value, b.value),
+  );
+  const reference = new Map<string, number>();
+  const observations = new Set<string>();
+  requirements.forEach((item, index) => {
+    const key = canonical([
+      item.type,
+      item.evidence.start,
+      item.evidence.end,
+      item.value,
+    ]);
+    if (reference.has(item.id) || item.id === doc.id || observations.has(key))
+      invalid();
+    reference.set(item.id, index);
+    observations.add(key);
+  });
+  const chars = Array.from(doc.sourceText);
+  const paths = (ids: string[]): string[] => {
+    if (new Set(ids).size !== ids.length) invalid();
+    const ordinals = ids.map((id) => {
+      const index = reference.get(id);
+      return index === undefined ? invalid() : index;
+    });
+    return ordinals
+      .sort((a, b) => a - b)
+      .map((index) => `/requirements/${index}`);
+  };
+  const clean = (raw: Json): Json => {
+    if (raw === null || typeof raw !== "object") return raw;
+    if (Array.isArray(raw)) return raw.map(clean);
+    if ("quote" in raw && "start" in raw && "end" in raw) {
+      const { start, end, quote } = raw;
+      if (
+        typeof start !== "number" ||
+        typeof end !== "number" ||
+        typeof quote !== "string" ||
+        end <= start ||
+        chars.slice(start, end).join("") !== quote ||
+        end > chars.length
+      )
+        invalid();
+      if ("spanId" in raw && raw.spanId !== `jd-${start}-${end}`) invalid();
+    }
+    return Object.fromEntries(
+      Object.entries(raw)
+        .filter(([key]) => key !== "spanId")
+        .map(([key, value]) => {
+          if (key === "requirementIds" || key === "observedRequirementIds")
+            return [key, paths(value as string[])];
+          if (key === "prospectiveCreditGroups") {
+            const groups = value as string[];
+            if (new Set(groups).size !== groups.length) invalid();
+            return [key, [...groups].sort()];
+          }
+          if (["tokenEvidence", "candidateEvidence"].includes(key)) {
+            const spans = value as Array<
+              { start: number; end: number } & { [key: string]: Json }
+            >;
+            return [
+              key,
+              [...spans]
+                .sort((a, b) => a.start - b.start || a.end - b.end)
+                .map(clean),
+            ];
+          }
+          return [key, clean(value)];
+        }),
+    );
+  };
+  const clauseIds = new Set<string>(),
+    clauseSpans = new Set<string>();
+  for (const item of doc.relations.clauses) {
+    const key = `${item.evidence.start}:${item.evidence.end}`;
+    if (clauseIds.has(item.id) || clauseSpans.has(key)) invalid();
+    clauseIds.add(item.id);
+    clauseSpans.add(key);
+  }
+  if (
+    doc.requirements.reduce((n, item) => n + item.tokenEvidence.length, 0) >
+    1000
+  )
+    invalid();
+  return clean({
+    ...without(doc, ["id", "createdAt", "parentVersionId"]),
+    requirements: requirements.map((item) => without(item, ["id"])),
+    retainedClauses: [...doc.retainedClauses].sort(bySpan),
+    relations: {
+      clauses: [...doc.relations.clauses]
+        .sort(bySpan)
+        .map((item) => without(item, ["id"])),
+    },
+  });
+}
+export const JobRequirementRelationsSchema = structure.superRefine(
+  (doc, context) => {
+    assertJobRelationUnicodeRuntime();
+    try {
+      if (
+        doc.parentVersionId === doc.id ||
+        sha(doc.sourceText) !== doc.inputSha256 ||
+        Buffer.byteLength(canonical(doc, true), "utf8") >
+          JOB_RELATION_ADMISSION_PROFILE.budgets.bodyJsonbUtf8Bytes
+      )
+        invalid();
+      const expected = build(doc.sourceText, doc);
+      if (canonical(project(doc)) !== canonical(project(expected))) invalid();
+    } catch {
+      context.addIssue({
+        code: "custom",
+        message: "Stored JD relation provenance or interpretation mismatch",
+      });
+    }
+  },
+);
+export const StoredJobRequirementsSchema = z.union([
+  JobRequirementsSchema,
+  JobRequirementRelationsSchema,
+]);
+export type JobRequirementRelations = z.infer<
+  typeof JobRequirementRelationsSchema
+>;
+export type StoredJobRequirements = z.infer<typeof StoredJobRequirementsSchema>;
+
+export function createJobRequirementRelations(
+  sourceText: string,
+  owned: Parameters<typeof build>[1],
+): JobRequirementRelations {
+  assertJobRelationUnicodeRuntime();
+  unicode(sourceText);
+  return JobRequirementRelationsSchema.parse(build(sourceText, owned));
+}
+export function projectJobRelationSemantics(raw: unknown): Json {
+  return project(JobRequirementRelationsSchema.parse(raw));
+}
+export function encodeJobRelationSemantics(raw: unknown): Uint8Array {
+  return new TextEncoder().encode(canonical(projectJobRelationSemantics(raw)));
+}
+export function jobRelationSemanticSha256(raw: unknown): string {
+  return sha(encodeJobRelationSemantics(raw));
+}

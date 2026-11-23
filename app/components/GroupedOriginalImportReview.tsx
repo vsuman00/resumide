@@ -1,0 +1,617 @@
+import { useEffect, useRef, useState } from "react";
+import { Form, Link } from "react-router";
+import { z } from "zod";
+import type {
+  GroupedOriginalAppliedReceipt,
+  GroupedOriginalCommand,
+  GroupedOriginalDisplayGroup,
+  GroupedOriginalError,
+  GroupedOriginalPreview,
+  GroupedOriginalPreviewRequest,
+  GroupedOriginalReason,
+  GroupedOriginalWorkspace,
+} from "~/lib/server/grouped-import-repository";
+
+export type GroupedOriginalFeedback =
+  | { kind: "preview"; preview: GroupedOriginalPreview }
+  | {
+      kind: "applied";
+      receipt: GroupedOriginalAppliedReceipt;
+      resolved: GroupedOriginalCommand;
+    }
+  | {
+      kind: "error";
+      reason: GroupedOriginalReason;
+      recovery: GroupedOriginalError["recovery"];
+      submitted?: GroupedOriginalCommand;
+    };
+type Available = Extract<GroupedOriginalWorkspace, { state: "available" }>;
+type Pending = {
+  schemaVersion: "pending-grouped-original/1.0.0";
+  savedAt: number;
+  command: GroupedOriginalCommand;
+};
+const LIFETIME = 30 * 60 * 1000;
+const uuid = z.uuid().regex(/^[a-f0-9-]+$/);
+const revision = z.number().int().min(0).max(2_147_483_647);
+// Browser storage admission only. The server independently validates every command.
+const pendingCommand = z.strictObject({
+  schemaVersion: z.literal("grouped-original-command/1.0.0"),
+  operation: z.literal("approve_and_import_grouped_original"),
+  binding: z.record(z.string(), z.string().max(200)),
+  expected: z
+    .strictObject({
+      reviewRevision: revision,
+      reviewHeadId: uuid.nullable(),
+      assignmentRevision: revision,
+      assignmentHeadId: uuid.nullable(),
+      associationRevision: revision,
+      associationHeadId: uuid.nullable(),
+      canonicalHeadId: z.null(),
+    })
+    .refine(
+      (v) =>
+        (v.reviewRevision === 0) === (v.reviewHeadId === null) &&
+        (v.assignmentRevision === 0) === (v.assignmentHeadId === null) &&
+        (v.associationRevision === 0) === (v.associationHeadId === null),
+    ),
+  selectedGroupIds: z
+    .array(z.string().regex(/^entry-association-[a-f0-9]{64}$/))
+    .min(1)
+    .max(32)
+    .refine((ids) => new Set(ids).size === ids.length),
+  unselectedDisposition: z.literal("retain_original"),
+  acknowledgement: z.literal(true),
+  previewHash: z.string().regex(/^[a-f0-9]{64}$/),
+  idempotencyKey: uuid,
+});
+const recordSchema = z.strictObject({
+  schemaVersion: z.literal("pending-grouped-original/1.0.0"),
+  savedAt: z.number().int().nonnegative(),
+  command: z.unknown(),
+});
+const bytes = (text: string) => new TextEncoder().encode(text).byteLength;
+function validCommand(
+  value: unknown,
+  workspace: Pick<Available, "binding">,
+): value is GroupedOriginalCommand {
+  const parsed = pendingCommand.safeParse(value);
+  if (!parsed.success) return false;
+  const { binding } = parsed.data;
+  const keys = Object.keys(workspace.binding);
+  if (
+    Object.keys(binding).length !== keys.length ||
+    !keys.every((key) => Object.hasOwn(binding, key))
+  )
+    return false;
+  if (!/^[a-z]{2,3}(?:-[A-Z]{2})?$/.test(binding.effectiveLocale)) return false;
+  if (
+    !Object.entries(workspace.binding).every(
+      ([key, item]) => key === "effectiveLocale" || binding[key] === item,
+    )
+  )
+    return false;
+  const command = JSON.stringify(value);
+  return (
+    bytes(command) <= 16_384 &&
+    bytes(
+      new URLSearchParams({
+        command,
+        relationshipAcknowledgement: "accepted",
+      }).toString(),
+    ) <= 16_384
+  );
+}
+function validRecord(value: unknown, workspace: Available): value is Pending {
+  const parsed = recordSchema.safeParse(value);
+  const now = Date.now();
+  return (
+    parsed.success &&
+    Number.isSafeInteger(parsed.data.savedAt) &&
+    parsed.data.savedAt <= now &&
+    now - parsed.data.savedAt < LIFETIME &&
+    validCommand(parsed.data.command, workspace)
+  );
+}
+const sameFields = (a: object, b: object) =>
+  Object.keys(a).length === Object.keys(b).length &&
+  Object.entries(a).every(([key, value]) =>
+    Object.entries(b).some(
+      ([otherKey, otherValue]) => key === otherKey && value === otherValue,
+    ),
+  );
+const exact = (a: GroupedOriginalCommand, b: GroupedOriginalCommand) =>
+  a.schemaVersion === b.schemaVersion &&
+  a.operation === b.operation &&
+  a.idempotencyKey === b.idempotencyKey &&
+  a.previewHash === b.previewHash &&
+  a.acknowledgement === b.acknowledgement &&
+  a.unselectedDisposition === b.unselectedDisposition &&
+  sameFields(a.binding, b.binding) &&
+  sameFields(a.expected, b.expected) &&
+  JSON.stringify(a.selectedGroupIds) === JSON.stringify(b.selectedGroupIds);
+const fields = { employer: "Employer", role: "Role", dates: "Dates" };
+function Groups({
+  groups,
+  start = 0,
+}: {
+  groups: GroupedOriginalDisplayGroup[];
+  start?: number;
+}) {
+  return groups.map((group, index) => (
+    <article key={group.id} className="account-card">
+      <h4>Possible entry {start + index + 1} (unverified)</h4>
+      <dl>
+        {group.members.map((member) => (
+          <div key={member.assertionId}>
+            <dt>{fields[member.field]}</dt>
+            <dd>{member.value}</dd>
+            <dd>
+              {member.citations.map((citation, n) => (
+                <Link key={`${citation.spanId}:${n}`} to={citation.href}>
+                  View cited source (
+                  {citation.method === "local_ocr"
+                    ? "local OCR"
+                    : "native text"}
+                  )
+                </Link>
+              ))}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </article>
+  ));
+}
+function CommitForm({
+  command,
+  enabled,
+  busy,
+  destination,
+  onAccepted,
+  retry,
+}: {
+  command: GroupedOriginalCommand;
+  enabled: boolean;
+  busy: boolean;
+  destination: string;
+  onAccepted: (command: GroupedOriginalCommand) => boolean;
+  retry: boolean;
+}) {
+  const [checked, setChecked] = useState(false);
+  const checkbox = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const reset = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        if (checkbox.current) checkbox.current.checked = false;
+        setChecked(false);
+      }
+    };
+    window.addEventListener("pageshow", reset);
+    return () => window.removeEventListener("pageshow", reset);
+  }, []);
+  return (
+    <Form
+      method="post"
+      action={`${destination}?grouped=commit`}
+      onSubmit={(event) => {
+        if (
+          !enabled ||
+          busy ||
+          !checked ||
+          !event.currentTarget.checkValidity() ||
+          !onAccepted(command)
+        ) {
+          event.preventDefault();
+          return;
+        }
+        setChecked(false);
+      }}
+    >
+      <input type="hidden" name="command" value={JSON.stringify(command)} />
+      <label>
+        <input
+          ref={checkbox}
+          type="checkbox"
+          name="relationshipAcknowledgement"
+          value="accepted"
+          required
+          checked={checked}
+          disabled={!enabled || busy}
+          onChange={(event) => setChecked(event.target.checked)}
+        />
+        I reviewed these entry relationships. This does not confirm the facts
+        themselves.
+      </label>
+      <button
+        type="submit"
+        className="back-button"
+        disabled={!enabled || busy || !checked}
+      >
+        {retry ? "Retry the same import" : "Save selected entry relationships"}
+      </button>
+    </Form>
+  );
+}
+function FreshReview({
+  workspace,
+  feedback,
+  busy,
+  destination,
+  onAccepted,
+}: {
+  workspace: Available;
+  feedback?: GroupedOriginalFeedback;
+  busy: boolean;
+  destination: string;
+  onAccepted: (command: GroupedOriginalCommand) => boolean;
+}) {
+  const [selected, setSelected] = useState<string[]>([]);
+  const [locale, setLocale] = useState(workspace.binding.effectiveLocale);
+  const [review, setReview] = useState<{
+    feedback?: GroupedOriginalFeedback;
+    preview: GroupedOriginalPreview | null;
+  }>(() => ({ feedback, preview: null }));
+  let candidate = review.preview;
+  if (feedback !== review.feedback) {
+    candidate = feedback?.kind === "preview" ? feedback.preview : null;
+    setReview({ feedback, preview: candidate });
+  }
+  const selectedGroupIds = workspace.groups
+    .filter((group) => selected.includes(group.id))
+    .map((group) => group.id);
+  const valid =
+    selectedGroupIds.length > 0 &&
+    selectedGroupIds.length <= 32 &&
+    /^[a-z]{2,3}(?:-[A-Z]{2})?$/.test(locale) &&
+    workspace.captured.canonicalHeadId === null;
+  const request: GroupedOriginalPreviewRequest | null = valid
+    ? {
+        schemaVersion: "grouped-original-command/1.0.0",
+        operation: "approve_and_import_grouped_original",
+        binding: { ...workspace.binding, effectiveLocale: locale },
+        expected: { ...workspace.captured, canonicalHeadId: null },
+        selectedGroupIds,
+        unselectedDisposition: "retain_original",
+      }
+    : null;
+  const preview =
+    request &&
+    candidate &&
+    Object.entries(request.binding).every(
+      ([key, value]) =>
+        candidate.command.binding[key as keyof typeof request.binding] ===
+        value,
+    ) &&
+    Object.entries(request.expected).every(
+      ([key, value]) =>
+        candidate.command.expected[key as keyof typeof request.expected] ===
+        value,
+    ) &&
+    JSON.stringify(request.selectedGroupIds) ===
+      JSON.stringify(candidate.command.selectedGroupIds)
+      ? candidate
+      : null;
+  return (
+    <>
+      {!workspace.canPreview && (
+        <p role="status">
+          A new grouped import is unavailable. Review saved corrections or open
+          the latest resume version.
+        </p>
+      )}
+      <Form
+        method="post"
+        action={`${destination}?grouped=preview`}
+        onSubmit={(event) => {
+          if (!workspace.canPreview || busy || !request) event.preventDefault();
+        }}
+      >
+        <input
+          type="hidden"
+          name="command"
+          value={request ? JSON.stringify(request) : ""}
+        />
+        <p>
+          Select up to 32 possible entries. Groups you leave unselected keep
+          their original entries. Dates are shown as extracted text.
+        </p>
+        <fieldset disabled={busy || !workspace.canPreview}>
+          <legend>Choose relationships to preview</legend>
+          {workspace.groups.map((group, index) => (
+            <div key={group.id}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={selected.includes(group.id)}
+                  onChange={(event) => {
+                    setSelected(
+                      event.target.checked
+                        ? [...selected, group.id]
+                        : selected.filter((id) => id !== group.id),
+                    );
+                    setReview({ feedback, preview: null });
+                  }}
+                />{" "}
+                Select possible entry {index + 1}
+              </label>
+              <Groups groups={[group]} start={index} />
+            </div>
+          ))}
+          <label>
+            Output locale
+            <input
+              value={locale}
+              maxLength={6}
+              pattern="[a-z]{2,3}(-[A-Z]{2})?"
+              required
+              onChange={(event) => {
+                setLocale(event.target.value);
+                setReview({ feedback, preview: null });
+              }}
+            />
+          </label>
+        </fieldset>
+        {selected.length > 32 && (
+          <p role="alert">Choose no more than 32 entries for one import.</p>
+        )}
+        <button
+          type="submit"
+          className="back-button"
+          disabled={busy || !workspace.canPreview || !request}
+        >
+          Preview selected relationships
+        </button>
+      </Form>
+      {preview && (
+        <section aria-label="Selected relationship preview">
+          <h3>Review the selected relationships</h3>
+          <p>
+            This preview has not saved or approved these relationships. Facts
+            still need separate confirmation.
+          </p>
+          <Groups groups={preview.groups} />
+          <CommitForm
+            key={preview.command.idempotencyKey}
+            command={preview.command}
+            enabled={workspace.canCommit && preview.canCommit}
+            busy={busy}
+            destination={destination}
+            onAccepted={onAccepted}
+            retry={false}
+          />
+        </section>
+      )}
+    </>
+  );
+}
+export default function GroupedOriginalImportReview({
+  workspace,
+  ownerId,
+  analysisId,
+  feedback,
+  busy,
+  fresh,
+}: {
+  workspace: GroupedOriginalWorkspace;
+  ownerId: string;
+  analysisId: string;
+  feedback?: GroupedOriginalFeedback;
+  busy: boolean;
+  fresh: boolean;
+}) {
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [storageProblem, setStorageProblem] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [epoch, setEpoch] = useState(0);
+  const available =
+    workspace.state === "available" &&
+    workspace.source.ownerId === ownerId &&
+    workspace.source.analysisId === analysisId
+      ? workspace
+      : null;
+  const sourceKey = available ? JSON.stringify(available.binding) : "";
+  const storageKey = `resumide:grouped-original:pending:${ownerId}:${analysisId}`;
+  const destination = `/analysis/${analysisId}/canonical`;
+  const workspaceRef = useRef(available);
+  workspaceRef.current = available;
+  useEffect(() => {
+    const current = workspaceRef.current;
+    if (!current) return;
+    try {
+      const stored = window.sessionStorage.getItem(storageKey);
+      if (!stored) {
+        setPending(null);
+        return;
+      }
+      let value: unknown;
+      try {
+        value =
+          stored.length <= 20_000 && bytes(stored) <= 20_000
+            ? JSON.parse(stored)
+            : null;
+      } catch {
+        value = null;
+      }
+      if (validRecord(value, current)) setPending(value);
+      else {
+        window.sessionStorage.removeItem(storageKey);
+        setPending(null);
+        setNotice(
+          "The stored import needs a new review. Choose and preview the relationships again.",
+        );
+      }
+    } catch {
+      setStorageProblem(true);
+    }
+  }, [sourceKey, storageKey]);
+  useEffect(() => {
+    if (
+      feedback?.kind === "error" &&
+      feedback.submitted &&
+      workspaceRef.current &&
+      validCommand(feedback.submitted, workspaceRef.current)
+    ) {
+      setPending((previous) =>
+        previous && exact(previous.command, feedback.submitted!)
+          ? previous
+          : {
+              schemaVersion: "pending-grouped-original/1.0.0",
+              savedAt: Date.now(),
+              command: feedback.submitted!,
+            },
+      );
+    }
+    if (feedback?.kind !== "applied") return;
+    setPending((previous) =>
+      previous && exact(previous.command, feedback.resolved) ? null : previous,
+    );
+    try {
+      const stored = window.sessionStorage.getItem(storageKey);
+      if (stored && stored.length <= 20_000) {
+        const record = recordSchema.safeParse(JSON.parse(stored));
+        if (
+          record.success &&
+          validCommand(record.data.command, {
+            binding: feedback.resolved.binding,
+          }) &&
+          exact(record.data.command, feedback.resolved)
+        )
+          window.sessionStorage.removeItem(storageKey);
+      }
+    } catch {
+      setStorageProblem(true);
+    }
+  }, [feedback, storageKey]);
+  useEffect(() => {
+    const reset = (event: PageTransitionEvent) => {
+      if (event.persisted) setEpoch((value) => value + 1);
+    };
+    window.addEventListener("pageshow", reset);
+    return () => window.removeEventListener("pageshow", reset);
+  }, []);
+  useEffect(() => {
+    if (!pending) return;
+    const timeout = window.setTimeout(
+      () => {
+        setPending(null);
+        setNotice(
+          "The pending import expired. Review the relationships again.",
+        );
+        try {
+          const value: unknown = JSON.parse(
+            window.sessionStorage.getItem(storageKey) ?? "null",
+          );
+          if (
+            recordSchema.safeParse(value).success &&
+            typeof value === "object" &&
+            value !== null &&
+            "savedAt" in value &&
+            value.savedAt === pending.savedAt
+          )
+            window.sessionStorage.removeItem(storageKey);
+        } catch {
+          setStorageProblem(true);
+        }
+      },
+      Math.max(0, pending.savedAt + LIFETIME - Date.now()),
+    );
+    return () => window.clearTimeout(timeout);
+  }, [pending, storageKey]);
+  const remember = (command: GroupedOriginalCommand) => {
+    if (!available || !available.canCommit || !validCommand(command, available))
+      return false;
+    const value: Pending =
+      pending && exact(pending.command, command)
+        ? pending
+        : {
+            schemaVersion: "pending-grouped-original/1.0.0",
+            savedAt: Date.now(),
+            command,
+          };
+    if (Date.now() - value.savedAt >= LIFETIME) return false;
+    setPending(value);
+    try {
+      window.sessionStorage.setItem(storageKey, JSON.stringify(value));
+    } catch {
+      setStorageProblem(true);
+    }
+    return true;
+  };
+  const retry =
+    pending && available && validRecord(pending, available) ? pending : null;
+  return (
+    <section aria-labelledby="grouped-original-heading" aria-busy={busy}>
+      <h2 id="grouped-original-heading">Review possible employment entries</h2>
+      <p>
+        These are unverified relationships between extracted employer, role and
+        date values. Reviewing an entry relationship does not confirm its facts
+        or assess qualifications.
+      </p>
+      {notice && <p role="status">{notice}</p>}
+      {storageProblem && (
+        <p role="status">
+          This tab could not store or restore the pending import. Keep this page
+          open to retain an in-memory retry. Reloading may lose it.
+        </p>
+      )}
+      {(!available || !available.canCommit) && (
+        <p role="status">
+          Saving entry relationships is unavailable. An available preview does
+          not save your review.
+        </p>
+      )}
+      {feedback?.kind === "error" && feedback.recovery === "review_again" && (
+        <p role="status">
+          Review the latest source and create a new preview. The earlier command
+          will not be changed automatically.
+        </p>
+      )}
+      {feedback?.kind === "applied" && (
+        <p role="status">
+          {feedback.receipt.idempotent
+            ? "This import was already saved; your current version may be newer."
+            : "Entry relationships were saved. Confirm the facts separately."}{" "}
+          <Link to={`${destination}?version=${feedback.receipt.versionId}`}>
+            Open the saved version
+          </Link>
+        </p>
+      )}
+      {retry && (
+        <section aria-label="Pending original import">
+          <h3>Pending import</h3>
+          <p>
+            The outcome of this original submission may be unknown. Retrying
+            sends the same selections, review captures, locale and request key;
+            it does not create a new review.
+          </p>
+          <CommitForm
+            key={`${retry.command.idempotencyKey}:${epoch}`}
+            command={retry.command}
+            enabled={Boolean(available?.canCommit)}
+            busy={busy}
+            destination={destination}
+            onAccepted={remember}
+            retry
+          />
+        </section>
+      )}
+      {available && fresh && (
+        <FreshReview
+          key={`${JSON.stringify([available.binding, available.captured])}:${epoch}`}
+          workspace={available}
+          feedback={feedback}
+          busy={busy}
+          destination={destination}
+          onAccepted={remember}
+        />
+      )}
+      {!available && (
+        <p>
+          Possible entries are unavailable. Your existing resume review remains
+          available below.
+        </p>
+      )}
+    </section>
+  );
+}

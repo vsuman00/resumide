@@ -1,0 +1,334 @@
+{
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "worktree": "dirty",
+  "nodeVersion": "22.23.4",
+  "tier": "local_synthetic_policy_and_ocr_worker",
+  "consumerPathVerified": false,
+  "consumerActivationApproved": false,
+  "physicalRegionVerified": false,
+  "durableAdmissionVerified": false,
+  "focusedTestsPassed": 369,
+  "testedSources": {
+    "app/lib/server/ocr/local-review-admission.ts": "c5e118511f8b6fbdcae51a71fb8dbcd872b62ab66efa0e5d913cb3194789a380",
+    "scripts/verify-local-ocr.ts": "9c1b8ac4f788e0d7b5966c50369ae7091e97c05d41fa82564f83da4edc750924",
+    "tests/unit/ocr/local-review-admission.test.ts": "fa451424c79f075522927093f71ae5afc7acf0ddebc19682c9eadbbe622c1cd6",
+    "app/lib/server/ocr/pdf-detection.ts": "941b751c990bc4b0c1455b9017122b9e419f59db451f87ae3a5c66af9b9ae142",
+    "app/lib/server/ocr/local-container.ts": "45234904a4dad16ccc5b998c679ce6ae1850f72650edcc2920824bec27fc1f65",
+    "app/lib/server/ocr/selective.ts": "2d647df8cd51d36fd1fbd489cc7464d8ef3b8f098fc674743b871ea8a7f04325"
+  },
+  "reports": {
+    "fast": {
+      "sha256": "f36bdc1a44bb264f505d09b52e68919e8f8d27a291d2fb8a0f5b0a601a8dc6a3",
+      "status": "engineering_smoke_passed",
+      "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+      "profile": "legacy-fast",
+      "datasetType": "synthetic_engineering_only",
+      "partition": "development",
+      "humanValidation": "not_evaluated",
+      "calibration": "not_evaluated",
+      "representativeValidity": "not_evaluated",
+      "fullAA1Gate": "open",
+      "accuracyGate": "not_passed",
+      "cleanup": "no_new_owned_containers_remaining",
+      "results": [
+        {
+          "kind": "scanned",
+          "sourceSha256": "246a98b9d9130382d45cc0d1a9d80c004e2ad77f81acf0623b3ae954e3acf331",
+          "status": "review_required",
+          "reviewAdmission": "ready_for_synthetic_review",
+          "selectedPages": [1],
+          "wallMs": 1331.898542,
+          "engineDurationMs": 635,
+          "versions": {
+            "engine": "tesseract-5.3.0-2",
+            "renderer": "poppler-22.12.0-2+deb12u3",
+            "languageData": "sha256:7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+          },
+          "pages": [
+            {
+              "pageNumber": 1,
+              "wordCount": 9,
+              "errors": 13,
+              "referenceCharacters": 76
+            }
+          ],
+          "cost": {
+            "apiFeeMicros": 0,
+            "compute": {
+              "status": "unknown",
+              "valueMicros": null,
+              "reason": "host_rate_unavailable"
+            },
+            "boundedAllocation": {
+              "id": "owner-approved-synthetic-local-2026-10-04",
+              "maxWallTimeMs": 10000,
+              "maxPages": 10,
+              "externalApiFeeMicros": 0
+            },
+            "attempts": 1
+          },
+          "resourceUsage": {
+            "kind": "child_process_rusage",
+            "cpuTimeMs": 598.973,
+            "maxChildRssBytes": 117035008,
+            "rendererCalls": 1,
+            "recognitionCalls": 1,
+            "containerMemoryPeak": {
+              "kind": "cgroup_v2_memory_peak",
+              "measuredThrough": "recognition_complete",
+              "valueBytes": 174845952,
+              "reason": null
+            }
+          }
+        },
+        {
+          "kind": "mixed",
+          "sourceSha256": "cb8baaeb4a5c888f9b2a0e445a1aceb4c7622577cf3360984a5e53af91fb4436",
+          "status": "review_required",
+          "reviewAdmission": "ready_for_synthetic_review",
+          "selectedPages": [1, 3],
+          "wallMs": 1723.0668330000003,
+          "engineDurationMs": 1196,
+          "versions": {
+            "engine": "tesseract-5.3.0-2",
+            "renderer": "poppler-22.12.0-2+deb12u3",
+            "languageData": "sha256:7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
+          },
+          "pages": [
+            {
+              "pageNumber": 1,
+              "wordCount": 9,
+              "errors": 13,
+              "referenceCharacters": 76
+            },
+            {
+              "pageNumber": 3,
+              "wordCount": 16,
+              "errors": 4,
+              "referenceCharacters": 128
+            }
+          ],
+          "cost": {
+            "apiFeeMicros": 0,
+            "compute": {
+              "status": "unknown",
+              "valueMicros": null,
+              "reason": "host_rate_unavailable"
+            },
+            "boundedAllocation": {
+              "id": "owner-approved-synthetic-local-2026-10-04",
+              "maxWallTimeMs": 10000,
+              "maxPages": 10,
+              "externalApiFeeMicros": 0
+            },
+            "attempts": 1
+          },
+          "resourceUsage": {
+            "kind": "child_process_rusage",
+            "cpuTimeMs": 1224.286,
+            "maxChildRssBytes": 117272576,
+            "rendererCalls": 2,
+            "recognitionCalls": 2,
+            "containerMemoryPeak": {
+              "kind": "cgroup_v2_memory_peak",
+              "measuredThrough": "recognition_complete",
+              "valueBytes": 111603712,
+              "reason": null
+            }
+          }
+        },
+        {
+          "kind": "native",
+          "sourceSha256": "33dfe85cba8a264e301809df670430203aeed29c13daaa70fb2b61eaa9c4d723",
+          "status": "not_needed",
+          "reviewAdmission": "ocr_not_needed",
+          "selectedPages": [],
+          "wallMs": 108.72254200000043
+        }
+      ],
+      "safeFailures": [
+        {
+          "mode": "cancelled",
+          "code": "cancelled",
+          "engineObserved": true,
+          "cleanup": "verified",
+          "wallMs": 561.3155420000003
+        },
+        {
+          "mode": "timeout",
+          "code": "timeout",
+          "engineObserved": true,
+          "cleanup": "verified",
+          "wallMs": 628.246083
+        },
+        {
+          "mode": "invalid_pdf",
+          "code": "engine_failure",
+          "engineObserved": false,
+          "cleanup": "verified",
+          "wallMs": 474.6987500000005
+        }
+      ]
+    },
+    "fusion": {
+      "sha256": "8819c9362432e1161e5e5d8c04f4dd242679b23e21d9e72897d254eaa74f900a",
+      "status": "engineering_smoke_passed",
+      "imageId": "sha256:6cbc1be0d1580b3c8ecc50dc68d14750995f0d766995779ffd3a09c40b1c9854",
+      "profile": "tesseract-5.3.0-2/text-fusion-v4",
+      "datasetType": "synthetic_engineering_only",
+      "partition": "development",
+      "humanValidation": "not_evaluated",
+      "calibration": "not_evaluated",
+      "representativeValidity": "not_evaluated",
+      "fullAA1Gate": "open",
+      "accuracyGate": "not_passed",
+      "cleanup": "no_new_owned_containers_remaining",
+      "results": [
+        {
+          "kind": "scanned",
+          "sourceSha256": "246a98b9d9130382d45cc0d1a9d80c004e2ad77f81acf0623b3ae954e3acf331",
+          "status": "review_required",
+          "reviewAdmission": "ready_for_synthetic_review",
+          "selectedPages": [1],
+          "wallMs": 951.330917,
+          "engineDurationMs": 543,
+          "versions": {
+            "engine": "tesseract-5.3.0-2/text-fusion-v4",
+            "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+            "languageData": "model-bundle-sha256:74a6c07f4943981367364af90d830c36c6de018cb0c7762caba61e51189c44cc"
+          },
+          "pages": [
+            {
+              "pageNumber": 1,
+              "wordCount": 10,
+              "errors": 14,
+              "referenceCharacters": 76
+            }
+          ],
+          "cost": {
+            "apiFeeMicros": 0,
+            "compute": {
+              "status": "unknown",
+              "valueMicros": null,
+              "reason": "host_rate_unavailable"
+            },
+            "boundedAllocation": {
+              "id": "owner-approved-synthetic-local-2026-10-04",
+              "maxWallTimeMs": 10000,
+              "maxPages": 10,
+              "externalApiFeeMicros": 0
+            },
+            "attempts": 1
+          },
+          "resourceUsage": {
+            "kind": "child_process_rusage",
+            "cpuTimeMs": 625.394,
+            "maxChildRssBytes": 63709184,
+            "rendererCalls": 1,
+            "recognitionCalls": 2,
+            "containerMemoryPeak": {
+              "kind": "cgroup_v2_memory_peak",
+              "measuredThrough": "recognition_complete",
+              "valueBytes": 73310208,
+              "reason": null
+            }
+          }
+        },
+        {
+          "kind": "mixed",
+          "sourceSha256": "cb8baaeb4a5c888f9b2a0e445a1aceb4c7622577cf3360984a5e53af91fb4436",
+          "status": "review_required",
+          "reviewAdmission": "ready_for_synthetic_review",
+          "selectedPages": [1, 3],
+          "wallMs": 1571.665375,
+          "engineDurationMs": 1156,
+          "versions": {
+            "engine": "tesseract-5.3.0-2/text-fusion-v4",
+            "renderer": "poppler-22.12.0-2+deb12u3/dpi-150",
+            "languageData": "model-bundle-sha256:74a6c07f4943981367364af90d830c36c6de018cb0c7762caba61e51189c44cc"
+          },
+          "pages": [
+            {
+              "pageNumber": 1,
+              "wordCount": 10,
+              "errors": 14,
+              "referenceCharacters": 76
+            },
+            {
+              "pageNumber": 3,
+              "wordCount": 16,
+              "errors": 2,
+              "referenceCharacters": 128
+            }
+          ],
+          "cost": {
+            "apiFeeMicros": 0,
+            "compute": {
+              "status": "unknown",
+              "valueMicros": null,
+              "reason": "host_rate_unavailable"
+            },
+            "boundedAllocation": {
+              "id": "owner-approved-synthetic-local-2026-10-04",
+              "maxWallTimeMs": 10000,
+              "maxPages": 10,
+              "externalApiFeeMicros": 0
+            },
+            "attempts": 1
+          },
+          "resourceUsage": {
+            "kind": "child_process_rusage",
+            "cpuTimeMs": 1386.293,
+            "maxChildRssBytes": 66134016,
+            "rendererCalls": 2,
+            "recognitionCalls": 4,
+            "containerMemoryPeak": {
+              "kind": "cgroup_v2_memory_peak",
+              "measuredThrough": "recognition_complete",
+              "valueBytes": 58880000,
+              "reason": null
+            }
+          }
+        },
+        {
+          "kind": "native",
+          "sourceSha256": "33dfe85cba8a264e301809df670430203aeed29c13daaa70fb2b61eaa9c4d723",
+          "status": "not_needed",
+          "reviewAdmission": "ocr_not_needed",
+          "selectedPages": [],
+          "wallMs": 77.54529200000025
+        }
+      ],
+      "safeFailures": [
+        {
+          "mode": "cancelled",
+          "code": "cancelled",
+          "engineObserved": true,
+          "cleanup": "verified",
+          "wallMs": 534.7139160000002
+        },
+        {
+          "mode": "cancelled_second_pass",
+          "code": "cancelled",
+          "engineObserved": true,
+          "cleanup": "verified",
+          "wallMs": 726.3075420000005
+        },
+        {
+          "mode": "timeout",
+          "code": "timeout",
+          "engineObserved": true,
+          "cleanup": "verified",
+          "wallMs": 631.8484159999998
+        },
+        {
+          "mode": "invalid_pdf",
+          "code": "engine_failure",
+          "engineObserved": false,
+          "cleanup": "verified",
+          "wallMs": 387.90958299999966
+        }
+      ]
+    }
+  }
+}

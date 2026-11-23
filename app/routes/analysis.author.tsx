@@ -1,4 +1,4 @@
-import { data, redirect } from "react-router";
+import { data, redirect, type ShouldRevalidateFunction } from "react-router";
 import { getServerConfig } from "~/lib/server/config";
 import { getAuthenticatedUser } from "~/lib/server/auth";
 import {
@@ -8,6 +8,7 @@ import {
 import { CanonicalError } from "~/lib/server/canonical-repository";
 import {
   applyAuthoring,
+  previewClarification,
   readAuthoringForm,
 } from "~/lib/server/authoring-repository";
 import { assertSameOrigin } from "~/lib/server/security";
@@ -20,6 +21,11 @@ const privateHeaders = () =>
     "Cache-Control": "private, no-store",
     "X-Robots-Tag": "noindex, nofollow",
   });
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  actionStatus,
+  defaultShouldRevalidate,
+}) => actionStatus === 409 || defaultShouldRevalidate;
+
 export function loader(args: Args) {
   if (!getServerConfig().AUTHORING_ENABLED)
     throw data(
@@ -44,13 +50,35 @@ export async function action({ request, params }: Args) {
     );
     if (!user) throw new CanonicalError(404, "Authoring workspace not found.");
     submitted = await readAuthoringForm(request);
-    await applyAuthoring(
-      createSupabaseAdminClient(),
-      params.id ?? "",
-      user.id,
-      submitted,
-      crypto.randomUUID(),
-    );
+    const client = createSupabaseAdminClient();
+    if (submitted.action === "preview_clarification") {
+      const preview = await previewClarification(
+        client,
+        params.id ?? "",
+        user.id,
+        submitted,
+      );
+      return data({ preview, error: null, submitted }, { headers: h });
+    }
+    if (submitted.action === "clarify") {
+      const { reviewedValueHash, ...command } = submitted;
+      await applyAuthoring(
+        client,
+        params.id ?? "",
+        user.id,
+        command,
+        crypto.randomUUID(),
+        reviewedValueHash,
+      );
+    } else {
+      await applyAuthoring(
+        client,
+        params.id ?? "",
+        user.id,
+        submitted,
+        crypto.randomUUID(),
+      );
+    }
     const focus =
       "targetFactId" in submitted
         ? submitted.targetFactId

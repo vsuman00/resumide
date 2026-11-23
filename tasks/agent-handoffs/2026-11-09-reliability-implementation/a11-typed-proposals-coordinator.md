@@ -1,0 +1,11 @@
+# CR-A11 typed proposal coordinator
+
+The full reliability objective remains active. CR-A10 has a verified local read-only consumer ([347-case closeout](a10-typed-consumer-closeout.md)); native and representative acceptance remain open. Typed proposals are still paused. This record governs the complete A11 sequence, not a smaller substitute.
+
+The [machine-readable contract](a11-typed-proposals-coordinator.json) preserves the full path: pre-dispatch admission, a separate typed patch/support contract, atomic typed persistence, explicit consumer review/apply and the remaining AI-surface integration. Existing patch1.0.0 and canonical-only CAS cannot supply typed JD/coverage authority. PostgreSQL must independently verify supported structural operations; a JavaScript diagnostic digest is correlation metadata, not native JSONB hash proof.
+
+The first necessary repair is the dormant injected proposal helper. It currently sends content before stale/typed diagnostic validation. Backend owns only authoring-proposals.ts and its handoff; frontend owns its unit test and handoff; runtime prepares the minimal independent Node/SQL transformation contract read-only. Exact Root baselines and old worktree bytes are recorded in a11-preflight-baseline.json. Root owns shared contracts, integration and one affected gate. Each writer remains in its separate existing worktree.
+
+Use actual builders and current diagnostics to reproduce zero-dispatch failures and one valid positive. Existing timeout tests use a scoring fixture whose contribution has no placement; preserve their assertions while supplying a genuinely valid target. Do not weaken the preflight to accept an orphan. The helper's validation is not caller authentication and does not replace the later owned-reader/consent/support path.
+
+No existing source/writing rule, numeric policy, writer permission, feature flag or provider is activated by this leaf. Direct canonical corrections stay available. Source/synthetic checks only; database, SQL execution, real configuration/data, providers, services, browser/compiler/Docker, dependencies and Git/deployment operations remain outside this allocation. Pricing remains deferred, services free and deployment on hold.

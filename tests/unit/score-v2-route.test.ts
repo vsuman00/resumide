@@ -1,13 +1,18 @@
 import { beforeEach, it, expect, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   enabled: true,
+  authoringEnabled: false,
   user: vi.fn(),
   admin: vi.fn(),
   server: vi.fn(),
   load: vi.fn(),
+  authoring: vi.fn(),
 }));
 vi.mock("../../app/lib/server/config", () => ({
-  getServerConfig: () => ({ SCORING_V2_ENABLED: mocks.enabled }),
+  getServerConfig: () => ({
+    SCORING_V2_ENABLED: mocks.enabled,
+    AUTHORING_ENABLED: mocks.authoringEnabled,
+  }),
 }));
 vi.mock("../../app/lib/server/auth", () => ({
   getAuthenticatedUser: mocks.user,
@@ -19,6 +24,9 @@ vi.mock("../../app/lib/server/supabase", () => ({
 vi.mock("../../app/lib/server/score-v2-repository", () => ({
   loadScoreDiagnostics: mocks.load,
 }));
+vi.mock("../../app/lib/server/authoring-repository", () => ({
+  loadAuthoring: mocks.authoring,
+}));
 import { loader, action, headers } from "../../app/routes/analysis.score";
 import { CanonicalError } from "../../app/lib/server/canonical-repository";
 const args = (query = "") => ({
@@ -28,6 +36,7 @@ const args = (query = "") => ({
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.enabled = true;
+  mocks.authoringEnabled = false;
   mocks.user.mockResolvedValue({ id: "owner" });
   mocks.load.mockResolvedValue({ diagnostics: {} });
 });
@@ -54,11 +63,34 @@ it("rejects duplicate version selectors", async () => {
   });
   expect(mocks.load).not.toHaveBeenCalled();
 });
+it("honors the version selector during targeted data requests", async () => {
+  const r = await loader(
+    args(".data?_routes=routes%2Fanalysis.score&canonical=version"),
+  );
+  expect(mocks.load).toHaveBeenCalledWith(
+    undefined,
+    "test",
+    "owner",
+    { canonical: "version" },
+    undefined,
+    { clauseOrderPreview: false },
+  );
+  expect(new Headers(r.init?.headers).get("Cache-Control")).toBe(
+    "private, no-store",
+  );
+});
 it("uses the session owner and preserves no-store and cookies", async () => {
   const r = await loader(args("?canonical=version"));
-  expect(mocks.load).toHaveBeenCalledWith(undefined, "test", "owner", {
-    canonical: "version",
-  });
+  expect(mocks.load).toHaveBeenCalledWith(
+    undefined,
+    "test",
+    "owner",
+    {
+      canonical: "version",
+    },
+    undefined,
+    { clauseOrderPreview: mocks.authoringEnabled },
+  );
   expect(new Headers(r.init?.headers).get("Cache-Control")).toContain(
     "no-store",
   );
@@ -81,6 +113,34 @@ it.each([404, 409, 422, 503])(
     });
   },
 );
+
+it("A09 score preserves actionable typed abstention and private headers before proposals", async () => {
+  mocks.authoringEnabled = true;
+  const message =
+    "Saved typed JD requirements can be reviewed on the JD page. Scoring diagnostics and proposals are paused until typed requirement coverage is available.";
+  mocks.load.mockRejectedValue(new CanonicalError(503, message));
+  const failure = await loader(args()).then(
+    () => null,
+    (error: unknown) => error,
+  );
+  expect(failure).toMatchObject({
+    data: { error: message },
+    init: { status: 503 },
+  });
+  if (
+    !failure ||
+    typeof failure !== "object" ||
+    !("init" in failure) ||
+    !failure.init ||
+    typeof failure.init !== "object" ||
+    !("headers" in failure.init) ||
+    !(failure.init.headers instanceof Headers)
+  )
+    throw Error("Expected private scoring error headers.");
+  expect(failure.init.headers.get("Cache-Control")).toBe("private, no-store");
+  expect(failure.init.headers.get("X-Robots-Tag")).toContain("noindex");
+  expect(mocks.authoring).not.toHaveBeenCalled();
+});
 it("never exposes raw database exceptions", async () => {
   mocks.load.mockRejectedValue(Error("secret SQL or source text"));
   await expect(loader(args())).rejects.toMatchObject({
@@ -89,7 +149,7 @@ it("never exposes raw database exceptions", async () => {
   });
 });
 
-it.each(["__proto__", "ownerId", "weights", "policyId"])(
+it.each(["__proto__", "ownerId", "weights", "policyId", "_routes"])(
   "rejects unsupported selector %s before privileged reads",
   async (key) => {
     await expect(loader(args(`?${key}=untrusted`))).rejects.toMatchObject({

@@ -1,0 +1,77 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/ai-budget-source-sql.test.ts (18 tests | 1 failed) 9ms
+     ✓ guards actual fresh generic operation insertion with a live registered source 1ms
+     ✓ extends the actual retirement producer to registered legacy rewrite selectors 0ms
+     ✓ refuses ambiguous retained OP1 retries and rolls fresh registration back on denied reserve 0ms
+     ✓ pins every new actual function and all three terminal pre/postimages 1ms
+     ✓ preserves generic budget bodies and strict old binding/receipt/policy dependencies 0ms
+     ✓ requires real owner/analysis/version/root and nonblocking admission before any reserve 0ms
+     ✓ guards all generic new operations/attempts/dispatch, but leaves release/settlement paths alone 0ms
+     ✓ rolls fresh source registration back on every denied or malformed old reservation 0ms
+     ✓ uses exact registered selectors before legacy/account inference and never makes a clock from registration 0ms
+     × exports the complete owner set with exact binding/source proof after retirement 4ms
+     ✓ seals fresh schema/constraints/indexes/guards once and rejects writable catalogue/data access 0ms
+     ✓ exposes exactly independent frozen metadata capabilities 0ms
+     ✓ preserves Root OP2 byte vector 1 0ms
+     ✓ preserves Root OP2 byte vector 2 0ms
+     ✓ preserves Root OP2 byte vector 3 0ms
+     ✓ preserves Root OP2 byte vector 4 0ms
+     ✓ preserves Root OP2 byte vector 5 0ms
+     ✓ binds the actual Native source to the exact OP2 header/framing/masks 0ms
+ ✓ tests/unit/retention-root-coverage-sql.test.ts (15 tests) 67ms
+ ✓ tests/unit/owned-ai-disposition-sql.test.ts (12 tests) 9ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/ai-budget-source-sql.test.ts > actual terminal source and catalogue proof mechanism; no SQL execution > exports the complete owner set with exact binding/source proof after retirement
+AssertionError: expected '\ndeclare s private.ai_budget_operati…' to contain '\'registeredAt\',s.'
+
+- Expected
++ Received
+
+- 'registeredAt',s.
++
++ declare s private.ai_budget_operation_sources%rowtype;o private.ai_budget_operations%rowtype;item jsonb;answer jsonb;rows jsonb:='[]'::jsonb;n integer:=0;bytes bigint:=1024;
++ begin
++  if p_user_id is null then raise exception 'AI_SOURCE_EXPORT_INVALID' using errcode='22023';end if;
++  if private.ai_budget_source_ready() is not true then raise exception 'AI_SOURCE_EXPORT_UNAVAILABLE' using errcode='23514';end if;
++  perform 1 from auth.users where id=p_user_id;if not found then raise exception 'AI_SOURCE_EXPORT_UNAVAILABLE' using errcode='23514';end if;
++  -- Entire owner set, across organizations and flags; no current source/membership filter.
++  for s in select * from private.ai_budget_operation_sources where owner_id=p_user_id order by operation_id limit 4097 loop
++   n:=n+1;if n>4096 then raise exception 'AI_SOURCE_EXPORT_UNAVAILABLE' using errcode='23514';end if;
++   select * into o from private.ai_budget_operations where id=s.operation_id;
++   if not found or private.ai_budget_source_valid(s,o) is not true then raise exception 'AI_SOURCE_EXPORT_UNAVAILABLE' using errcode='23514';end if;
++   if not exists(select 1 from public.resumes r join public.resume_versions v on v.resume_id=r.id
++     where (r.id,r.owner_id,r.organization_id,v.id,v.owner_id,v.organization_id)=(s.resume_id,s.owner_id,s.organization_id,s.resume_version_id,s.owner_id,s.organization_id))
++    and not exists(select 1 from private.owned_ai_operation_dispositions d where d.kind='r03' and d.operation_id=s.operation_id
++     and (d.owner_id,d.organization_id,d.analysis_id,d.resume_id,d.resume_version_id)=(s.owner_id,s.organization_id,s.analysis_id,s.resume_id,s.resume_version_id)
++     and d.phase='prepared' and d.source_scope='resume_root') then raise exception 'AI_SOURCE_EXPORT_UNAVAILABLE' using errcode='23514';end if;
++   item:=jsonb_build_object('operationId',s.operation_id,'ownerId',s.owner_id,'organizationId',s.organization_id,'kind',s.kind,'analysisId',s.analysis_id,
++    'resumeId',s.resume_id,'resumeVersionId',s.resume_version_id,'requestNonce',s.request_nonce,'bindingSha256',s.binding_sha256,'registeredAt',private.ifo_stamp(s.registered_at));
++   bytes:=bytes+octet_length(convert_to(item::text,'UTF8'))+1;if bytes>33554432 then raise exception 'AI_SOURCE_EXPORT_UNAVAILABLE' using errcode='23514';end if;
++   rows:=rows||jsonb_build_array(item);
++  end loop;
++  answer:=jsonb_build_object('schemaVersion','owned-ai-budget-sources/1.0.0','ownerId',p_user_id,'sources',rows);
++  if octet_length(convert_to(answer::text,'UTF8'))>33554432 then raise exception 'AI_SOURCE_EXPORT_UNAVAILABLE' using errcode='23514';end if;
++  return answer;
++ end;
++
+
+ ❯ tests/unit/ai-budget-source-sql.test.ts:99:168
+     97|   expect(s).toContain("(d.owner_id,d.organization_id,d.analysis_id,d.r…
+     98|   expect(s).not.toContain("current_setting");expect(s).not.toContain("…
+     99|   for(const key of ["operationId","ownerId","organizationId","kind","a…
+       |                                                                                                                                                                        ^
+    100|  });
+    101|  it("seals fresh schema/constraints/indexes/guards once and rejects wr…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 44 passed (45)
+   Start at  16:01:18
+   Duration  314ms (transform 44ms, setup 0ms, import 68ms, tests 85ms, environment 0ms)
+

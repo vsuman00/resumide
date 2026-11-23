@@ -1,0 +1,590 @@
+import { AI_BUDGET_SOURCE_PROFILE } from "../../app/lib/server/ai-budget-source-profile";
+import { createHash } from "node:crypto";
+import { beforeEach, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({
+  config: vi.fn(),
+  user: vi.fn(),
+  from: vi.fn(),
+  rpc: vi.fn(),
+  consent: vi.fn(),
+  access: vi.fn(),
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getServerConfig: mocks.config,
+}));
+vi.mock("../../app/lib/server/auth", () => ({
+  getAuthenticatedUser: mocks.user,
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseAdminClient: () => ({ from: mocks.from, rpc: mocks.rpc }),
+  createSupabaseServerClient: () => ({}),
+}));
+vi.mock("../../app/lib/server/privacy", () => ({
+  requireAndRecordAiConsent: mocks.consent,
+}));
+vi.mock("../../app/lib/server/canonical-repository", async (original) => ({
+  ...(await original<
+    typeof import("../../app/lib/server/canonical-repository")
+  >()),
+  ownedAnalysis: mocks.access,
+}));
+
+import { zodResponseFormat } from "openai/helpers/zod";
+import { rewriteAction } from "../../app/lib/server/rewrite-service";
+import { QualitativeAiFailure } from "../../app/lib/server/qualitative-ai";
+import {
+  REWRITE_INSTRUCTIONS,
+  REWRITE_PROMPT_VERSION,
+  type RewriteTransport,
+} from "../../app/lib/server/rewrite-ai";
+import { buildRewriteSources } from "../../app/lib/server/rewrite-sources";
+import { WriterProposalSchema } from "../../app/lib/server/writer-proposals";
+import { WRITING_SUPPORT_POLICY_VERSION } from "../../app/lib/server/writing-support";
+import {
+  calculateAiBudgetCost,
+  hashAiBudgetBinding,
+} from "../../app/lib/server/ai-budget";
+
+const id = "11111111-1111-4111-8111-111111111111";
+const owner = "22222222-2222-4222-8222-222222222222";
+const key = "33333333-3333-4333-8333-333333333333";
+const source = "- Built a Python API for event ingestion.";
+let analysis: Record<string, unknown>;
+let failSave: boolean;
+let failSettle: boolean;
+let stale: boolean;
+let recoverReserved: boolean;
+const events: string[] = [];
+const writes: Array<{ table: string; method: string; value: unknown }> = [];
+const reservations = new Map<string, Record<string, unknown>>();
+const claimed = new Set<string>();
+
+function ok(receipt: Record<string, unknown>) {
+  return {
+    data: { schemaVersion: "ai-budget/1.0.0", status: "ok", receipt },
+    error: null,
+  };
+}
+function denied(code: string) {
+  return {
+    data: { schemaVersion: "ai-budget/1.0.0", status: "denied", code },
+    error: null,
+  };
+}
+function request(headers: Record<string, string> = { "Idempotency-Key": key }) {
+  return new Request(`https://example.test/resume/${id}/rewrite`, {
+    method: "POST",
+    headers: {
+      Origin: "https://example.test",
+      "Content-Type": "application/x-www-form-urlencoded",
+      ...headers,
+    },
+    body: "aiConsent=accepted",
+  });
+}
+function transport(): RewriteTransport & { execute: ReturnType<typeof vi.fn> } {
+  return {
+    execute: vi.fn(async () => {
+      events.push("provider");
+      return {
+        output: {
+          summary: null,
+          bullets: [
+            {
+              sourceId: 0,
+              rewrite: "Created a Python API for event ingestion.",
+              reasoning: "Clarifies the contribution.",
+            },
+          ],
+        },
+        usage: { inputTokens: 7, outputTokens: 3 },
+      };
+    }),
+  };
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  events.length = 0;
+  writes.length = 0;
+  reservations.clear();
+  claimed.clear();
+  failSave = false;
+  failSettle = false;
+  stale = false;
+  recoverReserved = false;
+  analysis = {
+    id,
+    owner_id: owner,
+    organization_id: id,
+    status: "completed",
+    resume_version_id: id,
+    job_id: id,
+    jobs: { title: "Engineer", description: "Python API development" },
+    resume_versions: { resumes: { status: "active" } },
+    analysis_extractions: { extracted_text: source },
+    writer_drafts: [
+      {
+        id,
+        kind: "summary",
+        draft: { summary: null, bullets: [] },
+        updated_at: "2026-11-10T00:00:00Z",
+      },
+    ],
+  };
+  mocks.config.mockReturnValue({
+    APP_ORIGIN: "https://example.test",
+    AI_ENABLED: true,
+    AI_BUDGET_ENABLED: true,
+    AI_BUDGET_POLICY_VERSION: "synthetic-budget-v1",
+    OPENAI_TIMEOUT_MS: 100,
+    OPENAI_MAX_OUTPUT_TOKENS: 1000,
+    OPENAI_MODEL: "synthetic-model",
+    AI_MONTHLY_TOKEN_LIMIT: 1,
+    MAX_EXTRACTED_CHARACTERS: 100000,
+  });
+  mocks.user.mockResolvedValue({ id: owner });
+  mocks.access.mockResolvedValue({});
+  mocks.consent.mockResolvedValue(undefined);
+  mocks.from.mockImplementation((table: string) => {
+    const q: Record<string, unknown> = {};
+    const data = () => ({
+      data:
+        table === "analyses"
+          ? analysis
+          : table === "document_evidence_attempts"
+            ? []
+            : table === "writer_drafts"
+              ? stale
+                ? null
+                : { id }
+              : null,
+      error:
+        table === "analysis_ai_runs" && failSave
+          ? { message: "private database detail" }
+          : null,
+    });
+    q.then = (resolve: (value: unknown) => unknown) =>
+      Promise.resolve(data()).then(resolve);
+    for (const method of [
+      "select",
+      "eq",
+      "limit",
+      "maybeSingle",
+      "insert",
+      "update",
+    ]) {
+      q[method] = (...args: unknown[]) => {
+        if (method === "insert" || method === "update") {
+          writes.push({ table, method, value: args[0] });
+          events.push(`${table}:${method}`);
+        }
+        return q;
+      };
+    }
+    return q;
+  });
+  mocks.rpc.mockImplementation(
+    async (name: string, args: Record<string, unknown>) => {
+      events.push(name);
+      if (name === "consume_analysis_rate_limit")
+        return { data: true, error: null };
+      if (name === "get_organization_ai_tokens_used")
+        throw new Error("legacy budget must not run");
+      if (name === "read_ai_budget_source_readiness")
+        return {
+          data: {
+            ...AI_BUDGET_SOURCE_PROFILE,
+            schemaReady: true,
+            reserveExecutable: true,
+            exportExecutable: false,
+          },
+          error: null,
+        };
+      const p = args.p_request as Record<string, unknown>;
+      const operationId = String(p.operationId);
+      if (name === "ai_budget_reserve_source_next") {
+        expect(args.p_source).toEqual({
+          schemaVersion: "ai-budget-source/1.0.0",
+          kind: "legacy_rewrite",
+          analysisId: id,
+          resumeVersionId: id,
+          requestNonce: expect.any(String),
+        });
+        const existing = reservations.get(operationId);
+        if (existing) {
+          if (existing.payloadSha256 !== p.payloadSha256)
+            return denied("AI_BUDGET_CONFLICT");
+          return ok({ ...existing, replayed: true, dispatchAllowed: false });
+        }
+        const binding = {
+          ...p,
+          userId: args.p_user_id,
+          organizationId: args.p_organization_id,
+          attemptOrdinal: 2,
+          reservedInputTokens: Number(p.reservedInputTokens),
+          reservedOutputTokens: Number(p.reservedOutputTokens),
+        };
+        const reservedCostMicrousd = calculateAiBudgetCost({
+          inputTokens: Number(p.reservedInputTokens),
+          outputTokens: Number(p.reservedOutputTokens),
+          inputMicrousdPerMillion: "1000000",
+          outputMicrousdPerMillion: "2000000",
+        });
+        const r = {
+          ...p,
+          userId: args.p_user_id,
+          organizationId: args.p_organization_id,
+          attemptOrdinal: 2,
+          schemaVersion: "ai-budget/1.0.0",
+          bindingSha256: hashAiBudgetBinding(
+            binding as Parameters<typeof hashAiBudgetBinding>[0],
+          ),
+          period: "2026-11-01",
+          state: "reserved",
+          reservedCostMicrousd,
+          actualInputTokens: null,
+          actualOutputTokens: null,
+          actualCostMicrousd: null,
+          replayed: false,
+          dispatchAllowed: false,
+          poolBlocked: false,
+          attemptLimit: 3,
+          poolPolicyVersion: "synthetic-pool-v1",
+          inputMicrousdPerMillion: "1000000",
+          outputMicrousdPerMillion: "2000000",
+        };
+        reservations.set(operationId, r);
+        return ok({ ...r, replayed: recoverReserved });
+      }
+      const r = reservations.get(operationId)!;
+      if (name === "ai_budget_claim_dispatch") {
+        const replayed = claimed.has(operationId);
+        claimed.add(operationId);
+        const next = {
+          ...r,
+          state: replayed ? r.state : "dispatched",
+          replayed,
+          dispatchAllowed: !replayed,
+        };
+        reservations.set(operationId, { ...next, dispatchAllowed: false });
+        return ok(next);
+      }
+      if (name === "ai_budget_settle") {
+        if (failSettle)
+          return {
+            data: null,
+            error: { message: "private settlement detail" },
+          };
+        const usage = p.usage as { inputTokens: string; outputTokens: string };
+        const next = {
+          ...r,
+          state: "settled",
+          actualInputTokens: usage.inputTokens,
+          actualOutputTokens: usage.outputTokens,
+          actualCostMicrousd: calculateAiBudgetCost({
+            inputTokens: Number(usage.inputTokens),
+            outputTokens: Number(usage.outputTokens),
+            inputMicrousdPerMillion: "1000000",
+            outputMicrousdPerMillion: "2000000",
+          }),
+          replayed: false,
+          dispatchAllowed: false,
+        };
+        reservations.set(operationId, next);
+        return ok(next);
+      }
+      if (name === "ai_budget_mark_unknown") {
+        const next = {
+          ...r,
+          state: "held_unknown",
+          replayed: false,
+          dispatchAllowed: false,
+        };
+        reservations.set(operationId, next);
+        return ok(next);
+      }
+      throw new Error(`Unexpected RPC ${name}`);
+    },
+  );
+});
+
+it("settles before persistence and binds the exact production payload and assigned attempt", async () => {
+  const ai = transport();
+  const response = await rewriteAction(request(), id, ai);
+  expect(response.status).toBe(200);
+  expect(events.filter((e) => e !== "consume_analysis_rate_limit")).toEqual([
+    "read_ai_budget_source_readiness",
+    "ai_budget_reserve_source_next",
+    "ai_budget_claim_dispatch",
+    "provider",
+    "ai_budget_settle",
+    "analysis_ai_runs:insert",
+    "writer_drafts:update",
+  ]);
+  expect(mocks.rpc).not.toHaveBeenCalledWith(
+    "get_organization_ai_tokens_used",
+    expect.anything(),
+  );
+  const args = mocks.rpc.mock.calls.find(
+    ([name]) => name === "ai_budget_reserve_source_next",
+  )![1];
+  const p = args.p_request;
+  const userPayload = JSON.stringify({
+    resumeText: source,
+    sources: buildRewriteSources(source),
+    jobTitle: "Engineer",
+    jobDescription: "Python API development",
+  });
+  const schema = zodResponseFormat(WriterProposalSchema, "resume_rewrite");
+  expect(args).toMatchObject({ p_user_id: owner, p_organization_id: id });
+  expect(p).not.toHaveProperty("attemptOrdinal");
+  expect(p).toMatchObject({
+    surface: "rewrite",
+    model: "synthetic-model",
+    promptPolicyVersion: REWRITE_PROMPT_VERSION,
+    policyVersion: "synthetic-budget-v1",
+    reservedOutputTokens: "1000",
+  });
+  expect(Number(p.reservedInputTokens)).toBeGreaterThanOrEqual(
+    Buffer.byteLength(REWRITE_INSTRUCTIONS) +
+      Buffer.byteLength(userPayload) +
+      Buffer.byteLength(JSON.stringify(schema)),
+  );
+  expect(p.payloadSha256).toBe(
+    createHash("sha256")
+      .update(
+        JSON.stringify({
+          analysisId: id,
+          resumeVersionId: id,
+          jobId: id,
+          system: REWRITE_INSTRUCTIONS,
+          user: userPayload,
+          schema,
+          promptVersion: REWRITE_PROMPT_VERSION,
+          supportPolicyVersion: WRITING_SUPPORT_POLICY_VERSION,
+          model: "synthetic-model",
+          policyVersion: "synthetic-budget-v1",
+        }),
+      )
+      .digest("hex"),
+  );
+  expect(ai.execute.mock.calls[0][0].idempotencyKey).toBe(
+    `rewrite-${p.attemptId}`,
+  );
+  expect(
+    mocks.rpc.mock.calls.find(([name]) => name === "ai_budget_settle")![1]
+      .p_request,
+  ).toMatchObject({
+    attemptOrdinal: 2,
+    usage: { inputTokens: "7", outputTokens: "3" },
+  });
+});
+
+it("never dispatches exact header replay twice and conflicts on changed payload under that key", async () => {
+  const ai = transport();
+  expect((await rewriteAction(request(), id, ai)).status).toBe(200);
+  writes.length = 0;
+  expect((await rewriteAction(request(), id, ai)).status).toBe(409);
+  expect(ai.execute).toHaveBeenCalledTimes(1);
+  expect(writes).toEqual([]);
+  analysis.jobs = {
+    title: "Engineer",
+    description: "Changed Python job description",
+  };
+  expect((await rewriteAction(request(), id, ai)).status).toBe(409);
+  const reserves = mocks.rpc.mock.calls.filter(
+    ([name]) => name === "ai_budget_reserve_source_next",
+  );
+  expect(reserves).toHaveLength(3);
+  expect(reserves[0][1].p_request.operationId).toBe(
+    reserves[2][1].p_request.operationId,
+  );
+  expect(reserves[0][1].p_request.payloadSha256).not.toBe(
+    reserves[2][1].p_request.payloadSha256,
+  );
+  expect(ai.execute).toHaveBeenCalledTimes(1);
+});
+
+it("recovers a replayed reserved attempt through its first dispatch claim", async () => {
+  recoverReserved = true;
+  const ai = transport();
+  expect((await rewriteAction(request(), id, ai)).status).toBe(200);
+  expect(
+    mocks.rpc.mock.calls.filter(
+      ([name]) => name === "ai_budget_reserve_source_next",
+    ),
+  ).toHaveLength(1);
+  expect(
+    mocks.rpc.mock.calls.filter(
+      ([name]) => name === "ai_budget_claim_dispatch",
+    ),
+  ).toHaveLength(1);
+  expect(ai.execute).toHaveBeenCalledTimes(1);
+  expect(reservations.size).toBe(1);
+  expect([...reservations.values()][0].state).toBe("settled");
+  expect(events).not.toContain("ai_budget_release");
+});
+
+it("uses the accepted request ID for replay and creates fresh operations when no key is supplied", async () => {
+  const ai = transport();
+  expect(
+    (
+      await rewriteAction(
+        request({ "X-Request-Id": "synthetic-request-1" }),
+        id,
+        ai,
+      )
+    ).status,
+  ).toBe(200);
+  expect(
+    (
+      await rewriteAction(
+        request({ "X-Request-Id": "synthetic-request-1" }),
+        id,
+        ai,
+      )
+    ).status,
+  ).toBe(409);
+  expect((await rewriteAction(request({}), id, ai)).status).toBe(200);
+  expect((await rewriteAction(request({}), id, ai)).status).toBe(200);
+  const p = mocks.rpc.mock.calls
+    .filter(([name]) => name === "ai_budget_reserve_source_next")
+    .map(([, args]) => args.p_request);
+  expect(p[0].operationId).toBe(p[1].operationId);
+  expect(new Set(p.map((v) => v.operationId)).size).toBe(3);
+  expect(ai.execute).toHaveBeenCalledTimes(3);
+});
+
+it("charges known refusal usage without writing or refunding the prior draft", async () => {
+  const ai = transport();
+  ai.execute.mockRejectedValueOnce(
+    new QualitativeAiFailure("AI_REFUSED", false, {
+      inputTokens: 7,
+      outputTokens: 3,
+    }),
+  );
+  const response = await rewriteAction(request(), id, ai);
+  expect(response.status).toBe(503);
+  expect(events).toContain("ai_budget_settle");
+  expect(events).not.toContain("ai_budget_release");
+  expect(writes).toEqual([]);
+  expect([...reservations.values()][0]).toMatchObject({
+    state: "settled",
+    actualInputTokens: "7",
+    actualOutputTokens: "3",
+  });
+});
+
+it("retains a dispatched timeout with unknown usage as a hold", async () => {
+  const ai = transport();
+  ai.execute.mockRejectedValueOnce(
+    new QualitativeAiFailure("AI_TIMEOUT", true),
+  );
+  expect((await rewriteAction(request(), id, ai)).status).toBe(503);
+  expect(events).toContain("ai_budget_mark_unknown");
+  expect(events).not.toContain("ai_budget_settle");
+  expect(events).not.toContain("ai_budget_release");
+  expect(writes).toEqual([]);
+  expect([...reservations.values()][0]).toMatchObject({
+    state: "held_unknown",
+    actualInputTokens: null,
+  });
+});
+
+it("settles observed usage even when the provider output is invalid", async () => {
+  const ai = transport();
+  ai.execute.mockResolvedValueOnce({
+    output: { invalid: true },
+    usage: { inputTokens: 7, outputTokens: 3 },
+  });
+  expect((await rewriteAction(request(), id, ai)).status).toBe(503);
+  expect(events).toContain("ai_budget_settle");
+  expect(events).not.toContain("ai_budget_mark_unknown");
+  expect(writes).toEqual([]);
+});
+
+it("keeps known spend when no proposal passes grounding", async () => {
+  const ai = transport();
+  ai.execute.mockResolvedValueOnce({
+    output: {
+      summary: null,
+      bullets: [
+        {
+          sourceId: 0,
+          rewrite: "Led an AWS team with 99% uptime.",
+          reasoning: "Clarifies the contribution.",
+        },
+      ],
+    },
+    usage: { inputTokens: 7, outputTokens: 3 },
+  });
+  expect((await rewriteAction(request(), id, ai)).status).toBe(422);
+  expect(events.indexOf("ai_budget_settle")).toBeLessThan(
+    events.indexOf("analysis_ai_runs:insert"),
+  );
+  expect(writes.map((v) => v.table)).toEqual(["analysis_ai_runs"]);
+  expect(events).not.toContain("ai_budget_release");
+});
+
+it("does not persist a proposal when settlement is unavailable or expose private error text", async () => {
+  failSettle = true;
+  const response = await rewriteAction(request(), id, transport());
+  expect(response.status).toBe(503);
+  expect(JSON.stringify(await response.json())).not.toContain(
+    "private settlement detail",
+  );
+  expect(writes).toEqual([]);
+  expect(events).not.toContain("ai_budget_release");
+});
+
+it("retains settled spend after run persistence failure or stale draft rejection", async () => {
+  failSave = true;
+  expect((await rewriteAction(request(), id, transport())).status).toBe(503);
+  expect([...reservations.values()][0].state).toBe("settled");
+  expect(writes.map((v) => v.table)).toEqual(["analysis_ai_runs"]);
+  failSave = false;
+  stale = true;
+  expect(
+    (
+      await rewriteAction(
+        request({ "Idempotency-Key": owner }),
+        id,
+        transport(),
+      )
+    ).status,
+  ).toBe(409);
+  expect([...reservations.values()].every((v) => v.state === "settled")).toBe(
+    true,
+  );
+  expect(events).not.toContain("ai_budget_release");
+});
+
+it("rejects an invalid idempotency key before reserve or provider access", async () => {
+  const ai = transport();
+  expect(
+    (await rewriteAction(request({ "Idempotency-Key": "invalid" }), id, ai))
+      .status,
+  ).toBe(400);
+  expect(events).not.toContain("ai_budget_reserve_source_next");
+  expect(ai.execute).not.toHaveBeenCalled();
+  expect(writes).toEqual([]);
+});
+
+it("requires source admission before reserving and calling the SDK", async () => {
+  const original = mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation((name, args) =>
+    name === "ai_budget_reserve_source_next"
+      ? Promise.resolve(denied("AI_BUDGET_DENIED"))
+      : original(name, args),
+  );
+  const ai = transport();
+  const response = await rewriteAction(request(), id, ai);
+  expect(response.status).toBe(503);
+  expect(ai.execute).not.toHaveBeenCalled();
+  expect(mocks.rpc).not.toHaveBeenCalledWith(
+    "ai_budget_reserve_next",
+    expect.anything(),
+  );
+});

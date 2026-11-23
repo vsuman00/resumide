@@ -1,0 +1,77 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/privacy-export-route.test.ts (38 tests | 2 failed) 27ms
+     ✓ downloads a permitted completed export with fixed no-store and attachment semantics 12ms
+     ✓ revokes old completed manifest access for an active deletion: queued 1ms
+     ✓ revokes old completed manifest access for an active deletion: processing 0ms
+     ✓ revokes old completed manifest access for an active deletion: completed 0ms
+     ✓ keeps an old export blocked after durable preparation even when its request is failed 0ms
+     ✓ keeps an old export blocked after durable preparation even when its request is cancelled 0ms
+     ✓ blocks before serialization when deletion arrives while the manifest is loading 1ms
+     ✓ permits an export when deletion does not match the existing access policy: {"id":"10000000-0000-4000-8000-000000000004","user_id":"10000000-0000-4000-8000-000000000001","kind":"deletion","status":"failed"} 1ms
+     ✓ permits an export when deletion does not match the existing access policy: {"id":"10000000-0000-4000-8000-000000000004","user_id":"10000000-0000-4000-8000-000000000001","kind":"deletion","status":"cancelled"} 1ms
+     ✓ permits an export when deletion does not match the existing access policy: {"id":"10000000-0000-4000-8000-000000000004","user_id":"10000000-0000-4000-8000-000000000002","kind":"deletion","status":"queued"} 0ms
+     ✓ fails closed on a deletion-policy query error before loading private manifest data 0ms
+     ✓ fails closed on an unverifiable deletion-policy result 0ms
+     ✓ fails closed if the final access check fails after manifest loading 0ms
+     ✓ keeps unauthenticated, missing-id and unsupported-method guards before privileged reads 0ms
+     ✓ does not expose an export request with status queued 0ms
+     ✓ does not expose an export request with status processing 0ms
+     ✓ does not expose an export request with status failed 0ms
+     ✓ does not expose an export request with status cancelled 0ms
+     ✓ keeps foreign-owner and manifest-query failures unavailable 0ms
+     ✓ checks exact access metadata independently from export permission 0ms
+     ✓ blocks after preparation even when the request and its storage plan have gone 0ms
+     ✓ rechecks durable preparation before serializing a loaded manifest 0ms
+     ✓ refuses missing, denied, mismatched or open metadata 0 without REST fallback 0ms
+     ✓ refuses missing, denied, mismatched or open metadata 1 without REST fallback 0ms
+     ✓ refuses missing, denied, mismatched or open metadata 2 without REST fallback 0ms
+     ✓ refuses missing, denied, mismatched or open metadata 3 without REST fallback 0ms
+     ✓ refuses missing, denied, mismatched or open metadata 4 without REST fallback 0ms
+     ✓ refuses missing, denied, mismatched or open metadata 5 without REST fallback 0ms
+     ✓ refuses unverifiable access replies 0 without loading private data 0ms
+     ✓ refuses unverifiable access replies 1 without loading private data 0ms
+     ✓ refuses unverifiable access replies 2 without loading private data 0ms
+     ✓ refuses unverifiable access replies 3 without loading private data 0ms
+     ✓ refuses unverifiable access replies 4 without loading private data 0ms
+     ✓ fails closed when the access RPC or metadata RPC is absent or denied 0ms
+     ✓ bounds both RPCs with one deadline and rejects a late ignored cancellation 2ms
+     × refuses a clear reply when read_owned_ai_disposition_readiness crosses the deadline before the timer can run 3ms
+     × refuses a clear reply when read_candidate_privacy_access crosses the deadline before the timer can run 1ms
+     ✓ skips already-cancelled access and aborts an in-flight metadata request 0ms
+ ✓ tests/unit/privacy-route.test.ts (16 tests) 65ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/privacy-export-route.test.ts > durable access authority > refuses a clear reply when read_owned_ai_disposition_readiness crosses the deadline before the timer can run
+ FAIL  tests/unit/privacy-export-route.test.ts > durable access authority > refuses a clear reply when read_candidate_privacy_access crosses the deadline before the timer can run
+AssertionError: expected { state: 'clear', …(1) } to deeply equal { state: 'unavailable', …(1) }
+
+- Expected
++ Received
+
+  {
+-   "deletionPrepared": null,
+-   "state": "unavailable",
++   "deletionPrepared": false,
++   "state": "clear",
+  }
+
+ ❯ tests/unit/privacy-export-route.test.ts:520:67
+    518|         };
+    519|       });
+    520|       expect(await readCandidatePrivacyAccess(database(), owner)).toEq…
+       |                                                                   ^
+    521|         state: "unavailable", deletionPrepared: null,
+    522|       });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 52 passed (54)
+   Start at  13:26:44
+   Duration  330ms (transform 228ms, setup 0ms, import 348ms, tests 91ms, environment 0ms)
+
+JSON report written to /var/folders/6n/9cbj04mx647dtyxxmrlfywl40000gn/T/resumide-disposition-access-work-6u44n22t/deadline-checks/red-tests.json

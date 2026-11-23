@@ -1,0 +1,122 @@
+--- before/app/lib/server/worker-readiness.ts
++++ after/app/lib/server/worker-readiness.ts
+@@ -13,6 +13,19 @@
+ import { OwnedAiRetirementProfileSchema } from "./owned-ai-retirement-export";
+ import { OWNED_AI_BUDGET_EXPORT_PROFILE } from "./owned-ai-budget-export-profile";
+ import { OwnedAiBudgetExportReadinessSchema } from "./owned-ai-budget-export";
++
++import { DOCUMENT_PAGE_COUNT_READINESS_PROFILE } from "./document-page-count-readiness-profile";
++
++const pageCountReadinessSchema = z.strictObject({
++  schemaVersion: z.literal("document-page-count-readiness/1.0.0"),
++  profileVersion: z.literal("document-page-count-native/1.0.0"),
++  checkerSha256: z.string().regex(/^[a-f0-9]{64}$/u),
++  writerSha256: z.string().regex(/^[a-f0-9]{64}$/u),
++  metadataSha256: z.string().regex(/^[a-f0-9]{64}$/u),
++  schemaReady: z.boolean(),
++  writerExecutable: z.boolean(),
++  fencedWriterExecutable: z.boolean(),
++});
+ 
+ const legacyReadinessSchema = LegacyScoringInputProfileSchema.extend({
+   schemaReady: z.boolean(),
+@@ -68,6 +81,7 @@
+   signal?: AbortSignal;
+   analysisFencingEnabled?: boolean;
+   initialFeedbackEnabled?: boolean;
++  evidenceReviewEnabled?: boolean;
+   legacyScoringInputEnabled?: boolean;
+   aiEnabled?: boolean;
+   aiBudgetEnabled?: boolean;
+@@ -91,6 +105,7 @@
+     [
+       options.analysisFencingEnabled,
+       options.initialFeedbackEnabled,
++      options.evidenceReviewEnabled,
+       options.legacyScoringInputEnabled,
+       options.aiEnabled,
+       options.aiBudgetEnabled,
+@@ -98,6 +113,7 @@
+   )
+     throw new WorkerReadinessError("WORKER_SCHEMA_INVALID");
+   const fencing = options.analysisFencingEnabled === true;
++  const evidenceReview = options.evidenceReviewEnabled === true;
+   const initialFeedback = options.initialFeedbackEnabled === true;
+   if (
+     initialFeedback &&
+@@ -115,6 +131,7 @@
+       !identifier.test(options.aiBudgetPolicyVersion))
+   )
+     throw new WorkerReadinessError("WORKER_SCHEMA_INVALID");
++  const deadline = Date.now() + timeoutMs;
+   const controller = new AbortController();
+   let interrupted: WorkerReadinessError | undefined;
+   let rejectInterrupted!: (error: WorkerReadinessError) => void;
+@@ -134,6 +151,8 @@
+   if (options.signal?.aborted) onAbort();
+   const timer = setTimeout(() => abort("WORKER_STARTUP_TIMEOUT"), timeoutMs);
+   const active = () => {
++    if (!controller.signal.aborted && Date.now() >= deadline)
++      abort("WORKER_STARTUP_TIMEOUT");
+     if (controller.signal.aborted)
+       throw interrupted ?? new WorkerReadinessError("WORKER_STARTUP_CANCELLED");
+   };
+@@ -153,10 +172,40 @@
+         active();
+         if (error) throw new WorkerReadinessError("WORKER_SCHEMA_UNAVAILABLE");
+       }
+-      if (!fencing && !aiBudget && !initialFeedback) return;
++      if (!fencing && !aiBudget && !initialFeedback && !evidenceReview) return;
+       active();
+       if (!client.rpc)
+         throw new WorkerReadinessError("WORKER_SCHEMA_UNAVAILABLE");
++      const readMetadata = async (name: string) => {
++        active();
++        const reply = await client.rpc!(name, {}).abortSignal(
++          controller.signal,
++        );
++        active();
++        if (reply.error)
++          throw new WorkerReadinessError("WORKER_SCHEMA_UNAVAILABLE");
++        return reply.data;
++      };
++      if (evidenceReview) {
++        const value = pageCountReadinessSchema.safeParse(
++          await readMetadata("read_document_page_count_readiness"),
++        );
++        if (
++          !value.success ||
++          Object.entries(DOCUMENT_PAGE_COUNT_READINESS_PROFILE).some(
++            ([key, expected]) =>
++              value.data[key as keyof typeof value.data] !== expected,
++          )
++        )
++          throw new WorkerReadinessError("WORKER_SCHEMA_INVALID");
++        if (
++          !value.data.schemaReady ||
++          !value.data.writerExecutable ||
++          (fencing && !value.data.fencedWriterExecutable)
++        )
++          throw new WorkerReadinessError("WORKER_SCHEMA_CAPABILITY_MISSING");
++      }
++      if (!fencing && !aiBudget && !initialFeedback) return;
+       const result = await client
+         .rpc("worker_schema_readiness", {
+           p_fencing: fencing,
+@@ -183,16 +232,6 @@
+           parsed.data.failures,
+         );
+       if (!initialFeedback) return;
+-      const readMetadata = async (name: string) => {
+-        active();
+-        const reply = await client.rpc!(name, {}).abortSignal(
+-          controller.signal,
+-        );
+-        active();
+-        if (reply.error)
+-          throw new WorkerReadinessError("WORKER_SCHEMA_UNAVAILABLE");
+-        return reply.data;
+-      };
+       const checkExport = (
+         raw: unknown,
+         schema:

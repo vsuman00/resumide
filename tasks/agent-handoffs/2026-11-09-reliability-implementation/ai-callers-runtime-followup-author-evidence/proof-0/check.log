@@ -1,0 +1,239 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/qualitative-stage-outage.test.ts (10 tests | 6 failed) 32ms
+     ✓ does not call a model or publish historical scores for uncalibrated evidence 1ms
+     ✓ persists a deterministic partial result after the first retryable failure 5ms
+     ✓ different cited prose cannot change the deterministic baseline or store model ratings 11ms
+     × never falls back to the legacy pool or dispatches when the enabled ledger denies 8ms
+     × persists deterministic partial feedback on definitive AI_BUDGET_EXHAUSTED without provider dispatch 2ms
+     × persists deterministic partial feedback on definitive AI_BUDGET_BLOCKED without provider dispatch 1ms
+     × settles before product persistence and retains the charge when persistence fails 2ms
+     × charges rejected known output but holds unknown provider usage before partial persistence 0ms
+     × uses admitted logical ordinal and policy cap rather than the global job retry count 1ms
+     ✓ dispatches nothing without current consent or an explicit configured policy 0ms
+ ❯ tests/unit/initial-feedback-stage.test.ts (13 tests | 1 failed) 131ms
+     ✓ publishes immutable original inputs before legacy reads and keeps the old transport isolated 78ms
+     ✓ replays an owned publication before consent, quota, rate, claim or SDK 17ms
+     ✓ fails pending safely on every queue replay without redispatch or completion 2ms
+     ✓ publishes AI-off deterministic output without fresh authorization or SDK 4ms
+     ✓ uses existing consent and never manufactures it 3ms
+     ✓ requires a real matching lease and respects cancellation before lookup 1ms
+     ✓ leaves the legacy branch selected when the flag is false 1ms
+     ✓ uses the bounded worker failure path for unresolved accounting and never redispatches 9ms
+     ✓ never dispatches when the once-only claim loses 4ms
+     × uses the exact budget-on selected policy and both accounting paths 6ms
+     ✓ refuses an unselected Native policy before consent, quota or provider with no budget-off fallback 1ms
+     ✓ rejects malformed selected dependencies before scope lookup 1ms
+     ✓ cancels the installed SDK attempt and retains unknown spend without legacy publication or redispatch 3ms
+ ❯ tests/unit/canonical-rewrite-service.test.ts (40 tests | 4 failed) 1050ms
+     ✓ preserves exact valid request and microseconds from urlencoded 12ms
+     ✓ preserves exact valid request and microseconds from multipart 2ms
+     ✓ refuses duplicate form without service IO 1ms
+     ✓ refuses escaped duplicate JSON without service IO 0ms
+     ✓ refuses missing without service IO 1ms
+     ✓ refuses extra without service IO 0ms
+     ✓ refuses file without service IO 1ms
+     ✓ requires the exact native consent acknowledgement 0ms
+     ✓ rejects malformed UTF8 and both encoded and decoded byte overflows 2ms
+     ✓ settles stalled body deadline and releases reader when cancel resolve 3ms
+     ✓ settles stalled body deadline and releases reader when cancel reject 1ms
+     ✓ settles caller cancellation during a pending read and releases its reader 0ms
+     ✓ denies unknown or malformed counter null before dispatch 127ms
+     ✓ denies unknown or malformed counter false before dispatch 44ms
+     ✓ denies unknown or malformed counter  before dispatch 40ms
+     ✓ denies unknown or malformed counter   before dispatch 37ms
+     ✓ denies unknown or malformed counter 12 before dispatch 36ms
+     ✓ denies unknown or malformed counter -1 before dispatch 38ms
+     ✓ denies unknown or malformed counter 1.5 before dispatch 35ms
+     ✓ denies unknown or malformed counter NaN before dispatch 34ms
+     ✓ denies unknown or malformed counter Infinity before dispatch 34ms
+     ✓ retains legitimate nonnegative numeric counter 0 46ms
+     ✓ retains legitimate nonnegative numeric counter 12 42ms
+     × preserves AI_BUDGET_EXHAUSTED without provider dispatch 35ms
+     × preserves AI_BUDGET_BLOCKED without provider dispatch 31ms
+     × preserves AI_BUDGET_DENIED without provider dispatch 36ms
+     × preserves AI_BUDGET_DISABLED without provider dispatch 32ms
+     ✓ preserves AI_BUDGET_UNAVAILABLE without provider dispatch 34ms
+     ✓ refuses canonical known spend or unknown holds ignored by legacy counter '100000'/'0' 31ms
+     ✓ refuses canonical known spend or unknown holds ignored by legacy counter '0'/'1' 31ms
+   ✓ refuses foreign owner usage metadata through the actual caller 30ms
+   ✓ refuses foreign organization usage metadata through the actual caller 30ms
+   ✓ refuses foreign analysis usage metadata through the actual caller 29ms
+   ✓ refuses wrong usage profile usage metadata through the actual caller 29ms
+   ✓ refuses inconsistent component total usage metadata through the actual caller 31ms
+   ✓ refuses a prior-month usage snapshot instead of using it as this month's capacity 31ms
+   ✓ refuses old profile readiness metadata before counter/provider dispatch 21ms
+   ✓ refuses missing usage function hash readiness metadata before counter/provider dispatch 22ms
+   ✓ refuses initial feedback known spend before any canonical provider dispatch 32ms
+   ✓ uses the new shared counter even when hard R03 reservation is enabled 31ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 11 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/canonical-rewrite-service.test.ts > actual action closed budget recovery > preserves AI_BUDGET_EXHAUSTED without provider dispatch
+ FAIL  tests/unit/canonical-rewrite-service.test.ts > actual action closed budget recovery > preserves AI_BUDGET_BLOCKED without provider dispatch
+AssertionError: expected 503 to be 429 // Object.is equality
+
+- Expected
++ Received
+
+- 429
++ 503
+
+ ❯ tests/unit/canonical-rewrite-service.test.ts:521:31
+    519|       const f = await handlerFixture(0, code),
+    520|         response = await f.response();
+    521|       expect(response.status).toBe(status);
+       |                               ^
+    522|       expect(await response.json()).toMatchObject({
+    523|         kind: "error",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  tests/unit/canonical-rewrite-service.test.ts > actual action closed budget recovery > preserves AI_BUDGET_DENIED without provider dispatch
+ FAIL  tests/unit/canonical-rewrite-service.test.ts > actual action closed budget recovery > preserves AI_BUDGET_DISABLED without provider dispatch
+AssertionError: expected { kind: 'error', …(2) } to match object { kind: 'error', …(2) }
+
+- Expected
++ Received
+
+  {
+    "kind": "error",
+    "reason": "unavailable",
+-   "recovery": "unavailable",
++   "recovery": "retry_exact",
+  }
+
+ ❯ tests/unit/canonical-rewrite-service.test.ts:522:37
+    520|         response = await f.response();
+    521|       expect(response.status).toBe(status);
+    522|       expect(await response.json()).toMatchObject({
+       |                                     ^
+    523|         kind: "error",
+    524|         reason: "unavailable",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  tests/unit/initial-feedback-stage.test.ts > selected initial-feedback worker stage, actual service/SDK with fake RPC/fetch > uses the exact budget-on selected policy and both accounting paths
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ tests/unit/initial-feedback-stage.test.ts:846:21
+    844|     mocks.config.AI_BUDGET_POLICY_VERSION = "unit-budget/1";
+    845|     await expect(h.run()).resolves.toBe(true);
+    846|     expect(h.fetch).toHaveBeenCalledTimes(1);
+       |                     ^
+    847|     expect(h.events).toContain("ai_budget_reserve_next");
+    848|     expect(h.events).toContain("ai_budget_settle");
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  tests/unit/qualitative-stage-outage.test.ts > shared qualitative budget admission > never falls back to the legacy pool or dispatches when the enabled ledger denies
+AssertionError: expected AiBudgetError: AI budget admission is una… { code: '…' } to match object { code: 'AI_BUDGET_UNAVAILABLE' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "code": "AI_BUDGET_UNAVAILABLE",
++ AiBudgetError {
++   "code": "AI_BUDGET_INVALID",
+  }
+
+ ❯ tests/unit/qualitative-stage-outage.test.ts:226:7
+    224|           execute,
+    225|         }),
+    226|       ).rejects.toMatchObject({ code: "AI_BUDGET_UNAVAILABLE" });
+       |       ^
+    227|       expect(execute).not.toHaveBeenCalled();
+    228|       expect(mocks.rpc).not.toHaveBeenCalledWith(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ FAIL  tests/unit/qualitative-stage-outage.test.ts > shared qualitative budget admission > persists deterministic partial feedback on definitive AI_BUDGET_EXHAUSTED without provider dispatch
+ FAIL  tests/unit/qualitative-stage-outage.test.ts > shared qualitative budget admission > persists deterministic partial feedback on definitive AI_BUDGET_BLOCKED without provider dispatch
+AssertionError: promise rejected "AiBudgetError: AI budget admission is una… { code: '…' }" instead of resolving
+ ❯ tests/unit/qualitative-stage-outage.test.ts:256:7
+    254|       await expect(
+    255|         processQualitativeStage(analysisId, 1, { execute }),
+    256|       ).resolves.toBe(false);
+       |       ^
+    257|       expect(execute).not.toHaveBeenCalled();
+    258|       expect(mocks.rpc.mock.calls.map(([name]) => name)).toEqual([
+
+Caused by: AiBudgetError: AI budget admission is unavailable.
+ ❯ createSourceBoundAiBudgetClient app/lib/server/ai-budget-source.ts:269:30
+ ❯ Module.processQualitativeStage app/lib/server/qualitative-stage.ts:201:17
+ ❯ tests/unit/qualitative-stage-outage.test.ts:254:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { code: 'AI_BUDGET_INVALID' }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+
+ FAIL  tests/unit/qualitative-stage-outage.test.ts > shared qualitative budget admission > settles before product persistence and retains the charge when persistence fails
+AssertionError: expected [Function] to throw error including 'Qualitative result persistence failed' but got 'AI budget admission is unavailable.'
+
+Expected: "Qualitative result persistence failed"
+Received: "AI budget admission is unavailable."
+
+ ❯ tests/unit/qualitative-stage-outage.test.ts:286:5
+    284|     await expect(
+    285|       processQualitativeStage(analysisId, 1, { execute }),
+    286|     ).rejects.toThrow("Qualitative result persistence failed");
+       |     ^
+    287|     const calls = mocks.rpc.mock.calls.map(([name]) => name);
+    288|     expect(calls.indexOf("ai_budget_settle")).toBeLessThan(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+
+ FAIL  tests/unit/qualitative-stage-outage.test.ts > shared qualitative budget admission > charges rejected known output but holds unknown provider usage before partial persistence
+AiBudgetError: AI budget admission is unavailable.
+ ❯ createSourceBoundAiBudgetClient app/lib/server/ai-budget-source.ts:269:30
+    267| ) {
+    268|   const parsed = scopeSchema.safeParse(rawScope);
+    269|   if (!parsed.success) throw new AiBudgetError("AI_BUDGET_INVALID");
+       |                              ^
+    270|   const scope = parsed.data,
+    271|     operationId = createSourceBoundAiBudgetOperationId(scope);
+ ❯ Module.processQualitativeStage app/lib/server/qualitative-stage.ts:201:17
+ ❯ tests/unit/qualitative-stage-outage.test.ts:309:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+
+ FAIL  tests/unit/qualitative-stage-outage.test.ts > shared qualitative budget admission > uses admitted logical ordinal and policy cap rather than the global job retry count
+AssertionError: expected AiBudgetError: AI budget admission is una… { code: '…' } to be QualitativeAiFailure: Qualitative analysi… { …(3) } // Object.is equality
+
+- Expected
++ Received
+
+- QualitativeAiFailure {
+-   "message": "Qualitative analysis is unavailable.",
+-   "code": "AI_PROVIDER_UNAVAILABLE",
+-   "retryable": true,
+-   "usage": {
+-     "inputTokens": 10,
+-     "outputTokens": 20,
+-   },
+-   "name": "QualitativeAiFailure",
++ AiBudgetError {
++   "message": "AI budget admission is unavailable.",
++   "code": "AI_BUDGET_INVALID",
++   "name": "AiBudgetError",
+  }
+
+ ❯ tests/unit/qualitative-stage-outage.test.ts:342:46
+    340|         { execute: vi.fn().mockRejectedValue(failure) },
+    341|       );
+    342|       if (ordinal === 1) await expect(promise).rejects.toBe(failure);
+       |                                              ^
+    343|       else await expect(promise).resolves.toBe(false);
+    344|       expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  11 failed | 52 passed (63)
+   Start at  22:27:21
+   Duration  1.57s (transform 690ms, setup 0ms, import 1.12s, tests 1.21s, environment 0ms)
+
+JSON report written to /tmp/resumide-ai-callers-followup-A61NCw/tests.json

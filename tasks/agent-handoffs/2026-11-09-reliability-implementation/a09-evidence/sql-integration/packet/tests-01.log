@@ -1,0 +1,75 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/job-requirement-relations-sql-contract.test.ts (42 tests | 2 failed) 160ms
+     ✓ binds the frozen structure/profile and the complete guarded transaction 34ms
+     ✓ rejects schema drift 3ms
+     ✓ rejects Unicode profile drift 1ms
+     ✓ rejects admission codec drift 2ms
+     ✓ rejects legacy validator replacement 3ms
+     ✓ rejects malformed declaration regression 3ms
+     ✓ rejects missing Unicode helper 3ms
+     ✓ rejects permissive discriminator 3ms
+     ✓ rejects legacy branch removed 3ms
+     ✓ rejects v2 validation bypassed 3ms
+     ✓ rejects check validation removed 3ms
+     ✓ rejects downgrade trigger removed 3ms
+     ✓ rejects parent downgrade discriminator changed 3ms
+     ✓ rejects semantic reconstruction skipped 3ms
+     ✓ rejects source hash skipped 3ms
+     ✓ rejects owner mutex removed 3ms
+     ✓ rejects privacy barrier removed 3ms
+     ✓ rejects active resume gate removed 3ms
+     ✓ rejects membership gate removed 3ms
+     ✓ rejects command namespace removed 3ms
+     ✓ rejects expected parent binding removed 3ms
+     ✓ rejects receipt equality removed 3ms
+     ✓ rejects replay now falls through 3ms
+     ✓ rejects fresh CAS removed 3ms
+     ✓ rejects source equality removed 3ms
+     ✓ rejects item insert removed 3ms
+     ✓ rejects audit insert removed 3ms
+     ✓ rejects authenticated execution granted 3ms
+     ✓ rejects dangling reference rejection removed 3ms
+     ✓ rejects raw span proof removed 3ms
+     ✓ rejects duplicate observation rejection removed 3ms
+     ✓ rejects importance unknown weakened 3ms
+     ✓ rejects OR/AND unknown weakened 3ms
+     ✓ rejects duration unknown weakened 3ms
+     × rejects exclusive bound flattened 6ms
+     × rejects token budget raised 4ms
+     ✓ rejects native locale lowercase substituted 4ms
+     ✓ rejects receipt lookup moved after the fresh-head CAS 3ms
+     ✓ rejects operator mutation: rollback replaced with commit 4ms
+     ✓ rejects operator mutation: native admission removed 4ms
+     ✓ rejects operator mutation: foreign-owner assertion removed 4ms
+     ✓ rejects operator mutation: cleanup assertion removed 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/job-requirement-relations-sql-contract.test.ts > A09 SQL source contract (no SQL parsing or execution) > rejects exclusive bound flattened
+ FAIL  tests/unit/job-requirement-relations-sql-contract.test.ts > A09 SQL source contract (no SQL parsing or execution) > rejects token budget raised
+AssertionError: expected [Function] to throw an error
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ tests/unit/job-requirement-relations-sql-contract.test.ts:194:7
+    192|     expect(() =>
+    193|       verifyJobRequirementRelationsSource({ ...source, migration }),
+    194|     ).toThrow(/A09_SOURCE_CONTRACT/u);
+       |       ^
+    195|   });
+    196|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 40 passed (42)
+   Start at  17:59:26
+   Duration  347ms (transform 70ms, setup 0ms, import 123ms, tests 160ms, environment 0ms)
+

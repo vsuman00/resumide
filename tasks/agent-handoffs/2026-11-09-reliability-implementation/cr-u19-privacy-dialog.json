@@ -1,0 +1,72 @@
+{
+  "id": "CR-U19-S01",
+  "status": "VERIFIED_LOCAL_PRIVACY_DIALOG_A11Y",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated SSR build on loopback with synthetic Auth and Data API",
+  "sources": {
+    "app/routes/privacy.tsx": "47116b3366a267a49e5fdb6d0b432c9da84ba122c339577760111f10eb6e606d",
+    "app/app.css": "a727b96a50731c96a7505386122a2376ab246ebf44a9f9562753a627ab529ab3",
+    "scripts/verify-local-privacy-journey.ts": "a7743f848a7d714010c3b215104674eacc1a5cef091443dbded66ebcdcf38b3c",
+    "scripts/local-fixture-browser.ts": "372fa419ba68e5c15b742dbb4acd267a0359b67c1b8eb8b9ea5319a5c36e22f4",
+    "tests/components/Privacy.test.tsx": "4117278e5b70aa577b88b53188ba3efd56553e7d00acab5f3cb929e23ac8cb27",
+    "package-lock.json": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41"
+  },
+  "baseline": {
+    "focusEscapedDialog": true,
+    "initialFocusMissedCancel": true,
+    "blockingAxeRule": "color-contrast",
+    "logSha256": "ef9b94431d70855c563470fee509b1397fd5dad65d2cd94a18f1a05c2f9d39f0",
+    "residualContrastDiagnosticLogSha256": "a70814e0771c428776fa4a9665e0447720468999ac670c72267c909e1a24e4ac"
+  },
+  "focusedTests": {
+    "passed": 256,
+    "files": 9,
+    "logSha256": "bebb7601e706f4d77e290930673ad688d2c5bbc7814e62b85ea3a11c5b97c382"
+  },
+  "checks": {
+    "typecheck": "passed",
+    "lint": "passed with four existing warnings",
+    "fixtureLint": "passed",
+    "webBuildLogSha256": "14bd587aeb04ad65217252d38209b507cd223af1bfe582ddb6d56f2345a34589",
+    "workerBuildLogSha256": "074da8871f378ab47c5751438dfa0e5d7e543ee68b3931649e3d8cc136fb7b13",
+    "stylesheetFormatting": "Pre-existing differences in rewrite styles"
+  },
+  "browser": {
+    "viewports": [
+      {
+        "width": 390,
+        "height": 460
+      },
+      {
+        "width": 320,
+        "height": 300
+      }
+    ],
+    "scopedAxe": ["dark verification prompt", "light final confirmation"],
+    "reportSha256": "fe35ce28a820f59f214680a8be20f7b54c1ec16e419b10172d0620fbcd56fcea",
+    "result": {
+      "browser": "Chromium",
+      "refreshCalls": 1,
+      "missingAuditRecoveredOnRetry": true,
+      "deletionReplaysKeptSingleRequest": true,
+      "unverifiedDeletionDenied": true,
+      "wrongBrowserDidNotConsumeLink": true,
+      "staleAndMismatchedIdentityRejected": true,
+      "callbackAloneCreatedNoDeletion": true,
+      "verificationCookieMaxAgeBounded": true,
+      "keyboardFocusCycledAndRestored": true,
+      "pendingFocusStayedInsideDialog": true,
+      "mobileForcedColorsFocusVisible": true,
+      "dialogBlockingAxeViolations": 0,
+      "newFormMadeIndependentRequest": true,
+      "exactNativeDownload": true,
+      "queuedAndPreparedDeletionBlockedDownload": true,
+      "cancelledDeletionRestoredDownload": true,
+      "completionCopyDistinguishedFromErasure": true,
+      "physicalDeletionVerified": false,
+      "managedSupabaseVerified": false
+    }
+  },
+  "manualScreenReaderVerified": false,
+  "fullConsumerAccessibilityGateVerified": false
+}

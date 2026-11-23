@@ -1,0 +1,46 @@
+{
+  "format-write": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--write",
+      "tests/components/CanonicalCorrections.test.tsx",
+      "tests/components/GroupedOriginalImportReview.test.tsx",
+      "tests/components/PrivacyRepairs.test.tsx"
+    ],
+    "expectedExit": 0,
+    "allowedChanges": [
+      "tests/components/CanonicalCorrections.test.tsx",
+      "tests/components/GroupedOriginalImportReview.test.tsx",
+      "tests/components/PrivacyRepairs.test.tsx"
+    ]
+  },
+  "focused": {
+    "args": [
+      "node_modules/vitest/vitest.mjs",
+      "run",
+      "tests/components/CanonicalCorrections.test.tsx",
+      "tests/components/GroupedOriginalImportReview.test.tsx",
+      "tests/components/PrivacyRepairs.test.tsx"
+    ],
+    "expectedExit": 0
+  },
+  "lint": {
+    "args": [
+      "node_modules/eslint/bin/eslint.js",
+      "tests/components/CanonicalCorrections.test.tsx",
+      "tests/components/GroupedOriginalImportReview.test.tsx",
+      "tests/components/PrivacyRepairs.test.tsx"
+    ],
+    "expectedExit": 0
+  },
+  "format": {
+    "args": [
+      "node_modules/prettier/bin/prettier.cjs",
+      "--check",
+      "tests/components/CanonicalCorrections.test.tsx",
+      "tests/components/GroupedOriginalImportReview.test.tsx",
+      "tests/components/PrivacyRepairs.test.tsx"
+    ],
+    "expectedExit": 0
+  }
+}

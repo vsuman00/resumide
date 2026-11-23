@@ -1,0 +1,53 @@
+{
+  "status": "verified-local-metrics-and-alert-config",
+  "id": "CR-R20-S01",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "testedWorkspace": "dirty working checkout",
+  "sources": {
+    "app/lib/server/observability.ts": "b6f0afd7d28ba0cce4b9a658a524a5ed49fc799e13ec731221b3ad709fe1bdbd",
+    "tests/unit/observability.test.ts": "f2f9db9e5dfba7b837ae96cbd86a1a104887e03ade79b440eb6985ae8cc5e5df",
+    "tests/unit/metrics-route.test.ts": "552f1dc682afc097eb648cc99c10802814965e4ab6646165fed38bdfe00f6805",
+    "docs/operations/ALERTS.json": "873d5f2925258f4ecda740c5dece8473e1f64f39d824eaa9c3a168f39f2404af"
+  },
+  "before": {
+    "focusedTestFailures": 2,
+    "latencyCountAfter2001Samples": 2000,
+    "latencyBucketAt50MsAfterFirstSampleExpired": 0,
+    "highestFiniteQueueAgeBucketMs": 10000
+  },
+  "after": {
+    "focusedTestsPassed": 9,
+    "prometheusCumulativeCountAfter2001Samples": 2001,
+    "localSnapshotSampleCount": 2000,
+    "latencyBucketAt50MsAfterFirstSampleExpired": 1,
+    "queueAgeBucketsAboveFiveMinutesMs": [
+      600000,
+      900000,
+      1800000
+    ],
+    "alertConfigRulesValidated": 6,
+    "typecheckPassed": true,
+    "webBuildPassed": true,
+    "workerBuildPassed": true,
+    "lintErrors": 0,
+    "existingJdHookWarnings": 4,
+    "logsSha256": {
+      "integrated-typecheck.log": "b63c0de51fcb1526e23a41bde9c50d3e1af56b2b08d9bfe50e3d977251642455",
+      "integrated-web-build.log": "e60474498b832620c065f2ef428878094532ecec480ae650944fbda9aabdee86",
+      "integrated-worker-build.log": "c04c3e8f9a034135b8a07d0e5089500a5624e85dd8b32e61bda2e952917deb59"
+    },
+    "integratedLocalVitest": {
+      "passed": 7177,
+      "files": 339,
+      "privateMode": "aa7-owned-synthetic",
+      "logSha256": "e8e536add149bc3efd3a269b1a597f23864ab51c1e33c99576a1dcad32ce93b4"
+    }
+  },
+  "remaining": [
+    "Verify safe end-to-end correlation through HTTP and the leased worker",
+    "Verify actual Prometheus scraping and alert evaluation",
+    "Verify delivery to an approved receiver"
+  ],
+  "releaseAccepted": false
+}

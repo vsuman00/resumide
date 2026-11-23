@@ -1,0 +1,55 @@
+{
+  "id": "CR-U19-S05",
+  "status": "VERIFIED_LOCAL_CLARIFICATION_RECOVERY_A11Y",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated production SSR on loopback with simulated Supabase Auth and Data API transport and disposable PostgreSQL 17.11",
+  "sources": {
+    "app/components/AuthoringWorkspace.tsx": "359db5e04015d69e75efc63c57202ce54273e514a4e1c74fe385658e6e11cb7a",
+    "app/routes/analysis.author.tsx": "4e3b80354d5b19d146987c1f57ff4ff77c8b5c8474dc2ece197bef45aac3c35d",
+    "app/routes/analysis.score.tsx": "f316f47a3866e014f689ff12a92c40244c7cc3d7d03ff54cbd65cfa04e09e0cc",
+    "scripts/verify-local-clarification-browser.ts": "3455055adc310a030827161fe892bddce9f78d0a383e36e9c4b8e31d27be384d",
+    "scripts/verify-local-typed-score.py": "d1bd1ed8d39b0f9064f0f9438922875be05df7ad88f066b866a1e97e2ef59efa",
+    "scripts/local-fixture-browser.ts": "372fa419ba68e5c15b742dbb4acd267a0359b67c1b8eb8b9ea5319a5c36e22f4",
+    "package-lock.json": "f1d6b2550dced9a9ba730dacbd4c772324c05a7bbde6f94ba27727efd16c5c41"
+  },
+  "baseline": {
+    "observed": "Pressing Enter opened the complete fact preview at 390 CSS pixels, but the preview heading did not receive focus.",
+    "logSha256": "85e5b5236be3296c511df59f4c872b22530b25dbcd72384b070adb16481981b8"
+  },
+  "browser": {
+    "version": "Chromium 153.0.8010.12",
+    "runner": "scripts/verify-local-typed-score.py --browser --clarification",
+    "viewports": ["390x740", "320x640"],
+    "schemaOperations": 100,
+    "orderedDigest": "4e253744226912aab1c9411cb03e528f8fbdaa10984aa5933a88ff380601293a",
+    "logSha256": "371b0d1698a04de951f3bc401f3c35d619a6b0c2b420e29b1121f804e3453a04",
+    "result": {
+      "keyboardPreviewFocus": true,
+      "staleKeyboardSubmissionStatus": 409,
+      "staleAlertAndAnswerFocused": true,
+      "staleAttemptLeftHeadAndLedgerUnchanged": true,
+      "retainedAnswerAndLatestSavedFact": true,
+      "previewAndConfirmationControlsFitNarrowViewport": true,
+      "staleAttemptWithForcedColorsAndReducedMotion": true,
+      "clarificationPreviewSeriousOrCriticalAxeViolations": 0,
+      "reviewedRetryRequiredFreshAcknowledgement": true,
+      "exactReviewedFactAndOneEventSaved": true,
+      "scoresRemainedUnavailable": true
+    }
+  },
+  "checks": {
+    "node": "22.23.4",
+    "focusedTestsPassed": 251,
+    "focusedTestFiles": 15,
+    "testsLogSha256": "a5ebd7c9b6483f07b7b1898ace910c9d6507fc89975acbe3c6fcad3c489bf6a5",
+    "typecheck": "passed",
+    "lint": "passed with four existing JD clause-order warnings",
+    "fixtureLint": "passed",
+    "changedCodeFormatting": "passed",
+    "webBuildLogSha256": "976559d8012e6dcb58d246412f56560d7aa2e65a9a7d15958c4b2fd5d3b6525e",
+    "workerBuildLogSha256": "478a99600a42441fada68914c009a41c36b41c803b1bda2839737cbf1a4d5158"
+  },
+  "manualScreenReaderVerified": false,
+  "browserZoomVerified": false,
+  "managedSupabaseVerified": false
+}

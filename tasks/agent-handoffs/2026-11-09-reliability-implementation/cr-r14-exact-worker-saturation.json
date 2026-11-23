@@ -1,0 +1,55 @@
+{
+  "id": "CR-R14-S15",
+  "date": "2026-11-22",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "workspace": "Integrated dirty main checkout",
+  "status": "VERIFIED_EXACT_IMAGE_RESOURCE_SATURATION",
+  "evidenceTier": "Actual immutable local worker with a neutral probe and production container settings",
+  "worker": {
+    "imageId": "sha256:115d58407c3951915925597e3722a5077ceef840f41b7c0c59a0f47910657d02",
+    "profile": "focused-saturation",
+    "checks": [
+      {
+        "name": "exact-worker-resource-saturation",
+        "pass": true,
+        "memoryChildSignal": 9,
+        "localOomKills": 1,
+        "cpuChildSignal": 9,
+        "cpuChildSeconds": 10,
+        "scratchAllocatedBytes": 134217728,
+        "extraScratchBlockDenied": true,
+        "scratchRecovered": true
+      }
+    ],
+    "checksExecuted": 1
+  },
+  "limitsExercisedInOrder": [
+    "512 MiB memory with zero swap",
+    "10 CPU seconds in one child",
+    "128 MiB scratch"
+  ],
+  "ownedConverterContainersRemaining": 0,
+  "focusedTestsPassed": 123,
+  "checks": {
+    "typecheck": "pass",
+    "check:latex:source": "pass"
+  },
+  "sourceHashes": {
+    "scripts/latex-runtime/verify-resource-saturation.py": "d9d588671fc0e8a324e7662278052a0cb05af38360c547dd8b1ab159836aa595",
+    "scripts/verify-latex-boundaries.ts": "83d870c91374c0600bc50eb9b2cf2ceb1b4f87a289f0fce60f9f77545c9b1eca",
+    "scripts/verify-latex-sandbox.ts": "f73d7c9f12a478bd9380c0e417543e964ab3e94fc40d3b94b8981c8153514e52",
+    "scripts/latex-test-fixtures.ts": "74974cd06cbfb0223e6a10923b7041673fa225d579837ee9293fdd2ae64d2f54",
+    "app/lib/server/latex-sandbox.ts": "100252a580c6fe5579040b2e99253b710517ba7a117a691c2b0694305af41096"
+  },
+  "logHashes": {
+    "runtime": "e5e47f477621104ea0ac7b5589994a2720adbfe08e14c70f412e19b006d6bdd8",
+    "final": "c86cc96a8df82cee784d4c401664dc99a8006444b3c48fd30bce501ed85b5c18",
+    "tests": "f893008081c1ec141ecaa70755b863c8c5a14d71c687a58f9aaa67ac82e76ec8",
+    "source": "d776806e187eca963fdefcf38f373b00add5ba121afdc2841112e7f3d25cbb9a",
+    "types": "b63c0de51fcb1526e23a41bde9c50d3e1af56b2b08d9bfe50e3d977251642455"
+  },
+  "open": [
+    "Exact-image PDF policy coverage beyond the currently admitted frame, layout and ceiling checks remains open.",
+    "Managed verification and release acceptance remain open."
+  ]
+}

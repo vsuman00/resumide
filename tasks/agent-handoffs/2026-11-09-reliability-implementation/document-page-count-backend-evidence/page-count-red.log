@@ -1,0 +1,48 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/analysis-worker-fence.test.ts (15 tests | 2 failed) 90ms
+   ✓ forwards signal and the exact claimed attempt through each worker stage 3ms
+   ✓ requires the lease before any stage work when fencing is enabled 0ms
+   ✓ checks ownership before loading or extracting bytes 0ms
+   ✓ fences every extraction transition and document-evidence write 1ms
+   ✓ fences extraction persistence with native layout enabled=false 1ms
+   ✓ fences extraction persistence with native layout enabled=true 2ms
+   ✓ also fences the extraction failure transition 0ms
+   ✓ does not write when extraction finishes after cancellation 0ms
+   ✓ fails a stale scoring write without falling back to its legacy RPC 27ms
+   ✓ preserves the legacy scoring RPC shape when fencing is off and no lease is supplied 13ms
+   ✓ fails closed on invalid ownership replies and rejected RPCs without raw error details 0ms
+   ✓ rejects a pre-aborted worker instead of reporting successful processing 0ms
+   ✓ rejects cancellation between stages and never enters the next stage 0ms
+   × carries the actual declared review page total outside the immutable envelope, fenced=false 40ms
+   × carries the actual declared review page total outside the immutable envelope, fenced=true 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/analysis-worker-fence.test.ts > carries the actual declared review page total outside the immutable envelope, fenced=false
+ FAIL  tests/unit/analysis-worker-fence.test.ts > carries the actual declared review page total outside the immutable envelope, fenced=true
+AssertionError: expected undefined to be 2 // Object.is equality
+
+- Expected:
+2
+
++ Received:
+undefined
+
+ ❯ tests/unit/analysis-worker-fence.test.ts:368:39
+    366|       const parameters = fenced ? persisted![1].p_parameters : persist…
+    367|       expect(parameters.p_envelope.nativeSource.pages).toHaveLength(2);
+    368|       expect(parameters.p_page_count).toBe(2);
+       |                                       ^
+    369|       expect(parameters.p_envelope).not.toHaveProperty("pageCount");
+    370|     } finally { profile.mockRestore(); }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 13 passed (15)
+   Start at  06:00:01
+   Duration  335ms (transform 124ms, setup 0ms, import 177ms, tests 90ms, environment 0ms)
+

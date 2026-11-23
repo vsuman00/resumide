@@ -1,0 +1,108 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx (8 tests | 8 failed) 75ms
+   × shows complete before/after and the actual xyz structural reason 45ms
+   × shows complete before/after and the actual action_impact_context structural reason 6ms
+   × shows complete before/after and the actual action_scope_result structural reason 5ms
+   × shows exact unchanged source fact binding and recorded provenance without upgrading historical references 4ms
+   × keeps projected and saved diagnostics distinct and numerical outcomes unavailable 5ms
+   × preserves the exact acceptance payload, explicit acknowledgement and reject action 3ms
+   × leaves incomplete XYZ unavailable without making measurements mandatory for the metric-free alternative 3ms
+   × preserves historical read-only state 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > shows complete before/after and the actual xyz structural reason
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > shows complete before/after and the actual action_impact_context structural reason
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > shows complete before/after and the actual action_scope_result structural reason
+Error: SCORE_FACT_CITATION_MISMATCH
+ ❯ buildScoreDiagnostics app/lib/server/score-v2-engine.ts:513:15
+    511|           fact.value
+    512|       )
+    513|         throw Error("SCORE_FACT_CITATION_MISMATCH");
+       |               ^
+    514|     }
+    515|   }
+ ❯ fixture tests/components/AuthoringRecommendationReview.test.tsx:21:23
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx:42:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > shows exact unchanged source fact binding and recorded provenance without upgrading historical references
+Error: SCORE_FACT_CITATION_MISMATCH
+ ❯ buildScoreDiagnostics app/lib/server/score-v2-engine.ts:513:15
+    511|           fact.value
+    512|       )
+    513|         throw Error("SCORE_FACT_CITATION_MISMATCH");
+       |               ^
+    514|     }
+    515|   }
+ ❯ fixture tests/components/AuthoringRecommendationReview.test.tsx:21:23
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx:49:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > keeps projected and saved diagnostics distinct and numerical outcomes unavailable
+Error: SCORE_FACT_CITATION_MISMATCH
+ ❯ buildScoreDiagnostics app/lib/server/score-v2-engine.ts:513:15
+    511|           fact.value
+    512|       )
+    513|         throw Error("SCORE_FACT_CITATION_MISMATCH");
+       |               ^
+    514|     }
+    515|   }
+ ❯ fixture tests/components/AuthoringRecommendationReview.test.tsx:21:23
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx:60:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > preserves the exact acceptance payload, explicit acknowledgement and reject action
+Error: SCORE_FACT_CITATION_MISMATCH
+ ❯ buildScoreDiagnostics app/lib/server/score-v2-engine.ts:513:15
+    511|           fact.value
+    512|       )
+    513|         throw Error("SCORE_FACT_CITATION_MISMATCH");
+       |               ^
+    514|     }
+    515|   }
+ ❯ fixture tests/components/AuthoringRecommendationReview.test.tsx:21:23
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx:65:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > leaves incomplete XYZ unavailable without making measurements mandatory for the metric-free alternative
+Error: SCORE_FACT_CITATION_MISMATCH
+ ❯ buildScoreDiagnostics app/lib/server/score-v2-engine.ts:513:15
+    511|           fact.value
+    512|       )
+    513|         throw Error("SCORE_FACT_CITATION_MISMATCH");
+       |               ^
+    514|     }
+    515|   }
+ ❯ fixture tests/components/AuthoringRecommendationReview.test.tsx:21:23
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx:78:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  tests/components/AuthoringRecommendationReview.test.tsx > preserves historical read-only state
+Error: SCORE_FACT_CITATION_MISMATCH
+ ❯ buildScoreDiagnostics app/lib/server/score-v2-engine.ts:513:15
+    511|           fact.value
+    512|       )
+    513|         throw Error("SCORE_FACT_CITATION_MISMATCH");
+       |               ^
+    514|     }
+    515|   }
+ ❯ fixture tests/components/AuthoringRecommendationReview.test.tsx:21:23
+ ❯ tests/components/AuthoringRecommendationReview.test.tsx:84:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  8 failed (8)
+   Start at  09:11:48
+   Duration  943ms (transform 132ms, setup 0ms, import 300ms, tests 75ms, environment 499ms)
+
+JSON report written to /private/tmp/resumide-jd-recommendations-frontend-1904wvcp/review-red/tests.json

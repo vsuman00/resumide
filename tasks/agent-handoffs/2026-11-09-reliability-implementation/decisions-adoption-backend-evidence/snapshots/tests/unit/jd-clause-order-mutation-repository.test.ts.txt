@@ -1,0 +1,579 @@
+import * as drafting from "../../app/lib/server/jd-clause-order-drafting";
+import * as proof from "../../app/lib/server/clause-order-authoring";
+import { afterEach, expect, it, vi } from "vitest";
+import {
+  createJdClauseOrderFixture,
+  jdClauseOrderFixtureId as id,
+} from "../fixtures/jd-clause-order";
+import {
+  buildClauseOrderProposal,
+  parseClauseOrderCommand,
+} from "../../app/lib/server/clause-order-authoring";
+import { clauseOrderCommandSha256 } from "../../app/lib/server/clause-order-authoring";
+import { JD_CLAUSE_ORDER_READINESS_PROFILE } from "../../app/lib/server/jd-clause-order-readiness-profile";
+import {
+  loadJdClauseOrderWorkspace,
+  applyJdClauseOrderAction,
+} from "../../app/lib/server/jd-clause-order-repository";
+import { reviseCanonical } from "../../app/lib/server/canonical-content";
+import { createJobRequirementRelations } from "../../app/lib/server/job-requirement-admission";
+import { JdClauseOrderWorkspaceSchema } from "../../app/lib/jd-clause-order-decisions";
+import type { RequirementRelationshipContext } from "../../app/lib/server/requirement-relationship-context";
+type Result = { data: unknown; error: unknown };
+const ok = (data: unknown): Result => ({ data, error: null });
+const ready = () => ({
+  ...JD_CLAUSE_ORDER_READINESS_PROFILE,
+  schemaReady: true,
+  writerExecutable: true,
+});
+type Call = {
+  name: string;
+  args: Record<string, unknown>;
+  signal?: AbortSignal;
+};
+function fake(
+  context: RequirementRelationshipContext,
+  override?: (
+    call: Call,
+    calls: Call[],
+  ) => Result | Promise<Result> | undefined,
+) {
+  const calls: Call[] = [],
+    signals: AbortSignal[] = [];
+  const rpc = vi.fn((name: string, args: Record<string, unknown>) => {
+    const call: Call = { name, args };
+    calls.push(call);
+    const request = {
+      abortSignal(signal: AbortSignal) {
+        call.signal = signal;
+        signals.push(signal);
+        return request;
+      },
+      then(
+        resolve: (result: Result) => unknown,
+        reject?: (error: unknown) => unknown,
+      ) {
+        return Promise.resolve()
+          .then(async () => {
+            const changed = override?.(call, calls);
+            if (changed !== undefined) return changed;
+            if (name === "read_requirement_relationship_context")
+              return ok(context);
+            if (name === "read_jd_clause_order_readiness") return ok(ready());
+            if (name === "apply_jd_clause_order_action") {
+              const c = parseClauseOrderCommand(args.p_command);
+              return ok({
+                schemaVersion: "jd-clause-order-receipt/2.0.0",
+                status: "applied",
+                action: c.operation,
+                idempotencyKey: c.idempotencyKey,
+                commandSha256: clauseOrderCommandSha256(c),
+                draftId: c.draftId,
+                baseVersionId: c.binding.canonical.versionId,
+                baseRevision: c.binding.canonical.revision,
+                requirementVersionId: c.binding.requirements.versionId,
+                requirementRevision: c.binding.requirements.revision,
+                versionId:
+                  c.operation === "accept"
+                    ? id(990)
+                    : c.binding.canonical.versionId,
+                revision:
+                  c.binding.canonical.revision +
+                  (c.operation === "accept" ? 2 : 0),
+                eventId: id(991),
+                idempotent: false,
+              });
+            }
+            throw Error("UNEXPECTED_SYNTHETIC_RPC");
+          })
+          .then(resolve, reject);
+      },
+    };
+    return request;
+  });
+  // Synthetic SDK boundary only; production uses the supplied actual Supabase client.
+  return {
+    client: { rpc } as unknown as Parameters<
+      typeof loadJdClauseOrderWorkspace
+    >[0],
+    rpc,
+    calls,
+    signals,
+  };
+}
+async function fixture(
+  options: Parameters<typeof createJdClauseOrderFixture>[0] = {},
+) {
+  const f = await createJdClauseOrderFixture(options),
+    selection = {
+      canonicalVersionId: f.context.canonical.versionId,
+      requirementVersionId: f.context.requirements.versionId,
+    },
+    expected = { analysisId: f.owned.analysisId, ownerId: f.owned.ownerId };
+  const full = {
+    ...selection,
+    clauseId: f.context.requirements.content.relations.clauses[0].id,
+    targetFactId: f.targetFactId,
+  };
+  return { f, selection, expected, full };
+}
+function moved(context: RequirementRelationshipContext) {
+  const next = structuredClone(context),
+    canonical = reviseCanonical(context.canonical.content, {
+      operation: "rename_section",
+      sectionId: context.canonical.content.sections[0].id,
+      value: "Reviewed experience",
+    }),
+    jd = createJobRequirementRelations("Requirements\nGit preferred", {
+      ownerId: context.source.ownerId,
+      organizationId: context.source.organizationId,
+      analysisId: context.source.analysisId,
+      jobId: context.requirements.content.jobId,
+      parentVersionId: context.requirements.versionId,
+      locale: "en-IN",
+      domain: "software-engineering",
+    });
+  next.heads = {
+    canonicalHeadId: canonical.versionId,
+    canonicalHeadRevision: context.canonical.revision + 1,
+    requirementHeadId: jd.id,
+    requirementHeadRevision: context.requirements.revision + 1,
+  };
+  return next;
+}
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
+it("disabled feature does no read, proof, readiness or write work", async () => {
+  const { f, selection } = await fixture(),
+    store = fake(f.context);
+  expect(
+    await loadJdClauseOrderWorkspace(
+      store.client,
+      "invalid",
+      "invalid",
+      selection,
+      { enabled: false },
+    ),
+  ).toBeNull();
+  expect(store.rpc).not.toHaveBeenCalled();
+});
+it("releases actual owned proposals only after metadata and a matching final owned reread", async () => {
+  const { f, selection } = await fixture(),
+    store = fake(f.context);
+  const workspace = await loadJdClauseOrderWorkspace(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+    selection,
+    { enabled: true },
+  );
+  expect(workspace).not.toBeNull();
+  expect(JdClauseOrderWorkspaceSchema.parse(workspace)).toEqual(workspace);
+  expect(workspace?.proposals[0].draft.after).toBe(
+    "Developed tools using Git; Built services using Python",
+  );
+  expect(workspace?.binding.source).toEqual(f.context.source);
+  expect(store.calls.map((c) => c.name)).toEqual([
+    "read_requirement_relationship_context",
+    "read_jd_clause_order_readiness",
+    "read_requirement_relationship_context",
+  ]);
+  expect(store.signals.every((s) => s.aborted)).toBe(true);
+  expect(store.calls.every((c) => c.signal instanceof AbortSignal)).toBe(true);
+});
+it.each([false, "drift"])(
+  "returns null for real readiness refusal %s without releasing proposals",
+  async (mode) => {
+    const { f, selection } = await fixture(),
+      store = fake(f.context, (c) =>
+        c.name === "read_jd_clause_order_readiness"
+          ? ok({
+              ...ready(),
+              ...(mode === false
+                ? { writerExecutable: false }
+                : { checkerSha256: "f".repeat(64) }),
+            })
+          : undefined,
+      );
+    expect(
+      await loadJdClauseOrderWorkspace(
+        store.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        selection,
+        { enabled: true },
+      ),
+    ).toBeNull();
+    expect(store.calls).toHaveLength(2);
+  },
+);
+it("keeps explicitly selected historical pairs unavailable rather than forging their heads", async () => {
+  const { f, selection } = await fixture(),
+    context = moved(f.context),
+    before = JSON.stringify(context),
+    store = fake(context);
+  expect(
+    await loadJdClauseOrderWorkspace(
+      store.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      selection,
+      { enabled: true },
+    ),
+  ).toBeNull();
+  expect(JSON.stringify(context)).toBe(before);
+  expect(store.calls).toHaveLength(1);
+});
+it.each([
+  { confirm: false },
+  { jdText: "Requirements\nPython required" },
+  { pageCount: null },
+  { header: "Candidate Name\nExperience\nSoftware Engineer at Orchard Labs" },
+])(
+  "returns null for unsupported/no-supported real producer context %j",
+  async (options) => {
+    const { f, selection } = await fixture(options),
+      store = fake(f.context);
+    expect(
+      await loadJdClauseOrderWorkspace(
+        store.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        selection,
+        { enabled: true },
+      ),
+    ).toBeNull();
+  },
+);
+it("preserves honest five-proposal bounded plan counts and truncation", async () => {
+  const { f, selection } = await fixture({
+      jdText: "Requirements\n" + Array(8).fill("Git required").join("\n"),
+    }),
+    store = fake(f.context);
+  const result = await loadJdClauseOrderWorkspace(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+    selection,
+    { enabled: true },
+  );
+  expect(result?.proposals).toHaveLength(5);
+  expect(result?.inspectedPairCount).toBe(13);
+  expect(result?.truncated).toBe(true);
+  expect(new Set(result?.proposals.map((p) => p.draft.id)).size).toBe(5);
+});
+it.each(["head", "source", "pair", "privacy"])(
+  "withholds every proposal after a final %s change",
+  async (kind) => {
+    const { f, selection } = await fixture(),
+      changed = moved(f.context);
+    let reads = 0;
+    const store = fake(f.context, (c) => {
+      if (c.name !== "read_requirement_relationship_context" || ++reads === 1)
+        return undefined;
+      if (kind === "privacy") return ok({ status: "not_found" });
+      const next = structuredClone(f.context);
+      if (kind === "head") next.heads = changed.heads;
+      if (kind === "source") next.source.sourceId = id(998);
+      if (kind === "pair") next.requirements.contentSha256 = "f".repeat(64);
+      return ok(next);
+    });
+    await expect(
+      loadJdClauseOrderWorkspace(
+        store.client,
+        f.owned.analysisId,
+        f.owned.ownerId,
+        selection,
+        { enabled: true },
+      ),
+    ).rejects.toBeInstanceOf(Error);
+    expect(
+      store.calls.every((c) => c.name !== "apply_jd_clause_order_action"),
+    ).toBe(true);
+  },
+);
+it("rejects missing pinned selection and cross-owner access", async () => {
+  const { f, selection } = await fixture(),
+    store = fake(f.context);
+  await expect(
+    loadJdClauseOrderWorkspace(
+      store.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      {},
+      { enabled: true },
+    ),
+  ).rejects.toMatchObject({ reason: "invalid_input" });
+  expect(store.rpc).not.toHaveBeenCalled();
+  await expect(
+    loadJdClauseOrderWorkspace(
+      store.client,
+      f.owned.analysisId,
+      id(999),
+      selection,
+      { enabled: true },
+    ),
+  ).rejects.toBeInstanceOf(Error);
+  expect(store.calls).toHaveLength(1);
+});
+it.each(["accept", "reject"] as const)(
+  "dispatches exact ORIGINAL %s after later heads move through the supplied RPC",
+  async (operation) => {
+    const { f, full, expected } = await fixture(),
+      proposal = buildClauseOrderProposal(f.context, expected, full),
+      command =
+        operation === "accept"
+          ? proposal.acceptCommand
+          : proposal.rejectCommand,
+      store = fake(moved(f.context));
+    const result = await applyJdClauseOrderAction(
+      store.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      command,
+      command.idempotencyKey,
+    );
+    expect(result.action).toBe(operation);
+    expect(store.calls.map((c) => c.name)).toEqual([
+      "read_requirement_relationship_context",
+      "read_jd_clause_order_readiness",
+      "apply_jd_clause_order_action",
+    ]);
+    expect(store.calls[0].args.p_selection).toEqual({
+      canonicalVersionId: f.context.canonical.versionId,
+      requirementVersionId: f.context.requirements.versionId,
+    });
+    expect(store.calls[2].args).toEqual({
+      p_user_id: f.owned.ownerId,
+      p_analysis_id: f.owned.analysisId,
+      p_command: command,
+      p_request_id: command.idempotencyKey,
+    });
+  },
+);
+it.each(["request", "owner", "analysis"])(
+  "denies wrong %s correlation before any RPC",
+  async (kind) => {
+    const { f, full, expected } = await fixture(),
+      command = buildClauseOrderProposal(
+        f.context,
+        expected,
+        full,
+      ).acceptCommand,
+      store = fake(f.context);
+    await expect(
+      applyJdClauseOrderAction(
+        store.client,
+        kind === "analysis" ? id(999) : f.owned.analysisId,
+        kind === "owner" ? id(999) : f.owned.ownerId,
+        command,
+        kind === "request" ? id(999) : command.idempotencyKey,
+      ),
+    ).rejects.toMatchObject({ reason: "invalid_input" });
+    expect(store.rpc).not.toHaveBeenCalled();
+  },
+);
+it("rejects rehashed forged support before readiness or dispatch", async () => {
+  const { f, full, expected } = await fixture(),
+    command = structuredClone(
+      buildClauseOrderProposal(f.context, expected, full).acceptCommand,
+    ),
+    store = fake(f.context);
+  command.afterSha256 = "f".repeat(64);
+  expect(clauseOrderCommandSha256(command)).toMatch(/^[a-f0-9]{64}$/u);
+  await expect(
+    applyJdClauseOrderAction(
+      store.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      command,
+      command.idempotencyKey,
+    ),
+  ).rejects.toMatchObject({ reason: "stale_inputs" });
+  expect(store.calls.map((c) => c.name)).toEqual([
+    "read_requirement_relationship_context",
+  ]);
+});
+it.each([
+  "not-ready",
+  "rpc-error",
+  "throw",
+  "conflict",
+  "malformed",
+  "tampered",
+  "extra-conflict",
+])("does not regenerate or retry an action after %s", async (kind) => {
+  const { f, full, expected } = await fixture(),
+    command = buildClauseOrderProposal(f.context, expected, full).acceptCommand;
+  const store = fake(f.context, (c) => {
+    if (kind === "not-ready" && c.name === "read_jd_clause_order_readiness")
+      return ok({ ...ready(), writerExecutable: false });
+    if (c.name !== "apply_jd_clause_order_action") return undefined;
+    if (kind === "rpc-error")
+      return { data: null, error: { message: "SYNTHETIC_PRIVATE_ERROR" } };
+    if (kind === "throw") throw Error("SYNTHETIC_PRIVATE_ERROR");
+    if (kind === "conflict") return ok({ status: "conflict" });
+    if (kind === "extra-conflict")
+      return ok({ status: "conflict", extra: true });
+    if (kind === "tampered")
+      return ok({
+        schemaVersion: "jd-clause-order-receipt/2.0.0",
+        status: "applied",
+        commandSha256: "f".repeat(64),
+      });
+    return ok({ status: "unknown" });
+  });
+  await expect(
+    applyJdClauseOrderAction(
+      store.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      command,
+      command.idempotencyKey,
+    ),
+  ).rejects.toMatchObject({
+    reason:
+      kind === "conflict"
+        ? "stale_inputs"
+        : ["malformed", "tampered", "extra-conflict"].includes(kind)
+          ? "invalid_result"
+          : "unavailable",
+  });
+  expect(
+    store.calls.filter((c) => c.name === "apply_jd_clause_order_action"),
+  ).toHaveLength(kind === "not-ready" ? 0 : 1);
+});
+it("bounds a hanging owned read to five seconds and aborts the SDK", async () => {
+  vi.useFakeTimers();
+  const { f, selection } = await fixture(),
+    store = fake(f.context, () => new Promise<Result>(() => {}));
+  const pending = loadJdClauseOrderWorkspace(
+      store.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      selection,
+      { enabled: true },
+    ),
+    outcome = expect(pending).rejects.toMatchObject({ reason: "unavailable" });
+  await vi.advanceTimersByTimeAsync(5000);
+  await outcome;
+  expect(store.signals.every((s) => s.aborted)).toBe(true);
+  expect(store.calls).toHaveLength(1);
+});
+it("caller cancellation prevents workspace publication and cancels underlying SDK", async () => {
+  const { f, selection } = await fixture(),
+    controller = new AbortController(),
+    store = fake(f.context, () => new Promise<Result>(() => {}));
+  const pending = loadJdClauseOrderWorkspace(
+    store.client,
+    f.owned.analysisId,
+    f.owned.ownerId,
+    selection,
+    { enabled: true, signal: controller.signal },
+  );
+  await Promise.resolve();
+  controller.abort();
+  await expect(pending).rejects.toMatchObject({ reason: "unavailable" });
+  expect(store.signals.every((s) => s.aborted)).toBe(true);
+  expect(store.calls).toHaveLength(1);
+});
+
+it.each(["workspace", "action"] as const)(
+  "does not call metadata if synchronous %s proof consumes the whole deadline",
+  async (kind) => {
+    const { f, selection, full, expected } = await fixture(),
+      command = buildClauseOrderProposal(
+        f.context,
+        expected,
+        full,
+      ).acceptCommand,
+      store = fake(f.context);
+    let now = 0;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    if (kind === "workspace") {
+      const original = drafting.buildJdClauseOrderPlan;
+      vi.spyOn(drafting, "buildJdClauseOrderPlan").mockImplementation(
+        (...args) => {
+          const result = original(...args);
+          now = 5000;
+          return result;
+        },
+      );
+      await expect(
+        loadJdClauseOrderWorkspace(
+          store.client,
+          f.owned.analysisId,
+          f.owned.ownerId,
+          selection,
+          { enabled: true },
+        ),
+      ).rejects.toMatchObject({ reason: "unavailable" });
+    } else {
+      const original = proof.verifyOriginalClauseOrderCommand;
+      vi.spyOn(proof, "verifyOriginalClauseOrderCommand").mockImplementation(
+        (...args) => {
+          const result = original(...args);
+          now = 5000;
+          return result;
+        },
+      );
+      await expect(
+        applyJdClauseOrderAction(
+          store.client,
+          f.owned.analysisId,
+          f.owned.ownerId,
+          command,
+          command.idempotencyKey,
+        ),
+      ).rejects.toMatchObject({ reason: "unavailable" });
+    }
+    expect(store.calls.map((c) => c.name)).toEqual([
+      "read_requirement_relationship_context",
+    ]);
+  },
+);
+it("a hanging dispatched action remains unknown and never retries or rotates its key", async () => {
+  vi.useFakeTimers();
+  const { f, full, expected } = await fixture(),
+    command = buildClauseOrderProposal(f.context, expected, full).acceptCommand,
+    store = fake(f.context, (c) =>
+      c.name === "apply_jd_clause_order_action"
+        ? new Promise<Result>(() => {})
+        : undefined,
+    );
+  const pending = applyJdClauseOrderAction(
+      store.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      command,
+      command.idempotencyKey,
+    ),
+    outcome = expect(pending).rejects.toMatchObject({ reason: "unavailable" });
+  await vi.advanceTimersByTimeAsync(5000);
+  await outcome;
+  const writes = store.calls.filter(
+    (c) => c.name === "apply_jd_clause_order_action",
+  );
+  expect(writes).toHaveLength(1);
+  expect(writes[0].args.p_command).toEqual(command);
+  expect(writes[0].args.p_request_id).toBe(command.idempotencyKey);
+  expect(writes[0].signal?.aborted).toBe(true);
+});
+it("already cancelled workspace does no SDK work", async () => {
+  const { f, selection } = await fixture(),
+    store = fake(f.context),
+    controller = new AbortController();
+  controller.abort();
+  await expect(
+    loadJdClauseOrderWorkspace(
+      store.client,
+      f.owned.analysisId,
+      f.owned.ownerId,
+      selection,
+      { enabled: true, signal: controller.signal },
+    ),
+  ).rejects.toMatchObject({ reason: "unavailable" });
+  expect(store.rpc).not.toHaveBeenCalled();
+});

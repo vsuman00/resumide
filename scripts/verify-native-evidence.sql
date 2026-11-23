@@ -41,7 +41,9 @@ begin
   insert into public.resumes (id, organization_id, owner_id, display_name)
     values (resume_id, organization_id, owner_id, 'aa010-synthetic.pdf');
   insert into public.resume_versions (id, resume_id, organization_id, owner_id, storage_key, checksum, bytes, media_type)
-    values (version_id, resume_id, organization_id, owner_id, 'aa010/synthetic.pdf', repeat('a', 64), 1024, 'application/pdf');
+    values (version_id, resume_id, organization_id, owner_id,
+      format('organizations/%s/resumes/%s/versions/%s.pdf', organization_id, resume_id, version_id),
+      repeat('a', 64), 1024, 'application/pdf');
   insert into public.analyses (id, resume_version_id, organization_id, owner_id, status, idempotency_key)
     values (analysis_id, version_id, organization_id, owner_id, 'extracting', gen_random_uuid());
 

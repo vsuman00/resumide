@@ -23,7 +23,8 @@ begin
     id, resume_id, organization_id, owner_id, storage_key, checksum, bytes, media_type
   ) values (
     version_id, resume_id, organization_id, owner_id,
-    'phase4-test/phase4-test.pdf', repeat('a', 64), 1024, 'application/pdf'
+    format('organizations/%s/resumes/%s/versions/%s.pdf', organization_id, resume_id, version_id),
+    repeat('a', 64), 1024, 'application/pdf'
   );
   insert into public.jobs (id, organization_id, owner_id, title, description)
   values (job_id, organization_id, owner_id, 'Engineer', 'Build reliable systems');

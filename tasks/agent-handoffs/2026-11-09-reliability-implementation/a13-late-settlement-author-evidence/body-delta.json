@@ -1,0 +1,34 @@
+{
+  "preimages": [
+    {
+      "signature": "private.ifo_attempt_guard()",
+      "sha256": "cde43794f51052a21567059232fe446d36aedc357c32893843ef25090da5ebaf"
+    },
+    {
+      "signature": "private.initial_feedback_operation_ready()",
+      "sha256": "a88195b8cc89503549d43a9fe23f649bd9b4d9abecdad8461974f3ed9c7e1b9d"
+    },
+    {
+      "signature": "private.initial_feedback_ready()",
+      "sha256": "7e37b1d085058f95b15bfd5f7e28b8e120875ee2b1eef5ad13aca110ea10ed2f"
+    }
+  ],
+  "postimages": [
+    {
+      "signature": "private.ifo_attempt_guard()",
+      "sha256": "207d5aa216776488dcebf080fd804d0b75ce1c00907d3a88a4e2c3c9035c951f"
+    },
+    {
+      "signature": "private.initial_feedback_operation_ready()",
+      "sha256": "007ba402596474817e3584b4c3359e352f0fef2a1bce0ff878eb8bc0d164b0c5"
+    },
+    {
+      "signature": "private.initial_feedback_ready()",
+      "sha256": "2a25a380a70725c9fb0af2d8423913595cd61956d2c5308c39c3cc56709ea669"
+    }
+  ],
+  "beforeFragment": "   -- A partial's unknown hold may learn actual usage after publication. It\n   -- cannot change its terminal reason, acquire a dispatch, or alter content.\n   if not exists(select 1 from private.initial_feedback_publications p where p.id=op.publication_id and p.state='deterministic_only')\n    or not(old.state='held_unknown' and old.usage is null and old.error_code is not null and new.state='failed' and new.usage is not null\n",
+  "afterFragment": "   -- Candidate content may already have cascaded away. Exact immutable\n   -- claimed metadata alone admits this first known fill, never a new dispatch.\n   -- Identity-retention expiry is a separate, not-yet-adopted lifecycle.\n   if not(old.state='held_unknown' and old.usage is null and old.error_code is not null and new.state='failed' and new.usage is not null\n",
+  "pubProfileUnchanged": "d1e59a0573979737cf4dbe4df75539cfda4dd0e6f58cfdd87b8f60319d3ed2a9",
+  "migrationSha256": "6563a195f69de2bd92675da850b7b893e7e6df16cd6223a2e85ef3c3739286cf"
+}

@@ -1,0 +1,30 @@
+{
+  "task": "CR-U03-S03-followup",
+  "status": "SOURCE_REVIEW_HOLD_REGRESSION_BEFORE_REPAIR",
+  "parentGate": {
+    "receipt": "u03-integrated-8779993b-e9be-4f97-97fc-01b4c3bba1cd.json",
+    "result": "100/7 plus types/lint/web/worker PASS at original source; retained historical, does not cover new counterexample"
+  },
+  "reviewer": "a04_runtime",
+  "owner": "a04_frontend",
+  "counterexamples": [
+    "fact A edit rejected then unrelated fact B confirmation succeeds must retain A",
+    "fact A edit rejected then fact B edit rejected must retain both",
+    "own exact or explicitly reviewed matching resolution clears only that target and exact value"
+  ],
+  "files": {
+    "app/routes/analysis.canonical.tsx": "126f64cb143b9acca874353c81355f285bc06f1e71852ea723c4065e69ce3acd",
+    "tests/unit/canonical-route.test.ts": "91ff494d1b551744ce5c911afa574b56935fca1aa5f6eebb6bf3fd62f89ffc2c",
+    "tests/components/CanonicalCorrections.test.tsx": "3ad7337cee4085b5bdb2c080a07717673906c150cc6230cfcb44f1b1ce2098d0",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-u03-canonical-draft.md": "d2327ce03b65919bccc5c0796a9d48afe0f39a85606ae066b6a8bdee4bf14296"
+  },
+  "successIdentity": "Private successful parsed edit/rename may return resolved command; clear only same operation/stable target/exact value. Failure submitted remains separate. Unrelated successful or failed non-edit/rename action must preserve drafts.",
+  "memory": "Source/analysis/resume/owner-bound collection, keyed operation and target. Replace only same-target failure. Include parsed missing/deleted targets readonly without granting ownership. Cap normal collection1030 using schema1000facts+30sections; never silently evict. Capacity feedback remains visible readonly with copy guidance and additional new editor submission disabled until space resolved. Existing retries/reviews and unrelated confirmations may proceed.",
+  "floors": [
+    "native forms/strict parser/private/no-store/current-target/history/busy/CAS unchanged",
+    "No local storage/URL drafts/runtime server parser client imports/new database or provider operation",
+    "No deleted/disabled/weakened original assertions; actual Router failure before repair",
+    "Root final affected two-file gate and full types/lint/web/worker; no100 or282 repetition"
+  ],
+  "reviewedAttemptKeys": "Loader generates a distinct server UUID for each operation/actual current fact or section target. Retained new-attempt forms use that exact key; missing/invalid keys withhold new review. No production singleton-key fallback for test fixtures. Distinct panels must not share one idempotency key."
+}

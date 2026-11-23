@@ -1,0 +1,9 @@
+{
+  "status": "FROZEN_SOURCE_INVARIANT_SUPPLEMENT",
+  "baseContractSha256": "e4bb4adc7a7dedd7614ae3969ce1d498f8076823134fde674606135591571998",
+  "finding": "Existing generic privileged Root UPDATE could change deleted to active; no current application RPC performs this and authenticated table writes are already denied. This is not claimed as a public exploit.",
+  "design": "New independent public.resumes BEFORE UPDATE guard denies old.status=deleted and new.status IS DISTINCT FROM deleted. Preserve existing generic privacy guard bytes, ownership/metadata handling, and legitimate active->deleted transition. No role grant or generic bypass.",
+  "closure": "Backend verified actual composed source does not close trigger counts on these public tables. New function body and exact enabled trigger registration are pinned by the updated owned_ai_disposition_ready. Same two Node profile modules; old policy/scoring profiles and receipts unchanged.",
+  "scope": "Prevent state reactivation of existing tombstoned roots; no backup/restore/INSERT reconstruction protection claimed. Exact history/restore still requires R19 lifecycle closure.",
+  "verification": "Source controls for deleted->active/NULL/other-state refusal, metadata-only/deleting transitions and registration/hash composition; Native trigger semantics remain unparsed/unexecuted."
+}

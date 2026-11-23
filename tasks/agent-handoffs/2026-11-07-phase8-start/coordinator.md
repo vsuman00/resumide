@@ -1,0 +1,11 @@
+# Phase 8 start: prerequisite and implementation packet
+
+Owner requested the next phase after AA8/AA9. Canonical next phase is B2C billing/entitlements T080-T082, followed by Billing launch. tasks/plan.md says: "No billing task begins until A4 passes and the commercial model is approved." Current Gate A4 is explicitly open and no approved commercial model was found. General continuation does not close either gate. This run prepares concrete prerequisite/design work; no billing implementation or provider selection is authorized yet.
+
+Base main/a0b239299d75b0bd64b588fe743ebe2975fb28b9, extensive dirty work preserved. Prior AA8/AA9 verification/claims remain distinct from A4 production approval. Deployment hold remains. No staging/commit/push, hosted change, migration application, real data/provider call, payment, DB container or new dependency.
+
+Assignments: root owns this coordinator, CONTEXT.md, canonical plans and proposed decision packet. aa7_review in licenses worktree audits T080 server/persistence integration and proposes bounded service/schema contracts in its own handoff only. aa7_validation in sandbox audits A4/approval and existing verification/CI constraints in its own handoff only. aa7_frontend_review in accessible-preview drafts only docs/design/BILLING_ENTITLEMENTS.md as a DRAFT decision/UX specification, without prices/provider choices or implemented UI. All read the current root rather than stale private baselines. No source-code writers/services allocated.
+
+Acceptance: identify exact prerequisites/current evidence, existing integration points, owner decisions and local-test/production boundaries; assemble a reviewable T080-first packet and request only missing commercial model/explicit local sequencing decision. Do not invent prices, quotas, vendor capabilities or gate approvals. Apply clean-user-facing-text to prose and verify documentation links/diff. Proceed with dependent code only after the needed owner answer.
+
+Updated 2026-11-08: all three preparatory assignments returned. Draft design and ADR-0019 proposed local T080 exception are integrated. No gate waiver exists; commercial model/limits remain owner inputs. One asynchronous commercial-model question is pending. Before any dependent implementation, obtain explicit local sequencing decision (or actual A4 closure) plus approved T080 policy values.

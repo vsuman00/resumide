@@ -1,0 +1,73 @@
+{
+  "task": "CR-R17-S02",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "checkedDate": "2026-11-21",
+  "checkout": "dirty integration worktree",
+  "evidenceTier": "LOCAL_WORKER_AND_SDK_TRANSPORT",
+  "inputSha256": {
+    "app/lib/server/privacy-worker.ts": "7871d012880bbfe0e89c0ace5f19dfd27a8b80ab0e35b4abc9532e45cbba290c",
+    "app/lib/server/storage.ts": "142f385301ba4e39f0fcebbb992e4c84ed730715315fa4ff3798d206cecf6100",
+    "app/lib/server/supabase.ts": "ba72b9a96c9d49137eb83a4097f4ccd0a3aa88e53d3274a47eada13a97b8394c",
+    "tests/unit/privacy-claim-fence.test.ts": "31c4e94ffa0b7b88505358b65310ac88d3986a7dce74537185bb979e7b5871ba",
+    "tests/unit/storage.test.ts": "5955757245ccd7a317b0faa2e74d67e53e4d6e5183bb2f6490046e19feeb7f8d"
+  },
+  "before": {
+    "failed": 6,
+    "passed": 13,
+    "cause": "Deletion completed with only the remove acknowledgment.",
+    "logSha256": "61fe15c276ba16fdcc6c1b250d17fb5a7a2da3470e0d01bf6e351288f5a9b346"
+  },
+  "fullApplication": {
+    "runs": [
+      {
+        "passed": 6770,
+        "files": 322,
+        "sha256": "a015ef45d33c5cb0fe00201269882b4b8bb9adada9b2cfe053ffe60fd6426014"
+      },
+      {
+        "passed": 3,
+        "files": 1,
+        "sha256": "02f688e79be66647bfe9ded1d061a2ea3ec4b9703ec1135981a6701639fce1f9"
+      }
+    ],
+    "scope": "Same application source as the final candidate. This run predates the strengthened late-response assertion in the SDK test."
+  },
+  "afterFinalTestChange": {
+    "focused": {
+      "passed": 153,
+      "files": 4,
+      "sha256": "1b1abe3a63b433306e892f95c6ffc0c57ae2301cbfb8b1afebeb61b9bb76529c"
+    },
+    "commands": [
+      "prettier --check",
+      "npm test (four affected files)",
+      "npm run typecheck",
+      "eslint tests/unit/storage.test.ts"
+    ],
+    "exitCode": 0,
+    "staticsLogSha256": "b63c0de51fcb1526e23a41bde9c50d3e1af56b2b08d9bfe50e3d977251642455"
+  },
+  "staticsAndBuilds": {
+    "commands": [
+      "npm run format:check",
+      "npm run typecheck",
+      "npm run lint",
+      "npm run build",
+      "npm run build:worker"
+    ],
+    "exitCode": 0,
+    "lintWarnings": 4,
+    "logSha256": "6de7c3f8d86340a7b9f4b01c52a9ce9e60fa5c7c586b97e9d269e35fb68b8a1d",
+    "artifacts": {
+      "build/server/index.js": "d131aa64b36605ac352760e74ac206b02e9e3363bbebff6be4f77ddf4d19a95c",
+      "build/worker/analysis.mjs": "60de13261e954d6fe75dabdecde281b66395dbc806a712486d02cf938999e798"
+    }
+  },
+  "intermediateFailure": "The stronger timer test initially used Promise.withResolvers, which ran on Node 22 but is outside the project TypeScript library target. A regular Promise fixture passed the final type, lint and focused test gate.",
+  "limits": [
+    "Synthetic SDK transport and local worker only",
+    "Managed Storage visibility and physical erasure are unverified",
+    "Bound admission retirement and active-writer reconciliation remain open",
+    "No migration, deployment, or production activation"
+  ]
+}

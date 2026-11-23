@@ -1,0 +1,67 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ↓ tests/components/BuildAiAssistant.test.tsx > keeps selected-context suggestions dismissed through Escape keyup and permits fresh selection
+ × tests/components/BuildAiAssistant.test.tsx > renders published Build cancelled as its own safe outcome 74ms
+   → expected 'AI suggestions are unavailable. No ch…' to be 'The AI request was cancelled. No sugg…' // Object.is equality
+ × tests/components/BuildAiAssistant.test.tsx > renders published Build output_invalid as its own safe outcome 16ms
+   → expected 'AI suggestions are unavailable. No ch…' to be 'The AI response could not be used saf…' // Object.is equality
+ × tests/components/BuildAiAssistant.test.tsx > renders published Build request_conflict as its own safe outcome 12ms
+   → expected 'AI suggestions are unavailable. No ch…' to be 'This suggestion request cannot be reu…' // Object.is equality
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/BuildAiAssistant.test.tsx > renders published Build cancelled as its own safe outcome
+AssertionError: expected 'AI suggestions are unavailable. No ch…' to be 'The AI request was cancelled. No sugg…' // Object.is equality
+
+Expected: "The AI request was cancelled. No suggestion was applied."
+Received: "AI suggestions are unavailable. No change was applied. You can try again later."
+
+ ❯ tests/components/BuildAiAssistant.test.tsx:101:29
+     99|   expect(request.editor.value).toBe(failureSource);
+    100|   expect(request.onApply).not.toHaveBeenCalled();
+    101|   expect(alert.textContent).toBe(message);
+       |                             ^
+    102| });
+    103|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/components/BuildAiAssistant.test.tsx > renders published Build output_invalid as its own safe outcome
+AssertionError: expected 'AI suggestions are unavailable. No ch…' to be 'The AI response could not be used saf…' // Object.is equality
+
+Expected: "The AI response could not be used safely. No change was applied."
+Received: "AI suggestions are unavailable. No change was applied. You can try again later."
+
+ ❯ tests/components/BuildAiAssistant.test.tsx:101:29
+     99|   expect(request.editor.value).toBe(failureSource);
+    100|   expect(request.onApply).not.toHaveBeenCalled();
+    101|   expect(alert.textContent).toBe(message);
+       |                             ^
+    102| });
+    103|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/components/BuildAiAssistant.test.tsx > renders published Build request_conflict as its own safe outcome
+AssertionError: expected 'AI suggestions are unavailable. No ch…' to be 'This suggestion request cannot be reu…' // Object.is equality
+
+Expected: "This suggestion request cannot be reused. Review the current selection before asking again."
+Received: "AI suggestions are unavailable. No change was applied. You can try again later."
+
+ ❯ tests/components/BuildAiAssistant.test.tsx:101:29
+     99|   expect(request.editor.value).toBe(failureSource);
+    100|   expect(request.onApply).not.toHaveBeenCalled();
+    101|   expect(alert.textContent).toBe(message);
+       |                             ^
+    102| });
+    103|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 skipped (4)
+   Start at  18:39:20
+   Duration  821ms (transform 62ms, setup 0ms, import 142ms, tests 103ms, environment 502ms)
+

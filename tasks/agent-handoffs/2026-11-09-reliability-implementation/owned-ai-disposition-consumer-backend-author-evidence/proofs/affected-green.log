@@ -1,0 +1,55 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+stderr | tests/components/CanonicalEntryRegroupReview.test.tsx > saved whole-entry regroup consumer > current canonical route lacks the saved-entry regroup review
+No `HydrateFallback` element provided to render during initial hydration
+
+ ❯ tests/components/CanonicalEntryRegroupReview.test.tsx (18 tests | 1 failed) 4679ms
+     ✓ current canonical route lacks the saved-entry regroup review 178ms
+     ✓ uses explicit actual fact choices and full Core diff while denied saving stays unavailable 238ms
+     ✓ retains before transport and manually resumes the same original after reload and head movement  493ms
+     ✓ irreversibly invalidates previews on edit/revert, loader refresh and persisted history  402ms
+     ✓ rejects invalid retained metadata expired without automatic actions 53ms
+     ✓ rejects invalid retained metadata foreign without automatic actions 98ms
+     ✓ rejects invalid retained metadata oversized without automatic actions 55ms
+     ✓ rejects invalid retained metadata checkbox without automatic actions 79ms
+     × keeps the original TTL on an ambiguous retry 262ms
+     ✓ retains metadata and withholds success when an actual SDK receipt fails correlation 261ms
+     ✓ preserves the exact pending request without offering apply when historical diff is unavailable 108ms
+     ✓ reports storage failure and retains an honest in-memory retry 216ms
+     ✓ keeps busy guards and discards cancelled A with a newer B=false 208ms
+     ✓ keeps busy guards and discards cancelled A with a newer B=true 290ms
+     ✓ offers recovery after a definite conflict without automatically clearing the original request  402ms
+     ✓ discards only on explicit click without a request and requires a new preview and unchecked acknowledgement  586ms
+     ✓ keeps pending and historical details when local storage removal fails  400ms
+     ✓ disables discard during a real in-flight resume and retains the request  350ms
+ ✓ tests/unit/legacy-scoring-input-sql.test.ts (17 tests) 8ms
+ ✓ tests/unit/owned-ai-usage-sql.test.ts (9 tests) 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/components/CanonicalEntryRegroupReview.test.tsx > saved whole-entry regroup consumer > keeps the original TTL on an ambiguous retry
+AssertionError: expected <input required …(4)></input> to have property "checked" with value true
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ tests/components/CanonicalEntryRegroupReview.test.tsx:655:33
+    653|       // RPC entry precedes its response. Hold that boundary so this t…
+    654|       // confuse a pending save with the settled ambiguous-error rende…
+    655|       expect(acknowledgement()).toHaveProperty("checked", true);
+       |                                 ^
+    656|       expect(sessionStorage.getItem(storageKey)).toBe(original);
+    657|       await act(async () => releaseApply());
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 43 passed (44)
+   Start at  13:53:29
+   Duration  5.49s (transform 246ms, setup 0ms, import 388ms, tests 4.69s, environment 240ms)
+

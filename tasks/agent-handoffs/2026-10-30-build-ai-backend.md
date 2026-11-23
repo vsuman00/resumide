@@ -1,0 +1,38 @@
+# Build selected-context AI: backend handoff
+
+Updated: 2026-10-30. Status: IMPLEMENTED; backend static checks pass, independent acceptance tests pending. The [coordinator packet](2026-10-30-build-ai-coordinator.md) records explicit approval to reuse the configured key. The existing model and official endpoint are unchanged. Credential presence is not evidence of access: testing reported its single authorized synthetic call returned 401. This worker made no model calls or key/environment-secret changes.
+
+## Owned implementation
+
+- `app/lib/build-assist.ts`: browser-safe request/response types, policy/limits, SHA-256 helper, whole-line selections with exact CRLF offsets, stale-safe apply, resume fact-confirmation gate, and last-edit undo binding. Frontend and testing received the shared contract before implementation continued.
+- `app/lib/server/build-assist.ts`: exact request metadata/hash/range/consent validation; bounded selected/context payload; strict model schema; whole-candidate LaTeX admission; protected signed numeric/decimal/scientific, currency/unit, email and URL token preservation for resume replacements; uncertain or unsafe edits become non-applicable advice. Successful responses bind source hash, line range, original text, mode and fact-confirmation requirement.
+- `app/lib/server/build-assist-service.ts`: authenticated, strict same-origin JSON action with bounded body/deadline, default-off flags, per-process concurrency and direct Supabase admission/consent/audit. Returns private/no-store fixed errors or a transient suggestion. No analyzer/canonical import or source/prompt/output persistence.
+- `app/lib/server/config.ts`, `.env.example`, and `latex-converter-service.ts`: default-off `BUILD_AI_ASSIST_ENABLED` and a public `aiEnabled` loader boolean requiring the converter and existing AI flags. Preserve all unrelated baseline changes.
+
+Frontend owns `/build/suggest` resource registration and its thin `buildSuggestAction(request)` call. No compiler code or image changed. No dependency, lockfile or migration was added.
+
+## Provider and budget boundary
+
+Only mode, selected text and up to two context lines each side are forwarded. The complete source/hash/identity never enters the provider payload. Source is at most 48 KiB; selection at most 20 lines/4,000 characters; selected plus nearby context at most 8,000 characters and 8,000 UTF-8 bytes. Serialized provider data is capped at 17,000 bytes; fixed instructions/schema at 6,000 bytes. Output is capped at 768 tokens. A 25,000-token request reservation includes framing/output headroom; it is a conservative quota allowance, not a statement of actual charges or a provider billing guarantee.
+
+The existing OpenAI SDK uses the configured model helper, official egress validation, strict structured output, no tools, no retries, a 10-second timeout, forwarded cancellation, disabled SDK logging and redirect rejection. `store:false` is requested; no broader provider-retention claim is made. The implementation follows [official structured-output guidance](https://developers.openai.com/api/docs/guides/structured-outputs) and [SDK options](https://developers.openai.com/api/reference/typescript); actual credential/model capability remains unverified after the 401 smoke.
+
+Deployment admission uses opaque `build-ai:user:<user hash>` at 3/minute and `build-ai:global:v1` at 20/minute, plus two active requests per process. Existing analysis token usage is checked through `get_organization_ai_tokens_used`. The existing usage table requires an analysis ID and stored output, so it is not used for standalone suggestions.
+
+A separate atomic generic-rate bucket `build-ai:month:YYYY-MM:<organization hash>` uses a 32-day window and a limit of `floor((configured monthly allowance - observed analysis usage) / 25000)`. Default 100,000 tokens permits at most four reserved Build requests in that month before other observed usage reduces the limit. Failed, cancelled and ambiguous admitted requests consume reservations; there are no automatic retries or refunds. Analysis and Build do not share an atomic billing ledger, and future analysis spend can race this observation. Actual known provider token/cost counts go only to the existing content-free metrics helper. A follow-up observability fix emits bounded integer usage before refusal, cancellation or output validation can reject a completed response. The service records that callback once; successful responses are not counted again. The SDK uses the same strict schema with `create`, then local JSON/schema validation, so malformed model JSON does not discard available usage. Responses with unknown/invalid usage do not produce fabricated metrics.
+
+## Consent, cancellation and privacy
+
+Every request requires explicit `consent:true` for policy `build-ai-selected-context-v1`, a matching source hash and the exact selected range. Membership determines the owner organization. Existing `consents` stores purpose `qualitative_ai` with that policy and refreshed capture time; a fixed content-free audit action uses a server-generated UUID. DB failures withhold the request rather than calling the provider. No user-supplied request ID, source, prompts, output or raw provider errors are persisted or logged.
+
+Body reads have a five-second deadline and handle already-aborted requests before reading. Provider cancellation is forwarded, checked again after completion, and never causes automatic retry. Cancellation cannot guarantee that a provider stopped processing or charging; the conservative monthly reservation remains consumed. Concurrency is released in `finally` on every service exit.
+
+Resume token preservation and candidate confirmation do not prove semantic truth: units, names, qualifications or meaning could still change. The UI must present plain-text before/after/explanation, require confirmation for resume edits, reject stale application and preserve explicit Apply/Discard/Undo. No auto-apply or auto-compile is introduced.
+
+## Verification and integration
+
+Backend Node 22.23.4 `npm run typecheck`, focused ESLint, formatting and whitespace checks pass. Read-only review found a numeric-sign preservation gap; the server tokenizer now distinguishes negative/positive values and conservatively protects nearby unit/currency forms. Static source probes distinguish `-5` from `5`, `-.5`, currency/multiplier forms, and `kg` from `lb`; testing owns the regression suite. Some harmless wording changes around metrics now become advice rather than an applicable patch. No provider call, DB operation or acceptance test was run by this worker. Testing owns mocked adapter/service/fault/privacy/budget tests and the separately authorized live smoke. Its final results belong in a new receipt; historical compiler receipts stay unchanged.
+
+Brief read-only frontend review found plain-text output, one-request consent reset, source/range/sequence checks, late fact-confirmation recheck, and exact-source undo aligned with the contract. Frontend was asked to compare the current selected/context text with the disclosed selection before Ask AI as an explicit guard against a source-change effect race. This worker edited no frontend files.
+
+Coordinator integrates only the six owned implementation files plus this handoff, preserves unrelated dirty work, and obtains final combined verification. No deployment, publication, hosted migration, private-document test, key creation, model change or release acceptance is implied. The self-contained prose hygiene pass applies to this handoff; protocol identifiers and code remain unchanged.

@@ -1,0 +1,39 @@
+
+> test
+> vitest run tests/unit/owned-ai-retirement-sql.test.ts tests/unit/initial-feedback-late-settlement-sql.test.ts
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv4.1.12 [39m[90m/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats[39m
+
+ [32m✓[39m tests/unit/owned-ai-retirement-sql.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [31m❯[39m tests/unit/initial-feedback-late-settlement-sql.test.ts [2m([22m[2m8 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 7[2mms[22m[39m
+     [32m✓[39m does not make exact terminal accounting depend on an erasable publication row[32m 1[2mms[22m[39m
+     [32m✓[39m preserves9ffc/6bc/63dd source bytes and the publication profile[32m 2[2mms[22m[39m
+     [32m✓[39m changes only the erasable-row condition while retaining every old guard[32m 0[2mms[22m[39m
+     [32m✓[39m changes only the exact guard hash in the operation source manifest[32m 0[2mms[22m[39m
+     [32m✓[39m changes only the exact operation checker hash in the full source manifest[32m 0[2mms[22m[39m
+     [32m✓[39m guards exact preimages/postimages and keeps all three private routines denied[32m 1[2mms[22m[39m
+     [32m✓[39m adds no storage/policy/admission path and leaves the usage-retirement defect separate[32m 0[2mms[22m[39m
+[31m     [31m×[31m retains a real owner-scoped cascade/late-settlement verifier as explicitly unrun[39m[32m 2[2mms[22m[39m
+
+[31m⎯⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 1 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m tests/unit/initial-feedback-late-settlement-sql.test.ts[2m > [22mlate-known forward source closure[2m > [22mretains a real owner-scoped cascade/late-settlement verifier as explicitly unrun
+[31m[1mError[22m: ENOENT: no such file or directory, open '/Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats/scripts/verify-initial-feedback-late-settlement.sql'[39m
+[36m [2m❯[22m read tests/unit/initial-feedback-late-settlement-sql.test.ts:[2m31:3[22m[39m
+    [90m 29|[39m // Textual source regression only. No SQL parser, execution or Native …
+    [90m 30|[39m [35mconst[39m read [33m=[39m (file[33m:[39m string) [33m=>[39m
+    [90m 31|[39m   [34mreadFileSync[39m([35mnew[39m [33mURL[39m([32m`../../[39m[36m${[39mfile[36m}[39m[32m`[39m[33m,[39m [35mimport[39m[33m.[39mmeta[33m.[39murl)[33m,[39m [32m"utf8"[39m)[33m;[39m
+    [90m   |[39m   [31m^[39m
+    [90m 32|[39m [35mconst[39m original [33m=[39m [34mread[39m(
+    [90m 33|[39m   "supabase/migrations/20261115081345_initial_feedback_publications.sq…
+[90m [2m❯[22m tests/unit/initial-feedback-late-settlement-sql.test.ts:[2m176:22[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m1 passed[39m[22m[90m (2)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m16 passed[39m[22m[90m (17)[39m
+[2m   Start at [22m 15:50:37
+[2m   Duration [22m 118ms[2m (transform 54ms, setup 0ms, import 72ms, tests 13ms, environment 0ms)[22m
+

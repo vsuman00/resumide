@@ -1,0 +1,172 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-runtime/resume_ats
+
+ ❯ tests/unit/empty-supabase-target-source.test.ts (13 tests | 2 failed) 9ms
+     ✓ discloses the unexecuted tier and external admission limits 1ms
+     ✓ uses one repeatable read-only snapshot with finite session-local limits 0ms
+     ✓ requires actual PostgreSQL major17 before any aggregates 0ms
+     ✓ refuses missing Auth/Storage tables before their fixed aggregate queries 0ms
+     × requires ordinary managed tables before fixed aggregate reads 3ms
+     × refuses non-table optional history before its fixed literal query 3ms
+     ✓ refuses nonzero auth.users without returning record selectors 0ms
+     ✓ refuses nonzero storage.objects without returning record selectors 0ms
+     ✓ refuses nonzero storage.buckets without returning record selectors 0ms
+     ✓ checks public/private ordinary, partitioned, foreign and materialized relations 0ms
+     ✓ allows absent migration history but rejects any present rows using one fixed literal 0ms
+     ✓ emits only a metadata pass row after every refusal check 0ms
+     ✓ contains no fixtures, object mutation, temp objects, grants or caller authorization settings 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/empty-supabase-target-source.test.ts > empty managed target preflight source, not Native execution > requires ordinary managed tables before fixed aggregate reads
+AssertionError: expected '\n\n\n\nbegin transaction isolation l…' to contain 'p.relkind=\'r\''
+
+- Expected
++ Received
+
+- p.relkind='r'
++
++
++
++
++ begin transaction isolation level repeatable read read only;
++ set local statement_timeout='15s';
++ set local lock_timeout='1s';
++ set local idle_in_transaction_session_timeout='20s';
++ set local search_path='';
++
++ do $empty_target$
++ declare history_rows bigint;
++ begin
++   if current_setting('server_version_num')::integer not between 170000 and 179999 then
++     raise exception 'EMPTY_TARGET_POSTGRES_MAJOR_MISMATCH' using errcode='23514';
++   end if;
++   if to_regclass('auth.users') is null or to_regclass('storage.objects') is null
++     or to_regclass('storage.buckets') is null then
++     raise exception 'EMPTY_TARGET_REQUIRED_MANAGED_TABLE_MISSING' using errcode='23514';
++   end if;
++   if (select count(*) from auth.users)<>0 then
++     raise exception 'EMPTY_TARGET_AUTH_USERS_PRESENT' using errcode='23514';
++   end if;
++   if (select count(*) from storage.objects)<>0 then
++     raise exception 'EMPTY_TARGET_STORAGE_OBJECTS_PRESENT' using errcode='23514';
++   end if;
++   if (select count(*) from storage.buckets)<>0 then
++     raise exception 'EMPTY_TARGET_STORAGE_BUCKETS_PRESENT' using errcode='23514';
++   end if;
++   if exists(select 1 from pg_catalog.pg_class c
++     join pg_catalog.pg_namespace n on n.oid=c.relnamespace
++     where n.nspname in ('public','private') and c.relkind in ('r','p','f','m')) then
++     raise exception 'EMPTY_TARGET_APPLICATION_RELATIONS_PRESENT' using errcode='23514';
++   end if;
++   if to_regclass('supabase_migrations.schema_migrations') is not null then
++     
++     execute 'select count(*) from supabase_migrations.schema_migrations' into history_rows;
++     if history_rows<>0 then
++       raise exception 'EMPTY_TARGET_MIGRATION_HISTORY_PRESENT' using errcode='23514';
++     end if;
++   end if;
++ end;
++ $empty_target$;
++
++
++ select jsonb_build_object(
++   'schemaVersion','empty-supabase-target-preflight/1.0.0',
++   'status','empty',
++   'postgresMajor',17,
++   'counts',jsonb_build_object('authUsers',0,'storageObjects',0,'storageBuckets',0,
++     'applicationRelations',0,'migrationHistoryRows',0),
++   'externalIsolationProved',false
++ ) as target_preflight;
++ rollback;
++
+
+ ❯ tests/unit/empty-supabase-target-source.test.ts:52:24
+     50|   });
+     51|   it("requires ordinary managed tables before fixed aggregate reads",(…
+     52|     expect(statements).toContain("p.relkind='r'");
+       |                        ^
+     53|     expect(statements).toContain("EMPTY_TARGET_MANAGED_RELATION_KIND_M…
+     54|     before("EMPTY_TARGET_MANAGED_RELATION_KIND_MISMATCH", "select coun…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  tests/unit/empty-supabase-target-source.test.ts > empty managed target preflight source, not Native execution > refuses non-table optional history before its fixed literal query
+AssertionError: expected '\n\n\n\nbegin transaction isolation l…' to contain 'p.oid=to_regclass(\'supabase_migratio…'
+
+- Expected
++ Received
+
+- p.oid=to_regclass('supabase_migrations.schema_migrations') and p.relkind<>'r'
++
++
++
++
++ begin transaction isolation level repeatable read read only;
++ set local statement_timeout='15s';
++ set local lock_timeout='1s';
++ set local idle_in_transaction_session_timeout='20s';
++ set local search_path='';
++
++ do $empty_target$
++ declare history_rows bigint;
++ begin
++   if current_setting('server_version_num')::integer not between 170000 and 179999 then
++     raise exception 'EMPTY_TARGET_POSTGRES_MAJOR_MISMATCH' using errcode='23514';
++   end if;
++   if to_regclass('auth.users') is null or to_regclass('storage.objects') is null
++     or to_regclass('storage.buckets') is null then
++     raise exception 'EMPTY_TARGET_REQUIRED_MANAGED_TABLE_MISSING' using errcode='23514';
++   end if;
++   if (select count(*) from auth.users)<>0 then
++     raise exception 'EMPTY_TARGET_AUTH_USERS_PRESENT' using errcode='23514';
++   end if;
++   if (select count(*) from storage.objects)<>0 then
++     raise exception 'EMPTY_TARGET_STORAGE_OBJECTS_PRESENT' using errcode='23514';
++   end if;
++   if (select count(*) from storage.buckets)<>0 then
++     raise exception 'EMPTY_TARGET_STORAGE_BUCKETS_PRESENT' using errcode='23514';
++   end if;
++   if exists(select 1 from pg_catalog.pg_class c
++     join pg_catalog.pg_namespace n on n.oid=c.relnamespace
++     where n.nspname in ('public','private') and c.relkind in ('r','p','f','m')) then
++     raise exception 'EMPTY_TARGET_APPLICATION_RELATIONS_PRESENT' using errcode='23514';
++   end if;
++   if to_regclass('supabase_migrations.schema_migrations') is not null then
++     
++     execute 'select count(*) from supabase_migrations.schema_migrations' into history_rows;
++     if history_rows<>0 then
++       raise exception 'EMPTY_TARGET_MIGRATION_HISTORY_PRESENT' using errcode='23514';
++     end if;
++   end if;
++ end;
++ $empty_target$;
++
++
++ select jsonb_build_object(
++   'schemaVersion','empty-supabase-target-preflight/1.0.0',
++   'status','empty',
++   'postgresMajor',17,
++   'counts',jsonb_build_object('authUsers',0,'storageObjects',0,'storageBuckets',0,
++     'applicationRelations',0,'migrationHistoryRows',0),
++   'externalIsolationProved',false
++ ) as target_preflight;
++ rollback;
++
+
+ ❯ tests/unit/empty-supabase-target-source.test.ts:57:24
+     55|   });
+     56|   it("refuses non-table optional history before its fixed literal quer…
+     57|     expect(statements).toContain("p.oid=to_regclass('supabase_migratio…
+       |                        ^
+     58|     before("EMPTY_TARGET_MIGRATION_HISTORY_KIND_MISMATCH", "execute 's…
+     59|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 11 passed (13)
+   Start at  05:29:37
+   Duration  98ms (transform 17ms, setup 0ms, import 22ms, tests 9ms, environment 0ms)
+

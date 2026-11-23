@@ -1,0 +1,16 @@
+{
+  "status": "CONCRETE_SOURCE_FINDINGS_AND_NARROW_SUCCESSOR_ACK_NATIVE_UNEXECUTED",
+  "sourceCandidate": "1026250d970 / Nodef5f / profile35295",
+  "findings": [
+    "STABLE exporter attempted Auth rowlock; change to ordinarysnapshotexistence read preserves readonly single snapshot",
+    "Node validation returned without finaldeadline/abort check; genuinefakeRPCdeadlinebehaviorRED preserved byRuntime"
+  ],
+  "acceptedSuccessor": "SQLde681/Node4b0/profile985cf; BackendnarrowclosureACK",
+  "primaryCorroboration": [
+    "https://www.postgresql.org/docs/17/xfunc-volatility.html",
+    "https://www.postgresql.org/docs/16/spi-visibility.html",
+    "https://raw.githubusercontent.com/postgres/postgres/REL_17_STABLE/src/backend/tcop/utility.c",
+    "https://raw.githubusercontent.com/postgres/postgres/REL_17_STABLE/src/backend/executor/spi.c"
+  ],
+  "evidenceTier": "Source and installedSDK/fakeRPC behavior only. NoSQLparsed/executed; noNativeRED or projectversionclaim."
+}

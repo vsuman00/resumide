@@ -1,0 +1,630 @@
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-backend/resume_ats
+
+ ❯ tests/unit/owned-legacy-ai-usage-sql.test.ts (3 tests | 3 failed) 8ms
+     × captures actual runs before the final covered parent DELETE 5ms
+     × includes retained original-month unlinked usage in the real shared reader 1ms
+     × preserves old arbitrary-since run usage and casts each integer before addition 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/owned-legacy-ai-usage-sql.test.ts > actual predecessor source loss regressions, SQL unparsed/unexecuted > captures actual runs before the final covered parent DELETE
+AssertionError: expected 'declare selected private.retention_it…' to contain 'capture_owned_legacy_ai_usage'
+
+- Expected
++ Received
+
+- capture_owned_legacy_ai_usage
++ declare selected private.retention_items%rowtype;item_row private.retention_items%rowtype;root_row public.resumes%rowtype;
++ begin
++  select * into selected from private.retention_items where id=p_item_id;
++  if not found then return false;end if;
++  if selected.status='deleted' then return true;end if;
++  if private.owned_ai_disposition_ready() is not true then raise exception 'RETENTION_SOURCE_UNAVAILABLE' using errcode='23514';end if;
++  if not private.try_lock_candidate_owners(array[selected.owner_id]) then raise exception 'PRIVACY_OWNER_BUSY' using errcode='55P03';end if;
++  -- Re-read terminal state after owner acquisition BEFORE requiring a parent:
++  -- another completion may have committed both deletion and parent cascade.
++  select * into item_row from private.retention_items where id=p_item_id for update skip locked;
++  if not found then
++   if exists(select 1 from private.retention_items where id=p_item_id) then raise exception 'RETENTION_ITEM_BUSY' using errcode='55P03';end if;
++   return false;
++  end if;
++  if (item_row.owner_id,item_row.resume_id,item_row.storage_key) is distinct from (selected.owner_id,selected.resume_id,selected.storage_key)
++   then raise exception 'RETENTION_ITEM_IDENTITY_CONFLICT' using errcode='23514';end if;
++  if item_row.status='deleted' then return true;end if;
++  root_row:=private.r17_lock_root(item_row.owner_id,item_row.resume_id);
++  if root_row.status<>'deleted' or not exists(select 1 from public.resume_versions v where v.resume_id=root_row.id and v.owner_id=root_row.owner_id
++    and v.organization_id=root_row.organization_id and v.storage_key=item_row.storage_key
++    and v.storage_key=private.r17_storage_key(v.organization_id,v.resume_id,v.id))
++   then raise exception 'RETENTION_PARENT_REPAIR_REQUIRED' using errcode='23514';end if;
++  update private.retention_items set status='deleted',completed_at=clock_timestamp(),last_error_code=null where id=p_item_id and status in ('queued','failed');
++  if not found then raise exception 'RETENTION_ITEM_STATE' using errcode='23514';end if;
++  -- Missing/unenrolled actual versions prevent BOTH publication retirement and
++  -- parent cascade, even when every recorded work item is already deleted.
++  if private.r17_root_covered(root_row.owner_id,root_row.id,root_row.organization_id) is true then
++   perform private.retire_initial_feedback_publications(root_row.owner_id,root_row.id,null,item_row.id);
++   -- Recheck coverage under the same owner/root/source locks immediately before DELETE.
++   delete from public.resumes r where r.id=root_row.id and r.owner_id=root_row.owner_id and r.status='deleted'
++     and private.r17_root_covered(root_row.owner_id,root_row.id,root_row.organization_id) is true;
++   if not found then raise exception 'RETENTION_COVERAGE_CHANGED' using errcode='23514';end if;
++  end if;
++  return true;
++ end;
++
+
+ ❯ tests/unit/owned-legacy-ai-usage-sql.test.ts:11:18
+      9|  it("captures actual runs before the final covered parent DELETE",()=>{
+     10|   const actual=candidate||r17.find(p=>p.signature==="public.complete_r…
+     11|   expect(actual).toContain("capture_owned_legacy_ai_usage");
+       |                  ^
+     12|  });
+     13|  it("includes retained original-month unlinked usage in the real share…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  tests/unit/owned-legacy-ai-usage-sql.test.ts > actual predecessor source loss regressions, SQL unparsed/unexecuted > includes retained original-month unlinked usage in the real shared reader
+AssertionError: expected '-- Exact owned content retirement SOU…' to contain 'owned_legacy_ai_usage_retirements'
+
+- Expected
++ Received
+
+- owned_legacy_ai_usage_retirements
++ -- Exact owned content retirement SOURCE ONLY. SQL UNPARSED/UNEXECUTED.
++ -- Linkable accounting proof only; ADR0020 deadline/expiry/Auth/restore remain
++ -- separate hard adoption dependencies. No data grants, backfill or policy seeds.
++ begin;
++ set local statement_timeout='10s';
++ set local lock_timeout='1s';
++ set local idle_in_transaction_session_timeout='15s';
++ set local search_path='';
++
++ do $retirement_pre$
++ declare item record;p pg_catalog.pg_proc%rowtype;owner_oid oid;service_oid oid;
++ begin
++  select proowner into owner_oid from pg_catalog.pg_proc where oid=to_regprocedure('public.persist_deterministic_analysis(uuid,text,jsonb,text,jsonb,text,text,text,text,jsonb,text,integer,text)');
++  select oid into service_oid from pg_catalog.pg_roles where rolname='service_role';
++  for item in select key signature,value #>> '{}' expected from jsonb_each($retirement_preimages${"public.prepare_deletion_request(uuid,text)":"c4e88149be1466d815a3605c070df0d314062bdfd185f02e6f9fde1f03112251","public.complete_retention_item(uuid)":"eecff5c5e3cfe431a9a12bd0a6d3c9a080448d3638938f791f72921380d50b6a","public.read_initial_feedback_usage(uuid,uuid)":"b242c0e264b0dfa5307f742a77e7a3cc0818bc9c18c88b946d9b27ee0a25889f","private.initial_feedback_ready()":"2a25a380a70725c9fb0af2d8423913595cd61956d2c5308c39c3cc56709ea669"}$retirement_preimages$::jsonb) loop
++   if (select private.ifo_sha(prosrc) from pg_catalog.pg_proc where oid=to_regprocedure(item.signature)) is distinct from item.expected then
++    raise exception 'OWNED_AI_RETIREMENT_PREIMAGE_DRIFT' using errcode='23514';end if;
++  end loop;
++  for item in select * from (values ('public.prepare_deletion_request(uuid,text)','jsonb'),('public.complete_retention_item(uuid)','boolean')) v(signature,result_type) loop
++   select * into p from pg_catalog.pg_proc where oid=to_regprocedure(item.signature);
++   if not found or p.proowner<>owner_oid or not p.prosecdef or p.prokind<>'f' or p.proisstrict or p.proretset or p.provolatile<>'v'
++    or p.prolang<>(select oid from pg_catalog.pg_language where lanname='plpgsql') or p.prorettype<>to_regtype(item.result_type)
++    or p.proconfig is distinct from array['search_path=""']
++    or exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) g where g.grantee<>p.proowner and (g.grantee<>service_oid or g.privilege_type<>'EXECUTE' or g.is_grantable))
++    or not has_function_privilege('service_role',p.oid,'EXECUTE') or has_function_privilege('anon',p.oid,'EXECUTE') or has_function_privilege('authenticated',p.oid,'EXECUTE')
++    then raise exception 'OWNED_AI_RETIREMENT_PRODUCER_DRIFT' using errcode='23514';end if;
++  end loop;
++  if private.initial_feedback_ready() is not true then perform private.ifo_fail('unavailable');end if;
++ end;
++ $retirement_pre$;
++
++ create table private.initial_feedback_content_retirements (
++  operation_id uuid primary key references private.initial_feedback_operations(operation_id) on delete restrict,
++  publication_id uuid not null unique,
++  attempt_id uuid references private.initial_feedback_attempts(attempt_id) on delete restrict,
++  run_id uuid unique,
++  owner_id uuid not null,organization_id uuid not null,analysis_id uuid not null,
++  resume_id uuid not null,resume_version_id uuid not null,
++  publication_state text not null check(publication_state in ('assessed','deterministic_only')),
++  binding_sha256 text not null check(binding_sha256 collate "C" ~ '^[a-f0-9]{64}$'),
++  retired_at timestamptz not null check(isfinite(retired_at)),
++  deletion_request_id uuid,retention_item_id uuid,
++  check((deletion_request_id is not null)::integer+(retention_item_id is not null)::integer=1),
++  check((publication_state='assessed' and attempt_id is not null and run_id is not null)
++    or (publication_state='deterministic_only' and run_id is null))
++ );
++ alter table private.initial_feedback_content_retirements enable row level security;
++ revoke all on private.initial_feedback_content_retirements from public,anon,authenticated,service_role;
++ create function private.owned_ai_retirement_guard() returns trigger
++ language plpgsql volatile set search_path='' as $ret_0$
++ declare pub private.initial_feedback_publications%rowtype;op private.initial_feedback_operations%rowtype;
++ begin
++  if tg_op<>'INSERT' then perform private.ifo_fail('stale');end if;
++  select * into op from private.initial_feedback_operations where operation_id=new.operation_id for update;
++  if not found then perform private.ifo_fail('unavailable');end if;
++  select * into pub from private.initial_feedback_publications where id=new.publication_id and operation_id=op.operation_id for key share skip locked;
++  if not found or op.state<>'published' or op.publication_id<>pub.id
++   or (new.owner_id,new.organization_id,new.analysis_id,new.resume_id,new.resume_version_id,new.binding_sha256)
++    is distinct from (op.owner_id,op.organization_id,op.analysis_id,op.resume_id,op.resume_version_id,op.binding_sha256)
++   or (new.attempt_id,new.run_id,new.publication_state) is distinct from (pub.attempt_id,pub.run_id,pub.state)
++   or (pub.owner_id,pub.organization_id,pub.analysis_id,pub.resume_id,pub.resume_version_id,pub.binding_sha256)
++    is distinct from (op.owner_id,op.organization_id,op.analysis_id,op.resume_id,op.resume_version_id,op.binding_sha256)
++   or not isfinite(new.retired_at) or new.retired_at>clock_timestamp() then perform private.ifo_fail('unavailable');end if;
++  if new.deletion_request_id is not null and new.retention_item_id is null then
++   if not exists(select 1 from public.data_requests d join private.privacy_deletion_plans plan on plan.request_id=d.id
++     where d.id=new.deletion_request_id and d.user_id=new.owner_id and d.kind='deletion' and d.status='processing'
++       and d.lease_owner is not null and d.lease_expires_at>clock_timestamp()) then perform private.ifo_fail('unavailable');end if;
++  elsif new.retention_item_id is not null and new.deletion_request_id is null then
++   if not exists(select 1 from private.retention_items t join public.resume_versions v on v.storage_key=t.storage_key and v.resume_id=t.resume_id
++     join public.resumes r on r.id=t.resume_id where t.id=new.retention_item_id and t.owner_id=new.owner_id and t.resume_id=new.resume_id
++       and r.owner_id=new.owner_id and r.status='deleted' and v.owner_id=new.owner_id and t.status='deleted'
++       and not exists(select 1 from private.retention_items x where x.resume_id=r.id and x.status<>'deleted')) then perform private.ifo_fail('unavailable');end if;
++  else perform private.ifo_fail('invalid');end if;
++  return new;
++ end;
++ $ret_0$;
++ create trigger initial_feedback_content_retirement_guard before insert or update or delete on private.initial_feedback_content_retirements for each row execute function private.owned_ai_retirement_guard();
++ create function private.retire_initial_feedback_publications(p_owner_id uuid,p_resume_id uuid,p_deletion_request_id uuid,p_retention_item_id uuid) returns void
++ language plpgsql volatile set search_path='' as $ret_1$
++ declare op_id uuid;op private.initial_feedback_operations%rowtype;pub private.initial_feedback_publications%rowtype;
++  att private.initial_feedback_attempts%rowtype;run public.analysis_ai_runs%rowtype;
++ begin
++  if private.owned_ai_retirement_ready() is not true then perform private.ifo_fail('unavailable');end if;
++  if p_owner_id is null or (p_deletion_request_id is not null)::integer+(p_retention_item_id is not null)::integer<>1
++   or current_setting('transaction_isolation') not in ('read committed','read uncommitted') then perform private.ifo_fail('invalid');end if;
++  -- Existing producer may hold request/item rows: owner acquisition never waits.
++  if not private.try_lock_candidate_owners(array[p_owner_id]) then raise exception 'PRIVACY_OWNER_BUSY' using errcode='55P03';end if;
++  if p_deletion_request_id is not null then
++   if p_resume_id is not null then perform private.ifo_fail('invalid');end if;
++   perform 1 from public.data_requests d join private.privacy_deletion_plans plan on plan.request_id=d.id
++    where d.id=p_deletion_request_id and d.user_id=p_owner_id and d.kind='deletion' and d.status='processing'
++     and d.lease_owner is not null and d.lease_expires_at>clock_timestamp() for update of d skip locked;
++  else
++   perform 1 from private.retention_items t join public.resumes r on r.id=t.resume_id
++    where t.id=p_retention_item_id and t.owner_id=p_owner_id and t.resume_id=p_resume_id and t.status='deleted'
++     and r.owner_id=p_owner_id and r.status='deleted'
++     and not exists(select 1 from private.retention_items x where x.resume_id=r.id and x.status<>'deleted') for update of t skip locked;
++  end if;
++  if not found then perform private.ifo_fail('unavailable');end if;
++  for op_id in select operation_id from private.initial_feedback_operations where owner_id=p_owner_id and publication_id is not null
++    and (p_resume_id is null or resume_id=p_resume_id) order by analysis_id,operation_id loop
++   -- Root/source -> analysis -> operation -> attempt -> publication -> run.
++   -- Every object lock is nonblocking: no reverse waiting with request/item locks.
++   perform 1 from public.resumes r join public.resume_versions v on v.resume_id=r.id
++    join private.initial_feedback_operations o on o.resume_version_id=v.id and o.resume_id=r.id
++    where o.operation_id=op_id and r.owner_id=p_owner_id and v.owner_id=p_owner_id and v.organization_id=o.organization_id
++    for share of r,v skip locked;
++   if not found then
++    -- Exact already-retired operations have no content; no invented new proof.
++    if exists(select 1 from private.initial_feedback_content_retirements s join private.initial_feedback_operations oldop on oldop.operation_id=s.operation_id
++      where s.operation_id=op_id and oldop.state='published' and s.publication_id=oldop.publication_id
++       and (s.owner_id,s.organization_id,s.analysis_id,s.resume_id,s.resume_version_id,s.binding_sha256)
++        =(oldop.owner_id,oldop.organization_id,oldop.analysis_id,oldop.resume_id,oldop.resume_version_id,oldop.binding_sha256)
++       and not exists(select 1 from private.initial_feedback_publications p where p.operation_id=op_id)) then continue;end if;
++    perform private.ifo_fail('unavailable');
++   end if;
++   perform 1 from public.analyses a join private.initial_feedback_operations o on o.analysis_id=a.id
++    where o.operation_id=op_id and a.owner_id=p_owner_id and a.organization_id=o.organization_id and a.resume_version_id=o.resume_version_id
++    for update of a skip locked;
++   if not found then perform private.ifo_fail('unavailable');end if;
++   select * into op from private.initial_feedback_operations where operation_id=op_id for update skip locked;
++   if not found or op.state<>'published' then perform private.ifo_fail('unavailable');end if;
++   if exists(select 1 from private.initial_feedback_content_retirements where operation_id=op_id) then perform private.ifo_fail('unavailable');end if;
++   -- Publication is immutable; read its selector before locking the selected attempt.
++   select * into pub from private.initial_feedback_publications where id=op.publication_id and operation_id=op_id;
++   if not found then perform private.ifo_fail('unavailable');end if;
++   if pub.attempt_id is not null then
++    select * into att from private.initial_feedback_attempts where attempt_id=pub.attempt_id and operation_id=op_id for update skip locked;
++    if not found then perform private.ifo_fail('unavailable');end if;
++   end if;
++   select * into pub from private.initial_feedback_publications where id=op.publication_id and operation_id=op_id for update skip locked;
++   if not found or (pub.owner_id,pub.organization_id,pub.analysis_id,pub.resume_id,pub.resume_version_id,pub.binding_sha256)
++     is distinct from (op.owner_id,op.organization_id,op.analysis_id,op.resume_id,op.resume_version_id,op.binding_sha256)
++    then perform private.ifo_fail('unavailable');end if;
++   if pub.state='assessed' then
++    if pub.attempt_id is null or pub.run_id is null or att.state<>'published' or att.error_code is not null
++      or att.claimed_at is null or att.usage is null or private.ifo_usage_valid(att.usage) is not true then perform private.ifo_fail('unavailable');end if;
++    select * into run from public.analysis_ai_runs where id=pub.run_id for share skip locked;
++    if not found or (run.owner_id,run.organization_id,run.analysis_id) is distinct from (op.owner_id,op.organization_id,op.analysis_id)
++     or run.provider<>'openai' or run.model_id<>op.binding->'policy'->>'model' or run.prompt_version<>op.binding->'policy'->>'promptVersion'
++     or run.input_hash<>op.binding_sha256 or run.input_tokens::text<>att.usage->>'inputTokens' or run.output_tokens::text<>att.usage->>'outputTokens'
++     or private.ifo_sha(private.ifpub_run_json(run)::text)<>pub.run_content_sha256 then perform private.ifo_fail('unavailable');end if;
++   elsif pub.state<>'deterministic_only' or pub.run_id is not null then perform private.ifo_fail('unavailable');end if;
++   insert into private.initial_feedback_content_retirements(operation_id,publication_id,attempt_id,run_id,owner_id,organization_id,analysis_id,
++     resume_id,resume_version_id,publication_state,binding_sha256,retired_at,deletion_request_id,retention_item_id)
++    values(op.operation_id,pub.id,pub.attempt_id,pub.run_id,op.owner_id,op.organization_id,op.analysis_id,op.resume_id,op.resume_version_id,
++     pub.state,op.binding_sha256,clock_timestamp(),p_deletion_request_id,p_retention_item_id);
++  end loop;
++ end;
++ $ret_1$;
++
++ create function public.export_owned_ai_retirement_records(p_user_id uuid) returns jsonb
++ language plpgsql volatile security definer set search_path='' as $ret_2$
++ declare rows jsonb[]:=array[]::jsonb[];row_value jsonb;answer jsonb;n integer:=0;bytes bigint:=1024;
++ begin
++  if p_user_id is null then perform private.ifo_fail('invalid');end if;
++  if private.owned_ai_retirement_ready() is not true then perform private.ifo_fail('unavailable');end if;
++  perform 1 from auth.users where id=p_user_id for key share skip locked;if not found then perform private.ifo_fail('not_found');end if;
++  -- Entire owner across orgs/periods/flags; no membership/source requirement.
++  for row_value in select to_jsonb(s)||jsonb_build_object('retired_at',private.ifo_stamp(s.retired_at))
++   from private.initial_feedback_content_retirements s where s.owner_id=p_user_id order by s.operation_id limit 4097 loop
++   n:=n+1;bytes:=bytes+octet_length(convert_to(row_value::text,'UTF8'))+1;
++   if n>4096 or bytes>33554432 then perform private.ifo_fail('unavailable');end if;
++   rows:=array_append(rows,row_value);
++  end loop;
++  answer:=jsonb_build_object('schemaVersion','owned-ai-retirement-export/1.0.0','retirements',to_jsonb(rows));
++  if octet_length(convert_to(answer::text,'UTF8'))>33554432 then perform private.ifo_fail('unavailable');end if;
++  return answer;
++ end;
++ $ret_2$;
++
++ create or replace function public.prepare_deletion_request(p_request_id uuid,p_worker_id text) returns jsonb
++ language plpgsql volatile security definer set search_path='' as $ret_3$
++ declare
++   request_row public.data_requests%rowtype;
++   storage_objects jsonb;
++ begin
++   select * into request_row
++   from public.data_requests
++   where id = p_request_id
++     and kind = 'deletion'
++     and status = 'processing'
++     and lease_owner = p_worker_id
++   for update;
++   if not found then
++     raise exception 'privacy deletion request is not owned' using errcode = '42501';
++   end if;
++
++   select plan.storage_objects into storage_objects
++   from private.privacy_deletion_plans plan
++   where plan.request_id = request_row.id;
++
++   if not found then
++     select coalesce(jsonb_agg(jsonb_build_object(
++       'storageKey', storage_key,
++       'checksum', checksum,
++       'bytes', bytes
++     )), '[]'::jsonb)
++     into storage_objects
++     from public.resume_versions
++     where owner_id = request_row.user_id;
++
++     insert into private.privacy_deletion_plans (request_id, storage_objects)
++     values (request_row.id, storage_objects);
++   end if;
++
++   -- Candidate rows and the durable object plan commit atomically. A retry can
++   -- therefore continue deleting the same objects after database rows are gone.
++   perform private.retire_initial_feedback_publications(request_row.user_id,null,request_row.id,null);
++   delete from public.analyses where owner_id = request_row.user_id;
++   delete from public.jobs where owner_id = request_row.user_id;
++   delete from public.resumes where owner_id = request_row.user_id;
++   delete from public.consents where user_id = request_row.user_id;
++   delete from public.memberships where user_id = request_row.user_id;
++   delete from public.profiles where id = request_row.user_id;
++
++   update public.privacy_request_steps
++   set status = 'completed', completed_at = timezone('utc', now())
++   where request_id = request_row.id and step_key = 'database';
++
++   return jsonb_build_object(
++     'storageObjects', storage_objects,
++     'databaseDeletedAt', timezone('utc', now())
++   );
++ end;
++ $ret_3$;
++
++ create or replace function public.complete_retention_item(p_item_id uuid) returns boolean
++ language plpgsql volatile security definer set search_path='' as $ret_4$
++ declare
++   item_row private.retention_items%rowtype;
++ begin
++   update private.retention_items
++   set status = 'deleted', completed_at = timezone('utc', now()), last_error_code = null
++   where id = p_item_id
++   returning * into item_row;
++   if not found then return false; end if;
++
++   if exists(select 1 from public.resumes r where r.id=item_row.resume_id and r.owner_id=item_row.owner_id
++     and not exists(select 1 from private.retention_items ri where ri.resume_id=r.id and ri.status<>'deleted')) then
++     perform private.retire_initial_feedback_publications(item_row.owner_id,item_row.resume_id,null,item_row.id);
++   end if;
++   delete from public.resumes r
++   where r.id = item_row.resume_id and r.owner_id=item_row.owner_id and r.status='deleted'
++     and not exists (
++       select 1 from private.retention_items ri
++       where ri.resume_id = r.id and ri.status <> 'deleted'
++     );
++   return true;
++ end;
++ $ret_4$;
++
++ create function public.read_owned_ai_retirement_readiness() returns jsonb
++ language plpgsql stable security definer set search_path='' as $ret_5$
++ begin
++  return jsonb_build_object('schemaVersion','owned-ai-retirement-readiness/1.0.0','profileVersion','owned-ai-retirement-profile/1.0.0',
++   'schemaReady',private.owned_ai_retirement_ready(),
++   'exportExecutable',has_function_privilege('service_role',to_regprocedure('public.export_owned_ai_retirement_records(uuid)'),'EXECUTE'),
++   'checkerSha256',(select private.ifo_sha(prosrc) from pg_catalog.pg_proc where oid=to_regprocedure('private.owned_ai_retirement_ready()')),
++   'captureSha256',(select private.ifo_sha(prosrc) from pg_catalog.pg_proc where oid=to_regprocedure('private.retire_initial_feedback_publications(uuid,uuid,uuid,uuid)')),
++   'exportSha256',(select private.ifo_sha(prosrc) from pg_catalog.pg_proc where oid=to_regprocedure('public.export_owned_ai_retirement_records(uuid)')),
++   'metadataSha256',(select private.ifo_sha(prosrc) from pg_catalog.pg_proc where oid=to_regprocedure('public.read_owned_ai_retirement_readiness()')));
++ end;
++ $ret_5$;
++
++ create function private.owned_ai_retirement_ready() returns boolean
++ language plpgsql stable set search_path='' as $ret_6$
++ declare item jsonb;p pg_catalog.pg_proc%rowtype;owner_oid oid;service_oid oid;role_name text;rel pg_catalog.pg_class%rowtype;col jsonb;expected smallint[];
++  manifest jsonb:=$retirement_catalog$[{"signature":"private.owned_ai_retirement_guard()","sha256":"8cbbd706652a3f41eb39db83da3a34757557950bd06364d4b5741fdcf86d7ff2","resultType":"trigger","language":"plpgsql","definer":false,"strict":false,"volatility":"v","acl":"private"},{"signature":"private.retire_initial_feedback_publications(uuid,uuid,uuid,uuid)","sha256":"d066dfb3459d527b551ab81a564f85e896220e8b8f88749d21e378bd2b84cce0","resultType":"void","language":"plpgsql","definer":false,"strict":false,"volatility":"v","acl":"private"},{"signature":"public.export_owned_ai_retirement_records(uuid)","sha256":"dc09528d888b8089e5e87d2d1edf32a8796267683021b2085dac2d0e80f3db27","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.prepare_deletion_request(uuid,text)","sha256":"942689c1919b5e1cded75177d96944826e64ab6c8ab6350d0e4ae467622e8022","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"service"},{"signature":"public.complete_retention_item(uuid)","sha256":"0307152ae26d0bbcc0239d932e15253849c159c615070b93270c2e8c9b5335be","resultType":"boolean","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"service"},{"signature":"public.read_owned_ai_retirement_readiness()","sha256":"55a9f1dd2000b1a4cd1e258e68b0e56d36872422f7a76ced5c08585fe31d70b7","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"s","acl":"metadata"},{"signature":"private.initial_feedback_publication_ready()","sha256":"e3b968b748f2e67983a034885c920510566bb71c69fc3d7bc0204b7d22b005d4","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"s","acl":"private"}]$retirement_catalog$::jsonb;
++ begin
++  select oid into service_oid from pg_catalog.pg_roles where rolname='service_role';
++  select proowner into owner_oid from pg_catalog.pg_proc where oid=to_regprocedure('public.persist_deterministic_analysis(uuid,text,jsonb,text,jsonb,text,text,text,text,jsonb,text,integer,text)');
++  if service_oid is null or owner_oid is null then return false;end if;
++  for item in select value from jsonb_array_elements(manifest) loop
++   select * into p from pg_catalog.pg_proc where oid=to_regprocedure(item->>'signature');
++   if not found or p.proowner<>owner_oid or p.prokind<>'f' or p.proretset or p.proisstrict is distinct from (item->>'strict')::boolean
++     or p.prorettype<>to_regtype(item->>'resultType') or p.prolang<>(select oid from pg_catalog.pg_language where lanname=item->>'language')
++     or p.prosecdef is distinct from (item->>'definer')::boolean or p.provolatile<>item->>'volatility'
++     or p.proconfig is distinct from array['search_path=""'] or private.ifo_sha(p.prosrc)<>item->>'sha256' then return false;end if;
++   if exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) g where g.grantee<>p.proowner
++     and (item->>'acl'='private' or g.grantee<>service_oid or g.privilege_type<>'EXECUTE' or g.is_grantable)) then return false;end if;
++   foreach role_name in array array['anon','authenticated'] loop if has_function_privilege(role_name,p.oid,'EXECUTE') then return false;end if;end loop;
++   if item->>'acl'='private' and has_function_privilege('service_role',p.oid,'EXECUTE') then return false;end if;
++   if item->>'acl' in ('metadata','service') and not has_function_privilege('service_role',p.oid,'EXECUTE') then return false;end if;
++   if item->>'acl'<>'private' and has_function_privilege('service_role',p.oid,'EXECUTE')
++     and not exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) g where g.grantee=service_oid and g.privilege_type='EXECUTE' and not g.is_grantable) then return false;end if;
++  end loop;
++  if private.initial_feedback_publication_ready() is not true then return false;end if;
++  -- Exact function/table source closures are diagnostic: inherited CHECK/default,
++  -- retention/erasure, actual role/CAS/rollback and caller adoption remain open.
++  select * into p from pg_catalog.pg_proc where oid=to_regprocedure('private.owned_ai_retirement_ready()');
++  if not found or p.proowner<>owner_oid or p.prokind<>'f' or p.prosecdef or p.proretset or p.proisstrict or p.provolatile<>'s'
++    or p.prorettype<>'boolean'::regtype or p.proconfig is distinct from array['search_path=""']
++    or exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) g where g.grantee<>p.proowner) then return false;end if;
++  foreach role_name in array array['anon','authenticated','service_role'] loop if has_function_privilege(role_name,p.oid,'EXECUTE') then return false;end if;end loop;
++
++  select * into rel from pg_catalog.pg_class where oid=to_regclass('private.initial_feedback_content_retirements');
++  if not found or rel.relkind<>'r' or not rel.relrowsecurity or rel.relowner<>owner_oid then return false;end if;
++  if exists(select 1 from pg_catalog.pg_policy where polrelid=rel.oid)
++   or exists(select 1 from aclexplode(coalesce(rel.relacl,acldefault('r',rel.relowner))) g where g.grantee<>rel.relowner)
++   or exists(select 1 from pg_catalog.pg_attribute a cross join lateral aclexplode(a.attacl) g where a.attrelid=rel.oid and g.grantee<>rel.relowner) then return false;end if;
++  foreach role_name in array array['anon','authenticated','service_role'] loop
++   if has_table_privilege(role_name,rel.oid,'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')
++    or has_any_column_privilege(role_name,rel.oid,'SELECT,INSERT,UPDATE,REFERENCES') then return false;end if;
++  end loop;
++  if (select count(*) from pg_catalog.pg_attribute where attrelid=rel.oid and attnum>0 and not attisdropped)<>14 then return false;end if;
++  for col in select value from jsonb_array_elements($retirement_columns$[["operation_id","uuid",true],["publication_id","uuid",true],["attempt_id","uuid",false],["run_id","uuid",false],["owner_id","uuid",true],["organization_id","uuid",true],["analysis_id","uuid",true],["resume_id","uuid",true],["resume_version_id","uuid",true],["publication_state","text",true],["binding_sha256","text",true],["retired_at","timestamp with time zone",true],["deletion_request_id","uuid",false],["retention_item_id","uuid",false]]$retirement_columns$::jsonb) loop
++   if not exists(select 1 from pg_catalog.pg_attribute where attrelid=rel.oid and attname=col->>0 and atttypid=to_regtype(col->>1)
++    and attnotnull=(col->>2)::boolean and attnum>0 and not attisdropped and not atthasdef and attidentity='' and attgenerated='') then return false;end if;
++  end loop;
++  if (select count(*) from pg_catalog.pg_constraint where conrelid=rel.oid and contype='f')<>2
++   or (select count(*) from pg_catalog.pg_constraint where conrelid=rel.oid and contype='p')<>1
++   or (select count(*) from pg_catalog.pg_constraint where conrelid=rel.oid and contype='u')<>2 then return false;end if;
++  for item in select value from jsonb_array_elements($retirement_keys$[{"kind":"p","columns":["operation_id"]},{"kind":"u","columns":["publication_id"]},{"kind":"u","columns":["run_id"]},{"kind":"f","columns":["operation_id"],"references":"private.initial_feedback_operations","target":"operation_id"},{"kind":"f","columns":["attempt_id"],"references":"private.initial_feedback_attempts","target":"attempt_id"}]$retirement_keys$::jsonb) loop
++   select array_agg(a.attnum order by k.ordinality) into expected from jsonb_array_elements_text(item->'columns') with ordinality k(name,ordinality)
++     join pg_catalog.pg_attribute a on a.attrelid=rel.oid and a.attname=k.name;
++   if not exists(select 1 from pg_catalog.pg_constraint c where c.conrelid=rel.oid and c.contype=(item->>'kind')::"char" and c.conkey=expected
++     and c.convalidated and not c.condeferrable and (item->>'kind'<>'f' or (c.confrelid=to_regclass(item->>'references') and c.confdeltype='r'
++      and c.confkey=array[(select attnum from pg_catalog.pg_attribute where attrelid=c.confrelid and attname=item->>'target')]::smallint[]))) then return false;end if;
++  end loop;
++  if not exists(select 1 from pg_catalog.pg_trigger where tgrelid=rel.oid and tgname='initial_feedback_content_retirement_guard'
++    and tgfoid=to_regprocedure('private.owned_ai_retirement_guard()') and tgtype=31 and tgenabled='O' and not tgisinternal)
++   or (select count(*) from pg_catalog.pg_trigger where tgrelid=rel.oid and not tgisinternal)<>1 then return false;end if;
++  -- CHECK predicates and Native lock/rollback/erasure behavior require actual
++  -- catalog reconciliation before grants/adoption; this remains diagnostic.
++  return true;
++ exception when others then return false;
++ end;
++ $ret_6$;
++
++ create or replace function public.read_initial_feedback_usage(p_user_id uuid,p_analysis_id uuid) returns jsonb
++ language plpgsql volatile security definer set search_path='' as $ret_7$
++ declare a public.analyses%rowtype;period_start date;period_end date;
++   legacy_tokens numeric;canonical_tokens numeric;feedback_tokens numeric;unknown_claims bigint;
++   values_valid boolean;links_valid boolean;total_tokens numeric;
++ begin
++   if private.initial_feedback_ready() is not true then perform private.ifo_fail('unavailable');end if;
++   a:=private.owned_ai_usage_owner(p_user_id,p_analysis_id);
++   period_start:=date_trunc('month',clock_timestamp() at time zone 'UTC')::date;
++   period_end:=(period_start+interval '1 month')::date;
++   -- One statement snapshot; link validation/exclusion has NO month predicate.
++   -- Only the three disjoint components below select their respective month.
++   with canonical_scope as materialized (
++     select x.owner_id,x.organization_id,x.analysis_id,x.operation_id,x.run_id,x.claimed_at,nullif(x.usage,'null'::jsonb) usage,
++       x.binding_sha256,x.policy->>'model' model,x.policy->>'promptVersion' prompt_version
++     from private.canonical_rewrite_operations x where x.organization_id=a.organization_id
++     union
++     select x.owner_id,x.organization_id,x.analysis_id,x.operation_id,x.run_id,x.claimed_at,nullif(x.usage,'null'::jsonb),
++       x.binding_sha256,x.policy->>'model',x.policy->>'promptVersion'
++     from private.canonical_rewrite_operations x join public.analysis_ai_runs r on r.id=x.run_id where r.organization_id=a.organization_id
++   ), feedback_attempts as materialized (
++     select t.attempt_id,t.operation_id,t.claimed_at,nullif(t.usage,'null'::jsonb) usage,o.owner_id,o.organization_id,o.analysis_id,
++       o.binding_sha256,o.binding->'policy'->>'model' model,o.binding->'policy'->>'promptVersion' prompt_version
++     from private.initial_feedback_attempts t join private.initial_feedback_operations o on o.operation_id=t.operation_id
++     where o.organization_id=a.organization_id
++   ), retirement_scope as materialized (
++     select s.* from private.initial_feedback_content_retirements s where s.organization_id=a.organization_id
++     union select s.* from private.initial_feedback_content_retirements s join private.initial_feedback_operations o on o.operation_id=s.operation_id where o.organization_id=a.organization_id
++     union select s.* from private.initial_feedback_content_retirements s join public.analysis_ai_runs r on r.id=s.run_id where r.organization_id=a.organization_id
++   ), publication_scope as materialized (
++     select p.id,p.operation_id,p.attempt_id,p.analysis_id,p.owner_id,p.organization_id,p.run_id,p.state,p.binding_sha256
++     from private.initial_feedback_publications p where p.organization_id=a.organization_id
++     union
++     select p.id,p.operation_id,p.attempt_id,p.analysis_id,p.owner_id,p.organization_id,p.run_id,p.state,p.binding_sha256
++     from private.initial_feedback_publications p join private.initial_feedback_operations o on o.operation_id=p.operation_id where o.organization_id=a.organization_id
++     union
++     select p.id,p.operation_id,p.attempt_id,p.analysis_id,p.owner_id,p.organization_id,p.run_id,p.state,p.binding_sha256
++     from private.initial_feedback_publications p join public.analysis_ai_runs r on r.id=p.run_id where r.organization_id=a.organization_id
++     union
++     select s.publication_id,s.operation_id,s.attempt_id,s.analysis_id,s.owner_id,s.organization_id,s.run_id,s.publication_state,s.binding_sha256
++     from retirement_scope s
++   ), links as materialized (
++     -- Retained pre-compatibility A12 legacy runs are authoritative links too.
++     select r.id run_id,coalesce(x.organization_id=a.organization_id and x.claimed_at is not null and isfinite(x.claimed_at)
++       and x.usage is not null and private.ifo_usage_valid(x.usage)
++       and (r.owner_id,r.organization_id,r.analysis_id)=(x.owner_id,x.organization_id,x.analysis_id)
++       and r.provider='openai' and r.model_id=x.model and r.prompt_version=x.prompt_version and r.input_hash=x.binding_sha256
++       and r.input_tokens>=0 and r.output_tokens>=0
++       and r.input_tokens::text=x.usage->>'inputTokens' and r.output_tokens::text=x.usage->>'outputTokens',false) valid
++     from canonical_scope x join public.analysis_ai_runs r on r.id=x.run_id
++     union all
++     select p.run_id,coalesce(p.organization_id=a.organization_id and p.state='assessed'
++       and o.operation_id=p.operation_id and o.publication_id=p.id and o.state='published'
++       and t.attempt_id=p.attempt_id and t.operation_id=o.operation_id
++       and (p.owner_id,p.organization_id,p.analysis_id)=(o.owner_id,o.organization_id,o.analysis_id)
++       and p.binding_sha256=o.binding_sha256 and t.claimed_at is not null and isfinite(t.claimed_at)
++       and nullif(t.usage,'null'::jsonb) is not null and private.ifo_usage_valid(t.usage)
++       and (r.owner_id,r.organization_id,r.analysis_id)=(p.owner_id,p.organization_id,p.analysis_id)
++       and r.provider='openai' and r.model_id=o.binding->'policy'->>'model' and r.prompt_version=o.binding->'policy'->>'promptVersion'
++       and r.input_hash=o.binding_sha256 and r.input_tokens>=0 and r.output_tokens>=0
++       and r.input_tokens::text=t.usage->>'inputTokens' and r.output_tokens::text=t.usage->>'outputTokens',false)
++     from publication_scope p left join private.initial_feedback_operations o on o.operation_id=p.operation_id
++       left join private.initial_feedback_attempts t on t.attempt_id=p.attempt_id
++       left join public.analysis_ai_runs r on r.id=p.run_id where p.run_id is not null
++       and (r.id is not null or not exists(select 1 from retirement_scope s where s.publication_id=p.id and s.run_id=p.run_id))
++   ), integrity as (
++     select not exists(select 1 from links where not valid)
++       and not exists(select 1 from links group by run_id having count(*)>1)
++       and not exists(select 1 from retirement_scope s left join private.initial_feedback_operations o on o.operation_id=s.operation_id
++         where o.operation_id is null or o.state<>'published' or s.publication_id is distinct from o.publication_id
++           or (s.owner_id,s.organization_id,s.analysis_id,s.resume_id,s.resume_version_id,s.binding_sha256)
++             is distinct from (o.owner_id,o.organization_id,o.analysis_id,o.resume_id,o.resume_version_id,o.binding_sha256)
++           or exists(select 1 from private.initial_feedback_publications p where p.id=s.publication_id or p.operation_id=s.operation_id)
++           or s.publication_state not in ('assessed','deterministic_only') or not isfinite(s.retired_at)
++           or (s.publication_state='assessed' and (s.run_id is null or not exists(select 1 from private.initial_feedback_attempts t
++             where t.attempt_id=s.attempt_id and t.operation_id=o.operation_id and t.state='published' and t.error_code is null
++               and t.claimed_at is not null and isfinite(t.claimed_at) and t.usage is not null and private.ifo_usage_valid(t.usage))))
++           or (s.publication_state='deterministic_only' and s.run_id is not null)
++           or (s.attempt_id is not null and not exists(select 1 from private.initial_feedback_attempts t where t.attempt_id=s.attempt_id and t.operation_id=o.operation_id)))
++       and not exists(select 1 from private.initial_feedback_operations o where o.organization_id=a.organization_id and o.publication_id is not null
++         and not exists(select 1 from private.initial_feedback_publications p where p.id=o.publication_id and p.operation_id=o.operation_id
++           and p.owner_id=o.owner_id and p.organization_id=o.organization_id and p.analysis_id=o.analysis_id)
++         and not exists(select 1 from retirement_scope s where s.publication_id=o.publication_id and s.operation_id=o.operation_id
++           and s.owner_id=o.owner_id and s.organization_id=o.organization_id and s.analysis_id=o.analysis_id and s.binding_sha256=o.binding_sha256)) valid
++   ), legacy as (
++     select coalesce(sum(case when r.input_tokens>=0 and r.output_tokens>=0 then r.input_tokens::numeric+r.output_tokens::numeric else 0 end),0) tokens,
++       coalesce(bool_and(coalesce(r.input_tokens>=0 and r.output_tokens>=0,false)),true) valid
++     from public.analysis_ai_runs r where r.organization_id=a.organization_id
++       and r.created_at>=period_start::timestamp at time zone 'UTC' and r.created_at<period_end::timestamp at time zone 'UTC'
++       and not exists(select 1 from links l where l.run_id=r.id)
++   ), canonical as (
++     select coalesce(sum(case when x.usage is not null and private.ifo_usage_valid(x.usage) then
++       (x.usage->>'inputTokens')::numeric+(x.usage->>'outputTokens')::numeric else 0 end),0) tokens,
++       count(*) filter(where x.usage is null) unknown_count,
++       coalesce(bool_and(private.ifo_usage_valid(x.usage)),true) valid
++     from canonical_scope x where x.organization_id=a.organization_id
++       and x.claimed_at>=period_start::timestamp at time zone 'UTC' and x.claimed_at<period_end::timestamp at time zone 'UTC'
++   ), feedback as (
++     select coalesce(sum(case when x.usage is not null and private.ifo_usage_valid(x.usage) then
++       (x.usage->>'inputTokens')::numeric+(x.usage->>'outputTokens')::numeric else 0 end),0) tokens,
++       count(*) filter(where x.usage is null) unknown_count,
++       coalesce(bool_and(private.ifo_usage_valid(x.usage)),true) valid
++     from feedback_attempts x where x.claimed_at>=period_start::timestamp at time zone 'UTC'
++       and x.claimed_at<period_end::timestamp at time zone 'UTC'
++   ) select legacy.tokens,canonical.tokens,feedback.tokens,canonical.unknown_count+feedback.unknown_count,
++       legacy.valid and canonical.valid and feedback.valid,integrity.valid
++     into legacy_tokens,canonical_tokens,feedback_tokens,unknown_claims,values_valid,links_valid
++     from legacy cross join canonical cross join feedback cross join integrity;
++   if values_valid is not true or links_valid is not true or legacy_tokens is null or canonical_tokens is null or feedback_tokens is null
++     then perform private.ifo_fail('unavailable');end if;
++   total_tokens:=legacy_tokens+canonical_tokens+feedback_tokens;
++   if greatest(length(legacy_tokens::text),length(canonical_tokens::text),length(feedback_tokens::text),length(total_tokens::text))>128
++     then perform private.ifo_fail('unavailable');end if;
++   return jsonb_build_object('schemaVersion','initial-feedback-usage/1.0.0','profileVersion','initial-feedback-readiness-profile/1.0.0',
++     'usageSha256',(select encode(sha256(convert_to(prosrc,'UTF8')),'hex') from pg_catalog.pg_proc where oid=to_regprocedure('public.read_initial_feedback_usage(uuid,uuid)')),
++     'ownerId',p_user_id,'organizationId',a.organization_id,'analysisId',a.id,'periodStart',to_char(period_start,'YYYY-MM-DD'),'periodEnd',to_char(period_end,'YYYY-MM-DD'),
++     'legacyUnlinkedTokens',legacy_tokens::text,'canonicalTokens',canonical_tokens::text,'initialFeedbackTokens',feedback_tokens::text,
++     'totalTokens',total_tokens::text,'unknownClaims',unknown_claims::text);
++ end;
++ $ret_7$;
++
++ create or replace function private.initial_feedback_ready() returns boolean
++ language plpgsql stable set search_path='' as $ret_8$
++ declare item jsonb;p pg_catalog.pg_proc%rowtype;owner_oid oid;service_oid oid;role_name text;
++  manifest jsonb:=$shared_usage_catalog$[{"signature":"private.initial_feedback_publication_ready()","sha256":"e3b968b748f2e67983a034885c920510566bb71c69fc3d7bc0204b7d22b005d4","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"s","acl":"private"},{"signature":"public.read_initial_feedback(uuid,uuid)","sha256":"57701a307d3087720642d9b4057eac87b770465e81726c000c5238708bcfc47b","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.finish_initial_feedback(uuid,jsonb,uuid,uuid,text,jsonb,text,text)","sha256":"966cdb270ca5a4c1ab8fe6a6dd9097b5d46ebb2b2218f8047b794646cca315a8","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.export_initial_feedback_records(uuid)","sha256":"eefd5842be1eb38fe1e0f17ea148f1708eae634c2a8fe42ab94467c9839fe0cd","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"private.initial_feedback_operation_ready()","sha256":"007ba402596474817e3584b4c3359e352f0fef2a1bce0ff878eb8bc0d164b0c5","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"s","acl":"private"},{"signature":"public.prepare_initial_feedback(uuid,jsonb,jsonb,uuid)","sha256":"93b7af8445710cd105e2da67eb27f7d9b8d9c52cd7ec924a6ab6f6aa69548f92","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.settle_initial_feedback_attempt(uuid,uuid,text,jsonb,text)","sha256":"739919dedaa5080c4bb8f3c556a9f9b1528fb88747edef9764588bd9038d4148","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"public.claim_initial_feedback_dispatch(uuid,jsonb,uuid,uuid,text,jsonb)","sha256":"335cef3a4e4f948b4c3b3c17ea9a3159368cab5df6e5a7a1389bc0f46759766a","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"private.ifo_usage_valid(jsonb)","sha256":"eaad99f9a4064320c648f12452b1f9a4007d872431c21e98a7eded66b4e9018c","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"i","acl":"private"},{"signature":"private.owned_ai_usage_owner(uuid,uuid)","sha256":"6c8dc21f6ef2cca5778cbfac9808a570507873d2f1ff8ac14f21e7393e18aa16","resultType":"public.analyses","language":"plpgsql","definer":false,"strict":false,"volatility":"v","acl":"private"},{"signature":"public.read_initial_feedback_usage(uuid,uuid)","sha256":"9564c709cea106d8999c61e4db14ce45c40c41eacd23ce54f7fa1ea5c234c223","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"v","acl":"optional_service"},{"signature":"private.canonical_rewrite_ready()","sha256":"e98f6ec0de0a09ec002a85d97d007cb71a49c261bbcba746d82c688a7281251b","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"s","acl":"private"},{"signature":"public.read_initial_feedback_readiness()","sha256":"2bafa1e30a02308604ad0114ab114189aef6e8323379e443ab7a96a64b2196d6","resultType":"jsonb","language":"plpgsql","definer":true,"strict":false,"volatility":"s","acl":"metadata"},{"signature":"private.owned_ai_retirement_ready()","sha256":"d5742f5ece8d96a2c7dd5628c9faebd479ad2dbbfc470d0ab96755d75f4008b7","resultType":"boolean","language":"plpgsql","definer":false,"strict":false,"volatility":"s","acl":"private"}]$shared_usage_catalog$::jsonb;
++ begin
++  select oid into service_oid from pg_catalog.pg_roles where rolname='service_role';
++  select proowner into owner_oid from pg_catalog.pg_proc where oid=to_regprocedure('public.persist_deterministic_analysis(uuid,text,jsonb,text,jsonb,text,text,text,text,jsonb,text,integer,text)');
++  if service_oid is null or owner_oid is null then return false;end if;
++  for item in select value from jsonb_array_elements(manifest) loop
++   select * into p from pg_catalog.pg_proc where oid=to_regprocedure(item->>'signature');
++   if not found or p.proowner<>owner_oid or p.prokind<>'f' or p.proretset or p.proisstrict is distinct from (item->>'strict')::boolean
++     or p.prorettype<>to_regtype(item->>'resultType') or p.prolang<>(select oid from pg_catalog.pg_language where lanname=item->>'language')
++     or p.prosecdef is distinct from (item->>'definer')::boolean or p.provolatile<>item->>'volatility'
++     or p.proconfig is distinct from array['search_path=""'] or private.ifo_sha(p.prosrc)<>item->>'sha256' then return false;end if;
++   if exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) g where g.grantee<>p.proowner
++     and (item->>'acl'='private' or g.grantee<>service_oid or g.privilege_type<>'EXECUTE' or g.is_grantable)) then return false;end if;
++   foreach role_name in array array['anon','authenticated'] loop if has_function_privilege(role_name,p.oid,'EXECUTE') then return false;end if;end loop;
++   if item->>'acl'='private' and has_function_privilege('service_role',p.oid,'EXECUTE') then return false;end if;
++   if item->>'acl'='metadata' and not has_function_privilege('service_role',p.oid,'EXECUTE') then return false;end if;
++   if item->>'acl'<>'private' and has_function_privilege('service_role',p.oid,'EXECUTE')
++     and not exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) g where g.grantee=service_oid and g.privilege_type='EXECUTE' and not g.is_grantable) then return false;end if;
++  end loop;
++  if private.initial_feedback_publication_ready() is not true or private.canonical_rewrite_ready() is not true or private.owned_ai_retirement_ready() is not true then return false;end if;
++  -- Exact function/table source closures are diagnostic: inherited CHECK/default,
++  -- retention/erasure, actual role/CAS/rollback and caller adoption remain open.
++  select * into p from pg_catalog.pg_proc where oid=to_regprocedure('private.initial_feedback_ready()');
++  if not found or p.proowner<>owner_oid or p.prokind<>'f' or p.prosecdef or p.proretset or p.proisstrict or p.provolatile<>'s'
++    or p.prorettype<>'boolean'::regtype or p.proconfig is distinct from array['search_path=""']
++    or exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) g where g.grantee<>p.proowner) then return false;end if;
++  foreach role_name in array array['anon','authenticated','service_role'] loop if has_function_privilege(role_name,p.oid,'EXECUTE') then return false;end if;end loop;
++  return true;
++ exception when others then return false;
++ end;
++ $ret_8$;
++
++ revoke all on function private.owned_ai_retirement_guard(),private.retire_initial_feedback_publications(uuid,uuid,uuid,uuid),public.export_owned_ai_retirement_records(uuid),public.read_owned_ai_retirement_readiness(),private.owned_ai_retirement_ready() from public,anon,authenticated,service_role;
++ grant execute on function public.read_owned_ai_retirement_readiness() to service_role;
++ -- No export grant, worker adoption, retention deadline, expiry/Auth/restore or seed.
++
++ do $retirement_post$
++ declare item record;
++ begin
++  for item in select key signature,value #>> '{}' expected from jsonb_each($retirement_postimages${"private.owned_ai_retirement_guard()":"8cbbd706652a3f41eb39db83da3a34757557950bd06364d4b5741fdcf86d7ff2","private.retire_initial_feedback_publications(uuid,uuid,uuid,uuid)":"d066dfb3459d527b551ab81a564f85e896220e8b8f88749d21e378bd2b84cce0","public.export_owned_ai_retirement_records(uuid)":"dc09528d888b8089e5e87d2d1edf32a8796267683021b2085dac2d0e80f3db27","public.prepare_deletion_request(uuid,text)":"942689c1919b5e1cded75177d96944826e64ab6c8ab6350d0e4ae467622e8022","public.complete_retention_item(uuid)":"0307152ae26d0bbcc0239d932e15253849c159c615070b93270c2e8c9b5335be","public.read_owned_ai_retirement_readiness()":"55a9f1dd2000b1a4cd1e258e68b0e56d36872422f7a76ced5c08585fe31d70b7","private.owned_ai_retirement_ready()":"d5742f5ece8d96a2c7dd5628c9faebd479ad2dbbfc470d0ab96755d75f4008b7","public.read_initial_feedback_usage(uuid,uuid)":"9564c709cea106d8999c61e4db14ce45c40c41eacd23ce54f7fa1ea5c234c223","private.initial_feedback_ready()":"1a04acf95f9daa172cf1874269e6ee0988e0433d5085407f8d9cb6cfd5ff557c"}$retirement_postimages$::jsonb) loop
++   if (select private.ifo_sha(prosrc) from pg_catalog.pg_proc where oid=to_regprocedure(item.signature)) is distinct from item.expected then
++    raise exception 'OWNED_AI_RETIREMENT_POSTIMAGE_DRIFT' using errcode='23514';end if;
++  end loop;
++  if private.initial_feedback_ready() is not true or private.owned_ai_retirement_ready() is not true then perform private.ifo_fail('unavailable');end if;
++ end;
++ $retirement_post$;
++ commit;
++
+
+ ❯ tests/unit/owned-legacy-ai-usage-sql.test.ts:14:76
+     12|  });
+     13|  it("includes retained original-month unlinked usage in the real share…
+     14|   expect(candidate||retirement.split("$retirement_usage$")[1]||retirem…
+       |                                                                            ^
+     15|  });
+     16|  it("preserves old arbitrary-since run usage and casts each integer be…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  tests/unit/owned-legacy-ai-usage-sql.test.ts > actual predecessor source loss regressions, SQL unparsed/unexecuted > preserves old arbitrary-since run usage and casts each integer before addition
+AssertionError: expected 'create function public.get_organizati…' to contain 'input_tokens::numeric'
+
+- Expected
++ Received
+
+- input_tokens::numeric
++ create function public.get_organization_ai_tokens_used(
++   p_organization_id uuid,
++   p_since timestamptz
++ )
++ returns bigint
++ language sql
++ stable
++ security definer
++ set search_path = ''
++ as $$
++   select coalesce(sum(input_tokens + output_tokens), 0)::bigint
++   from public.analysis_ai_runs
++   where organization_id = p_organization_id
++     and created_at >= p_since;
++ $$;
++
++ revoke all on function public.get_organization_ai_tokens_used(uuid, timestamptz)
++ from public, anon, authenticated;
++ grant execute on function public.get_organization_ai_tokens_used(uuid, timestamptz)
++ to service_role;
++
++
+
+ ❯ tests/unit/owned-legacy-ai-usage-sql.test.ts:18:18
+     16|  it("preserves old arbitrary-since run usage and casts each integer be…
+     17|   const actual=candidate||legacy.slice(legacy.indexOf("create function…
+     18|   expect(actual).toContain("input_tokens::numeric");expect(actual).toC…
+       |                  ^
+     19|  });
+     20| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  17:27:00
+   Duration  83ms (transform 10ms, setup 0ms, import 14ms, tests 8ms, environment 0ms)
+

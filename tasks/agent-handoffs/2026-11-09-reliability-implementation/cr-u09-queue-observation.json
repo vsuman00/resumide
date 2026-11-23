@@ -1,0 +1,55 @@
+{
+  "id": "CR-U09-S03",
+  "relatedTask": "CR-R11",
+  "status": "VERIFIED_LOCAL_QUEUE_OBSERVATION",
+  "baseRevision": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Dirty integrated worktree, synthetic fixtures",
+  "sources": {
+    "supabase/migrations/20261122061500_analysis_queue_observation.sql": "0b17e93b5e9b129a9208eb910751036edcd936a8c3fe773dc5b236c94ef59403",
+    "scripts/verify-analysis-queue-observation.sql": "b8b8a4131469ea3e79e095eee6faee7aacf14986de2fa04c5508f447a6b064f2",
+    "app/lib/server/jobs.ts": "f73eb0f8b669cde64b3ffd266fba3fd91dfbcc18e0506f003b49192c08591116",
+    "scripts/run-worker.ts": "c4de0a676f585c21eb2c7b1d30df825674127f0fafa25789558849cf2461d165",
+    "app/routes/api.analysis-status.ts": "dae78db41ae19e244c6f27d42c4d324ddf1817c5458b87be354f6d9f32725713",
+    "app/routes/analysis.tsx": "13a4a58cda91d0a2a738a5e29730a065aa726a9963273e6f6ddf3a6e99835f3f",
+    "tests/unit/jobs-fence.test.ts": "d0de727883db24d5d3b6753bd0fbfcaca3ee7f2ee7a42e982199f317e65ad467",
+    "tests/unit/analysis-status.test.ts": "589cb8e0b0acb78864e3e2f24de5c3bc5da35d5008be8c889f7f4d2b02592362",
+    "tests/components/AnalysisProgress.test.tsx": "fe891685ff1d61576c61b3eada88285fe6ddf89d5876832528bee5ef016b3020"
+  },
+  "postgres": {
+    "environment": "Disposable native PostgreSQL 17",
+    "replayedOperations": 100,
+    "orderedBaselineSha256": "4e253744226912aab1c9411cb03e528f8fbdaa10984aa5933a88ff380601293a",
+    "additionalMigrations": ["20261122060000", "20261122061500"],
+    "checks": [
+      "Service-only RPC privileges and restricted internal observation table",
+      "Successful empty check in each mode and 15-second write throttling",
+      "Actual legacy and fenced leases with expected attempt and fence data",
+      "Failed claims and stale or future timestamps do not report a recent check",
+      "Foreign owner, retired source, deletion and revoked membership are denied",
+      "Extraction no longer returns queue activity"
+    ]
+  },
+  "baselineRegressions": 6,
+  "focusedTests": {
+    "command": "npm test -- tests/unit/jobs-fence.test.ts tests/unit/analysis-status.test.ts tests/unit/worker-startup.test.ts tests/components/AnalysisProgress.test.tsx",
+    "exitCode": 0,
+    "passed": 51
+  },
+  "typecheck": {"exitCode": 0},
+  "lint": {"exitCode": 0, "errors": 0, "existingHookWarnings": 4},
+  "webBuild": {"exitCode": 0, "logSha256": "167a118e15c55a4f2d5cc0a072ec26841f12745b6cb06ae6bc9a19d3affe6a77"},
+  "workerBuild": {"exitCode": 0},
+  "browser": {
+    "environment": "Built SSR on loopback in Chromium with simulated Supabase Auth and Data API",
+    "scriptSha256": "679b45c5874f092d13e0d24e821b05809590e666fac25256ee908d206f10f170",
+    "reportSha256": "807228dd1199568cdea18f8f5500023a9feb035148464f25123188a1521ce759",
+    "verified": ["generic waiting", "no recent check", "recent check", "extraction clears waiting"],
+    "scopedObservationReads": 3,
+    "externalRequests": 0
+  },
+  "managedVerification": false,
+  "remaining": [
+    "Continuous worker and leased OCR upload on an approved managed target",
+    "Managed status, privacy, and session acceptance"
+  ]
+}

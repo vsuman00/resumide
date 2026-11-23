@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "reviewProvenance": "independent AI-assisted source review, no blind reruns",
+  "modules": [
+    {
+      "module": "partitions",
+      "result": "PASS",
+      "receipt": "../2026-11-07-aa8-aa9-pilot-evidence/partition-cross-review.json"
+    },
+    {
+      "module": "corpus-drill",
+      "result": "PASS",
+      "receipt": "drill-calibration-cross-review.json"
+    },
+    {
+      "module": "calibration",
+      "result": "PASS",
+      "receipt": "drill-calibration-cross-review.json"
+    },
+    {
+      "module": "pilot-workflow",
+      "sourceSha256": "4e9125086e9b4426542ac569b5fec1926c976669ede84af8729ada95b2f6194a",
+      "testSha256": "615a852738c8bdd0395ddf241b944cbe784a6762d014366e9db7f07516bba758",
+      "result": "PASS",
+      "finding": null,
+      "recommendation": null,
+      "reportedTo": [
+        "root",
+        "aa7_review"
+      ],
+      "otherChecks": [
+        "Protocol scope/restrictions, human-only decisions, delivered notice, rubric/source binding, correction invalidation and appeal binding.",
+        "Strict actor-role permissions, revision CAS, idempotent actor/command binding and busy lock through awaited callbacks.",
+        "Synthetic adapters remain synthetic; external adapter requires explicit trusted authorization. Unknown cost/latency and malformed outputs stop work.",
+        "Stop/revoke/rollback/expiry block cached advisory; failed deletion revokes access; exact zero remaining required and immutable snapshots/hash-chain retained."
+      ],
+      "priorSourceSha256": "d3f4bd80292594278f73037241e7762b081ece4f94afbc42f637856167c4438f",
+      "originalAsyncFinding": "Addressed by refreshed actor/expiry barrier and per-attempt external authority with actual completed observations retained.",
+      "resolution": "Exact frozen4e912508 refreshes actor/time after rubric await, checks external authority before/after each attempt, retains completed observations and stops interrupted runs. Commit line843 already uses Date.parse(actor.asOf).",
+      "reviewerCorrection": "A follow-up about stale lastTime carried the original statement without re-reading the final commit line. Exact current hash/line disproved it; finding withdrawn, no source fix or extra execution required."
+    },
+    {
+      "module": "evaluation-claims",
+      "sourceSha256": "0984b34dbe1ab029eaa3522959d641654b6616d1905453003762f26e7bc0589c",
+      "testSha256": "fc77f7e06c5847b8b5315a1520714d010ba46f88ab38e7df70fc3da870d2c9f0",
+      "result": "PASS",
+      "blockingFindings": [],
+      "reviewed": [
+        "All five exact specification labels retained, current synthetic evidence restricted to Regression-tested.",
+        "Strict actual locked-report shape and bounded payload hash, lock/report/calibration bindings checked; source/scope and exact card/report payload passed into trusted authorization. Missing, false, throwing or mismatched authority cannot approve.",
+        "Regression label can describe an executed/reviewed low-power run without claiming numeric or representative validity; requires exact trusted execution and technical-review receipts.",
+        "Higher labels require independent-human representative evidence, complete ten metrics per exact required segment, all segment/aggregate numeric gates, separate sample authority and independent human review. Withheld/degenerate/undefined cells block those claims.",
+        "Vendor and outcome labels require their precise additional receipt kinds, named version/configuration card binding and prospective outcome-study reference.",
+        "Card version/scope/expiry and unknown fields fail closed. No implicit activation, publication, deployment or claim promotion operation.",
+        "Monitor requires complete trusted fresh signals and all binding hashes; stale/future/missing/throwing signals, revocation, failed evaluation and every limit breach propose stop/previous-version rollback."
+      ],
+      "limits": [
+        "In-process receipt and signal authorities must be authenticated by the caller; test callbacks exercise those trust branches without real reviewers, studies or vendor observations.",
+        "Monitor returns a proposed action only. Actual rollout/rollback and public release approval remain separate.",
+        "No tests rerun in this independent source review; root actual10PASS remains execution evidence."
+      ]
+    }
+  ]
+}

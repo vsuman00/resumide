@@ -1,0 +1,522 @@
+import { z } from "zod";
+import { zodResponseFormat } from "openai/helpers/zod";
+import { isDeepStrictEqual } from "node:util";
+import {
+  CanonicalRewriteRequestSchema,
+  CanonicalRewriteCommandSchema,
+  CanonicalRewritePrepareSchema,
+  CanonicalRewriteClaimSchema,
+  CanonicalRewriteOperationSchema,
+  CanonicalRewritePlanSchema,
+  CanonicalRewriteError,
+  canonicalRewritePolicy,
+  buildCanonicalRewriteWorkspace,
+  reconstructCanonicalRewrite,
+  validateCanonicalRewritePublication,
+  type CanonicalRewriteRequest,
+  type CanonicalRewritePublication,
+  type CanonicalRewriteWorkspace,
+} from "./canonical-rewrite-contract";
+import { getServerConfig } from "./config";
+import { CANONICAL_REWRITE_READINESS_PROFILE } from "./canonical-rewrite-readiness-profile";
+import {
+  canonicalRewritePayload,
+  CANONICAL_REWRITE_INSTRUCTIONS,
+  requestCanonicalRewrite,
+  type CanonicalRewriteTransport,
+} from "./canonical-rewrite-ai";
+import { AiBudgetError, createAiBudgetClient } from "./ai-budget";
+import {
+  createAiBudgetAttemptId,
+  reserveAiBudgetTokens,
+  runBudgetedAiAttempt,
+} from "./ai-budget-attempt";
+import { runProviderAttempt, type ProviderUsage } from "./provider-attempt";
+import { QualitativeAiFailure } from "./qualitative-ai";
+
+export interface CanonicalRewriteClient {
+  rpc(
+    name: string,
+    args: Record<string, unknown>,
+  ): PromiseLike<{ data: unknown; error: unknown }>;
+}
+const decimal = z.string().regex(/^(?:0|[1-9][0-9]{0,15})$/u);
+const usageSchema = z.strictObject({
+  inputTokens: decimal,
+  outputTokens: decimal,
+});
+const settlementSchema = z.strictObject({
+  schemaVersion: z.literal("canonical-rewrite-settlement/1.0.0"),
+  operationId: z.uuid(),
+  bindingSha256: z.string().regex(/^[a-f0-9]{64}$/u),
+  usage: usageSchema.nullable(),
+  state: z.enum(["reserved", "dispatched", "saved", "rejected", "unknown"]),
+});
+export type CanonicalRewriteRunResult =
+  | { kind: "saved"; publication: CanonicalRewritePublication }
+  | {
+      kind: "pending";
+      operationId: string;
+      state: "reserved" | "dispatched" | "unknown";
+    };
+// Only an observed native refusal proves the finish transaction did not commit.
+class NativeRefusal extends CanonicalRewriteError {}
+function nativeRefusal(code: unknown) {
+  switch (code) {
+    case "P0C01":
+      return new NativeRefusal("stale_inputs", "review_again");
+    case "42501":
+    case "P0002":
+      return new NativeRefusal("not_found", "unavailable");
+    case "22023":
+      return new NativeRefusal("invalid_input", "review_again");
+    case "P0C03":
+      return new NativeRefusal("unavailable", "retry_exact");
+    default:
+      return null;
+  }
+}
+async function rpc(
+  client: CanonicalRewriteClient,
+  name: string,
+  args: Record<string, unknown>,
+  signal?: AbortSignal,
+) {
+  let result;
+  try {
+    result = await runProviderAttempt({
+      timeoutMs: 5000,
+      signal,
+      failure: () => new CanonicalRewriteError("unavailable", "retry_exact"),
+      execute: async () => await client.rpc(name, args),
+    });
+  } catch {
+    throw new CanonicalRewriteError("unavailable", "retry_exact");
+  }
+  if (!result) throw new CanonicalRewriteError("unavailable", "retry_exact");
+  if (result.error) {
+    const code =
+      typeof result.error === "object"
+        ? (result.error as Record<string, unknown>).code
+        : null;
+    throw (
+      nativeRefusal(code) ??
+      new CanonicalRewriteError("unavailable", "retry_exact")
+    );
+  }
+  const status =
+    result.data && typeof result.data === "object"
+      ? (result.data as Record<string, unknown>).status
+      : null;
+  if (status === "not_found")
+    throw new NativeRefusal("not_found", "unavailable");
+  if (status === "conflict")
+    throw new NativeRefusal("stale_inputs", "review_again");
+  if (status === "invalid")
+    throw new NativeRefusal("invalid_input", "review_again");
+  if (status === "unavailable")
+    throw new NativeRefusal("unavailable", "retry_exact");
+  return result.data;
+}
+export async function loadCanonicalRewriteWorkspace(
+  client: CanonicalRewriteClient,
+  analysisId: string,
+  ownerId: string,
+  options: {
+    canonicalVersionId?: string;
+    requirementVersionId?: string;
+    model?: string;
+    expectedProfile?: unknown;
+  } = {},
+) {
+  const {
+    model = getServerConfig().OPENAI_MODEL,
+    expectedProfile = CANONICAL_REWRITE_READINESS_PROFILE,
+    ...selection
+  } = options;
+  if (
+    !z.uuid().safeParse(analysisId).success ||
+    !z.uuid().safeParse(ownerId).success
+  )
+    throw new CanonicalRewriteError("invalid_input");
+  const raw = await rpc(client, "read_canonical_rewrite_context", {
+    p_user_id: ownerId,
+    p_analysis_id: analysisId,
+    p_selection: {
+      canonicalVersionId: selection.canonicalVersionId ?? null,
+      requirementVersionId: selection.requirementVersionId ?? null,
+    },
+    p_policy: canonicalRewritePolicy(model),
+  });
+  const workspace = buildCanonicalRewriteWorkspace(raw, model, expectedProfile),
+    source = workspace.binding.authoring.source;
+  if (
+    source.ownerId !== ownerId ||
+    source.analysisId !== analysisId ||
+    (selection.canonicalVersionId &&
+      workspace.binding.authoring.canonical.versionId !==
+        selection.canonicalVersionId) ||
+    (selection.requirementVersionId &&
+      workspace.binding.authoring.requirements.versionId !==
+        selection.requirementVersionId)
+  )
+    throw new CanonicalRewriteError("invalid_result", "unavailable");
+  return workspace;
+}
+function validateOperation(
+  raw: unknown,
+  request: CanonicalRewriteRequest,
+  policy: ReturnType<typeof canonicalRewritePolicy>,
+  analysisId: string,
+  ownerId: string,
+  bindingSha?: string,
+) {
+  const operation = CanonicalRewriteOperationSchema.safeParse(raw);
+  if (
+    !operation.success ||
+    operation.data.ownerId !== ownerId ||
+    operation.data.analysisId !== analysisId ||
+    operation.data.operationId !== request.operationId ||
+    !isDeepStrictEqual(operation.data.request, request) ||
+    !isDeepStrictEqual(operation.data.policy, policy) ||
+    (bindingSha && operation.data.bindingSha256 !== bindingSha)
+  )
+    throw new CanonicalRewriteError("invalid_result", "retry_exact");
+  return operation.data;
+}
+export async function runCanonicalRewrite(
+  client: CanonicalRewriteClient,
+  analysisId: string,
+  ownerId: string,
+  rawRequest: unknown,
+  options: {
+    model: string;
+    expectedProfile: unknown;
+    getTransport: () => CanonicalRewriteTransport;
+    timeoutMs: number;
+    signal?: AbortSignal;
+    authorize: (workspace: CanonicalRewriteWorkspace) => Promise<void>;
+    budget?: { policyVersion: string; maxOutputTokens: number };
+  },
+): Promise<CanonicalRewriteRunResult> {
+  const parsed = CanonicalRewriteRequestSchema.safeParse(rawRequest);
+  if (
+    !parsed.success ||
+    !z.uuid().safeParse(ownerId).success ||
+    !z.uuid().safeParse(analysisId).success
+  )
+    throw new CanonicalRewriteError("invalid_input");
+  const request = parsed.data,
+    policy = canonicalRewritePolicy(options.model);
+  const command = CanonicalRewriteCommandSchema.parse({
+    schemaVersion: "canonical-rewrite-command/1.0.0",
+    request,
+    policy,
+  });
+  const raw = await rpc(
+    client,
+    "prepare_canonical_rewrite",
+    {
+      p_user_id: ownerId,
+      p_analysis_id: analysisId,
+      p_command: command,
+      p_request_id: request.operationId,
+    },
+    options.signal,
+  );
+  const prepared = CanonicalRewritePrepareSchema.safeParse(raw);
+  if (!prepared.success)
+    throw new CanonicalRewriteError("invalid_result", "retry_exact");
+  const operation = validateOperation(
+    prepared.data.operation,
+    request,
+    policy,
+    analysisId,
+    ownerId,
+  );
+  if (operation.dispatchAllowed)
+    throw new CanonicalRewriteError("invalid_result", "retry_exact");
+  if (operation.state === "saved" && operation.publication) {
+    const publication = validateCanonicalRewritePublication(
+      operation.publication,
+      request,
+    );
+    if (
+      publication.result.binding.authoring.source.ownerId !== ownerId ||
+      publication.result.binding.authoring.source.analysisId !== analysisId ||
+      publication.receipt.bindingSha256 !== operation.bindingSha256 ||
+      !isDeepStrictEqual(publication.result.binding.policy, policy)
+    )
+      throw new CanonicalRewriteError("invalid_result", "retry_exact");
+    return { kind: "saved", publication };
+  }
+  if (operation.state === "saved")
+    throw new CanonicalRewriteError("invalid_result", "retry_exact");
+  if (operation.state === "rejected")
+    throw new CanonicalRewriteError("unavailable", "review_again");
+  if (operation.state !== "reserved" || !prepared.data.context)
+    return {
+      kind: "pending",
+      operationId: request.operationId,
+      state: operation.state,
+    };
+  const workspace = buildCanonicalRewriteWorkspace(
+    prepared.data.context,
+    options.model,
+    options.expectedProfile,
+  );
+  const source = workspace.binding.authoring.source;
+  if (
+    source.ownerId !== ownerId ||
+    source.analysisId !== analysisId ||
+    workspace.bindingSha256 !== operation.bindingSha256 ||
+    workspace.binding.authoring.canonical.versionId !==
+      request.canonicalVersionId ||
+    workspace.binding.authoring.requirements.versionId !==
+      request.requirementVersionId ||
+    workspace.binding.draft.id !== request.draftId ||
+    workspace.binding.draft.updatedAt !== request.expectedDraftUpdatedAt
+  )
+    throw new CanonicalRewriteError("invalid_result", "retry_exact");
+  if (!workspace.canGenerate)
+    throw new CanonicalRewriteError("unavailable", "unavailable");
+  let claimed = false,
+    known: ProviderUsage | null = null,
+    finishSubmitted = false;
+  const providerFailure: { value: QualitativeAiFailure | null } = {
+    value: null,
+  };
+  let phase:
+    | "authorize"
+    | "provider"
+    | "accounting"
+    | "validation"
+    | "recheck"
+    | "finish" = "authorize";
+  const settle = async (errorCode: string | null) => {
+    const usage = known
+      ? {
+          inputTokens: String(known.inputTokens),
+          outputTokens: String(known.outputTokens),
+        }
+      : null;
+    const raw = await rpc(client, "settle_canonical_rewrite_attempt", {
+      p_user_id: ownerId,
+      p_analysis_id: analysisId,
+      p_operation_id: request.operationId,
+      p_binding_sha256: operation.bindingSha256,
+      p_usage: usage,
+      p_error_code: errorCode,
+    });
+    const receipt = settlementSchema.safeParse(raw);
+    if (
+      !receipt.success ||
+      receipt.data.operationId !== request.operationId ||
+      receipt.data.bindingSha256 !== operation.bindingSha256 ||
+      !isDeepStrictEqual(receipt.data.usage, usage)
+    )
+      throw new CanonicalRewriteError("invalid_result", "retry_exact");
+  };
+  const claim = async (budget: Record<string, unknown> | null) => {
+    const raw = await rpc(
+      client,
+      "claim_canonical_rewrite_dispatch",
+      {
+        p_user_id: ownerId,
+        p_analysis_id: analysisId,
+        p_operation_id: request.operationId,
+        p_binding_sha256: operation.bindingSha256,
+        p_budget: budget,
+      },
+      options.signal,
+    );
+    const result = CanonicalRewriteClaimSchema.safeParse(raw);
+    if (!result.success)
+      throw new CanonicalRewriteError("invalid_result", "retry_exact");
+    const value = validateOperation(
+      result.data.operation,
+      request,
+      policy,
+      analysisId,
+      ownerId,
+      operation.bindingSha256,
+    );
+    if (value.state !== "dispatched" || !value.dispatchAllowed) {
+      // The existing strict budget client owns classification of a denied envelope.
+      if (
+        budget &&
+        result.data.budget !== null &&
+        value.state === "reserved" &&
+        !value.dispatchAllowed
+      )
+        return result.data;
+      throw new CanonicalRewriteError("pending", "retry_exact");
+    }
+    claimed = true;
+    return result.data;
+  };
+  try {
+    await options.authorize(workspace);
+    phase = "provider";
+    const execute = async () => {
+      try {
+        const value = await requestCanonicalRewrite(
+          workspace,
+          request.operationId,
+          options.getTransport(),
+          options.timeoutMs,
+          options.signal,
+        );
+        known = value.usage;
+        return value;
+      } catch (error) {
+        // Budget settlement may replace this error; retain safe observed counters first.
+        if (error instanceof QualitativeAiFailure) {
+          known = error.usage;
+          providerFailure.value = error;
+        }
+        throw error;
+      }
+    };
+    const response = options.budget
+      ? await runBudgetedAiAttempt({
+          client: createAiBudgetClient({
+            rpc: async (name, args) => {
+              if (name !== "ai_budget_claim_dispatch")
+                return await client.rpc(name, args);
+              const result = await claim(args);
+              if (result.budget === null)
+                throw new CanonicalRewriteError(
+                  "invalid_result",
+                  "retry_exact",
+                );
+              return { data: result.budget, error: null };
+            },
+          }),
+          binding: {
+            userId: ownerId,
+            organizationId: source.organizationId,
+            operationId: request.operationId,
+            attemptId: createAiBudgetAttemptId({
+              operationId: request.operationId,
+              attemptNonce: "canonical-rewrite/1",
+            }),
+            surface: "rewrite",
+            payloadSha256: operation.bindingSha256,
+            model: options.model,
+            promptPolicyVersion: policy.promptVersion,
+            policyVersion: options.budget.policyVersion,
+            ...reserveAiBudgetTokens({
+              system: CANONICAL_REWRITE_INSTRUCTIONS,
+              user: JSON.stringify(canonicalRewritePayload(workspace)),
+              schema: zodResponseFormat(
+                CanonicalRewritePlanSchema,
+                "canonical_rewrite_plan",
+              ),
+              maxOutputTokens: options.budget.maxOutputTokens,
+            }),
+          },
+          signal: options.signal,
+          execute: async (recordUsage) => {
+            const value = await execute();
+            recordUsage(value.usage);
+            return { value, usage: value.usage };
+          },
+        })
+      : await (async () => {
+          const result = await claim(null);
+          if (result.budget !== null)
+            throw new CanonicalRewriteError("invalid_result", "retry_exact");
+          return execute();
+        })();
+    phase = "accounting";
+    await settle(null); // Technical accounting precedes ANY output support validation or content save.
+    if (options.signal?.aborted)
+      throw new CanonicalRewriteError("cancelled", "retry_exact");
+    phase = "validation";
+    if (response.refused) throw new CanonicalRewriteError("unsupported_output");
+    const expected = reconstructCanonicalRewrite(
+      workspace,
+      request.operationId,
+      response.output,
+    );
+    phase = "recheck";
+    const current = await loadCanonicalRewriteWorkspace(
+      client,
+      analysisId,
+      ownerId,
+      {
+        model: options.model,
+        expectedProfile: options.expectedProfile,
+        canonicalVersionId: request.canonicalVersionId,
+        requirementVersionId: request.requirementVersionId,
+      },
+    );
+    if (
+      !isDeepStrictEqual(current.binding, workspace.binding) ||
+      current.bindingSha256 !== workspace.bindingSha256 ||
+      !isDeepStrictEqual(current.sources, workspace.sources) ||
+      !current.canGenerate
+    )
+      throw new CanonicalRewriteError("stale_inputs");
+    if (options.signal?.aborted)
+      throw new CanonicalRewriteError("cancelled", "retry_exact");
+    phase = "finish";
+    finishSubmitted = true;
+    const publication = await rpc(
+      client,
+      "finish_canonical_rewrite",
+      {
+        p_user_id: ownerId,
+        p_analysis_id: analysisId,
+        p_operation_id: request.operationId,
+        p_binding_sha256: operation.bindingSha256,
+        p_plan: response.output,
+        p_usage: {
+          inputTokens: String(known!.inputTokens),
+          outputTokens: String(known!.outputTokens),
+        },
+        p_request_id: request.operationId,
+      },
+      options.signal,
+    );
+    return {
+      kind: "saved",
+      publication: validateCanonicalRewritePublication(
+        publication,
+        request,
+        expected,
+      ),
+    };
+  } catch (error) {
+    if (!known && error instanceof QualitativeAiFailure) known = error.usage;
+    // A transport failure or malformed receipt after finish may hide an applied
+    // transaction. Preserve that operation for exact replay; never demote it.
+    if (!finishSubmitted || error instanceof NativeRefusal) {
+      const code =
+        options.signal?.aborted ||
+        providerFailure.value?.code === "AI_CANCELLED"
+          ? "cancelled"
+          : (error instanceof CanonicalRewriteError &&
+                error.reason === "unsupported_output") ||
+              providerFailure.value?.code === "AI_OUTPUT_INVALID"
+            ? "invalid_output"
+            : phase === "recheck" ||
+                (error instanceof CanonicalRewriteError &&
+                  error.reason === "stale_inputs")
+              ? "stale_inputs"
+              : phase === "finish" || phase === "accounting"
+                ? "storage_failed"
+                : claimed
+                  ? "provider_failed"
+                  : "unknown";
+      await settle(code);
+    }
+    if (
+      error instanceof CanonicalRewriteError ||
+      error instanceof AiBudgetError
+    )
+      throw error;
+    throw new CanonicalRewriteError("unavailable", "retry_exact");
+  }
+}

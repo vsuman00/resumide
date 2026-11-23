@@ -1,0 +1,80 @@
+
+> test
+> vitest run tests/unit/score-snapshot-binding.test.ts -t A09 score typed JD boundary rejects
+
+
+ RUN  v4.1.12 /Users/vaibhavsuman/.codex/worktrees/reliability-20261109-frontend/resume_ats
+
+ ❯ tests/unit/score-snapshot-binding.test.ts (19 tests | 2 failed | 17 skipped) 68ms
+   ↓ rejects a mismatched owner in an internal scoring snapshot
+   ↓ rejects a mismatched analysis in an internal scoring snapshot
+   ↓ rejects a mismatched version in an internal scoring snapshot
+     × rejects a current stored v2 row before the legacy engine 58ms
+     × rejects a historical stored v2 row before the legacy engine 10ms
+     ↓ preserves an owned-reader denial 404 before typed abstention
+     ↓ preserves an owned-reader denial 503 before typed abstention
+     ↓ preserves expectedCanonical conflict precedence over evidence failure and typed abstention
+     ↓ preserves expectedRequirements conflict precedence over evidence failure and typed abstention
+     ↓ preserves hash evidence integrity failure before typed abstention
+     ↓ preserves source evidence integrity failure before typed abstention
+     ↓ preserves evidenceRow storage failure before typed abstention
+     ↓ preserves sourceRow storage failure before typed abstention
+     ↓ preserves the legacy diagnostics path and withheld dimensions
+     ↓ preserves the no-JD diagnostics path and withheld dimensions
+     ↓ preserves the final legacy canonical head check
+     ↓ preserves the final legacy JD head check
+     ↓ preserves the final legacy job binding check
+     ↓ preserves the final legacy privacy check
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/unit/score-snapshot-binding.test.ts > A09 score typed JD boundary > rejects a current stored v2 row before the legacy engine
+ FAIL  tests/unit/score-snapshot-binding.test.ts > A09 score typed JD boundary > rejects a historical stored v2 row before the legacy engine
+AssertionError: expected Error: Scoring inputs failed integrity ch… { status: … } to match object { status: 503, …(1) }
+
+- Expected
++ Received
+
+- {
+-   "message": "Saved typed JD requirements can be reviewed on the JD page. Scoring diagnostics and proposals are paused until typed requirement coverage is available.",
+-   "status": 503,
++ CanonicalError {
++   "status": 422,
+  }
+
+ ❯ tests/unit/score-snapshot-binding.test.ts:220:26
+    218|         .read({ requirements: scenario.document.id })
+    219|         .then(() => null, (failure: unknown) => failure);
+    220|       expect.soft(error).toMatchObject({
+       |                          ^
+    221|         status: 503,
+    222|         message: typedUnavailable,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  tests/unit/score-snapshot-binding.test.ts > A09 score typed JD boundary > rejects a current stored v2 row before the legacy engine
+ FAIL  tests/unit/score-snapshot-binding.test.ts > A09 score typed JD boundary > rejects a historical stored v2 row before the legacy engine
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ tests/unit/score-snapshot-binding.test.ts:224:39
+    222|         message: typedUnavailable,
+    223|       });
+    224|       expect(build.mock.calls.length).toBe(0);
+       |                                       ^
+    225|       expect(readers.requirements).toHaveBeenCalledWith(
+    226|         scenario.client,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 17 skipped (19)
+   Start at  18:03:41
+   Duration  354ms (transform 160ms, setup 0ms, import 226ms, tests 68ms, environment 0ms)
+

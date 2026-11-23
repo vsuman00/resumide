@@ -1,0 +1,501 @@
+import { hashAiBudgetBinding } from "../../app/lib/server/ai-budget";
+import { AI_BUDGET_SOURCE_PROFILE } from "../../app/lib/server/ai-budget-source-profile";
+import { beforeEach, expect, it, vi } from "vitest";
+const mocks = vi.hoisted(() => ({
+  user: vi.fn(),
+  from: vi.fn(),
+  rpc: vi.fn(),
+  consent: vi.fn(),
+  config: vi.fn(),
+  factory: vi.fn(),
+  access: vi.fn(),
+}));
+vi.mock("../../app/lib/server/auth", () => ({
+  getAuthenticatedUser: mocks.user,
+}));
+vi.mock("../../app/lib/server/config", () => ({
+  getServerConfig: mocks.config,
+}));
+vi.mock("../../app/lib/server/supabase", () => ({
+  createSupabaseAdminClient: () => ({ from: mocks.from, rpc: mocks.rpc }),
+  createSupabaseServerClient: () => ({}),
+}));
+vi.mock("../../app/lib/server/privacy", () => ({
+  requireAndRecordAiConsent: mocks.consent,
+}));
+vi.mock("../../app/lib/server/canonical-repository", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("../../app/lib/server/canonical-repository")
+    >();
+  return { ...actual, ownedAnalysis: mocks.access };
+});
+import { CanonicalError } from "../../app/lib/server/canonical-repository";
+vi.mock("../../app/lib/server/rewrite-ai", async (original) => ({
+  ...(await original<typeof import("../../app/lib/server/rewrite-ai")>()),
+  createRewriteTransport: mocks.factory,
+}));
+import { rewriteAction } from "../../app/lib/server/rewrite-service";
+import { QualitativeAiFailure } from "../../app/lib/server/qualitative-ai";
+import type { RewriteTransport } from "../../app/lib/server/rewrite-ai";
+const id = "11111111-1111-4111-8111-111111111111";
+const owner = "22222222-2222-4222-8222-222222222222";
+const original =
+  "– Built React services with PostgreSQL; reduced latency by 20%.";
+let analysis: Record<string, unknown>;
+let stale = false;
+let runFailure = false;
+const queries: Array<{ table: string; operations: Array<unknown[]> }> = [];
+function client() {
+  return {
+    execute: vi.fn().mockResolvedValue({
+      output: {
+        summary: null,
+        bullets: [
+          {
+            sourceId: 0,
+            rewrite:
+              "Developed React services with PostgreSQL; reduced latency by 20%.",
+            reasoning: "Clarifies the measured contribution.",
+          },
+        ],
+      },
+      usage: { inputTokens: 100, outputTokens: 200 },
+    }),
+  };
+}
+function request(body = "aiConsent=accepted", origin = "https://example.test") {
+  return new Request(`https://example.test/resume/${id}/rewrite`, {
+    method: "POST",
+    headers: {
+      Origin: origin,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body,
+  });
+}
+beforeEach(() => {
+  vi.clearAllMocks();
+  queries.length = 0;
+  stale = false;
+  runFailure = false;
+  analysis = {
+    id,
+    owner_id: owner,
+    organization_id: id,
+    status: "completed",
+    resume_version_id: id,
+    job_id: id,
+    jobs: { title: "Engineer", description: "React and PostgreSQL with AWS" },
+    resume_versions: { resumes: { status: "active" } },
+    analysis_extractions: { extracted_text: original },
+    writer_drafts: [
+      {
+        id,
+        kind: "summary",
+        draft: { summary: null, bullets: [] },
+        updated_at: "2026-10-31T00:00:00Z",
+      },
+    ],
+  };
+  mocks.access.mockResolvedValue({});
+  mocks.user.mockResolvedValue({ id: owner });
+  mocks.config.mockReturnValue({
+    APP_ORIGIN: "https://example.test",
+    AI_ENABLED: true,
+    AI_BUDGET_ENABLED: true,
+    AI_BUDGET_POLICY_VERSION: "synthetic-budget/1",
+    OPENAI_TIMEOUT_MS: 100,
+    OPENAI_MAX_OUTPUT_TOKENS: 1000,
+    AI_MONTHLY_TOKEN_LIMIT: 100000,
+    MAX_EXTRACTED_CHARACTERS: 100000,
+    OPENAI_MODEL: "test-model",
+  });
+  mocks.consent.mockResolvedValue(undefined);
+  mocks.rpc.mockImplementation(
+    async (name: string, args: Record<string, unknown>) => {
+      if (name === "read_ai_budget_source_readiness")
+        return {
+          data: {
+            ...AI_BUDGET_SOURCE_PROFILE,
+            schemaReady: true,
+            reserveExecutable: true,
+            exportExecutable: false,
+          },
+          error: null,
+        };
+      if (
+        name === "ai_budget_reserve_next" ||
+        name === "get_organization_ai_tokens_used"
+      )
+        throw Error("LEGACY_BUDGET_FALLBACK_FORBIDDEN");
+      if (name === "ai_budget_reserve_source_next")
+        expect(args.p_source).toMatchObject({
+          schemaVersion: "ai-budget-source/1.0.0",
+          kind: "legacy_rewrite",
+          analysisId: id,
+          resumeVersionId: id,
+        });
+      if (name.startsWith("ai_budget_")) return admittedBudgetReply(name, args);
+      return {
+        data: name === "consume_analysis_rate_limit" ? true : 0,
+        error: null,
+      };
+    },
+  );
+  mocks.from.mockImplementation((table: string) => {
+    const entry = { table, operations: [] as unknown[][] };
+    queries.push(entry);
+    const data = () => ({
+      data:
+        table === "analyses"
+          ? analysis
+          : table === "document_evidence_attempts"
+            ? []
+            : table === "writer_drafts"
+              ? stale
+                ? null
+                : { id }
+              : null,
+      error:
+        table === "analysis_ai_runs" && runFailure
+          ? { code: "unavailable" }
+          : null,
+    });
+    const q: Record<string, unknown> = {
+      then: (resolve: (v: unknown) => unknown) =>
+        Promise.resolve(data()).then(resolve),
+    };
+    for (const method of [
+      "select",
+      "eq",
+      "update",
+      "insert",
+      "limit",
+      "maybeSingle",
+    ]) {
+      q[method] = (...args: unknown[]) => {
+        entry.operations.push([method, ...args]);
+        return q;
+      };
+    }
+    return q;
+  });
+});
+it("persists a grounded proposal run and compare-and-swap draft without changing scores", async () => {
+  const ai = client();
+  const response = await rewriteAction(request(), id, ai);
+  expect(response.status).toBe(200);
+  expect(await response.json()).toMatchObject({ ok: true, bulletCount: 1 });
+  expect(ai.execute).toHaveBeenCalledTimes(1);
+  expect(mocks.consent).toHaveBeenCalledWith(
+    expect.objectContaining({ userId: owner, accepted: true }),
+  );
+  const run = queries.find((q) => q.table === "analysis_ai_runs")!;
+  expect(run.operations[0]).toEqual([
+    "insert",
+    expect.objectContaining({
+      owner_id: owner,
+      analysis_id: id,
+      prompt_version: "source-bound-rewrite/1.0.0",
+    }),
+  ]);
+  const draft = queries.find((q) => q.table === "writer_drafts")!;
+  expect(draft.operations).toContainEqual(["eq", "owner_id", owner]);
+  expect(draft.operations).toContainEqual([
+    "eq",
+    "updated_at",
+    "2026-10-31T00:00:00Z",
+  ]);
+  expect(queries.some((q) => q.table === "analysis_results")).toBe(false);
+  expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+});
+it("requires technical budget admission before dispatch when the ledger is enabled", async () => {
+  mocks.config.mockReturnValue({
+    ...mocks.config(),
+    AI_BUDGET_ENABLED: true,
+    AI_BUDGET_POLICY_VERSION: "synthetic-budget-v1",
+  });
+  mocks.rpc.mockImplementation(async (name: string) => ({
+    data:
+      name === "ai_budget_reserve_source_next"
+        ? {
+            schemaVersion: "ai-budget/1.0.0",
+            status: "denied",
+            code: "AI_BUDGET_EXHAUSTED",
+          }
+        : name === "read_ai_budget_source_readiness"
+          ? {
+              ...AI_BUDGET_SOURCE_PROFILE,
+              schemaReady: true,
+              reserveExecutable: true,
+              exportExecutable: false,
+            }
+          : name === "consume_analysis_rate_limit"
+            ? true
+            : 0,
+    error: null,
+  }));
+  const ai = client();
+  const response = await rewriteAction(request(), id, ai);
+  expect(ai.execute).not.toHaveBeenCalled();
+  expect(response.status).toBe(429);
+  expect(queries.some((q) => q.table === "writer_drafts")).toBe(false);
+});
+it("requires authentication, same origin and consent before provider access", async () => {
+  const ai = client();
+  mocks.user.mockResolvedValue(null);
+  expect((await rewriteAction(request(), id, ai)).status).toBe(401);
+  mocks.user.mockResolvedValue({ id: owner });
+  expect(
+    (
+      await rewriteAction(
+        request("aiConsent=accepted", "https://evil.test"),
+        id,
+        ai,
+      )
+    ).status,
+  ).toBe(403);
+  expect((await rewriteAction(request(""), id, ai)).status).toBe(403);
+  expect(ai.execute).not.toHaveBeenCalled();
+  expect(mocks.consent).not.toHaveBeenCalled();
+});
+it("denies a foreign analysis without exposing saved data", async () => {
+  const ai = client();
+  analysis = null as unknown as Record<string, unknown>;
+  expect((await rewriteAction(request(), id, ai)).status).toBe(404);
+  expect(ai.execute).not.toHaveBeenCalled();
+  expect(queries[0].operations).toContainEqual(["eq", "owner_id", owner]);
+});
+it("denies disabled AI, missing JD, inactive source and exhausted budgets", async () => {
+  const ai = client();
+  const config = mocks.config();
+  mocks.config.mockReturnValue({ ...config, AI_ENABLED: false });
+  expect((await rewriteAction(request(), id, ai)).status).toBe(503);
+  mocks.config.mockReturnValue(config);
+  analysis.jobs = { title: "Engineer", description: "" };
+  expect((await rewriteAction(request(), id, ai)).status).toBe(422);
+  analysis.jobs = { title: "Engineer", description: "React" };
+  analysis.resume_versions = { resumes: { status: "deleted" } };
+  expect((await rewriteAction(request(), id, ai)).status).toBe(404);
+  analysis.resume_versions = { resumes: { status: "active" } };
+  mocks.config.mockReturnValue({ ...config, AI_MONTHLY_TOKEN_LIMIT: 100 });
+  const admitted = mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation((name, args) =>
+    name === "ai_budget_reserve_source_next"
+      ? Promise.resolve({
+          data: {
+            schemaVersion: "ai-budget/1.0.0",
+            status: "denied",
+            code: "AI_BUDGET_EXHAUSTED",
+          },
+          error: null,
+        })
+      : admitted(name, args),
+  );
+  expect((await rewriteAction(request(), id, ai)).status).toBe(429);
+  expect(ai.execute).not.toHaveBeenCalled();
+});
+it("prevents repeated generation through the shared database limiter", async () => {
+  const ai = client();
+  mocks.rpc.mockResolvedValue({ data: false, error: null });
+  const response = await rewriteAction(request(), id, ai);
+  expect(response.status).toBe(429);
+  expect(response.headers.get("Retry-After")).toBeTruthy();
+  expect(ai.execute).not.toHaveBeenCalled();
+});
+it("preserves previous draft on timeout, ungrounded output, receipt failure or stale write", async () => {
+  const ai = client();
+  ai.execute.mockRejectedValueOnce(
+    new QualitativeAiFailure("AI_TIMEOUT", true),
+  );
+  expect((await rewriteAction(request(), id, ai)).status).toBe(503);
+  expect(queries.some((q) => q.table === "writer_drafts")).toBe(false);
+  ai.execute.mockResolvedValueOnce({
+    output: {
+      summary: null,
+      bullets: [
+        {
+          sourceId: 0,
+          rewrite: "Built Kubernetes services with 99% uptime.",
+          reasoning: "Clarifies the result.",
+        },
+      ],
+    },
+    usage: { inputTokens: 1, outputTokens: 1 },
+  });
+  expect((await rewriteAction(request(), id, ai)).status).toBe(422);
+  expect(queries.some((q) => q.table === "writer_drafts")).toBe(false);
+  runFailure = true;
+  expect((await rewriteAction(request(), id, ai)).status).toBe(503);
+  expect(queries.some((q) => q.table === "writer_drafts")).toBe(false);
+  runFailure = false;
+  stale = true;
+  expect((await rewriteAction(request(), id, ai)).status).toBe(409);
+});
+it("rejects oversized and wrong-method requests", async () => {
+  const ai = client();
+  expect(
+    (
+      await rewriteAction(
+        new Request(`https://example.test/resume/${id}/rewrite`),
+        id,
+        ai,
+      )
+    ).status,
+  ).toBe(405);
+  expect(
+    (await rewriteAction(request("x=" + "a".repeat(2049)), id, ai)).status,
+  ).toBe(413);
+  expect(ai.execute).not.toHaveBeenCalled();
+});
+
+it("rechecks active ownership, membership and deletion access before and after drafting", async () => {
+  const ai = client();
+  mocks.access.mockRejectedValueOnce(
+    new CanonicalError(404, "Source unavailable."),
+  );
+  expect((await rewriteAction(request(), id, ai)).status).toBe(404);
+  expect(ai.execute).not.toHaveBeenCalled();
+  mocks.access
+    .mockResolvedValueOnce({})
+    .mockRejectedValueOnce(new CanonicalError(404, "Source unavailable."));
+  expect((await rewriteAction(request(), id, ai)).status).toBe(404);
+  expect(ai.execute).toHaveBeenCalledTimes(1);
+  expect(queries.some((q) => q.table === "writer_drafts")).toBe(false);
+});
+
+it("propagates an HTTP caller abort to the actual attempt and preserves the previous draft", async () => {
+  const controller = new AbortController();
+  const http = new Request(request(), { signal: controller.signal });
+  let dispatchedSignal: AbortSignal | undefined;
+  let markStarted: (() => void) | undefined;
+  const started = new Promise<void>((resolve) => {
+    markStarted = resolve;
+  });
+  const execute = vi
+    .fn<RewriteTransport["execute"]>()
+    .mockImplementation((sent) => {
+      dispatchedSignal = sent.signal;
+      markStarted?.();
+      return new Promise(() => undefined);
+    });
+  const pending = rewriteAction(http, id, { execute });
+  await started;
+  controller.abort();
+  const propagatedAtCallerAbort = dispatchedSignal?.aborted;
+  const response = await pending;
+  expect(propagatedAtCallerAbort).toBe(true);
+  expect(response.status).not.toBe(200);
+  expect(execute).toHaveBeenCalledTimes(1);
+  expect(queries.some((query) => query.table === "writer_drafts")).toBe(false);
+});
+
+it("never labels a stale legacy run as current grounded support", async () => {
+  stale = true;
+  const ai = client();
+  const response = await rewriteAction(request(), id, ai);
+  expect(response.status).toBe(409);
+  const body = await response.json();
+  expect(body.code).toBe("stale_draft");
+  expect(body).not.toHaveProperty("draft");
+  const run = queries.find((q) => q.table === "analysis_ai_runs")!;
+  const inserted = run.operations.find((op) => op[0] === "insert")?.[1];
+  expect(inserted).toMatchObject({
+    output: { state: "legacy_review_required" },
+  });
+  const draft = queries.find((q) => q.table === "writer_drafts")!;
+  expect(draft.operations).toContainEqual(["eq", "analysis_id", id]);
+  expect(draft.operations).toContainEqual(["eq", "owner_id", owner]);
+  expect(draft.operations).toContainEqual([
+    "eq",
+    "updated_at",
+    "2026-10-31T00:00:00Z",
+  ]);
+});
+
+function admittedBudgetReply(name: string, args: Record<string, unknown>) {
+  const p = args.p_request as Record<string, unknown>;
+  const binding = {
+    userId: String(args.p_user_id),
+    organizationId: String(args.p_organization_id),
+    operationId: String(p.operationId),
+    attemptId: String(p.attemptId),
+    attemptOrdinal: Number(p.attemptOrdinal ?? 1),
+    surface: p.surface as "qualitative" | "rewrite" | "build",
+    payloadSha256: String(p.payloadSha256),
+    model: String(p.model),
+    promptPolicyVersion: String(p.promptPolicyVersion),
+    policyVersion: String(p.policyVersion),
+    reservedInputTokens: Number(p.reservedInputTokens),
+    reservedOutputTokens: Number(p.reservedOutputTokens),
+  };
+  const usage = p.usage as
+    { inputTokens: string; outputTokens: string } | undefined;
+  const state =
+    name === "ai_budget_claim_dispatch"
+      ? "dispatched"
+      : name === "ai_budget_settle"
+        ? "settled"
+        : name === "ai_budget_mark_unknown"
+          ? "held_unknown"
+          : name === "ai_budget_release"
+            ? "released"
+            : "reserved";
+  return {
+    data: {
+      schemaVersion: "ai-budget/1.0.0",
+      status: "ok",
+      receipt: {
+        schemaVersion: "ai-budget/1.0.0",
+        ...binding,
+        reservedInputTokens: String(binding.reservedInputTokens),
+        reservedOutputTokens: String(binding.reservedOutputTokens),
+        bindingSha256: hashAiBudgetBinding(binding),
+        period: "2026-11-01",
+        state,
+        reservedCostMicrousd: String(
+          binding.reservedInputTokens + binding.reservedOutputTokens,
+        ),
+        actualInputTokens: state === "settled" ? usage!.inputTokens : null,
+        actualOutputTokens: state === "settled" ? usage!.outputTokens : null,
+        actualCostMicrousd:
+          state === "settled"
+            ? String(BigInt(usage!.inputTokens) + BigInt(usage!.outputTokens))
+            : null,
+        replayed: false,
+        dispatchAllowed: state === "dispatched",
+        poolBlocked: false,
+        poolPolicyVersion: "synthetic-pool/1",
+        attemptLimit: 3,
+        inputMicrousdPerMillion: "1000000",
+        outputMicrousdPerMillion: "1000000",
+      },
+    },
+    error: null,
+  };
+}
+
+it.each([
+  [false, "synthetic-budget/1"],
+  [undefined, "synthetic-budget/1"],
+  [true, undefined],
+  [true, ""],
+  [true, "   "],
+])(
+  "denies missing rewrite technical selection before factory/consent/quota: %s/%s",
+  async (enabled, policy) => {
+    mocks.config.mockReturnValue({
+      ...mocks.config(),
+      AI_BUDGET_ENABLED: enabled,
+      AI_BUDGET_POLICY_VERSION: policy,
+    });
+    const ai = client();
+    expect((await rewriteAction(request(), id, ai)).status).toBe(503);
+    expect((await rewriteAction(request(), id)).status).toBe(503);
+    expect(ai.execute).not.toHaveBeenCalled();
+    expect(mocks.factory).not.toHaveBeenCalled();
+    expect(mocks.rpc).not.toHaveBeenCalled();
+    expect(mocks.consent).not.toHaveBeenCalled();
+  },
+);

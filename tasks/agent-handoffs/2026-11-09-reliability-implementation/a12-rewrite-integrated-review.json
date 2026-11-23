@@ -1,0 +1,91 @@
+{
+  "status": "PASS_INTEGRATED_SOURCE_SYNTHETIC_DOM_ONLY",
+  "receipt": "a12-rewrite-integrated-54da8d96-616a-44d0-846b-7abbb9a530d2.json",
+  "summary": {
+    "testFilesPassed": 19,
+    "testsPassed": 351
+  },
+  "sourceInputs": 838,
+  "changedSourceInputsDuringRun": [],
+  "integratedFiles": 30,
+  "changedPriorInputs": [
+    ".env.example",
+    "app/components/ResumeWriter.tsx",
+    "app/lib/server/config.ts",
+    "app/lib/server/privacy-worker.ts",
+    "app/lib/server/rewrite-service.ts",
+    "app/routes.ts",
+    "app/routes/analysis.score.tsx",
+    "tests/components/ResumeWriter.test.tsx",
+    "tests/unit/config.test.ts",
+    "tests/unit/privacy-operations.test.ts",
+    "tests/unit/rewrite-service.test.ts"
+  ],
+  "unchangedCommonInputs": 804,
+  "newInputs": [
+    "app/components/CanonicalRewritePanel.tsx",
+    "app/lib/server/canonical-rewrite-ai.ts",
+    "app/lib/server/canonical-rewrite-contract.ts",
+    "app/lib/server/canonical-rewrite-readiness-profile.ts",
+    "app/lib/server/canonical-rewrite-repository.ts",
+    "app/lib/server/canonical-rewrite-service.ts",
+    "app/routes/analysis.rewrite.ts",
+    "scripts/verify-canonical-rewrite.sql",
+    "supabase/migrations/20261114181344_canonical_rewrite_operations.sql",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-backend-integration.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-coordinator.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-frontend-integration.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-integrated-controller.mjs",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-native-source-review.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-root-registration.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-runtime-integration.json",
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a12-rewrite-scaffold.json",
+    "tests/components/CanonicalRewritePanel.test.tsx",
+    "tests/unit/canonical-rewrite-contract.test.ts",
+    "tests/unit/canonical-rewrite-repository.test.ts",
+    "tests/unit/canonical-rewrite-route.test.ts",
+    "tests/unit/canonical-rewrite-score.test.ts",
+    "tests/unit/canonical-rewrite-service.test.ts"
+  ],
+  "noLongerCapturedInputs": [
+    "tasks/agent-handoffs/2026-11-09-reliability-implementation/a11-declaration-integrated-controller.mjs"
+  ],
+  "previousControllerStillPresent": true,
+  "logAndArtifactsRehashed": true,
+  "controllerAbsent": true,
+  "ownedGroupsAbsent": [77038, 77122, 77224, 77261, 77359],
+  "checks": [
+    "npm test -- tests/unit/canonical-rewrite-contract.test.ts tests/unit/canonical-rewrite-repository.test.ts tests/unit/canonical-rewrite-service.test.ts tests/components/CanonicalRewritePanel.test.tsx tests/unit/canonical-rewrite-route.test.ts tests/unit/canonical-rewrite-score.test.ts tests/unit/rewrite-service.test.ts tests/unit/rewrite-ai.test.ts tests/unit/rewrite-budget.test.ts tests/unit/provider-cancellation.test.ts tests/unit/provider-attempt-sdk.test.ts tests/components/ResumeWriter.test.tsx tests/unit/privacy-operations.test.ts tests/unit/privacy.test.ts tests/unit/config.test.ts tests/unit/typed-authoring-score-route.test.ts tests/unit/typed-score-route.test.ts tests/unit/score-v2-route.test.ts tests/unit/ai-budget.test.ts",
+    "npm run typecheck",
+    "npm run lint",
+    "npm run build",
+    "npm run build:worker"
+  ],
+  "frozenLegacyContractsUnchanged": [
+    "app/lib/server/typed-authoring-contract.ts",
+    "app/lib/server/requirement-semantic-evidence.ts",
+    "app/lib/server/requirement-coverage.ts",
+    "app/lib/server/typed-authoring-command-codec.ts",
+    "app/lib/server/writing-support.ts"
+  ],
+  "limits": [
+    "SQL parsing/execution and native catalog/ACL/transactions/replay/races/privacy/retention/cleanup NOT_RUN",
+    "No provider/browser/services/DB/Docker/dependencies/Git/deployment",
+    "Closed current source-plan generation only; broader useful writing and fullA12 remain open",
+    "Defaultfalse feature and native mutator-denied source; no production activation",
+    "Full64-parent goal ACTIVE; current checkpoint does not close full reliability acceptance"
+  ],
+  "postDocumentationSourceBindingsUnchanged": true,
+  "documentationChecks": {
+    "localLinksChecked": 68,
+    "whitespaceFilesChecked": 40,
+    "canonicalTaskIds": 64,
+    "parentCounts": {
+      "VERIFIED": 2,
+      "PARTIAL": 37,
+      "PLANNED": 25
+    },
+    "graphPreserved": true,
+    "prose": "a12-rewrite-prose-checks.json"
+  }
+}

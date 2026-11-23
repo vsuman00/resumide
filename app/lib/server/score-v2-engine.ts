@@ -1,6 +1,9 @@
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { DocumentEvidenceSchema } from "./document-evidence";
+import {
+  DocumentEvidenceSchema,
+  type DocumentEvidence,
+} from "./document-evidence";
 import {
   CanonicalResumeDraftSchema,
   type CanonicalResumeDraft,
@@ -89,6 +92,7 @@ const Input = z.strictObject({
 const normalized = (value: string) =>
   value.normalize("NFKC").toLocaleLowerCase("en").replace(/\s+/gu, " ").trim();
 type Fact = CanonicalResumeDraft["facts"][number];
+const DIAGNOSTIC_PRODUCER = "score-v2/1.0.3" as const;
 const cited = (fact: Fact) => fact.sources.length > 0;
 const confirmed = (fact: Fact) =>
   fact.state === "candidate_confirmed" && cited(fact);
@@ -218,6 +222,15 @@ function technicalDateValid(value: string) {
   const match = /^(\d{4})\s*[-–—]\s*(\d{4})$/u.exec(value.trim());
   return !!match && Number(match[2]) >= Number(match[1]);
 }
+// Legacy JD rows store only an inclusive minimum. Confirm that the exact
+// clause expresses that interpretation before comparing whole calendar months.
+function hasLegacyMinimumTenure(item: JobRequirement) {
+  const match =
+    /^(?:[•*–—-]\s+)?(?:(?:must have|requires)\s+)?(?:(?:at least|(?:a )?minimum(?: of)?)\s+)?(\d{1,2})(?:\s*\+)?\s*(?:years?|yrs?)\s+(?:of\s+)?(?:(?:professional|work|working)\s+)?experience(?:\s+(?:required|mandatory|essential|preferred))?[.!]?$/iu.exec(
+      item.evidence.quote.trim().replace(/\s+/gu, " "),
+    );
+  return match !== null && Number(match[1]) === item.minimumYears;
+}
 function proposeMatch(item: JobRequirement, doc: CanonicalResumeDraft) {
   const result = (
     state: z.infer<typeof MatchState>,
@@ -258,8 +271,14 @@ function proposeMatch(item: JobRequirement, doc: CanonicalResumeDraft) {
         "not_evaluated",
         "Skill-specific tenure requires dated evidence associated with that skill; general role dates do not establish it.",
       );
+    const minimumYears = item.minimumYears;
+    if (minimumYears === null || !hasLegacyMinimumTenure(item))
+      return result(
+        "not_evaluated",
+        "This experience clause needs review. The legacy format can compare only an explicit minimum for general experience.",
+      );
     const months = confirmedExperienceMonths(doc);
-    if (months === null || item.minimumYears === null)
+    if (months === null)
       return result(
         "not_evaluated",
         "Verify full dates and their association with confirmed software roles.",
@@ -268,7 +287,7 @@ function proposeMatch(item: JobRequirement, doc: CanonicalResumeDraft) {
       (f) => f.type === "dates" || f.type === "role",
     );
     return result(
-      months >= item.minimumYears * 12
+      months >= minimumYears * 12
         ? "satisfied"
         : months > 0
           ? "partially_satisfied"
@@ -347,7 +366,13 @@ function proposeMatch(item: JobRequirement, doc: CanonicalResumeDraft) {
       "not_evaluated",
       "No reliable matching evidence was recovered; absence is not yet established.",
     );
-  if (!matches.some(confirmed))
+  const declarations = matches.filter(
+    (fact) =>
+      fact.state === "candidate_confirmed" &&
+      fact.confirmation?.actorId === doc.ownerId &&
+      fact.confirmation.value === fact.value,
+  );
+  if (!declarations.length)
     return result(
       "candidate_confirmation_required",
       "A matching candidate exists but needs exact source-backed confirmation.",
@@ -355,8 +380,14 @@ function proposeMatch(item: JobRequirement, doc: CanonicalResumeDraft) {
     );
   if (item.type === "skill")
     return result(
-      "candidate_confirmation_required",
-      "A listed skill does not establish proficiency or experience.",
+      "not_evaluated",
+      "Your exact skill declaration is recorded; proficiency and skill-specific duration still need supporting evidence and review.",
+      matches,
+    );
+  if (!declarations.some(cited))
+    return result(
+      "not_evaluated",
+      "An exact candidate declaration is recorded, but no matching source citation is attached; supporting evidence still needs review.",
       matches,
     );
   return result(
@@ -365,6 +396,106 @@ function proposeMatch(item: JobRequirement, doc: CanonicalResumeDraft) {
     matches,
   );
 }
+/** Shared technical observations only; callers supply admitted source documents.
+ * This does not evaluate typed requirements or establish semantic relationships. */
+export function buildTechnicalScoreRules(
+  evidence: DocumentEvidence,
+  canonical: CanonicalResumeDraft,
+  observedPageCoverage: number | null,
+): z.infer<typeof TechnicalRuleSchema>[] {
+  const rule = (
+    id: string,
+    label: string,
+    credit: number | null,
+    reason: string,
+    citations: z.infer<typeof Citation>[] = [],
+    critical = false,
+    notApplicable = false,
+  ) => ({
+    id,
+    label,
+    state: notApplicable
+      ? ("not_applicable" as const)
+      : credit === null
+        ? ("not_evaluated" as const)
+        : credit === 1
+          ? ("pass" as const)
+          : credit === 0
+            ? ("fail" as const)
+            : ("partial" as const),
+    credit: notApplicable ? null : credit,
+    weight: null,
+    critical,
+    reason,
+    citations: citations.slice(0, 20),
+    additionalCitationCount: Math.max(0, citations.length - 20),
+  });
+  const contacts = canonical.facts.filter(
+    (f) => ["name", "email", "phone"].includes(f.type) && cited(f),
+  );
+  const contactCount = new Set(contacts.map((f) => f.type)).size;
+  const dates = canonical.facts.filter((f) => f.type === "dates");
+  const bullets = canonical.sections.flatMap((s) =>
+    s.entries.flatMap((e) => e.bullets),
+  );
+  const uniqueBullets = new Set(bullets.map((b) => normalized(b.text)));
+  const hasExperience = canonical.sections.some((s) => s.type === "experience");
+  return [
+    rule(
+      "parse.page-coverage",
+      "Recovered page coverage",
+      observedPageCoverage,
+      "Coverage describes retained pages with text, not calibrated extraction accuracy.",
+      evidence.spans
+        .filter((s) => s.text.trim())
+        .map((s) => ({ kind: "document_span" as const, id: s.id })),
+      true,
+    ),
+    rule(
+      "structure.recognized-sections",
+      "Recognized section structure",
+      canonical.sections.length
+        ? canonical.sections.filter((s) => s.type !== "other").length /
+            canonical.sections.length
+        : null,
+      "Unrecognized sections remain inspectable and require review.",
+    ),
+    rule(
+      "contact.recovered",
+      "Recovered contact candidates",
+      contactCount / 3,
+      "Observes name/email/phone recovery without rating identity or candidate merit.",
+      refs(contacts),
+      true,
+    ),
+    rule(
+      "dates.order",
+      "Calendar order in recovered date ranges",
+      dates.length && dates.every((f) => technicalDateValid(f.value))
+        ? 1
+        : null,
+      hasExperience
+        ? "Ambiguous formats need review; year-only ranges never establish exact experience duration."
+        : "No employment section is present; the date rule is not applicable.",
+      refs(dates),
+      false,
+      !hasExperience,
+    ),
+    rule(
+      "content.duplication",
+      "Repeated bullet content",
+      bullets.length ? uniqueBullets.size / bullets.length : null,
+      "Repeated content cannot multiply factual or alignment credit.",
+    ),
+    rule(
+      "format.geometry",
+      "Qualified layout evidence",
+      null,
+      "Text alone cannot establish font, column, clipping or rendered-format compatibility.",
+    ),
+  ];
+}
+
 export function buildScoreDiagnostics(
   raw: z.input<typeof Input>,
 ): ScoreDiagnostics {
@@ -448,97 +579,11 @@ export function buildScoreDiagnostics(
           !populated
         ? "insufficient"
         : "review_required";
-  const rule = (
-    id: string,
-    label: string,
-    credit: number | null,
-    reason: string,
-    citations: z.infer<typeof Citation>[] = [],
-    critical = false,
-    notApplicable = false,
-  ) => ({
-    id,
-    label,
-    state: notApplicable
-      ? ("not_applicable" as const)
-      : credit === null
-        ? ("not_evaluated" as const)
-        : credit === 1
-          ? ("pass" as const)
-          : credit === 0
-            ? ("fail" as const)
-            : ("partial" as const),
-    credit: notApplicable ? null : credit,
-    weight: null,
-    critical,
-    reason,
-    citations: citations.slice(0, 20),
-    additionalCitationCount: Math.max(0, citations.length - 20),
-  });
-  const contacts = canonical.facts.filter(
-    (f) => ["name", "email", "phone"].includes(f.type) && cited(f),
+  const rules = buildTechnicalScoreRules(
+    evidence,
+    canonical,
+    observedPageCoverage,
   );
-  const contactCount = new Set(contacts.map((f) => f.type)).size;
-  const dates = canonical.facts.filter((f) => f.type === "dates");
-  const bullets = canonical.sections.flatMap((s) =>
-    s.entries.flatMap((e) => e.bullets),
-  );
-  const uniqueBullets = new Set(bullets.map((b) => normalized(b.text)));
-  const hasExperience = canonical.sections.some((s) => s.type === "experience");
-  const rules = [
-    rule(
-      "parse.page-coverage",
-      "Recovered page coverage",
-      observedPageCoverage,
-      "Coverage describes retained pages with text, not calibrated extraction accuracy.",
-      evidence.spans
-        .filter((s) => s.text.trim())
-        .map((s) => ({ kind: "document_span" as const, id: s.id })),
-      true,
-    ),
-    rule(
-      "structure.recognized-sections",
-      "Recognized section structure",
-      canonical.sections.length
-        ? canonical.sections.filter((s) => s.type !== "other").length /
-            canonical.sections.length
-        : null,
-      "Unrecognized sections remain inspectable and require review.",
-    ),
-    rule(
-      "contact.recovered",
-      "Recovered contact candidates",
-      contactCount / 3,
-      "Observes name/email/phone recovery without rating identity or candidate merit.",
-      refs(contacts),
-      true,
-    ),
-    rule(
-      "dates.order",
-      "Calendar order in recovered date ranges",
-      dates.length && dates.every((f) => technicalDateValid(f.value))
-        ? 1
-        : null,
-      hasExperience
-        ? "Ambiguous formats need review; year-only ranges never establish exact experience duration."
-        : "No employment section is present; the date rule is not applicable.",
-      refs(dates),
-      false,
-      !hasExperience,
-    ),
-    rule(
-      "content.duplication",
-      "Repeated bullet content",
-      bullets.length ? uniqueBullets.size / bullets.length : null,
-      "Repeated content cannot multiply factual or alignment credit.",
-    ),
-    rule(
-      "format.geometry",
-      "Qualified layout evidence",
-      null,
-      "Text alone cannot establish font, column, clipping or rendered-format compatibility.",
-    ),
-  ];
   const groups = new Map<string, JobRequirement[]>();
   for (const item of requirements?.requirements ?? []) {
     const key = `${item.type}:${normalized(item.value)}`;
@@ -627,7 +672,7 @@ export function buildScoreDiagnostics(
   const hash = createHash("sha256")
     .update(
       JSON.stringify({
-        producer: "score-v2/1.0.1",
+        producer: DIAGNOSTIC_PRODUCER,
         policy,
         evidence,
         canonical,
@@ -650,7 +695,7 @@ export function buildScoreDiagnostics(
       ]
         .sort()
         .at(-1),
-      producerVersion: "score-v2/1.0.1",
+      producerVersion: DIAGNOSTIC_PRODUCER,
       retentionPolicyId: canonical.retentionPolicyId,
       inputSha256: hash,
       evidenceVersionId: evidence.id,

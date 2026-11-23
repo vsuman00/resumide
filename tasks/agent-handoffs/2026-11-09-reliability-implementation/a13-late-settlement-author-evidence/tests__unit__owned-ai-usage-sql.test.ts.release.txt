@@ -1,0 +1,226 @@
+import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { describe, expect, it } from "vitest";
+// Historical source-profile snapshot; every original assertion remains unchanged.
+const profile = Object.freeze({
+  schemaVersion: "initial-feedback-readiness/1.0.0",
+  profileVersion: "initial-feedback-readiness-profile/1.0.0",
+  checkerSha256:
+    "7e37b1d085058f95b15bfd5f7e28b8e120875ee2b1eef5ad13aca110ea10ed2f",
+  readerSha256:
+    "57701a307d3087720642d9b4057eac87b770465e81726c000c5238708bcfc47b",
+  prepareSha256:
+    "93b7af8445710cd105e2da67eb27f7d9b8d9c52cd7ec924a6ab6f6aa69548f92",
+  claimSha256:
+    "335cef3a4e4f948b4c3b3c17ea9a3159368cab5df6e5a7a1389bc0f46759766a",
+  settleSha256:
+    "739919dedaa5080c4bb8f3c556a9f9b1528fb88747edef9764588bd9038d4148",
+  finishSha256:
+    "966cdb270ca5a4c1ab8fe6a6dd9097b5d46ebb2b2218f8047b794646cca315a8",
+  usageSha256:
+    "b242c0e264b0dfa5307f742a77e7a3cc0818bc9c18c88b946d9b27ee0a25889f",
+  exportSha256:
+    "eefd5842be1eb38fe1e0f17ea148f1708eae634c2a8fe42ab94467c9839fe0cd",
+  metadataSha256:
+    "2bafa1e30a02308604ad0114ab114189aef6e8323379e443ab7a96a64b2196d6",
+});
+const read = (path: string) =>
+  readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
+const sql = read("supabase/migrations/20261115082125_owned_ai_usage.sql");
+const hash = (text: string) =>
+  createHash("sha256").update(text, "utf8").digest("hex");
+const body = (name: string) => {
+  const escaped = name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const m = new RegExp(
+    `create function ${escaped}\\([\\s\\S]*?\\) returns [^\\n]+\\nlanguage[^\\n]+ as (\\$[a-z_]+\\$)([\\s\\S]*?)\\1;`,
+    "u",
+  ).exec(sql);
+  if (!m) throw Error(`Missing source body ${name}`);
+  return m[2];
+};
+const usage = body("public.read_initial_feedback_usage"),
+  checker = body("private.initial_feedback_ready"),
+  metadata = body("public.read_initial_feedback_readiness");
+const manifest = JSON.parse(
+  checker.split("$shared_usage_catalog$")[1],
+) as Array<{ signature: string; sha256: string }>;
+// Text/source identity checks only. No SQL parser, database, role or concurrency proof.
+describe("shared owned usage native source (unparsed/unexecuted)", () => {
+  it("pins the real local bodies and composed actual publication interfaces without a cycle", () => {
+    expect(hash(usage)).toBe(profile.usageSha256);
+    expect(hash(checker)).toBe(profile.checkerSha256);
+    expect(hash(metadata)).toBe(profile.metadataSha256);
+    expect(manifest).toHaveLength(13);
+    expect(
+      manifest.some((x) => x.signature === "private.initial_feedback_ready()"),
+    ).toBe(false);
+    for (const name of [
+      "private.owned_ai_usage_owner",
+      "public.read_initial_feedback_usage",
+      "public.read_initial_feedback_readiness",
+    ])
+      expect(
+        manifest.find((x) => x.signature.split("(")[0] === name)?.sha256,
+      ).toBe(hash(body(name)));
+    for (const [key, signature] of [
+      ["readerSha256", "public.read_initial_feedback(uuid,uuid)"],
+      [
+        "finishSha256",
+        "public.finish_initial_feedback(uuid,jsonb,uuid,uuid,text,jsonb,text,text)",
+      ],
+      ["exportSha256", "public.export_initial_feedback_records(uuid)"],
+      [
+        "prepareSha256",
+        "public.prepare_initial_feedback(uuid,jsonb,jsonb,uuid)",
+      ],
+      [
+        "settleSha256",
+        "public.settle_initial_feedback_attempt(uuid,uuid,text,jsonb,text)",
+      ],
+    ] as const)
+      expect(profile[key]).toBe(
+        manifest.find((x) => x.signature === signature)?.sha256,
+      );
+    expect(checker).toContain(
+      "private.initial_feedback_publication_ready() is not true or private.canonical_rewrite_ready() is not true",
+    );
+  });
+  it("admits owned current source/privacy/membership and optional job without a numeric score guard", () => {
+    const owner = body("private.owned_ai_usage_owner");
+    for (const text of [
+      "where id=p_analysis_id and owner_id=p_user_id for share skip locked",
+      "private.try_candidate_privacy_write(a.owner_id)",
+      "role in ('owner','admin','member') for share skip locked",
+      "status='active' for share skip locked",
+      "if a.job_id is not null then",
+    ])
+      expect(owner).toContain(text);
+    expect(owner).not.toMatch(
+      /document_evidence|legacy_scoring_access|p_organization_id/gu,
+    );
+  });
+  it("validates links across all months before the legacy creation-month filter", () => {
+    const prefix = usage.slice(
+      usage.indexOf("with canonical_scope"),
+      usage.indexOf("), legacy as"),
+    );
+    expect(prefix).not.toMatch(/period_start|period_end/gu);
+    expect(prefix).toContain("from private.canonical_rewrite_operations");
+    expect(prefix).toContain("from private.initial_feedback_attempts");
+    expect(prefix).toContain("from private.initial_feedback_publications");
+    expect(sql).not.toContain("canonical_rewrite_attempts");
+    expect(usage).toContain("r.created_at>=period_start");
+    expect(usage.match(/x.claimed_at>=period_start/gu)).toHaveLength(2);
+    expect(usage).not.toContain("get_organization_ai_tokens_used");
+  });
+  it("excludes exact run IDs only and refuses ambiguous or inconsistent authoritative links", () => {
+    for (const text of [
+      "join public.analysis_ai_runs r on r.id=x.run_id",
+      "t.attempt_id=p.attempt_id and t.operation_id=o.operation_id",
+      "p.binding_sha256=o.binding_sha256",
+      "(r.owner_id,r.organization_id,r.analysis_id)=(p.owner_id,p.organization_id,p.analysis_id)",
+      "r.input_tokens::text=t.usage->>'inputTokens'",
+      "r.input_hash=o.binding_sha256",
+      "from links group by run_id having count(*)>1",
+      "not exists(select 1 from links l where l.run_id=r.id)",
+    ])
+      expect(usage).toContain(text);
+    expect(usage).toContain(
+      "if values_valid is not true or links_valid is not true",
+    );
+    expect(usage).not.toMatch(
+      /not exists\(select 1 from links[^)]+analysis_id/gu,
+    );
+  });
+  it("keeps all claimed known/unknown accounting regardless publication outcome", () => {
+    const stats = usage.slice(
+      usage.indexOf("), canonical as"),
+      usage.indexOf(") select legacy.tokens"),
+    );
+    expect(
+      stats.match(/count\(\*\) filter\(where x.usage is null\)/gu),
+    ).toHaveLength(2);
+    expect(stats.match(/private.ifo_usage_valid\(x.usage\)/gu)).toHaveLength(4);
+    expect(stats).not.toMatch(/state|published|saved|rejected|publication/gu);
+    expect(usage).toContain("legacy_tokens+canonical_tokens+feedback_tokens");
+    expect(usage).toContain("greatest(length(legacy_tokens::text)");
+    expect(usage).toContain(
+      "date_trunc('month',clock_timestamp() at time zone 'UTC')",
+    );
+  });
+  it("returns exact thirteen usage fields and nineteen real readiness fields", () => {
+    const keys = (s: string) =>
+      [...s.matchAll(/(?:\(|,)\s*'([A-Za-z][A-Za-z0-9]*)'\s*,/gu)].map(
+        (m) => m[1],
+      );
+    const result = usage.slice(usage.indexOf("return jsonb_build_object"));
+    expect(keys(result)).toEqual([
+      "schemaVersion",
+      "profileVersion",
+      "usageSha256",
+      "ownerId",
+      "organizationId",
+      "analysisId",
+      "periodStart",
+      "periodEnd",
+      "legacyUnlinkedTokens",
+      "canonicalTokens",
+      "initialFeedbackTokens",
+      "totalTokens",
+      "unknownClaims",
+    ]);
+    expect(keys(metadata)).toHaveLength(19);
+    expect(Object.keys(profile)).toHaveLength(11);
+    expect(result).toContain(
+      "pg_catalog.pg_proc where oid=to_regprocedure('public.read_initial_feedback_usage(uuid,uuid)')",
+    );
+    expect(sql.match(/grant execute on function/gu)).toHaveLength(1);
+    expect(sql).toContain(
+      "grant execute on function public.read_initial_feedback_readiness() to service_role",
+    );
+    expect(sql).toContain(
+      "public.read_initial_feedback_usage(uuid,uuid) from public,anon,authenticated,service_role",
+    );
+    expect(checker).toContain("CHECK/default");
+  });
+  it("preserves old counters/source profiles while the actual caller always uses the shared helper", () => {
+    for (const [path, sha] of [
+      [
+        "app/lib/server/canonical-rewrite-usage.ts",
+        "a51cfb8cd780f04cb254f43691f53f8110efa6a656ea85a2069e5ceaac2a4c33",
+      ],
+      [
+        "app/lib/server/canonical-rewrite-readiness-profile.ts",
+        "d80052f60c25dbb45210c8ddefaa11fde67a1f817ac43e398a6c89523a93a151",
+      ],
+      [
+        "supabase/migrations/20261114192207_canonical_rewrite_compatibility.sql",
+        "00833163ac60a1d80909b6b73533525e7dbc7697f62388dcc17d01d74b62c248",
+      ],
+    ])
+      expect(hash(read(path))).toBe(sha);
+    const service = read("app/lib/server/canonical-rewrite-service.ts");
+    expect(service).toContain("await readOwnedAiUsage(");
+    expect(service).not.toContain("readCanonicalRewriteUsage");
+    expect(service).not.toContain("if (!config.AI_BUDGET_ENABLED)");
+    expect(service).not.toContain("Number(tokensUsed");
+  });
+  it("keeps actual Native verification deferred and refuses empty/time-backdated substitutes", () => {
+    const draft = read("scripts/verify-owned-ai-usage.sql");
+    for (const text of [
+      "UNPARSED/UNEXECUTED",
+      "current_user=function_owner",
+      "actual CHECK/default/role/catalog reconciliation",
+      "exact_preregistered_partition_no_double_count",
+      "all_components_and_unknown_present_not_empty_substitute",
+      "real_linked_and_cross_month_fixture_requirements",
+      "prior_month_settlement_not_current_month_credit",
+      "malformed_authoritative_link_refused_whole_reply",
+      "read_and_technical_mirror_do_not_debit_budget",
+      "set constraints all immediate;\nrollback;",
+    ])
+      expect(draft.replace(/\n-- /gu, " ")).toContain(text);
+    expect(draft).toContain("no backdating/trigger disablement");
+    expect(draft).not.toContain("grant execute");
+  });
+});

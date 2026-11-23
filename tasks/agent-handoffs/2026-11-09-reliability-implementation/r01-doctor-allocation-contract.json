@@ -1,0 +1,75 @@
+{
+  "task": "CR-R01-S02",
+  "status": "FROZEN_SOURCE_SYNTHETIC_INTERFACE_NO_LIVE_ALLOCATION",
+  "at": "2026-11-13T19:21:23.355956+00:00",
+  "baseHead": "a0b239299d75b0bd64b588fe743ebe2975fb28b9",
+  "scope": "Unify explicit bounded doctor model-access interface and legacy adapter; fake transport only. No new provider call is authorized.",
+  "cli": {
+    "offline": "Existing flags, results and invalid bare --live behavior preserved.",
+    "live": "doctor-ai --live --allocation FILE [--workspace PATH] [--source env-file|process] [--env-file RELATIVE]",
+    "parsing": "Reject unknown, duplicate, ambiguous and incomplete options before selected env/key access. No argv echo.",
+    "allocationFile": "Maximum16KiB, fatal UTF8, strict flat JSON with duplicate/unknown keys refused; regular non-symlink file inside selected real workspace. Reject equality with selected env path before opening the allocation."
+  },
+  "allocation": {
+    "schemaVersion": "ai-doctor-live-allocation/1.0.0",
+    "allocationId": "lowercase UUID",
+    "ownerConfirmed": true,
+    "operation": "model_access",
+    "workspaceRoot": "canonical absolute selected workspace",
+    "source": "env_file or process",
+    "envFile": "normalized workspace-relative selected env file (default .env), or null for process",
+    "model": "bounded identifier matching exact selected effective model",
+    "expiresAt": "strict UTC ISO timestamp, future and at most30minutes from admission",
+    "maxRequests": 1,
+    "maxOutputTokens": 0,
+    "timeoutMs": "integer1..10000"
+  },
+  "authority": "Declared operator scope only; does not establish ownership, signature, cross-process single-use or a global spend ledger. Reuse across invocations requires actual owner authorization outside the code. No provider request is allocated by this task.",
+  "api": {
+    "offline": "Preserve readAiReadiness(input), runAiDoctor(argv,environment?) semantics.",
+    "live": "runAllocatedAiReadiness(input,allocationUnknown,dependencies?) validates scope before effective-config resolution. Optional third runAiDoctor dependencies for fake fetch/clock/signal only.",
+    "legacy": "Export runLiveOpenAiModel(argv,environment,deps), import-safe direct-entry guard and delegate to doctor. Explicit --live passed unchanged; otherwise prepend it; --help forwards help. Noargs refuses as bare --live."
+  },
+  "configuration": "Resolve selected file/Node.parseEnv/inherited precedence exactly once, privately, shared with offline resolver. Never fall back to getAnalysisConfig or SDK ambient context. Preserve existing safe offline report fields/flags/precedence and every prior assertion.",
+  "transport": {
+    "sdk": "Actual installed OpenAI6.47.0 models.retrieve only; no generation/list/fallback.",
+    "request": "One exact HTTPS api.openai.com/v1/models/<encoded selected model> GET with no body; count before dispatch; zero retries or redirects.",
+    "context": "Explicit selected key/base/org/project, null absent org/project/adminKey/webhookSecret; logging off and silent logger; exclude ambient custom headers. Never return secrets.",
+    "limits": "AbortController deadline min(timeoutMs,expiry-now), caller cancellation supported, response bytes capped64KiB and reading/parsing inside deadline. Honor SDK signal, redirect:error and one-dispatch guard.",
+    "result": "Only a valid model response correlated to requested model can prove this model access; no writing/generation/product readiness claim."
+  },
+  "output": {
+    "schemaVersion": "ai-readiness/live-v1",
+    "fields": "Fixed safe status/authentication/failure enums, allocationAccepted, providerRequests0|1,generationRequests0,retries0,redirects0,httpStatus bounded|null,deadlineAborted. No actual model/base/context/key identifiers, paths, argv, messages, bodies, headers or stacks.",
+    "exit": "2 arguments/allocation refusal;1 failed/unavailable;0 successful allocated model access only. Offline schema remains unchanged."
+  },
+  "acceptance": [
+    "Actual existing doctor RED for complete allocated-live arguments, not missing import.",
+    "One real-SDK/fake-fetch success with exact request/context/counters.",
+    "Invalid/incomplete/duplicate/expired/mismatched allocation or config refuses without dispatch; admission failures do not access selected env/key.",
+    "401/429/503/network failures do not retry or expose canaries.",
+    "Deadline/caller abort, redirect and oversized/malformed/mismatched response controls.",
+    "Import-safe legacy script and actual delegation; all existing offline assertions unchanged."
+  ],
+  "owners": {
+    "backend": {
+      "worktree": "backend",
+      "files": [
+        "app/lib/server/ai-readiness.ts",
+        "scripts/doctor-ai.ts",
+        "scripts/verify-live-openai-model.ts",
+        "tasks/agent-handoffs/2026-11-09-reliability-implementation/backend-r01-doctor-allocation.md"
+      ]
+    },
+    "tests": {
+      "worktree": "frontend",
+      "files": [
+        "tests/unit/ai-readiness.test.ts",
+        "tasks/agent-handoffs/2026-11-09-reliability-implementation/frontend-r01-doctor-allocation-tests.md"
+      ]
+    },
+    "reviewer": "Read-only compatibility/transport review in runtime worktree; no source ownership.",
+    "root": "Contract, dependencies, integration, plans/runbook/context and one final affected gate."
+  },
+  "boundaries": "No real env/keys/provider request, SQL parse/execution, database/browser/services/Docker, dependencies, Git or deployment. Source and fake transport only. Separate worktrees and finite affected checks."
+}

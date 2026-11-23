@@ -1,18 +1,20 @@
 import type { Route } from "./+types/home";
+import { useEffect, useRef } from "react";
 import {
   data as routeData,
+  redirect,
   isRouteErrorResponse,
   Link,
   useLoaderData,
   useNavigate,
   useNavigation,
   useRevalidator,
-  useRouteLoaderData,
 } from "react-router";
 import PublicShell from "~/components/PublicShell";
 import WorkspaceShell from "~/components/WorkspaceShell";
 import EvidenceScene3D from "~/components/EvidenceScene3D";
 import { getAuthenticatedUser } from "~/lib/server/auth";
+import { readCandidatePrivacyAccess } from "~/lib/server/privacy-deletion-policy";
 import {
   createSupabaseAdminClient,
   createSupabaseServerClient,
@@ -20,26 +22,20 @@ import {
 
 const PAGE_SIZE = 12;
 
-interface RootLoaderData {
-  user: { email?: string } | null;
-}
-
 interface HistoryEntry {
   id: string;
   status: string;
   created_at: string;
-  jobs: { title: string; company_name: string } | null;
-  analysis_results: { feedback: unknown } | null;
+  jobs: { title: string; company_name: string | null } | null;
+  score: number | null;
 }
 
 export async function loader({ request, url }: Route.LoaderArgs) {
   const headers = new Headers();
-  const user = await getAuthenticatedUser(
-    createSupabaseServerClient(request, headers),
-  );
-  if (!user)
+  if (url.pathname !== "/analyses")
     return routeData(
       {
+        isWorkspace: false,
         entries: [] as HistoryEntry[],
         page: 1,
         sort: "recent" as const,
@@ -47,6 +43,11 @@ export async function loader({ request, url }: Route.LoaderArgs) {
       },
       { headers },
     );
+  const client = createSupabaseServerClient(request, headers);
+  const user = await getAuthenticatedUser(client);
+  headers.set("Cache-Control", "private, no-store");
+  headers.set("X-Robots-Tag", "noindex, nofollow");
+  if (!user) throw redirect("/auth?next=%2Fanalyses", { headers });
 
   const searchParams = url.searchParams;
   const requestedPage = Number(searchParams.get("page"));
@@ -57,32 +58,71 @@ export async function loader({ request, url }: Route.LoaderArgs) {
   )
     ? (searchParams.get("sort") as "recent" | "highest" | "lowest")
     : "recent";
-  const { data, error } = await createSupabaseAdminClient()
+  const history = (entries: HistoryEntry[], hasMore = false) =>
+    routeData({ isWorkspace: true, entries, page, sort, hasMore }, { headers });
+  const unavailable = () =>
+    new Response("Resume history is unavailable.", { status: 503, headers });
+  const admin = createSupabaseAdminClient();
+  const checkAccess = async () => {
+    const access = await readCandidatePrivacyAccess(admin, user.id, {
+      signal: request.signal,
+    });
+    if (access.state === "unavailable") throw unavailable();
+    return access.state === "clear";
+  };
+  if (!(await checkAccess())) return history([]);
+
+  const { data, error } = await client
     .from("analyses")
     .select(
-      "id, status, created_at, jobs(title, company_name), analysis_results(feedback)",
+      "id, owner_id, organization_id, status, created_at, jobs(title, company_name), analysis_results(feedback), resume_versions!inner(owner_id, organization_id, resumes!resume_versions_resume_id_fkey!inner(owner_id, organization_id, status))",
     )
     .eq("owner_id", user.id)
+    .eq("resume_versions.owner_id", user.id)
+    .eq("resume_versions.resumes.owner_id", user.id)
+    .eq("resume_versions.resumes.status", "active")
     .order("created_at", { ascending: false })
+    .abortSignal(request.signal)
     .range(0, 999);
-  if (error)
-    throw new Response("Resume history is unavailable.", { status: 503 });
+  if (error) throw unavailable();
+  if (data?.length && !(await checkAccess())) return history([]);
 
-  const rows: HistoryEntry[] = (data ?? []).map((row) => ({
-    id: row.id,
-    status: row.status,
-    created_at: row.created_at,
-    jobs: Array.isArray(row.jobs) ? (row.jobs[0] ?? null) : row.jobs,
-    analysis_results: Array.isArray(row.analysis_results)
+  const rows: HistoryEntry[] = (data ?? []).flatMap((row) => {
+    const version = Array.isArray(row.resume_versions)
+      ? row.resume_versions[0]
+      : row.resume_versions;
+    const resume = Array.isArray(version?.resumes)
+      ? version.resumes[0]
+      : version?.resumes;
+    if (
+      row.owner_id !== user.id ||
+      version?.owner_id !== user.id ||
+      version.organization_id !== row.organization_id ||
+      resume?.owner_id !== user.id ||
+      resume.organization_id !== row.organization_id ||
+      resume.status !== "active"
+    )
+      return [];
+
+    const result = Array.isArray(row.analysis_results)
       ? (row.analysis_results[0] ?? null)
-      : row.analysis_results,
-  }));
+      : row.analysis_results;
+    return [
+      {
+        id: row.id,
+        status: row.status,
+        created_at: row.created_at,
+        jobs: Array.isArray(row.jobs) ? (row.jobs[0] ?? null) : row.jobs,
+        score: scoreForFeedback(result?.feedback),
+      },
+    ];
+  });
   const sorted = [...rows].sort((left, right) => {
     if (sort === "recent") {
       return right.created_at.localeCompare(left.created_at);
     }
-    const leftScore = scoreForEntry(left) ?? -1;
-    const rightScore = scoreForEntry(right) ?? -1;
+    const leftScore = left.score ?? -1;
+    const rightScore = right.score ?? -1;
     return sort === "highest"
       ? rightScore - leftScore ||
           right.created_at.localeCompare(left.created_at)
@@ -90,14 +130,9 @@ export async function loader({ request, url }: Route.LoaderArgs) {
           right.created_at.localeCompare(left.created_at);
   });
   const from = (page - 1) * PAGE_SIZE;
-  return routeData(
-    {
-      entries: sorted.slice(from, from + PAGE_SIZE),
-      page,
-      sort,
-      hasMore: sorted.length > from + PAGE_SIZE,
-    },
-    { headers },
+  return history(
+    sorted.slice(from, from + PAGE_SIZE),
+    sorted.length > from + PAGE_SIZE,
   );
 }
 
@@ -107,13 +142,12 @@ export function meta({}: Route.MetaArgs) {
     {
       name: "description",
       content:
-        "Inspect parsed resume evidence and improve the highest-impact issues first.",
+        "Inspect parsed resume evidence and improve the issues supported by evidence.",
     },
   ];
 }
 
-function scoreForEntry(entry: HistoryEntry) {
-  const feedback = entry.analysis_results?.feedback;
+function scoreForFeedback(feedback: unknown) {
   if (!feedback || typeof feedback !== "object") return null;
   const score = (feedback as { overallScore?: unknown }).overallScore;
   return typeof score === "number" ? score : null;
@@ -160,7 +194,7 @@ function PublicHome() {
             <h1 id="public-home-heading">See what the ATS sees.</h1>
             <p>
               Inspect your parsed resume, understand every score, and fix the
-              highest-impact issues first.
+              issues supported by evidence.
             </p>
             <div className="public-hero-actions">
               <Link to="/upload" className="primary-button w-fit">
@@ -218,8 +252,8 @@ function PublicHome() {
             <p className="workspace-eyebrow">From score to action</p>
             <h2 id="result-story-heading">A result you can actually use.</h2>
             <p>
-              Start with three high-impact repairs, inspect the evidence behind
-              each one, and preserve the strengths that already work.
+              Review suggested changes, inspect the evidence behind each one,
+              and preserve the strengths that already work.
             </p>
             <Link to="/upload" className="back-button w-fit">
               Start an evidence review
@@ -233,55 +267,34 @@ function PublicHome() {
             <header>
               <div>
                 <p className="workspace-eyebrow">Example analysis</p>
-                <h3>ATS readiness</h3>
+                <h3>Evidence review</h3>
               </div>
-              <span>Strong foundation</span>
+              <span>Illustrative workflow</span>
             </header>
-            <div className="public-preview-score">
-              <strong>78</strong>
-              <span>/100</span>
-              <progress
-                value="78"
-                max="100"
-                aria-label="Example ATS readiness score"
-              >
-                78%
-              </progress>
-            </div>
-            <dl className="public-preview-metrics">
-              <div>
-                <dt>Strengths</dt>
-                <dd>12</dd>
-              </div>
-              <div>
-                <dt>Repairs</dt>
-                <dd>6</dd>
-              </div>
-              <div>
-                <dt>Role match</dt>
-                <dd>78%</dd>
-              </div>
-            </dl>
+            <p>
+              Review source evidence before accepting a change. Scores require
+              reliable, calibrated evidence.
+            </p>
             <div className="public-preview-queue">
               <div className="public-preview-queue-heading">
                 <h4>Repair queue</h4>
-                <span>Top priorities</span>
+                <span>Examples to review</span>
               </div>
               <ol>
                 <li>
                   <span>1</span>
-                  <p>Add quantified impact to the most recent role</p>
-                  <small>High</small>
+                  <p>Confirm any claimed impact against your source</p>
+                  <small>Review</small>
                 </li>
                 <li>
                   <span>2</span>
                   <p>Include relevant language from the target role</p>
-                  <small>High</small>
+                  <small>Review</small>
                 </li>
                 <li>
                   <span>3</span>
                   <p>Clarify scope and team size</p>
-                  <small>Medium</small>
+                  <small>Review</small>
                 </li>
               </ol>
             </div>
@@ -306,6 +319,16 @@ function AnalysisWorkspace({
   const navigation = useNavigation();
   const navigate = useNavigate();
   const latest = entries[0];
+  const historyHeading = useRef<HTMLHeadingElement>(null);
+  const previousView = useRef({ page, sort });
+  useEffect(() => {
+    if (
+      previousView.current.page !== page &&
+      previousView.current.sort === sort
+    )
+      historyHeading.current?.focus();
+    previousView.current = { page, sort };
+  }, [page, sort]);
 
   return (
     <WorkspaceShell
@@ -348,7 +371,7 @@ function AnalysisWorkspace({
               </div>
               <div className="latest-analysis-score">
                 <span>ATS score</span>
-                <strong>{scoreForEntry(latest) ?? "--"}</strong>
+                <strong>{latest.score ?? "--"}</strong>
               </div>
               <Link
                 to={actionForEntry(latest).to}
@@ -388,7 +411,13 @@ function AnalysisWorkspace({
             <div className="result-section-heading">
               <div>
                 <p className="workspace-eyebrow">Saved reviews</p>
-                <h2 id="analysis-history-heading">Analysis history</h2>
+                <h2
+                  id="analysis-history-heading"
+                  ref={historyHeading}
+                  tabIndex={-1}
+                >
+                  Analysis history
+                </h2>
               </div>
               <span>{entries.length} shown</span>
             </div>
@@ -398,7 +427,7 @@ function AnalysisWorkspace({
                 aria-label="Sort analyses"
                 value={sort}
                 onChange={(event) =>
-                  navigate(`/?page=1&sort=${event.target.value}`)
+                  navigate(`/analyses?page=1&sort=${event.target.value}`)
                 }
               >
                 <option value="recent">Latest first</option>
@@ -422,7 +451,7 @@ function AnalysisWorkspace({
                 <tbody>
                   {entries.map((entry) => {
                     const action = actionForEntry(entry);
-                    const score = scoreForEntry(entry);
+                    const score = entry.score;
                     return (
                       <tr key={entry.id}>
                         <td data-label="Target role">
@@ -457,7 +486,7 @@ function AnalysisWorkspace({
           <nav className="history-pagination" aria-label="Resume history pages">
             {page > 1 ? (
               <Link
-                to={`/?page=${page - 1}&sort=${sort}`}
+                to={`/analyses?page=${page - 1}&sort=${sort}`}
                 className="back-button"
               >
                 Previous
@@ -465,7 +494,7 @@ function AnalysisWorkspace({
             ) : null}
             {hasMore ? (
               <Link
-                to={`/?page=${page + 1}&sort=${sort}`}
+                to={`/analyses?page=${page + 1}&sort=${sort}`}
                 className="back-button"
               >
                 Next
@@ -479,10 +508,9 @@ function AnalysisWorkspace({
 }
 
 export default function Home() {
-  const { entries, page, sort, hasMore } = useLoaderData<typeof loader>();
-  const rootData = useRouteLoaderData("root") as RootLoaderData | undefined;
-
-  if (!rootData?.user) return <PublicHome />;
+  const { isWorkspace, entries, page, sort, hasMore } =
+    useLoaderData<typeof loader>();
+  if (!isWorkspace) return <PublicHome />;
   return (
     <AnalysisWorkspace
       entries={entries}

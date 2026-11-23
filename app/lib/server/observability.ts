@@ -11,6 +11,12 @@ type HistogramSummary = {
   p95: number;
   p99: number;
 };
+type HistogramSeries = {
+  samples: number[];
+  count: number;
+  sum: number;
+  buckets: { upper: number; count: number }[];
+};
 
 export type MetricsSnapshot = {
   counters: Record<string, number>;
@@ -19,6 +25,10 @@ export type MetricsSnapshot = {
 
 const MAX_SAMPLES_PER_HISTOGRAM = 2_000;
 const PROMETHEUS_HISTOGRAM_BUCKETS = [50, 100, 250, 500, 1_000, 5_000, 10_000];
+const QUEUE_AGE_BUCKETS_MS = [
+  1_000, 5_000, 10_000, 30_000, 60_000, 120_000, 180_000, 300_000, 600_000,
+  900_000, 1_800_000,
+];
 const SENSITIVE_FIELD =
   /password|secret|token|authorization|cookie|api[-_]?key|email|resume|prompt|content|description|message|raw|body|stack/i;
 
@@ -51,7 +61,7 @@ function percentile(values: readonly number[], quantile: number): number {
 
 export class MetricsRegistry {
   private readonly counters = new Map<string, number>();
-  private readonly histograms = new Map<string, number[]>();
+  private readonly histograms = new Map<string, HistogramSeries>();
 
   increment(name: string, labels: MetricLabels = {}, value = 1): void {
     if (!Number.isFinite(value) || value < 0) return;
@@ -62,15 +72,35 @@ export class MetricsRegistry {
   observe(name: string, labels: MetricLabels = {}, value: number): void {
     if (!Number.isFinite(value) || value < 0) return;
     const key = metricKey(name, labels);
-    const samples = this.histograms.get(key) ?? [];
-    if (samples.length >= MAX_SAMPLES_PER_HISTOGRAM) samples.shift();
-    samples.push(value);
-    this.histograms.set(key, samples);
+    let series = this.histograms.get(key);
+    if (!series) {
+      const boundaries =
+        name === "analysis_queue_age_ms"
+          ? QUEUE_AGE_BUCKETS_MS
+          : PROMETHEUS_HISTOGRAM_BUCKETS;
+      series = {
+        samples: [],
+        count: 0,
+        sum: 0,
+        buckets: boundaries.map((upper) => ({ upper, count: 0 })),
+      };
+      this.histograms.set(key, series);
+    }
+    // Keep snapshot percentiles bounded while exported counters remain cumulative.
+    if (series.samples.length >= MAX_SAMPLES_PER_HISTOGRAM) {
+      series.samples.shift();
+    }
+    series.samples.push(value);
+    series.count += 1;
+    series.sum += value;
+    for (const bucket of series.buckets) {
+      if (value <= bucket.upper) bucket.count += 1;
+    }
   }
 
   snapshot(): MetricsSnapshot {
     const histograms: Record<string, HistogramSummary> = {};
-    for (const [key, values] of this.histograms) {
+    for (const [key, { samples: values }] of this.histograms) {
       histograms[key] = {
         count: values.length,
         sum: values.reduce((sum, value) => sum + value, 0),
@@ -89,26 +119,23 @@ export class MetricsRegistry {
       const [name, rawLabels = ""] = key.split("|");
       lines.push(`${name}${formatPrometheusLabels(rawLabels)} ${value}`);
     }
-    for (const [key, values] of this.histograms) {
+    for (const [key, series] of this.histograms) {
       const [name, rawLabels = ""] = key.split("|");
       const labels = formatPrometheusLabels(rawLabels);
-      for (const boundary of PROMETHEUS_HISTOGRAM_BUCKETS) {
-        const bucketCount = values.filter((value) => value <= boundary).length;
+      for (const bucket of series.buckets) {
         const bucketLabels = rawLabels
-          ? `${rawLabels},le=${boundary}`
-          : `le=${boundary}`;
+          ? `${rawLabels},le=${bucket.upper}`
+          : `le=${bucket.upper}`;
         lines.push(
-          `${name}_bucket${formatPrometheusLabels(bucketLabels)} ${bucketCount}`,
+          `${name}_bucket${formatPrometheusLabels(bucketLabels)} ${bucket.count}`,
         );
       }
       const infinityLabels = rawLabels ? `${rawLabels},le=+Inf` : "le=+Inf";
       lines.push(
-        `${name}_bucket${formatPrometheusLabels(infinityLabels)} ${values.length}`,
+        `${name}_bucket${formatPrometheusLabels(infinityLabels)} ${series.count}`,
       );
-      lines.push(`${name}_count${labels} ${values.length}`);
-      lines.push(
-        `${name}_sum${labels} ${values.reduce((sum, value) => sum + value, 0)}`,
-      );
+      lines.push(`${name}_count${labels} ${series.count}`);
+      lines.push(`${name}_sum${labels} ${series.sum}`);
     }
     return `${lines.join("\n")}\n`;
   }
