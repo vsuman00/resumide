@@ -4,6 +4,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import FileUploader from "../../app/components/FileUploader";
+import { setPendingUpload } from "../../app/lib/pending-upload";
 
 afterEach(cleanup);
 
@@ -72,4 +73,22 @@ describe("FileUploader", () => {
     expect(onValidationError).toHaveBeenCalledWith(expect.any(String));
     expect(screen.queryByText("oversized.pdf")).toBeNull();
   });
+});
+
+it("preselects a PDF handed over from Build, once", () => {
+  const file = new File(["%PDF-1.7"], "document.pdf", {
+    type: "application/pdf",
+  });
+  setPendingUpload(file);
+  const onFileSelect = vi.fn();
+  render(
+    <FileUploader maxUploadBytes={5_000_000} onFileSelect={onFileSelect} />,
+  );
+  expect(onFileSelect).toHaveBeenCalledExactlyOnceWith(file);
+  expect(screen.getByText("document.pdf")).toBeTruthy();
+  expect(screen.getByText(/From Build/)).toBeTruthy();
+  cleanup();
+  const again = vi.fn();
+  render(<FileUploader maxUploadBytes={5_000_000} onFileSelect={again} />);
+  expect(again).not.toHaveBeenCalled();
 });

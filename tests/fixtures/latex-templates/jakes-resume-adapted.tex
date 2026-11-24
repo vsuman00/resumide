@@ -1,0 +1,61 @@
+% Jake's Resume (github.com/jakegut/resume, MIT) with the three common XeLaTeX edits:
+% fullpage -> geometry, color -> xcolor, verbatim removed. Synthetic content only.
+\documentclass[letterpaper,11pt]{article}
+\usepackage{latexsym}
+\usepackage[margin=0.5in]{geometry}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+\titleformat{\section}{\vspace{-4pt}\scshape\raggedright\large}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+\pdfgentounicode=1
+\newcommand{\resumeItem}[1]{\item\small{{#1 \vspace{-2pt}}}}
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+\begin{document}
+\begin{center}
+  \textbf{\Huge \scshape Alex Example} \\ \vspace{1pt}
+  \small 555-0100 $|$ \href{mailto:alex@example.com}{\underline{alex@example.com}} $|$
+  \href{https://example.com}{\underline{example.com}}
+\end{center}
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading{Example University}{Example City}{Bachelor of Science in Computing}{2019 -- 2023}
+  \resumeSubHeadingListEnd
+\section{Experience}
+  \resumeSubHeadingListStart
+    \resumeSubheading{Software Engineer}{2023 -- Present}{Example Company}{Remote}
+      \resumeItemListStart
+        \resumeItem{Developed an example REST API using a synthetic stack}
+        \resumeItem{Reduced example build times by 30\% through caching}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+\section{Technical Skills}
+ \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{\textbf{Languages}{: Example, Sample, Placeholder}}}
+ \end{itemize}
+\end{document}

@@ -351,3 +351,55 @@ describe("standalone converter HTTP boundary (compiler mocked)", () => {
     );
   });
 });
+
+describe("notices and diagnostics over HTTP (BX-03, BX-05)", () => {
+  const decode = (value: string | null) =>
+    JSON.parse(Buffer.from(value ?? "", "base64").toString("utf8"));
+  it("dispatches the neutralized copy and reports pdfLaTeX-only lines", async () => {
+    const withGlyph = source.replace(
+      "\\begin{document}",
+      "\\input{glyphtounicode}\n\\pdfgentounicode=1\n\\begin{document}",
+    );
+    const response = await latexAction(
+      request({}, JSON.stringify({ source: withGlyph, profile: "document" })),
+    );
+    expect(response.status).toBe(200);
+    const line = withGlyph.split("\n").indexOf("\\input{glyphtounicode}") + 1;
+    expect(decode(response.headers.get("X-Latex-Notices"))).toEqual([
+      { line, kind: "glyphtounicode" },
+      { line: line + 1, kind: "pdfgentounicode" },
+    ]);
+    const [prepared] = mocks.compile.mock.calls[0];
+    expect(prepared.source).toContain("%\\input{glyphtounicode}");
+    expect(prepared.source.split("\n")).toHaveLength(
+      withGlyph.split("\n").length,
+    );
+  });
+  it("returns warnings as a header and error diagnostics in JSON", async () => {
+    const warning = { kind: "overfull_box", line: 4, severity: "warning" };
+    mocks.compile.mockResolvedValueOnce({
+      pdf: new Uint8Array([1]),
+      pages: 1,
+      text: "x",
+      diagnostics: [warning],
+      durationMs: 1,
+    });
+    const ok = await latexAction(request());
+    expect(decode(ok.headers.get("X-Latex-Warnings"))).toEqual([warning]);
+    expect(decode(ok.headers.get("X-Latex-Notices"))).toEqual([]);
+    mocks.compile.mockRejectedValueOnce(
+      new LatexSandboxError("compile_failed", {
+        kind: "undefined_command",
+        line: 7,
+        severity: "error",
+      }),
+    );
+    const failed = await latexAction(request());
+    expect(failed.status).toBe(422);
+    expect(await failed.json()).toEqual({
+      code: "compile_failed",
+      error: "The document could not compile. Check the LaTeX source.",
+      diagnostic: { kind: "undefined_command", line: 7, severity: "error" },
+    });
+  });
+});

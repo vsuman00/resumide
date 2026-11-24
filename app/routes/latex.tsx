@@ -5,20 +5,54 @@ import {
   useState,
   type PointerEvent,
 } from "react";
-import { useLoaderData, type HeadersFunction } from "react-router";
+import { useLoaderData, useNavigate, type HeadersFunction } from "react-router";
 import SiteNavigation from "~/components/SiteNavigation";
 import LatexPdfPreview, {
   PDF_VERIFICATION_FAILED,
+  type PdfHighlight,
   type PdfLoadResult,
 } from "~/components/LatexPdfPreview";
-import BuildAiAssistant from "~/components/BuildAiAssistant";
-import { readLatexCompileReply } from "~/lib/latex-compile-response";
+import BuildAiAssistant, {
+  type BuildAiAssistantHandle,
+} from "~/components/BuildAiAssistant";
+import ClientOnly from "~/components/ClientOnly";
+import CompileProblems from "~/components/CompileProblems";
+import LatexEditor, {
+  type LatexEditorHandle,
+  type LineRange,
+} from "~/components/LatexEditor";
+import BuildOnboarding, {
+  BuildTips,
+  ShortcutSheet,
+  type OnboardingChoice,
+} from "~/components/BuildOnboarding";
+import {
+  isBuildOnboarded,
+  loadBuildDraft,
+  saveBuildDraft,
+  setBuildOnboarded,
+} from "~/lib/build-drafts";
+import { diagnosticSelection } from "~/lib/build-assist";
+import { BUILD_TEMPLATES } from "~/lib/build-templates";
+import {
+  LatexCompileError,
+  readLatexCompileReply,
+} from "~/lib/latex-compile-response";
 import {
   getLatexExample,
   LATEX_EXAMPLES,
   LATEX_LIMITS,
+  LATEX_PACKAGES,
+  type LatexDiagnostic,
+  type LatexNotice,
   type LatexProfile,
 } from "~/lib/latex-converter";
+import {
+  locateLineInPdf,
+  visibleTextOfLine,
+  type PdfPageItems,
+} from "~/lib/latex-line-locator";
+import { setPendingUpload } from "~/lib/pending-upload";
 import { latexLoader } from "~/lib/server/latex-converter-service";
 import styles from "~/components/LatexConverter.module.css";
 
@@ -67,14 +101,13 @@ const compileMessages: Record<string, string> = {
     "Provide a complete LaTeX document, including its document environment.",
   source_too_large:
     "Source exceeds the 48 KiB limit. Shorten it before recompiling.",
-  source_unsupported:
-    "This document uses an unsupported class or package. Try a starter example, or use geometry, titlesec, enumitem, hyperref, xcolor, amsmath, amssymb and latexsym.",
+  source_unsupported: `This document uses an unsupported class or package. Build supports the article class with ${LATEX_PACKAGES.join(", ")}. Start from a template, or remove the other packages.`,
   source_unsafe:
     "This source requests a prohibited operation. Remove external file access, shell commands and unsupported controls.",
   missing_glyph:
     "Some characters are unavailable in the compiler fonts. Replace unsupported characters and recompile.",
   layout_overflow:
-    "Content exceeds the supported page layout. Shorten long lines or adjust the document layout.",
+    "Some content runs far past the page edge. Shorten the line shown in Problems or allow it to break.",
   timeout:
     "Compilation exceeded the time limit. Simplify the document, then recompile.",
   output_invalid:
@@ -90,30 +123,6 @@ const compileMessages: Record<string, string> = {
   rate_limited: "Too many compilation requests. Wait a moment, then recompile.",
   busy: "The converter is busy. Wait a moment, then recompile.",
 };
-
-function Highlight({ source }: { source: string }) {
-  if (source.length > 24_000) return <>{source}</>;
-  return (
-    <>
-      {source.split(/(%[^\n]*|\\[a-zA-Z]+\*?|[{}$])/g).map((part, index) => (
-        <span
-          key={index}
-          className={
-            part.startsWith("%")
-              ? styles.comment
-              : part.startsWith("\\")
-                ? styles.command
-                : /^[{}$]$/.test(part)
-                  ? styles.punctuation
-                  : undefined
-          }
-        >
-          {part}
-        </span>
-      ))}
-    </>
-  );
-}
 
 export default function LatexConverter() {
   const { enabled, aiEnabled = false } = useLoaderData<{
@@ -133,6 +142,29 @@ export default function LatexConverter() {
   );
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
+  const [savedAt, setSavedAt] = useState<number | null>(null);
+  const draftLoaded = useRef(false);
+  const [diagnostics, setDiagnostics] = useState<LatexDiagnostic[]>([]);
+  const [diagnosticsSource, setDiagnosticsSource] = useState<string | null>(
+    null,
+  );
+  const [notices, setNotices] = useState<LatexNotice[]>([]);
+  const [highlight, setHighlight] = useState<PdfHighlight | null>(null);
+  const [noText, setNoText] = useState(false);
+  const [onboarding, setOnboarding] = useState<"closed" | "dialog" | "tips">(
+    "closed",
+  );
+  const [hasDraft, setHasDraft] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [shortcuts, setShortcuts] = useState(false);
+  const navigate = useNavigate();
+  const textItems = useRef<PdfPageItems[]>([]);
+  const lastLines = useRef<{
+    range: LineRange;
+    kind: "cursor" | "selection";
+  } | null>(null);
+  const aiAssistant = useRef<BuildAiAssistantHandle>(null);
+  const aiAnchor = useRef<HTMLElement>(null);
   const [error, setError] = useState<{
     message: string;
     needsSignIn?: boolean;
@@ -141,9 +173,7 @@ export default function LatexConverter() {
   const [split, setSplit] = useState(50);
   const [collapsed, setCollapsed] = useState(false);
   const [options, setOptions] = useState(false);
-  const editor = useRef<HTMLTextAreaElement>(null);
-  const highlight = useRef<HTMLPreElement>(null);
-  const numbers = useRef<HTMLDivElement>(null);
+  const editor = useRef<LatexEditorHandle>(null);
   const panes = useRef<HTMLDivElement>(null);
   const compileAlert = useRef<HTMLParagraphElement>(null);
   const compileButton = useRef<HTMLButtonElement>(null);
@@ -163,6 +193,26 @@ export default function LatexConverter() {
         : current,
     );
   }, []);
+  // Load after mount so server and client render the same first HTML.
+  useEffect(() => {
+    const draft = loadBuildDraft(window.localStorage);
+    if (draft) {
+      setSource(draft.source);
+      setSavedAt(draft.savedAt);
+      setHasDraft(true);
+    }
+    if (!isBuildOnboarded(window.localStorage)) setOnboarding("dialog");
+    draftLoaded.current = true;
+  }, []);
+  useEffect(() => {
+    if (!draftLoaded.current) return;
+    const timer = setTimeout(() => {
+      const now = Date.now();
+      saveBuildDraft(window.localStorage, source, now);
+      setSavedAt(now);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [source]);
   const outputStatus =
     output?.state === "checking"
       ? "Checking the compiled PDF..."
@@ -208,6 +258,8 @@ export default function LatexConverter() {
     endCompile();
     setOutput(null);
     setError(null);
+    setHighlight(null);
+    setNotices([]);
     setStatus("Code changed. Recompile to update the PDF.");
   }
   function changeSource(value: string) {
@@ -222,26 +274,116 @@ export default function LatexConverter() {
     setSource(value);
   }
   function insert(before: string, after = "") {
-    const input = editor.current;
-    if (!input) return;
-    const start = input.selectionStart,
-      end = input.selectionEnd;
-    changeSource(
-      source.slice(0, start) +
-        before +
-        source.slice(start, end) +
-        after +
-        source.slice(end),
-    );
-    requestAnimationFrame(() => {
-      input.focus();
-      input.setSelectionRange(start + before.length, end + before.length);
-    });
+    editor.current?.insertAround(before, after);
   }
   function example() {
     if (window.confirm("Replace the current code with this example?"))
       changeSource(getLatexExample(profile, paper));
   }
+  function onboard(choice: OnboardingChoice) {
+    if (choice.kind === "template") {
+      const template = BUILD_TEMPLATES.find((t) => t.id === choice.id);
+      if (template) changeSource(template.source());
+    } else if (choice.kind === "restore") {
+      const draft = loadBuildDraft(window.localStorage);
+      if (draft) changeSource(draft.source);
+    }
+    setBuildOnboarded(window.localStorage, true);
+    setOnboarding("tips");
+    requestAnimationFrame(() => editor.current?.focus());
+  }
+  function dismissOnboarding() {
+    setBuildOnboarded(window.localStorage, true);
+    setOnboarding("closed");
+    requestAnimationFrame(() => editor.current?.focus());
+  }
+  function finishTips() {
+    setOnboarding("closed");
+  }
+  // "?" opens the shortcut sheet unless the user is typing somewhere.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "?" || event.ctrlKey || event.metaKey || event.altKey)
+        return;
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']"))
+        return;
+      event.preventDefault();
+      setShortcuts(true);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+  // Selecting lines (or moving the cursor) highlights them in the PDF.
+  const locate = useCallback(
+    (range: LineRange) => {
+      if (!textItems.current.length) return;
+      const lines = source.split("\n");
+      // A blank line has nothing to find, so say nothing about it.
+      if (
+        !lines
+          .slice(range.startLine - 1, range.endLine)
+          .join("")
+          .trim()
+      ) {
+        setNoText(false);
+        setHighlight(null);
+        return;
+      }
+      const text = visibleTextOfLine(
+        lines.slice(range.startLine - 1, range.endLine).join(" "),
+      );
+      const hit = locateLineInPdf(
+        text,
+        range.startLine - 1,
+        lines.length,
+        textItems.current,
+      );
+      setNoText(!hit);
+      setHighlight(
+        hit
+          ? {
+              page: hit.page,
+              rects: hit.rects,
+              label:
+                range.startLine === range.endLine
+                  ? `L${range.startLine}`
+                  : `L${range.startLine}–${range.endLine}`,
+            }
+          : null,
+      );
+    },
+    [source],
+  );
+  useEffect(() => {
+    const last = lastLines.current;
+    if (!last || !pdf) return;
+    const timer = setTimeout(() => locate(last.range), 150);
+    return () => clearTimeout(timer);
+  }, [pdf, locate]);
+  function onLines(range: LineRange, kind: "cursor" | "selection") {
+    lastLines.current = { range, kind };
+    if (!pdf) return;
+    window.clearTimeout(lineTimer.current);
+    lineTimer.current = window.setTimeout(() => locate(range), 150);
+  }
+  const lineTimer = useRef(0);
+  function fixWithAi(diagnostic: LatexDiagnostic) {
+    if (!diagnostic.line) return;
+    aiAssistant.current?.open(diagnosticSelection(source, diagnostic.line), {
+      kind: diagnostic.kind,
+      line: diagnostic.line,
+    });
+  }
+  function checkThisResume() {
+    if (!pdf) return;
+    setPendingUpload(
+      new File([pdf], "document.pdf", { type: "application/pdf" }),
+    );
+    void navigate("/upload");
+  }
+  const diagnosticsStale =
+    diagnosticsSource !== null && diagnosticsSource !== source;
   async function compile() {
     if (
       !enabled ||
@@ -257,6 +399,9 @@ export default function LatexConverter() {
     setBusy(true);
     setTab("preview");
     setStatus("Compiling your current code...");
+    setDiagnostics([]);
+    setDiagnosticsSource(null);
+    const compiledSource = source;
     const timer = window.setTimeout(() => {
       if (current !== generation.current) return;
       invalidate();
@@ -273,12 +418,12 @@ export default function LatexConverter() {
         signal: controller.signal,
         cache: "no-store",
       });
-      const { pdf: result, pages: count } = await readLatexCompileReply(
-        response,
-        controller.signal,
-      );
+      const reply = await readLatexCompileReply(response, controller.signal);
       if (current !== generation.current) return;
-      setOutput({ pdf: result, pages: count, state: "checking" });
+      setOutput({ pdf: reply.pdf, pages: reply.pages, state: "checking" });
+      setNotices(reply.notices);
+      setDiagnostics(reply.diagnostics);
+      setDiagnosticsSource(compiledSource);
       setStatus("");
     } catch (cause) {
       if (current !== generation.current) return;
@@ -287,10 +432,16 @@ export default function LatexConverter() {
         ? compileMessages[code]
         : undefined;
       if (code === "unauthenticated") setTab("preview");
+      if (cause instanceof LatexCompileError && cause.diagnostic) {
+        setDiagnostics([cause.diagnostic]);
+        setDiagnosticsSource(compiledSource);
+      }
       setError({
         message:
           message ??
-          "Compilation failed. Check your code and try again, or load an example.",
+          (cause instanceof LatexCompileError && cause.diagnostic
+            ? "The document did not compile. Fix the problem listed below, then recompile."
+            : "Compilation failed. Check your code and try again, or load an example."),
         needsSignIn: code === "unauthenticated",
       });
       setStatus("");
@@ -395,67 +546,65 @@ export default function LatexConverter() {
                 >
                   List
                 </button>
-                <BuildAiAssistant
-                  source={source}
-                  editorRef={editor}
-                  enabled={aiEnabled}
-                  onApply={changeSource}
-                />
+                <div className={styles.aiAnchor}>
+                  <BuildAiAssistant
+                    ref={aiAssistant}
+                    source={source}
+                    editor={editor}
+                    anchor={aiAnchor}
+                    onOpenChange={setAiOpen}
+                    enabled={aiEnabled}
+                    onApply={changeSource}
+                    onPreview={(range, replacement) =>
+                      editor.current?.showInlineDiff(range, replacement)
+                    }
+                  />
+                </div>
                 <span className={styles.sourceCount}>
                   {bytes.toLocaleString()} /{" "}
                   {LATEX_LIMITS.sourceBytes.toLocaleString()} bytes
                 </span>
               </div>
               <div className={styles.codeArea}>
-                <div
-                  ref={numbers}
-                  className={styles.lineNumbers}
-                  aria-hidden="true"
+                <ClientOnly
+                  fallback={
+                    <textarea
+                      className={styles.codeFallback}
+                      aria-label="LaTeX source"
+                      aria-describedby="latex-source-help"
+                      spellCheck={false}
+                      value={source}
+                      onChange={(event) => changeSource(event.target.value)}
+                    />
+                  }
                 >
-                  {source
-                    .split("\n")
-                    .map((_, i) => i + 1)
-                    .join("\n")}
-                </div>
-                <div className={styles.codeLayers}>
-                  <pre
-                    ref={highlight}
-                    className={styles.highlight}
-                    aria-hidden="true"
-                  >
-                    <Highlight source={source + "\n"} />
-                  </pre>
-                  <textarea
+                  <LatexEditor
                     ref={editor}
-                    aria-label="LaTeX source"
-                    aria-describedby="latex-source-help"
-                    spellCheck={false}
-                    autoCapitalize="off"
-                    autoCorrect="off"
                     value={source}
-                    onChange={(event) => changeSource(event.target.value)}
-                    onScroll={(event) => {
-                      if (highlight.current) {
-                        highlight.current.scrollTop =
-                          event.currentTarget.scrollTop;
-                        highlight.current.scrollLeft =
-                          event.currentTarget.scrollLeft;
-                      }
-                      if (numbers.current)
-                        numbers.current.scrollTop =
-                          event.currentTarget.scrollTop;
-                    }}
-                    onKeyDown={(event) => {
-                      if (
-                        (event.ctrlKey || event.metaKey) &&
-                        event.key === "Enter"
-                      ) {
-                        event.preventDefault();
-                        void compile();
-                      }
-                    }}
+                    onChange={changeSource}
+                    onCompile={() => void compile()}
+                    onCursorLine={(line) =>
+                      onLines({ startLine: line, endLine: line }, "cursor")
+                    }
+                    onSelectionLines={(range) =>
+                      range && onLines(range, "selection")
+                    }
+                    onAskAi={() => aiAssistant.current?.open()}
+                    aiEnabled={aiEnabled && !aiOpen}
+                    diagnostics={diagnostics}
+                    onDiffKey={(action) =>
+                      action === "accept"
+                        ? aiAssistant.current?.accept()
+                        : aiAssistant.current?.reject()
+                    }
+                    onRejectedEdit={() =>
+                      setError({
+                        message:
+                          "The edit exceeds the source limit and was not applied. Use a smaller document.",
+                      })
+                    }
                   />
-                </div>
+                </ClientOnly>
               </div>
               {bytes > LATEX_LIMITS.sourceBytes && (
                 <p role="alert" className={styles.error}>
@@ -464,9 +613,9 @@ export default function LatexConverter() {
                 </p>
               )}
               <p id="latex-source-help" className={styles.editorNote}>
-                Download your PDF, then choose New analysis to review it. Ctrl/⌘
-                + Enter recompiles. This page does not save your code or PDF.
-                Generated PDFs are not tagged for screen readers.
+                Ctrl/⌘ + Enter recompiles, Ctrl/⌘ + K asks AI about the selected
+                lines. Saved only in this browser. Generated PDFs are not tagged
+                for screen readers.
               </p>
             </section>
             <div className={styles.splitterWrap}>
@@ -528,6 +677,7 @@ export default function LatexConverter() {
               </button>
             </div>
             <section
+              ref={aiAnchor}
               className={`${styles.pdfPane} ${tab !== "preview" ? styles.mobileHidden : ""}`}
               aria-label="Compilation workspace"
             >
@@ -577,6 +727,15 @@ export default function LatexConverter() {
                     }}
                   >
                     Cancel
+                  </button>
+                )}
+                {url && pdf && (
+                  <button
+                    type="button"
+                    className={styles.checkButton}
+                    onClick={checkThisResume}
+                  >
+                    Check this resume
                   </button>
                 )}
                 {url && pdf ? (
@@ -632,6 +791,18 @@ export default function LatexConverter() {
                   <button type="button" onClick={example}>
                     Load example
                   </button>
+                  <button type="button" onClick={() => setShortcuts(true)}>
+                    Keyboard shortcuts
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setBuildOnboarded(window.localStorage, false);
+                      setOnboarding("tips");
+                    }}
+                  >
+                    Show tips again
+                  </button>
                   <p>
                     Loading an example replaces the editor. Paper choice applies
                     only to the example.
@@ -665,19 +836,62 @@ export default function LatexConverter() {
                   {PDF_VERIFICATION_FAILED}
                 </p>
               )}
+              {notices.map((notice) => (
+                <p key={notice.line} role="status" className={styles.notice}>
+                  Line {notice.line} is for pdfLaTeX and was skipped. Build uses
+                  XeLaTeX, which already embeds Unicode text.
+                </p>
+              ))}
+              <CompileProblems
+                diagnostics={diagnostics}
+                stale={diagnosticsStale}
+                onJump={(line) => {
+                  setTab("code");
+                  editor.current?.goToLine(line);
+                }}
+                onFixWithAi={aiEnabled ? fixWithAi : undefined}
+              />
+              {noText && pdf && (
+                <p className={styles.noTextChip}>
+                  No visible text for this line
+                </p>
+              )}
               <p role="status" className={styles.status}>
                 {outputStatus ||
                   "Compile your current code to preview and download a PDF."}
               </p>
+              {savedAt && (
+                <p className={styles.savedAt}>
+                  Saved in this browser ·{" "}
+                  {new Date(savedAt).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              )}
               <LatexPdfPreview
                 pdf={output?.state === "invalid" ? null : (output?.pdf ?? null)}
                 pages={output?.pages ?? 0}
                 onLoadResult={onPdfLoadResult}
+                highlight={highlight}
+                onTextItems={(items) => {
+                  textItems.current = items;
+                  if (lastLines.current) locate(lastLines.current.range);
+                }}
               />
             </section>
           </div>
+          {onboarding === "tips" && <BuildTips onDone={finishTips} />}
         </div>
       </main>
+      {shortcuts && <ShortcutSheet onClose={() => setShortcuts(false)} />}
+      {onboarding === "dialog" && (
+        <BuildOnboarding
+          hasDraft={hasDraft}
+          onChoose={onboard}
+          onDismiss={dismissOnboarding}
+        />
+      )}
     </>
   );
 }

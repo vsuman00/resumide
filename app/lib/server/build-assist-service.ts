@@ -298,6 +298,9 @@ export async function buildSuggestAction(request: Request): Promise<Response> {
                 startLine: prepared.startLine,
                 endLine: prepared.endLine,
                 mode: prepared.mode,
+                ...(prepared.diagnostic
+                  ? { diagnostic: prepared.diagnostic }
+                  : {}),
                 policyVersion: prepared.policyVersion,
                 model: config.OPENAI_MODEL,
                 budgetPolicyVersion: config.AI_BUDGET_POLICY_VERSION,

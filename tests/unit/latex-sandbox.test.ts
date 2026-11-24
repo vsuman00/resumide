@@ -494,3 +494,82 @@ it("honors quarantine raised by another request while image inspection was pendi
     vi.unstubAllEnvs();
   }
 });
+
+describe("structured compiler diagnostics (BX-05)", () => {
+  async function compileWith(stdout: string) {
+    vi.resetModules();
+    vi.stubEnv("DOCKER_HOST", "unix:///synthetic/docker.sock");
+    mockDockerReplies([
+      { code: 0 },
+      { code: 0, stdout: imageId },
+      { code: 0, stdout: createdId },
+      { code: 0, stdout },
+      { code: 0 },
+      { code: 1, stderr: "No such container" },
+    ]);
+    try {
+      const { compileLatex: compile } =
+        await import("../../app/lib/server/latex-sandbox");
+      return await compile(preparedSynthetic(), { imageId }).then(
+        (value) => ({ value, error: undefined }),
+        (error: unknown) => ({ value: undefined, error }),
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  }
+  const warning = (line: number | null) => ({
+    kind: "overfull_box",
+    line,
+    severity: "warning",
+  });
+
+  it("carries an error diagnostic on the sandbox error", async () => {
+    const { error } = await compileWith(
+      JSON.stringify({
+        error: "compile_failed",
+        diagnostic: { kind: "undefined_command", line: 12 },
+      }),
+    );
+    expect(error).toMatchObject({
+      code: "compile_failed",
+      diagnostic: { kind: "undefined_command", line: 12, severity: "error" },
+    });
+  });
+  it("returns success warnings", async () => {
+    const { value } = await compileWith(
+      JSON.stringify({
+        ...JSON.parse(syntheticPdf),
+        diagnostics: [warning(3), warning(9), warning(null)],
+      }),
+    );
+    expect(value?.diagnostics).toHaveLength(3);
+    expect(value?.diagnostics[0]).toEqual(warning(3));
+  });
+  it.each([
+    ["a line over 100,000", { diagnostics: [warning(100_001)] }],
+    ["an unknown kind", { diagnostics: [{ ...warning(2), kind: "secret" }] }],
+    ["extra keys", { diagnostics: [{ ...warning(2), text: "log excerpt" }] }],
+    [
+      "more than 20 warnings",
+      { diagnostics: Array.from({ length: 21 }, (_, i) => warning(i + 1)) },
+    ],
+  ])("rejects %s as output_invalid", async (_, patch) => {
+    const { error } = await compileWith(
+      JSON.stringify({ ...JSON.parse(syntheticPdf), ...patch }),
+    );
+    expect(error).toMatchObject({ code: "output_invalid" });
+  });
+  it("rejects error replies with extra keys or a bad diagnostic", async () => {
+    for (const reply of [
+      { error: "compile_failed", log: "x" },
+      {
+        error: "compile_failed",
+        diagnostic: { kind: "other", line: 2, text: "x" },
+      },
+    ])
+      expect((await compileWith(JSON.stringify(reply))).error).toMatchObject({
+        code: "output_invalid",
+      });
+  });
+});

@@ -1,6 +1,11 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
-import { LATEX_LIMITS, LATEX_POLICY_VERSION } from "../latex-converter";
+import {
+  LATEX_DIAGNOSTIC_KINDS,
+  LATEX_LIMITS,
+  LATEX_POLICY_VERSION,
+  type LatexDiagnostic,
+} from "../latex-converter";
 import {
   validatePreparedLatexDocument,
   type PreparedLatexDocument,
@@ -36,10 +41,44 @@ const messages: Record<LatexSandboxCode, string> = {
   cleanup_failed: "The compiler is unavailable while cleanup is checked.",
 };
 export class LatexSandboxError extends Error {
-  constructor(public readonly code: LatexSandboxCode) {
+  constructor(
+    public readonly code: LatexSandboxCode,
+    public readonly diagnostic?: LatexDiagnostic,
+  ) {
     super(messages[code]);
     this.name = "LatexSandboxError";
   }
+}
+// Accept only {kind, line[, severity]} with fixed kinds; anything else is output_invalid.
+function readDiagnostic(
+  raw: unknown,
+  severity: LatexDiagnostic["severity"],
+): LatexDiagnostic {
+  const keys = severity === "warning" ? "kind,line,severity" : "kind,line";
+  if (
+    !raw ||
+    typeof raw !== "object" ||
+    Array.isArray(raw) ||
+    Object.keys(raw).sort().join(",") !== keys
+  )
+    throw new LatexSandboxError("output_invalid");
+  const { kind, line } = raw as Record<string, unknown>;
+  if (
+    !LATEX_DIAGNOSTIC_KINDS.includes(kind as LatexDiagnostic["kind"]) ||
+    (line !== null &&
+      (typeof line !== "number" ||
+        !Number.isInteger(line) ||
+        line < 1 ||
+        line > 100_000)) ||
+    (severity === "warning" &&
+      (raw as Record<string, unknown>).severity !== "warning")
+  )
+    throw new LatexSandboxError("output_invalid");
+  return {
+    kind: kind as LatexDiagnostic["kind"],
+    line: line as number | null,
+    severity,
+  };
 }
 let active = 0;
 let quarantined = false;
@@ -223,7 +262,7 @@ export type LatexCompileResult = {
   pdf: Uint8Array;
   pages: number;
   text: string;
-  diagnostics: string[];
+  diagnostics: LatexDiagnostic[];
   durationMs: number;
 };
 export async function compileLatex(
@@ -300,8 +339,17 @@ export async function compileLatex(
     if (!value || typeof value !== "object" || Array.isArray(value))
       throw new LatexSandboxError("output_invalid");
     const data = value as Record<string, unknown>;
-    if (typeof data.error === "string" && Object.hasOwn(messages, data.error))
-      throw new LatexSandboxError(data.error as LatexSandboxCode);
+    if (typeof data.error === "string" && Object.hasOwn(messages, data.error)) {
+      const keys = Object.keys(data).sort().join(",");
+      if (keys !== "error" && keys !== "diagnostic,error")
+        throw new LatexSandboxError("output_invalid");
+      throw new LatexSandboxError(
+        data.error as LatexSandboxCode,
+        "diagnostic" in data
+          ? readDiagnostic(data.diagnostic, "error")
+          : undefined,
+      );
+    }
     if (
       Object.keys(data).sort().join(",") !== "diagnostics,pages,pdf,text" ||
       typeof data.pdf !== "string" ||
@@ -314,9 +362,12 @@ export async function compileLatex(
       data.text.length > 100000 ||
       !data.text.trim() ||
       !Array.isArray(data.diagnostics) ||
-      data.diagnostics.length
+      data.diagnostics.length > 20
     )
       throw new LatexSandboxError("output_invalid");
+    const diagnostics = data.diagnostics.map((item) =>
+      readDiagnostic(item, "warning"),
+    );
     const pdf = Buffer.from(data.pdf, "base64");
     if (
       pdf.length > LATEX_LIMITS.pdfBytes ||
@@ -329,7 +380,7 @@ export async function compileLatex(
       pdf: new Uint8Array(pdf),
       pages: data.pages,
       text: data.text,
-      diagnostics: [],
+      diagnostics,
       durationMs: Math.round(performance.now() - started),
     };
   } finally {

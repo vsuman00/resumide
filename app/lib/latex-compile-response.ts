@@ -1,4 +1,9 @@
-import { LATEX_LIMITS } from "./latex-converter";
+import {
+  LATEX_DIAGNOSTIC_KINDS,
+  LATEX_LIMITS,
+  type LatexDiagnostic,
+  type LatexNotice,
+} from "./latex-converter";
 
 const errorReplyBytes = 4_096;
 
@@ -50,6 +55,54 @@ async function readBounded(
   return bytes.subarray(0, size);
 }
 
+export class LatexCompileError extends Error {
+  constructor(
+    code: string,
+    public readonly diagnostic?: LatexDiagnostic,
+  ) {
+    super(code);
+  }
+}
+const isLine = (line: unknown) =>
+  line === null ||
+  (typeof line === "number" && Number.isInteger(line) && line > 0);
+function readDiagnostic(raw: unknown, severity: LatexDiagnostic["severity"]) {
+  if (!raw || typeof raw !== "object") return undefined;
+  const { kind, line } = raw as Record<string, unknown>;
+  return LATEX_DIAGNOSTIC_KINDS.includes(kind as LatexDiagnostic["kind"]) &&
+    isLine(line)
+    ? ({ kind, line, severity } as LatexDiagnostic)
+    : undefined;
+}
+// Missing or malformed metadata degrades to "none"; it never blocks a valid PDF.
+function readHeaderList<T>(
+  value: string | null,
+  read: (item: unknown) => T | undefined,
+): T[] {
+  if (!value) return [];
+  try {
+    const list: unknown = JSON.parse(
+      new TextDecoder().decode(
+        Uint8Array.from(atob(value), (c) => c.charCodeAt(0)),
+      ),
+    );
+    return Array.isArray(list)
+      ? list.slice(0, 20).flatMap((item) => read(item) ?? [])
+      : [];
+  } catch {
+    return [];
+  }
+}
+const readNotice = (raw: unknown): LatexNotice | undefined => {
+  if (!raw || typeof raw !== "object") return undefined;
+  const { kind, line } = raw as Record<string, unknown>;
+  return (kind === "pdfgentounicode" || kind === "glyphtounicode") &&
+    typeof line === "number" &&
+    isLine(line)
+    ? { kind, line }
+    : undefined;
+};
+
 export async function readLatexCompileReply(
   response: Response,
   signal: AbortSignal,
@@ -67,7 +120,12 @@ export async function readLatexCompileReply(
         typeof body.code === "string" &&
         body.code !== "unauthenticated"
       )
-        throw new Error(body.code);
+        throw new LatexCompileError(
+          body.code,
+          "diagnostic" in body
+            ? readDiagnostic(body.diagnostic, "error")
+            : undefined,
+        );
       invalidReply();
     }
 
@@ -90,7 +148,18 @@ export async function readLatexCompileReply(
     const bytes = await readBounded(response, LATEX_LIMITS.pdfBytes, signal);
     if (String.fromCharCode(...bytes.subarray(0, 5)) !== "%PDF-")
       invalidReply();
-    return { pdf: new Blob([bytes], { type: mime }), pages };
+    return {
+      pdf: new Blob([bytes], { type: mime }),
+      pages,
+      notices: readHeaderList(
+        response.headers.get("X-Latex-Notices"),
+        readNotice,
+      ),
+      diagnostics: readHeaderList(
+        response.headers.get("X-Latex-Warnings"),
+        (item) => readDiagnostic(item, "warning"),
+      ),
+    };
   } finally {
     if (response.body && !response.bodyUsed)
       void response.body.cancel().catch(() => undefined);

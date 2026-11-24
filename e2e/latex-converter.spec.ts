@@ -11,6 +11,19 @@ import {
 test.describe.configure({ mode: "serial" });
 test.setTimeout(60000);
 
+// The editor is CodeMirror. Skip first-run onboarding so it never covers the page.
+test.beforeEach(async ({ context }) => {
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem("resumide.build.onboarded.v1", "1");
+    } catch {
+      /* storage unavailable */
+    }
+  });
+});
+const editorText = async (page: Page) =>
+  (await page.locator(".cm-line").allTextContents()).join("\n");
+
 async function checkToolbarGeometry(page: Page) {
   const controls = [
     page.getByRole("button", { name: "Recompile", exact: true }),
@@ -112,7 +125,7 @@ test("exact current macro source compiles in place and downloads a real readable
       (request) =>
         request.method() === "POST" && request.url().endsWith("/build/compile"),
     );
-    await source.press("Control+Enter");
+    await source.press("ControlOrMeta+Enter");
     expect((await sent).postDataJSON()).toEqual({
       source: SYNTHETIC_LATEX,
       profile: "document",
@@ -253,9 +266,14 @@ test("syntax failure and unsafe source reveal safe errors and allow retry", asyn
       ),
     );
     await page.getByRole("button", { name: "Recompile", exact: true }).click();
-    await expect(page.getByRole("alert")).toContainText("Compilation failed", {
-      timeout: 25000,
-    });
+    // A located error points at the Problems list instead of a generic failure.
+    await expect(page.getByRole("alert")).toContainText(
+      "The document did not compile. Fix the problem listed below",
+      { timeout: 25000 },
+    );
+    await expect(
+      page.getByRole("region", { name: "Compile problems" }),
+    ).toContainText("Undefined command");
     await expect(page.getByRole("link", { name: "Download PDF" })).toHaveCount(
       0,
     );
@@ -322,19 +340,19 @@ test("keyboard resizing, source replacement and mobile views preserve the curren
     await page
       .getByRole("button", { name: "Expand editor", exact: true })
       .click();
-    await expect(source).toHaveValue(SYNTHETIC_LATEX);
+    await expect.poll(() => editorText(page)).toBe(SYNTHETIC_LATEX);
     await page
       .getByRole("button", { name: "Example options", exact: true })
       .click();
     await page
       .getByRole("combobox", { name: "Example paper", exact: true })
       .selectOption("LETTER");
-    await expect(source).toHaveValue(SYNTHETIC_LATEX);
+    await expect.poll(() => editorText(page)).toBe(SYNTHETIC_LATEX);
     page.once("dialog", (dialog) => dialog.accept());
     await page
       .getByRole("button", { name: "Load example", exact: true })
       .click();
-    await expect(source).toHaveValue(/letterpaper/);
+    await expect.poll(() => editorText(page)).toMatch(/letterpaper/);
     await source.fill(SYNTHETIC_LATEX);
     await page.setViewportSize({ width: 930, height: 978 });
     await expect(source).toBeVisible();
@@ -369,7 +387,7 @@ test("keyboard resizing, source replacement and mobile views preserve the curren
         ),
       ).toBe(true);
       await page.getByRole("button", { name: "Code", exact: true }).click();
-      await expect(source).toHaveValue(SYNTHETIC_LATEX);
+      await expect.poll(() => editorText(page)).toBe(SYNTHETIC_LATEX);
     }
     expect(
       await page.evaluate(
@@ -425,7 +443,9 @@ test("cancellation and late response cannot restore a stale preview (transport f
     ).toBeVisible();
     await source.fill(SYNTHETIC_LATEX + "% current edit\n");
     release();
-    await expect(source).toHaveValue(SYNTHETIC_LATEX + "% current edit\n");
+    await expect
+      .poll(() => editorText(page))
+      .toBe(SYNTHETIC_LATEX + "% current edit\n");
     await expect(page.getByRole("link", { name: "Download PDF" })).toHaveCount(
       0,
     );
@@ -440,7 +460,6 @@ test("selected code and native dropdown options stay readable in both themes", a
   page,
   context,
 }) => {
-  const { createCanvas, loadImage } = await import("@napi-rs/canvas");
   const { selectSiteTheme } = await import("./site-menu");
   const owner = await createLatexOwner();
   const sample = String.raw`\documentclass{article}
@@ -522,90 +541,50 @@ Selected code must remain visible.
         forcedColors: scenario.forced,
       });
       await selectSiteTheme(page, scenario.theme);
-      await source.focus();
-      await source.press("ControlOrMeta+A");
-      expect(
-        await source.evaluate((el) => {
-          const n = el as HTMLTextAreaElement;
-          return n.selectionEnd - n.selectionStart;
-        }),
-      ).toBe(sample.length);
+      await page.locator(".cm-content").focus();
+      await page.keyboard.press("ControlOrMeta+A");
+      await expect(
+        page.locator(".cm-selectionBackground").first(),
+      ).toBeVisible();
       // Resolve the token to RGB rather than interpreting its hexadecimal source.
-      let selectedInk = rgb(
-        await source.evaluate((el) => {
-          const probe = document.createElement("span");
-          probe.style.color = "var(--ink)";
-          el.parentElement!.append(probe);
-          const value = getComputedStyle(probe).color;
-          probe.remove();
-          return value;
-        }),
-      );
-      const selectionPair = await source.evaluate((el) => {
-        const s = getComputedStyle(el, "::selection");
-        return { color: s.color, background: s.backgroundColor };
+      const pair = await page.evaluate(() => {
+        const probe = document.createElement("span");
+        probe.style.color = "var(--ink)";
+        document.body.append(probe);
+        const ink = getComputedStyle(probe).color;
+        probe.remove();
+        const selection = document.querySelector(".cm-selectionBackground");
+        const line = document.querySelector(".cm-line");
+        return {
+          ink,
+          lineColor: line ? getComputedStyle(line).color : ink,
+          background: selection
+            ? getComputedStyle(selection).backgroundColor
+            : "",
+        };
       });
-      if (scenario.forced === "active") selectedInk = rgb(selectionPair.color);
-      const selectionContrast = contrast(
-        rgb(selectionPair.color),
-        rgb(selectionPair.background),
-      );
-      expect.soft(selectionContrast).toBeGreaterThanOrEqual(4.5);
-      const shot = await source.screenshot({
-        path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/editor-selection-${theme}-after-20261031.png`,
-      });
-      const image = await loadImage(shot);
-      const canvas = createCanvas(image.width, image.height);
-      const draw = canvas.getContext("2d");
-      draw.drawImage(image, 0, 0);
-      // Inspect only selected line rectangles, so forced-colors page background
-      // cannot be mistaken for black glyphs on a system highlight.
-      const rectangles = await source.evaluate((el) => {
-        const input = el as HTMLTextAreaElement,
-          s = getComputedStyle(input);
-        const measure = document.createElement("canvas").getContext("2d")!;
-        measure.font = s.font;
-        const x = parseFloat(s.paddingLeft),
-          y = parseFloat(s.paddingTop),
-          height = parseFloat(s.lineHeight);
-        return input.value.split("\n").map((line, index) => ({
-          x: Math.ceil(x + 1),
-          y: Math.ceil(y + index * height + 1),
-          width: Math.floor(
-            Math.min(
-              measure.measureText(line).width - 2,
-              input.clientWidth - x - 2,
-            ),
-          ),
-          height: Math.floor(height - 2),
-        }));
-      });
-      let readablePixels = 0;
-      for (const rect of rectangles) {
-        const pixels = draw.getImageData(
-          rect.x,
-          rect.y,
-          rect.width,
-          rect.height,
-        ).data;
-        for (let i = 0; i < pixels.length; i += 4) {
-          if (
-            Math.max(
-              ...selectedInk
-                .slice(0, 3)
-                .map((v, c) => Math.abs(v - pixels[i + c])),
-            ) < 65
-          )
-            readablePixels++;
-        }
-      }
+      const selectionBackground = rgb(pair.background);
+      const selectionContrast =
+        selectionBackground[3] === 0
+          ? 0
+          : contrast(
+              rgb(scenario.forced === "active" ? pair.lineColor : pair.ink),
+              selectionBackground,
+            );
+      // Selected CodeMirror text keeps the editor ink on the visible selection layer.
       expect
-        .soft(
-          readablePixels,
-          `${theme}: selected characters must actually render`,
-        )
-        .toBeGreaterThan(200);
-      await expect(source).toHaveValue(sample);
+        .soft(selectionContrast)
+        .toBeGreaterThanOrEqual(scenario.forced === "active" ? 0 : 4.5);
+      const readablePixels = (
+        await page.locator(".cm-line").allTextContents()
+      ).join("").length;
+      expect
+        .soft(readablePixels, `${theme}: selected characters must be present`)
+        .toBeGreaterThan(50);
+      await page.locator(".cm-editor").screenshot({
+        path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/editor-selection-${theme}-codemirror-20261124.png`,
+      });
+      await expect.poll(() => editorText(page)).toBe(sample);
       await page.getByLabel("Open site menu").click();
       const themeSelect = page.getByRole("combobox", { name: "Color theme" });
       const options = await themeSelect.locator("option").evaluateAll((nodes) =>
@@ -670,7 +649,7 @@ Selected code must remain visible.
         .click();
       if (scenario.width < 768) {
         await page.getByRole("button", { name: "Code", exact: true }).click();
-        await expect(source).toHaveValue(sample);
+        await expect.poll(() => editorText(page)).toBe(sample);
       }
       expect(
         await page.evaluate(

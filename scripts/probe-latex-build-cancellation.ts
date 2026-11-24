@@ -26,9 +26,9 @@ import {
 } from "./build-latex-verified";
 
 export const BASE_MANIFEST =
-  "sha256:8829fd735519259880d845285b55ad24fba0ef2b16cc8c2d69f32a692870488a";
+  "sha256:68fc9a009077c09a5a892030656a23ce2e8a503d1618c38e73511b820f0d6f41";
 const LAYOUT_HASH =
-  "c2e7a81ccde0b80c97980298a2190825cbd64892f0eb9939d099eeb5d985f4d9";
+  "d367b3bbb11e7485923db3179d318594fda84b4f1d5e579ce667613310f2738d";
 export const PROBE_BUDGET = Object.freeze({
   totalMs: 45000,
   readyMs: 20000,

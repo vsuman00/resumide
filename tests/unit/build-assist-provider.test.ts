@@ -307,3 +307,57 @@ describe("Build provider transport with SDK mocked, no network", () => {
     },
   );
 });
+
+describe("Fix with AI from a compile error (BX-12)", () => {
+  const fixRequest = (diagnostic: unknown, mode = "fix") => ({
+    source,
+    sourceHash: createHash("sha256").update(source).digest("hex"),
+    startLine: 4,
+    endLine: 8,
+    mode,
+    consent: true,
+    policyVersion: BUILD_AI_POLICY_VERSION,
+    diagnostic,
+  });
+  it.each([
+    [
+      "a line outside the selection",
+      { kind: "undefined_command", line: 9 },
+      "fix",
+    ],
+    ["an unknown kind", { kind: "log_excerpt", line: 6 }, "fix"],
+    ["extra keys", { kind: "other", line: 6, text: "! Undefined" }, "fix"],
+    ["a non-fix mode", { kind: "other", line: 6 }, "rewrite"],
+  ])("rejects %s as invalid_request", (_, diagnostic, mode) => {
+    expect(() =>
+      validateBuildAssistRequest(fixRequest(diagnostic, mode)),
+    ).toThrow(expect.objectContaining({ code: "invalid_request" }));
+  });
+  it("sends only the kind and the line relative to the selection", async () => {
+    const prepared = validateBuildAssistRequest(
+      fixRequest({ kind: "undefined_command", line: 6 }),
+    );
+    await executeBuildAssist(prepared, options).catch(() => undefined);
+    const payload = JSON.parse(
+      mocks.create.mock.calls[0][0].messages[1].content,
+    );
+    expect(payload.compileError).toEqual({
+      kind: "undefined_command",
+      line: 3,
+    });
+    expect(Object.keys(payload).sort()).toEqual([
+      "afterContext",
+      "beforeContext",
+      "compileError",
+      "mode",
+      "selectedText",
+    ]);
+  });
+  it("keeps the legacy payload unchanged without a diagnostic", async () => {
+    await executeBuildAssist(prepared(), options).catch(() => undefined);
+    const payload = JSON.parse(
+      mocks.create.mock.calls[0][0].messages[1].content,
+    );
+    expect(payload.compileError).toBeUndefined();
+  });
+});

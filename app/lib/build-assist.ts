@@ -1,3 +1,4 @@
+import type { LatexDiagnosticKind } from "./latex-converter";
 export const BUILD_AI_POLICY_VERSION = "build-ai-selected-context-v2";
 export const BUILD_AI_LIMITS = Object.freeze({
   sourceBytes: 49152,
@@ -18,6 +19,10 @@ export const BUILD_AI_LIMITS = Object.freeze({
   concurrency: 2,
 });
 export type BuildAssistMode = "fix" | "rewrite" | "resume";
+export type BuildAssistDiagnostic = {
+  kind: LatexDiagnosticKind;
+  line: number;
+};
 export type BuildAssistRequest = {
   source: string;
   sourceHash: string;
@@ -26,7 +31,15 @@ export type BuildAssistRequest = {
   mode: BuildAssistMode;
   consent: true;
   policyVersion: typeof BUILD_AI_POLICY_VERSION;
+  /** A compile error to fix: only its kind and line ever leave the browser. */
+  diagnostic?: BuildAssistDiagnostic;
 };
+/** The selection for "Fix with AI": the error line and two lines either side. */
+export function diagnosticSelection(source: string, line: number) {
+  const lines = buildLineStarts(source).length;
+  const at = Math.max(1, Math.min(lines, line));
+  return { startLine: Math.max(1, at - 2), endLine: Math.min(lines, at + 2) };
+}
 export type BuildSuggestion = {
   operation: "replace" | "advice" | "no_change";
   replacement: string | null;

@@ -6,7 +6,11 @@ import {
   createSupabaseAdminClient,
   createSupabaseServerClient,
 } from "./supabase";
-import { LatexSourceError, prepareLatexDocument } from "./latex-source";
+import {
+  LatexSourceError,
+  neutralizePdfTexOnly,
+  prepareLatexDocument,
+} from "./latex-source";
 import { compileLatex, LatexSandboxError } from "./latex-sandbox";
 const privateHeaders = () =>
   new Headers({
@@ -23,10 +27,13 @@ function error(
   code: string,
   message: string,
   status: number,
+  extra: Record<string, unknown> = {},
 ) {
   secureHeaders(headers);
-  return Response.json({ error: message, code }, { status, headers });
+  return Response.json({ error: message, code, ...extra }, { status, headers });
 }
+const base64Json = (value: unknown) =>
+  Buffer.from(JSON.stringify(value), "utf8").toString("base64");
 export async function latexLoader(request: Request) {
   const headers = privateHeaders();
   try {
@@ -189,7 +196,11 @@ export async function latexAction(request: Request): Promise<Response> {
         );
       }
     }
-    const prepared = prepareLatexDocument(await boundedJson(request));
+    const body = await boundedJson(request);
+    const prepared = prepareLatexDocument(body);
+    const { notices } = neutralizePdfTexOnly(
+      (body as { source: string }).source,
+    );
     const result = await compileLatex(prepared, {
       imageId: config.LATEX_COMPILER_IMAGE,
       signal: request.signal,
@@ -198,6 +209,9 @@ export async function latexAction(request: Request): Promise<Response> {
     headers.set("Content-Type", "application/pdf");
     headers.set("Content-Disposition", 'attachment; filename="document.pdf"');
     headers.set("X-Latex-Pages", String(result.pages));
+    // Only fixed kinds and line numbers; never source or compiler text.
+    headers.set("X-Latex-Notices", base64Json(notices));
+    headers.set("X-Latex-Warnings", base64Json(result.diagnostics));
     headers.set("Content-Length", String(result.pdf.byteLength));
     return new Response(new Uint8Array(result.pdf), { headers });
   } catch (failure) {
@@ -220,6 +234,7 @@ export async function latexAction(request: Request): Promise<Response> {
             : ["runtime_unavailable", "cleanup_failed"].includes(failure.code)
               ? 503
               : 422,
+        failure.diagnostic ? { diagnostic: failure.diagnostic } : {},
       );
     return error(
       headers,

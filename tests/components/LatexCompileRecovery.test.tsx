@@ -7,6 +7,7 @@ import {
   screen,
   within,
 } from "@testing-library/react";
+import { EditorView } from "@codemirror/view";
 import { createMemoryRouter, RouterProvider } from "react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PdfLoadResult } from "~/components/LatexPdfPreview";
@@ -85,11 +86,23 @@ function mount(enabled = true) {
   );
   return render(<RouterProvider router={router} />);
 }
+// The editor is CodeMirror; drive it through its view rather than a textarea.
 function editor() {
-  return screen.getByRole("textbox", {
-    name: "LaTeX source",
-  }) as HTMLTextAreaElement;
+  return screen.getByRole("textbox", { name: "LaTeX source" });
 }
+function view() {
+  return EditorView.findFromDOM(editor().closest(".cm-editor") as HTMLElement)!;
+}
+function typeSource(value: string) {
+  const v = view();
+  act(() =>
+    v.dispatch({
+      changes: { from: 0, to: v.state.doc.length, insert: value },
+      userEvent: "input.paste",
+    }),
+  );
+}
+const editorText = () => view().state.doc.toString();
 function compileStatus() {
   return within(
     screen.getByRole("region", { name: "Compilation workspace" }),
@@ -129,6 +142,22 @@ async function flush() {
   });
 }
 beforeEach(() => {
+  // jsdom has no layout; CodeMirror only needs these to exist.
+  const rect = () =>
+    ({
+      x: 0,
+      y: 0,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      width: 0,
+      height: 0,
+      toJSON() {},
+    }) as DOMRect;
+  Range.prototype.getClientRects = () => [] as unknown as DOMRectList;
+  Range.prototype.getBoundingClientRect = rect;
+  document.elementFromPoint = () => null;
   fetchMock.mockReset();
   openPdf
     .mockReset()
@@ -161,11 +190,11 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
   ])("shows distinct prescribed %s recovery", async (code, message) => {
     fetchMock.mockResolvedValueOnce(failure(code));
     mount();
-    fireEvent.change(editor(), { target: { value: source } });
+    typeSource(source);
     compile();
     const alert = await screen.findByRole("alert");
     expect(alert.textContent).toBe(message);
-    expect(editor().value).toBe(source);
+    expect(editorText()).toBe(source);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(alert.textContent).not.toContain("PRIVATE_UNIT_RAW_SERVER_DETAIL");
   });
@@ -185,7 +214,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
   it("keeps an own published unsafe-source message and the exact fake request", async () => {
     fetchMock.mockResolvedValueOnce(failure("source_unsafe"));
     mount();
-    fireEvent.change(editor(), { target: { value: source } });
+    typeSource(source);
     compile();
     expect((await screen.findByRole("alert")).textContent).toBe(
       "This source requests a prohibited operation. Remove external file access, shell commands and unsupported controls.",
@@ -234,7 +263,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
       )
       .mockResolvedValueOnce(pdf());
     mount();
-    fireEvent.change(editor(), { target: { value: source } });
+    typeSource(source);
     compile();
     const link = await screen.findByRole("link", {
       name: "Sign in in a new tab",
@@ -243,7 +272,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
     expect(link.getAttribute("target")).toBe("_blank");
     expect(document.activeElement).toBe(screen.getByRole("alert"));
     expect(cancel).toHaveBeenCalledOnce();
-    expect(editor().value).toBe(source);
+    expect(editorText()).toBe(source);
     expect(createObjectURL).not.toHaveBeenCalled();
     compile();
     await screen.findByRole("link", { name: "Download PDF" });
@@ -312,10 +341,10 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
     fireEvent.change(screen.getByLabelText("Example paper"), {
       target: { value: "LETTER" },
     });
-    fireEvent.change(editor(), { target: { value: source } });
+    typeSource(source);
     compile();
     expect((await screen.findByRole("alert")).textContent).toBe(cleanupMessage);
-    expect(editor().value).toBe(source);
+    expect(editorText()).toBe(source);
     expect(
       (screen.getByLabelText("Example", { exact: true }) as HTMLSelectElement)
         .value,
@@ -331,7 +360,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
   it("creates the current preview/download only at the mocked PDF boundary", async () => {
     fetchMock.mockResolvedValueOnce(pdf(2));
     mount();
-    fireEvent.change(editor(), { target: { value: source } });
+    typeSource(source);
     compile();
     expect(
       (await screen.findByTestId("mock-pdf-render-boundary")).textContent,
@@ -340,7 +369,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
     expect(link.getAttribute("href")).toBe("blob:synthetic-compile-1");
     expect(link.getAttribute("download")).toBe("document.pdf");
     expect(compileStatus().textContent).toBe("PDF ready. 2 pages.");
-    expect(editor().value).toBe(source);
+    expect(editorText()).toBe(source);
     expect(createObjectURL).toHaveBeenCalledTimes(1);
   });
   it("withholds download until the current compiled PDF passes the document check", async () => {
@@ -350,7 +379,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
     });
     fetchMock.mockResolvedValueOnce(pdf(2)).mockResolvedValueOnce(pdf());
     mount();
-    fireEvent.change(editor(), { target: { value: source } });
+    typeSource(source);
     compile();
     await screen.findByTestId("mock-pdf-render-boundary");
     expect(compileStatus().textContent).toBe("Checking the compiled PDF...");
@@ -363,7 +392,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
     expect(screen.queryByTestId("mock-pdf-render-boundary")).toBeNull();
     expect(screen.queryByRole("link", { name: "Download PDF" })).toBeNull();
     expect(createObjectURL).not.toHaveBeenCalled();
-    expect(editor().value).toBe(source);
+    expect(editorText()).toBe(source);
 
     compile();
     await screen.findByRole("link", { name: "Download PDF" });
@@ -381,7 +410,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
     mount();
     compile();
     await screen.findByTestId("mock-pdf-render-boundary");
-    fireEvent.change(editor(), { target: { value: source } });
+    typeSource(source);
     compile();
     const download = await screen.findByRole("link", { name: "Download PDF" });
     await act(async () => stale.resolve());
@@ -421,7 +450,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
     mount();
     compile();
     await screen.findByRole("link", { name: "Download PDF" });
-    fireEvent.change(editor(), { target: { value: source } });
+    typeSource(source);
     expect(screen.queryByRole("link", { name: "Download PDF" })).toBeNull();
     expect(screen.queryByTestId("mock-pdf-render-boundary")).toBeNull();
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:synthetic-compile-1");
@@ -465,17 +494,17 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
     const waiting = deferred<Response>();
     fetchMock.mockReturnValueOnce(waiting.promise);
     mount();
-    fireEvent.change(editor(), { target: { value: source } });
+    typeSource(source);
     compile();
     const codeTab = screen.getByRole("button", { name: /^Code$/u });
     codeTab.focus();
     fireEvent.click(codeTab);
-    editor().focus();
+    view().focus();
     await act(async () => waiting.resolve(pdf()));
     await screen.findByRole("link", { name: "Download PDF" });
     expect(codeTab.getAttribute("aria-pressed")).toBe("true");
     expect(document.activeElement).toBe(editor());
-    expect(editor().value).toBe(source);
+    expect(editorText()).toBe(source);
     expect(compileStatus().textContent).toBe("PDF ready. 1 page.");
   });
   it.each(["cancelled", "completed"])(
@@ -509,7 +538,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
       const old = deferred<Response>();
       fetchMock.mockReturnValueOnce(old.promise).mockResolvedValueOnce(pdf(2));
       mount();
-      fireEvent.change(editor(), { target: { value: source } });
+      typeSource(source);
       compile();
       const signal = fetchMock.mock.calls[0][1]?.signal;
       fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
@@ -525,7 +554,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
       compile();
       await screen.findByRole("link", { name: "Download PDF" });
       expect(compileStatus().textContent).toBe("PDF ready. 2 pages.");
-      expect(editor().value).toBe(source);
+      expect(editorText()).toBe(source);
       expect(fetchMock).toHaveBeenCalledTimes(2);
     },
   );
@@ -537,7 +566,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
       mount();
       compile();
       const signal = fetchMock.mock.calls[0][1]?.signal;
-      fireEvent.change(editor(), { target: { value: source } });
+      typeSource(source);
       expect(signal?.aborted).toBe(true);
       compile();
       await screen.findByRole("link", { name: "Download PDF" });
@@ -551,7 +580,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
       expect(
         screen.getByTestId("mock-pdf-render-boundary").textContent,
       ).toContain("2 page(s)");
-      expect(editor().value).toBe(source);
+      expect(editorText()).toBe(source);
     },
   );
   it.each(["success", "failure"])(
@@ -628,7 +657,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
     );
     fetchMock.mockResolvedValueOnce(older).mockResolvedValueOnce(pdf(2));
     mount();
-    fireEvent.change(editor(), { target: { value: source } });
+    typeSource(source);
     compile();
     await act(async () => pulling.promise);
     const callback = timer.mock.calls.find(
@@ -640,7 +669,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
     expect(screen.getByRole("alert").textContent).toBe(
       "Compilation stopped. You can recompile when ready.",
     );
-    expect(editor().value).toBe(source);
+    expect(editorText()).toBe(source);
     compile();
     await screen.findByRole("link", { name: "Download PDF" });
     expect(cancel).toHaveBeenCalledOnce();
@@ -654,7 +683,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
   });
   it("keeps compilation disabled while allowing source edits", async () => {
     mount(false);
-    fireEvent.change(editor(), { target: { value: source } });
+    typeSource(source);
     const button = screen.getByRole("button", {
       name: "Recompile",
     }) as HTMLButtonElement;
@@ -663,7 +692,7 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
     fireEvent.keyDown(editor(), { key: "Enter", ctrlKey: true });
     await flush();
     expect(fetchMock).not.toHaveBeenCalled();
-    expect(editor().value).toBe(source);
+    expect(editorText()).toBe(source);
     expect(
       screen.getByText(
         "PDF compilation is turned off for this workspace. You can still edit your code.",
@@ -672,15 +701,13 @@ describe("actual Build route compile recovery with fake HTTP/PDF boundaries", ()
   });
   it("preserves the source byte limit and refuses over-limit editing/dispatch", async () => {
     mount();
-    fireEvent.change(editor(), {
-      target: { value: "a".repeat(LATEX_LIMITS.sourceBytes + 1) },
-    });
+    typeSource("a".repeat(LATEX_LIMITS.sourceBytes + 1));
     expect((await screen.findByRole("alert")).textContent).toBe(
       "The edit exceeds the source limit and was not applied. Use a smaller document.",
     );
     const multibyte = "界".repeat(Math.floor(LATEX_LIMITS.sourceBytes / 3) + 1);
-    fireEvent.change(editor(), { target: { value: multibyte } });
-    expect(editor().value).toBe(multibyte);
+    typeSource(multibyte);
+    expect(editorText()).toBe(multibyte);
     expect(screen.getByRole("alert").textContent).toBe(
       "Source exceeds the 48 KiB limit. Shorten it before recompiling.",
     );

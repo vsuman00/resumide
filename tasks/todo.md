@@ -4,6 +4,7 @@ Status: **PARTIAL; CANDIDATE B2C BASELINE IMPLEMENTED; AA0 APPROVED 2026-10-04; 
 Plan: [`plan.md`](plan.md)
 AA3 status: **LOCAL IMPLEMENTATION DELIVERED; DOMAIN/DATA ACCEPTANCE OPEN**
 Accuracy-v2 subplan: [`accuracy-authoring-plan.md`](accuracy-authoring-plan.md)
+Build experience plan: **APPROVED 2026-11-23; IMPLEMENTED AND LOCALLY VERIFIED 2026-11-24 (PARTIAL: not committed, release not accepted)** — [`build-experience-plan.md`](build-experience-plan.md), tracked under [Build experience](#build-experience-plan--approved-2026-11-23-implemented-and-locally-verified-2026-11-24)
 Architecture: [`../ARCHITECTURE.md`](../ARCHITECTURE.md)
 
 ## Task rules
@@ -467,6 +468,85 @@ Always Free Mumbai deployment plan. The [proposed plan](../docs/operations/ORACL
 contains prerequisites, ordered tasks and separate provider, staging and release
 gates. It does not change the approved Fly decision or authorize provisioning,
 hosted testing, real data or deployment; the localhost-first direction remains.
+
+### Build experience plan — APPROVED 2026-11-23; IMPLEMENTED AND LOCALLY VERIFIED 2026-11-24
+
+The owner approved [`build-experience-plan.md`](build-experience-plan.md) on 2026-11-23. It makes `/build` comparable to Overleaf for single-file resumes: autosave, template compatibility, line-level errors, a CodeMirror editor, a code-to-PDF highlight, inline AI on selection, onboarding and polish. The owner also decided to keep XeLaTeX, approved CodeMirror 6, chose a code-line highlight in the PDF with an `L<n>` margin label, and chose in-app onboarding for end users. Coding has not started. It begins when the owner asks.
+
+Rules for this section:
+
+- Each task follows its plan section's files, interfaces and test steps.
+- Check a row only when the plan's verification step passes, and link the evidence. Store evidence under `agent-handoffs/build-experience/`.
+- Tasks 4–6 change the compiler image. They stay disabled until BX-06 re-qualifies the new image ID.
+- The global constraints in the plan apply to every task: no server-side storage of source or PDFs, unchanged limits, per-request AI consent, content-free diagnostics, and default-off flags.
+- Status labels: **PLANNED**, **IN PROGRESS**, **PARTIAL**, **VERIFIED**, **BLOCKED** (name the missing decision), as defined in `ARCHITECTURE.md` §2.
+
+#### Owner decisions required
+
+- [x] **BX-D1, Task 5 (approved 2026-11-24, refined):** approve turning overfull `\hbox`/`\vbox` notices from compile failures into warnings. Evidence for the change: the owner's resume was rejected for a 0.78-point overflow ([2026-10-31 repair](../docs/evaluation/LATEX_DOCUMENT_OVERFLOW_REPAIR_20261031.md)). Blocks BX-05.
+- [x] **BX-D2, Task 4 (approved 2026-11-24):** approve the final package list after the BX-02 corpus report. Blocks BX-04.
+- [ ] **BX-D3, Task 11:** keep AI consent per request (current policy), or approve remembering consent per session (a privacy policy change). The default is per request, so this does not block BX-11.
+- [ ] **BX-D4, Task 12:** authorise one live provider probe for "Fix with AI". This does not block the stubbed-provider verification.
+
+#### Phase 0 — browser-only fixes (no compiler image change)
+
+- [ ] **PARTIAL** [BX-01](build-experience-plan.md#task-1-autosave-drafts-in-the-browser): Autosave drafts in browser storage, with 5 snapshots and safe recovery from corrupt or oversized drafts. Implemented 2026-11-24: `app/lib/build-drafts.ts`, `/build` autosave (800 ms), tests `tests/unit/build-drafts.test.ts` (5) and `latex-routes.test.ts` pass, typecheck and lint clean. Browser check of reload recovery still open.
+  - Done when: `tests/unit/build-drafts.test.ts` and `tests/unit/latex-routes.test.ts` pass, and the editor note no longer says the page doesn't save.
+- [ ] **PARTIAL** [BX-02](build-experience-plan.md#task-2-template-compatibility-corpus-and-report): Build a 12-template synthetic corpus and a compatibility report.
+  - Done when: `template-baseline.json` records admission and compile results for every template, with and without the image.
+- [ ] **PARTIAL** [BX-03](build-experience-plan.md#task-3-handle-pdflatex-only-lines-with-a-notice): Skip `\pdfgentounicode=1` and `\input{glyphtounicode}` with a visible notice, without rewriting editor source. Depends on BX-02.
+  - Done when: `tests/unit/latex-source.test.ts` and `tests/unit/latex-service.test.ts` pass, and other `\input` uses are still rejected.
+
+#### Phase 1 — one compiler image rebuild
+
+- [ ] **PARTIAL** [BX-04](build-experience-plan.md#task-4-expand-packages-from-the-corpus-data): Admit resume-template packages that 2 or more corpus templates need. Depends on BX-02 and BX-D2.
+  - Done when: the package and option tests pass and `npm run test:latex` passes.
+- [ ] **PARTIAL** [BX-05](build-experience-plan.md#task-5-structured-diagnostics-overfull-boxes-become-warnings): Return `{kind, line}` diagnostics, and turn overfull boxes into warnings. Depends on BX-D1.
+  - Done when: `tests/unit/latex-sandbox.test.ts` and `tests/unit/latex-service.test.ts` pass, and no log text leaves the supervisor.
+- [ ] **PARTIAL** [BX-06](build-experience-plan.md#task-6-rebuild-and-re-qualify-the-image): Rebuild and re-qualify the compiler image. Depends on BX-03, BX-04 and BX-05.
+  - Done when: the runbook's runtime suite passes on the new `sha256:` ID, every `expected: "compile"` template compiles (including the synthetic overflow case), and the Trivy comparison against the 79-high baseline is recorded for owner disposition.
+
+#### Phase 2 — editor and preview
+
+- [ ] **PARTIAL** [BX-07](build-experience-plan.md#task-7-codemirror-editor-component): Replace the text box with a CodeMirror 6 editor (LaTeX mode, brackets, search, Tab indent, ⌘/Ctrl+Enter, ⌘/Ctrl+/, error gutter).
+  - Done when: `tests/components/latex-editor.test.tsx` and `e2e/latex-converter.spec.ts` pass with zero serious Axe findings.
+- [ ] **PARTIAL** [BX-08](build-experience-plan.md#task-8-problems-panel-with-jump-to-line): Add a Problems panel with jump-to-line and stale-compile protection. Depends on BX-05 and BX-07.
+  - Done when: `tests/components/compile-problems.test.tsx` passes.
+- [ ] **PARTIAL** [BX-09](build-experience-plan.md#task-9-continuous-preview-with-a-text-and-link-layer): Continuous multi-page preview with selectable text and safe links (`http`, `https` and `mailto` only).
+  - Done when: `tests/unit/pdf-links.test.ts`, `tests/components/latex-pdf-preview.test.tsx` and the Build e2e pass.
+- [ ] **PARTIAL** [BX-10](build-experience-plan.md#task-10-highlight-the-selected-code-line-in-the-pdf): Highlight the selected code line in the PDF with an `L<n>` margin label. Depends on BX-07 and BX-09.
+  - Done when: `tests/unit/latex-line-locator.test.ts` passes and a Chrome check shows the correct page and label.
+
+#### Phase 3 — inline AI
+
+- [ ] **PARTIAL** [BX-11](build-experience-plan.md#task-11-selection-triggered-inline-ai-with-diff-and-acceptreject): Selection-triggered AI (✦ chip and ⌘/Ctrl+K) offering fix, rewrite and resume wording, shown as an inline diff with Tab to accept and Esc to reject, plus a PDF highlight. Depends on BX-07 and BX-10.
+  - Done when: `npm run test:build-ai`, `tests/components/build-ai-assistant.test.tsx` and `e2e/build-assist.spec.ts` (stubbed provider) pass with zero serious Axe findings.
+- [ ] **PARTIAL** [BX-12](build-experience-plan.md#task-12-fix-with-ai-from-a-compile-error): "Fix with AI" from a compile error. Depends on BX-08 and BX-11.
+  - Done when: `npm run test:build-ai` passes. The live probe waits for BX-D4.
+
+#### Phase 4 — onboarding and polish
+
+- [ ] **PARTIAL** [BX-13](build-experience-plan.md#task-13-first-run-onboarding-and-template-gallery): First-run onboarding, template gallery and coach marks. Depends on BX-01 and BX-06.
+  - Done when: `tests/components/build-onboarding.test.tsx` passes with zero serious Axe findings.
+- [ ] **PARTIAL** [BX-14](build-experience-plan.md#task-14-check-this-resume-handoff-to-the-analyzer): "Check this resume" hands the PDF to `/upload` without submitting it.
+  - Done when: `tests/unit/pending-upload.test.ts` and the Build e2e handoff case pass.
+- [ ] **PARTIAL** [BX-15](build-experience-plan.md#task-15-polish-pass-to-the-quality-bar): Polish pass to the plan's quality bar, then update `docs/design/LATEX_CONVERTER.md`. Depends on BX-07 to BX-14.
+  - Done when: the `design-review` findings are fixed, and both Build e2e suites pass at 390, 768, 1366 and 1440 px, in light and dark, and at 200% zoom.
+
+**Implementation evidence, 2026-11-24** (Node 22.23.4, dirty working tree on `wip/reliability-snapshot-20261123`; nothing committed; synthetic data only):
+
+- **BX-D1 as built:** overfull boxes up to 20 pt compile with a line-level warning. Larger overflow still fails as `layout_overflow`, because the runbook verifier showed that treating every size as a warning let text sit fully off the page (a hidden-text risk). The 0.78 pt owner case compiles.
+- **BX-D2 as built:** admitted `fancyhdr`, `tabularx`, `array`, `marvosym`, `babel[english]` and `parskip`. `fontawesome5` is deferred because it needs `texlive-fonts-extra` (about 1.7 GB installed). `multicol`, `ragged2e` and `fontenc` were each needed by only one corpus template, so they stay out.
+- **BX-06 image:** `sha256:e7a49adc9a9c232ffa99894d84d4e65fac5aae7b251c42f54b0e732dde01d23a`, built through the reviewed wrapper on Docker 29.9.3 with a fresh cancellation probe. Two earlier candidates were withdrawn after the verifier found real gaps (a readable `shellesc.sty`; off-page overflow). The runbook verifier passes 31 checks, the 12-template corpus matches its manifest, the six starter profiles pass (p95 786 ms), and rollback passes. Trivy found 0 critical and 145 high findings (47 unique CVEs) against the 79 high baseline, with no Dockerfile change; this needs owner disposition. Release stays disabled. [Receipt](agent-handoffs/build-experience/image-requalification.json)
+- **Unit and component checks:** `npm test` runs 349 files and 7,346 tests, all passing. Typecheck and lint show no errors, and `check:latex:source`, `check:build-ai:source`, both builds and the Python self-tests pass. The JD Unicode tests need the pinned Node v22.23.4, not a newer Node.
+- **Chrome (real compiler image, real login, synthetic users):** 13 Build tests and 6 inline-AI tests pass with zero Axe violations. They cover onboarding, autosave and reload, the PDF line highlight with its `L<n>` label, the error list with jump, warnings, the pdfLaTeX notice, the checker handoff, the inline diff with Tab and Esc, four widths in light and dark with no horizontal scroll, and reduced motion. Screenshots are in `docs/evaluation/*-20261124.png`.
+- **Not verified:** a live provider call (BX-D4 not authorised) and the hosted AI budget path. The inline-AI browser tests answer `/build/suggest` at the browser boundary, and the server checks are covered by unit tests. Managed Build acceptance, a human screen-reader pass, other browsers, and production hosting are still open. One synthetic test account from an earlier run remains on the test project; it is not in this session's ledger.
+
+**Follow-up, 2026-11-24 (second Chrome pass, same environment):** Three more browser tests pass against the real compiler: all six gallery templates compile from the UI (about 2 minutes, paced for the 3-per-minute rate limit), a three-page document scrolls with a following page indicator and safe links, and a paste at exactly 49,152 bytes is accepted while a larger one is refused with the draft intact. These found and fixed one product bug: a highlight on a page scrolled out of view was not brought into view, because the check used the window instead of the preview's own scroll area. Final totals: 349 files and 7,346 unit and component tests; Chrome 16 core and 6 inline-AI tests, all with zero Axe violations.
+
+**Recommended order:** BX-01 → BX-02 → BX-05 (after BX-D1) → BX-03 / BX-04 → BX-06 → BX-07 / BX-08 → BX-10 / BX-11 → BX-09, BX-12 to BX-15.
+
+**Related review:** the [2026-11-23 enterprise architecture review](../docs/reviews/2026-11-23-enterprise-architecture-review.md) records that `/build/compile` runs Docker from the web request. Moving the compiler into its own worker is a deployment task and outside this plan.
 
 ## Gate A0 decision record - 2026-09-09
 

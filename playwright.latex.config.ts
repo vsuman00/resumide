@@ -12,7 +12,7 @@ if (
 
 export default defineConfig({
   testDir: "./e2e",
-  testMatch: "latex-converter.spec.ts",
+  testMatch: ["latex-converter.spec.ts", "build-experience.spec.ts"],
   outputDir: process.env.BROWSER_PRIVATE_OUTPUT_DIR,
   fullyParallel: false,
   workers: 1,

@@ -1,0 +1,75 @@
+{
+  "id": "BX-06",
+  "date": "2026-11-24",
+  "status": "LOCAL_CANDIDATE_VERIFIED_NOT_RELEASE_ACCEPTED",
+  "imageId": "sha256:e7a49adc9a9c232ffa99894d84d4e65fac5aae7b251c42f54b0e732dde01d23a",
+  "imageTag": "resumide-latex:local-b29af087d5b9b0d7e17ded83",
+  "buildPacketFingerprint": "d3ced7826e1ac59ade8a7588950ea1e2a7744a7adfab4f7c4e2a1f6300dc0ff3",
+  "cancellationProbe": {
+    "fingerprint": "b7c4c4333e3f390800da0283ce207646c93b3018ce43e879eeb9aa0a48e9b996",
+    "status": "pass",
+    "daemonStatus": "canceled",
+    "newProbeBaseManifest": "sha256:68fc9a009077c09a5a892030656a23ce2e8a503d1618c38e73511b820f0d6f41",
+    "note": "Old probe base image was absent; a new local debian:trixie-slim + python3-minimal 7-layer OCI layout was re-pinned in scripts/probe-latex-build-cancellation.ts"
+  },
+  "toolchain": {
+    "docker": "29.9.3",
+    "buildx": "v0.38.1",
+    "buildkit": "v0.34.2",
+    "node": "22.23.5"
+  },
+  "withdrawnCandidates": [
+    {
+      "imageId": "sha256:2dce2827c6f760cb85088b8022fd5b6f6983c2fe5eed3ce0fb7a9d3aeaa5be1e",
+      "reason": "closure granted all of tex/latex/tools; shellesc.sty readable (verifier unsupported-package)"
+    },
+    {
+      "imageId": "sha256:110feecbb77b2e11abbead038aeb21e34b908d86dbe8de1e9393995b25aba249",
+      "reason": "overfull boxes of any size became warnings; fully off-page text compiled (verifier off-page-layout)"
+    }
+  ],
+  "runbookVerifier": "verify-latex-e7a49adc.json (31 checks, exit 0)",
+  "templateCorpus": "template-image-e7a49adc.json (12/12 match manifest)",
+  "starterProfiles": {
+    "samples": 6,
+    "p95Ms": 786,
+    "allHeadingOrderPass": true
+  },
+  "rollback": {
+    "imageId": "sha256:e7a49adc9a9c232ffa99894d84d4e65fac5aae7b251c42f54b0e732dde01d23a",
+    "flagOffUnitHttpBoundary": "pass",
+    "stoppedOwnedContainerRefusesAdmission": "pass",
+    "exactOwnedContainerRemoved": "pass",
+    "sameProcessRetainsQuarantine": "pass",
+    "freshProcessCompile": "pass",
+    "pdfBytes": 14077,
+    "pages": 2,
+    "pdfSha256": "d649b6b2bedbd7622f95a919e994b40ece49c1df268bc1a4c98ba07756c32926",
+    "ownedContainersRemaining": 0
+  },
+  "trivy": {
+    "scanner": "aquasec/trivy:0.69.1",
+    "scannedOn": "2026-11-24",
+    "critical": 0,
+    "highFindings": 145,
+    "uniqueHighCves": 47,
+    "baselineHighFindings": 79,
+    "dockerfileChanged": false,
+    "note": "Installed package set unchanged from the reviewed recipe (no Dockerfile change); the increase reflects a newer vulnerability database. Owner disposition required; release stays disabled."
+  },
+  "policy": {
+    "overfullBoxes": "warning up to 20pt (BX-D1); larger overflow fails as layout_overflow",
+    "admittedPackages": [
+      "fancyhdr",
+      "tabularx",
+      "array",
+      "marvosym",
+      "babel[english]",
+      "parskip"
+    ],
+    "deferred": {
+      "fontawesome5": "needs texlive-fonts-extra (~1.7 GB installed)"
+    }
+  },
+  "releaseAccepted": false
+}

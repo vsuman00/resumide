@@ -6,6 +6,7 @@ import {
   getLatexExample,
 } from "../../app/lib/latex-converter";
 import {
+  neutralizePdfTexOnly,
   prepareLatexDocument,
   validatePreparedLatexDocument,
 } from "../../app/lib/server/latex-source";
@@ -152,4 +153,73 @@ describe("standalone LaTeX source admission", () => {
       expect(() => validatePreparedLatexDocument(forged)).toThrow();
     },
   );
+});
+
+describe("pdfLaTeX-only lines (BX-03)", () => {
+  const wrap = (line: string) =>
+    String.raw`\documentclass{article}
+\usepackage{hyperref}
+` +
+    line +
+    String.raw`
+\begin{document}
+Text.
+\end{document}`;
+  it.each([
+    [String.raw`\pdfgentounicode=1`, "pdfgentounicode"],
+    [String.raw`  \input{glyphtounicode}  `, "glyphtounicode"],
+    [String.raw`\input glyphtounicode`, "glyphtounicode"],
+  ])("neutralizes %s on line 3 and keeps line count", (line, kind) => {
+    const source = wrap(line);
+    const result = neutralizePdfTexOnly(source);
+    expect(result.notices).toEqual([{ line: 3, kind }]);
+    expect(result.source.split("\n")).toHaveLength(source.split("\n").length);
+    expect(result.source.split("\n")[2]).toBe("%" + line);
+    const prepared = prepareLatexDocument(input(source));
+    expect(prepared.source).toBe(result.source);
+    expect(prepared.sourceHash).toBe(
+      createHash("sha256").update(result.source, "utf8").digest("hex"),
+    );
+    expect(validatePreparedLatexDocument(prepared).source).toBe(result.source);
+  });
+  it("still rejects other inputs, including a combined line", () => {
+    expect(() =>
+      prepareLatexDocument(input(wrap(String.raw`\input{other}`))),
+    ).toThrow(expect.objectContaining({ code: "source_unsafe" }));
+    expect(() =>
+      prepareLatexDocument(
+        input(wrap(String.raw`\input{glyphtounicode}\input{x}`)),
+      ),
+    ).toThrow(expect.objectContaining({ code: "source_unsafe" }));
+  });
+});
+
+describe("resume template packages (BX-04)", () => {
+  const withPackage = (use: string) =>
+    String.raw`\documentclass{article}
+` +
+    use +
+    String.raw`
+\begin{document}
+Text.
+\end{document}`;
+  it.each([
+    String.raw`\usepackage{fancyhdr}`,
+    String.raw`\usepackage{tabularx,array}`,
+    String.raw`\usepackage{marvosym}`,
+    String.raw`\usepackage[english]{babel}`,
+    String.raw`\usepackage[skip=6pt]{parskip}`,
+  ])("admits %s", (use) => {
+    expect(() => prepareLatexDocument(input(withPackage(use)))).not.toThrow();
+  });
+  it.each([
+    String.raw`\usepackage[french]{babel}`,
+    String.raw`\usepackage{fontawesome5}`,
+    String.raw`\usepackage{multicol}`,
+    String.raw`\usepackage[skip=\medskipamount]{parskip}`,
+  ])("rejects %s as unsupported", (use) => {
+    expect(() => prepareLatexDocument(input(withPackage(use)))).toThrow(
+      expect.objectContaining({ code: "source_unsupported" }),
+    );
+  });
 });

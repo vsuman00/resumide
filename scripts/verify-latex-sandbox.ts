@@ -122,13 +122,21 @@ assert set(closure['elfInterpreters'])=={path for group in loaders.values() for 
 print(json.dumps({'runtimeHashes':{p:hashlib.sha256(pathlib.Path('/opt/latex',p).read_bytes()).hexdigest() for p in paths},'manifestSha256':hashlib.sha256(manifest).hexdigest(),'closureFiles':len(closure['files']),'snapshot':closure['snapshot'],'packagesSha256':hashlib.sha256(pathlib.Path('/opt/latex/packages.lock').read_bytes()).hexdigest(),'requiredStyles':{pathlib.Path(path).name:{'path':path,'sha256':digest} for path,digest in styles.items()},'requiredFonts':font_groups,'requiredRuntime':inventoried(closure['requiredRuntime']),'requiredTransitiveFiles':inventoried(closure['requiredTransitiveFiles']),'engineLoaders':loaders,'fontconfig':fontconfig}))`,
     ],
   });
+  // BX-04: the admitted package set plus babel's English definitions.
   assert.deepEqual(Object.keys(inventory.value.requiredStyles).sort(), [
     "amsmath.sty",
     "amssymb.sty",
+    "array.sty",
+    "babel.sty",
+    "english.ldf",
     "enumitem.sty",
+    "fancyhdr.sty",
     "geometry.sty",
     "hyperref.sty",
     "latexsym.sty",
+    "marvosym.sty",
+    "parskip.sty",
+    "tabularx.sty",
     "titlesec.sty",
     "xcolor.sty",
   ]);
@@ -649,6 +657,10 @@ print(json.dumps({'parser':'pypdf','version':pypdf.__version__,'legacyParserPres
       "overfull-layout",
       wrap(String.raw`\hbox to 1pt{An intentionally long synthetic box.}`),
     ],
+    [
+      "off-page-layout",
+      wrap(String.raw`\noindent\mbox{\hspace{25cm}Off-page synthetic text}`),
+    ],
     ["recursive-macro", wrap(String.raw`\def\forever{\forever}\forever`)],
     ["cpu-loop", wrap(String.raw`\loop\iftrue\repeat`)],
   ];
@@ -658,7 +670,7 @@ print(json.dumps({'parser':'pypdf','version':pypdf.__version__,'legacyParserPres
       typeof result.value.error === "string",
       `${name} produced downloadable output`,
     );
-    if (name === "overfull-layout")
+    if (name === "overfull-layout" || name === "off-page-layout")
       assert.equal(result.value.error, "layout_overflow");
     assert.ok(
       !JSON.stringify(result.value).includes("/etc/passwd"),
@@ -670,6 +682,16 @@ print(json.dumps({'parser':'pypdf','version':pypdf.__version__,'legacyParserPres
       durationMs: result.durationMs,
     });
   }
+  // BX-D1: a small overfull line (the 0.78pt owner case) compiles with a warning only.
+  const overfull = await rawLatexAttempt(
+    imageId,
+    wrap(String.raw`\noindent\rule{\dimexpr\linewidth+0.78pt\relax}{0.4pt}`),
+  );
+  assert.equal(overfull.value.error, undefined, "Overfull box must compile");
+  assert.deepEqual(overfull.value.diagnostics, [
+    { kind: "overfull_box", line: 3, severity: "warning" },
+  ]);
+  checks.push({ name: "overfull-layout-warning", pass: true });
   checks.push(...(await verifyLatexLifecycle(imageId)));
   return {
     policyVersion: LATEX_POLICY_VERSION,

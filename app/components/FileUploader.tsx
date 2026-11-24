@@ -1,6 +1,7 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useDropzone, type FileRejection } from "react-dropzone";
 import { formatSize } from "~/lib/utils";
+import { takePendingUpload } from "~/lib/pending-upload";
 import EvidenceScene3D from "~/components/EvidenceScene3D";
 
 interface FileUploaderProps {
@@ -15,6 +16,17 @@ const FileUploader = ({
   onValidationError,
 }: FileUploaderProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [fromBuild, setFromBuild] = useState(false);
+  const mountProps = useRef({ onFileSelect, maxUploadBytes });
+  // A PDF compiled in Build arrives preselected once; the user still submits it.
+  useEffect(() => {
+    const file = takePendingUpload();
+    const { onFileSelect: select, maxUploadBytes: limit } = mountProps.current;
+    if (!file || file.type !== "application/pdf" || file.size > limit) return;
+    setSelectedFile(file);
+    setFromBuild(true);
+    select(file);
+  }, []);
   const onDrop = useCallback(
     <T extends File>(
       acceptedFiles: T[],
@@ -31,6 +43,7 @@ const FileUploader = ({
       }
 
       onValidationError?.("");
+      setFromBuild(false);
       const nextFile = acceptedFiles[0] ?? null;
       setSelectedFile(nextFile);
       onFileSelect(nextFile);
@@ -63,7 +76,12 @@ const FileUploader = ({
             </span>
             <div className="file-dropzone-file-details">
               <p>{selectedFile.name}</p>
-              <span>{formatSize(selectedFile.size)} PDF</span>
+              <span>
+                {formatSize(selectedFile.size)} PDF
+                {fromBuild && (
+                  <span className="file-from-build"> · From Build</span>
+                )}
+              </span>
             </div>
             <div className="file-dropzone-actions">
               <button
@@ -85,6 +103,7 @@ const FileUploader = ({
                   event.preventDefault();
                   event.stopPropagation();
                   setSelectedFile(null);
+                  setFromBuild(false);
                   if (inputRef.current) inputRef.current.value = "";
                   onFileSelect(null);
                   onValidationError?.("");

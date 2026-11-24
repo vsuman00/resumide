@@ -6,6 +6,124 @@ export const LATEX_LIMITS = Object.freeze({
   timeoutMs: 20_000,
   concurrency: 2,
 });
+export type LatexNotice = {
+  line: number;
+  kind: "pdfgentounicode" | "glyphtounicode";
+};
+export type LatexDiagnosticKind =
+  | "undefined_command"
+  | "missing_brace"
+  | "missing_package"
+  | "environment_mismatch"
+  | "overfull_box"
+  | "other";
+export type LatexDiagnostic = {
+  kind: LatexDiagnosticKind;
+  line: number | null;
+  severity: "error" | "warning";
+};
+export const LATEX_DIAGNOSTIC_KINDS: readonly LatexDiagnosticKind[] = [
+  "undefined_command",
+  "missing_brace",
+  "missing_package",
+  "environment_mismatch",
+  "overfull_box",
+  "other",
+];
+export const LATEX_PACKAGES: readonly string[] = Object.freeze([
+  "titlesec",
+  "latexsym",
+  "amssymb",
+  "amsmath",
+  "enumitem",
+  "geometry",
+  "hyperref",
+  "xcolor",
+  "fancyhdr",
+  "tabularx",
+  "array",
+  "marvosym",
+  "babel",
+  "parskip",
+]);
+export const LATEX_PACKAGE_OPTIONS: Readonly<
+  Record<string, readonly string[]>
+> = Object.freeze({
+  titlesec: ["compact", "explicit", "nostruts"],
+  latexsym: [],
+  amssymb: [],
+  amsmath: [
+    "fleqn",
+    "leqno",
+    "intlimits",
+    "nointlimits",
+    "sumlimits",
+    "nosumlimits",
+    "namelimits",
+    "nonamelimits",
+    "tbtags",
+    "centertags",
+  ],
+  enumitem: ["inline", "shortlabels", "ignoredisplayed", "loadonly"],
+  geometry: [
+    "a4paper",
+    "letterpaper",
+    "paper",
+    "margin",
+    "left",
+    "right",
+    "top",
+    "bottom",
+    "hmargin",
+    "vmargin",
+    "includehead",
+    "includefoot",
+    "nohead",
+    "nofoot",
+    "headheight",
+    "headsep",
+    "footskip",
+    "width",
+    "height",
+    "textwidth",
+    "textheight",
+    "scale",
+    "hscale",
+    "vscale",
+    "centering",
+    "hcentering",
+    "vcentering",
+    "bindingoffset",
+    "heightrounded",
+    "showframe",
+    "showcrop",
+    "pass",
+  ],
+  hyperref: [
+    "hidelinks",
+    "colorlinks",
+    "linkcolor",
+    "urlcolor",
+    "citecolor",
+    "pdfauthor",
+    "pdftitle",
+    "pdfsubject",
+    "pdfkeywords",
+    "unicode",
+    "bookmarks",
+    "bookmarksopen",
+    "bookmarksnumbered",
+    "pdfborder",
+    "breaklinks",
+  ],
+  xcolor: ["dvipsnames", "svgnames", "x11names", "monochrome"],
+  fancyhdr: [],
+  tabularx: [],
+  array: [],
+  marvosym: [],
+  babel: ["english"],
+  parskip: ["skip", "indent", "parfill"],
+});
 export type LatexProfile = "early-career" | "experienced" | "document";
 export type LatexInput = { source: string; profile: LatexProfile };
 export const LATEX_EXAMPLES: ReadonlyArray<{

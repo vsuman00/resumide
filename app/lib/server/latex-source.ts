@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
 import {
   LATEX_LIMITS,
+  LATEX_PACKAGE_OPTIONS,
+  LATEX_PACKAGES,
   LATEX_POLICY_VERSION,
+  type LatexNotice,
   type LatexProfile,
 } from "../latex-converter";
 
@@ -29,88 +32,7 @@ export class LatexSourceError extends Error {
     this.name = "LatexSourceError";
   }
 }
-export const LATEX_PACKAGES = Object.freeze([
-  "titlesec",
-  "latexsym",
-  "amssymb",
-  "amsmath",
-  "enumitem",
-  "geometry",
-  "hyperref",
-  "xcolor",
-]);
-export const LATEX_PACKAGE_OPTIONS: Readonly<
-  Record<string, readonly string[]>
-> = Object.freeze({
-  titlesec: ["compact", "explicit", "nostruts"],
-  latexsym: [],
-  amssymb: [],
-  amsmath: [
-    "fleqn",
-    "leqno",
-    "intlimits",
-    "nointlimits",
-    "sumlimits",
-    "nosumlimits",
-    "namelimits",
-    "nonamelimits",
-    "tbtags",
-    "centertags",
-  ],
-  enumitem: ["inline", "shortlabels", "ignoredisplayed", "loadonly"],
-  geometry: [
-    "a4paper",
-    "letterpaper",
-    "paper",
-    "margin",
-    "left",
-    "right",
-    "top",
-    "bottom",
-    "hmargin",
-    "vmargin",
-    "includehead",
-    "includefoot",
-    "nohead",
-    "nofoot",
-    "headheight",
-    "headsep",
-    "footskip",
-    "width",
-    "height",
-    "textwidth",
-    "textheight",
-    "scale",
-    "hscale",
-    "vscale",
-    "centering",
-    "hcentering",
-    "vcentering",
-    "bindingoffset",
-    "heightrounded",
-    "showframe",
-    "showcrop",
-    "pass",
-  ],
-  hyperref: [
-    "hidelinks",
-    "colorlinks",
-    "linkcolor",
-    "urlcolor",
-    "citecolor",
-    "pdfauthor",
-    "pdftitle",
-    "pdfsubject",
-    "pdfkeywords",
-    "unicode",
-    "bookmarks",
-    "bookmarksopen",
-    "bookmarksnumbered",
-    "pdfborder",
-    "breaklinks",
-  ],
-  xcolor: ["dvipsnames", "svgnames", "x11names", "monochrome"],
-});
+export { LATEX_PACKAGES, LATEX_PACKAGE_OPTIONS };
 function fail(code: LatexSourceCode): never {
   throw new LatexSourceError(code);
 }
@@ -128,6 +50,26 @@ function withoutComments(source: string) {
   }
   return result;
 }
+const PDFTEX_ONLY: Record<string, LatexNotice["kind"]> = {
+  "\\pdfgentounicode=1": "pdfgentounicode",
+  "\\input{glyphtounicode}": "glyphtounicode",
+  "\\input glyphtounicode": "glyphtounicode",
+};
+// XeLaTeX already embeds Unicode text, so these pdfLaTeX-only lines are commented
+// out in the dispatched copy. Line count is kept so diagnostics still point right.
+export function neutralizePdfTexOnly(source: string): {
+  source: string;
+  notices: LatexNotice[];
+} {
+  const notices: LatexNotice[] = [];
+  const lines = source.split("\n").map((line, index) => {
+    const kind = PDFTEX_ONLY[line.trim()];
+    if (!kind) return line;
+    notices.push({ line: index + 1, kind });
+    return "%" + line;
+  });
+  return { source: lines.join("\n"), notices };
+}
 export function prepareLatexDocument(raw: unknown): PreparedLatexDocument {
   if (!raw || typeof raw !== "object" || Array.isArray(raw))
     fail("source_invalid");
@@ -139,7 +81,12 @@ export function prepareLatexDocument(raw: unknown): PreparedLatexDocument {
     !["early-career", "experienced", "document"].includes(input.profile)
   )
     fail("source_invalid");
-  const source = input.source as string;
+  if (
+    Buffer.byteLength(input.source as string, "utf8") > LATEX_LIMITS.sourceBytes
+  )
+    fail("source_too_large");
+  const { source } = neutralizePdfTexOnly(input.source as string);
+  // Commenting adds one byte per neutralized line; keep the dispatched copy in bounds.
   if (Buffer.byteLength(source, "utf8") > LATEX_LIMITS.sourceBytes)
     fail("source_too_large");
   if (!source.trim()) fail("source_invalid");

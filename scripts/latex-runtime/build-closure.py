@@ -41,7 +41,7 @@ for path,digest in sealed_fontconfig['files'].items():
  require_paths([path])
  if hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()!=digest: raise RuntimeError('Invalid sealed Fontconfig hash')
 root=pathlib.Path('/usr/share/texlive/texmf-dist')
-roots=['tex/latex/base','tex/latex/l3kernel','tex/latex/l3backend','tex/latex/l3packages','tex/latex/titlesec','tex/latex/amsmath','tex/latex/amsfonts','tex/latex/enumitem','tex/latex/geometry','tex/latex/hyperref','tex/latex/xcolor','tex/latex/graphics','tex/latex/graphics-def','tex/latex/graphics-cfg','tex/latex/auxhook','tex/latex/refcount','tex/latex/rerunfilecheck','tex/latex/letltxmacro','tex/latex/atveryend','tex/latex/atbegshi','tex/latex/kvoptions','tex/latex/kvsetkeys','tex/latex/kvdefinekeys','tex/latex/gettitlestring','tex/latex/hycolor','tex/latex/url','tex/generic/iftex','tex/generic/infwarerr','tex/generic/ltxcmds','tex/generic/kvdefinekeys','tex/generic/kvsetkeys','tex/generic/pdftexcmds','tex/generic/pdfescape','tex/generic/etexcmds','tex/generic/intcalc','tex/generic/bigintcalc','tex/generic/bitset','tex/generic/uniquecounter','tex/generic/stringenc','tex/generic/gettitlestring','tex/generic/atbegshi','tex/generic/hyph-utf8','tex/generic/unicode-data','fonts/misc/xetex/fontmapping','fonts/tfm/adobe/zapfding','fonts/tfm/urw35vf/zapfding','fonts/type1/urw/zapfding','fonts/tfm/public/cm','fonts/tfm/public/amsfonts','fonts/tfm/public/latex-fonts','fonts/tfm/public/ec','fonts/type1/public/amsfonts','fonts/type1/public/cm-super','fonts/vf/public/ae','fonts/enc/dvips/base','fonts/enc/dvips/cm-super','fonts/map/dvipdfmx','dvipdfmx']
+roots=['tex/latex/base','tex/latex/l3kernel','tex/latex/l3backend','tex/latex/l3packages','tex/latex/titlesec','tex/latex/amsmath','tex/latex/amsfonts','tex/latex/enumitem','tex/latex/geometry','tex/latex/hyperref','tex/latex/xcolor','tex/latex/graphics','tex/latex/graphics-def','tex/latex/graphics-cfg','tex/latex/auxhook','tex/latex/refcount','tex/latex/rerunfilecheck','tex/latex/letltxmacro','tex/latex/atveryend','tex/latex/atbegshi','tex/latex/kvoptions','tex/latex/kvsetkeys','tex/latex/kvdefinekeys','tex/latex/gettitlestring','tex/latex/hycolor','tex/latex/url','tex/latex/fancyhdr','tex/latex/marvosym','tex/latex/parskip','tex/generic/babel','tex/generic/babel-english','fonts/tfm/public/marvosym','fonts/type1/public/marvosym','fonts/afm/public/marvosym','fonts/map/dvips/marvosym','tex/generic/iftex','tex/generic/infwarerr','tex/generic/ltxcmds','tex/generic/kvdefinekeys','tex/generic/kvsetkeys','tex/generic/pdftexcmds','tex/generic/pdfescape','tex/generic/etexcmds','tex/generic/intcalc','tex/generic/bigintcalc','tex/generic/bitset','tex/generic/uniquecounter','tex/generic/stringenc','tex/generic/gettitlestring','tex/generic/atbegshi','tex/generic/hyph-utf8','tex/generic/unicode-data','fonts/misc/xetex/fontmapping','fonts/tfm/adobe/zapfding','fonts/tfm/urw35vf/zapfding','fonts/type1/urw/zapfding','fonts/tfm/public/cm','fonts/tfm/public/amsfonts','fonts/tfm/public/latex-fonts','fonts/tfm/public/ec','fonts/type1/public/amsfonts','fonts/type1/public/cm-super','fonts/vf/public/ae','fonts/enc/dvips/base','fonts/enc/dvips/cm-super','fonts/map/dvipdfmx','dvipdfmx']
 files=set()
 for name in roots:
  p=root/name
@@ -49,6 +49,8 @@ for name in roots:
 for pattern in ['/var/lib/texmf/web2c/xetex/xelatex.fmt','/var/lib/texmf/fonts/map/dvipdfmx/**/*','/var/lib/texmf/fonts/map/dvips/**/*','/var/lib/texmf/fonts/map/pdftex/**/*','/etc/texmf/dvipdfmx/**/*','/usr/share/texmf/fonts/opentype/public/lm/*','/usr/share/texmf/fonts/type1/public/lm/*','/usr/share/texmf/fonts/tfm/public/lm/*','/usr/share/texmf/fonts/enc/dvips/lm/*']:
  files.update(str(pathlib.Path(p).resolve()) for p in glob.glob(pattern,recursive=True) if pathlib.Path(p).is_file())
 files.add('/opt/latex/texmf.cnf')
+# Only these two files from tools/; the rest (for example shellesc) must stay unreadable.
+files.update(str((root/p).resolve()) for p in ['tex/latex/tools/tabularx.sty','tex/latex/tools/array.sty'])
 required_transitives=require_paths([root/'tex/latex/etoolbox/etoolbox.sty','/etc/paperspecs'])
 files.update(required_transitives)
 loaders=set()
@@ -74,7 +76,7 @@ for directory in ['/var/cache/fontconfig']:
 for p in ['/etc/ld.so.cache','/usr/lib/locale/C.utf8/LC_CTYPE']:
  if pathlib.Path(p).is_file(): files.add(p)
 # Validate the supported surface before writing any closure artifacts or hashes.
-required_styles=[str(root/p) for p in ['tex/latex/titlesec/titlesec.sty','tex/latex/base/latexsym.sty','tex/latex/amsfonts/amssymb.sty','tex/latex/amsmath/amsmath.sty','tex/latex/enumitem/enumitem.sty','tex/latex/geometry/geometry.sty','tex/latex/hyperref/hyperref.sty','tex/latex/xcolor/xcolor.sty']]
+required_styles=[str(root/p) for p in ['tex/latex/titlesec/titlesec.sty','tex/latex/base/latexsym.sty','tex/latex/amsfonts/amssymb.sty','tex/latex/amsmath/amsmath.sty','tex/latex/enumitem/enumitem.sty','tex/latex/geometry/geometry.sty','tex/latex/hyperref/hyperref.sty','tex/latex/xcolor/xcolor.sty','tex/latex/fancyhdr/fancyhdr.sty','tex/latex/tools/tabularx.sty','tex/latex/tools/array.sty','tex/latex/marvosym/marvosym.sty','tex/latex/parskip/parskip.sty','tex/generic/babel/babel.sty','tex/generic/babel-english/english.ldf']]
 required_fonts={}
 for label,pattern in {
  'latinModernOpenType':'/usr/share/texmf/fonts/opentype/public/lm/*.otf',

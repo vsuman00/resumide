@@ -749,3 +749,22 @@ Built a dashboard.
     });
   },
 );
+
+describe("diagnosticSelection (BX-12)", () => {
+  it("selects the error line with two lines either side, clamped", async () => {
+    const { diagnosticSelection } = await import("../../app/lib/build-assist");
+    const text = Array.from({ length: 10 }, (_, i) => `line ${i + 1}`).join(
+      "\n",
+    );
+    expect(diagnosticSelection(text, 5)).toEqual({ startLine: 3, endLine: 7 });
+    expect(diagnosticSelection(text, 1)).toEqual({ startLine: 1, endLine: 3 });
+    expect(diagnosticSelection(text, 10)).toEqual({
+      startLine: 8,
+      endLine: 10,
+    });
+    expect(diagnosticSelection(text, 99)).toEqual({
+      startLine: 8,
+      endLine: 10,
+    });
+  });
+});

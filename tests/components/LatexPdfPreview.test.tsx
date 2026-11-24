@@ -295,7 +295,7 @@ it("explains an empty text page without failing the canvas", async () => {
   expect(screen.getByRole("img", { name: "PDF page 1 of 1" })).toBeTruthy();
 });
 
-it("keeps page text and navigation available after a canvas render failure", async () => {
+it("keeps other pages, page text and navigation available after one page fails", async () => {
   const first = mockPage("Readable first page");
   first.render.mockImplementationOnce(() => ({
     promise: Promise.reject(new Error("First page render failed")),
@@ -307,18 +307,15 @@ it("keeps page text and navigation available after a canvas render failure", asy
   openText();
   expect(await screen.findByRole("alert")).toBeTruthy();
   expect(await screen.findByText("Readable first page")).toBeTruthy();
-  expect(screen.queryByRole("img")).toBeNull();
-
-  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+  expect(screen.queryByRole("img", { name: "PDF page 1 of 2" })).toBeNull();
   expect(
     await screen.findByRole("img", { name: "PDF page 2 of 2" }),
   ).toBeTruthy();
-  expect(screen.queryByRole("alert")).toBeNull();
 
+  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+  expect(await screen.findByText("Readable second page")).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
-  expect(
-    await screen.findByRole("img", { name: "PDF page 1 of 2" }),
-  ).toBeTruthy();
+  expect(await screen.findByText("Readable first page")).toBeTruthy();
 });
 
 it("retries rendering the current page without reloading the PDF", async () => {
@@ -391,22 +388,19 @@ it("clears loaded page text while the next page extraction is pending", async ()
   expect(await screen.findByText("Next page text")).toBeTruthy();
 });
 
-it("does not expose the previous visual page while the next one is rendering", async () => {
+it("keeps each page hidden until its own pixels are ready", async () => {
   const first = mockPage("First page");
   const second = mockPage("Second page");
   const paint = deferred<void>();
   second.render.mockReturnValue({ promise: paint.promise, cancel: vi.fn() });
   mockDocument([first, second]);
   render(<LatexPdfPreview pdf={mockPdf()} pages={2} />);
-  const previous = await screen.findByRole("img", { name: "PDF page 1 of 2" });
-  await waitFor(() => expect(first.render).toHaveBeenCalledTimes(1));
-
-  fireEvent.click(screen.getByRole("button", { name: "Next page" }));
+  expect(
+    await screen.findByRole("img", { name: "PDF page 1 of 2" }),
+  ).toBeTruthy();
   await waitFor(() => expect(second.render).toHaveBeenCalledTimes(1));
-  expect(screen.queryByRole("img")).toBeNull();
+  expect(screen.queryByRole("img", { name: "PDF page 2 of 2" })).toBeNull();
   expect(screen.getByText("Rendering PDF page 2.")).toBeTruthy();
-  expect(previous.isConnected).toBe(false);
-
   await act(async () => {
     paint.resolve();
     await paint.promise;
@@ -414,6 +408,113 @@ it("does not expose the previous visual page while the next one is rendering", a
   expect(
     await screen.findByRole("img", { name: "PDF page 2 of 2" }),
   ).toBeTruthy();
+});
+
+it("renders one page container per PDF page in a single scroll area", async () => {
+  mockDocument([mockPage("a"), mockPage("b"), mockPage("c")]);
+  const { container } = render(<LatexPdfPreview pdf={mockPdf()} pages={3} />);
+  await screen.findByRole("img", { name: "PDF page 3 of 3" });
+  const stage = screen.getByRole("region", { name: "PDF page viewport" });
+  expect(stage.querySelectorAll("[data-page]")).toHaveLength(3);
+  expect(container.querySelectorAll("canvas")).toHaveLength(3);
+});
+
+it("follows scrolling with the page indicator and reports the visible page", async () => {
+  let fire!: (
+    entries: { target: Element; intersectionRatio: number }[],
+  ) => void;
+  vi.stubGlobal(
+    "IntersectionObserver",
+    class {
+      constructor(callback: typeof fire) {
+        fire = callback;
+      }
+      observe() {}
+      disconnect() {}
+    },
+  );
+  mockDocument([mockPage("a"), mockPage("b")]);
+  const onPageVisible = vi.fn();
+  render(
+    <LatexPdfPreview pdf={mockPdf()} pages={2} onPageVisible={onPageVisible} />,
+  );
+  const stage = await screen.findByRole("region", {
+    name: "PDF page viewport",
+  });
+  await waitFor(() =>
+    expect(stage.querySelectorAll("[data-page]")).toHaveLength(2),
+  );
+  const [one, two] = stage.querySelectorAll("[data-page]");
+  act(() =>
+    fire([
+      { target: one, intersectionRatio: 0.1 },
+      { target: two, intersectionRatio: 0.9 },
+    ]),
+  );
+  expect(screen.getByText("2 / 2")).toBeTruthy();
+  expect(onPageVisible).toHaveBeenLastCalledWith(2);
+});
+
+it("renders only safe PDF links and draws the line highlight with its label", async () => {
+  const page = Object.assign(mockPage("Linked"), {
+    getAnnotations: vi.fn(async () => [
+      { subtype: "Link", url: "https://example.com/", rect: [10, 10, 60, 20] },
+      {
+        subtype: "Link",
+        unsafeUrl: "javascript:alert(1)",
+        rect: [10, 30, 60, 40],
+      },
+      {
+        subtype: "Link",
+        unsafeUrl: "file:///etc/passwd",
+        rect: [10, 50, 60, 60],
+      },
+    ]),
+  });
+  mockDocument([page]);
+  const highlight = {
+    page: 1,
+    rects: [{ str: "Linked", x: 10, y: 700, width: 40, height: 10 }],
+    label: "L42",
+  };
+  const { container } = render(
+    <LatexPdfPreview pdf={mockPdf()} pages={1} highlight={highlight} />,
+  );
+  await screen.findByRole("img", { name: "PDF page 1 of 1" });
+  await waitFor(() => expect(container.querySelectorAll("a")).toHaveLength(1));
+  const link = container.querySelector("a")!;
+  expect(link.getAttribute("href")).toBe("https://example.com/");
+  expect(link.getAttribute("rel")).toBe("noopener noreferrer");
+  expect(link.getAttribute("target")).toBe("_blank");
+  expect(screen.getByText("L42")).toBeTruthy();
+});
+
+it("reports extracted text items for every page", async () => {
+  const one = mockPage("");
+  one.getTextContent.mockResolvedValue({
+    items: [
+      {
+        str: "Alpha",
+        hasEOL: false,
+        transform: [10, 0, 0, 10, 72, 700],
+        width: 30,
+        height: 10,
+      } as never,
+    ],
+  });
+  mockDocument([one, mockPage("")]);
+  const onTextItems = vi.fn();
+  render(
+    <LatexPdfPreview pdf={mockPdf()} pages={2} onTextItems={onTextItems} />,
+  );
+  await waitFor(() => expect(onTextItems).toHaveBeenCalled());
+  expect(onTextItems.mock.lastCall![0]).toEqual([
+    {
+      page: 1,
+      items: [{ str: "Alpha", x: 72, y: 700, width: 30, height: 10 }],
+    },
+    { page: 2, items: [] },
+  ]);
 });
 
 it("waits for replacement PDF pixels and ignores a late render from the old document", async () => {
