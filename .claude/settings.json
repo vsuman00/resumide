@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "model": "sonnet",
+  "effortLevel": "medium",
+  "permissions": {
+    "allow": [
+      "Bash(npm test)",
+      "Bash(npm test *)",
+      "Bash(npm run lint)",
+      "Bash(npm run typecheck)",
+      "Bash(npm run format:check)",
+      "Bash(npm run test:latex)",
+      "Bash(npm run test:build-ai)",
+      "Bash(git status)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git branch --show-current)",
+      "Bash(ls *)",
+      "Bash(rg *)",
+      "Bash(wc *)"
+    ],
+    "ask": [
+      "Bash(npm install *)",
+      "Bash(npm i *)",
+      "Bash(npm ci)",
+      "Bash(npm uninstall *)",
+      "Bash(rm *)",
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "Bash(supabase *)",
+      "Bash(npm run test:db)",
+      "Edit(./supabase/migrations/**)",
+      "Write(./supabase/migrations/**)",
+      "Edit(./.env*)",
+      "Write(./.env*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.local)",
+      "Read(./.env.production)",
+      "Read(./.env.ocr-repair)",
+      "Read(./.env.*.local)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)"
+    ]
+  }
+}

@@ -56,3 +56,25 @@ Use [package scripts](package.json) and [CI](.github/workflows/ci.yml) for exact
 Use synthetic fixtures by default. Use direct Supabase for approved database and Auth tests, and reserve Docker for worker runtimes. The legacy `npm run test:db` resets a local Docker-backed Supabase database and falls outside the current testing scope. Follow the managed runbook for target approval, schema verification, fixture cleanup, and protected credentials. For browser work, use Chrome or Chrome DevTools. Keep macOS settings and VoiceOver untouched.
 
 Treat any real resume/JD, hosted write, live provider call, Git publication, or deployment as a separately authorized action. Keep secrets, candidate data, and prompts out of commits, logs, screenshots, and handoffs. For documentation-only changes, verify formatting and links and run `git diff --check`.
+
+## Working rules for Claude Code
+
+**Commands** (npm, lockfile `package-lock.json`, Node 22): install `npm ci` · dev `npm run dev` (web + worker, reads `.env`) or `npm run dev:web` · build `npm run build` then `npm run build:worker` · test `npm test` (Vitest; focused: `npm test -- <file>`) · lint `npm run lint` · typecheck `npm run typecheck` · format check `npm run format:check`.
+
+**Coding rules**
+
+- Strict TypeScript; no `any` or non-null assertions where a type guard works. Small functions; follow the surrounding file's conventions.
+- No new dependency without owner approval. No edits to files outside the task.
+- Before any `supabase/migrations/` change, explain the schema change and wait for approval. Migrations are forward-only.
+
+**Definition of done:** `npm run lint`, `npm run typecheck` and the relevant tests pass. Report files changed, checks run, and remaining risks, and update the task row in `tasks/todo.md`.
+
+**Model and effort policy** (details in [docs/ai-workflow.md](docs/ai-workflow.md))
+
+- `code-explorer` (Haiku, low): read, search, explain, trivial edits.
+- `implementer` (Sonnet, medium): approved tasks, bug fixes, tests.
+- `architect` (Opus, medium; high only for security, auth, payments, migrations or a failed medium attempt): plans, hard bugs, reviews.
+
+**Token-saving rules:** read only the files the task needs, and read large files by line range (`tasks/todo.md` is 2,000+ lines). Never dump logs, lockfiles, `graphify-out/` or evidence JSON. Work in small verified steps. If the same test fails twice after a fix, stop and report instead of looping.
+
+**Git:** never commit or push unless asked. After each verified change, suggest a Conventional Commit message (`feat(build): ...`, `fix(ocr): ...`).
