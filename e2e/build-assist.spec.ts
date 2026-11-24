@@ -44,9 +44,13 @@ async function dismissOnboarding(page: Page) {
 }
 // The hosted AI budget is a separate approval, so /build/suggest is answered at the browser
 // boundary with replies bound to each request's hash. Server checks are unit-tested.
-async function mockSuggest(page: Page, counter: { calls: number }) {
+async function mockSuggest(
+  page: Page,
+  counter: { calls: number; bodies?: unknown[] },
+) {
   await page.route("**/build/suggest", async (route) => {
     counter.calls++;
+    counter.bodies?.push(JSON.parse(route.request().postData() ?? "{}"));
     const body = JSON.parse(route.request().postData() ?? "{}") as {
       source: string;
       sourceHash: string;
@@ -360,6 +364,68 @@ test("mock provider timeout and refusal fail safely without changing source", as
       ).toHaveCount(0);
       await page.keyboard.press("Escape");
     }
+  } finally {
+    await owner.cleanup();
+  }
+});
+
+test("Fix with AI from a compile error sends only kind and line, needs consent, and its suggestion is marked in editor and PDF", async ({
+  page,
+  context,
+}) => {
+  const owner = await createBuildAssistOwner();
+  const counter = { calls: 0, bodies: [] as unknown[] };
+  try {
+    await owner.login(context);
+    await mockSuggest(page, counter);
+    await openBuild(page);
+    // Compile a valid version first so the PDF exists for the highlight.
+    await setSource(page, BUILD_AI_SOURCE);
+    await page.getByRole("button", { name: "Recompile", exact: true }).click();
+    await expect(page.getByText("PDF ready. 1 page.")).toBeVisible({
+      timeout: 25000,
+    });
+    await selectLine(page);
+    await ask(page);
+    await expect(page.locator(".cm-diff-added")).toBeVisible();
+    await expect(page.locator("b", { hasText: /^L6$/ })).toBeVisible();
+    await page.keyboard.press("Escape");
+    // Now break line 6 and use the Problems panel.
+    await setSource(
+      page,
+      BUILD_AI_SOURCE.replace("Helped reduce", "\\notacommand Helped reduce"),
+    );
+    await page.getByRole("button", { name: "Recompile", exact: true }).click();
+    const problems = page.getByRole("region", { name: "Compile problems" });
+    await expect(problems).toContainText("Line 6 · Undefined command", {
+      timeout: 25000,
+    });
+    await problems.getByRole("button", { name: "Fix with AI" }).click();
+    await expect(PANEL(page)).toContainText("Fixing line 6: undefined command");
+    await expect(page.getByRole("button", { name: "Rewrite" })).toBeDisabled();
+    const askButton = page.getByRole("button", { name: "Ask AI", exact: true });
+    await expect(askButton).toBeDisabled();
+    expect(counter.calls).toBe(1);
+    await ask(page);
+    await expect(page.locator(".cm-diff-added")).toBeVisible();
+    const body = counter.bodies.at(-1) as Record<string, unknown>;
+    expect(body).toMatchObject({
+      mode: "fix",
+      startLine: 4,
+      endLine: 8,
+      diagnostic: { kind: "undefined_command", line: 6 },
+    });
+    expect(Object.keys(body).sort()).toEqual([
+      "consent",
+      "diagnostic",
+      "endLine",
+      "mode",
+      "policyVersion",
+      "source",
+      "sourceHash",
+      "startLine",
+    ]);
+    expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   } finally {
     await owner.cleanup();
   }

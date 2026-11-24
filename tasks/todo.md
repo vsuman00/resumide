@@ -4,7 +4,7 @@ Status: **PARTIAL; CANDIDATE B2C BASELINE IMPLEMENTED; AA0 APPROVED 2026-10-04; 
 Plan: [`plan.md`](plan.md)
 AA3 status: **LOCAL IMPLEMENTATION DELIVERED; DOMAIN/DATA ACCEPTANCE OPEN**
 Accuracy-v2 subplan: [`accuracy-authoring-plan.md`](accuracy-authoring-plan.md)
-Build experience plan: **APPROVED 2026-11-23; IMPLEMENTED AND LOCALLY VERIFIED 2026-11-24 (PARTIAL: not committed, release not accepted)** — [`build-experience-plan.md`](build-experience-plan.md), tracked under [Build experience](#build-experience-plan--approved-2026-11-23-implemented-and-locally-verified-2026-11-24)
+Build experience plan: **APPROVED 2026-11-23; IMPLEMENTED, LOCALLY VERIFIED AND COMMITTED 2026-11-24 (PARTIAL: release not accepted)** — [`build-experience-plan.md`](build-experience-plan.md), tracked under [Build experience](#build-experience-plan--approved-2026-11-23-implemented-and-locally-verified-2026-11-24)
 Architecture: [`../ARCHITECTURE.md`](../ARCHITECTURE.md)
 
 ## Task rules
@@ -543,6 +543,8 @@ Rules for this section:
 - **Not verified:** a live provider call (BX-D4 not authorised) and the hosted AI budget path. The inline-AI browser tests answer `/build/suggest` at the browser boundary, and the server checks are covered by unit tests. Managed Build acceptance, a human screen-reader pass, other browsers, and production hosting are still open. One synthetic test account from an earlier run remains on the test project; it is not in this session's ledger.
 
 **Follow-up, 2026-11-24 (second Chrome pass, same environment):** Three more browser tests pass against the real compiler: all six gallery templates compile from the UI (about 2 minutes, paced for the 3-per-minute rate limit), a three-page document scrolls with a following page indicator and safe links, and a paste at exactly 49,152 bytes is accepted while a larger one is refused with the draft intact. These found and fixed one product bug: a highlight on a page scrolled out of view was not brought into view, because the check used the window instead of the preview's own scroll area. Final totals: 349 files and 7,346 unit and component tests; Chrome 16 core and 6 inline-AI tests, all with zero Axe violations.
+
+**Plan audit, 2026-11-24 (third pass):** Each plan step was checked against the code. Four gaps were closed: `@codemirror/lint` was removed (unused); an AI suggestion now also marks its lines in the PDF; and two new Chrome tests cover "Fix with AI" from a compile error (only the kind and line are sent, consent is still required, and the diff and PDF mark appear) and Esc-then-Tab leaving the editor. The plan's "As built" section lists every deviation. Still open and owner-gated: BX-D4 live probe, the hosted AI budget path, Trivy disposition, a screen-reader pass, other browsers, and the gstack `design-review` run.
 
 **Recommended order:** BX-01 → BX-02 → BX-05 (after BX-D1) → BX-03 / BX-04 → BX-06 → BX-07 / BX-08 → BX-10 / BX-11 → BX-09, BX-12 to BX-15.
 

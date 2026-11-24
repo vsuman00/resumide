@@ -389,3 +389,27 @@ test("a near-limit paste is accepted and one byte over is refused without losing
     await owner.cleanup();
   }
 });
+
+test("Escape then Tab leaves the editor without inserting a tab", async ({
+  page,
+  context,
+}) => {
+  const owner = await createLatexOwner();
+  try {
+    await owner.login(context);
+    await skipOnboarding(page);
+    await open(page);
+    await editor(page).fill(DOC);
+    await page.locator(".cm-line", { hasText: "Built example" }).click();
+    await page.keyboard.press("Tab");
+    // Inside the editor Tab indents the line (two spaces).
+    expect(await sourceText(page)).not.toBe(DOC);
+    await page.keyboard.press("ControlOrMeta+z");
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Tab");
+    await expect(editor(page)).not.toBeFocused();
+    expect(await sourceText(page)).toBe(DOC);
+  } finally {
+    await owner.cleanup();
+  }
+});

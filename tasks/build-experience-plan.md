@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Status:** APPROVED by the owner 2026-11-23; IMPLEMENTED AND LOCALLY VERIFIED 2026-11-24 (not committed; release not accepted). Tracked as BX-01 to BX-15 in [`todo.md`](todo.md#build-experience-plan--approved-2026-11-23-implemented-and-locally-verified-2026-11-24).
+**Status:** APPROVED by the owner 2026-11-23; IMPLEMENTED AND LOCALLY VERIFIED 2026-11-24, committed on `wip/reliability-snapshot-20261123` (release not accepted). All steps below are done; deviations are listed under "As built". Tracked as BX-01 to BX-15 in [`todo.md`](todo.md#build-experience-plan--approved-2026-11-23-implemented-and-locally-verified-2026-11-24).
 
 **Goal:** Make `/build` feel like Overleaf for single-file resumes. Popular templates should compile, errors should point to lines, work should never be lost, selecting a line should show where it lands in the PDF, and AI should suggest fixes and rewrites inline. The user experience should be polished, keyboard-first and accessible.
 
@@ -76,20 +76,20 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
   - `listBuildSnapshots(storage: Storage | null): { source: string; savedAt: number }[]` (newest first, maximum 5)
   - Storage key: `resumide.build.draft.v1`
 
-- [ ] **Step 1: Write the failing tests.** Cover each of these:
+- [x] **Step 1: Write the failing tests.** Cover each of these:
   - Save then load returns the same source.
   - Invalid JSON returns `null`.
   - A source over 49,152 bytes is neither saved nor loaded.
   - The newest 5 snapshots are kept, at most one per 60 seconds.
   - A `null` storage, or one whose accessor throws, is a no-op and doesn't throw.
-- [ ] **Step 2:** Run `npm test -- tests/unit/build-drafts.test.ts`. Expect FAIL (module missing).
-- [ ] **Step 3: Implement.** Wrap every storage access in try/catch. In `latex.tsx`:
+- [x] **Step 2:** Run `npm test -- tests/unit/build-drafts.test.ts`. Expect FAIL (module missing).
+- [x] **Step 3: Implement.** Wrap every storage access in try/catch. In `latex.tsx`:
   - Initialise from `loadBuildDraft(window.localStorage)` on the client, falling back to the example.
   - Save after 800 ms without typing.
   - Show "Saved in this browser · 12:04" in the status line.
   - Change the editor note at line 467 from "does not save your code" to "Saved only in this browser."
-- [ ] **Step 4:** Run the tests and expect PASS. Also run `npm test -- tests/unit/latex-routes.test.ts`.
-- [ ] **Step 5:** Commit: `feat(build): autosave drafts in browser storage`
+- [x] **Step 4:** Run the tests and expect PASS. Also run `npm test -- tests/unit/latex-routes.test.ts`.
+- [x] **Step 5:** Commit: `feat(build): autosave drafts in browser storage`
 
 ### Task 2: Template compatibility corpus and report
 
@@ -103,11 +103,11 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
 - Consumes: `prepareLatexDocument` from `app/lib/server/latex-source.ts`, and `compileLatex` from `latex-sandbox.ts` (only when `LATEX_COMPILER_IMAGE` is set).
 - Produces: a JSON report on stdout, `{file, admission: "ok" | <LatexSourceError code>, compile?: "ok" | <LatexSandboxCode>}[]`. Task 4 uses it to choose packages.
 
-- [ ] **Step 1:** Write a test that loads `manifest.json` and asserts every fixture with `expected: "compile"` passes `prepareLatexDocument`. Gate it behind `BUILD_TEMPLATE_CORPUS=1` until Task 6 removes the gate.
-- [ ] **Step 2:** Run `BUILD_TEMPLATE_CORPUS=1 npm test -- tests/unit/latex-template-corpus.test.ts`. Expect FAIL, naming the rejected packages. Record the list.
-- [ ] **Step 3:** Implement the script. It runs admission for every fixture, and runs the real compile only when the image is configured.
-- [ ] **Step 4:** Run `npx vite-node scripts/benchmark-latex-templates.ts`, with and without the image. Save the report to `tasks/agent-handoffs/build-experience/template-baseline.json`.
-- [ ] **Step 5:** Commit: `test(build): add template compatibility corpus`
+- [x] **Step 1:** Write a test that loads `manifest.json` and asserts every fixture with `expected: "compile"` passes `prepareLatexDocument`. Gate it behind `BUILD_TEMPLATE_CORPUS=1` until Task 6 removes the gate.
+- [x] **Step 2:** Run `BUILD_TEMPLATE_CORPUS=1 npm test -- tests/unit/latex-template-corpus.test.ts`. Expect FAIL, naming the rejected packages. Record the list.
+- [x] **Step 3:** Implement the script. It runs admission for every fixture, and runs the real compile only when the image is configured.
+- [x] **Step 4:** Run `npx vite-node scripts/benchmark-latex-templates.ts`, with and without the image. Save the report to `tasks/agent-handoffs/build-experience/template-baseline.json`.
+- [x] **Step 5:** Commit: `test(build): add template compatibility corpus`
 
 ### Task 3: Handle pdfLaTeX-only lines with a notice
 
@@ -120,15 +120,15 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
 **Interfaces:**
 - Produces: `neutralizePdfTexOnly(source: string): { source: string; notices: { line: number; kind: "pdfgentounicode" | "glyphtounicode" }[] }`. It replaces exactly these whole lines (ignoring surrounding whitespace) in the **dispatched copy** with `%` comments: `\pdfgentounicode=1`, `\input{glyphtounicode}` and `\input glyphtounicode`. Line count and every other byte stay unchanged. The editor source is never modified.
 
-- [ ] **Step 1:** Write failing tests:
+- [x] **Step 1:** Write failing tests:
   - Each of the three forms is neutralised, and its 1-based line number is reported.
   - `\input{other}` is still rejected as `source_unsafe`.
   - A line containing `\input{glyphtounicode}\input{x}` is still rejected.
   - The dispatched hash is computed on the neutralised copy.
-- [ ] **Step 2:** Run the tests. Expect FAIL.
-- [ ] **Step 3:** Implement as specified. The UI notice reads: "Line 4 is for pdfLaTeX and was skipped. Build uses XeLaTeX, which already embeds Unicode text."
-- [ ] **Step 4:** Run `npm test -- tests/unit/latex-source.test.ts tests/unit/latex-service.test.ts`. Expect PASS.
-- [ ] **Step 5:** Commit: `feat(build): skip pdfLaTeX-only lines with a visible notice`
+- [x] **Step 2:** Run the tests. Expect FAIL.
+- [x] **Step 3:** Implement as specified. The UI notice reads: "Line 4 is for pdfLaTeX and was skipped. Build uses XeLaTeX, which already embeds Unicode text."
+- [x] **Step 4:** Run `npm test -- tests/unit/latex-source.test.ts tests/unit/latex-service.test.ts`. Expect PASS.
+- [x] **Step 5:** Commit: `feat(build): skip pdfLaTeX-only lines with a visible notice`
 
 ## Phase 1 — One compiler image rebuild
 
@@ -144,11 +144,11 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
 **Interfaces:**
 - Produces: the expanded `LATEX_PACKAGES`. **Initial candidates** are `fancyhdr`, `tabularx`, `array`, `multicol`, `marvosym`, `fontenc`, `babel` (option `english` only), `ragged2e`, `parskip` and `fontawesome5`. Keep only those the Task 2 report shows are needed by 2 or more templates.
 
-- [ ] **Step 1:** Write failing tests. Each admitted package is accepted with its listed options, and an unlisted option is rejected with `source_unsupported`.
-- [ ] **Step 2:** Run them. Expect FAIL.
-- [ ] **Step 3:** Implement the lists. Add the matching `tex/latex/<pkg>` roots to the closure.
-- [ ] **Step 4:** Run the tests and expect PASS. Then run `npm run test:latex`.
-- [ ] **Step 5:** Commit: `feat(build): admit resume template packages`
+- [x] **Step 1:** Write failing tests. Each admitted package is accepted with its listed options, and an unlisted option is rejected with `source_unsupported`.
+- [x] **Step 2:** Run them. Expect FAIL.
+- [x] **Step 3:** Implement the lists. Add the matching `tex/latex/<pkg>` roots to the closure.
+- [x] **Step 4:** Run the tests and expect PASS. Then run `npm run test:latex`.
+- [x] **Step 5:** Commit: `feat(build): admit resume template packages`
 
 ### Task 5: Structured diagnostics; overfull boxes become warnings
 
@@ -166,27 +166,27 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
 - Supervisor output: an error is `{"error": code, "diagnostic": {"kind", "line"}}`. Success is `"diagnostics": [{"kind", "line", "severity": "warning"}]`, with at most 20 entries.
 - `readLatexCompileReply` returns `{ pdf, pages, notices, diagnostics: LatexDiagnostic[] }`. On failure it throws `Error(code)` with an attached `diagnostic`.
 
-- [ ] **Step 1:** Write failing tests in `latex-sandbox.test.ts`, mocking the container stdout:
+- [x] **Step 1:** Write failing tests in `latex-sandbox.test.ts`, mocking the container stdout:
   - An error with a diagnostic → `LatexSandboxError` carries `diagnostic`.
   - A success with 3 warnings → the result's `diagnostics` length is 3.
   - A line over 100,000, an unknown kind, or extra keys → `output_invalid`.
   - More than 20 warnings → `output_invalid`.
-- [ ] **Step 2:** Run them. Expect FAIL.
-- [ ] **Step 3:** Implement the supervisor parser. Read only log lines matching `^\./main\.tex:(\d+): ` and the first `! ` line, and map them to a kind with fixed regexes. **Never emit the matched text.**
+- [x] **Step 2:** Run them. Expect FAIL.
+- [x] **Step 3:** Implement the supervisor parser. Read only log lines matching `^\./main\.tex:(\d+): ` and the first `! ` line, and map them to a kind with fixed regexes. **Never emit the matched text.**
   - **Policy change (owner sign-off required):** `Overfull \hbox` and `Overfull \vbox` become `warning` diagnostics with their line, instead of `layout_overflow`. The PDF is still checked by `inspect_pdf`, the page limit and the geometry parsing.
   - `Missing character` stays an error.
-- [ ] **Step 4:** Run `npm test -- tests/unit/latex-sandbox.test.ts tests/unit/latex-service.test.ts`. Expect PASS.
-- [ ] **Step 5:** Commit: `feat(build): return line-level compiler diagnostics`
+- [x] **Step 4:** Run `npm test -- tests/unit/latex-sandbox.test.ts tests/unit/latex-service.test.ts`. Expect PASS.
+- [x] **Step 5:** Commit: `feat(build): return line-level compiler diagnostics`
 
 ### Task 6: Rebuild and re-qualify the image
 
 **Files:** no new source. Write the evidence to `tasks/agent-handoffs/build-experience/image-requalification.json`.
 
-- [ ] **Step 1:** Build with the reviewed wrapper in `docs/operations/LATEX_CONVERTER.md`, and record the new `sha256:` image ID.
-- [ ] **Step 2:** Run the runbook's runtime suite: the six starter profiles, PDF policy, rollback, resource limits and Landlock probes. Expect every check to PASS on the new ID.
-- [ ] **Step 3:** Run `LATEX_COMPILER_IMAGE=<id> npx vite-node scripts/benchmark-latex-templates.ts`. Expect every `expected: "compile"` template to report `compile: "ok"`, including a synthetic copy of the 0.78-point overflow case. Remove the `BUILD_TEMPLATE_CORPUS` gate from Task 2.
-- [ ] **Step 4:** Run the Trivy scan and compare it with the 79-high baseline. Record any new high findings for owner disposition.
-- [ ] **Step 5:** Commit the evidence (never the image ID in `.env`).
+- [x] **Step 1:** Build with the reviewed wrapper in `docs/operations/LATEX_CONVERTER.md`, and record the new `sha256:` image ID.
+- [x] **Step 2:** Run the runbook's runtime suite: the six starter profiles, PDF policy, rollback, resource limits and Landlock probes. Expect every check to PASS on the new ID.
+- [x] **Step 3:** Run `LATEX_COMPILER_IMAGE=<id> npx vite-node scripts/benchmark-latex-templates.ts`. Expect every `expected: "compile"` template to report `compile: "ok"`, including a synthetic copy of the 0.78-point overflow case. Remove the `BUILD_TEMPLATE_CORPUS` gate from Task 2.
+- [x] **Step 4:** Run the Trivy scan and compare it with the 79-high baseline. Record any new high findings for owner disposition.
+- [x] **Step 5:** Commit the evidence (never the image ID in `.env`).
 
 ## Phase 2 — Overleaf-grade editor and preview
 
@@ -204,16 +204,16 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
   - `LatexEditor` props: `{ value: string; onChange(value: string): void; onCompile(): void; onCursorLine(line: number): void; onSelectionLines(range: { startLine: number; endLine: number } | null): void; onAskAi(): void; diagnostics: LatexDiagnostic[] }`, forwarding a ref to `LatexEditorHandle`.
   - Extensions: `stex` mode, line numbers, bracket matching, `closeBrackets`, history, search (Ctrl/⌘+F), `indentWithTab` (Escape then Tab leaves the editor), `Mod-Enter` → `onCompile`, `Mod-k` → `onAskAi`, `Mod-/` toggles `% `, and lint gutter markers from `diagnostics`.
 
-- [ ] **Step 1:** Write failing component tests:
+- [x] **Step 1:** Write failing component tests:
   - Typing calls `onChange`.
   - `Mod-Enter` calls `onCompile`.
   - `Mod-/` toggles `% ` on the selected lines.
   - `goToLine(5)` places the cursor on line 5.
   - A diagnostic on line 3 renders a gutter marker labelled "Error on line 3: undefined command".
-- [ ] **Step 2:** Run `npm test -- tests/components/latex-editor.test.tsx`. Expect FAIL.
-- [ ] **Step 3:** Implement. Mount CodeMirror client-only (using the existing `ClientOnly` component), with a plain `<textarea>` as the SSR fallback. Keep the 49,152-byte guard in `changeSource`.
-- [ ] **Step 4:** Run the component tests and `npm run test:e2e -- e2e/latex-converter.spec.ts`. Expect PASS, with zero serious Axe findings.
-- [ ] **Step 5:** Commit: `feat(build): Overleaf-style CodeMirror editor`
+- [x] **Step 2:** Run `npm test -- tests/components/latex-editor.test.tsx`. Expect FAIL.
+- [x] **Step 3:** Implement. Mount CodeMirror client-only (using the existing `ClientOnly` component), with a plain `<textarea>` as the SSR fallback. Keep the 49,152-byte guard in `changeSource`.
+- [x] **Step 4:** Run the component tests and `npm run test:e2e -- e2e/latex-converter.spec.ts`. Expect PASS, with zero serious Axe findings.
+- [x] **Step 5:** Commit: `feat(build): Overleaf-style CodeMirror editor`
 
 ### Task 8: Problems panel with jump-to-line
 
@@ -226,15 +226,15 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
 - Consumes: `LatexDiagnostic` (Task 5), `LatexEditorHandle.goToLine` (Task 7), and `hashBuildSource` from `app/lib/build-assist.ts`.
 - Produces: `CompileProblems` props `{ diagnostics: LatexDiagnostic[]; stale: boolean; onJump(line: number): void; onFixWithAi?: (diagnostic: LatexDiagnostic) => void }`
 
-- [ ] **Step 1:** Write failing tests:
+- [x] **Step 1:** Write failing tests:
   - An error renders as "Line 42 · Undefined command — check the spelling or remove it", with a Jump button.
   - Warnings render in a collapsed "1 warning" group.
   - When `stale` is true, Jump is disabled and the panel reads "Code changed since this compile. Recompile to refresh."
   - Each kind maps to a fixed help sentence.
-- [ ] **Step 2:** Run them. Expect FAIL.
-- [ ] **Step 3:** Implement. `stale` is true when the current source hash differs from `diagnosticsSourceHash`.
-- [ ] **Step 4:** Run them. Expect PASS.
-- [ ] **Step 5:** Commit: `feat(build): problems panel with line jump`
+- [x] **Step 2:** Run them. Expect FAIL.
+- [x] **Step 3:** Implement. `stale` is true when the current source hash differs from `diagnosticsSourceHash`.
+- [x] **Step 4:** Run them. Expect PASS.
+- [x] **Step 5:** Commit: `feat(build): problems panel with line jump`
 
 ### Task 9: Continuous preview with a text and link layer
 
@@ -249,14 +249,14 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
   - Preview props add `highlight?: { page: number; rects: { x: number; y: number; width: number; height: number }[]; label: string } | null` (in PDF user-space units) and `onPageVisible?: (page: number) => void`.
   - The preview also exposes its extracted page items for Task 10: `onTextItems?: (pages: PdfPageItems[]) => void`, where `type PdfPageItems = { page: number; items: { str: string; x: number; y: number; width: number; height: number }[] }` is exported from `app/lib/latex-line-locator.ts`.
 
-- [ ] **Step 1:** Write failing tests:
+- [x] **Step 1:** Write failing tests:
   - `safePdfHref("javascript:alert(1)")` → `null`; `"file:///x"` → `null`; `"HTTPS://a.b"` → the href; `"mailto:a@b.c"` → the href.
   - The preview renders N page containers for an N-page PDF.
   - The page indicator follows scroll via `onPageVisible`.
-- [ ] **Step 2:** Run them. Expect FAIL.
-- [ ] **Step 3:** Implement. Render pages lazily with an `IntersectionObserver`. Links use `target="_blank" rel="noopener noreferrer"`. Text is selectable.
-- [ ] **Step 4:** Run them, then the Build e2e. Expect PASS.
-- [ ] **Step 5:** Commit: `feat(build): continuous PDF preview with selectable text and safe links`
+- [x] **Step 2:** Run them. Expect FAIL.
+- [x] **Step 3:** Implement. Render pages lazily with an `IntersectionObserver`. Links use `target="_blank" rel="noopener noreferrer"`. Text is selectable.
+- [x] **Step 4:** Run them, then the Build e2e. Expect PASS.
+- [x] **Step 5:** Commit: `feat(build): continuous PDF preview with selectable text and safe links`
 
 ### Task 10: Highlight the selected code line in the PDF
 
@@ -273,16 +273,16 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
   - `locateLineInPdf(lineText: string, lineIndex: number, totalLines: number, pages: PdfPageItems[]): { page: number; rects: PdfPageItems["items"] } | null`
 - Algorithm (not determined by the signature): lowercase and collapse whitespace on both sides, then find runs of consecutive items whose joined text contains the first 60 characters of the visible text. If there are several matches, pick the one whose relative document position (item index over the total item count) is closest to `lineIndex / totalLines`. Return `null` when the visible text is shorter than 3 characters.
 
-- [ ] **Step 1:** Write failing tests:
+- [x] **Step 1:** Write failing tests:
   - `visibleTextOfLine("\\item \\textbf{Built} APIs \\% 30")` → `"Built APIs % 30"`.
   - `visibleTextOfLine("\\vspace{2pt}")` → `""`.
   - With two identical bullets on pages 1 and 2, line 80 of 100 → page 2.
   - Text split across 3 items → one result with 3 rects.
   - No match → `null`.
-- [ ] **Step 2:** Run them. Expect FAIL.
-- [ ] **Step 3:** Implement. On `null`, show a quiet "No visible text for this line" chip in the preview toolbar.
-- [ ] **Step 4:** Run them. Expect PASS. In Chrome, select a bullet line and confirm the highlight and the L-label appear on the correct page.
-- [ ] **Step 5:** Commit: `feat(build): highlight selected code line in PDF preview`
+- [x] **Step 2:** Run them. Expect FAIL.
+- [x] **Step 3:** Implement. On `null`, show a quiet "No visible text for this line" chip in the preview toolbar.
+- [x] **Step 4:** Run them. Expect PASS. In Chrome, select a bullet line and confirm the highlight and the L-label appear on the correct page.
+- [x] **Step 5:** Commit: `feat(build): highlight selected code line in PDF preview`
 
 ## Phase 3 — Inline AI on selection
 
@@ -303,16 +303,16 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
   5. An `advice` or `no_change` result shows only the explanation.
   6. Resume wording keeps the fact-confirmation checkbox before Accept.
 
-- [ ] **Step 1:** Write failing tests:
+- [x] **Step 1:** Write failing tests:
   - Hovering a line no longer opens the panel.
   - A selection plus `Mod-K` opens it, with focus on the first action.
   - A `replace` reply calls `showInlineDiff` with the reply's range.
   - Tab applies it, and Esc clears the diff without changing the source.
   - If the source is edited before the reply arrives, the reply is dropped with "Code changed. Ask again."
-- [ ] **Step 2:** Run them. Expect FAIL.
-- [ ] **Step 3:** Implement. Keep every existing server-side check unchanged.
-- [ ] **Step 4:** Run `npm run test:build-ai` and the Build AI e2e with the stubbed provider. Expect PASS, with zero serious Axe findings.
-- [ ] **Step 5:** Commit: `feat(build): inline AI suggestions on selection with diff review`
+- [x] **Step 2:** Run them. Expect FAIL.
+- [x] **Step 3:** Implement. Keep every existing server-side check unchanged.
+- [x] **Step 4:** Run `npm run test:build-ai` and the Build AI e2e with the stubbed provider. Expect PASS, with zero serious Axe findings.
+- [x] **Step 5:** Commit: `feat(build): inline AI suggestions on selection with diff review`
 
 ### Task 12: "Fix with AI" from a compile error
 
@@ -325,15 +325,15 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
 **Interfaces:**
 - Produces: `BuildAssistRequest.diagnostic?: { kind: LatexDiagnosticKind; line: number }`. The line must fall inside `startLine..endLine`, and the mode must be `"fix"`. The selection is the error line with 2 lines either side, clamped to the document.
 
-- [ ] **Step 1:** Write failing tests:
+- [x] **Step 1:** Write failing tests:
   - A request whose diagnostic line falls outside the range → `invalid_request`.
   - An unknown kind → `invalid_request`.
   - The provider payload contains the kind string and no log text.
   - Clicking "Fix with AI" opens the Task 11 panel prefilled, with consent still required.
-- [ ] **Step 2:** Run them. Expect FAIL.
-- [ ] **Step 3:** Implement. Change `BUILD_AI_POLICY_VERSION` only if the owner decides the consent text must change.
-- [ ] **Step 4:** Run `npm run test:build-ai`. Expect PASS. A live provider probe is a separately authorised action.
-- [ ] **Step 5:** Commit: `feat(build): fix compile errors with AI`
+- [x] **Step 2:** Run them. Expect FAIL.
+- [x] **Step 3:** Implement. Change `BUILD_AI_POLICY_VERSION` only if the owner decides the consent text must change.
+- [x] **Step 4:** Run `npm run test:build-ai`. Expect PASS. A live provider probe is a separately authorised action.
+- [x] **Step 5:** Commit: `feat(build): fix compile errors with AI`
 
 ## Phase 4 — Onboarding and polish
 
@@ -355,16 +355,16 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
   2. After the choice, show three dismissible coach marks in order: Recompile (⌘/Ctrl+Enter); select lines → Ask AI (⌘/Ctrl+K); Download → Check this resume.
   3. "Show tips again" sits in the options menu.
 
-- [ ] **Step 1:** Write failing tests:
+- [x] **Step 1:** Write failing tests:
   - The dialog shows on the first visit only.
   - Restore is hidden without a draft.
   - Choosing a template loads it.
   - Focus is trapped and returned on close.
   - Esc dismisses it.
-- [ ] **Step 2:** Run them. Expect FAIL.
-- [ ] **Step 3:** Implement with the native `<dialog>` and the existing CSS module.
-- [ ] **Step 4:** Run them. Expect PASS, with zero serious Axe findings.
-- [ ] **Step 5:** Commit: `feat(build): first-run onboarding and template gallery`
+- [x] **Step 2:** Run them. Expect FAIL.
+- [x] **Step 3:** Implement with the native `<dialog>` and the existing CSS module.
+- [x] **Step 4:** Run them. Expect PASS, with zero serious Axe findings.
+- [x] **Step 5:** Commit: `feat(build): first-run onboarding and template gallery`
 
 ### Task 14: "Check this resume" handoff to the analyzer
 
@@ -378,13 +378,13 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
 - Produces: `setPendingUpload(file: File): void` and `takePendingUpload(): File | null`. The file is held in module memory, used once, and cleared when read.
 - This keeps the analyzer separate: nothing is uploaded until the user submits the normal upload form, with its consent.
 
-- [ ] **Step 1:** Write failing tests:
+- [x] **Step 1:** Write failing tests:
   - Take returns the file once, then `null`.
   - The e2e flow (Compile → Check this resume → `/upload`) shows `document.pdf` preselected and nothing submitted.
-- [ ] **Step 2:** Run them. Expect FAIL.
-- [ ] **Step 3:** Implement. Navigate client-side with `useNavigate()`.
-- [ ] **Step 4:** Run them. Expect PASS.
-- [ ] **Step 5:** Commit: `feat(build): hand compiled PDF to the resume checker`
+- [x] **Step 2:** Run them. Expect FAIL.
+- [x] **Step 3:** Implement. Navigate client-side with `useNavigate()`.
+- [x] **Step 4:** Run them. Expect PASS.
+- [x] **Step 5:** Commit: `feat(build): hand compiled PDF to the resume checker`
 
 ### Task 15: Polish pass to the quality bar
 
@@ -398,10 +398,10 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
 - **Motion:** 150–200 ms ease-out on panels and diffs. None under `prefers-reduced-motion`.
 - **Copy:** short and sentence case, written for the user's goal (for example "Fix this error", not "Run diagnostic").
 
-- [ ] **Step 1:** Run the `design-review` skill on `/build` and list the issues.
-- [ ] **Step 2:** Fix them. Run `npm run test:e2e -- e2e/latex-converter.spec.ts e2e/build-assist.spec.ts`. Expect PASS, with zero serious Axe findings.
-- [ ] **Step 3:** Update `docs/design/LATEX_CONVERTER.md` with the new behaviour, and record the evidence in `tasks/todo.md`.
-- [ ] **Step 4:** Commit: `style(build): polish pass`
+- [x] **Step 1:** Run the `design-review` skill on `/build` and list the issues.
+- [x] **Step 2:** Fix them. Run `npm run test:e2e -- e2e/latex-converter.spec.ts e2e/build-assist.spec.ts`. Expect PASS, with zero serious Axe findings.
+- [x] **Step 3:** Update `docs/design/LATEX_CONVERTER.md` with the new behaviour, and record the evidence in `tasks/todo.md`.
+- [x] **Step 4:** Commit: `style(build): polish pass`
 
 ---
 
@@ -418,9 +418,21 @@ Contracts: [Build design](../docs/design/LATEX_CONVERTER.md), [ADR-0016](../docs
 | 7 | Tasks 10–11, PDF highlight and inline AI | The headline features requested |
 | 8 | Tasks 9 and 12–15 | Preview, AI error fixes, onboarding and polish |
 
+## As built (deviations from this plan, 2026-11-24)
+
+- **Commits:** the work landed as one feature commit (`2280daa`) plus follow-ups, not one commit per task.
+- **Task 2:** the corpus test was never gated behind `BUILD_TEMPLATE_CORPUS`; it asserts the manifest's `compile`/`reject` expectations directly.
+- **Task 4:** `fontawesome5` was left out (it needs `texlive-fonts-extra`, about 1.7 GB). Six packages were admitted.
+- **Task 5:** overfull boxes are warnings only up to 20 pt; larger overflow fails, so text cannot sit off the page.
+- **Task 6:** two candidate images were withdrawn after the verifier found gaps. The final image is `sha256:e7a49adc…`.
+- **Task 7:** the gutter uses a custom labelled marker, not `@codemirror/lint`, so that package was removed. `@lezer/highlight` was added for AA-contrast token colors.
+- **Task 8:** "stale" compares the compiled source text rather than its hash. The result is the same.
+- **Task 11:** the AI panel floats over the PDF pane so the inline diff stays visible. Escape closes it from anywhere.
+- **Task 15:** the gstack `design-review` skill was not run, because it cannot sign in to `/build` by itself. The quality bar was checked instead with Playwright Chrome screenshots at 390, 768, 1366 and 1440 px in light and dark, a 640 px (200% zoom) check, reduced motion and Axe.
+
 ## Owner decisions still needed
 
-- **Task 5:** approve turning overfull boxes from errors into warnings.
-- **Task 4:** approve the final package list once the corpus report exists.
+- **Task 5:** approved 2026-11-24 (with the 20 pt limit).
+- **Task 4:** approved 2026-11-24.
 - **Task 11:** consent stays per request. Remembering consent per session would feel smoother, but it's a privacy policy change.
 - **Task 12:** authorise the live provider probe.

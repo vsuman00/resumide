@@ -555,9 +555,11 @@ export default function LatexConverter() {
                     onOpenChange={setAiOpen}
                     enabled={aiEnabled}
                     onApply={changeSource}
-                    onPreview={(range, replacement) =>
-                      editor.current?.showInlineDiff(range, replacement)
-                    }
+                    onPreview={(range, replacement) => {
+                      editor.current?.showInlineDiff(range, replacement);
+                      // The suggestion's lines are also marked in the PDF.
+                      if (range) onLines(range, "selection");
+                    }}
                   />
                 </div>
                 <span className={styles.sourceCount}>
