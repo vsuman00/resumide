@@ -486,7 +486,7 @@ Rules for this section:
 - [x] **BX-D1, Task 5 (approved 2026-11-24, refined):** approve turning overfull `\hbox`/`\vbox` notices from compile failures into warnings. Evidence for the change: the owner's resume was rejected for a 0.78-point overflow ([2026-10-31 repair](../docs/evaluation/LATEX_DOCUMENT_OVERFLOW_REPAIR_20261031.md)). Blocks BX-05.
 - [x] **BX-D2, Task 4 (approved 2026-11-24):** approve the final package list after the BX-02 corpus report. Blocks BX-04.
 - [ ] **BX-D3, Task 11:** keep AI consent per request (current policy), or approve remembering consent per session (a privacy policy change). The default is per request, so this does not block BX-11.
-- [ ] **BX-D4, Task 12:** authorise one live provider probe for "Fix with AI". This does not block the stubbed-provider verification.
+- [x] **BX-D4, Task 12 (authorised and run 2026-11-24, under $2):** authorise one live provider probe for "Fix with AI". This does not block the stubbed-provider verification.
 
 #### Phase 0 — browser-only fixes (no compiler image change)
 
@@ -545,6 +545,12 @@ Rules for this section:
 **Follow-up, 2026-11-24 (second Chrome pass, same environment):** Three more browser tests pass against the real compiler: all six gallery templates compile from the UI (about 2 minutes, paced for the 3-per-minute rate limit), a three-page document scrolls with a following page indicator and safe links, and a paste at exactly 49,152 bytes is accepted while a larger one is refused with the draft intact. These found and fixed one product bug: a highlight on a page scrolled out of view was not brought into view, because the check used the window instead of the preview's own scroll area. Final totals: 349 files and 7,346 unit and component tests; Chrome 16 core and 6 inline-AI tests, all with zero Axe violations.
 
 **Plan audit, 2026-11-24 (third pass):** Each plan step was checked against the code. Four gaps were closed: `@codemirror/lint` was removed (unused); an AI suggestion now also marks its lines in the PDF; and two new Chrome tests cover "Fix with AI" from a compile error (only the kind and line are sent, consent is still required, and the diff and PDF mark appear) and Esc-then-Tab leaving the editor. The plan's "As built" section lists every deviation. Still open and owner-gated: BX-D4 live probe, the hosted AI budget path, Trivy disposition, a screen-reader pass, other browsers, and the gstack `design-review` run.
+
+**Live AI check, 2026-11-24 (BX-D4, GPT-6 Luna, owner limit $2):** The capability probe passed, and `e2e/build-ai-live.spec.ts` ran four tests in Chrome against the real server validation and the live model (`BUILD_AI_LIVE=1`): Fix code, Rewrite, Improve resume wording, and Fix with AI from a compile error. All pass, with zero Axe violations. Total spend for the whole session was about $0.0013 over 21 calls (hard cap in the test: $1 and 12 calls per run; list price $0.10 / $0.50 per million tokens, from third-party pages, unconfirmed on OpenAI's own pricing page). [Receipt](agent-handoffs/build-experience/live-ai-gpt-6-luna-20261124.json)
+
+- **Finding:** the live model correctly fixed `\textbff` to `\textbf`, but the factual-support check refused it as unproven, so Fix code never produced a replacement. Fixed with a narrow `command_repair` rule (policy `build-factual-support/1.1.0`): it applies only when the original has an unknown command, exactly one text-wrapper command is renamed within edit distance 2, and every other character is identical. Words, numbers, braces and other commands cannot change. Six new unit tests cover it. This loosens a frozen policy slightly, so it needs your review.
+- **Safe withholds, by design:** Rewrite turned "Worked on" into "Built" (a stronger claim) and the check withheld it. Resume wording only inserted "by" and was still withheld. The UI showed Advice, no diff and no Accept button, and the source was untouched. These are the conservative checks working, not defects; the "by" case shows they can be stricter than needed.
+- **Not covered:** the hosted consent, audit and AI-budget rows. That ledger is not migrated on the test project, so those requests were validated by the real server code but not written to the database.
 
 **Recommended order:** BX-01 → BX-02 → BX-05 (after BX-D1) → BX-03 / BX-04 → BX-06 → BX-07 / BX-08 → BX-10 / BX-11 → BX-09, BX-12 to BX-15.
 

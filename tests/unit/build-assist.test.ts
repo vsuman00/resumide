@@ -768,3 +768,69 @@ describe("diagnosticSelection (BX-12)", () => {
     });
   });
 });
+
+describe("command typo repair (live GPT-6 Luna finding)", () => {
+  const whole = (line: string) =>
+    `\\documentclass{article}\n\\begin{document}\n\\begin{itemize}\n${line}\n\\end{itemize}\n\\end{document}\n`;
+  const check = (original: string, replacement: string) => {
+    const source = whole(original);
+    const bound = validateBuildAssistRequest({
+      source,
+      sourceHash: createHash("sha256").update(source).digest("hex"),
+      startLine: 4,
+      endLine: 4,
+      mode: "fix",
+      consent: true,
+      policyVersion: BUILD_AI_POLICY_VERSION,
+    });
+    return {
+      proof: assessBuildFactualSupport({ ...bound, replacement }).state,
+      operation: validateBuildSuggestion(bound, {
+        operation: "replace",
+        replacement,
+        explanation: "Closes the brace.",
+        questions: [],
+      }).suggestion.operation,
+    };
+  };
+  it("accepts a misspelled text wrapper renamed to the known one", () => {
+    expect(
+      check(
+        "\\item \\textbff{Worked} on dashboards in 2024.",
+        "\\item \\textbf{Worked} on dashboards in 2024.",
+      ),
+    ).toEqual({
+      proof: "supported",
+      operation: "replace",
+    });
+  });
+  it.each([
+    [
+      "changed words",
+      "\\item \\textbff{Worked} on dashboards.",
+      "\\item \\textbf{Led} on dashboards.",
+    ],
+    [
+      "changed number",
+      "\\item \\textbff{Built} 12 tools.",
+      "\\item \\textbf{Built} 99 tools.",
+    ],
+    [
+      "renamed to a non-wrapper command",
+      "\\item \\textbff{Built} tools.",
+      "\\item \\input{Built} tools.",
+    ],
+    [
+      "a far-off command",
+      "\\item \\textbff{Built} tools.",
+      "\\item \\emph{Built} tools.",
+    ],
+    [
+      "a readable original",
+      "\\item \\textbf{Built} tools.",
+      "\\item \\textit{Built} tools.",
+    ],
+  ])("still abstains for %s", (_, original, replacement) => {
+    expect(check(original, replacement).operation).not.toBe("replace");
+  });
+});

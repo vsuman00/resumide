@@ -14,7 +14,7 @@ if (
   );
 const standalone = defineConfig({
   testDir: "./e2e",
-  testMatch: "build-assist.spec.ts",
+  testMatch: ["build-assist.spec.ts", "build-ai-live.spec.ts"],
   fullyParallel: false,
   workers: 1,
   reporter: "list",

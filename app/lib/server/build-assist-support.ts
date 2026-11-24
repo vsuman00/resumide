@@ -4,7 +4,7 @@ import {
   buildWritingSupportDocument,
 } from "./writing-support";
 
-export const BUILD_FACT_SUPPORT_POLICY = "build-factual-support/1.0.0";
+export const BUILD_FACT_SUPPORT_POLICY = "build-factual-support/1.1.0";
 const MAX_PARTS = 8192;
 const MAX_DEPTH = 24;
 const textWrappers = new Set([
@@ -405,9 +405,44 @@ function selectedProjection(
 export type BuildFactualSupport =
   | {
       state: "supported";
-      kind: "literal_formatting" | "source_transformation";
+      kind: "literal_formatting" | "source_transformation" | "command_repair";
     }
   | { state: "clarification_required" };
+
+const COMMAND = /\\[A-Za-z]+\*?/gu;
+function editDistance(a: string, b: string) {
+  let row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const next = [i];
+    for (let j = 1; j <= b.length; j++)
+      next[j] = Math.min(
+        row[j] + 1,
+        next[j - 1] + 1,
+        row[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    row = next;
+  }
+  return row[b.length];
+}
+/**
+ * A misspelled command renamed to a known text wrapper (\textbff -> \textbf).
+ * Every non-command character is identical, so no words, numbers or braces change.
+ */
+function isCommandTypoRepair(original: string, replacement: string) {
+  if (original.replace(COMMAND, "\0") !== replacement.replace(COMMAND, "\0"))
+    return false;
+  const before = original.match(COMMAND) ?? [];
+  const after = replacement.match(COMMAND) ?? [];
+  let changed = 0;
+  for (let i = 0; i < before.length; i++) {
+    if (before[i] === after[i]) continue;
+    const name = after[i].slice(1).replace(/\*$/u, "");
+    if (!textWrappers.has(name) || editDistance(before[i], after[i]) > 2)
+      return false;
+    changed++;
+  }
+  return changed > 0;
+}
 
 /** Full-buffer projection stays local; only the existing selected payload goes to AI. */
 export function assessBuildFactualSupport(input: {
@@ -427,6 +462,24 @@ export function assessBuildFactualSupport(input: {
   )
     return abstain;
   try {
+    if (isCommandTypoRepair(input.originalText, input.replacement)) {
+      // Only when the original is unreadable (an unknown command) and the result is readable.
+      let unreadable = false;
+      try {
+        project(input.originalText, true);
+      } catch (error) {
+        if (!(error instanceof UnsupportedTex)) throw error;
+        unreadable = true;
+      }
+      if (!unreadable) return abstain;
+      project(input.replacement, true);
+      project(
+        input.source.slice(0, input.startOffset) +
+          input.replacement +
+          input.source.slice(input.endOffset),
+      );
+      return { state: "supported", kind: "command_repair" };
+    }
     const from = project(input.originalText, true),
       to = project(input.replacement);
     if (
