@@ -1,0 +1,76 @@
+{
+  "version": "heldout-1",
+  "note": "Held-out synthetic pairs written after the matcher was frozen for Phase A. Labels were set before the first run and were not changed after seeing results. Not real postings or resumes.",
+  "fixtures": [
+    {
+      "id": "accountant-strong",
+      "category": "strong",
+      "style": "Corporate",
+      "jobDescription": "Senior Accountant\n\nRequired Qualifications\n- Bachelor's degree in Accounting or Finance\n- 4+ years of accounting experience\n- Proficiency in QuickBooks\n- Experience with month-end close and financial reporting\n\nPreferred\n- CPA license",
+      "resumeText": "Senior Accountant, Example Finance, Mar 2019 - Present\n- Led month-end close and prepared financial reporting for three entities.\n- Managed general ledger reconciliations in QuickBooks.\n\nStaff Accountant, Sample Ledger, Jun 2016 - Feb 2019\n- Processed accounts payable and receivable.\n\nEducation\nB.S. Accounting, State University, 2016\n\nSkills\nQuickBooks, Excel, GAAP",
+      "expectedMet": [
+        "Bachelor's degree",
+        "Accounting",
+        "QuickBooks",
+        "month-end close",
+        "financial reporting"
+      ],
+      "expectedMissing": ["CPA"],
+      "requiredCoverage": [0.8, 1.0]
+    },
+    {
+      "id": "nurse-partial",
+      "category": "partial",
+      "style": "Healthcare",
+      "jobDescription": "Registered Nurse - ICU\n\nRequirements\n- Active RN license\n- BLS and ACLS certification\n- 2+ years of critical care experience\n- Experience with ventilator management\n- Bachelor of Science in Nursing preferred",
+      "resumeText": "Registered Nurse, Example Hospital, Aug 2021 - Present\n- Cared for adult patients in a medical-surgical unit.\n- Maintained BLS certification and active RN license.\n\nEducation\nB.S. Nursing, State University, 2021",
+      "expectedMet": ["RN license", "BLS"],
+      "expectedMissing": ["ACLS", "ventilator management", "critical care"],
+      "requiredCoverage": [0.2, 0.6]
+    },
+    {
+      "id": "sales-poor",
+      "category": "poor",
+      "style": "Sales",
+      "jobDescription": "Enterprise Account Executive\n\nQualifications\n- 5+ years of enterprise SaaS sales experience\n- Proven record of closing six-figure deals\n- Experience with Salesforce\n- Strong negotiation skills",
+      "resumeText": "Software Engineer, Example Corp, 2020 - Present\n- Built backend services in Go and PostgreSQL.\n- Wrote unit tests and maintained CI pipelines.\n\nEducation\nB.S. Computer Science, State University, 2020",
+      "expectedMet": [],
+      "expectedMissing": [
+        "Salesforce",
+        "enterprise SaaS sales",
+        "closing six-figure deals"
+      ],
+      "requiredCoverage": [0.0, 0.25]
+    },
+    {
+      "id": "data-analyst-strong",
+      "category": "strong",
+      "style": "Analytics",
+      "jobDescription": "Data Analyst\n\nWhat you need\n- Bachelor's degree in a quantitative field\n- 2+ years of experience in data analysis\n- Advanced SQL\n- Experience with Tableau or Power BI\n- Experience communicating insights to stakeholders",
+      "resumeText": "Data Analyst, Example Analytics, Jan 2021 - Present\n- Wrote complex SQL queries to analyse customer behaviour.\n- Built dashboards in Tableau and presented insights to stakeholders.\n\nEducation\nB.S. Statistics, State University, 2020",
+      "expectedMet": ["Bachelor's degree", "SQL", "Tableau", "data analysis"],
+      "expectedMissing": [],
+      "requiredCoverage": [0.8, 1.0]
+    },
+    {
+      "id": "devops-partial",
+      "category": "partial",
+      "style": "Infrastructure",
+      "jobDescription": "DevOps Engineer\n\nMinimum qualifications\n- 3+ years of experience in DevOps or SRE\n- Experience with Kubernetes and Docker\n- Infrastructure as code with Terraform\n- Experience with Prometheus or Grafana\n- Scripting in Python or Bash",
+      "resumeText": "Systems Administrator, Example IT, Feb 2020 - Present\n- Maintained Linux servers and wrote Bash scripts for automation.\n- Containerised internal tools with Docker.\n\nEducation\nB.S. Information Technology, State University, 2019",
+      "expectedMet": ["Docker", "Bash"],
+      "expectedMissing": ["Kubernetes", "Terraform", "Prometheus"],
+      "requiredCoverage": [0.2, 0.65]
+    },
+    {
+      "id": "pm-partial",
+      "category": "partial",
+      "style": "Product",
+      "jobDescription": "Product Manager\n\nRequirements\n- 3+ years of product management experience\n- Experience writing product requirements documents\n- Familiarity with Agile and Scrum\n- Experience with A/B testing\n- MBA preferred",
+      "resumeText": "Business Analyst, Example Retail, Apr 2019 - Present\n- Gathered requirements and wrote specifications for engineering teams.\n- Worked in an Agile Scrum team and ran A/B tests on checkout.\n\nEducation\nB.A. Economics, State University, 2018",
+      "expectedMet": ["Agile", "Scrum", "A/B testing"],
+      "expectedMissing": ["product management"],
+      "requiredCoverage": [0.4, 0.85]
+    }
+  ]
+}

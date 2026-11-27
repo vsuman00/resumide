@@ -1,7 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect as baseExpect, test } from "@playwright/test";
 import { createCanonicalFixture } from "../scripts/canonical-test-fixture";
+
+// Pages take about 6 s to load against the hosted project, more under parallel load (FT-06).
+const expect = baseExpect.configure({ timeout: 20_000 });
 
 // This suite is intentionally local-only and is run through test:aa2:browser.
 // It never falls back to the hosted .env or provisions cloud resources.

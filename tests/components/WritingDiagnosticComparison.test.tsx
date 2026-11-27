@@ -73,7 +73,7 @@ it("labels projected wording as not saved without inheriting source or confirmat
   );
   const view = within(
     screen.getByRole("region", {
-      name: "Projected writing observations (not saved)",
+      name: /^Projected writing observations \(not saved\)/,
     }),
   );
   expect(

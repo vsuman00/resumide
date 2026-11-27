@@ -1,11 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import AxeBuilder from "@axe-core/playwright";
-import { test, expect } from "@playwright/test";
+import { test, expect as baseExpect } from "@playwright/test";
 import { createScoreFixture } from "../scripts/score-v2-test-fixture";
+
+// Pages take about 6 s to load against the hosted project, more under parallel load (FT-11).
+const expect = baseExpect.configure({ timeout: 20_000 });
 test("owner reviews withheld scoring diagnostics, source versions and privacy by keyboard", async ({
   page,
   context,
 }) => {
+  test.setTimeout(120_000);
   const f = await createScoreFixture(),
     other = await createScoreFixture();
   const sessions: ReturnType<typeof createServerClient>[] = [];

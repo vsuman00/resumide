@@ -1,10 +1,17 @@
 import { createServerClient } from "@supabase/ssr";
 import AxeBuilder from "@axe-core/playwright";
-import { test, expect, type BrowserContext } from "@playwright/test";
+import {
+  test,
+  expect as baseExpect,
+  type BrowserContext,
+} from "@playwright/test";
 import { createScoreFixture } from "../scripts/score-v2-test-fixture";
 import { loadCanonical } from "../app/lib/server/canonical-repository";
 import { applyAuthoring } from "../app/lib/server/authoring-repository";
 import { clarifyValue } from "../app/lib/server/authoring-contract";
+
+// Each save redirects to /score, whose loader takes about 6 s against the hosted project (FT-03).
+const expect = baseExpect.configure({ timeout: 20_000 });
 async function login(
   context: BrowserContext,
   f: Awaited<ReturnType<typeof createScoreFixture>>,
@@ -49,6 +56,7 @@ test("candidate edits, clarifies, accepts and undoes a source-bound patch by key
   page,
   context,
 }) => {
+  test.setTimeout(120_000);
   const f = await createScoreFixture(),
     client = await login(context, f);
   try {
@@ -112,7 +120,10 @@ test("candidate edits, clarifies, accepts and undoes a source-bound patch by key
       name: "Accept action scope result",
       exact: true,
     });
+    // Wait out the reload after the last confirmation: it resets acknowledgements and disables the form.
+    await page.waitForLoadState("networkidle");
     await accept.locator("..").getByRole("checkbox").check();
+    await expect(accept).toBeEnabled();
     await accept.focus();
     await page.keyboard.press("Enter");
     await expect(page.locator(`#author-fact-${fact.id}`)).toHaveValue(
@@ -162,6 +173,7 @@ test("candidate edits, clarifies, accepts and undoes a source-bound patch by key
 test("JavaScript-disabled editing preserves stale drafts and supports explicit recovery and restore", async ({
   browser,
 }) => {
+  test.setTimeout(120_000);
   const f = await createScoreFixture(),
     context = await browser.newContext({
       javaScriptEnabled: false,

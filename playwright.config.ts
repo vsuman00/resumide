@@ -62,9 +62,13 @@ if (privateRun) {
 
 export default defineConfig({
   testDir: "./e2e",
-  testIgnore: privateRun ? ["**/._*", "**/build-assist.spec.ts"] : ["**/._*"],
+  // build-assist needs the Build AI test harness, so it only runs under playwright.build-ai.config.ts.
+  testIgnore: ["**/._*", "**/build-assist.spec.ts"],
   fullyParallel: !privateRun,
-  workers: privateRun ? 1 : undefined,
+  // The hosted test project is remote: parallel workers push the privacy access check past its
+  // fail-closed 5 s cap and cause spurious 503s (FT-11), so hosted runs go one spec at a time.
+  workers:
+    privateRun || process.env.AA7_HOSTED_TEST_AUTHORIZATION ? 1 : undefined,
   outputDir: privateRun ? process.env.BROWSER_PRIVATE_OUTPUT_DIR : undefined,
   reporter: "list",
   use: {

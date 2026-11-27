@@ -1,12 +1,19 @@
 import { randomUUID } from "node:crypto";
 import { createServerClient } from "@supabase/ssr";
 import AxeBuilder from "@axe-core/playwright";
-import { test, expect, type BrowserContext } from "@playwright/test";
+import {
+  test,
+  expect as baseExpect,
+  type BrowserContext,
+} from "@playwright/test";
 import { createArtifactFixture } from "../scripts/artifact-test-fixture";
 import {
   mutateCanonical,
   loadCanonical,
 } from "../app/lib/server/canonical-repository";
+
+// Export pages take several seconds to check against the hosted project (FT-05).
+const expect = baseExpect.configure({ timeout: 20_000 });
 async function login(
   context: BrowserContext,
   f: Awaited<ReturnType<typeof createArtifactFixture>>,
@@ -85,6 +92,7 @@ test("semantic preview, checked PDF/DOCX and stale-version safety", async ({
   page,
   context,
 }) => {
+  test.setTimeout(120_000);
   const f = await prepare();
   try {
     await login(context, f);
@@ -116,9 +124,10 @@ test("semantic preview, checked PDF/DOCX and stale-version safety", async ({
     expect((await first).suggestedFilename()).toBe("resume.pdf");
     await page.getByLabel("Format").selectOption("docx");
     await page.getByRole("button", { name: "Check export" }).click();
+    // The PDF result stays on screen until the DOCX check ends, so wait for the DOCX button.
     await expect(
-      page.getByRole("heading", { name: "Export parity verified" }),
-    ).toBeVisible();
+      page.getByRole("button", { name: "Download checked DOCX" }),
+    ).toBeVisible({ timeout: 60_000 });
     const second = page.waitForEvent("download");
     await page.getByRole("button", { name: "Download checked DOCX" }).click();
     expect((await second).suggestedFilename()).toBe("resume.docx");
@@ -147,6 +156,7 @@ test("semantic preview, checked PDF/DOCX and stale-version safety", async ({
   }
 });
 test("no-JavaScript export form and private access", async ({ browser }) => {
+  test.setTimeout(120_000);
   const f = await prepare(),
     other = await createArtifactFixture();
   try {

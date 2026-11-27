@@ -15,6 +15,15 @@ const validEnvironment = {
 };
 
 describe("server configuration", () => {
+  it("turns the requirement matcher on by default and lets it be rolled back (ATS-D3)", () => {
+    for (const parse of [parseServerConfig, parseAnalysisConfig]) {
+      expect(parse(validEnvironment).MATCHER_V2_ENABLED).toBe(true);
+      expect(
+        parse({ ...validEnvironment, MATCHER_V2_ENABLED: "false" })
+          .MATCHER_V2_ENABLED,
+      ).toBe(false);
+    }
+  });
   it("keeps owned initial feedback default-off and validates both selected dependencies", () => {
     for (const parse of [parseServerConfig, parseAnalysisConfig]) {
       expect(parse(validEnvironment).INITIAL_FEEDBACK_ENABLED).toBe(false);

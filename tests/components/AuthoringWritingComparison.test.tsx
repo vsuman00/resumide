@@ -94,7 +94,7 @@ it("shows projected text observations from the actual patch without replacing fu
   const f = fixture();
   await show(f);
   const region = screen.getByRole("region", {
-    name: "Projected writing observations (not saved)",
+    name: /^Projected writing observations \(not saved\)/,
   });
   expect(
     within(region).getByText(
@@ -121,7 +121,7 @@ it("does not carry source references or confirmation into an unchanged unsaved p
   await show(f);
   const view = within(
     screen.getByRole("region", {
-      name: "Projected writing observations (not saved)",
+      name: /^Projected writing observations \(not saved\)/,
     }),
   );
   expect(view.getByText("Wording unchanged")).toBeTruthy();
@@ -162,7 +162,7 @@ it("keeps historical authoring read-only while calling a proposal projected", as
   await show(f);
   expect(
     screen.getByRole("region", {
-      name: "Projected writing observations (not saved)",
+      name: /^Projected writing observations \(not saved\)/,
     }),
   ).toBeTruthy();
   expect(

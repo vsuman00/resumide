@@ -94,7 +94,14 @@ export async function createCanonicalFixture(
           resume_id: resumeId,
           organization_id: organizationId,
           owner_id: ownerId,
-          storage_key: sourceStorageKey ?? `aa2-local/${sourceId}`,
+          // The database requires the app's key shape even when no object is uploaded.
+          storage_key:
+            sourceStorageKey ??
+            createResumeStorageKey({
+              organizationId,
+              resumeId,
+              versionId: sourceId,
+            }),
           checksum,
           bytes: sourceBytes?.byteLength ?? 1024,
           media_type: "application/pdf",
@@ -112,9 +119,14 @@ export async function createCanonicalFixture(
         },
       ],
     ];
-    for (const [table, record] of inserts)
-      if ((await admin.from(table).insert(record)).error)
-        throw new Error("Synthetic source setup failed");
+    for (const [table, record] of inserts) {
+      const { error } = await admin.from(table).insert(record);
+      // Codes only: no record values, so no fixture text reaches logs.
+      if (error)
+        throw new Error(
+          `Synthetic source setup failed: ${table} ${error.code ?? "unknown"}`,
+        );
+    }
     const envelope = reconcileDocumentEvidence(
       {
         id: attemptId,

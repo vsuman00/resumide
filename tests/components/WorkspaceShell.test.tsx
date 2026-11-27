@@ -51,6 +51,8 @@ it("includes the workspace heading, description, action and content in one main 
     screen.getByRole("navigation", { name: "Main navigation" }).closest("main"),
   ).toBeNull();
   expect(
-    screen.getByRole("link", { name: "Resumide home" }).closest("main"),
+    screen
+      .getByRole("link", { name: /^Resumide\s*Evidence desk\s*home$/i })
+      .closest("main"),
   ).toBeNull();
 });

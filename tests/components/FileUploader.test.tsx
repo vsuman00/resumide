@@ -32,7 +32,9 @@ describe("FileUploader", () => {
         onFileSelect={onFileSelect}
       />,
     );
-    const input = screen.getByLabelText<HTMLInputElement>("Upload PDF resume");
+    const input = screen.getByLabelText<HTMLInputElement>(
+      "Upload resume file (PDF or Word)",
+    );
 
     await user.upload(input, file);
     expect(onFileSelect).toHaveBeenLastCalledWith(file);
@@ -63,7 +65,7 @@ describe("FileUploader", () => {
     );
 
     await user.upload(
-      screen.getByLabelText("Upload PDF resume"),
+      screen.getByLabelText("Upload resume file (PDF or Word)"),
       new File(["%PDF-1.4"], "oversized.pdf", {
         type: "application/pdf",
       }),

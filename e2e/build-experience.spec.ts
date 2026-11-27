@@ -64,7 +64,7 @@ test("first visit offers templates; the chosen template loads, tips follow, and 
     await page.getByRole("button", { name: "Show tips again" }).click();
     await expect(page.getByText("1 of 3")).toBeVisible();
     await page.screenshot({
-      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/build-experience-tips-20261124.png`,
+      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/build-experience-tips-20261124.png`,
     });
   } finally {
     await owner.cleanup();
@@ -92,7 +92,7 @@ test("selecting a line highlights it in the PDF with its line label", async ({
     const label = page.locator("b", { hasText: /^L6$/ });
     await expect(label).toBeVisible({ timeout: 5000 });
     await page.screenshot({
-      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/build-experience-pdf-highlight-20261124.png`,
+      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/build-experience-pdf-highlight-20261124.png`,
       fullPage: true,
     });
     // A macro-only line has no visible text to highlight.
@@ -127,7 +127,7 @@ test("a compile error lists its kind and line; Jump moves the cursor; editing ma
     await page.getByRole("button", { name: "Jump to line 6" }).click();
     await expect(page.locator(".cm-activeLine")).toContainText("notacommand");
     await page.screenshot({
-      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/build-experience-problems-20261124.png`,
+      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/build-experience-problems-20261124.png`,
       fullPage: true,
     });
     await page.keyboard.type("% x");
@@ -244,7 +244,7 @@ test("? opens the shortcut sheet; layouts hold at four widths in light and dark 
           `${scheme} ${width}: no horizontal scroll`,
         ).toBe(true);
         await page.screenshot({
-          path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/build-experience-${scheme}-${width}-20261124.png`,
+          path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/build-experience-${scheme}-${width}-20261124.png`,
         });
       }
     }

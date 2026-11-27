@@ -6,6 +6,8 @@ import {
   verifyLocalFixtureZoom,
   withLocalFixtureBrowserContext,
 } from "../scripts/local-fixture-browser";
+import { DOCX_MEDIA_TYPE } from "../app/lib/server/docx-extract";
+import { buildDocx } from "../tests/fixtures/docx";
 
 test("home renders the candidate history state", async ({ page }) => {
   await page.goto("/");
@@ -98,13 +100,32 @@ test("upload page supports keyboard/file states and safe API errors", async ({
   const jobTitle = page.getByLabel("Job title");
   await jobTitle.focus();
   await expect(jobTitle).toBeFocused();
-  await page.getByLabel("Upload PDF resume").setInputFiles("scripts/dummy.pdf");
+  await page
+    .getByLabel("Upload resume file (PDF or Word)")
+    .setInputFiles("scripts/dummy.pdf");
   await page.getByRole("checkbox").check();
   await expect(
     page.getByRole("button", { name: /analyze resume/i }),
   ).toBeEnabled();
   await page.getByRole("button", { name: /analyze resume/i }).click();
   await expect(page.getByRole("alert")).toContainText(/sign in|analysis/i);
+});
+
+test("upload page accepts a Word resume and labels it as Word (ATS-D5)", async ({
+  page,
+}) => {
+  await page.goto("/upload");
+  await page.getByLabel("Upload resume file (PDF or Word)").setInputFiles({
+    name: "resume.docx",
+    mimeType: DOCX_MEDIA_TYPE,
+    buffer: Buffer.from(buildDocx(["Alex Example", "Software Engineer"])),
+  });
+  await expect(page.getByText("resume.docx").first()).toBeVisible();
+  await expect(page.getByText(/\bWord$/)).toBeVisible();
+  await page.getByRole("checkbox").check();
+  await expect(
+    page.getByRole("button", { name: /analyze resume/i }),
+  ).toBeEnabled();
 });
 
 test("stopping an in-flight upload does not claim its server data was deleted", async ({
@@ -119,7 +140,9 @@ test("stopping an in-flight upload does not claim its server data was deleted", 
   });
 
   await page.goto("/upload");
-  await page.getByLabel("Upload PDF resume").setInputFiles("scripts/dummy.pdf");
+  await page
+    .getByLabel("Upload resume file (PDF or Word)")
+    .setInputFiles("scripts/dummy.pdf");
   await page.getByRole("checkbox").check();
   await page.getByRole("button", { name: /analyze resume/i }).click();
   await page.getByRole("button", { name: "Stop upload", exact: true }).click();
@@ -268,7 +291,7 @@ test("evidence status retry keeps keyboard focus at 200% browser zoom", async ({
       }),
     ).toBeVisible();
     await expect(status).toBeFocused();
-    await expect(status).toContainText("Current status: needs ocr.");
+    await expect(status).toContainText("Current status: text review needed.");
     await expect(
       progress.getByRole("heading", { name: "Scores are withheld" }),
     ).toBeVisible();

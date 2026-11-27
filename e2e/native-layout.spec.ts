@@ -8,12 +8,15 @@ import { createHash, randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect as baseExpect, test } from "@playwright/test";
 import { extractPdfForAnalysis } from "../app/lib/server/extraction-stage";
 import { buildNativeEvidence } from "../app/lib/server/native-evidence";
 import { createResumeStorageKey } from "../app/lib/server/storage";
 import { BASELINE_SEMANTICS } from "../app/lib/server/qualitative-prose";
 import { syntheticPdf, CONTACT_PDF_STREAM } from "../tests/fixtures/native-pdf";
+
+// Pages take about 6 s to load against the hosted project, more under parallel load (FT-11).
+const expect = baseExpect.configure({ timeout: 20_000 });
 
 test("owner can review persisted layout by keyboard; other users cannot read it", async ({
   page,
@@ -260,7 +263,7 @@ test("owner can review persisted layout by keyboard; other users cannot read it"
       "Strong",
     );
     await page.locator(".result-score-header").screenshot({
-      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/navigation-report-button-20261031.png`,
+      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/navigation-report-button-20261031.png`,
     });
     const scoreContext = page.locator("details").filter({
       has: page.getByText("How this saved score was calculated", {
@@ -274,7 +277,7 @@ test("owner can review persisted layout by keyboard; other users cannot read it"
     );
     await expect(scoreContext.locator("time")).toContainText("IST");
     await scoreContext.screenshot({
-      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/score-explanation-20261031.png`,
+      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/score-explanation-20261031.png`,
     });
     await scoreContext.locator("summary").click();
     const reportButton = await page
@@ -519,7 +522,7 @@ test("owner can review persisted layout by keyboard; other users cannot read it"
         element.scrollIntoView({ block: "center" }),
       );
       await toneGroup.screenshot({
-        path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/cited-writing-${width}-20261031.png`,
+        path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/cited-writing-${width}-20261031.png`,
       });
     }
     await page.goto("/analyses");

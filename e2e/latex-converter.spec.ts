@@ -1,4 +1,4 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 import { createLatexOwner } from "../tests/fixtures/latex-auth";
@@ -183,7 +183,7 @@ test("exact current macro source compiles in place and downloads a real readable
     await expect(firstPageText).not.toContainText("Closing phrase");
     await expect(firstPageText.locator("*")).toHaveCount(0);
     await page.screenshot({
-      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/build-toolbar-trixie-paperfix-20261106.png`,
+      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/build-toolbar-trixie-paperfix-20261106.png`,
       fullPage: true,
     });
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
@@ -582,7 +582,7 @@ Selected code must remain visible.
         .soft(readablePixels, `${theme}: selected characters must be present`)
         .toBeGreaterThan(50);
       await page.locator(".cm-editor").screenshot({
-        path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/editor-selection-${theme}-codemirror-20261124.png`,
+        path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/editor-selection-${theme}-codemirror-20261124.png`,
       });
       await expect.poll(() => editorText(page)).toBe(sample);
       await page.getByLabel("Open site menu").click();
@@ -612,7 +612,7 @@ Selected code must remain visible.
       }
       await themeSelect.click();
       await page.screenshot({
-        path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/theme-options-${theme}-after-20261031.png`,
+        path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/theme-options-${theme}-after-20261031.png`,
       });
       await page.keyboard.press("Escape");
       await page.getByLabel("Open site menu").click();
@@ -663,8 +663,11 @@ Selected code must remain visible.
         selectionContrast,
       });
     }
+    const evidenceDir =
+      process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence";
+    await mkdir(evidenceDir, { recursive: true });
     await writeFile(
-      `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/EDITOR_CONTRAST_RECEIPT_20261031.json`,
+      `${evidenceDir}/EDITOR_CONTRAST_RECEIPT_20261031.json`,
       JSON.stringify(
         {
           date: "2026-10-31",

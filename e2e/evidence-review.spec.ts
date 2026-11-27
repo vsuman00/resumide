@@ -97,7 +97,7 @@ test("owner confirms and corrects evidence by keyboard with CAS, privacy and no-
           resume_id: resumeId,
           organization_id: organizationId,
           owner_id: owner,
-          storage_key: `organizations/${organizationId}/resumes/${resumeId}/${versionId}.pdf`,
+          storage_key: `organizations/${organizationId}/resumes/${resumeId}/versions/${versionId}.pdf`,
           checksum: "a".repeat(64),
           bytes: 100,
           media_type: "application/pdf",

@@ -40,9 +40,10 @@ vi.mock("../../app/lib/server/upload-validation", async (original) => ({
   ...(await original<
     typeof import("../../app/lib/server/upload-validation")
   >()),
-  validatePdfUpload: vi
-    .fn()
-    .mockResolvedValue(new Uint8Array([37, 80, 68, 70])),
+  validateResumeUpload: vi.fn().mockResolvedValue({
+    bytes: Buffer.from([37, 80, 68, 70]),
+    mediaType: "application/pdf",
+  }),
 }));
 import { AnalysisAdmissionError } from "../../app/lib/server/analysis-ingestion";
 

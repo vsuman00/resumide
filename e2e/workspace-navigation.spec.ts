@@ -8,6 +8,14 @@ test("one floating navbar connects public home, history, upload and Build with t
   page,
   context,
 }) => {
+  // Build shows a first-visit dialog; this test is about the navbar, so skip it.
+  await context.addInitScript(() => {
+    try {
+      localStorage.setItem("resumide.build.onboarded.v1", "1");
+    } catch {
+      /* storage unavailable */
+    }
+  });
   const owner = await createBrowserOwner();
   const cookies: { name: string; value: string }[] = [];
   const client = createServerClient(
@@ -71,7 +79,7 @@ test("one floating navbar connects public home, history, upload and Build with t
     ).toBeVisible();
     await expect(page.locator(".workspace-rail")).toHaveCount(0);
     await page
-      .getByRole("link", { name: "Resumide home", exact: true })
+      .getByRole("link", { name: /^Resumide\s*Evidence desk\s*home$/i })
       .click();
     await expect(page).toHaveURL("http://127.0.0.1:3110/");
     await expect(
@@ -106,13 +114,13 @@ test("one floating navbar connects public home, history, upload and Build with t
       ).toEqual([]);
       if (width === 390)
         await page.screenshot({
-          path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/floating-navigation-mobile-20261031.png`,
+          path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/floating-navigation-mobile-20261031.png`,
           clip: { x: 0, y: 0, width, height: 600 },
         });
       await page.getByLabel("Open site menu").click();
       if (width === 1366)
         await page.screenshot({
-          path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/floating-navigation-desktop-20261031.png`,
+          path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/floating-navigation-desktop-20261031.png`,
           clip: { x: 0, y: 0, width, height: 130 },
         });
     }

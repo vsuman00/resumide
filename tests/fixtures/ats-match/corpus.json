@@ -1,0 +1,189 @@
+{
+  "version": "ats-match-corpus/1.0.0",
+  "note": "Synthetic JD and resume pairs written for this repository. Not real postings or resumes. Labels are human judgements.",
+  "fixtures": [
+    {
+      "id": "swe-large-search-strong",
+      "category": "strong",
+      "style": "Google-style",
+      "jobDescription": "Minimum qualifications\nBachelor's degree in Computer Science or equivalent practical experience.\n5 years of experience with software development in one or more programming languages, and with data structures/algorithms.\n3 years of experience designing and building distributed systems.\nExperience with Kubernetes and Google Cloud Platform.\nPreferred qualifications\nMaster's degree or PhD in Computer Science.\nExperience with large language models (LLMs) and machine learning infrastructure.\nExperience leading technical projects and mentoring engineers.\nResponsibilities\nDesign, develop, test, deploy, maintain and improve software.\nManage project priorities, deadlines and deliverables.",
+      "resumeText": "Software Engineer, Example Corp, 2019 - 2025\nBuilt distributed system services on K8s and GCP; managed releases.\nLed a team of 4 engineers; mentored juniors. Developed LLM-based ML infra in Python and Go.\nDesigned and deployed microservices; maintained CI/CD. Data structures and algorithms.\nB.S. Computer Science",
+      "expectedMet": [
+        "Bachelor's degree",
+        "Computer Science",
+        "Distributed systems",
+        "Kubernetes",
+        "Google Cloud Platform",
+        "Data structures and algorithms",
+        "programming languages",
+        "Large language models",
+        "Machine learning infrastructure",
+        "Mentoring"
+      ],
+      "expectedMissing": ["Master's degree"],
+      "requiredCoverage": [0.9, 1.0]
+    },
+    {
+      "id": "sde-cloud-strong",
+      "category": "strong",
+      "style": "Amazon-style",
+      "jobDescription": "Basic qualifications\n3+ years of non-internship professional software development experience.\nBachelor's degree in computer science, computer engineering or a related field.\nExperience programming with at least one modern language such as Java, C++, or C#.\nExperience with AWS and building scalable services.\nPreferred qualifications\nExperience with microservices and RESTful APIs.\nKnowledge of operational excellence and on-call ownership.",
+      "resumeText": "Senior Software Development Engineer, Example Inc, 2018 - 2025\nBuilt RESTful APIs and microservices in Java on AWS serving 2M requests per day.\nOwned on-call rotation and led operational excellence reviews.\nEducation: B.Tech Computer Engineering",
+      "expectedMet": [
+        "Bachelor's degree",
+        "Java",
+        "AWS",
+        "Microservices",
+        "REST APIs"
+      ],
+      "expectedMissing": [],
+      "requiredCoverage": [0.9, 1.0]
+    },
+    {
+      "id": "swe-azure-partial",
+      "category": "partial",
+      "style": "Microsoft-style",
+      "jobDescription": "Required Qualifications\nBachelor's Degree in Computer Science or related technical field AND 4+ years technical engineering experience with coding in languages including C#, Java, JavaScript or Python.\nExperience with Azure and cloud services.\nPreferred Qualifications\nMaster's Degree in Computer Science.\nExperience with Kubernetes and machine learning.",
+      "resumeText": "Software Engineer, Example LLC, 2020 - 2025\nBuilt web services in Python and JavaScript on AWS.\nContainerized workloads with Docker.\nB.S. Computer Science",
+      "expectedMet": ["Bachelor's degree", "Python", "JavaScript"],
+      "expectedMissing": [
+        "Azure",
+        "Kubernetes",
+        "Master's degree",
+        "Machine learning"
+      ],
+      "requiredCoverage": [0.3, 0.75]
+    },
+    {
+      "id": "ds-strong",
+      "category": "strong",
+      "style": "data science",
+      "jobDescription": "Requirements\nMaster's degree in statistics, computer science or a related field.\nExperience with Python, SQL and machine learning frameworks such as PyTorch or TensorFlow.\nExperience with A/B testing and statistical analysis.\nNice to have\nExperience with Spark and Tableau.",
+      "resumeText": "Data Scientist, Example Analytics, 2019 - 2025\nBuilt machine learning models with PyTorch and Python; queried data with SQL.\nDesigned A/B tests and ran statistical analysis for pricing.\nBuilt Tableau dashboards on Spark pipelines.\nM.S. Statistics",
+      "expectedMet": [
+        "Master's degree",
+        "Python",
+        "SQL",
+        "PyTorch",
+        "A/B testing",
+        "Statistics",
+        "Machine learning",
+        "Tableau",
+        "Spark"
+      ],
+      "expectedMissing": [],
+      "requiredCoverage": [0.9, 1.0]
+    },
+    {
+      "id": "ds-poor",
+      "category": "poor",
+      "style": "data science",
+      "jobDescription": "Requirements\nMaster's degree in statistics, computer science or a related field.\nExperience with Python, SQL and machine learning frameworks such as PyTorch or TensorFlow.\nExperience with A/B testing and statistical analysis.",
+      "resumeText": "Graphic Designer, Example Studio, 2018 - 2025\nDesigned brand identities and packaging in Adobe Illustrator and Photoshop.\nLed client workshops and presentations.\nB.A. Visual Arts",
+      "expectedMet": [],
+      "expectedMissing": [
+        "Master's degree",
+        "Python",
+        "SQL",
+        "PyTorch",
+        "A/B testing",
+        "Statistics",
+        "Machine learning"
+      ],
+      "requiredCoverage": [0, 0.2]
+    },
+    {
+      "id": "sre-partial",
+      "category": "partial",
+      "style": "SRE",
+      "jobDescription": "What you'll bring\nExperience running production systems on Kubernetes and Linux.\nStrong knowledge of observability, Prometheus and incident response.\nExperience with Terraform and infrastructure as code.\nNice to have\nExperience with Go.",
+      "resumeText": "Systems Engineer, Example Co, 2019 - 2025\nOperated Linux servers and Kubernetes clusters; wrote runbooks.\nBuilt dashboards in Prometheus and handled incident response.",
+      "expectedMet": ["Kubernetes", "Linux", "Prometheus"],
+      "expectedMissing": ["Terraform"],
+      "requiredCoverage": [0.5, 0.85]
+    },
+    {
+      "id": "frontend-strong",
+      "category": "strong",
+      "style": "frontend",
+      "jobDescription": "Qualifications\nExperience building user interfaces with React and TypeScript.\nStrong knowledge of HTML, CSS and web accessibility.\nExperience with unit testing and Jest.\nBonus: GraphQL.",
+      "resumeText": "Frontend Engineer, Example Web, 2020 - 2025\nBuilt React and TypeScript applications with accessible HTML and CSS.\nWrote unit tests with Jest; migrated REST endpoints to GraphQL.",
+      "expectedMet": ["React", "TypeScript", "Jest", "Unit testing", "GraphQL"],
+      "expectedMissing": [],
+      "requiredCoverage": [0.9, 1.0]
+    },
+    {
+      "id": "pm-partial",
+      "category": "partial",
+      "style": "product",
+      "jobDescription": "Minimum qualifications\nBachelor's degree or equivalent practical experience.\n5 years of experience in product management.\nExperience with stakeholder management and roadmap planning.\nPreferred qualifications\nExperience with SQL and A/B testing.",
+      "resumeText": "Product Manager, Example SaaS, 2020 - 2025\nOwned the roadmap and managed stakeholders across engineering and design.\nRan experimentation programs with SQL.\nB.A. Economics",
+      "expectedMet": [
+        "Bachelor's degree",
+        "Product management",
+        "Stakeholder management",
+        "SQL",
+        "A/B testing"
+      ],
+      "expectedMissing": [],
+      "requiredCoverage": [0.6, 1.0]
+    },
+    {
+      "id": "marketing-strong",
+      "category": "strong",
+      "style": "non-tech",
+      "jobDescription": "Requirements\n3+ years of experience in digital marketing.\nExperience with SEO, content strategy and Google Analytics.\nExcellent written communication.\nPreferred\nExperience with Salesforce and email campaigns.",
+      "resumeText": "Marketing Manager, Example Retail, 2019 - 2025\nLed SEO and content strategy programs; reported in Google Analytics.\nRan email campaigns tracked in Salesforce.",
+      "expectedMet": [
+        "SEO",
+        "content strategy",
+        "Google Analytics",
+        "Salesforce",
+        "Email marketing"
+      ],
+      "expectedMissing": [],
+      "requiredCoverage": [0.7, 1.0],
+      "note": "Digital marketing is implied by the SEO and email evidence; implication rules need an ontology (decision ATS-D1), so the band is wider."
+    },
+    {
+      "id": "backend-go-poor",
+      "category": "poor",
+      "style": "backend",
+      "jobDescription": "Requirements\nExperience writing production services in Go.\nExperience with Kafka and PostgreSQL.\nKnowledge of gRPC and distributed systems.",
+      "resumeText": "Sales Associate, Example Retail, 2021 - 2025\nA go-getter who helps customers go further; trained new hires.\nManaged inventory and daily cash reconciliation.",
+      "expectedMet": [],
+      "expectedMissing": ["Go", "Kafka", "PostgreSQL", "Distributed systems"],
+      "requiredCoverage": [0, 0.2]
+    },
+    {
+      "id": "devops-strong",
+      "category": "strong",
+      "style": "devops",
+      "jobDescription": "Qualifications\nExperience with CI/CD pipelines, Docker and Kubernetes.\nExperience with Terraform and AWS.\nFamiliarity with Linux and Git.\nPreferred\nExperience with Prometheus and Python.",
+      "resumeText": "DevOps Engineer, Example Cloud, 2019 - 2025\nBuilt CI/CD pipelines with Docker and K8s on AWS; wrote Terraform modules.\nAdministered Linux hosts and Git workflows; Python tooling; Prometheus alerts.",
+      "expectedMet": [
+        "CI/CD",
+        "Docker",
+        "Kubernetes",
+        "Terraform",
+        "AWS",
+        "Linux",
+        "Git",
+        "Prometheus",
+        "Python"
+      ],
+      "expectedMissing": [],
+      "requiredCoverage": [0.9, 1.0]
+    },
+    {
+      "id": "security-partial",
+      "category": "partial",
+      "style": "security",
+      "jobDescription": "Minimum qualifications\nBachelor's degree in computer science or related field.\nExperience with threat modeling and penetration testing.\nExperience with Python and Linux.\nPreferred qualifications\nExperience with cloud security on AWS.",
+      "resumeText": "Security Analyst, Example Bank, 2020 - 2025\nPerformed threat modeling reviews and wrote Python automation on Linux.\nB.S. Information Systems",
+      "expectedMet": ["Bachelor's degree", "Python", "Linux"],
+      "expectedMissing": ["penetration testing"],
+      "requiredCoverage": [0.5, 0.9]
+    }
+  ]
+}

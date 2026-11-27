@@ -9,6 +9,7 @@ export default defineConfig({
   envDir: privateMode === "aa7-owned-synthetic" ? false : undefined,
   plugins: [tsconfigPaths()],
   test: {
+    globalSetup: ["tests/node-version-guard.ts"],
     environment: "node",
     include: [
       "tests/unit/**/*.test.ts",

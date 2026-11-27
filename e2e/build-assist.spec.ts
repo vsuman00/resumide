@@ -170,7 +170,7 @@ test("inline diff: Tab accepts bound to the exact source, Esc rejects, undo rest
     );
     await expect(editorText(page)).toContainText("Helped reduce incidents");
     await page.screenshot({
-      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "docs/evaluation"}/build-ai-inline-diff-20261124.png`,
+      path: `${process.env.BROWSER_EVIDENCE_DIR ?? "test-results/evidence"}/build-ai-inline-diff-20261124.png`,
       fullPage: true,
     });
     // Esc rejects without changing the source.

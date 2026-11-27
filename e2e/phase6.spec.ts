@@ -67,7 +67,9 @@ test.describe("Phase 6 accessible runtime matrix", () => {
     await expect(
       page.getByRole("heading", { name: /prepare a new analysis/i }),
     ).toBeVisible();
-    await expect(page.getByLabel("Upload PDF resume")).toBeAttached();
+    await expect(
+      page.getByLabel("Upload resume file (PDF or Word)"),
+    ).toBeAttached();
     await expect
       .poll(() =>
         page.evaluate(
@@ -89,7 +91,7 @@ test.describe("Phase 6 accessible runtime matrix", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/upload");
     await page
-      .getByLabel("Upload PDF resume")
+      .getByLabel("Upload resume file (PDF or Word)")
       .setInputFiles("scripts/dummy.pdf");
     await expect(page.locator("h1")).toHaveCount(1);
     await expect(page.locator(".file-dropzone-replace")).toBeVisible();
@@ -131,7 +133,7 @@ test.describe("Phase 6 accessible runtime matrix", () => {
     await page.route("**/api/analyze", (route) => route.abort("failed"));
     await page.goto("/upload");
     await page
-      .getByLabel("Upload PDF resume")
+      .getByLabel("Upload resume file (PDF or Word)")
       .setInputFiles("scripts/dummy.pdf");
     await page.getByRole("checkbox").check();
     await page.getByRole("button", { name: /analyze resume/i }).click();
