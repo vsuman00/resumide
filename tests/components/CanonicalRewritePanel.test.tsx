@@ -630,7 +630,12 @@ it.each(["fetch", "body"])(
       await vi.advanceTimersByTimeAsync(30001);
     });
     vi.useRealTimers();
-    await screen.findByRole("button", { name: "Retry exact writing request" });
+    // The default 1 s wait is too short for the first case on a cold CI runner.
+    await screen.findByRole(
+      "button",
+      { name: "Retry exact writing request" },
+      { timeout: 10_000 },
+    );
     expect(m.fetch).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Retained earlier summary")).toBeTruthy();
   },

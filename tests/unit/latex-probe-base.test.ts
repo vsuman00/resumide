@@ -352,7 +352,7 @@ describe("final staged layout admission", () => {
  def replace_output(*args,**kwargs):
   original(*args,**kwargs)
   if not changed:
-   target=pathlib.Path(args[2]);target.unlink();target.write_bytes(b'neutral replacement');target.chmod(0o444);changed.append(target)
+   target=pathlib.Path(args[2]);swap=target.with_name(target.name+'.swap');swap.write_bytes(b'neutral replacement');swap.chmod(0o444);swap.replace(target);changed.append(target)
  m._copy_member=replace_output
  try:invoke(v,output_dir=v[3],approved=m.fingerprint(v[4]))
  except m.LayoutError as e:print(e.code)
