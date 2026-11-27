@@ -3,12 +3,15 @@ const Heatmap = ({
   matchedKeywords,
   uncertainKeywords = [],
   keywordEvidence = [],
+  reference = false,
 }: {
   jdKeywords: string[];
   matchedKeywords: string[];
   missingKeywords: string[];
   uncertainKeywords?: string[];
   keywordEvidence?: KeywordEvidence[];
+  /** True when the JD match above is the result; this older list is context only. */
+  reference?: boolean;
 }) => {
   const matched = new Set(matchedKeywords);
   const uncertain = new Set(uncertainKeywords);
@@ -30,10 +33,18 @@ const Heatmap = ({
       <div className="result-section-heading">
         <div>
           <p className="workspace-eyebrow">Job relevance</p>
-          <h2 id="keyword-coverage-heading">Keyword coverage</h2>
+          <h2 id="keyword-coverage-heading">
+            {reference ? "Keyword list" : "Keyword coverage"}
+          </h2>
         </div>
-        <span>{coverage}% matched</span>
+        <span>{reference ? "For reference" : `${coverage}% matched`}</span>
       </div>
+      {reference ? (
+        <p className="keyword-coverage-intro">
+          This older list uses its own rules and is shown for reference. The JD
+          match above is your result.
+        </p>
+      ) : null}
       <p className="keyword-coverage-intro">
         Review the role-specific language found in your resume. Add a term only
         when it accurately reflects your experience. This view checks up to 20

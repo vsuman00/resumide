@@ -142,9 +142,12 @@ function FactObservations({
 export default function WritingDiagnosticComparison({
   comparison,
   factChanges,
+  context,
 }: {
   comparison: WritingComparison | SavedWritingComparison;
   factChanges?: readonly FactChange[];
+  /** Names the item this belongs to, so repeated sections have unique landmark names. */
+  context?: string;
 }) {
   const heading = useId();
   const saved = comparison.schemaVersion === "saved-writing-comparison/1.0.0";
@@ -152,7 +155,15 @@ export default function WritingDiagnosticComparison({
   const Heading = projected ? "h5" : "h3";
   const items = saved ? comparison.items : [comparison];
   return (
-    <section aria-labelledby={heading}>
+    <section
+      // Repeated per item: the region name adds the item so landmarks stay unique.
+      aria-labelledby={context ? undefined : heading}
+      aria-label={
+        context
+          ? `${projected ? "Projected writing observations (not saved)" : "Saved writing observations"}, ${context}`
+          : undefined
+      }
+    >
       <Heading id={heading}>
         {projected
           ? "Projected writing observations (not saved)"

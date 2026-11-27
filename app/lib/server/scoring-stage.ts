@@ -22,22 +22,44 @@ export const PARSER_VERSION = "parse-sim-v1";
 export const RULESET_VERSION = "ats-rules-v4";
 export const NORMALIZER_VERSION = "normalizer-v1";
 
+/** Drops per-line section maps and caps list sizes so the stored JSON stays small. */
+function compactTyped(
+  typed: NonNullable<ReturnType<typeof atsRules>["typed"]>,
+) {
+  const { structure, ...rest } = typed;
+  return {
+    ...rest,
+    profile: {
+      version: structure.version,
+      roles: structure.roles.slice(0, 20),
+      education: structure.education.slice(0, 10),
+      totalMonths: structure.totalMonths,
+      internMonths: structure.internMonths,
+    },
+  };
+}
+
 export function scoreExtractedResume(args: {
   text: string;
   pageCount: number;
   pageTexts?: readonly string[];
+  /** Stored extraction warnings; only structure findings are shown (ATS-15). */
+  extractionWarnings?: readonly unknown[] | null;
   jobDescription: string;
   textChecksum: string;
+  matcher?: "legacy" | "v2";
 }) {
   const parseView = parseSim({
     text: args.text,
     totalPages: args.pageCount,
     pageTexts: args.pageTexts,
+    extractionWarnings: args.extractionWarnings,
   });
   const rules = atsRules({
     text: args.text,
     jobDescription: args.jobDescription,
     parseView,
+    matcher: args.matcher,
   });
   const keywordCoverage = {
     taxonomyVersion: rules.taxonomyVersion,
@@ -46,6 +68,9 @@ export function scoreExtractedResume(args: {
     missing: rules.missingKeywords,
     uncertain: rules.uncertainKeywords,
     evidence: rules.matchingEvidence,
+    // Typed result for the v2 matcher: requirements by importance, application checks,
+    // title alignment and the parsed profile. Absent for the legacy matcher.
+    ...(rules.typed ? { typed: compactTyped(rules.typed) } : {}),
   };
   const payload = {
     score: rules.score,
@@ -115,7 +140,7 @@ export async function processScoringStage(
   const { data, error } = await admin
     .from("analyses")
     .select(
-      "status, request_id, jobs(description), analysis_extractions(extracted_text, text_checksum, page_count, page_texts)",
+      "status, request_id, jobs(description), analysis_extractions(extracted_text, text_checksum, page_count, page_texts, warnings)",
     )
     .eq("id", analysisId)
     .single();
@@ -138,8 +163,10 @@ export async function processScoringStage(
     text: extraction.extracted_text,
     pageCount: extraction.page_count,
     pageTexts: extraction.page_texts ?? undefined,
+    extractionWarnings: extraction.warnings,
     jobDescription: job?.description ?? "",
     textChecksum: extraction.text_checksum,
+    matcher: getAnalysisConfig().MATCHER_V2_ENABLED ? "v2" : "legacy",
   });
   const processId = `scorer-${randomUUID()}`;
   const requestId = data.request_id || `worker-${randomUUID()}`;

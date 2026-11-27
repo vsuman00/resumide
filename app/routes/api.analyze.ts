@@ -29,11 +29,11 @@ import {
 } from "~/lib/server/supabase";
 import {
   validateJobDetails,
-  validatePdfUpload,
+  validateResumeUpload,
 } from "~/lib/server/upload-validation";
 
 // React Router resource route. POST FormData:
-//   file: PDF
+//   file: PDF or Word (.docx)
 //   jobTitle: string
 //   jobDescription: string
 // Returns: { feedback: Feedback }
@@ -99,7 +99,7 @@ export async function action({ request }: { request: Request }) {
     if (!(file instanceof File)) {
       throw new PublicApiError(
         "INVALID_REQUEST",
-        "A PDF file is required.",
+        "A resume file (PDF or Word) is required.",
         400,
       );
     }
@@ -108,7 +108,10 @@ export async function action({ request }: { request: Request }) {
       maxTitleCharacters: config.MAX_JOB_TITLE_CHARACTERS,
       maxDescriptionCharacters: config.MAX_JOB_DESCRIPTION_CHARACTERS,
     });
-    const buffer = await validatePdfUpload(file, config.MAX_UPLOAD_BYTES);
+    const { bytes: buffer, mediaType } = await validateResumeUpload(
+      file,
+      config.MAX_UPLOAD_BYTES,
+    );
     await requireAndRecordAiConsent({
       userId: user.id,
       accepted: consentAccepted,
@@ -118,6 +121,7 @@ export async function action({ request }: { request: Request }) {
       userId: user.id,
       fileName: file.name,
       pdf: buffer,
+      mediaType,
       jobTitle,
       jobDescription,
       idempotencyKey,

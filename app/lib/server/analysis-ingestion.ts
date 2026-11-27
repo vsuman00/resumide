@@ -9,6 +9,7 @@ import {
 import { createSupabaseAdminClient } from "./supabase";
 import { getServerConfig } from "./config";
 import { AI_CONSENT_POLICY_VERSION } from "./privacy";
+import { DOCX_MEDIA_TYPE } from "./docx-extract";
 
 export const ANALYSIS_ADMISSION_POLICY_VERSION = "analysis-admission/1.0.0";
 type AdmissionCode =
@@ -72,7 +73,9 @@ const digest = (value: string | Uint8Array) =>
 type IngestionArgs = {
   userId: string;
   fileName: string;
+  /** The uploaded file bytes (a PDF unless `mediaType` says Word). */
   pdf: Uint8Array;
+  mediaType?: "application/pdf" | typeof DOCX_MEDIA_TYPE;
   jobTitle: string;
   jobDescription: string;
   idempotencyKey: string;
@@ -106,6 +109,8 @@ async function createBoundQueuedAnalysis(
     requestPolicySha256: args.requestPolicySha256!,
     policyVersion: ANALYSIS_ADMISSION_POLICY_VERSION,
     consentPolicyVersion: AI_CONSENT_POLICY_VERSION,
+    // Not part of the binding hash: the checksum already pins the bytes (ATS-D5).
+    mediaType: args.mediaType ?? "application/pdf",
   };
   const hash = createHash("sha256").update("ANALYSIS-ADMISSION1\n");
   for (const atom of [
@@ -191,7 +196,7 @@ async function createBoundQueuedAnalysis(
   let objectId: string;
   try {
     const uploaded = await admin.storage.from(bucket).upload(storageKey, pdf, {
-      contentType: "application/pdf",
+      contentType: meta.mediaType,
       upsert: false,
     });
     if (
@@ -306,6 +311,7 @@ export async function createQueuedAnalysis(args: IngestionArgs) {
     resumeId,
     versionId,
     bytes: args.pdf,
+    mediaType: args.mediaType,
   });
 
   try {
@@ -326,6 +332,7 @@ export async function createQueuedAnalysis(args: IngestionArgs) {
         p_storage_key: uploaded.storageKey,
         p_user_id: args.userId,
         p_version_id: versionId,
+        ...(args.mediaType ? { p_media_type: args.mediaType } : {}),
       },
       QueuedAnalysisSchema,
     );

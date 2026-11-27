@@ -7,6 +7,8 @@
 import { countBullets } from "./parsing/bullets";
 import { parseContact } from "./parsing/contact";
 import { extractDateStrings } from "./parsing/dates";
+import { parseHealthWarnings } from "./parsing/health";
+import { structureWarnings } from "./pdf-structure";
 import { parseLayoutWarnings } from "./parsing/layout";
 import { parseSections } from "./parsing/sections";
 
@@ -14,6 +16,8 @@ export function parseSim(args: {
   text: string;
   totalPages: number;
   pageTexts?: readonly string[];
+  /** Stored extraction warnings; only PDF-structure findings are used. */
+  extractionWarnings?: readonly unknown[] | null;
 }): ParseViewData {
   const lines = args.text.split(/\r?\n/u);
   const warnings: ParseViewWarning[] = [];
@@ -112,6 +116,15 @@ export function parseSim(args: {
   }
 
   warnings.push(...parseLayoutWarnings({ lines, sections: detectedSections }));
+  warnings.push(
+    ...parseHealthWarnings({
+      lines,
+      pageTexts: args.pageTexts,
+      totalPages: args.totalPages,
+    }),
+  );
+
+  warnings.push(...structureWarnings(args.extractionWarnings));
 
   const pageTexts = buildPageTexts(args);
 

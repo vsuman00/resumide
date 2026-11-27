@@ -1,4 +1,11 @@
-import { Form, Link, NavLink, useRouteLoaderData } from "react-router";
+import { useEffect, useRef } from "react";
+import {
+  Form,
+  Link,
+  NavLink,
+  useLocation,
+  useRouteLoaderData,
+} from "react-router";
 import ThemeControl from "./ThemeControl";
 import BrandLockup from "./BrandLockup";
 import styles from "./SiteNavigation.module.css";
@@ -29,21 +36,35 @@ function MainLinks() {
 }
 export default function SiteNavigation() {
   const root = useRouteLoaderData("root") as { user?: unknown } | undefined;
+  const menu = useRef<HTMLDetailsElement>(null);
+  const { pathname } = useLocation();
+  // The header stays mounted across pages, so close the menu after a link is chosen.
+  useEffect(() => {
+    if (menu.current) menu.current.open = false;
+  }, [pathname]);
   return (
     <header
       className={`site-navigation workspace-floating-header ${styles.bar}`}
     >
-      <Link
-        to="/"
-        aria-label="Resumide home"
-        className={`workspace-brand ${styles.brand}`}
-      >
+      {/* Name comes from the visible brand text plus a hidden "home" (WCAG 2.5.3). */}
+      <Link to="/" className={`workspace-brand ${styles.brand}`}>
         <BrandLockup compact />
+        <span className="sr-only"> home</span>
       </Link>
       <nav className={styles.primary} aria-label="Main navigation">
         <MainLinks />
       </nav>
-      <details className={styles.menu}>
+      <details
+        ref={menu}
+        className={styles.menu}
+        onKeyDown={(event) => {
+          // A native select handles its own Escape while its list is open.
+          if (event.key !== "Escape" || !menu.current?.open) return;
+          if ((event.target as HTMLElement).tagName === "SELECT") return;
+          menu.current.open = false;
+          menu.current.querySelector("summary")?.focus();
+        }}
+      >
         <summary aria-label="Open site menu">
           Menu <span aria-hidden="true">☰</span>
         </summary>

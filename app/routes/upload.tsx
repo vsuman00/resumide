@@ -61,16 +61,20 @@ const Upload = () => {
     if (isProcessing) return;
 
     if (!file) {
-      setFileError("Choose a PDF resume before analyzing.");
+      setFileError("Choose a PDF or Word resume before analyzing.");
       return;
     }
-    if (file.type !== "application/pdf") {
-      setFileError("Upload a PDF file to continue.");
+    if (
+      file.type !== "application/pdf" &&
+      file.type !==
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) {
+      setFileError("Upload a PDF or Word (.docx) file to continue.");
       return;
     }
     if (file.size > limits.maxUploadBytes) {
       setFileError(
-        `The PDF is too large. Maximum size is ${limits.maxUploadBytes / 1024 / 1024} MB.`,
+        `The file is too large. Maximum size is ${limits.maxUploadBytes / 1024 / 1024} MB.`,
       );
       return;
     }
@@ -153,7 +157,7 @@ const Upload = () => {
           <div className="analysis-prep-grid">
             <div className="upload-form-sections">
               <fieldset className="upload-fieldset">
-                <legend>Resume PDF</legend>
+                <legend>Resume file</legend>
                 <p className="upload-fieldset-intro">
                   Start with the original document. Resumide will preserve it as
                   the source layer for the evidence review.
@@ -266,7 +270,7 @@ const Upload = () => {
                   <span className="readiness-indicator" aria-hidden="true" />
                   <span>
                     <strong>
-                      {file ? "PDF selected" : "Add a resume PDF"}
+                      {file ? "Resume selected" : "Add a resume file"}
                     </strong>
                     <small>
                       {file ? file.name : "Required to start analysis"}
@@ -338,7 +342,7 @@ const Upload = () => {
             <p>
               {file && hasConsent
                 ? `Ready to analyze ${file.name}`
-                : "Add a PDF and confirm AI consent to continue."}
+                : "Add a resume and confirm AI consent to continue."}
             </p>
             <div>
               {isProcessing ? (

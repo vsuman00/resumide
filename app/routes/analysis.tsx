@@ -127,6 +127,11 @@ type StatusResponse = {
   queueActivity?: AnalysisQueueActivity;
 };
 
+// Internal status names that do not read as plain words.
+const STATUS_WORDS: Record<string, string> = {
+  needs_ocr: "text review needed",
+  qualitative_review: "preparing writing feedback",
+};
 export function meta() {
   return [{ title: "Resumide | Analysis Progress" }];
 }
@@ -364,7 +369,7 @@ function AnalysisProgressView({ id }: { id: string | undefined }) {
                 : error
                   ? "We could not refresh this analysis."
                   : result
-                    ? `Current status: ${result.status.replaceAll("_", " ")}.`
+                    ? `Current status: ${STATUS_WORDS[result.status] ?? result.status.replaceAll("_", " ")}.`
                     : "Loading analysis status."}
             </p>
           </div>

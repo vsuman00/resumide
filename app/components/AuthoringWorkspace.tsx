@@ -588,7 +588,7 @@ export default function AuthoringWorkspace({
               </Form>
             </section>
           )}
-          {model.patches.map((patch) => (
+          {model.patches.map((patch, patchIndex) => (
             <article key={patch.id} className="account-card">
               <h4>{patch.pattern.replaceAll("_", " ")}</h4>
               <p>
@@ -679,6 +679,7 @@ export default function AuthoringWorkspace({
                 version: unavailable. Numeric delta: unavailable.
               </p>
               <WritingDiagnosticComparison
+                context={`${patch.pattern.replaceAll("_", " ")}, suggestion ${patchIndex + 1}`}
                 comparison={buildProjectedWritingComparison({
                   baseVersionId: patch.baseVersionId,
                   fact: doc.facts.find((f) => f.id === patch.targetFactId)!,

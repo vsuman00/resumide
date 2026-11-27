@@ -42,7 +42,7 @@ export async function loader({
     const source = await ownedAnalysis(admin, params.id ?? "", user.id);
     const version = await admin
       .from("resume_versions")
-      .select("storage_key,checksum,bytes")
+      .select("storage_key,checksum,bytes,media_type")
       .eq("id", source.resume_version_id)
       .eq("owner_id", user.id)
       .eq("organization_id", source.organization_id)
@@ -66,8 +66,20 @@ export async function loader({
     if (bytes.byteLength !== version.data.bytes)
       throw new Error("Source length mismatch");
     assertResumeSource(bytes, version.data.bytes, version.data.checksum);
-    headers.set("Content-Type", "application/pdf");
-    headers.set("Content-Disposition", 'inline; filename="source-resume.pdf"');
+    const isWord = version.data.media_type?.endsWith(
+      "wordprocessingml.document",
+    );
+    // A browser cannot show a Word file inline, so it downloads instead (ATS-D5).
+    headers.set(
+      "Content-Type",
+      isWord ? version.data.media_type : "application/pdf",
+    );
+    headers.set(
+      "Content-Disposition",
+      isWord
+        ? 'attachment; filename="source-resume.docx"'
+        : 'inline; filename="source-resume.pdf"',
+    );
     return new Response(new Uint8Array(bytes), { headers });
   } catch (error) {
     if (error instanceof CanonicalError && error.status === 404)

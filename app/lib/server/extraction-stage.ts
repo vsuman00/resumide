@@ -30,6 +30,14 @@ import {
   persistAnalysisStage,
   type AnalysisStageOptions,
 } from "./analysis-stage-fence";
+import { inspectPdfStructure } from "./pdf-structure";
+import {
+  DOCX_MEDIA_TYPE,
+  DOCX_READER_VERSION,
+  DocxError,
+  docxStructureMessages,
+  readDocx,
+} from "./docx-extract";
 
 const EXTRACTOR_VERSION = "unpdf-v1";
 
@@ -66,6 +74,7 @@ export function extractionFailureStatus(
     return error.code === "EMPTY_TEXT" ? "needs_ocr" : "failed";
   }
   if (error instanceof OcrRequiredError) return "needs_ocr";
+  if (error instanceof DocxError) return "failed";
   if (error instanceof ExtractionStageFailure) {
     return "failed";
   }
@@ -207,6 +216,38 @@ function warningForOcrRequirement(
   return `This ${type} PDF requires OCR before scoring (${reason.replaceAll("_", " ")}).`;
 }
 
+const WORDS_PER_PAGE = 500;
+
+/**
+ * Word resumes (ATS-D5). A .docx has no fixed pages, so length is estimated from the word count
+ * and says so. The file is re-read here even though upload already checked it: the worker never
+ * trusts what the web tier saw.
+ */
+export function extractDocxForAnalysis(args: {
+  bytes: Uint8Array;
+  maxBytes: number;
+  expectedSha256: string;
+}) {
+  const startedAt = performance.now();
+  assertResumeSource(args.bytes, args.maxBytes, args.expectedSha256);
+  const read = readDocx(args.bytes);
+  const words = read.text.split(/\s+/).filter(Boolean).length;
+  const pages = Math.max(1, Math.ceil(words / WORDS_PER_PAGE));
+  return {
+    text: read.text,
+    pageTexts: [read.text],
+    totalPages: pages,
+    textChecksum: createHash("sha256").update(read.text).digest("hex"),
+    warnings: [
+      `[structure] info|Word files have no fixed pages, so length is estimated from the word count (about ${pages} ${pages === 1 ? "page" : "pages"}).`,
+      ...(pages > 2 ? ["Resume exceeds two pages."] : []),
+      ...docxStructureMessages(read),
+    ],
+    durationMs: Math.round(performance.now() - startedAt),
+    extractorVersion: DOCX_READER_VERSION,
+  };
+}
+
 export async function extractBoundedInput(
   args: {
     bytes: Uint8Array;
@@ -242,7 +283,11 @@ export async function extractBoundedInput(
       ...extracted,
       pageTexts: extracted.pageTexts ?? [extracted.text],
       textChecksum: createHash("sha256").update(extracted.text).digest("hex"),
-      warnings: extracted.totalPages > 2 ? ["Resume exceeds two pages."] : [],
+      warnings: [
+        ...(extracted.totalPages > 2 ? ["Resume exceeds two pages."] : []),
+        // Hidden text, images and icon links; best-effort and never fails extraction.
+        ...(await inspectPdfStructure(args.bytes)),
+      ],
       durationMs: Math.round(performance.now() - startedAt),
       extractorVersion: EXTRACTOR_VERSION,
     };
@@ -288,7 +333,7 @@ export async function processExtractionStage(
   const { data, error } = await admin
     .from("analyses")
     .select(
-      "status, owner_id, resume_versions(id, checksum, storage_key, organization_id)",
+      "status, owner_id, resume_versions(id, checksum, storage_key, organization_id, media_type)",
     )
     .eq("id", analysisId)
     .single();
@@ -332,6 +377,37 @@ export async function processExtractionStage(
     const bytes = await createResumeStorage().download(version.storage_key);
     await assertAnalysisStageLease(admin, analysisId, options);
     const config = getAnalysisConfig();
+    if (version.media_type === DOCX_MEDIA_TYPE) {
+      const extracted = extractDocxForAnalysis({
+        bytes,
+        maxBytes: config.MAX_UPLOAD_BYTES,
+        expectedSha256: version.checksum,
+      });
+      assertAnalysisStageActive(options);
+      // Word files carry no page images, so there is no layout or page evidence to review.
+      const { data: persisted, error: persistError } =
+        await persistAnalysisStage(
+          admin,
+          analysisId,
+          "persist_analysis_extraction",
+          {
+            p_analysis_id: analysisId,
+            p_duration_ms: extracted.durationMs,
+            p_extracted_text: extracted.text,
+            p_extractor_version: extracted.extractorVersion,
+            p_page_count: extracted.totalPages,
+            p_page_texts: extracted.pageTexts,
+            p_process_id: processId,
+            p_request_id: requestId,
+            p_text_checksum: extracted.textChecksum,
+            p_warnings: extracted.warnings,
+          },
+          options,
+        );
+      if (persistError || persisted !== true)
+        throw new Error("Extraction persistence failed.");
+      return;
+    }
     if (config.EVIDENCE_REVIEW_ENABLED) {
       const { envelope, pageCount } =
         await extractDocumentForReviewWithMetadata({

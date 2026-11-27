@@ -46,11 +46,13 @@ export class ResumeStorage {
     resumeId: string;
     versionId: string;
     bytes: Uint8Array;
+    /** PDF unless a Word file is stored; the ".pdf" key suffix is an opaque identity either way. */
+    mediaType?: string;
   }) {
     const storageKey = createResumeStorageKey(args);
     const checksum = createHash("sha256").update(args.bytes).digest("hex");
     const { error } = await this.bucket.upload(storageKey, args.bytes, {
-      contentType: "application/pdf",
+      contentType: args.mediaType ?? "application/pdf",
       upsert: false,
     });
 

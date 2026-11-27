@@ -71,6 +71,13 @@ const ServerConfigSchema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((value) => value === "true"),
+  // Requirement-phrase matcher for the live keyword rule (ATS-06). On by default since
+  // 2026-11-27 (owner decision ATS-D3); set "false" to roll back. The legacy-input scoring
+  // path keeps its pinned taxonomy version and ignores this flag.
+  MATCHER_V2_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((value) => value === "true"),
   JOB_INTELLIGENCE_ENABLED: z
     .enum(["true", "false"])
     .default("false")
@@ -207,6 +214,7 @@ export type ServerConfig = z.infer<typeof ServerConfigSchema>;
 const AnalysisConfigSchema = ServerConfigSchema.pick({
   INITIAL_FEEDBACK_ENABLED: true,
   LEGACY_SCORING_INPUT_ENABLED: true,
+  MATCHER_V2_ENABLED: true,
   ANALYSIS_FENCING_ENABLED: true,
   NATIVE_EVIDENCE_ENABLED: true,
   NATIVE_LAYOUT_ENABLED: true,

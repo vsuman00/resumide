@@ -149,7 +149,71 @@ export const ParseViewSchema = z.object({
 
 export type ParseViewZod = z.infer<typeof ParseViewSchema>;
 
+// Typed requirement result stored by the v2 matcher inside keyword_coverage.
+const LineEvidenceSchema = z.object({
+  line: z.number().int().min(1),
+  start: z.number().int().min(0),
+  end: z.number().int().min(0),
+  text: z.string(),
+});
+export const TypedCoverageSchema = z.object({
+  matcherVersion: z.string(),
+  vocabularyVersion: z.string(),
+  asOf: z.string(),
+  truncated: z.boolean(),
+  requirements: z.array(
+    z.object({
+      phrase: z.string(),
+      kind: z.enum(["skill", "degree", "years", "phrase", "soft"]),
+      section: z.enum(["required", "preferred", "responsibilities"]),
+      importance: z.enum(["required", "preferred", "contextual"]),
+      state: z.enum(["met", "partial", "missing", "not_evaluated"]),
+      satisfiedBy: z.string().nullable(),
+      // Shared id for "A, B or C" options; absent on results saved before 2026-11-26.
+      altGroup: z.string().nullable().optional(),
+      detail: z.string().nullable(),
+      context: z.enum(["role", "skills_list", "elsewhere"]).nullable(),
+      lastYear: z.number().int().nullable(),
+      resumeEvidence: z.array(LineEvidenceSchema),
+    }),
+  ),
+  applicationChecks: z.array(
+    z.object({
+      kind: z.enum(["authorization", "location", "relocation", "travel"]),
+      text: z.string(),
+      line: z.number().int(),
+    }),
+  ),
+  titleAlignment: z.object({
+    alignment: z.enum(["aligned", "adjacent", "different", "unknown"]),
+    jdTitle: z.string().nullable(),
+    resumeTitle: z.string().nullable(),
+    seniority: z.enum(["below", "at", "above", "unknown"]),
+  }),
+  profile: z.object({
+    roles: z.array(
+      z.object({
+        title: z.string().nullable(),
+        employer: z.string().nullable(),
+        startMonth: z.number().int(),
+        endMonth: z.number().int(),
+        current: z.boolean(),
+        dateText: z.string(),
+      }),
+    ),
+    education: z.array(
+      z.object({ text: z.string(), year: z.number().int().nullable() }),
+    ),
+    totalMonths: z.number().int().nullable(),
+    // Absent on results saved before 2026-11-26.
+    internMonths: z.number().int().optional(),
+  }),
+  integrity: z.object({ downgraded: z.number().int() }).optional(),
+});
+export type TypedCoverage = z.infer<typeof TypedCoverageSchema>;
+
 export const AnalysisResultSchema = z.object({
+  typed: TypedCoverageSchema.optional(),
   feedback: FeedbackSchema,
   parseView: ParseViewSchema,
   ruleTrace: z.array(

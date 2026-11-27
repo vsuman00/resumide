@@ -1,4 +1,9 @@
 import { matchJobDescription, type MatchEvidence } from "./matching";
+import {
+  matchRequirements,
+  toLegacyCoverage,
+  type RequirementMatchResult,
+} from "./matching/requirements";
 
 export interface RuleTrace {
   ruleId: string;
@@ -22,6 +27,8 @@ export interface ATSRulesResult {
   uncertainKeywords: string[];
   taxonomyVersion: string;
   matchingEvidence: MatchEvidence[];
+  /** Typed requirement result; present only for the v2 matcher. */
+  typed?: RequirementMatchResult;
 }
 
 interface RuleResult {
@@ -201,11 +208,22 @@ export function atsRules(args: {
   jobDescription: string;
   parseView: ParseViewData;
   rulesetVersion?: "ats-rules-v3" | "ats-rules-v4";
+  /** "v2" uses the requirement-phrase matcher; its versions land in taxonomyVersion. */
+  matcher?: "legacy" | "v2";
 }): ATSRulesResult {
-  const matching = matchJobDescription({
-    jobDescription: args.jobDescription,
-    resumeText: args.text,
-  });
+  const typed =
+    args.matcher === "v2"
+      ? matchRequirements({
+          jobDescription: args.jobDescription,
+          resumeText: args.text,
+        })
+      : undefined;
+  const matching = typed
+    ? toLegacyCoverage(typed)
+    : matchJobDescription({
+        jobDescription: args.jobDescription,
+        resumeText: args.text,
+      });
   const context: ScoreContext = {
     proportionalKeywords: args.rulesetVersion !== "ats-rules-v3",
     wordCount: args.text.trim().split(/\s+/).filter(Boolean).length,
@@ -244,6 +262,7 @@ export function atsRules(args: {
     uncertainKeywords: matching.uncertain,
     taxonomyVersion: matching.taxonomyVersion,
     matchingEvidence: matching.evidence,
+    typed,
   };
 }
 

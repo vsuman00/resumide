@@ -4,6 +4,9 @@ import { formatSize } from "~/lib/utils";
 import { takePendingUpload } from "~/lib/pending-upload";
 import EvidenceScene3D from "~/components/EvidenceScene3D";
 
+const WORD_TYPE =
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
 interface FileUploaderProps {
   maxUploadBytes: number;
   onFileSelect: (file: File | null) => void;
@@ -37,7 +40,8 @@ const FileUploader = ({
         setSelectedFile(null);
         onFileSelect(null);
         onValidationError?.(
-          rejection.errors[0]?.message ?? "Please select a valid PDF file.",
+          rejection.errors[0]?.message ??
+            "Please select a valid PDF or Word (.docx) file.",
         );
         return;
       }
@@ -54,7 +58,7 @@ const FileUploader = ({
   const { getRootProps, getInputProps, inputRef, isDragActive } = useDropzone({
     onDrop,
     multiple: false,
-    accept: { "application/pdf": [".pdf"] },
+    accept: { "application/pdf": [".pdf"], [WORD_TYPE]: [".docx"] },
     maxSize: maxUploadBytes,
   });
 
@@ -65,19 +69,24 @@ const FileUploader = ({
           className: `file-dropzone${isDragActive ? " is-drag-active" : ""}${selectedFile ? " has-file" : ""}`,
         })}
       >
-        <input {...getInputProps({ "aria-label": "Upload PDF resume" })} />
+        <input
+          {...getInputProps({
+            "aria-label": "Upload resume file (PDF or Word)",
+          })}
+        />
         {selectedFile ? (
           <div
             className="file-dropzone-selected"
             onClick={(event) => event.stopPropagation()}
           >
             <span className="file-type-mark" aria-hidden="true">
-              PDF
+              {selectedFile.type === WORD_TYPE ? "DOC" : "PDF"}
             </span>
             <div className="file-dropzone-file-details">
               <p>{selectedFile.name}</p>
               <span>
-                {formatSize(selectedFile.size)} PDF
+                {formatSize(selectedFile.size)}{" "}
+                {selectedFile.type === WORD_TYPE ? "Word" : "PDF"}
                 {fromBuild && (
                   <span className="file-from-build"> · From Build</span>
                 )}
@@ -123,13 +132,15 @@ const FileUploader = ({
             />
             <p>
               <strong>
-                {isDragActive ? "Drop your PDF here" : "Choose a PDF"}
+                {isDragActive
+                  ? "Drop your resume here"
+                  : "Choose a PDF or Word file"}
               </strong>
               <span> or drag and drop it into the tray</span>
             </p>
             <span className="file-dropzone-meta">
-              PDF only, up to {formatSize(maxUploadBytes)}. Text-based files
-              work best.
+              PDF or Word (.docx), up to {formatSize(maxUploadBytes)}.
+              Text-based files work best.
             </span>
           </div>
         )}

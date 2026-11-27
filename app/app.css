@@ -1422,6 +1422,11 @@ form {
     gap: 12px;
   }
 
+  /* The two result cards need the whole row, not the narrow score column. */
+  .result-score-primary:has(.two-results) {
+    grid-column: 1 / -1;
+  }
+
   .result-score-lockup {
     display: flex;
     flex: 0 0 auto;
@@ -3035,6 +3040,9 @@ form {
   }
 
   .public-footer nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
     color: var(--ink-muted);
     font-size: 13px;
     font-weight: 700;
@@ -5631,6 +5639,13 @@ form {
 
   .result-section-heading {
     align-items: flex-start;
+    /* The status badge drops under the title instead of widening the page. */
+    flex-wrap: wrap;
+  }
+
+  .result-section-heading > span {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .result-section-heading h2 {
@@ -6659,10 +6674,172 @@ form {
   line-height: 1.6;
 }
 
-.rewrite-generator { padding: 24px; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-raised); }
-.rewrite-generator h2 { font-size: 24px; margin-bottom: 12px; }
-.rewrite-generator p { color: var(--ink-muted); line-height: 1.6; max-width: 70ch; }
-.rewrite-generator form { display: grid; gap: 16px; margin-block: 16px; }
-.rewrite-consent { display: flex; align-items: start; gap: 10px; font-size: 14px; line-height: 1.5; }
-.rewrite-consent input { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 2px; }
-.rewrite-generator [role="status"] { font-size: 14px; color: var(--evidence); }
+.rewrite-generator {
+  padding: 24px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-raised);
+}
+.rewrite-generator h2 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+.rewrite-generator p {
+  color: var(--ink-muted);
+  line-height: 1.6;
+  max-width: 70ch;
+}
+.rewrite-generator form {
+  display: grid;
+  gap: 16px;
+  margin-block: 16px;
+}
+.rewrite-consent {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.rewrite-consent input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+}
+.rewrite-generator [role="status"] {
+  font-size: 14px;
+  color: var(--evidence);
+}
+
+/* ATS match: two results, requirement list and parsed profile */
+.two-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.two-results section {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.two-results h2 {
+  margin: 4px 0;
+  font-size: 1.1rem;
+}
+.two-results p {
+  margin: 4px 0;
+  color: var(--ink-muted);
+}
+.two-results .two-results-value {
+  color: var(--ink-strong, var(--ink));
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+.jd-match,
+.parsed-profile {
+  margin-bottom: 24px;
+}
+.jd-list {
+  list-style: none;
+  margin: 8px 0 16px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.jd-item {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.jd-item .jd-phrase,
+.jd-item p {
+  margin: 0 0 4px;
+}
+.jd-item .jd-phrase {
+  font-weight: 600;
+}
+.jd-item.is-note > div:only-child {
+  grid-column: 1 / -1;
+}
+.jd-item small {
+  color: var(--ink-muted);
+}
+.jd-state {
+  font-size: 0.8rem;
+  font-weight: 600;
+  align-self: start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong, var(--border));
+  text-align: center;
+  color: var(--ink);
+}
+.jd-item.is-met .jd-state {
+  border-color: var(--success, #067647);
+}
+.jd-item.is-missing .jd-state {
+  border-color: var(--danger, #b42318);
+}
+.jd-item.is-partial .jd-state {
+  border-color: var(--warning, #b54708);
+}
+.jd-hint {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+.jd-title-line,
+.jd-footnote {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+.parsed-contact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+.parsed-contact dt {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+}
+.parsed-contact dd {
+  margin: 0;
+}
+.parsed-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0 16px;
+}
+.parsed-table th,
+.parsed-table td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  /* Long titles and employers wrap instead of widening the page on phones. */
+  overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .parsed-table {
+    table-layout: fixed;
+    font-size: 0.875rem;
+  }
+  .parsed-table th,
+  .parsed-table td {
+    padding: 6px 4px;
+  }
+}
+@media (max-width: 640px) {
+  .two-results {
+    grid-template-columns: 1fr;
+  }
+  .jd-item {
+    grid-template-columns: 1fr;
+  }
+}

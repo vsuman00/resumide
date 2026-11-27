@@ -1,7 +1,14 @@
 import type { HeadersFunction } from "react-router";
 
 export { default, loader, ErrorBoundary } from "./home";
-export const meta = () => [{ title: "Analyses | Resumide" }];
+export const meta = () => [
+  { title: "Analyses | Resumide" },
+  {
+    name: "description",
+    content: "Your saved resume analyses and their evidence reviews.",
+  },
+  { name: "robots", content: "noindex, nofollow" },
+];
 
 export const headers: HeadersFunction = ({
   parentHeaders,

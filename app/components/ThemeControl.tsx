@@ -42,6 +42,7 @@ const ThemeControl = () => {
       </span>
       <span className="sr-only">Color theme</span>
       <select
+        name="color-theme"
         aria-label="Color theme"
         value={preference}
         onChange={(event) => {

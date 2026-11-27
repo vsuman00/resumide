@@ -10,8 +10,9 @@ const PublicShell = ({ children }: { children: ReactNode }) => {
       {children}
       <footer className="public-footer">
         <div>
-          <Link to="/" className="workspace-brand" aria-label="Resumide home">
+          <Link to="/" className="workspace-brand">
             <BrandLockup />
+            <span className="sr-only"> home</span>
           </Link>
           <p>Evidence before edits. Clarity before confidence.</p>
         </div>

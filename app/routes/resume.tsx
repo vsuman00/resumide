@@ -17,6 +17,7 @@ import ATS from "~/components/ATS";
 import ParseView from "~/components/ParseView";
 import { readOwnedNativeLayout } from "~/lib/server/layout-read-model";
 import Heatmap from "~/components/Heatmap";
+import { JdMatchPanel, ParsedProfile, TwoResults } from "~/components/JdMatch";
 import RewriteGenerator from "~/components/RewriteGenerator";
 import ResumeWriter from "~/components/ResumeWriter";
 import ResultTabs from "~/components/ResultTabs";
@@ -24,7 +25,11 @@ import EvidenceScene3D from "~/components/EvidenceScene3D";
 import WorkspaceShell from "~/components/WorkspaceShell";
 import { presentLegacyScore } from "~/lib/server/score-v2-contract";
 import { BASELINE_SEMANTICS } from "~/lib/server/qualitative-prose";
-import { AnalysisResultSchema } from "~/lib/server/schema";
+import {
+  AnalysisResultSchema,
+  type AnalysisResultZod,
+} from "~/lib/server/schema";
+import { buildAtsReport, formatAtsReport } from "~/lib/ats-report";
 import { getAuthenticatedUser } from "~/lib/server/auth";
 import {
   CanonicalError,
@@ -77,43 +82,6 @@ export const middleware: Route.MiddlewareFunction[] = [
   },
 ];
 
-function buildEvidenceReport(result: AnalysisResult, unscored = false): string {
-  const lines = [
-    "Resumide evidence report",
-    `Legacy analysis score: ${result.feedback.overallScore}/100 (not comparable with v2)`,
-    "",
-    "Score breakdown:",
-    `- ATS compatibility: ${result.feedback.ATS.score}/100`,
-    ...(unscored
-      ? ["Qualitative categories: cited prose only, no ratings."]
-      : [
-          `- Legacy tone and style: ${result.feedback.toneAndStyle.score}/100`,
-          `- Legacy content: ${result.feedback.content.score}/100`,
-          `- Legacy structure: ${result.feedback.structure.score}/100`,
-          `- Legacy skills: ${result.feedback.skills.score}/100`,
-        ]),
-    "",
-    "Deterministic checks:",
-    ...result.ruleTrace.map(
-      (rule) =>
-        `- ${rule.label}: ${rule.outcome === "not_evaluated" ? "Skipped" : rule.passed ? "Pass" : "Needs attention"} (${rule.detail})`,
-    ),
-    "",
-    "Keyword coverage:",
-    ...result.jdKeywords.map((keyword) => {
-      const status = result.uncertainKeywords.includes(keyword)
-        ? "Uncertain evidence"
-        : result.matchedKeywords.includes(keyword)
-          ? "Found in resume"
-          : "Missing from resume";
-      return `- ${keyword}: ${status}`;
-    }),
-    "",
-    "This report is guidance from a parse simulation, not a guarantee from a specific employer ATS.",
-  ];
-  return lines.join("\n");
-}
-
 export async function loader({ params, request, url }: Route.LoaderArgs) {
   const headers = new Headers({
     "Cache-Control": "private, no-store",
@@ -160,7 +128,7 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
   const { data, error } = await admin
     .from("analyses")
     .select(
-      "id, organization_id, resume_version_id, status, analysis_results(feedback, parse_view, rule_trace, keyword_coverage, created_at), analysis_deterministic_results(ruleset_version), writer_drafts(draft)",
+      "id, organization_id, resume_version_id, status, analysis_results(feedback, parse_view, rule_trace, keyword_coverage, created_at), analysis_deterministic_results(ruleset_version), writer_drafts(draft), resume_versions(media_type)",
     )
     .eq("id", analysisId)
     .eq("owner_id", user.id)
@@ -214,6 +182,7 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
     missingKeywords: keywords.missing,
     uncertainKeywords: keywords.uncertain ?? [],
     keywordEvidence: keywords.evidence ?? [],
+    typed: keywords.typed ?? undefined,
     writer: data.writer_drafts?.[0]?.draft,
   });
   const { loadInitialFeedbackConsumer, isInitialFeedbackConsumerAccessDenied } =
@@ -235,6 +204,13 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
     throw error;
   }
   const signedResumeUrl = `/analysis/${analysisId}/source`;
+  const sourceVersion = Array.isArray(data.resume_versions)
+    ? data.resume_versions[0]
+    : data.resume_versions;
+  // A Word file has no page images to preview (ATS-D5).
+  const sourceIsWord = Boolean(
+    sourceVersion?.media_type?.endsWith("wordprocessingml.document"),
+  );
   await recordAuditEvent({
     userId: user.id,
     action: "analysis.read",
@@ -265,6 +241,7 @@ export async function loader({ params, request, url }: Route.LoaderArgs) {
     {
       result,
       signedResumeUrl,
+      sourceIsWord,
       nativeLayout,
       unscoredProse,
       legacy,
@@ -281,6 +258,7 @@ const Resume = () => {
   const {
     result,
     signedResumeUrl,
+    sourceIsWord,
     nativeLayout,
     unscoredProse,
     legacy,
@@ -297,35 +275,43 @@ const Resume = () => {
   const feedback = result.feedback;
   const score = feedback?.overallScore ?? 0;
 
+  const report = buildAtsReport(result as AnalysisResultZod);
   useEffect(() => {
     const url = URL.createObjectURL(
-      new Blob([buildEvidenceReport(result, unscoredProse)], {
-        type: "text/plain",
-      }),
+      new Blob(
+        [formatAtsReport(result as AnalysisResultZod, report, unscoredProse)],
+        { type: "text/plain" },
+      ),
     );
     setReportUrl(url);
     return () => URL.revokeObjectURL(url);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- report derives from result
   }, [result, unscoredProse]);
   const feedbackGroups = visibleFeedbackGroups(
     feedback,
     qualitativeUnavailable,
     feedbackProvenance,
   );
-  const repairQueue = feedbackGroups
-    .flatMap((group) =>
-      group.tips
-        .filter(isFeedbackRepair)
-        .map((tip) => ({ ...tip, source: group.source })),
-    )
-    .slice(0, 3);
-  const strengthCount = feedbackGroups.reduce(
-    (count, group) => count + group.tips.filter(isFeedbackStrength).length,
-    0,
+  const feedbackRepairs = feedbackGroups.flatMap((group) =>
+    group.tips
+      .filter(isFeedbackRepair)
+      .map((tip) => ({ ...tip, source: group.source as string })),
   );
-  const improvementCount = feedbackGroups.reduce(
-    (count, group) => count + group.tips.filter(isFeedbackRepair).length,
-    0,
-  );
+  // Missing minimum qualifications and parse problems come first, then writing feedback.
+  const repairQueue: {
+    source: string;
+    tip: string;
+    explanation?: string | null;
+  }[] = [...(report?.actions ?? []), ...feedbackRepairs].slice(0, 5);
+  const strengthCount = report
+    ? report.strengths.length
+    : feedbackGroups.reduce(
+        (count, group) => count + group.tips.filter(isFeedbackStrength).length,
+        0,
+      );
+  const improvementCount = report
+    ? report.actions.length + feedbackRepairs.length
+    : feedbackRepairs.length;
 
   // Render the first page of the source PDF while keeping the original PDF
   // available. Local analyses already have a Blob; persisted analyses use the
@@ -341,6 +327,7 @@ const Resume = () => {
     setPreviewError("");
 
     const renderSourcePreview = async () => {
+      if (sourceIsWord) return;
       let sourcePdf: Blob;
 
       if (entry) {
@@ -400,7 +387,7 @@ const Resume = () => {
       revokeImgs.forEach((url) => URL.revokeObjectURL(url));
       if (revokePdf) URL.revokeObjectURL(revokePdf);
     };
-  }, [entry, signedResumeUrl]);
+  }, [entry, signedResumeUrl, sourceIsWord]);
 
   return (
     <WorkspaceShell
@@ -419,7 +406,17 @@ const Resume = () => {
         modelRatingsExcluded={unscoredProse}
       />
       <section className="result-score-header" aria-label="Analysis summary">
-        <div className="result-score-primary">
+        {report ? (
+          <div className="result-score-primary">
+            <TwoResults report={report} />
+            <p className="result-score-note">
+              These two results are shown separately on purpose. The older
+              blended legacy score ({score}/100) is kept in the evidence report
+              for comparison and does not measure job fit.
+            </p>
+          </div>
+        ) : null}
+        <div className="result-score-primary" hidden={Boolean(report)}>
           <div className="result-score-lockup">
             <span className="result-score-value is-uncalibrated">{score}</span>
             <div>
@@ -440,15 +437,29 @@ const Resume = () => {
         >
           Download evidence report
         </a>
-        <div className="result-score-meter">
-          <div>
-            <span>Legacy baseline</span>
-            <span>{score}/100</span>
+        {report ? null : (
+          <p className="result-score-note" data-testid="earlier-matcher-note">
+            This analysis was saved before 27 Nov 2026, when Resumide moved to
+            requirement-by-requirement matching. It is kept exactly as saved;
+            start a new analysis to see which job requirements your resume
+            meets.
+          </p>
+        )}
+        {report ? null : (
+          <div className="result-score-meter">
+            <div>
+              <span>Legacy baseline</span>
+              <span>{score}/100</span>
+            </div>
+            <progress
+              value={score}
+              max="100"
+              aria-label="Legacy analysis score"
+            >
+              {score}%
+            </progress>
           </div>
-          <progress value={score} max="100" aria-label="Legacy analysis score">
-            {score}%
-          </progress>
-        </div>
+        )}
         <dl className="result-score-metrics">
           <div>
             <dt>Strengths</dt>
@@ -482,10 +493,18 @@ const Resume = () => {
                 <h2>Source document</h2>
               </div>
               <a href={resumeUrl} target="_blank" rel="noopener noreferrer">
-                Open PDF
+                {sourceIsWord ? "Download Word file" : "Open PDF"}
               </a>
             </div>
-            {imageUrl ? (
+            {sourceIsWord ? (
+              <div className="result-preview-placeholder">
+                <span className="result-document-sheet" aria-hidden="true" />
+                <p>
+                  This is a Word file, so there is no page preview. Your
+                  original stays private and can be downloaded above.
+                </p>
+              </div>
+            ) : imageUrl ? (
               <a
                 className="result-preview-image"
                 href={resumeUrl}
@@ -682,21 +701,33 @@ const Resume = () => {
                   </div>
                 ),
                 parse: (
-                  <ParseView
-                    parseView={result.parseView}
-                    imageUrl={imageUrl}
-                    imageUrls={imageUrls}
-                    nativeLayout={nativeLayout}
-                  />
+                  <>
+                    <ParseView
+                      parseView={result.parseView}
+                      imageUrl={imageUrl}
+                      imageUrls={imageUrls}
+                      nativeLayout={nativeLayout}
+                    />
+                    {result.typed ? (
+                      <ParsedProfile
+                        typed={result.typed}
+                        contact={result.parseView.contact}
+                      />
+                    ) : null}
+                  </>
                 ),
                 keywords: (
-                  <Heatmap
-                    jdKeywords={result.jdKeywords}
-                    matchedKeywords={result.matchedKeywords}
-                    missingKeywords={result.missingKeywords}
-                    uncertainKeywords={result.uncertainKeywords}
-                    keywordEvidence={result.keywordEvidence}
-                  />
+                  <>
+                    {report ? <JdMatchPanel report={report} /> : null}
+                    <Heatmap
+                      jdKeywords={result.jdKeywords}
+                      matchedKeywords={result.matchedKeywords}
+                      missingKeywords={result.missingKeywords}
+                      uncertainKeywords={result.uncertainKeywords}
+                      keywordEvidence={result.keywordEvidence}
+                      reference={Boolean(report)}
+                    />
+                  </>
                 ),
                 rewrite: (
                   <>
