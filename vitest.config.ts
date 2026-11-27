@@ -10,6 +10,7 @@ export default defineConfig({
   plugins: [tsconfigPaths()],
   test: {
     globalSetup: ["tests/node-version-guard.ts"],
+    setupFiles: ["tests/component-setup.ts"],
     environment: "node",
     include: [
       "tests/unit/**/*.test.ts",
