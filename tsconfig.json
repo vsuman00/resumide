@@ -5,6 +5,9 @@
     "**/.client/**/*",
     ".react-router/types/**/*"
   ],
+  // Archived handoff scripts import absolute paths from the machine that wrote them, so they
+  // only resolve there. They are evidence, not product code.
+  "exclude": ["node_modules", "tasks/agent-handoffs"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["node", "vite/client"],
