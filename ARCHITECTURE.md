@@ -380,6 +380,24 @@ Repeated terms and aliases cannot receive duplicate credit. Skills listed withou
 
 The exact job description is the primary source. O*NET, ESCO, and approved domain packs normalize concepts. Market-frequency claims require dated permissioned data with sample/query provenance. Recruiter-authored calibration is deferred behind the enterprise/fairness gate.
 
+### Matching vocabulary and normalization (added 2026-11-25)
+
+Both dimensions above depend on one deterministic normalization layer. The JD and the resume go through the same layer, so neither side can match on rules the other skipped. [Gap analysis](docs/reviews/2026-11-25-ats-checker-gap-analysis.md)
+
+- **Normalizer:** Unicode NFKC, case folding, punctuation and hyphen rules (`CI/CD`, `Node.js`, `C++`), and English inflection (plural and verb forms) through a fixed rule table plus an irregular list. No stemming library may change results without a version bump.
+- **Vocabulary pack:** versioned data, not code. It holds skills with aliases and acronyms, degree levels and fields, title families and seniority, and stopwords. Each entry records its source (exact JD, O*NET public domain, ESCO CC BY 4.0, or reviewed manual) and licence. A pack change produces a new matcher version.
+- **Requirement phrases:** the JD is split by section (minimum or required, preferred, responsibilities, other) into requirement phrases, not single words. The number of requirements is bounded for cost, not to hide later sections. Each phrase keeps its section, importance and source span.
+- **AI role:** a model may propose aliases or phrase splits into a review queue only. Deterministic code and the reviewed pack decide matches.
+
+### Live score migration (added 2026-11-25)
+
+The live product still computes the legacy `atsRules` score, which blends formatting and a single-word keyword rule. Until v2 is calibrated:
+
+- The result shows **Parse health** (the ATS Compatibility checks) and **JD match** (requirement coverage by importance) as two separate results, never one blended number. A missing minimum requirement can't be offset by preferred matches.
+- Every saved result records its matcher, vocabulary and rule versions. Earlier analyses keep their original semantics and labels; nothing is re-scored silently.
+- Location, work authorization, relocation and travel are **application checks**. They are shown as items to answer in the employer's form and never add or remove points.
+- v2 (`SCORING_V2_ENABLED`) first runs in shadow mode on the same inputs, and becomes the live path only after the claim ladder below reaches `Corpus-validated`. Then the legacy weights are retired.
+
 ### Optional Application Readiness
 
 A combined candidate progress index may be tested only after comprehension research. If introduced, it is deterministic, exposes its components/confidence, is withheld with insufficient evidence, and is labelled `Application Readiness`. It must not be called an employer ATS score or interview probability.

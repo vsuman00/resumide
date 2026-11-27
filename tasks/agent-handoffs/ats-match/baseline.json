@@ -1,0 +1,120 @@
+{
+  "id": "ATS-01",
+  "date": "2026-11-25",
+  "corpus": "tests/fixtures/ats-match/corpus.json",
+  "pairs": 12,
+  "baselineLegacy": {
+    "metRecall": 0.601,
+    "inBand": 4,
+    "of": 12
+  },
+  "requirementMatcher": {
+    "metRecall": 1,
+    "missingRecall": 1,
+    "inBand": 12,
+    "of": 12
+  },
+  "firstRunBeforeFixes": {
+    "inBand": 6,
+    "note": "Plural headings, X-or-Y alternatives, vocabulary gaps and a Go/go false match were found and fixed using this corpus."
+  },
+  "caveat": "The matcher was tuned while reading these same 12 pairs, so the result flatters it. A held-out set is required (ATS-16). Synthetic data only.",
+  "rows": [
+    {
+      "id": "swe-large-search-strong",
+      "category": "strong",
+      "requiredCoverage": 1,
+      "legacyCoverage": 0.45,
+      "inBand": true,
+      "legacyInBand": false
+    },
+    {
+      "id": "sde-cloud-strong",
+      "category": "strong",
+      "requiredCoverage": 1,
+      "legacyCoverage": 0.35,
+      "inBand": true,
+      "legacyInBand": false
+    },
+    {
+      "id": "swe-azure-partial",
+      "category": "partial",
+      "requiredCoverage": 0.6,
+      "legacyCoverage": 0.2222222222222222,
+      "inBand": true,
+      "legacyInBand": false
+    },
+    {
+      "id": "ds-strong",
+      "category": "strong",
+      "requiredCoverage": 1,
+      "legacyCoverage": 0.5,
+      "inBand": true,
+      "legacyInBand": false
+    },
+    {
+      "id": "ds-poor",
+      "category": "poor",
+      "requiredCoverage": 0,
+      "legacyCoverage": 0,
+      "inBand": true,
+      "legacyInBand": true
+    },
+    {
+      "id": "sre-partial",
+      "category": "partial",
+      "requiredCoverage": 0.5,
+      "legacyCoverage": null,
+      "inBand": true,
+      "legacyInBand": false
+    },
+    {
+      "id": "frontend-strong",
+      "category": "strong",
+      "requiredCoverage": 1,
+      "legacyCoverage": 0.6363636363636364,
+      "inBand": true,
+      "legacyInBand": false
+    },
+    {
+      "id": "pm-partial",
+      "category": "partial",
+      "requiredCoverage": 1,
+      "legacyCoverage": 0.2222222222222222,
+      "inBand": true,
+      "legacyInBand": false
+    },
+    {
+      "id": "marketing-strong",
+      "category": "strong",
+      "requiredCoverage": 0.75,
+      "legacyCoverage": 0.75,
+      "inBand": true,
+      "legacyInBand": true
+    },
+    {
+      "id": "backend-go-poor",
+      "category": "poor",
+      "requiredCoverage": 0,
+      "legacyCoverage": 0,
+      "inBand": true,
+      "legacyInBand": true
+    },
+    {
+      "id": "devops-strong",
+      "category": "strong",
+      "requiredCoverage": 1,
+      "legacyCoverage": 1,
+      "inBand": true,
+      "legacyInBand": true
+    },
+    {
+      "id": "security-partial",
+      "category": "partial",
+      "requiredCoverage": 0.6666666666666666,
+      "legacyCoverage": 0.3333333333333333,
+      "inBand": true,
+      "legacyInBand": false
+    }
+  ]
+}
